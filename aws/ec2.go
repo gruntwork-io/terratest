@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/aws"
 	"fmt"
+	"github.com/gruntwork-io/gruntwork-cli/logging"
 )
 
 // Return all the ids of EC2 instances in the given region with the given tag
@@ -28,4 +29,34 @@ func GetEc2InstanceIdsByTag(awsRegion string, tagName string, tagValue string) (
 	}
 
 	return instanceIds, err
+}
+
+//Remove an AMI
+func RemoveAmi(ec2Client *ec2.EC2, imageId string) (error) {
+	logger := logging.GetLogger("RemoveAmi")
+	logger.Debug("Deregistering AMI %s\n", imageId)
+
+	_, err := ec2Client.DeregisterImage(&ec2.DeregisterImageInput{ImageId: aws.String(imageId) })
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//Terminate an instance
+func TerminateInstance(ec2Client *ec2.EC2, instanceId string) (error) {
+	logger := logging.GetLogger("TerminateInstance")
+	logger.Debug("Terminating Instance %s", instanceId)
+
+	_, err := ec2Client.TerminateInstances(&ec2.TerminateInstancesInput{
+		InstanceIds: []*string{
+			aws.String("instanceId"),
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

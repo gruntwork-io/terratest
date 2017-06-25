@@ -3,10 +3,13 @@ owners:
 - name: Gruntwork
   homepage: https://gruntwork.io
 import:
-- package: github.com/stretchr/testify/assert
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
 - package: github.com/aws/aws-sdk-go
   version: v1.6.27
   subpackages:
   - aws
   - aws/session
   - service/ec2
+- package: github.com/pquerna/otp

@@ -1,5 +1,5 @@
-hash: 609d76c584f1e60c8cd433f3e492c0e8574772f14f73fbbc424f18f9ce80f19b
-updated: 2017-06-22T17:03:00.259392803-04:00
+hash: 8405791d54f2ea7b88766b18307f52370fb43b765d319088e9f5eba73d0d3148
+updated: 2017-06-25T15:56:43.712718998-04:00
 imports:
 - name: github.com/aws/aws-sdk-go
   version: 00fb2125993965df739fa3398b03bef3eb2e198f
@@ -33,10 +33,16 @@ imports:
   - service/cloudwatchlogs
   - service/ec2
   - service/iam
+  - service/kms
   - service/s3
   - service/sns
   - service/sqs
   - service/sts
+- name: github.com/boombuler/barcode
+  version: c07adc95a07cb6213cf4c104caab763bce2d49c0
+  subpackages:
+  - qr
+  - utils
 - name: github.com/go-errors/errors
   version: 8fa88b06e5974e97fbf9899a7f86a344bfd1f105
 - name: github.com/go-ini/ini
@@ -50,6 +56,11 @@ imports:
   - logging
 - name: github.com/jmespath/go-jmespath
   version: 0b12d6b521d83fc7f755e7cfc1b1fbdd35a01a74
+- name: github.com/pquerna/otp
+  version: 9e1935374bc73ffe011187dafed51a412b90fe43
+  subpackages:
+  - hotp
+  - totp
 - name: github.com/Sirupsen/logrus
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/stretchr/testify
