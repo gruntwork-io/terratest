@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"fmt"
 	"github.com/gruntwork-io/gruntwork-cli/logging"
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 // Return all the ids of EC2 instances in the given region with the given tag
@@ -59,4 +60,13 @@ func TerminateInstance(ec2Client *ec2.EC2, instanceId string) (error) {
 	}
 
 	return nil
+}
+
+func CreateEC2Client(awsRegion string) (*ec2.EC2, error) {
+	awsConfig, err := CreateAwsConfig(awsRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	return ec2.New(session.New(), awsConfig), nil
 }
