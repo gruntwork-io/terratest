@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"fmt"
 	"github.com/gruntwork-io/gruntwork-cli/logging"
-	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 // Return all the ids of EC2 instances in the given region with the given tag
