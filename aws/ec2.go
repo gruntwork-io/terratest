@@ -51,7 +51,7 @@ func TerminateInstance(ec2Client *ec2.EC2, instanceId string) (error) {
 
 	_, err := ec2Client.TerminateInstances(&ec2.TerminateInstancesInput{
 		InstanceIds: []*string{
-			aws.String("instanceId"),
+			aws.String(instanceId),
 		},
 	})
 
