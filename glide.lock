@@ -1,5 +1,5 @@
-hash: 8405791d54f2ea7b88766b18307f52370fb43b765d319088e9f5eba73d0d3148
-updated: 2017-06-25T15:56:43.712718998-04:00
+hash: 7bddd0abcaab75152f3d0d72e1656804dd905306bb0a4680315f1e916db32270
+updated: 2017-06-26T01:00:55.243677437-04:00
 imports:
 - name: github.com/aws/aws-sdk-go
   version: 00fb2125993965df739fa3398b03bef3eb2e198f
@@ -62,9 +62,13 @@ imports:
   - hotp
   - totp
 - name: github.com/Sirupsen/logrus
-  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
+  version: 3d4380f53a34dcdc95f0c1db702615992b38d9a4
+  repo: git@github.com:/sirupsen/logrus
+  vcs: git
+- name: github.com/sirupsen/logrus
+  version: 3d4380f53a34dcdc95f0c1db702615992b38d9a4
 - name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  version: 2402e8e7a02fc811447d11f881aa9746cdc57983
   subpackages:
   - assert
 - name: github.com/urfave/cli
@@ -77,12 +81,12 @@ imports:
   - ed25519/internal/edwards25519
   - ssh
 - name: golang.org/x/sys
-  version: dbc2be9168a660ef302e04b6ff6406de6f967473
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   subpackages:
   - unix
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
