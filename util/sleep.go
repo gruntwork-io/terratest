@@ -2,7 +2,7 @@ package util
 
 import (
 	"time"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 //Sleep for a specified time.Duration and write a message to logger with a reason why

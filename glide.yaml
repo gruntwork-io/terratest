@@ -12,8 +12,7 @@ import:
   - aws
   - aws/session
   - service/ec2
+- package: github.com/gruntwork-io/gruntwork-cli
+  version: ^0.1.0
 - package: github.com/pquerna/otp
 - package: github.com/sirupsen/logrus
-- package: github.com/Sirupsen/logrus
-  repo: git@github.com:/sirupsen/logrus
-  vcs: git
