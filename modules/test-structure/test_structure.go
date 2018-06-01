@@ -52,10 +52,15 @@ func CopyTerraformFolderToTemp(t *testing.T, rootFolder string, examplesFolder s
 		return filepath.Join(rootFolder, examplesFolder)
 	}
 
-	tmpRootFolder, err := files.CopyTerraformFolderToTemp(rootFolder, t.Name())
+	tmpRootFolder, err := files.CopyTerraformFolderToTemp(rootFolder, cleanName(t.Name()))
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	return filepath.Join(tmpRootFolder, examplesFolder)
+}
+
+func cleanName(originalName string) string {
+	parts := strings.Split(originalName, "/")
+	return parts[len(parts)-1]
 }
