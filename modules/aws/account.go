@@ -5,12 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 )
 
 // GetAccountId gets the Account ID for the currently logged in IAM User.
-func GetAccountId(t *testing.T) string {
-	id, err := GetAccountIdE(t)
+func GetAccountId(t *testing.T, sessExists ...*session.Session) string {
+	id, err := GetAccountIdE(t, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -18,8 +19,8 @@ func GetAccountId(t *testing.T) string {
 }
 
 // GetAccountIdE gets the Account ID for the currently logged in IAM User.
-func GetAccountIdE(t *testing.T) (string, error) {
-	iamClient, err := NewIamClientE(t, defaultRegion)
+func GetAccountIdE(t *testing.T, sessExists ...*session.Session) (string, error) {
+	iamClient, err := NewIamClientE(t, defaultRegion, sessExists[0])
 	if err != nil {
 		return "", err
 	}

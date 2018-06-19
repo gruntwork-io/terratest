@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/Briansbum/terratest/modules/logger"
 )
 
 // Command is a simpler struct for defining commands than Go's built-in Cmd.

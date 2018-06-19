@@ -14,7 +14,11 @@ import (
 )
 
 // NewAuthenticatedSession gets an AWS Session, checking that the user has credentials properly configured in their environment.
-func NewAuthenticatedSession(region string) (*session.Session, error) {
+func NewAuthenticatedSession(region string, sessExists ...*session.Session) (*session.Session, error) {
+	if len(sessExists) > 0 {
+		return sessExists[0], nil
+	}
+
 	sess, err := session.NewSession(aws.NewConfig().WithRegion(region))
 	if err != nil {
 		return nil, err

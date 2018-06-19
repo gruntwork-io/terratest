@@ -3,12 +3,13 @@ package aws
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/acm"
 )
 
 // GetAcmCertificateArn gets the ACM certificate for the given domain name in the given region.
-func GetAcmCertificateArn(t *testing.T, awsRegion string, certDomainName string) string {
-	arn, err := GetAcmCertificateArnE(t, awsRegion, certDomainName)
+func GetAcmCertificateArn(t *testing.T, awsRegion string, certDomainName string, sessExists ...*session.Session) string {
+	arn, err := GetAcmCertificateArnE(t, awsRegion, certDomainName, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -16,8 +17,8 @@ func GetAcmCertificateArn(t *testing.T, awsRegion string, certDomainName string)
 }
 
 // GetAcmCertificateArnE gets the ACM certificate for the given domain name in the given region.
-func GetAcmCertificateArnE(t *testing.T, awsRegion string, certDomainName string) (string, error) {
-	acmClient, err := NewAcmClientE(t, awsRegion)
+func GetAcmCertificateArnE(t *testing.T, awsRegion string, certDomainName string, sessExists ...*session.Session) (string, error) {
+	acmClient, err := NewAcmClientE(t, awsRegion, sessExists[0])
 	if err != nil {
 		return "", err
 	}
@@ -37,8 +38,8 @@ func GetAcmCertificateArnE(t *testing.T, awsRegion string, certDomainName string
 }
 
 // NewAcmClient create a new ACM client.
-func NewAcmClient(t *testing.T, region string) *acm.ACM {
-	client, err := NewAcmClientE(t, region)
+func NewAcmClient(t *testing.T, region string, sessExists ...*session.Session) *acm.ACM {
+	client, err := NewAcmClientE(t, region, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,8 +47,8 @@ func NewAcmClient(t *testing.T, region string) *acm.ACM {
 }
 
 // NewAcmClientE creates a new ACM client.
-func NewAcmClientE(t *testing.T, awsRegion string) (*acm.ACM, error) {
-	sess, err := NewAuthenticatedSession(awsRegion)
+func NewAcmClientE(t *testing.T, awsRegion string, sessExists ...*session.Session) (*acm.ACM, error) {
+	sess, err := NewAuthenticatedSession(awsRegion, sessExists[0])
 	if err != nil {
 		return nil, err
 	}

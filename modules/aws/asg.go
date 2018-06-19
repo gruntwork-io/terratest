@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 
 // GetInstanceIdsForAsg gets the IDs of EC2 Instances in the given ASG.
-func GetInstanceIdsForAsg(t *testing.T, asgName string, awsRegion string) []string {
-	ids, err := GetInstanceIdsForAsgE(t, asgName, awsRegion)
+func GetInstanceIdsForAsg(t *testing.T, asgName string, awsRegion string, sessExists ...*session.Session) []string {
+	ids, err := GetInstanceIdsForAsgE(t, asgName, awsRegion, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -17,8 +18,8 @@ func GetInstanceIdsForAsg(t *testing.T, asgName string, awsRegion string) []stri
 }
 
 // GetInstanceIdsForAsgE gets the IDs of EC2 Instances in the given ASG.
-func GetInstanceIdsForAsgE(t *testing.T, asgName string, awsRegion string) ([]string, error) {
-	asgClient, err := NewAsgClientE(t, awsRegion)
+func GetInstanceIdsForAsgE(t *testing.T, asgName string, awsRegion string, sessExists ...*session.Session) ([]string, error) {
+	asgClient, err := NewAsgClientE(t, awsRegion, sessExists[0])
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +41,8 @@ func GetInstanceIdsForAsgE(t *testing.T, asgName string, awsRegion string) ([]st
 }
 
 // NewAsgClient creates an Auto Scaling Group client.
-func NewAsgClient(t *testing.T, region string) *autoscaling.AutoScaling {
-	client, err := NewAsgClientE(t, region)
+func NewAsgClient(t *testing.T, region string, sessExists ...*session.Session) *autoscaling.AutoScaling {
+	client, err := NewAsgClientE(t, region, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,8 +50,8 @@ func NewAsgClient(t *testing.T, region string) *autoscaling.AutoScaling {
 }
 
 // NewAsgClientE creates an Auto Scaling Group client.
-func NewAsgClientE(t *testing.T, region string) (*autoscaling.AutoScaling, error) {
-	sess, err := NewAuthenticatedSession(region)
+func NewAsgClientE(t *testing.T, region string, sessExists ...*session.Session) (*autoscaling.AutoScaling, error) {
+	sess, err := NewAuthenticatedSession(region, sessExists[0])
 	if err != nil {
 		return nil, err
 	}

@@ -4,11 +4,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Briansbum/terratest/modules/collections"
+	"github.com/Briansbum/terratest/modules/logger"
+	"github.com/Briansbum/terratest/modules/random"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/gruntwork-io/terratest/modules/collections"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/random"
 )
 
 // You can set this environment variable to force Terratest to use a specific region rather than a random one. This is
@@ -23,8 +24,8 @@ const defaultRegion = "us-east-1"
 // GetRandomRegion gets a randomly chosen AWS region. If approvedRegions is not empty, this will be a region from the approvedRegions
 // list; otherwise, this method will fetch the latest list of regions from the AWS APIs and pick one of those. If
 // forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
-func GetRandomRegion(t *testing.T, approvedRegions []string, forbiddenRegions []string) string {
-	region, err := GetRandomRegionE(t, approvedRegions, forbiddenRegions)
+func GetRandomRegion(t *testing.T, approvedRegions []string, forbiddenRegions []string, sessExists ...*session.Session) string {
+	region, err := GetRandomRegionE(t, approvedRegions, forbiddenRegions, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +35,7 @@ func GetRandomRegion(t *testing.T, approvedRegions []string, forbiddenRegions []
 // GetRandomRegionE gets a randomly chosen AWS region. If approvedRegions is not empty, this will be a region from the approvedRegions
 // list; otherwise, this method will fetch the latest list of regions from the AWS APIs and pick one of those. If
 // forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
-func GetRandomRegionE(t *testing.T, approvedRegions []string, forbiddenRegions []string) (string, error) {
+func GetRandomRegionE(t *testing.T, approvedRegions []string, forbiddenRegions []string, sessExists ...*session.Session) (string, error) {
 	regionFromEnvVar := os.Getenv(regionOverrideEnvVarName)
 	if regionFromEnvVar != "" {
 		logger.Logf(t, "Using AWS region %s from environment variable %s", regionFromEnvVar, regionOverrideEnvVarName)
@@ -44,7 +45,7 @@ func GetRandomRegionE(t *testing.T, approvedRegions []string, forbiddenRegions [
 	regionsToPickFrom := approvedRegions
 
 	if len(regionsToPickFrom) == 0 {
-		allRegions, err := GetAllAwsRegionsE(t)
+		allRegions, err := GetAllAwsRegionsE(t, sessExists[0])
 		if err != nil {
 			return "", err
 		}
@@ -59,8 +60,8 @@ func GetRandomRegionE(t *testing.T, approvedRegions []string, forbiddenRegions [
 }
 
 // GetAllAwsRegions gets the list of AWS regions available in this account.
-func GetAllAwsRegions(t *testing.T) []string {
-	out, err := GetAllAwsRegionsE(t)
+func GetAllAwsRegions(t *testing.T, sessExists ...*session.Session) []string {
+	out, err := GetAllAwsRegionsE(t, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,10 +69,10 @@ func GetAllAwsRegions(t *testing.T) []string {
 }
 
 // GetAllAwsRegionsE gets the list of AWS regions available in this account.
-func GetAllAwsRegionsE(t *testing.T) ([]string, error) {
+func GetAllAwsRegionsE(t *testing.T, sessExists ...*session.Session) ([]string, error) {
 	logger.Log(t, "Looking up all AWS regions available in this account")
 
-	ec2Client, err := NewEc2ClientE(t, defaultRegion)
+	ec2Client, err := NewEc2ClientE(t, defaultRegion, sessExists[0])
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +92,8 @@ func GetAllAwsRegionsE(t *testing.T) ([]string, error) {
 
 // GetAvailabilityZones gets the Availability Zones for a given AWS region. Note that for certain regions (e.g. us-east-1), different AWS
 // accounts have access to different availability zones.
-func GetAvailabilityZones(t *testing.T, region string) []string {
-	out, err := GetAvailabilityZonesE(t, region)
+func GetAvailabilityZones(t *testing.T, region string, sessExists ...*session.Session) []string {
+	out, err := GetAvailabilityZonesE(t, region, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,10 +102,10 @@ func GetAvailabilityZones(t *testing.T, region string) []string {
 
 // GetAvailabilityZonesE gets the Availability Zones for a given AWS region. Note that for certain regions (e.g. us-east-1), different AWS
 // accounts have access to different availability zones.
-func GetAvailabilityZonesE(t *testing.T, region string) ([]string, error) {
+func GetAvailabilityZonesE(t *testing.T, region string, sessExists ...*session.Session) ([]string, error) {
 	logger.Logf(t, "Looking up all availability zones available in this account for region %s", region)
 
-	ec2Client, err := NewEc2ClientE(t, region)
+	ec2Client, err := NewEc2ClientE(t, region, sessExists[0])
 	if err != nil {
 		return nil, err
 	}

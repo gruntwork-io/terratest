@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 )
 
 // GetCloudWatchLogEntries returns the CloudWatch log messages in the given region for the given log stream and log group.
-func GetCloudWatchLogEntries(t *testing.T, awsRegion string, logStreamName string, logGroupName string) []string {
-	out, err := GetCloudWatchLogEntriesE(t, awsRegion, logStreamName, logGroupName)
+func GetCloudWatchLogEntries(t *testing.T, awsRegion string, logStreamName string, logGroupName string, sessExists ...*session.Session) []string {
+	out, err := GetCloudWatchLogEntriesE(t, awsRegion, logStreamName, logGroupName, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -17,8 +18,8 @@ func GetCloudWatchLogEntries(t *testing.T, awsRegion string, logStreamName strin
 }
 
 // GetCloudWatchLogEntriesE returns the CloudWatch log messages in the given region for the given log stream and log group.
-func GetCloudWatchLogEntriesE(t *testing.T, awsRegion string, logStreamName string, logGroupName string) ([]string, error) {
-	client, err := NewCloudWatchLogsClientE(t, awsRegion)
+func GetCloudWatchLogEntriesE(t *testing.T, awsRegion string, logStreamName string, logGroupName string, sessExists ...*session.Session) ([]string, error) {
+	client, err := NewCloudWatchLogsClientE(t, awsRegion, sessExists[0])
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +42,8 @@ func GetCloudWatchLogEntriesE(t *testing.T, awsRegion string, logStreamName stri
 }
 
 // NewCloudWatchLogsClient creates a new CloudWatch Logs client.
-func NewCloudWatchLogsClient(t *testing.T, region string) *cloudwatchlogs.CloudWatchLogs {
-	client, err := NewCloudWatchLogsClientE(t, region)
+func NewCloudWatchLogsClient(t *testing.T, region string, sessExists ...*session.Session) *cloudwatchlogs.CloudWatchLogs {
+	client, err := NewCloudWatchLogsClientE(t, region, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,8 +51,8 @@ func NewCloudWatchLogsClient(t *testing.T, region string) *cloudwatchlogs.CloudW
 }
 
 // NewCloudWatchLogsClientE creates a new CloudWatch Logs client.
-func NewCloudWatchLogsClientE(t *testing.T, region string) (*cloudwatchlogs.CloudWatchLogs, error) {
-	sess, err := NewAuthenticatedSession(region)
+func NewCloudWatchLogsClientE(t *testing.T, region string, sessExists ...*session.Session) (*cloudwatchlogs.CloudWatchLogs, error) {
+	sess, err := NewAuthenticatedSession(region, sessExists[0])
 	if err != nil {
 		return nil, err
 	}

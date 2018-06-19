@@ -7,7 +7,7 @@ import (
 	"encoding/pem"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/Briansbum/terratest/modules/logger"
 	"golang.org/x/crypto/ssh"
 )
 

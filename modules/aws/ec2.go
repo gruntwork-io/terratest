@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Briansbum/terratest/modules/logger"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/gruntwork-io/terratest/modules/logger"
 )
 
 // GetPublicIpOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
-func GetPublicIpOfEc2Instance(t *testing.T, instanceID string, awsRegion string) string {
-	ip, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
+func GetPublicIpOfEc2Instance(t *testing.T, instanceID string, awsRegion string, sessExists ...*session.Session) string {
+	ip, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,8 +20,8 @@ func GetPublicIpOfEc2Instance(t *testing.T, instanceID string, awsRegion string)
 }
 
 // GetPublicIpOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
-func GetPublicIpOfEc2InstanceE(t *testing.T, instanceID string, awsRegion string) (string, error) {
-	ips, err := GetPublicIpsOfEc2InstancesE(t, []string{instanceID}, awsRegion)
+func GetPublicIpOfEc2InstanceE(t *testing.T, instanceID string, awsRegion string, sessExists ...*session.Session) (string, error) {
+	ips, err := GetPublicIpsOfEc2InstancesE(t, []string{instanceID}, awsRegion, sessExists[0])
 	if err != nil {
 		return "", err
 	}
@@ -35,8 +36,8 @@ func GetPublicIpOfEc2InstanceE(t *testing.T, instanceID string, awsRegion string
 }
 
 // GetPublicIpsOfEc2Instances gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-func GetPublicIpsOfEc2Instances(t *testing.T, instanceIDs []string, awsRegion string) map[string]string {
-	ips, err := GetPublicIpsOfEc2InstancesE(t, instanceIDs, awsRegion)
+func GetPublicIpsOfEc2Instances(t *testing.T, instanceIDs []string, awsRegion string, sessExists ...*session.Session) map[string]string {
+	ips, err := GetPublicIpsOfEc2InstancesE(t, instanceIDs, awsRegion, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,8 +45,8 @@ func GetPublicIpsOfEc2Instances(t *testing.T, instanceIDs []string, awsRegion st
 }
 
 // GetPublicIpsOfEc2InstancesE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-func GetPublicIpsOfEc2InstancesE(t *testing.T, instanceIDs []string, awsRegion string) (map[string]string, error) {
-	ec2Client := NewEc2Client(t, awsRegion)
+func GetPublicIpsOfEc2InstancesE(t *testing.T, instanceIDs []string, awsRegion string, sessExists ...*session.Session) (map[string]string, error) {
+	ec2Client := NewEc2Client(t, awsRegion, sessExists[0])
 
 	input := ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(instanceIDs)}
 	output, err := ec2Client.DescribeInstances(&input)
@@ -65,8 +66,8 @@ func GetPublicIpsOfEc2InstancesE(t *testing.T, instanceIDs []string, awsRegion s
 }
 
 // GetEc2InstanceIdsByTag returns all the IDs of EC2 instances in the given region with the given tag.
-func GetEc2InstanceIdsByTag(t *testing.T, region string, tagName string, tagValue string) []string {
-	out, err := GetEc2InstanceIdsByTagE(t, region, tagName, tagValue)
+func GetEc2InstanceIdsByTag(t *testing.T, region string, tagName string, tagValue string, sessExists ...*session.Session) []string {
+	out, err := GetEc2InstanceIdsByTagE(t, region, tagName, tagValue, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,8 +75,8 @@ func GetEc2InstanceIdsByTag(t *testing.T, region string, tagName string, tagValu
 }
 
 // GetEc2InstanceIdsByTagE returns all the IDs of EC2 instances in the given region with the given tag.
-func GetEc2InstanceIdsByTagE(t *testing.T, region string, tagName string, tagValue string) ([]string, error) {
-	client, err := NewEc2ClientE(t, region)
+func GetEc2InstanceIdsByTagE(t *testing.T, region string, tagName string, tagValue string, sessExists ...*session.Session) ([]string, error) {
+	client, err := NewEc2ClientE(t, region, sessExists[0])
 	if err != nil {
 		return nil, err
 	}
@@ -101,8 +102,8 @@ func GetEc2InstanceIdsByTagE(t *testing.T, region string, tagName string, tagVal
 }
 
 // GetTagsForEc2Instance returns all the tags for the given EC2 Instance.
-func GetTagsForEc2Instance(t *testing.T, region string, instanceID string) map[string]string {
-	tags, err := GetTagsForEc2InstanceE(t, region, instanceID)
+func GetTagsForEc2Instance(t *testing.T, region string, instanceID string, sessExists ...*session.Session) map[string]string {
+	tags, err := GetTagsForEc2InstanceE(t, region, instanceID, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,8 +111,8 @@ func GetTagsForEc2Instance(t *testing.T, region string, instanceID string) map[s
 }
 
 // GetTagsForEc2InstanceE returns all the tags for the given EC2 Instance.
-func GetTagsForEc2InstanceE(t *testing.T, region string, instanceID string) (map[string]string, error) {
-	client, err := NewEc2ClientE(t, region)
+func GetTagsForEc2InstanceE(t *testing.T, region string, instanceID string, sessExists ...*session.Session) (map[string]string, error) {
+	client, err := NewEc2ClientE(t, region, sessExists[0])
 	if err != nil {
 		return nil, err
 	}
@@ -144,18 +145,18 @@ func GetTagsForEc2InstanceE(t *testing.T, region string, instanceID string) (map
 }
 
 // DeleteAmi deletes the given AMI in the given region.
-func DeleteAmi(t *testing.T, region string, imageID string) {
-	err := DeleteAmiE(t, region, imageID)
+func DeleteAmi(t *testing.T, region string, imageID string, sessExists ...*session.Session) {
+	err := DeleteAmiE(t, region, imageID, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 // DeleteAmiE deletes the given AMI in the given region.
-func DeleteAmiE(t *testing.T, region string, imageID string) error {
+func DeleteAmiE(t *testing.T, region string, imageID string, sessExists ...*session.Session) error {
 	logger.Logf(t, "Deregistering AMI %s", imageID)
 
-	client, err := NewEc2ClientE(t, region)
+	client, err := NewEc2ClientE(t, region, sessExists[0])
 	if err != nil {
 		return err
 	}
@@ -196,18 +197,18 @@ func AddTagsToResourceE(t *testing.T, region string, resource string, tags map[s
 }
 
 // TerminateInstance terminates the EC2 instance with the given ID in the given region.
-func TerminateInstance(t *testing.T, region string, instanceID string) {
-	err := TerminateInstanceE(t, region, instanceID)
+func TerminateInstance(t *testing.T, region string, instanceID string, sessExists ...*session.Session) {
+	err := TerminateInstanceE(t, region, instanceID, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 // TerminateInstanceE terminates the EC2 instance with the given ID in the given region.
-func TerminateInstanceE(t *testing.T, region string, instanceID string) error {
+func TerminateInstanceE(t *testing.T, region string, instanceID string, sessExists ...*session.Session) error {
 	logger.Logf(t, "Terminating Instance %s", instanceID)
 
-	client, err := NewEc2ClientE(t, region)
+	client, err := NewEc2ClientE(t, region, sessExists[0])
 	if err != nil {
 		return err
 	}
@@ -222,8 +223,8 @@ func TerminateInstanceE(t *testing.T, region string, instanceID string) error {
 }
 
 // NewEc2Client creates an EC2 client.
-func NewEc2Client(t *testing.T, region string) *ec2.EC2 {
-	client, err := NewEc2ClientE(t, region)
+func NewEc2Client(t *testing.T, region string, sessExists ...*session.Session) *ec2.EC2 {
+	client, err := NewEc2ClientE(t, region, sessExists[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,8 +232,8 @@ func NewEc2Client(t *testing.T, region string) *ec2.EC2 {
 }
 
 // NewEc2ClientE creates an EC2 client.
-func NewEc2ClientE(t *testing.T, region string) (*ec2.EC2, error) {
-	sess, err := NewAuthenticatedSession(region)
+func NewEc2ClientE(t *testing.T, region string, sessExists ...*session.Session) (*ec2.EC2, error) {
+	sess, err := NewAuthenticatedSession(region, sessExists[0])
 	if err != nil {
 		return nil, err
 	}
