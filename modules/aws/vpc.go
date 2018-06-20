@@ -8,7 +8,7 @@ import (
 
 	"github.com/Briansbum/terratest/modules/random"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
+
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
@@ -30,8 +30,8 @@ var isDefaultFilterName = "isDefault"
 var isDefaultFilterValue = "true"
 
 // GetDefaultVpc fetches information about the default VPC in the given region.
-func GetDefaultVpc(t *testing.T, region string, sessExists ...*session.Session) *Vpc {
-	vpc, err := GetDefaultVpcE(t, region, sessExists[0])
+func GetDefaultVpc(t *testing.T, region string) *Vpc {
+	vpc, err := GetDefaultVpcE(t, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,8 +39,8 @@ func GetDefaultVpc(t *testing.T, region string, sessExists ...*session.Session) 
 }
 
 // GetDefaultVpcE fetches information about the default VPC in the given region.
-func GetDefaultVpcE(t *testing.T, region string, sessExists ...*session.Session) (*Vpc, error) {
-	client, err := NewEc2ClientE(t, region, sessExists[0])
+func GetDefaultVpcE(t *testing.T, region string) (*Vpc, error) {
+	client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func GetDefaultVpcE(t *testing.T, region string, sessExists ...*session.Session)
 
 	defaultVpc := vpcs.Vpcs[0]
 
-	subnets, err := GetSubnetsForVpcE(t, aws.StringValue(defaultVpc.VpcId), region, sessExists[0])
+	subnets, err := GetSubnetsForVpcE(t, aws.StringValue(defaultVpc.VpcId), region)
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +83,8 @@ func FindVpcName(vpc *ec2.Vpc) string {
 }
 
 // GetSubnetsForVpc gets the subnets in the specified VPC.
-func GetSubnetsForVpc(t *testing.T, vpcID string, region string, sessExists ...*session.Session) []Subnet {
-	subnets, err := GetSubnetsForVpcE(t, vpcID, region, sessExists[0])
+func GetSubnetsForVpc(t *testing.T, vpcID string, region string) []Subnet {
+	subnets, err := GetSubnetsForVpcE(t, vpcID, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,8 +92,8 @@ func GetSubnetsForVpc(t *testing.T, vpcID string, region string, sessExists ...*
 }
 
 // GetSubnetsForVpcE gets the subnets in the specified VPC.
-func GetSubnetsForVpcE(t *testing.T, vpcID string, region string, sessExists ...*session.Session) ([]Subnet, error) {
-	client, err := NewEc2ClientE(t, region, sessExists[0])
+func GetSubnetsForVpcE(t *testing.T, vpcID string, region string) ([]Subnet, error) {
+	client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
 	}

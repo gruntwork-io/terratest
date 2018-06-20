@@ -1,6 +1,6 @@
 # Terratest
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/Briansbum/terratest)](https://goreportcard.com/report/github.com/Briansbum/terratest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gruntwork-io/terratest)](https://goreportcard.com/report/github.com/gruntwork-io/terratest)
 
 Terratest is a Go library that makes it easier to write automated tests for your infrastructure code. It provides a
 variety of helper functions and patterns for common infrastructure testing tasks, including:
@@ -64,13 +64,13 @@ To add Terratest to your projects, we recommend using a Go dependency manager su
 [dep](https://github.com/golang/dep) to add the packages you wish to use (see [package by package overview](#package-by-package-overview) for the list). For example, to add the `terraform` package:
 
 ```bash
-dep ensure -add github.com/Briansbum/terratest/modules/terraform
+dep ensure -add github.com/gruntwork-io/terratest/modules/terraform
 ```
 
 Alternatively, you can use `go get`:
 
 ```bash
-go get github.com/Briansbum/terratest/modules/terraform
+go get github.com/gruntwork-io/terratest/modules/terraform
 ```
 
 
@@ -110,7 +110,7 @@ modules:
 1.  [Consul](https://github.com/hashicorp/terraform-aws-consul)
 1.  [Vault](https://github.com/hashicorp/terraform-aws-vault)
 1.  [Nomad](https://github.com/hashicorp/terraform-aws-nomad)
-1.  [Couchbase](https://github.com/Briansbum/terraform-aws-couchbase/)
+1.  [Couchbase](https://github.com/gruntwork-io/terraform-aws-couchbase/)
 
 
 
@@ -225,7 +225,7 @@ checkServerWorks(t, options)
 
 Of course, despite your best efforts, occasionally cleanup will fail, perhaps due to the CI server going down, or a bug
 in your code, or a temporary network outage. To handle those cases, we run a tool called
-[cloud-nuke](https://github.com/Briansbum/cloud-nuke) in our test AWS account on a nightly basis to clean up any
+[cloud-nuke](https://github.com/gruntwork-io/cloud-nuke) in our test AWS account on a nightly basis to clean up any
 leftover resources.
 
 
@@ -332,13 +332,13 @@ Here are some techniques we use with Docker:
 
 - If your script is used in a Packer template, add a [Docker
   builder](https://www.packer.io/docs/builders/docker.html) to the template so you can create a Docker image from the
-  same code. See the [Packer Docker Example](https://github.com/Briansbum/terratest/tree/master/examples/packer-docker-example) for working sample code.
+  same code. See the [Packer Docker Example](https://github.com/gruntwork-io/terratest/tree/master/examples/packer-docker-example) for working sample code.
 
 - We have prebuilt Docker images for major Linux distros that have many important dependencies (e.g., curl, vim,
   tar, sudo) already installed. See the [test-docker-images folder](/test-docker-images) for more details.
 
 - Create a `docker-compose.yml` to make it easier to run your Docker image with all the ports, environment variables,
-  and other settings it needs. See the [Packer Docker Example](https://github.com/Briansbum/terratest/tree/master/examples/packer-docker-example) for working sample code.
+  and other settings it needs. See the [Packer Docker Example](https://github.com/gruntwork-io/terratest/tree/master/examples/packer-docker-example) for working sample code.
 
 - With scripts in Docker, you can replace _some_ real-world dependencies with mocks! One way to do this is to create
   some "mock scripts" and to bind-mount them in `docker-compose.yml` in a way that replaces the real dependency. For
@@ -486,7 +486,7 @@ go test -timeout30m -run "<TEST_NAME>"
 ### Versioning
 
 This repo follows the principles of [Semantic Versioning](http://semver.org/). You can find each new release,
-along with the changelog, in the [Releases Page](https://github.com/Briansbum/terratest/releases).
+along with the changelog, in the [Releases Page](https://github.com/gruntwork-io/terratest/releases).
 
 During initial development, the major version will be 0 (e.g., `0.x.y`), which indicates the code does not yet have a
 stable API. Once we hit `1.0.0`, we will make every effort to maintain a backwards compatible API and use the MAJOR,

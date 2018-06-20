@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Briansbum/terratest/modules/collections"
-	"github.com/Briansbum/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/collections"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"golang.org/x/crypto/ssh"
 )
 

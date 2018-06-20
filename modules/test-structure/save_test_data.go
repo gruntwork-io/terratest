@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Briansbum/terratest/modules/aws"
-	"github.com/Briansbum/terratest/modules/files"
-	"github.com/Briansbum/terratest/modules/logger"
-	"github.com/Briansbum/terratest/modules/packer"
-	"github.com/Briansbum/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/packer"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
 // SaveTerraformOptions serializes and saves TerraformOptions into the given folder. This allows you to create TerraformOptions during setup

@@ -3,7 +3,7 @@ package docker
 import (
 	"testing"
 
-	"github.com/Briansbum/terratest/modules/shell"
+	"github.com/gruntwork-io/terratest/modules/shell"
 )
 
 // Options are Docker options.

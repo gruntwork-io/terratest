@@ -49,7 +49,7 @@ Change to the same folder structure we use for just about all other Gruntwork re
 
 - `modules`: The Terratest source code. Move all the `.go` files and packages into this folder so it's easier to browse
   the repo. That does mean all Terratest imports will have to be updated to
-  `github.com/Briansbum/terratest/modules/xxx`. Unit tests for the Go source code will be in this folder too (e.g., the
+  `github.com/gruntwork-io/terratest/modules/xxx`. Unit tests for the Go source code will be in this folder too (e.g., the
   unit test for `foo.go` will be in `foo_test.go`).
 
 - `test`: This will contain the automated tests for the examples in the `examples` folder. These will act both as an

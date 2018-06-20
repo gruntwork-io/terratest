@@ -32,6 +32,26 @@
   version = "0.2"
 
 [[projects]]
+  name = "github.com/gruntwork-io/terratest"
+  packages = [
+    "modules/aws",
+    "modules/collections",
+    "modules/docker",
+    "modules/files",
+    "modules/http-helper",
+    "modules/logger",
+    "modules/packer",
+    "modules/random",
+    "modules/retry",
+    "modules/shell",
+    "modules/ssh",
+    "modules/terraform",
+    "modules/test-structure"
+  ]
+  revision = "4fe5a5587640cc5de34390063b78ca2f8a187a70"
+  version = "v0.9.10"
+
+[[projects]]
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   revision = "0b12d6b5"

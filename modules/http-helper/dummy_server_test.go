@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/Briansbum/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
 

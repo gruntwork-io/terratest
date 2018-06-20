@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Briansbum/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"golang.org/x/net/context"
 )
 

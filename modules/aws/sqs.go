@@ -6,16 +6,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Briansbum/terratest/modules/logger"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
+
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/google/uuid"
+	"github.com/gruntwork-io/terratest/modules/logger"
 )
 
 // CreateRandomQueue creates a new SQS queue with a random name that starts with the given prefix and return the queue URL.
-func CreateRandomQueue(t *testing.T, awsRegion string, prefix string, sessExists ...*session.Session) string {
-	url, err := CreateRandomQueueE(t, awsRegion, prefix, sessExists[0])
+func CreateRandomQueue(t *testing.T, awsRegion string, prefix string) string {
+	url, err := CreateRandomQueueE(t, awsRegion, prefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,10 +23,10 @@ func CreateRandomQueue(t *testing.T, awsRegion string, prefix string, sessExists
 }
 
 // CreateRandomQueueE creates a new SQS queue with a random name that starts with the given prefix and return the queue URL.
-func CreateRandomQueueE(t *testing.T, awsRegion string, prefix string, sessExists ...*session.Session) (string, error) {
+func CreateRandomQueueE(t *testing.T, awsRegion string, prefix string) (string, error) {
 	logger.Logf(t, "Creating randomly named SQS queue with prefix %s", prefix)
 
-	sqsClient, err := NewSqsClientE(t, awsRegion, sessExists[0])
+	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
 		return "", err
 	}
@@ -50,18 +50,18 @@ func CreateRandomQueueE(t *testing.T, awsRegion string, prefix string, sessExist
 }
 
 // DeleteQueue deletes the SQS queue with the given URL.
-func DeleteQueue(t *testing.T, awsRegion string, queueURL string, sessExists ...*session.Session) {
-	err := DeleteQueueE(t, awsRegion, queueURL, sessExists[0])
+func DeleteQueue(t *testing.T, awsRegion string, queueURL string) {
+	err := DeleteQueueE(t, awsRegion, queueURL)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 // DeleteQueueE deletes the SQS queue with the given URL.
-func DeleteQueueE(t *testing.T, awsRegion string, queueURL string, sessExists ...*session.Session) error {
+func DeleteQueueE(t *testing.T, awsRegion string, queueURL string) error {
 	logger.Logf(t, "Deleting SQS Queue %s", queueURL)
 
-	sqsClient, err := NewSqsClientE(t, awsRegion, sessExists[0])
+	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
 		return err
 	}
@@ -74,18 +74,18 @@ func DeleteQueueE(t *testing.T, awsRegion string, queueURL string, sessExists ..
 }
 
 // DeleteMessageFromQueue deletes the message with the given receipt from the SQS queue with the given URL.
-func DeleteMessageFromQueue(t *testing.T, awsRegion string, queueURL string, receipt string, sessExists ...*session.Session) {
-	err := DeleteMessageFromQueueE(t, awsRegion, queueURL, receipt, sessExists[0])
+func DeleteMessageFromQueue(t *testing.T, awsRegion string, queueURL string, receipt string) {
+	err := DeleteMessageFromQueueE(t, awsRegion, queueURL, receipt)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 // DeleteMessageFromQueueE deletes the message with the given receipt from the SQS queue with the given URL.
-func DeleteMessageFromQueueE(t *testing.T, awsRegion string, queueURL string, receipt string, sessExists ...*session.Session) error {
+func DeleteMessageFromQueueE(t *testing.T, awsRegion string, queueURL string, receipt string) error {
 	logger.Logf(t, "Deleting message from queue %s (%s)", queueURL, receipt)
 
-	sqsClient, err := NewSqsClientE(t, awsRegion, sessExists[0])
+	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
 		return err
 	}
@@ -99,18 +99,18 @@ func DeleteMessageFromQueueE(t *testing.T, awsRegion string, queueURL string, re
 }
 
 // SendMessageToQueue sends the given message to the SQS queue with the given URL.
-func SendMessageToQueue(t *testing.T, awsRegion string, queueURL string, message string, sessExists ...*session.Session) {
-	err := SendMessageToQueueE(t, awsRegion, queueURL, message, sessExists[0])
+func SendMessageToQueue(t *testing.T, awsRegion string, queueURL string, message string) {
+	err := SendMessageToQueueE(t, awsRegion, queueURL, message)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 // SendMessageToQueueE sends the given message to the SQS queue with the given URL.
-func SendMessageToQueueE(t *testing.T, awsRegion string, queueURL string, message string, sessExists ...*session.Session) error {
+func SendMessageToQueueE(t *testing.T, awsRegion string, queueURL string, message string) error {
 	logger.Logf(t, "Sending message %s to queue %s", message, queueURL)
 
-	sqsClient, err := NewSqsClientE(t, awsRegion, sessExists[0])
+	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
 		return err
 	}
@@ -142,8 +142,8 @@ type QueueMessageResponse struct {
 
 // WaitForQueueMessage waits to receive a message from on the queueURL. Since the API only allows us to wait a max 20 seconds for a new
 // message to arrive, we must loop TIMEOUT/20 number of times to be able to wait for a total of TIMEOUT seconds
-func WaitForQueueMessage(t *testing.T, awsRegion string, queueURL string, timeout int, sessExists ...*session.Session) QueueMessageResponse {
-	sqsClient, err := NewSqsClientE(t, awsRegion, sessExists[0])
+func WaitForQueueMessage(t *testing.T, awsRegion string, queueURL string, timeout int) QueueMessageResponse {
+	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
 		return QueueMessageResponse{Error: err}
 	}
@@ -179,8 +179,8 @@ func WaitForQueueMessage(t *testing.T, awsRegion string, queueURL string, timeou
 }
 
 // NewSqsClient creates a new SQS client.
-func NewSqsClient(t *testing.T, region string, sessExists ...*session.Session) *sqs.SQS {
-	client, err := NewSqsClientE(t, region, sessExists[0])
+func NewSqsClient(t *testing.T, region string) *sqs.SQS {
+	client, err := NewSqsClientE(t, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,8 +188,8 @@ func NewSqsClient(t *testing.T, region string, sessExists ...*session.Session) *
 }
 
 // NewSqsClientE creates a new SQS client.
-func NewSqsClientE(t *testing.T, region string, sessExists ...*session.Session) (*sqs.SQS, error) {
-	sess, err := NewAuthenticatedSession(region, sessExists[0])
+func NewSqsClientE(t *testing.T, region string) (*sqs.SQS, error) {
+	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
