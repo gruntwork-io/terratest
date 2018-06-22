@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/gruntwork-io/terratest/modules/logger"
 )
@@ -27,7 +26,7 @@ func DeleteAmiAndAllSnapshots(t *testing.T, region string, ami string) {
 	}
 }
 
-// DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI
+// DeleteAmiAndAllSnapshotsE will delete the given AMI along with all EBS snapshots that backed that AMI
 func DeleteAmiAndAllSnapshotsE(t *testing.T, region string, ami string) error {
 	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
 	if err != nil {

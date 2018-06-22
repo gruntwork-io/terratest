@@ -4,12 +4,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Briansbum/terratest/modules/collections"
-	"github.com/Briansbum/terratest/modules/logger"
-	"github.com/Briansbum/terratest/modules/random"
 	"github.com/aws/aws-sdk-go/aws"
-
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/gruntwork-io/terratest/modules/collections"
+	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/random"
 )
 
 // You can set this environment variable to force Terratest to use a specific region rather than a random one. This is
