@@ -231,6 +231,51 @@ func AssertS3BucketExistsE(t *testing.T, region string, name string) error {
 	return err
 }
 
+// AssertS3BucketPolicyExists checks if the given S3 bucket policy exists in the given region and fail the test if it does not.
+func AssertS3BucketPolicyExists(t *testing.T, region string, bucket string) {
+	err := AssertS3BucketPolicyExistsE(t, region, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// AssertS3BucketPolicyExistsE checks if the given S3 bucket policy exists in the given region and return an error if it does not.
+func AssertS3BucketPolicyExistsE(t *testing.T, region string, bucket string) error {
+	s3client, err := NewS3ClientE(t, region)
+	if err != nil {
+		return err
+	}
+
+	params := &s3.GetBucketPolicyInput{
+		Bucket: aws.String(bucket),
+	}
+	_, err = s3client.GetBucketPolicy(params)
+	return err
+}
+
+// GetS3BucketPolicyContents fetches the contents of the bucket policy for the given bucket and returns it as a string.
+func GetS3BucketPolicyContents(t *testing.T, awsRegion string, bucket string) string {
+	contents, err := GetS3BucketPolicyContentsE(t, awsRegion, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return contents
+}
+
+// GetS3BucketPolicyContentsE fetches the contents of the bucket policy for the given bucket and returns it as a string.
+func GetS3BucketPolicyContentsE(t *testing.T, awsRegion string, bucket string) (string, error) {
+	s3client, err := NewS3ClientE(t, awsRegion)
+	if err != nil {
+		return "", err
+	}
+
+	params := &s3.GetBucketPolicyInput{
+		Bucket: aws.String(bucket),
+	}
+	contents, err := s3client.GetBucketPolicy(params)
+	return *contents.Policy, err
+}
+
 // NewS3Client creates an S3 client.
 func NewS3Client(t *testing.T, region string) *s3.S3 {
 	client, err := NewS3ClientE(t, region)

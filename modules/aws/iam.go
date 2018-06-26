@@ -133,6 +133,50 @@ func EnableMfaDeviceE(t *testing.T, iamClient *iam.IAM, mfaDevice *iam.VirtualMF
 	return nil
 }
 
+// AssertIamPolicyExists checks if the given IAM policy exists in the given region and fail the test if it does not.
+func AssertIamPolicyExists(t *testing.T, region string, policyARN string) {
+	err := AssertIamPolicyExistsE(t, region, policyARN)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+//AssertIamPolicyExistsE checks if the given IAM policy exists in the given region and return an error if it does not.
+func AssertIamPolicyExistsE(t *testing.T, region string, policyARN string) error {
+	iamClient, err := NewIamClientE(t, region)
+	if err != nil {
+		return err
+	}
+
+	_, err = iamClient.GetPolicyVersion(&iam.GetPolicyVersionInput{
+		PolicyArn: &policyARN,
+	})
+	return err
+}
+
+// AssertIamPolicyExists checks if the given IAM policy exists in the given region and fail the test if it does not.
+func GetIamPolicyDocument(t *testing.T, region string, policyARN string) string {
+	content, err := GetIamPolicyDocumentE(t, region, policyARN)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return content
+}
+
+//AssertIamPolicyExistsE checks if the given IAM policy exists in the given region and return an error if it does not.
+func GetIamPolicyDocumentE(t *testing.T, region string, policyARN string) (string, error) {
+	iamClient, err := NewIamClientE(t, region)
+	if err != nil {
+		return "", err
+	}
+
+	content, err := iamClient.GetPolicyVersion(&iam.GetPolicyVersionInput{
+		PolicyArn: &policyARN,
+	})
+	return *content.PolicyVersion.Document, err
+}
+
 // NewIamClient creates a new IAM client.
 func NewIamClient(t *testing.T, region string) *iam.IAM {
 	client, err := NewIamClientE(t, region)
