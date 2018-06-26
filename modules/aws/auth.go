@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,13 +18,6 @@ func NewAuthenticatedSession(region string) (*session.Session, error) {
 	sess, err := session.NewSession(aws.NewConfig().WithRegion(region))
 	if err != nil {
 		return nil, err
-	}
-
-	if _, ok := os.LookupEnv("AWS_ROLE_ARN"); ok {
-		sess, err = CreateAwsSessionFromRole(region, os.Getenv("AWS_ROLE_ARN"))
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	if _, err = sess.Config.Credentials.Get(); err != nil {
