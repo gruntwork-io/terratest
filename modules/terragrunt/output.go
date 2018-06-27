@@ -17,7 +17,7 @@ func Output(t *testing.T, options *Options, key string) string {
 
 // OutputE calls terragrunt output for the given variable and return its value.
 func OutputE(t *testing.T, options *Options, key string) (string, error) {
-	output, err := RunTerragruntCommandE(t, options, "output", "-no-color", key, "2>/dev/null")
+	output, err := RunTerragruntCommandE(t, options, "output", "-no-color", key)
 
 	if err != nil {
 		return "", err
