@@ -1,0 +1,68 @@
+package terragrunt
+
+import (
+	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestApplyNoError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt-no-error", t.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	options := &Options{
+		TerragruntDir: testFolder,
+		NoColor:       true,
+	}
+
+	out := InitAndApply(t, options)
+
+	assert.Contains(t, out, "Hello, World")
+
+	// Check that NoColor correctly doesn't output the colour escape codes which look like [0m,[1m or [32m
+	assert.NotRegexp(t, `\[\d*m`, out, "Output should not contain color escape codes")
+}
+
+func TestApplyWithErrorNoRetry(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt-with-error", t.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	options := &Options{
+		TerragruntDir: testFolder,
+	}
+
+	out, err := InitAndApplyE(t, options)
+
+	assert.Error(t, err)
+	assert.Contains(t, out, "This is the first run, exiting with an error")
+}
+
+func TestApplyWithErrorWithRetry(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt-with-error", t.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	options := &Options{
+		TerragruntDir: testFolder,
+		MaxRetries:    1,
+		RetryableTerragruntErrors: map[string]string{
+			"This is the first run, exiting with an error": "Intentional failure in test fixture",
+		},
+	}
+
+	out := InitAndApply(t, options)
+
+	assert.Contains(t, out, "This is the first run, exiting with an error")
+}
