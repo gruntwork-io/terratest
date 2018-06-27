@@ -8,7 +8,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
-	"github.com/gruntwork-io/terratest/modules/shell"
+	"github.com/kamsz/terratest/modules/shell"
 )
 
 // RunTerragruntCommand runs terragrunt with the given arguments and options and return stdout/stderr.
@@ -33,6 +33,7 @@ func RunTerragruntCommandE(t *testing.T, options *Options, args ...string) (stri
 			Args:       args,
 			WorkingDir: options.TerragruntDir,
 			Env:        options.EnvVars,
+			WithStderr: false,
 		}
 
 		out, err := shell.RunCommandAndGetOutputE(t, cmd)

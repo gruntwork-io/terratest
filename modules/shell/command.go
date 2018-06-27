@@ -20,6 +20,7 @@ type Command struct {
 	Args       []string          // The args to pass to the command
 	WorkingDir string            // The working directory
 	Env        map[string]string // Additional environment variables to set
+	WithStderr bool              // Include stderr in output
 }
 
 // RunCommand runs a shell command and redirects its stdout and stderr to the stdout of the atomic script itself.
@@ -71,7 +72,13 @@ func RunCommandAndGetOutputE(t *testing.T, command Command) (string, error) {
 		return "", err
 	}
 
-	output, err := readStdoutAndStderr(t, stdout, stderr)
+	var output string
+	if command.WithStderr != false {
+		output, err = readStdoutAndStderr(t, stdout, stderr)
+	} else {
+		output, err = readStdout(t, stdout)
+	}
+
 	if err != nil {
 		return output, err
 	}
@@ -81,6 +88,29 @@ func RunCommandAndGetOutputE(t *testing.T, command Command) (string, error) {
 	}
 
 	return output, nil
+}
+
+// This function captures stdout and stderr while still printing it to the stdout and stderr of this Go program
+func readStdout(t *testing.T, stdout io.ReadCloser) (string, error) {
+	allOutput := []string{}
+
+	stdoutScanner := bufio.NewScanner(stdout)
+
+	for {
+		if stdoutScanner.Scan() {
+			text := stdoutScanner.Text()
+			logger.Log(t, text)
+			allOutput = append(allOutput, text)
+		} else {
+			break
+		}
+	}
+
+	if err := stdoutScanner.Err(); err != nil {
+		return "", err
+	}
+
+	return strings.Join(allOutput, "\n"), nil
 }
 
 // This function captures stdout and stderr while still printing it to the stdout and stderr of this Go program
