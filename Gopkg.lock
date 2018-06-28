@@ -14,7 +14,6 @@
     "aws/credentials/ec2rolecreds",
     "aws/credentials/endpointcreds",
     "aws/credentials/stscreds",
-    "aws/csm",
     "aws/defaults",
     "aws/ec2metadata",
     "aws/endpoints",
@@ -26,8 +25,6 @@
     "internal/shareddefaults",
     "private/protocol",
     "private/protocol/ec2query",
-    "private/protocol/eventstream",
-    "private/protocol/eventstream/eventstreamapi",
     "private/protocol/json/jsonutil",
     "private/protocol/jsonrpc",
     "private/protocol/query",
@@ -46,8 +43,8 @@
     "service/sqs",
     "service/sts"
   ]
-  revision = "e79e9fd4ec11ccc242a472f980be78830f9eba80"
-  version = "v1.14.13"
+  revision = "5197757a58a794d49d2d0c50a932997157734100"
+  version = "v1.13.60"
 
 [[projects]]
   name = "github.com/boombuler/barcode"
@@ -101,8 +98,8 @@
 [[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
-  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
-  version = "v1.2.2"
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
 
 [[projects]]
   branch = "master"
@@ -112,21 +109,20 @@
     "ed25519",
     "ed25519/internal/edwards25519",
     "internal/chacha20",
-    "internal/subtle",
     "poly1305",
     "ssh"
   ]
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "df8d4716b3472e4a531c33cedbe537dae921a1a9"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "afe8f62b1d6bbd81f31868121a50b06d8188e1f9"
+  revision = "1e491301e022f8f977054da4c2d852decd59571f"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3ef150e8e675e2696ca2487883e2861d3f59e2aad2173fcaa75bd4456c2c44e8"
+  inputs-digest = "a06f37538eea4e18f7e2df6fb35244241cbcdfc8b8abd0748d3d949f5eb492e9"
   solver-name = "gps-cdcl"
   solver-version = 1
