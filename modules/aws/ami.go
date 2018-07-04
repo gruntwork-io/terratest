@@ -26,7 +26,7 @@ func DeleteAmiAndAllSnapshots(t *testing.T, region string, ami string) {
 	}
 }
 
-// DeleteAmiAndAllSnapshotsE will delete the given AMI along with all EBS snapshots that backed that AMI
+// DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI
 func DeleteAmiAndAllSnapshotsE(t *testing.T, region string, ami string) error {
 	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
 	if err != nil {
