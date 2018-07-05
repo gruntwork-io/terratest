@@ -80,6 +80,36 @@ func TestEmptyS3Bucket(t *testing.T) {
 	testEmptyBucket(t, s3Client, region, s3BucketName)
 }
 
+func TestAssertS3BucketPolicyIsCorrect(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomRegion(t, nil, nil)
+	s3BucketName := "gruntwork-terratest-" + strings.ToLower(random.UniqueId())
+	logger.Logf(t, "Random values selected. Region = %s, s3BucketName = %s\n", region, s3BucketName)
+
+	CreateS3Bucket(t, region, s3BucketName)
+	defer DeleteS3Bucket(t, region, s3BucketName)
+
+	bucketPolicy := "{\n  \"Id\": \"Policy1530700167142\",\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Sid\": \"Stmt1530700164953\",\n      \"Action\": \"s3:*\",\n      \"Effect\": \"Allow\",\n      \"Resource\": \"arn:aws:s3:::" + s3BucketName + "\",\n      \"Principal\": \"*\"\n    }\n  ]\n}"
+
+	s3client, err := NewS3ClientE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	input := &s3.PutBucketPolicyInput{
+		Bucket: aws.String(s3BucketName),
+		Policy: aws.String(bucketPolicy),
+	}
+
+	_, err = s3client.PutBucketPolicy(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	AssertS3BucketPolicyIsCorrect(t, region, s3BucketName, bucketPolicy)
+}
+
 func TestEmptyS3BucketVersioned(t *testing.T) {
 	t.Parallel()
 
@@ -107,11 +137,10 @@ func TestEmptyS3BucketVersioned(t *testing.T) {
 	}
 
 	_, err = s3Client.PutBucketVersioning(versionInput)
+
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	testEmptyBucket(t, s3Client, region, s3BucketName)
 }
 
 func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName string) {

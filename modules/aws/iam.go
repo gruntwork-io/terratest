@@ -1,12 +1,17 @@
 package aws
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/stretchr/testify/assert"
 )
 
 // GetIamCurrentUserName gets the username for the current IAM user.
@@ -135,26 +140,43 @@ func EnableMfaDeviceE(t *testing.T, iamClient *iam.IAM, mfaDevice *iam.VirtualMF
 
 // AssertIamPolicyExists checks if the given IAM policy exists in the given region and fail the test if it does not.
 func AssertIamPolicyExists(t *testing.T, region string, policyARN string) {
-	err := AssertIamPolicyExistsE(t, region, policyARN)
+	_, err := GetIamPolicyDocumentE(t, region, policyARN)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-//AssertIamPolicyExistsE checks if the given IAM policy exists in the given region and return an error if it does not.
-func AssertIamPolicyExistsE(t *testing.T, region string, policyARN string) error {
-	iamClient, err := NewIamClientE(t, region)
+// AssertIAMPolicyIsCorrect fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document.
+func AssertIAMPolicyIsCorrect(t *testing.T, region string, policyARN string, policyDocument string) {
+	err := AssertIAMPolicyIsCorrectE(t, region, policyARN, policyDocument)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// AssertIAMPolicyIsCorrectE fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document returning an error if they don't match.
+func AssertIAMPolicyIsCorrectE(t *testing.T, region string, policyARN string, policyDocument string) error {
+	dst := new(bytes.Buffer)
+
+	src := []byte(policyDocument)
+
+	err := json.Compact(dst, src)
 	if err != nil {
 		return err
 	}
 
-	_, err = iamClient.GetPolicyVersion(&iam.GetPolicyVersionInput{
-		PolicyArn: &policyARN,
-	})
-	return err
+	documentFromPolicy := GetIamPolicyDocument(t, region, policyARN)
+
+	assert.JSONEq(
+		t,
+		dst.String(),
+		documentFromPolicy,
+	)
+
+	return nil
 }
 
-// AssertIamPolicyExists checks if the given IAM policy exists in the given region and fail the test if it does not.
+// GetIamPolicyDocument gets the most recent policy document for an IAM policy and fatals if it can't get one.
 func GetIamPolicyDocument(t *testing.T, region string, policyARN string) string {
 	content, err := GetIamPolicyDocumentE(t, region, policyARN)
 	if err != nil {
@@ -164,17 +186,47 @@ func GetIamPolicyDocument(t *testing.T, region string, policyARN string) string 
 	return content
 }
 
-//AssertIamPolicyExistsE checks if the given IAM policy exists in the given region and return an error if it does not.
+// GetIamPolicyDocumentE gets the most recent policy document for an IAM policy and errors if it can't get one.
 func GetIamPolicyDocumentE(t *testing.T, region string, policyARN string) (string, error) {
 	iamClient, err := NewIamClientE(t, region)
 	if err != nil {
 		return "", err
 	}
 
-	content, err := iamClient.GetPolicyVersion(&iam.GetPolicyVersionInput{
+	versions, err := iamClient.ListPolicyVersions(&iam.ListPolicyVersionsInput{
 		PolicyArn: &policyARN,
 	})
-	return *content.PolicyVersion.Document, err
+	if err != nil {
+		return "", err
+	}
+
+	var defaultVersion string
+
+	for _, version := range versions.Versions {
+		if *version.IsDefaultVersion == true {
+			defaultVersion = *version.VersionId
+		}
+	}
+
+	document, err := iamClient.GetPolicyVersion(&iam.GetPolicyVersionInput{
+		PolicyArn: aws.String(policyARN),
+		VersionId: aws.String(defaultVersion),
+	})
+
+	var unescapedDocument *string
+
+	unescapedDocument = document.PolicyVersion.Document
+
+	if unescapedDocument == nil {
+		return "", errors.New("there isn't a policy document in the default policy version")
+	}
+
+	escapedDocument, err := url.QueryUnescape(*unescapedDocument)
+	if err != nil {
+		return "", err
+	}
+
+	return escapedDocument, nil
 }
 
 // NewIamClient creates a new IAM client.
