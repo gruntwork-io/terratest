@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"strings"
 
 	"bytes"
@@ -11,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/stretchr/testify/assert"
 )
 
 // FindS3BucketWithTag finds the name of the S3 bucket in the given region with the given tag key=value.
@@ -241,32 +239,22 @@ func AssertS3BucketPolicyExists(t *testing.T, region string, bucket string) {
 	}
 }
 
-// AssertS3BucketPolicyIsCorrect fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document.
-func AssertS3BucketPolicyIsCorrect(t *testing.T, region string, bucket string, policy string) {
-	err := AssertS3BucketPolicyIsCorrectE(t, region, bucket, policy)
+// AssertS3BucketPolicyIsEqual fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document.
+func AssertS3BucketPolicyIsEqual(t *testing.T, region string, bucket string, policy string) {
+	err := AssertS3BucketPolicyIsEqualE(t, region, bucket, policy)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-// AssertS3BucketPolicyIsCorrectE fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document returning an error if they don't match.
-func AssertS3BucketPolicyIsCorrectE(t *testing.T, region string, bucket string, policy string) error {
-	dst := new(bytes.Buffer)
+// AssertS3BucketPolicyIsEqualE fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document returning an error if they don't match.
+func AssertS3BucketPolicyIsEqualE(t *testing.T, region string, bucket string, policy string) error {
+	policyFromBucket := GetS3BucketPolicyContents(t, region, bucket)
 
-	src := []byte(policy)
-
-	err := json.Compact(dst, src)
+	err := AssertJsonEqualE(t, policy, policyFromBucket)
 	if err != nil {
 		return err
 	}
-
-	policyFromBucket := GetS3BucketPolicyContents(t, region, bucket)
-
-	assert.JSONEq(
-		t,
-		dst.String(),
-		policyFromBucket,
-	)
 
 	return nil
 }

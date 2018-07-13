@@ -87,8 +87,8 @@ func TestAssertS3BucketPolicyIsCorrect(t *testing.T) {
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(random.UniqueId())
 	logger.Logf(t, "Random values selected. Region = %s, s3BucketName = %s\n", region, s3BucketName)
 
-	CreateS3Bucket(t, region, s3BucketName)
 	defer DeleteS3Bucket(t, region, s3BucketName)
+	CreateS3Bucket(t, region, s3BucketName)
 
 	bucketPolicy := "{\n  \"Id\": \"Policy1530700167142\",\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Sid\": \"Stmt1530700164953\",\n      \"Action\": \"s3:*\",\n      \"Effect\": \"Allow\",\n      \"Resource\": \"arn:aws:s3:::" + s3BucketName + "\",\n      \"Principal\": \"*\"\n    }\n  ]\n}"
 
@@ -107,7 +107,7 @@ func TestAssertS3BucketPolicyIsCorrect(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertS3BucketPolicyIsCorrect(t, region, s3BucketName, bucketPolicy)
+	AssertS3BucketPolicyIsEqual(t, region, s3BucketName, bucketPolicy)
 }
 
 func TestEmptyS3BucketVersioned(t *testing.T) {

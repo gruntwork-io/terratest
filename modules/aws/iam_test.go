@@ -46,5 +46,5 @@ func TestAssertIAMPolicyIsCorrect(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertIAMPolicyIsCorrect(t, region, *policy.Policy.Arn, policyDocument)
+	AssertIAMPolicyIsEqual(t, region, *policy.Policy.Arn, policyDocument)
 }

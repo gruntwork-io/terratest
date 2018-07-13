@@ -14,6 +14,47 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// NoPolicyError is used to alert that a valid policy was found from an ARN but a document doesn't exist against it.
+type NoPolicyError struct {
+	error
+}
+
+func (e *NoPolicyError) Error() string {
+	return "the policy exists but no policy document was returned"
+}
+
+// AssertJsonEqual takes two json strings and compares them
+func AssertJsonEqual(t *testing.T, correct string, comparison string) {
+	err := AssertJsonEqualE(t, correct, comparison)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return
+}
+
+// AssertJsonEqualE takes two json strings and compares them, it returns an error if they're not identical
+func AssertJsonEqualE(t *testing.T, correct string, comparison string) error {
+	dst := new(bytes.Buffer)
+
+	src := []byte(correct)
+
+	err := json.Compact(dst, src)
+	if err != nil {
+		return err
+	}
+
+	equal := assert.JSONEq(
+		t,
+		dst.String(),
+		comparison,
+	)
+	if equal == false {
+		return errors.New("text")
+	}
+
+	return nil
+}
+
 // GetIamCurrentUserName gets the username for the current IAM user.
 func GetIamCurrentUserName(t *testing.T) string {
 	out, err := GetIamCurrentUserNameE(t)
@@ -146,32 +187,25 @@ func AssertIamPolicyExists(t *testing.T, region string, policyARN string) {
 	}
 }
 
-// AssertIAMPolicyIsCorrect fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document.
-func AssertIAMPolicyIsCorrect(t *testing.T, region string, policyARN string, policyDocument string) {
-	err := AssertIAMPolicyIsCorrectE(t, region, policyARN, policyDocument)
+// AssertIAMPolicyIsEqual fetches the contents of the IAM policy and matches it against the provided policy document.
+func AssertIAMPolicyIsEqual(t *testing.T, region string, policyARN string, policyDocument string) {
+	err := AssertIAMPolicyIsEqualE(t, region, policyARN, policyDocument)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-// AssertIAMPolicyIsCorrectE fetches the contents of the bucket policy for the given bucket and matches it against the provided policy document returning an error if they don't match.
-func AssertIAMPolicyIsCorrectE(t *testing.T, region string, policyARN string, policyDocument string) error {
-	dst := new(bytes.Buffer)
-
-	src := []byte(policyDocument)
-
-	err := json.Compact(dst, src)
+// AssertIAMPolicyIsEqualE fetches the contents of the IAM policy and matches it against the provided policy document returning an error if they don't match.
+func AssertIAMPolicyIsEqualE(t *testing.T, region string, policyARN string, policyDocument string) error {
+	documentFromPolicy, err := GetIamPolicyDocumentE(t, region, policyARN)
 	if err != nil {
 		return err
 	}
 
-	documentFromPolicy := GetIamPolicyDocument(t, region, policyARN)
-
-	assert.JSONEq(
-		t,
-		dst.String(),
-		documentFromPolicy,
-	)
+	err = AssertJsonEqualE(t, policyDocument, documentFromPolicy)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -218,7 +252,7 @@ func GetIamPolicyDocumentE(t *testing.T, region string, policyARN string) (strin
 	unescapedDocument = document.PolicyVersion.Document
 
 	if unescapedDocument == nil {
-		return "", errors.New("there isn't a policy document in the default policy version")
+		return "", new(NoPolicyError)
 	}
 
 	escapedDocument, err := url.QueryUnescape(*unescapedDocument)
