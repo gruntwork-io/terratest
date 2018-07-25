@@ -1,4 +1,4 @@
-package database
+package test
 
 import (
 	"database/sql"
@@ -44,9 +44,13 @@ func DBConnectionE(t *testing.T, dbType string, dbConfig DBConfig) (*sql.DB, err
 	case "mysql":
 		config = fmt.Sprintf("%s@%s:%s@tcp(%s:3306)/%s?allowNativePasswords=true", dbConfig.user, dbConfig.server, dbConfig.password, dbConfig.host, dbConfig.database)
 	default:
-		return nil, DBUnknown{dbType: dbType}
+		return nil, DatabaseUnknown{dbType: dbType}
 	}
 	db, err := sql.Open(dbType, config)
+	if err != nil {
+		return nil, err
+	}
+	err = db.Ping()
 	if err != nil {
 		return nil, err
 	}
@@ -143,11 +147,11 @@ func (err ValidationFunctionFailed) Error() string {
 	return fmt.Sprintf("Validation failed for command: %s.", err.command)
 }
 
-// DBUnknown is an error that occurs if the given database type is unknown or not supported.
-type DBUnknown struct {
+// DatabaseUnknown is an error that occurs if the given database type is unknown or not supported.
+type DatabaseUnknown struct {
 	dbType string
 }
 
-func (err DBUnknown) Error() string {
+func (err DatabaseUnknown) Error() string {
 	return fmt.Sprintf("Database unknown or not supported: %s. We only support mssql, postgres and mysql.", err.dbType)
 }
