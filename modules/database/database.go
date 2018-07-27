@@ -4,6 +4,15 @@ import (
 	"database/sql"
 	"fmt"
 	"testing"
+
+	// Microsoft SQL Database Driver
+	_ "github.com/denisenkom/go-mssqldb"
+
+	// PostgreSQL Database Driver
+	_ "github.com/lib/pq"
+
+	// MySQL Database Driver
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // DBConfig using server name, user name, password and database name
