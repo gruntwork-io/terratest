@@ -4,21 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"testing"
-
-	// Microsoft SQL Database Driver
-	_ "github.com/denisenkom/go-mssqldb"
-
-	// PostgreSQL Database Driver
-	_ "github.com/lib/pq"
-
-	// MySQL Database Driver
-	_ "github.com/go-sql-driver/mysql"
 )
 
 // DBConfig using server name, user name, password and database name
 type DBConfig struct {
 	Host     string
-	Port     int
+	Port     string
 	User     string
 	Password string
 	Database string
@@ -38,11 +29,11 @@ func DBConnectionE(t *testing.T, dbType string, dbConfig DBConfig) (*sql.DB, err
 	config := ""
 	switch dbType {
 	case "mssql":
-		config = fmt.Sprintf("server = %s; port = %d; user id = %s; password = %s; database = %s", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.Database)
+		config = fmt.Sprintf("server = %s; port = %s; user id = %s; password = %s; database = %s", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.Database)
 	case "postgres":
-		config = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.Database)
+		config = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=require", dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Password, dbConfig.Database)
 	case "mysql":
-		config = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?allowNativePasswords=true", dbConfig.User, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Database)
+		config = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?allowNativePasswords=true", dbConfig.User, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Database)
 	default:
 		return nil, DBUnknown{dbType: dbType}
 	}
