@@ -10,7 +10,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
-func TestTerraformHttpExample(t *testing.T) {
+func TestTerraformDatabaseExample(t *testing.T) {
 	t.Parallel()
 
 	terraformOptions := &terraform.Options{
