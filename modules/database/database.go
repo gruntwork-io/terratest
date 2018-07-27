@@ -18,7 +18,7 @@ import (
 // DBConfig using server name, user name, password and database name
 type DBConfig struct {
 	host     string
-	server   string
+	port     int
 	user     string
 	password string
 	database string
@@ -38,11 +38,11 @@ func DBConnectionE(t *testing.T, dbType string, dbConfig DBConfig) (*sql.DB, err
 	config := ""
 	switch dbType {
 	case "mssql":
-		config = fmt.Sprintf("server = %s; user id = %s; password = %s; database = %s", dbConfig.server, dbConfig.user, dbConfig.password, dbConfig.database)
+		config = fmt.Sprintf("server = %s; port = %d; user id = %s; password = %s; database = %s", dbConfig.host, dbConfig.port, dbConfig.user, dbConfig.password, dbConfig.database)
 	case "postgres":
-		config = fmt.Sprintf("host=%s user=%s@%s password=%s dbname=%s sslmode=require", dbConfig.host, dbConfig.user, dbConfig.server, dbConfig.password, dbConfig.database)
+		config = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require", dbConfig.host, dbConfig.port, dbConfig.user, dbConfig.password, dbConfig.database)
 	case "mysql":
-		config = fmt.Sprintf("%s@%s:%s@tcp(%s:3306)/%s?allowNativePasswords=true", dbConfig.user, dbConfig.server, dbConfig.password, dbConfig.host, dbConfig.database)
+		config = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?allowNativePasswords=true", dbConfig.user, dbConfig.password, dbConfig.host, dbConfig.port, dbConfig.database)
 	default:
 		return nil, DBUnknown{dbType: dbType}
 	}
