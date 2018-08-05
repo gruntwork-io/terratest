@@ -31,14 +31,6 @@ also can help you test Packer templates, Docker images, and much more. I propose
 
 
 
-## Build updates
-
-1. Move from Glide to Dep
-1. Move from CircleCI 1.0 to 2.0
-
-
-
-
 ## Folder structure
 
 Change to the same folder structure we use for just about all other Gruntwork repos:
