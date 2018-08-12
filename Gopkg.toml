@@ -49,6 +49,10 @@
   branch = "master"
   name = "golang.org/x/net"
 
+[[constraint]]
+  name = "github.com/justinbarrick/go-terraform-plan"
+  version = "v1.0.0"
+
 [prune]
   go-tests = true
   unused-packages = true
