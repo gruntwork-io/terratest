@@ -1,12 +1,7 @@
-provider "digitalocean" {
-  token = "hello"
-}
-
-resource "digitalocean_droplet" "web" {
+resource "null_resource" "test" {
 	count = 2
 
-  image  = "ubuntu-14-04-x64"
-  name   = "web-${count.index}"
-  region = "nyc2"
-  size   = "512mb"
+  triggers = {
+    abc = "def"
+  }
 }

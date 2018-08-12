@@ -21,12 +21,12 @@ func TestPlanNoError(t *testing.T) {
 
 	plan := InitAndPlan(t, options)
 
-	resource := plan.GetResource("digitalocean_droplet.web[1]")
+	resource := plan.GetResource("null_resource.test[1]")
 	assert.NotNil(t, resource)
 
-	attr := resource.GetAttribute("image")
+	attr := resource.GetAttribute("triggers.abc")
 	assert.NotNil(t, attr)
-	assert.Equal(t, "ubuntu-14-04-x64", attr.NewValue)
+	assert.Equal(t, "def", attr.NewValue)
 }
 
 func TestPlanWithError(t *testing.T) {
