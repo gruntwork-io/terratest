@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
@@ -39,9 +41,6 @@ func TestTerraformGcpExample(t *testing.T) {
 	}
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	//
-	// TODO - we might need to sleep for a bit before running destroy in case the resources haven't
-	// been fully initialized, but for now it seems to work fine.
 	defer terraform.Destroy(t, terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
@@ -61,10 +60,30 @@ func TestTerraformGcpExample(t *testing.T) {
 	// Add a tag to the Compute Instance
 	gcp.AddLabelsToInstance(t, projectId, zone, instanceID, map[string]string{"testing": "testing-tag-value2"})
 
-	// Look up the tags for the given Instance ID
-	instanceLabels := gcp.GetLabelsForComputeInstance(t, projectId, zone, instanceID)
+	// Check for the labels within a retry loop as it can sometimes take a while for the
+	// changes to propagate.
+	maxRetries := 12
+	timeBetweenRetries := 5 * time.Second
+	expectedText := "testing-tag-value2"
 
-	testingTag, containsTestingTag := instanceLabels["testing"]
-	assert.True(t, containsTestingTag)
-	assert.Equal(t, "testing-tag-value2", testingTag)
+	retry.DoWithRetry(t, fmt.Sprintf("Checking Instance %s for labels", instanceID), maxRetries, timeBetweenRetries, func() (string, error) {
+		// Look up the tags for the given Instance ID
+		instanceLabels, err := gcp.GetLabelsForComputeInstanceE(t, projectId, zone, instanceID)
+
+		if err != nil {
+			return "", err
+		}
+
+		testingTag, containsTestingTag := instanceLabels["testing"]
+		actualText := strings.TrimSpace(testingTag)
+		if containsTestingTag != true {
+			return "", fmt.Errorf("Expected the tag 'testing' to exist")
+		}
+
+		if actualText != expectedText {
+			return "", fmt.Errorf("Expeced GetLabelsForComputeInstanceE to return '%s' but got '%s'", expectedText, actualText)
+		}
+
+		return "", nil
+	})
 }
