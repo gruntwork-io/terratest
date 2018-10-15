@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"io/ioutil"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -54,4 +55,31 @@ func GenerateRSAKeyPairE(t *testing.T, keySize int) (*KeyPair, error) {
 
 	// Return
 	return &KeyPair{PublicKey: sshPubKeyStr, PrivateKey: keyPem}, nil
+}
+
+// TODO Vit: document this
+func LoadRSAKeyPair(t *testing.T, privateKeyPath string, publicKeyPath string) *KeyPair {
+	keyPair, err := LoadRSAKeyPairE(t, privateKeyPath, publicKeyPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return keyPair
+}
+
+// TODO Vit: document this
+func LoadRSAKeyPairE(t *testing.T, publicKeyPath string, privateKeyPath string) (*KeyPair, error) {
+	publicKey, err := ioutil.ReadFile(publicKeyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	privateKey, err := ioutil.ReadFile(privateKeyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &KeyPair{
+		PublicKey:  string(publicKey),
+		PrivateKey: string(privateKey),
+	}, nil
 }
