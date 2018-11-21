@@ -3,7 +3,6 @@ package http_helper
 
 import (
 	"fmt"
-	// TODO Guido: remove this import
 	"io"
 	"io/ioutil"
 	"net/http"

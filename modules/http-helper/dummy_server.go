@@ -44,24 +44,26 @@ func RunDummyServerE(t *testing.T, text string) (net.Listener, int, error) {
 	return listener, port, err
 }
 
-// RunDummyHandlerServer runs a dummy HTTP server on a unique port that will serve the given handler. Returns the Listener for the server, the
-// port it's listening on, or an error if something went wrong while trying to start the listener. Make sure to call
+// RunDummyHandlerServer runs a dummy HTTP server on a unique port that will serve given handlers. Returns the Listener for the server,
+// the port it's listening on, or an error if something went wrong while trying to start the listener. Make sure to call
 // the Close() method on the Listener when you're done!
-func RunDummyHandlerServer(t *testing.T, path string, handler func(http.ResponseWriter, *http.Request)) (net.Listener, int) {
-	listener, port, err := RunDummyHandlerServerE(t, path, handler)
+func RunDummyHandlerServer(t *testing.T, handlers map[string]func(http.ResponseWriter, *http.Request)) (net.Listener, int) {
+	listener, port, err := RunDummyHandlerServerE(t, handlers)
 	if err != nil {
 		t.Fatal(err)
 	}
 	return listener, port
 }
 
-// RunDummyHandlerServerE runs a dummy HTTP server on a unique port that will server the given handler. Returns the Listener for the server, the
-// port it's listening on, or an error if something went wrong while trying to start the listener. Make sure to call
+// RunDummyHandlerServerE runs a dummy HTTP server on a unique port that will server given handlers. Returns the Listener for the server,
+// the port it's listening on, or an error if something went wrong while trying to start the listener. Make sure to call
 // the Close() method on the Listener when you're done!
-func RunDummyHandlerServerE(t *testing.T, path string, handler func(http.ResponseWriter, *http.Request)) (net.Listener, int, error) {
+func RunDummyHandlerServerE(t *testing.T, handlers map[string]func(http.ResponseWriter, *http.Request)) (net.Listener, int, error) {
 	port := getNextPort()
 
-	http.HandleFunc(path, handler)
+	for path, handler := range handlers {
+		http.HandleFunc(path, handler)
+	}
 
 	logger.Logf(t, "Starting dummy HTTP server in port %d", port)
 
