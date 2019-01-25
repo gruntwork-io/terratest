@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 )
 
@@ -56,4 +57,22 @@ func NewCloudWatchLogsClientE(t *testing.T, region string) (*cloudwatchlogs.Clou
 		return nil, err
 	}
 	return cloudwatchlogs.New(sess), nil
+}
+
+// NewCloudWatchClient creates a new CloudWatch client.
+func NewCloudWatchClient(t *testing.T, region string) *cloudwatch.CloudWatch {
+    client, err := NewCloudWatchClientE(t, region)
+    if err != nil {
+        t.Fatal(err)
+    }
+    return client
+}
+
+// NewCloudWatchClientE creates a new CloudWatch client.
+func NewCloudWatchClientE(t *testing.T, region string) (*cloudwatch.CloudWatch, error) {
+    sess, err := NewAuthenticatedSession(region)
+    if err != nil {
+        return nil, err
+    }
+    return cloudwatch.New(sess), nil
 }
