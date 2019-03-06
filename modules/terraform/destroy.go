@@ -15,5 +15,5 @@ func Destroy(t *testing.T, options *Options) string {
 
 // DestroyE runs terraform destroy with the given options and return stdout/stderr.
 func DestroyE(t *testing.T, options *Options) (string, error) {
-	return RunTerraformCommandE(t, options, FormatArgs(options, "destroy", "-auto-approve", "-input=false", "-lock=false")...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, "destroy", "-auto-approve", "-input=false")...)
 }

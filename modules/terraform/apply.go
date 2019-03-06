@@ -43,5 +43,5 @@ func Apply(t *testing.T, options *Options) string {
 // ApplyE runs terraform apply with the given options and return stdout/stderr. Note that this method does NOT call destroy and
 // assumes the caller is responsible for cleaning up any resources created by running apply.
 func ApplyE(t *testing.T, options *Options) (string, error) {
-	return RunTerraformCommandE(t, options, FormatArgs(options, "apply", "-input=false", "-lock=false", "-auto-approve")...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, "apply", "-input=false", "-auto-approve")...)
 }

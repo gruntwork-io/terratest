@@ -14,6 +14,7 @@ func FormatArgs(options *Options, args ...string) []string {
 	terraformArgs = append(terraformArgs, FormatTerraformVarsAsArgs(options.Vars)...)
 	terraformArgs = append(terraformArgs, FormatTerraformArgs("-var-file", options.VarFiles)...)
 	terraformArgs = append(terraformArgs, FormatTerraformArgs("-target", options.Targets)...)
+	terraformArgs = append(terraformArgs, FormatTerraformLockAsArgs(options.Lock, options.LockTimeout)...)
 	return terraformArgs
 }
 
@@ -21,6 +22,20 @@ func FormatArgs(options *Options, args ...string) []string {
 // -var key=value).
 func FormatTerraformVarsAsArgs(vars map[string]interface{}) []string {
 	return formatTerraformArgs(vars, "-var")
+}
+
+// FormatTerraformLockAsArgs formats the lock and lock-timeout variables
+// -lock, -lock-timeout
+func FormatTerraformLockAsArgs(lockCheck bool, lockTimeout string) []string {
+	var lockArgs []string
+	if lockCheck == true {
+		lockArgs = append(lockArgs, "-lock=true")
+		if lockTimeout != "" {
+			lockTimeoutValue := fmt.Sprintf("%s=%s", "-lock-timeout", lockTimeout)
+			lockArgs = append(lockArgs, lockTimeoutValue)
+		}
+	}
+	return lockArgs
 }
 
 // FormatTerraformArgs will format multiple args with the arg name (e.g. "-var-file", []string{"foo.tfvars", "bar.tfvars"})
