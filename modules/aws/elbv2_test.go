@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// getSubnetIdsPerAZ gets the subnets ids in a slice given the specified VPC.
 func getSubnetIdsPerAZ(t *testing.T, vpc *Vpc) []*string {
 	var subnetIds []*string
 
@@ -23,20 +24,20 @@ func getSubnetIdsPerAZ(t *testing.T, vpc *Vpc) []*string {
 	return subnetIds
 }
 
-func TestElb(t *testing.T) {
+func TestElbV2(t *testing.T) {
 	t.Parallel()
 
 	region := GetRandomStableRegion(t, nil, nil)
 	vpc := GetDefaultVpc(t, region)
-	subnets := getSubnetIdsPerAZ(t, vpc)
+	subnets := getSubnetIdsPerAZ(t, vpc) // To create ELB you must specify subnets from at least two Availability Zones.
 
-	elb, err := CreateElbE(t, region, "terratest", subnets)
-	defer DeleteElb(t, region, elb)
+	elb, err := CreateElbV2E(t, region, "terratest", subnets)
+	defer DeleteElbV2(t, region, elb)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "terratest", *elb.LoadBalancerName)
 
-	elb2, err := GetElbE(t, region, *elb.LoadBalancerName)
+	elb2, err := GetElbV2E(t, region, *elb.LoadBalancerName)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "terratest", *elb2.LoadBalancerName)
