@@ -30,15 +30,13 @@ func TestElbV2(t *testing.T) {
 	region := GetRandomStableRegion(t, nil, nil)
 	vpc := GetDefaultVpc(t, region)
 	subnets := getSubnetIdsPerAZ(t, vpc) // To create ELB you must specify subnets from at least two Availability Zones.
+	elbName := "terratest"
 
-	elb, err := CreateElbV2E(t, region, "terratest", subnets)
-	defer DeleteElbV2(t, region, elb)
-
-	assert.Nil(t, err)
-	assert.Equal(t, "terratest", *elb.LoadBalancerName)
-
-	elb2, err := GetElbV2E(t, region, *elb.LoadBalancerName)
+	err := CreateElbV2E(t, region, elbName, subnets)
+	defer DeleteElbV2(t, region, elbName)
 
 	assert.Nil(t, err)
-	assert.Equal(t, "terratest", *elb2.LoadBalancerName)
+
+	dnsName := GetElbV2DNSName(t, region, elbName)
+	assert.Contains(t, *dnsName, elbName)
 }
