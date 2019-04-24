@@ -37,6 +37,6 @@ func TestElbV2(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	dnsName := GetElbV2DNSName(t, region, elbName)
-	assert.Contains(t, *dnsName, elbName)
+	_, err = GetElbV2E(t, region, elbName)
+	assert.Nil(t, err)
 }

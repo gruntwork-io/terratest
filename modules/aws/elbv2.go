@@ -9,17 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetElbV2Arn fetches ARN information about specified ELB.
-func GetElbV2Arn(t *testing.T, region string, name string) *string {
-	arn, err := GetElbV2ArnE(t, region, name)
+// LoadBalancer is an Amazon load balancer.
+type LoadBalancer struct {
+	Name                  string // The name of the load balancer.
+	ARN                   string // The Amazon Resource Name (ARN) of the load balancer.
+	CanonicalHostedZoneID string // The ID of the Amazon Route 53 hosted zone associated with the load balancer.
+	DNSName               string // The public DNS name of the load balancer.
+}
+
+// GetElbV2 fetches information about specified ELB.
+func GetElbV2(t *testing.T, region string, name string) *LoadBalancer {
+	lb, err := GetElbV2E(t, region, name)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return arn
+	return lb
 }
 
-// GetElbV2ArnE fetches ARN information about specified ELB.
-func GetElbV2ArnE(t *testing.T, region string, name string) (*string, error) {
+// GetElbV2E fetches information about specified ELB.
+func GetElbV2E(t *testing.T, region string, name string) (*LoadBalancer, error) {
 	client := NewElbV2Client(t, region)
 
 	resp, err := client.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
@@ -36,70 +44,14 @@ func GetElbV2ArnE(t *testing.T, region string, name string) (*string, error) {
 		return nil, fmt.Errorf("Expected to find 1 ELB named '%s' in region '%v', but found '%d'",
 			name, region, numElb)
 	}
+	elb := resp.LoadBalancers[0]
 
-	return resp.LoadBalancers[0].LoadBalancerArn, nil
-}
-
-// GetElbV2CanonicalHostedZoneID fetches Canonical Hosted Zone ID information about specified ELB.
-func GetElbV2CanonicalHostedZoneID(t *testing.T, region string, name string) *string {
-	arn, err := GetElbV2CanonicalHostedZoneIDE(t, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return arn
-}
-
-// GetElbV2CanonicalHostedZoneIDE fetches Canonical Hosted Zone ID information about specified ELB.
-func GetElbV2CanonicalHostedZoneIDE(t *testing.T, region string, name string) (*string, error) {
-	client := NewElbV2Client(t, region)
-
-	resp, err := client.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Names: []*string{
-			aws.String(name),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	numElb := len(resp.LoadBalancers)
-	if numElb != 1 {
-		return nil, fmt.Errorf("Expected to find 1 ELB named '%s' in region '%v', but found '%d'",
-			name, region, numElb)
-	}
-
-	return resp.LoadBalancers[0].CanonicalHostedZoneId, nil
-}
-
-// GetElbV2DNSName fetches DNS Name information about specified ELB.
-func GetElbV2DNSName(t *testing.T, region string, name string) *string {
-	arn, err := GetElbV2DNSNameE(t, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return arn
-}
-
-// GetElbV2DNSNameE fetches DNS Name information about specified ELB.
-func GetElbV2DNSNameE(t *testing.T, region string, name string) (*string, error) {
-	client := NewElbV2Client(t, region)
-
-	resp, err := client.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Names: []*string{
-			aws.String(name),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	numElb := len(resp.LoadBalancers)
-	if numElb != 1 {
-		return nil, fmt.Errorf("Expected to find 1 ELB named '%s' in region '%v', but found '%d'",
-			name, region, numElb)
-	}
-
-	return resp.LoadBalancers[0].DNSName, nil
+	return &LoadBalancer{
+		Name: aws.StringValue(elb.LoadBalancerName),
+		ARN:  aws.StringValue(elb.LoadBalancerArn),
+		CanonicalHostedZoneID: aws.StringValue(elb.CanonicalHostedZoneId),
+		DNSName:               aws.StringValue(elb.DNSName),
+	}, nil
 }
 
 // CreateElbV2 creates ELB in the given region under the given name and subnets list.
@@ -141,9 +93,9 @@ func DeleteElbV2(t *testing.T, region string, name string) {
 // DeleteElbV2E deletes existing ELB in the given region.
 func DeleteElbV2E(t *testing.T, region string, name string) error {
 	client := NewElbV2Client(t, region)
-	arn := GetElbV2Arn(t, region, name)
+	arn := GetElbV2(t, region, name)
 	_, err := client.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
-		LoadBalancerArn: arn,
+		LoadBalancerArn: aws.String(arn.ARN),
 	})
 
 	return err
