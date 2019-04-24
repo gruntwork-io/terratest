@@ -19,11 +19,11 @@ type LoadBalancer struct {
 
 // GetElbV2 fetches information about specified ELB.
 func GetElbV2(t *testing.T, region string, name string) *LoadBalancer {
-	lb, err := GetElbV2E(t, region, name)
+	elb, err := GetElbV2E(t, region, name)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return lb
+	return elb
 }
 
 // GetElbV2E fetches information about specified ELB.
