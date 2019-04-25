@@ -32,11 +32,10 @@ func TestElbV2(t *testing.T) {
 	subnets := getSubnetIdsPerAZ(t, vpc) // To create ELB you must specify subnets from at least two Availability Zones.
 	elbName := "terratest"
 
-	_, err := CreateElbV2E(t, region, elbName, subnets)
-	defer DeleteElbV2(t, region, elbName)
+	lb, err := CreateElbV2E(t, region, elbName, subnets)
+	defer DeleteElbV2(t, region, lb)
 
 	assert.Nil(t, err)
 
-	_, err = GetElbV2E(t, region, elbName)
 	assert.Nil(t, err)
 }

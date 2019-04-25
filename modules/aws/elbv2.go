@@ -17,48 +17,6 @@ type LoadBalancer struct {
 	DNSName               string // The public DNS name of the load balancer.
 }
 
-// CreateLoadBalancerFromElbV2 creates a LoadBalancer struct from provided elbv2.LoadBalancer
-func CreateLoadBalancerFromElbV2(elbv2 *elbv2.LoadBalancer) (lb *LoadBalancer) {
-	return &LoadBalancer{
-		Name: aws.StringValue(elbv2.LoadBalancerName),
-		ARN:  aws.StringValue(elbv2.LoadBalancerArn),
-		CanonicalHostedZoneID: aws.StringValue(elbv2.CanonicalHostedZoneId),
-		DNSName:               aws.StringValue(elbv2.DNSName),
-	}
-}
-
-// GetElbV2 fetches information about specified ELB.
-func GetElbV2(t *testing.T, region string, name string) *LoadBalancer {
-	lb, err := GetElbV2E(t, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return lb
-}
-
-// GetElbV2E fetches information about specified ELB.
-func GetElbV2E(t *testing.T, region string, name string) (*LoadBalancer, error) {
-	client := NewElbV2Client(t, region)
-
-	resp, err := client.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-		Names: []*string{
-			aws.String(name),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	numLb := len(resp.LoadBalancers)
-	if numLb != 1 {
-		return nil, fmt.Errorf("Expected to find 1 ELB named '%s' in region '%v', but found '%d'",
-			name, region, numLb)
-	}
-	lb := resp.LoadBalancers[0]
-
-	return CreateLoadBalancerFromElbV2(lb), nil
-}
-
 // CreateElbV2 creates ELB in the given region under the given name and subnets list.
 func CreateElbV2(t *testing.T, region string, name string, subnets []*string) *LoadBalancer {
 	lb, err := CreateElbV2E(t, region, name, subnets)
@@ -86,23 +44,27 @@ func CreateElbV2E(t *testing.T, region string, name string, subnets []*string) (
 	}
 	lb := resp.LoadBalancers[0]
 
-	return CreateLoadBalancerFromElbV2(lb), nil
+	return &LoadBalancer{
+		Name: aws.StringValue(lb.LoadBalancerName),
+		ARN:  aws.StringValue(lb.LoadBalancerArn),
+		CanonicalHostedZoneID: aws.StringValue(lb.CanonicalHostedZoneId),
+		DNSName:               aws.StringValue(lb.DNSName),
+	}, nil
 }
 
 // DeleteElbV2 deletes existing ELB in the given region.
-func DeleteElbV2(t *testing.T, region string, name string) {
-	err := DeleteElbV2E(t, region, name)
+func DeleteElbV2(t *testing.T, region string, lb *LoadBalancer) {
+	err := DeleteElbV2E(t, region, lb)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 // DeleteElbV2E deletes existing ELB in the given region.
-func DeleteElbV2E(t *testing.T, region string, name string) error {
+func DeleteElbV2E(t *testing.T, region string, lb *LoadBalancer) error {
 	client := NewElbV2Client(t, region)
-	arn := GetElbV2(t, region, name)
 	_, err := client.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
-		LoadBalancerArn: aws.String(arn.ARN),
+		LoadBalancerArn: aws.String(lb.ARN),
 	})
 
 	return err
