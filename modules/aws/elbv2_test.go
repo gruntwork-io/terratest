@@ -35,6 +35,4 @@ func TestElbV2(t *testing.T) {
 	defer DeleteElbV2(t, region, lb)
 
 	assert.Nil(t, err)
-
-	assert.Nil(t, err)
 }
