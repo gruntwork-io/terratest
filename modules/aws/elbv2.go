@@ -13,12 +13,12 @@ import (
 type LoadBalancer struct {
 	Name                  string // The name of the load balancer.
 	ARN                   string // The Amazon Resource Name (ARN) of the load balancer.
-	CanonicalHostedZoneID string // The ID of the Amazon Route 53 hosted zone associated with the load balancer.
+	CanonicalHostedZoneId string // The ID of the Amazon Route 53 hosted zone associated with the load balancer.
 	DNSName               string // The public DNS name of the load balancer.
 }
 
 // CreateElbV2 creates ELB in the given region under the given name and subnets list.
-func CreateElbV2(t *testing.T, region string, name string, subnets []*string) *LoadBalancer {
+func CreateElbV2(t *testing.T, region string, name string, subnets []string) *LoadBalancer {
 	lb, err := CreateElbV2E(t, region, name, subnets)
 	if err != nil {
 		t.Fatal(err)
@@ -27,11 +27,16 @@ func CreateElbV2(t *testing.T, region string, name string, subnets []*string) *L
 }
 
 // CreateElbV2E creates ELB in the given region under the given name and subnets list.
-func CreateElbV2E(t *testing.T, region string, name string, subnets []*string) (*LoadBalancer, error) {
+func CreateElbV2E(t *testing.T, region string, name string, subnets []string) (*LoadBalancer, error) {
 	client := NewElbV2Client(t, region)
+
+	var listSubnets []*string
+	for _, s := range subnets {
+		listSubnets = append(listSubnets, aws.String(s))
+	}
 	resp, err := client.CreateLoadBalancer(&elbv2.CreateLoadBalancerInput{
 		Name:    aws.String(name),
-		Subnets: subnets,
+		Subnets: listSubnets,
 	})
 	if err != nil {
 		return nil, err
@@ -47,7 +52,7 @@ func CreateElbV2E(t *testing.T, region string, name string, subnets []*string) (
 	return &LoadBalancer{
 		Name: aws.StringValue(lb.LoadBalancerName),
 		ARN:  aws.StringValue(lb.LoadBalancerArn),
-		CanonicalHostedZoneID: aws.StringValue(lb.CanonicalHostedZoneId),
+		CanonicalHostedZoneId: aws.StringValue(lb.CanonicalHostedZoneId),
 		DNSName:               aws.StringValue(lb.DNSName),
 	}, nil
 }

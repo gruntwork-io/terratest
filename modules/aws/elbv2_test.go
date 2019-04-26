@@ -3,13 +3,12 @@ package aws
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/stretchr/testify/assert"
 )
 
 // getSubnetIdsPerAZ gets the subnets ids in a slice given the specified VPC.
-func getSubnetIdsPerAZ(t *testing.T, vpc *Vpc) []*string {
-	var subnetIds []*string
+func getSubnetIdsPerAZ(t *testing.T, vpc *Vpc) []string {
+	var subnetIds []string
 
 	lookUp := make(map[string]bool)
 	for _, subnet := range vpc.Subnets {
@@ -18,7 +17,7 @@ func getSubnetIdsPerAZ(t *testing.T, vpc *Vpc) []*string {
 			continue
 		}
 		lookUp[subnet.AvailabilityZone] = true
-		subnetIds = append(subnetIds, aws.String(subnet.Id))
+		subnetIds = append(subnetIds, subnet.Id)
 	}
 
 	return subnetIds
