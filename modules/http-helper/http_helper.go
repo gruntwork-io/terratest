@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"crypto/tls"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
@@ -25,6 +26,8 @@ func HttpGet(t *testing.T, url string) (int, string) {
 // HttpGetE performs an HTTP GET on the given URL and return the HTTP status code, body, and any error.
 func HttpGetE(t *testing.T, url string) (int, string, error) {
 	logger.Logf(t, "Making an HTTP GET call to URL %s", url)
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := http.Client{
 		// By default, Go does not impose a timeout, so an HTTP connection attempt can hang for a LONG time.
