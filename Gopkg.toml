@@ -42,6 +42,14 @@ required = [
   version = "1.14.26"
 
 [[constraint]]
+  name = "github.com/Azure/azure-sdk-for-go"
+  version = "31.1.0"
+
+[[constraint]]
+  name = "github.com/Azure/go-autorest"
+  version = "12.3.0"
+
+[[constraint]]
   name = "github.com/google/uuid"
   version = "0.2.0"
 
