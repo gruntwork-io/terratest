@@ -19,7 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
-	"k8s.io/kubernetes/pkg/kubectl/generate"
+	"k8s.io/kubernetes/staging/src/k8s.io/kubectl/pkg/generate"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 )
