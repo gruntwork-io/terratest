@@ -1,3 +1,8 @@
+// +build azure
+
+// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
+// CircleCI.
+
 package test
 
 import (
@@ -5,8 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mathieubuisson/terratest/modules/azure"
-	// "github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +22,7 @@ func TestTerraformAzureNetworkExample(t *testing.T) {
 
 	// subscriptionID is overridden by the environment variable "ARM_SUBSCRIPTION_ID"
 	subscriptionID := ""
-	region := azure.GetRandomStableRegion(t, []string{}, []string{}, subscriptionID)
+	region := azure.GetRandomStableRegion(t, []string{}, []string{"southfricawest", "australiacentral2"}, subscriptionID)
 	firstSubnetName := "terratest-subnet1"
 	secondSubnetName := "terratest-subnet2"
 	domainNameLabel := fmt.Sprintf("terratest-example-dnslabel-%s", strings.ToLower(random.UniqueId()))
@@ -53,37 +57,37 @@ func TestTerraformAzureNetworkExample(t *testing.T) {
 	publicIPFqdn := terraform.Output(t, terraformOptions, "public_ip_fqdn")
 
 	// Verify that the Virtual Network is now present in the Resource Group
-	AssertVirtualNetworkExists(t, vnetName, rgName, subscriptionID)
+	azure.AssertVirtualNetworkExists(t, vnetName, rgName, subscriptionID)
 
 	// Lookup the subnets in the given Virtual Network
-	actualSubnets := GetSubnetsForVirtualNetwork(t, vnetName, rgName, subscriptionID)
+	actualSubnets := azure.GetSubnetsForVirtualNetwork(t, vnetName, rgName, subscriptionID)
 
 	// Verify that each subnet has the expected address prefix
-	actualFirstSubnet = filterSubnetsByName(actualSubnets, firstSubnetName)
+	actualFirstSubnet := filterSubnetsByName(actualSubnets, firstSubnetName)
 	assert.Equal(t, firstSubnetAddressPrefix, actualFirstSubnet.AddressPrefix)
-	actualSecondSubnet = filterSubnetsByName(actualSubnets, secondSubnetName)
+	actualSecondSubnet := filterSubnetsByName(actualSubnets, secondSubnetName)
 	assert.Equal(t, secondSubnetAddressPrefix, actualSecondSubnet.AddressPrefix)
 
 	// Verify that each subnet has the expected Network Security Group
-	actualFirstSubnetNsg := GetNetworkSecurityGroupForSubnet(t, firstSubnetName, vnetName, rgName, subscriptionID)
-	assert.Equal(t, expectedNsgName, actualFirstSubnetNsg.Name)
-	actualSecondSubnetNsg := GetNetworkSecurityGroupForSubnet(t, secondSubnetName, vnetName, rgName, subscriptionID)
-	assert.Equal(t, expectedNsgName, actualSecondSubnetNsg.Name)
+	actualFirstSubnetNsg := azure.GetNetworkSecurityGroupForSubnet(t, firstSubnetName, vnetName, rgName, subscriptionID)
+	assert.Equal(t, "subnet1-nsg", actualFirstSubnetNsg.Name)
+	actualSecondSubnetNsg := azure.GetNetworkSecurityGroupForSubnet(t, secondSubnetName, vnetName, rgName, subscriptionID)
+	assert.Equal(t, "subnet2-nsg", actualSecondSubnetNsg.Name)
 
 	// Lookup the actual Public IP resource
-	actualIP := GetPublicIP(t, rgName, publicIPName, subscriptionID)
+	actualIP := azure.GetPublicIP(t, rgName, publicIPName, subscriptionID)
 
 	// Verify that the Public IP resource has the expected properties
 	assert.Equal(t, publicIPAddress, actualIP.IPAddress)
 	assert.Equal(t, publicIPFqdn, actualIP.FullDNSName)
 
 	// Verify that our Public IP's domain name label is not available anymore
-	available := CheckPublicDNSNameAvailability(t, region, domainNameLabel, subscriptionID)
+	available := azure.CheckPublicDNSNameAvailability(t, region, domainNameLabel, subscriptionID)
 	assert.False(t, available)
 }
 
-func filterSubnetsByName(subnets []Subnet, name string) Subnet {
-	out := Subnet{}
+func filterSubnetsByName(subnets []azure.Subnet, name string) azure.Subnet {
+	out := azure.Subnet{}
 	for _, s := range subnets {
 		if s.Name == name {
 			out = s

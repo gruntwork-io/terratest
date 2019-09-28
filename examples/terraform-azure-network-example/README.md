@@ -24,8 +24,7 @@ it should be free, but you are completely responsible for all Azure charges.
 ## Running this module manually
 
 1. Sign up for an [Azure](https://azure.microsoft.com/) account.
-1. Configure your Azure credentials using one of the [supported methods for Azure CLI
-   tools](https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration?view=azure-cli-latest).
+1. Configure your Azure credentials using one of the [supported methods for Azure CLI](https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration?view=azure-cli-latest), or environment variables supported by [the Azure Terraform provider](https://www.terraform.io/docs/providers/azurerm/index.html).
 1. Install [Terraform](https://www.terraform.io/) and make sure it's on your `PATH`.
 1. Run `terraform init`.
 1. Run `terraform apply`.
@@ -34,10 +33,9 @@ it should be free, but you are completely responsible for all Azure charges.
 ## Running automated tests against this module
 
 1. Sign up for an [Azure](https://azure.microsoft.com/) account.
-1. Configure your Azure credentials using one of the [supported methods for Azure CLI
-   tools](https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration?view=azure-cli-latest).
+1. Configure your Azure credentials using one of the [supported methods for Azure CLI](https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration?view=azure-cli-latest), or environment variables supported by [the Azure Terraform provider](https://www.terraform.io/docs/providers/azurerm/index.html).
 1. Install [Terraform](https://www.terraform.io/) and make sure it's on your `PATH`.
 1. Install [Golang](https://golang.org/) and make sure this code is checked out into your `GOPATH`.
 1. `cd test`
 1. `dep ensure`
-1. `go test -v -run TestTerraformAzureNetworkExample -timeout 30m`
+1. `go test -v -run TestTerraformAzureNetworkExample -timeout 20m`

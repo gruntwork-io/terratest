@@ -7,7 +7,6 @@
 # ARM_CLIENT_ID (if you want to use a Service Principal to access Azure)
 # ARM_CLIENT_SECRET (if you want to use a Service Principal to access Azure)
 
-
 # ---------------------------------------------------------------------------------------------------------------------
 # REQUIRED PARAMETERS
 # You must provide a value for each of these parameters.
@@ -28,7 +27,7 @@ variable "public_ip_domain_name_label" {
 
 variable "resource_group_name" {
   description = "The name of the resource group where the resources will be deployed."
-  defaut      = "terratest-example-rg"
+  default     = "terratest-example-rg"
 }
 
 variable "virtual_network_name" {
