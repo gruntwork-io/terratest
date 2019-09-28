@@ -22,7 +22,7 @@ func TestTerraformAzureNetworkExample(t *testing.T) {
 
 	// subscriptionID is overridden by the environment variable "ARM_SUBSCRIPTION_ID"
 	subscriptionID := ""
-	region := azure.GetRandomStableRegion(t, []string{}, []string{"southfricawest", "australiacentral2"}, subscriptionID)
+	region := azure.GetRandomStableRegion(t, []string{}, []string{"australiacentral2"}, subscriptionID)
 	firstSubnetName := "terratest-subnet1"
 	secondSubnetName := "terratest-subnet2"
 	domainNameLabel := fmt.Sprintf("terratest-example-dnslabel-%s", strings.ToLower(random.UniqueId()))

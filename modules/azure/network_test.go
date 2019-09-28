@@ -6,133 +6,104 @@
 package azure
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	subscriptionID        = ""
-	rgName                = "terratest-rg"
-	location              = "northeurope"
-	vnetName              = "terratest-vnet"
-	expectedSubnets       = map[string]string{"terratest-subnet1": "172.17.0.0/24", "terratest-subnet2": "172.17.1.0/24"}
-	expectedVnetTags      = map[string]string{"terratest": "true", "environment": "dev"}
-	expectedNsgs          = map[string]string{"terratest-subnet1": "terratest-nsg1", "terratest-subnet2": "terratest-nsg2"}
-	expectedSecurityRules = map[string][]string{"terratest-subnet1": []string{"Allow_HTTPS_Inbound", "Allow_SSH_Inbound"}, "terratest-subnet2": []string{}}
-	publicIPName          = "terratest-vm-ip"
+	// subscriptionID is overridden by the environment variable "ARM_SUBSCRIPTION_ID"
+	subscriptionID = ""
+	rgName         = "terratest-rg"
 )
 
 func TestGetVirtualNetworkClient(t *testing.T) {
 	t.Parallel()
 
 	vnetClient, err := GetVirtualNetworkClient(subscriptionID)
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, *vnetClient)
-}
-
-func TestGetVirtualNetwork(t *testing.T) {
-	t.Parallel()
-
-	vnet := GetVirtualNetwork(t, vnetName, rgName, subscriptionID)
-	assert.NotEmpty(t, vnet)
-}
-
-func TestAssertVirtualNetworkExists(t *testing.T) {
-	t.Parallel()
-
-	AssertVirtualNetworkExists(t, vnetName, rgName, subscriptionID)
-}
-
-func filterSubnetsByName(subnets []Subnet, name string) Subnet {
-	out := Subnet{}
-	for _, s := range subnets {
-		if s.Name == name {
-			out = s
-			break
-		}
-	}
-	return out
-}
-
-func TestGetSubnetsForVirtualNetwork(t *testing.T) {
-	t.Parallel()
-
-	subnets := GetSubnetsForVirtualNetwork(t, vnetName, rgName, subscriptionID)
-	for subnetName, expectedAddressPrefix := range expectedSubnets {
-		t.Run(subnetName, func(t *testing.T) {
-			actualSubnet := filterSubnetsByName(subnets, subnetName)
-
-			assert.Equal(t, expectedAddressPrefix, actualSubnet.AddressPrefix)
-		})
-	}
-}
-
-func TestGetTagsForVirtualNetwork(t *testing.T) {
-	t.Parallel()
-
-	tags := GetTagsForVirtualNetwork(t, vnetName, rgName, subscriptionID)
-
-	assert.Equal(t, expectedVnetTags["terratest"], tags["terratest"])
-	assert.Equal(t, expectedVnetTags["environment"], tags["environment"])
-}
-
-func TestGetNetworkSecurityGroupForSubnet(t *testing.T) {
-	t.Parallel()
-
-	for subnetName, expectedNsgName := range expectedNsgs {
-		t.Run(subnetName, func(t *testing.T) {
-			nsg := GetNetworkSecurityGroupForSubnet(t, subnetName, vnetName, rgName, subscriptionID)
-
-			assert.Equal(t, expectedNsgName, nsg.Name)
-		})
-	}
-}
-
-func TestGetNetworkSecurityGroupForSubnetWithNetworkSecurityRules(t *testing.T) {
-	t.Parallel()
-
-	for subnetName, expectedRuleNames := range expectedSecurityRules {
-		t.Run(subnetName, func(t *testing.T) {
-			nsg := GetNetworkSecurityGroupForSubnet(t, subnetName, vnetName, rgName, subscriptionID)
-
-			assert.ElementsMatch(t, expectedRuleNames, nsg.SecurityRulesNames)
-		})
-	}
 }
 
 func TestGetPublicIPClient(t *testing.T) {
 	t.Parallel()
 
 	ipClient, err := GetPublicIPClient(subscriptionID)
-	require.NoError(t, err)
 
+	require.NoError(t, err)
 	assert.NotEmpty(t, *ipClient)
 }
 
 func TestCheckPublicDNSNameAvailability(t *testing.T) {
 	t.Parallel()
 
-	inUse := "terratest487639"
-	inUseRes := CheckPublicDNSNameAvailability(t, location, inUse, subscriptionID)
-	res := CheckPublicDNSNameAvailability(t, location, "ku2dhtmk97qzx", subscriptionID)
+	randomsuffix := strings.ToLower(fmt.Sprintf("%s%s", random.UniqueId(), random.UniqueId()))
+	nonExistentDomainNameLabel := fmt.Sprintf("nonexistent-%s", randomsuffix)
+	location := GetRandomStableRegion(t, []string{}, []string{"australiacentral2"}, subscriptionID)
 
-	assert.False(t, inUseRes)
-	assert.True(t, res)
+	available := CheckPublicDNSNameAvailability(t, location, nonExistentDomainNameLabel, subscriptionID)
+
+	assert.True(t, available)
 }
 
-func TestGetPublicIP(t *testing.T) {
+/*
+The below tests are currently stubbed out, with the expectation that they will throw errors.
+If/when methods to create and delete network resources are added, these tests can be extended.
+(see AWS S3 tests for reference).
+*/
+
+func TestGetVirtualNetworkE(t *testing.T) {
 	t.Parallel()
 
-	expectedIPAddress := "94.245.92.160"
-	expectedIPAddressVersion := "IPv4"
-	expectedAllocationMethod := "Dynamic"
-	expectedFullDNSName := "terratest487639.northeurope.cloudapp.azure.com"
-	actual := GetPublicIP(t, rgName, publicIPName, subscriptionID)
+	vnetName := ""
 
-	assert.Equal(t, expectedIPAddress, actual.IPAddress)
-	assert.Equal(t, expectedIPAddressVersion, actual.IPAddressVersion)
-	assert.Equal(t, expectedAllocationMethod, actual.AllocationMethod)
-	assert.Equal(t, expectedFullDNSName, actual.FullDNSName)
+	_, err := GetVirtualNetworkE(t, vnetName, rgName, subscriptionID)
+
+	require.Error(t, err)
+}
+
+func TestGetSubnetsForVirtualNetworkE(t *testing.T) {
+	t.Parallel()
+
+	vnetName := ""
+
+	_, err := GetSubnetsForVirtualNetworkE(t, vnetName, rgName, subscriptionID)
+
+	require.Error(t, err)
+}
+
+func TestGetTagsForVirtualNetworkE(t *testing.T) {
+	t.Parallel()
+
+	vnetName := ""
+
+	_, err := GetTagsForVirtualNetworkE(t, vnetName, rgName, subscriptionID)
+
+	require.Error(t, err)
+}
+
+func TestGetNetworkSecurityGroupForSubnetE(t *testing.T) {
+	t.Parallel()
+
+	vnetName := ""
+	subnetName := ""
+
+	_, err := GetNetworkSecurityGroupForSubnetE(t, subnetName, vnetName, rgName, subscriptionID)
+
+	require.Error(t, err)
+}
+
+func TestGetPublicIPE(t *testing.T) {
+	t.Parallel()
+
+	publicIPName := ""
+
+	_, err := GetPublicIPE(t, rgName, publicIPName, subscriptionID)
+
+	require.Error(t, err)
 }
