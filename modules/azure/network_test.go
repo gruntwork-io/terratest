@@ -1,8 +1,3 @@
-// +build azure
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure
 
 import (
@@ -44,7 +39,7 @@ func TestCheckPublicDNSNameAvailability(t *testing.T) {
 
 	randomsuffix := strings.ToLower(fmt.Sprintf("%s%s", random.UniqueId(), random.UniqueId()))
 	nonExistentDomainNameLabel := fmt.Sprintf("nonexistent-%s", randomsuffix)
-	location := GetRandomStableRegion(t, []string{}, []string{"australiacentral2"}, subscriptionID)
+	location := GetRandomStableRegion(t, []string{"northeurope", "eastus", "westus", "centralus"}, []string{}, subscriptionID)
 
 	available := CheckPublicDNSNameAvailability(t, location, nonExistentDomainNameLabel, subscriptionID)
 
