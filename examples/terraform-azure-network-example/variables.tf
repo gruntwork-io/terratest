@@ -3,9 +3,10 @@
 # Define these secrets as environment variables
 # ---------------------------------------------------------------------------------------------------------------------
 
+# ARM_TENANT_ID
 # ARM_SUBSCRIPTION_ID
-# ARM_CLIENT_ID (if you want to use a Service Principal to access Azure)
-# ARM_CLIENT_SECRET (if you want to use a Service Principal to access Azure)
+# ARM_CLIENT_ID (if you are using a Service Principal to authenticate to Azure)
+# ARM_CLIENT_SECRET (if you are using a Service Principal to authenticate to Azure)
 
 # ---------------------------------------------------------------------------------------------------------------------
 # REQUIRED PARAMETERS
