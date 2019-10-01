@@ -163,6 +163,29 @@ func PutS3BucketVersioningE(t *testing.T, region string, bucketName string) erro
 	return err
 }
 
+func PutS3Object(t *testing.T, region string, bucket string, key string, body string) {
+	err := PutS3ObjectE(t, region, bucket, key, body)
+	require.NoError(t, err)
+}
+
+func PutS3ObjectE(t *testing.T, region string, bucket string, key string, body string) error {
+	logger.Logf(t, "Inserting key %s in bucket %s with body '%s'", key, bucket, body)
+
+	s3Client, err := NewS3ClientE(t, region)
+	if err != nil {
+		return err
+	}
+
+	params := &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   aws.ReadSeekCloser(strings.NewReader(body)),
+	}
+
+	_, err = s3Client.PutObject(params)
+	return err
+}
+
 // DeleteS3Bucket destroys the S3 bucket in the given region with the given name.
 func DeleteS3Bucket(t *testing.T, region string, name string) {
 	err := DeleteS3BucketE(t, region, name)

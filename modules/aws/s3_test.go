@@ -29,6 +29,30 @@ func TestCreateAndDestroyS3Bucket(t *testing.T) {
 	DeleteS3Bucket(t, region, s3BucketName)
 }
 
+func TestPutS3Object(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	id := random.UniqueId()
+	logger.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
+
+	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
+	key := fmt.Sprintf("test-%s", id)
+	body := "This is the body"
+
+	CreateS3Bucket(t, region, s3BucketName)
+	defer DeleteS3Bucket(t, region, s3BucketName)
+
+	PutS3Object(t, region, s3BucketName, key, body)
+	defer EmptyS3Bucket(t, region, s3BucketName)
+
+	actualBody := GetS3ObjectContents(t, region, s3BucketName, key)
+
+	if actualBody != body {
+		t.Fatalf("Expected to have body '%s', but got '%s'.", body, actualBody)
+	}
+}
+
 func TestAssertS3BucketExistsNoFalseNegative(t *testing.T) {
 	t.Parallel()
 
