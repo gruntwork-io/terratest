@@ -163,11 +163,13 @@ func PutS3BucketVersioningE(t *testing.T, region string, bucketName string) erro
 	return err
 }
 
+// PutS3Object creates a key in a existing S3 bucket with the provided body.
 func PutS3Object(t *testing.T, region string, bucket string, key string, body string) {
 	err := PutS3ObjectE(t, region, bucket, key, body)
 	require.NoError(t, err)
 }
 
+// PutS3ObjectE creates a key in a existing S3 bucket with the provided body.
 func PutS3ObjectE(t *testing.T, region string, bucket string, key string, body string) error {
 	logger.Logf(t, "Inserting key %s in bucket %s with body '%s'", key, bucket, body)
 
