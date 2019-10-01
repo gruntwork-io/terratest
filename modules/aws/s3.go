@@ -302,6 +302,36 @@ func GetS3BucketPolicyE(t *testing.T, awsRegion string, bucket string) (string, 
 	return aws.StringValue(res.Policy), nil
 }
 
+// GetS3BucketTagging returns the tags associated to a given S3 bucket
+func GetS3BucketTagging(t *testing.T, awsRegion string, bucket string) map[string]string {
+	tags, err := GetS3BucketTaggingE(t, awsRegion, bucket)
+	require.NoError(t, err)
+
+	return tags
+}
+
+// GetS3BucketTaggingE returns the tags associated to a given S3 bucket
+func GetS3BucketTaggingE(t *testing.T, awsRegion string, bucket string) (map[string]string, error) {
+	tags := make(map[string]string)
+
+	s3Client, err := NewS3ClientE(t, awsRegion)
+	if err != nil {
+		return tags, err
+	}
+
+	result, err := s3Client.GetBucketTagging(
+		&s3.GetBucketTaggingInput{
+			Bucket: aws.String(bucket),
+		},
+	)
+
+	for _, tag := range result.TagSet {
+		tags[*(tag.Key)] = *(tag.Value)
+	}
+
+	return tags, nil
+}
+
 // AssertS3BucketExists checks if the given S3 bucket exists in the given region and fail the test if it does not.
 func AssertS3BucketExists(t *testing.T, region string, name string) {
 	err := AssertS3BucketExistsE(t, region, name)

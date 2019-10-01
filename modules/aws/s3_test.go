@@ -4,6 +4,7 @@ package aws
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -27,6 +28,37 @@ func TestCreateAndDestroyS3Bucket(t *testing.T) {
 
 	CreateS3Bucket(t, region, s3BucketName)
 	DeleteS3Bucket(t, region, s3BucketName)
+}
+
+func TestS3BucketTagging(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	id := random.UniqueId()
+	logger.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
+
+	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
+
+	CreateS3Bucket(t, region, s3BucketName)
+	defer DeleteS3Bucket(t, region, s3BucketName)
+
+	s3Client, err := NewS3ClientE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tags := map[string]string{
+		"keyA": "valueA",
+		"keyB": "valueB",
+	}
+
+	addTagsToBucket(t, s3Client, region, s3BucketName, tags)
+
+	bucketTags := GetS3BucketTagging(t, region, s3BucketName)
+
+	if !reflect.DeepEqual(tags, bucketTags) {
+		t.Fatalf("Expect bucket to have tags '%+v', but got '%+v'", tags, bucketTags)
+	}
 }
 
 func TestAssertS3BucketExistsNoFalseNegative(t *testing.T) {
@@ -211,4 +243,31 @@ func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName 
 		t.Fatal(err)
 	}
 	require.Equal(t, 0, len((*bucketObjects).Contents))
+}
+
+func addTagsToBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName string, tags map[string]string) {
+	logger.Logf(t, "Adding the following tags to bucket '%s': %+v", s3BucketName, tags)
+
+	// Convert custom tags in AWS tags
+	awsTags := make([]*s3.Tag, 0, len(tags))
+
+	for key, value := range tags {
+		awsTags = append(awsTags, &s3.Tag{
+			Key:   aws.String(key),
+			Value: aws.String(value),
+		})
+	}
+
+	config := &s3.PutBucketTaggingInput{
+		Bucket: aws.String(s3BucketName),
+		Tagging: &s3.Tagging{
+			TagSet: awsTags,
+		},
+	}
+
+	_, err := s3Client.PutBucketTagging(config)
+
+	if err != nil {
+		t.Fatalf("Failed to add tags to bucket: %s", err.Error())
+	}
 }
