@@ -4,6 +4,7 @@ package aws
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -27,6 +28,40 @@ func TestCreateAndDestroyS3Bucket(t *testing.T) {
 
 	CreateS3Bucket(t, region, s3BucketName)
 	DeleteS3Bucket(t, region, s3BucketName)
+}
+
+func TestS3ObjectTagging(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	id := random.UniqueId()
+	logger.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
+
+	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
+
+	CreateS3Bucket(t, region, s3BucketName)
+	defer DeleteS3Bucket(t, region, s3BucketName)
+
+	s3Client, err := NewS3ClientE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := fmt.Sprintf("test-%s", id)
+	tags := map[string]string{
+		"keyA": "valueA",
+		"keyB": "valueB",
+	}
+
+	addObjectToBucket(t, s3Client, region, s3BucketName, key, "The body")
+	addTagsToObject(t, s3Client, region, s3BucketName, key, tags)
+	defer EmptyS3Bucket(t, region, s3BucketName)
+
+	objectTags := GetS3ObjectTagging(t, region, s3BucketName, key)
+
+	if !reflect.DeepEqual(tags, objectTags) {
+		t.Fatalf("Expect object to have tags '%+v', but got '%+v'", tags, objectTags)
+	}
 }
 
 func TestAssertS3BucketExistsNoFalseNegative(t *testing.T) {
@@ -211,4 +246,48 @@ func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName 
 		t.Fatal(err)
 	}
 	require.Equal(t, 0, len((*bucketObjects).Contents))
+}
+
+func addObjectToBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName string, key string, body string) {
+	logger.Logf(t, "Adding the key '%s' to bucket '%s' with body '%s'", key, s3BucketName, body)
+
+	config := &s3.PutObjectInput{
+		Bucket: aws.String(s3BucketName),
+		Key:    aws.String(key),
+		Body:   aws.ReadSeekCloser(strings.NewReader(body)),
+	}
+
+	_, err := s3Client.PutObject(config)
+
+	if err != nil {
+		t.Fatalf("Failed to add key '%s' to bucket '%s': %s", key, s3BucketName, err.Error())
+	}
+}
+
+func addTagsToObject(t *testing.T, s3Client *s3.S3, region string, s3BucketName string, key string, tags map[string]string) {
+	logger.Logf(t, "Adding the following tags to object '%s': %+v", key, tags)
+
+	// Convert custom tags in AWS tags
+	awsTags := make([]*s3.Tag, 0, len(tags))
+
+	for key, value := range tags {
+		awsTags = append(awsTags, &s3.Tag{
+			Key:   aws.String(key),
+			Value: aws.String(value),
+		})
+	}
+
+	config := &s3.PutObjectTaggingInput{
+		Bucket: aws.String(s3BucketName),
+		Key:    aws.String(key),
+		Tagging: &s3.Tagging{
+			TagSet: awsTags,
+		},
+	}
+
+	_, err := s3Client.PutObjectTagging(config)
+
+	if err != nil {
+		t.Fatalf("Failed to add tags to object '%s': %s", key, err.Error())
+	}
 }
