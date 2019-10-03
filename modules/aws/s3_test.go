@@ -4,7 +4,6 @@ package aws
 import (
 	"fmt"
 	"math/rand"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,9 +56,7 @@ func TestS3BucketTagging(t *testing.T) {
 
 	bucketTags := GetS3BucketTagging(t, region, s3BucketName)
 
-	if !reflect.DeepEqual(tags, bucketTags) {
-		t.Fatalf("Expect bucket to have tags '%+v', but got '%+v'", tags, bucketTags)
-	}
+	assert.Equal(t, tags, bucketTags)
 }
 
 func TestAssertS3BucketExistsNoFalseNegative(t *testing.T) {
