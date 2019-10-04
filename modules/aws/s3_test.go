@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,9 +49,7 @@ func TestPutS3Object(t *testing.T) {
 
 	actualBody := GetS3ObjectContents(t, region, s3BucketName, key)
 
-	if actualBody != body {
-		t.Fatalf("Expected to have body '%s', but got '%s'.", body, actualBody)
-	}
+	assert.Equal(t, body, actualBody)
 }
 
 func TestAssertS3BucketExistsNoFalseNegative(t *testing.T) {
