@@ -327,7 +327,10 @@ func GetS3ObjectTaggingE(t *testing.T, awsRegion string, bucket string, key stri
 	)
 
 	for _, tag := range result.TagSet {
-		tags[*(tag.Key)] = *(tag.Value)
+		key := aws.StringValue(tag.Key)
+		value := aws.StringValue(tag.Value)
+
+		tags[key] = value
 	}
 
 	return tags, nil
