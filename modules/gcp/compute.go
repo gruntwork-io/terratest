@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -17,30 +18,31 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-// Corresponds to a GCP Compute Instance (https://cloud.google.com/compute/docs/instances/)
+// Instance Corresponds to a GCP Compute Instance (https://cloud.google.com/compute/docs/instances/)
 type Instance struct {
 	projectID string
 	*compute.Instance
 }
 
-// Corresponds to a GCP Image (https://cloud.google.com/compute/docs/images)
+// Image Corresponds to a GCP Image (https://cloud.google.com/compute/docs/images)
 type Image struct {
 	projectID string
 	*compute.Image
 }
 
-// Corresponds to a GCP Zonal Instance Group (https://cloud.google.com/compute/docs/instance-groups/)
+// ZonalInstanceGroup Corresponds to a GCP Zonal Instance Group (https://cloud.google.com/compute/docs/instance-groups/)
 type ZonalInstanceGroup struct {
 	projectID string
 	*compute.InstanceGroup
 }
 
-// Corresponds to a GCP Regional Instance Group (https://cloud.google.com/compute/docs/instance-groups/)
+// RegionalInstanceGroup Corresponds to a GCP Regional Instance Group (https://cloud.google.com/compute/docs/instance-groups/)
 type RegionalInstanceGroup struct {
 	projectID string
 	*compute.InstanceGroup
 }
 
+// InstanceGroup cooresponds to a GCP Instance Group (https://cloud.google.com/compute/docs/instance-groups/)
 type InstanceGroup interface {
 	GetInstanceIds(t *testing.T) []string
 	GetInstanceIdsE(t *testing.T) ([]string, error)
@@ -56,7 +58,7 @@ func FetchInstance(t *testing.T, projectID string, name string) *Instance {
 	return instance
 }
 
-// FetchInstance queries GCP to return an instance of the (GCP Compute) Instance type
+// FetchInstanceE queries GCP to return an instance of the (GCP Compute) Instance type
 func FetchInstanceE(t *testing.T, projectID string, name string) (*Instance, error) {
 	logger.Logf(t, "Getting Compute Instance %s", name)
 
@@ -94,7 +96,7 @@ func FetchImage(t *testing.T, projectID string, name string) *Image {
 	return image
 }
 
-// FetchImage queries GCP to return a new instance of the (GCP Compute) Image type
+// FetchImageE queries GCP to return a new instance of the (GCP Compute) Image type
 func FetchImageE(t *testing.T, projectID string, name string) (*Image, error) {
 	logger.Logf(t, "Getting Image %s", name)
 
@@ -123,7 +125,7 @@ func FetchRegionalInstanceGroup(t *testing.T, projectID string, region string, n
 	return instanceGroup
 }
 
-// FetchRegionalInstanceGroup queries GCP to return a new instance of the Regional Instance Group type
+// FetchRegionalInstanceGroupE queries GCP to return a new instance of the Regional Instance Group type
 func FetchRegionalInstanceGroupE(t *testing.T, projectID string, region string, name string) (*RegionalInstanceGroup, error) {
 	logger.Logf(t, "Getting Regional Instance Group %s", name)
 
@@ -152,7 +154,7 @@ func FetchZonalInstanceGroup(t *testing.T, projectID string, zone string, name s
 	return instanceGroup
 }
 
-// FetchZonalInstanceGroup queries GCP to return a new instance of the Regional Instance Group type
+// FetchZonalInstanceGroupE queries GCP to return a new instance of the Regional Instance Group type
 func FetchZonalInstanceGroupE(t *testing.T, projectID string, zone string, name string) (*ZonalInstanceGroup, error) {
 	logger.Logf(t, "Getting Zonal Instance Group %s", name)
 
@@ -171,7 +173,7 @@ func FetchZonalInstanceGroupE(t *testing.T, projectID string, zone string, name 
 	return &ZonalInstanceGroup{projectID, instanceGroup}, nil
 }
 
-// GetPublicIP gets the public IP address of the given Compute Instance.
+// GetPublicIp gets the public IP address of the given Compute Instance.
 func (i *Instance) GetPublicIp(t *testing.T) string {
 	ip, err := i.GetPublicIpE(t)
 	if err != nil {
@@ -242,7 +244,7 @@ func (i *Instance) SetMetadata(t *testing.T, metadata map[string]string) {
 	}
 }
 
-// SetLabelsE adds the given metadata map to the existing metadata of the given Compute Instance.
+// SetMetadataE adds the given metadata map to the existing metadata of the given Compute Instance.
 func (i *Instance) SetMetadataE(t *testing.T, metadata map[string]string) error {
 	logger.Logf(t, "Adding metadata to instance %s in zone %s", i.Name, i.Zone)
 
@@ -283,7 +285,7 @@ func newMetadata(t *testing.T, oldMetadata *compute.Metadata, kvs map[string]str
 	return newMetadata
 }
 
-// Add the given public SSH key to the Compute Instance. Users can SSH in with the given username.
+// AddSshKey Adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
 func (i *Instance) AddSshKey(t *testing.T, username string, publicKey string) {
 	err := i.AddSshKeyE(t, username, publicKey)
 	if err != nil {
@@ -291,7 +293,7 @@ func (i *Instance) AddSshKey(t *testing.T, username string, publicKey string) {
 	}
 }
 
-// Add the given public SSH key to the Compute Instance. Users can SSH in with the given username.
+// AddSshKeyE Adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
 func (i *Instance) AddSshKeyE(t *testing.T, username string, publicKey string) error {
 	logger.Logf(t, "Adding SSH Key to Compute Instance %s for username %s\n", i.Name, username)
 
@@ -427,22 +429,22 @@ func (ig *RegionalInstanceGroup) GetInstanceIdsE(t *testing.T) ([]string, error)
 	return instanceIDs, nil
 }
 
-// Return a collection of Instance structs from the given Instance Group
+// GetInstances Returns a collection of Instance structs from the given Instance Group
 func (ig *ZonalInstanceGroup) GetInstances(t *testing.T, projectId string) []*Instance {
 	return getInstances(t, ig, projectId)
 }
 
-// Return a collection of Instance structs from the given Instance Group
+// GetInstancesE Returns a collection of Instance structs from the given Instance Group
 func (ig *ZonalInstanceGroup) GetInstancesE(t *testing.T, projectId string) ([]*Instance, error) {
 	return getInstancesE(t, ig, projectId)
 }
 
-// Return a collection of Instance structs from the given Instance Group
+// GetInstances Returns a collection of Instance structs from the given Instance Group
 func (ig *RegionalInstanceGroup) GetInstances(t *testing.T, projectId string) []*Instance {
 	return getInstances(t, ig, projectId)
 }
 
-// Return a collection of Instance structs from the given Instance Group
+// GetInstancesE GetInstancesE Returns a collection of Instance structs from the given Instance Group
 func (ig *RegionalInstanceGroup) GetInstancesE(t *testing.T, projectId string) ([]*Instance, error) {
 	return getInstancesE(t, ig, projectId)
 }
@@ -525,22 +527,22 @@ func getPublicIpsE(t *testing.T, ig InstanceGroup, projectId string) ([]string, 
 	return ips, nil
 }
 
-// getRandomInstance returns a randomly selected Instance from the Regional Instance Group
+// GetRandomInstance returns a randomly selected Instance from the Regional Instance Group
 func (ig *ZonalInstanceGroup) GetRandomInstance(t *testing.T) *Instance {
 	return getRandomInstance(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
 }
 
-// getRandomInstanceE returns a randomly selected Instance from the Regional Instance Group
+// GetRandomInstanceE returns a randomly selected Instance from the Regional Instance Group
 func (ig *ZonalInstanceGroup) GetRandomInstanceE(t *testing.T) (*Instance, error) {
 	return getRandomInstanceE(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
 }
 
-// getRandomInstance returns a randomly selected Instance from the Regional Instance Group
+// GetRandomInstance returns a randomly selected Instance from the Regional Instance Group
 func (ig *RegionalInstanceGroup) GetRandomInstance(t *testing.T) *Instance {
 	return getRandomInstance(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
 }
 
-// getRandomInstanceE returns a randomly selected Instance from the Regional Instance Group
+// GetRandomInstanceE returns a randomly selected Instance from the Regional Instance Group
 func (ig *RegionalInstanceGroup) GetRandomInstanceE(t *testing.T) (*Instance, error) {
 	return getRandomInstanceE(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
 }
@@ -556,20 +558,38 @@ func getRandomInstance(t *testing.T, ig InstanceGroup, name string, region strin
 
 func getRandomInstanceE(t *testing.T, ig InstanceGroup, name string, region string, size int64, projectID string) (*Instance, error) {
 	instanceIDs := ig.GetInstanceIds(t)
-	if len(instanceIDs) == 0 {
-		return nil, fmt.Errorf("Could not find any instances in Regional Instance Group %s in Region %s", name, region)
+	switch {
+	case reflect.TypeOf(ig).String() == "*gcp.ZonalInstanceGroup":
+		if len(instanceIDs) == 0 {
+			return nil, fmt.Errorf("Could not find any instances in Zonal Instance Group %s in Region %s", name, region)
+		}
+
+		clusterSize := int(size)
+		if len(instanceIDs) != clusterSize {
+			return nil, fmt.Errorf("Expected Zonal Instance Group %s in Region %s to have %d instances, but found %d", name, region, clusterSize, len(instanceIDs))
+		}
+
+		randIndex := random.Random(0, clusterSize-1)
+		instanceID := instanceIDs[randIndex]
+		instance := FetchInstance(t, projectID, instanceID)
+
+		return instance, nil
+	default:
+		if len(instanceIDs) == 0 {
+			return nil, fmt.Errorf("Could not find any instances in Regional Instance Group %s in Region %s", name, region)
+		}
+
+		clusterSize := int(size)
+		if len(instanceIDs) != clusterSize {
+			return nil, fmt.Errorf("Expected Regional Instance Group %s in Region %s to have %d instances, but found %d", name, region, clusterSize, len(instanceIDs))
+		}
+
+		randIndex := random.Random(0, clusterSize-1)
+		instanceID := instanceIDs[randIndex]
+		instance := FetchInstance(t, projectID, instanceID)
+
+		return instance, nil
 	}
-
-	clusterSize := int(size)
-	if len(instanceIDs) != clusterSize {
-		return nil, fmt.Errorf("Expected Regional Instance Group %s in Region %s to have %d instances, but found %d", name, region, clusterSize, len(instanceIDs))
-	}
-
-	randIndex := random.Random(0, clusterSize-1)
-	instanceID := instanceIDs[randIndex]
-	instance := FetchInstance(t, projectID, instanceID)
-
-	return instance, nil
 }
 
 // NewComputeService creates a new Compute service, which is used to make GCE API calls.
@@ -626,13 +646,13 @@ func NewInstancesService(t *testing.T) *compute.InstancesService {
 func NewInstancesServiceE(t *testing.T) (*compute.InstancesService, error) {
 	service, err := NewComputeServiceE(t)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get new Instances Service\n")
+		return nil, fmt.Errorf("failed to get new Instances Service")
 	}
 
 	return service.Instances, nil
 }
 
-// Return a random, valid name for GCP resources. Many resources in GCP requires lowercase letters only.
+// RandomValidGcpName Returns a random, valid name for GCP resources. Many resources in GCP requires lowercase letters only.
 func RandomValidGcpName() string {
 	id := strings.ToLower(random.UniqueId())
 	instanceName := fmt.Sprintf("terratest-%s", id)
