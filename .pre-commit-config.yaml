@@ -2,3 +2,4 @@
   rev: v0.0.2
   hooks:
     - id: goimports
+    - id: gofmt
