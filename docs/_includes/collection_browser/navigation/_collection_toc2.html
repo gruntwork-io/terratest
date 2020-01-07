@@ -1,0 +1,167 @@
+{% capture tocWorkspace %}
+  {% comment %}
+    1. Get collections levels (if contains any page)
+    2. Get categories - or group by categories
+    3. Sort posts - i think it's already done by Jekyll
+    4. Going post by post, extract headers and assign to the list
+  {% endcomment %}
+
+  {% capture my_toc %}{% endcapture %}
+
+  {% assign collection_name = include.collection_name | default: 'posts' %}
+  {% assign collection_grouped = site[collection_name] | group_by: 'category' %}
+  {% assign sort_by = include.sort_by | default: 'order' %}
+  {% assign orderedList = include.ordered | default: false %}
+  {% assign minHeader = include.h_min | default: 1 %}
+  {% assign maxHeader = include.h_max | default: 6 %}
+  {% assign firstHeader = true %}
+
+  {% assign docHeaderIndentAmount = 1 %}
+
+  {% for category in collection_grouped %}
+
+  {% capture my_toc %}{{ my_toc }}
+- [{{ category.name }}]('/{{category.name}}'){% endcapture %}
+
+    {% assign items = category.items | sort: sort_by %}
+
+    {% for doc in items %}
+
+      {% capture my_toc %}{{ my_toc }}
+  - [{{ doc.title }}]({{doc.url}}){% endcapture %}
+
+      {% if doc.as_nested_collection %}
+        {% comment %}------------------ AS NESTED COLLECTION ------------------{% endcomment %}
+        {% assign n_collection = site[doc.as_nested_collection] %}
+        {% assign n_items = n_collection | sort: sort_by %}
+        {% assign n_firstHeader = true %}
+        {% for n_doc in n_items %}
+
+          {% capture my_toc %}{{ my_toc }}
+    - [{{ n_doc.title }}]({{n_doc.url}}){% endcapture %}
+
+          {% capture listModifier %}{% if orderedList %}1.{% else %}-{% endif %}{% endcapture %}
+          {% assign n_nodes = n_doc.content | split: '<h' %}
+          {% for node in n_nodes %}
+            {% if node == "" %}
+                {% continue %}
+            {% endif %}
+
+            {% assign headerLevel = node | replace: '"', '' | slice: 0, 1 | times: 1 %}
+
+            {% if firstHeader %}
+                {% assign firstHeader = false %}
+                {% assign minHeader = headerLevel %}
+            {% endif %}
+
+            {% assign indentAmount = headerLevel | minus: minHeader | plus: docHeaderIndentAmount %}
+            {% assign _workspace = node | split: '</h' %}
+
+            {% assign _idWorkspace = _workspace[0] | split: 'id="' %}
+            {% assign _idWorkspace = _idWorkspace[1] | split: '"' %}
+            {% assign html_id = _idWorkspace[0] %}
+
+            {% assign _classWorkspace = _workspace[0] | split: 'class="' %}
+            {% assign _classWorkspace = _classWorkspace[1] | split: '"' %}
+            {% assign html_class = _classWorkspace[0] %}
+
+            {% if html_class contains "no_toc" %}
+                {% continue %}
+            {% endif %}
+
+            {% capture _hAttrToStrip %}{{ _workspace[0] | split: '>' | first }}>{% endcapture %}
+            {% assign header = _workspace[0] | replace: _hAttrToStrip, '' %}
+
+            {% assign space = '' %}
+            {% for i in (1..indentAmount) %}
+                {% assign space = space | prepend: '    ' %}
+            {% endfor %}
+
+            {% unless include.item_class == blank %}
+                {% capture listItemClass %}{{ include.item_class | replace: '%level%', headerLevel }}{% endcapture %}
+            {% endunless %}
+
+            {% capture heading_body %}{% if include.sanitize %}{{ header | strip_html }}{% else %}{{ header }}{% endif %}{% endcapture %}
+            {% capture my_toc %}{{ my_toc }}
+      {{ space }}{{ listModifier }} {{ listItemClass }} [{{ heading_body | replace: "|", "\|" }}]({% if include.baseurl %}{{ include.baseurl }}{% endif %}{{doc.url}}#{{ html_id }}){% if include.anchor_class %}{:.{{ include.anchor_class }}}{% endif %}{% endcapture %}
+
+          {% endfor %}
+
+        {% endfor %}
+
+        {% comment %}================== END: AS NESTED COLLECTION ============={% endcomment %}
+      {% else %}
+
+        {% capture listModifier %}{% if orderedList %}1.{% else %}-{% endif %}{% endcapture %}
+        {% assign nodes = doc.content | split: '<h' %}
+        {% for node in nodes %}
+
+          {% if node == "" %}
+              {% continue %}
+          {% endif %}
+
+          {% assign headerLevel = node | replace: '"', '' | slice: 0, 1 | times: 1 %}
+
+          {% if headerLevel < minHeader or headerLevel > maxHeader %}
+              {% continue %}
+          {% endif %}
+
+          {% if firstHeader %}
+              {% assign firstHeader = false %}
+              {% assign minHeader = headerLevel %}
+          {% endif %}
+
+          {% assign indentAmount = headerLevel | minus: minHeader | plus: docHeaderIndentAmount %}
+          {% assign _workspace = node | split: '</h' %}
+
+          {% assign _idWorkspace = _workspace[0] | split: 'id="' %}
+          {% assign _idWorkspace = _idWorkspace[1] | split: '"' %}
+          {% assign html_id = _idWorkspace[0] %}
+
+          {% assign _classWorkspace = _workspace[0] | split: 'class="' %}
+          {% assign _classWorkspace = _classWorkspace[1] | split: '"' %}
+          {% assign html_class = _classWorkspace[0] %}
+
+          {% if html_class contains "no_toc" %}
+              {% continue %}
+          {% endif %}
+
+          {% capture _hAttrToStrip %}{{ _workspace[0] | split: '>' | first }}>{% endcapture %}
+          {% assign header = _workspace[0] | replace: _hAttrToStrip, '' %}
+
+          {% assign space = '' %}
+          {% for i in (1..indentAmount) %}
+              {% assign space = space | prepend: '    ' %}
+          {% endfor %}
+
+          {% unless include.item_class == blank %}
+              {% capture listItemClass %}{{ include.item_class | replace: '%level%', headerLevel }}{% endcapture %}
+          {% endunless %}
+
+          {% capture heading_body %}{% if include.sanitize %}{{ header | strip_html }}{% else %}{{ header }}{% endif %}{% endcapture %}
+          {% capture my_toc %}{{ my_toc }}
+{{ space }}{{ listModifier }} {{ listItemClass }} [{{ heading_body | replace: "|", "\|" }}]({% if include.baseurl %}{{ include.baseurl }}{% endif %}{{doc.url}}#{{ html_id }}){% if include.anchor_class %}{:.{{ include.anchor_class }}}{% endif %}{% endcapture %}
+
+        {% endfor %}
+
+      {% endif %}
+
+    {% endfor %}
+
+  {% endfor %}
+
+  {% if include.class %}
+      {% capture my_toc %}{:.{{ include.class }}}
+{{ my_toc | lstrip }}{% endcapture %}
+  {% endif %}
+
+  {% if include.id %}
+      {% capture my_toc %}{: #{{ include.id }}}
+{{ my_toc | lstrip }}{% endcapture %}
+  {% endif %}
+
+
+{% endcapture %}
+{% assign tocWorkspace = '' %}
+
+{{ my_toc | markdownify | strip }}
