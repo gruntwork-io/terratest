@@ -20,13 +20,13 @@ a tool like Terraform is to make calls to AWS, so if you remove AWS, there's not
 That means that most of the tests are going to be integration tests that deploy into a real AWS account. This makes
 the tests effective at catching real-world bugs, but it also makes them much slower and more brittle. We'll outline some best practices to minimize the downsides of this sort of testing.
 
-1.  [Unit tests, integration tests, end-to-end tests](#unit-tests-integration-tests-end-to-end-tests)
-1.  [Testing environment](#testing-environment)
-1.  [Namespacing](#namespacing)
-1.  [Cleanup](#cleanup)
-1.  [Timeouts and logging](#timeouts-and-logging)
-1.  [Debugging interleaved test output](#debugging-interleaved-test-output)
-1.  [Avoid test caching](#avoid-test-caching)
-1.  [Error handling](#error-handling)
-1.  [Iterating locally using Docker](#iterating-locally-using-docker)
-1.  [Iterating locally using test stages](#iterating-locally-using-test-stages)
+1.  [Unit tests, integration tests, end-to-end tests]({{site.baseurl}}/docs/testing-best-practices/unit-integration-end-to-end-test/)
+1.  [Testing environment]({{site.baseurl}}/docs/testing-best-practices/testing-environment/)
+1.  [Namespacing]({{site.baseurl}}/docs/testing-best-practices/namespacing/)
+1.  [Cleanup]({{site.baseurl}}/docs/testing-best-practices/cleanup/)
+1.  [Timeouts and logging]({{site.baseurl}}/docs/testing-best-practices/timeouts-and-logging/)
+1.  [Debugging interleaved test output]({{site.baseurl}}/docs/testing-best-practices/debugging-interleaved-test-output/)
+1.  [Avoid test caching]({{site.baseurl}}/docs/testing-best-practices/avoid-test-caching/)
+1.  [Error handling]({{site.baseurl}}/docs/testing-best-practices/error-handling/)
+1.  [Iterating locally using Docker]({{site.baseurl}}/docs/testing-best-practices/iterating-locally-using-docker/)
+1.  [Iterating locally using test stages]({{site.baseurl}}/docs/testing-best-practices/iterating-locally-using-test-stages/)

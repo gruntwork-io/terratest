@@ -3,8 +3,8 @@ layout: collection-browser-doc
 title: Avoid test caching
 category: testing-best-practices
 excerpt: >-
-  Learn more about ...
-tags: ["testing-best-practices"]
+  Since Go 1.10, test results are automatically cached. See how to turn off caching test results.
+tags: ["testing-best-practices", "cache"]
 order: 407
 nav_title: Documentation
 nav_title_link: /docs/

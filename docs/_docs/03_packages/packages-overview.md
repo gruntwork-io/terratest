@@ -11,8 +11,9 @@ nav_title_link: /docs/
 ---
 
 Now that you've had a chance to browse the examples and their tests, here's an overview of the packages you'll find in
-Terratest's [modules folder](/modules) and how they can help you test different types infrastructure:
+Terratest's [modules folder](https://github.com/gruntwork-io/terratest/tree/master/modules) and how they can help you test different types infrastructure:
 
+{:.doc-styled-table}
 | Package            | Description                                                                                                                                                                                                                                                                                          |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **aws**            | Functions that make it easier to work with the AWS APIs. Examples: find an EC2 Instance by tag, get the IPs of EC2 Instances in an ASG, create an EC2 KeyPair, look up a VPC ID.                                                                                                                     |

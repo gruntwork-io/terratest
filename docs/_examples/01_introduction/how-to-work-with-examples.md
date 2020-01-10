@@ -12,27 +12,27 @@ nav_title_link: /examples/
 
 The best way to learn how to use Terratest is through examples.
 
-First, check out the [examples folder](/examples) for different types of infrastructure code you may want to test,
+First, check out the [code examples section]({{site.baseurl}}/examples#code-examples) (or check the [examples folder on GitHub](https://github.com/gruntwork-io/terratest/tree/master/examples)) for different types of infrastructure code you may want to test,
 such as:
 
-1.  [Basic Terraform Example](/examples/terraform-basic-example): A simple "Hello, World" Terraform configuration.
-1.  [HTTP Terraform Example](/examples/terraform-http-example): A more complicated Terraform configuration that deploys
+1.  [Basic Terraform Example]({{site.baseurl}}/examples/code-examples/terraform-basic-example): A simple "Hello, World" Terraform configuration.
+1.  [HTTP Terraform Example]({{site.baseurl}}/examples/code-examples/terraform-http-example): A more complicated Terraform configuration that deploys
     a simple web server that responds to HTTP requests in AWS.
-1.  [Basic Packer Example](/examples/packer-basic-example): A simple Packer template for building an Amazon Machine
+1.  [Basic Packer Example]({{site.baseurl}}/examples/code-examples/packer-basic-example): A simple Packer template for building an Amazon Machine
     Image (AMI) or Google Cloud Platform Compute Image.
-1.  [Terraform Packer Example](/examples/terraform-packer-example): A more complicated example that shows how to use
+1.  [Terraform Packer Example]({{site.baseurl}}/examples/code-examples/terraform-packer-example): A more complicated example that shows how to use
     Packer to build an AMI with a web server installed and deploy that AMI in AWS using Terraform.
-1.  [Terraform GCP Example](/examples/terraform-gcp-example): A simple Terraform configuration that creates a GCP Compute Instance and Storage Bucket.
-1.  [Terraform remote-exec Example](/examples/terraform-remote-exec-example): A terraform configuration that creates and
+1.  [Terraform GCP Example]({{site.baseurl}}/examples/code-examples/terraform-gcp-example): A simple Terraform configuration that creates a GCP Compute Instance and Storage Bucket.
+1.  [Terraform remote-exec Example]({{site.baseurl}}/examples/code-examples/terraform-remote-exec-example): A terraform configuration that creates and
     AWS instance and then uses `remote-exec` to provision it.
-1.  [Basic Kubernetes Example](/examples/kubernetes-basic-example): A minimal Kubernetes resource that deploys an
+1.  [Basic Kubernetes Example]({{site.baseurl}}/examples/code-examples/kubernetes-basic-example): A minimal Kubernetes resource that deploys an
     addressable nginx instance.
-1.  [Kubernetes RBAC Example](/examples/kubernetes-rbac-example): A Kubernetes resource config that creates a Namespace
+1.  [Kubernetes RBAC Example]({{site.baseurl}}/examples/code-examples/kubernetes-rbac-example): A Kubernetes resource config that creates a Namespace
     with a ServiceAccount that has admin permissions within the Namespace, but not outside.
-1.  [Basic Helm Chart Example](/examples/helm-basic-example): A minimal helm chart that deploys a `Deployment` resource
+1.  [Basic Helm Chart Example]({{site.baseurl}}/examples/code-examples/helm-basic-example): A minimal helm chart that deploys a `Deployment` resource
     for the provided container image.
 
-Next, head over to the [test folder](/test) to see how you can use Terratest to test each of these examples:
+Next, head over to the [tests for examples]({{site.baseurl}}/examples#tests-for-examples) (or check the [test folder on GitHub](https://github.com/gruntwork-io/terratest/tree/master/test)) to see how you can use Terratest to test each of these examples:
 
 1.  [terraform_basic_example_test.go](/test/terraform_basic_example_test.go): Use Terratest to run `terraform apply` on
     the Basic Terraform Example and verify you get the expected outputs.

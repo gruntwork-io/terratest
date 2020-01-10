@@ -24,15 +24,15 @@
   {% capture col_id %}{{ collection_name | downcase | replace: ' ', '-' | replace: ':', ''}}{% endcapture %}
   {% capture cat_id %}{{ category.name | downcase | replace: ' ', '-' | replace: ':', ''}}{% endcapture %}
 
-  {% capture category_link %}/{{ collection_name }}#{{ category.name }}{% endcapture %}
+  {% capture category_link %}{{ site.baseurl }}/{{ collection_name }}#{{ category.name }}{% endcapture %}
 
   {% if site.has_nested_collections_as_categories and site.has_nested_collections_as_categories[collection_name] %}
     {% if site.has_nested_collections_as_categories[collection_name].size > 0 %}
       {% for nested_collection in site.has_nested_collections_as_categories[collection_name] %}
         {% assign v1 = category.name | downcase %}
-        {% assign v2 = nested_collection.collection_name | downcase %}
+        {% assign v2 = nested_collection.category_name | downcase %}
         {% if v1 == v2 %}
-          {% capture category_link %}{{ nested_collection.collection_index_page }}{% endcapture %}
+          {% capture category_link %}{{ site.baseurl }}{{ nested_collection.collection_index_page }}{% endcapture %}
           {% break %}
         {% endif %}
       {% endfor %}
@@ -52,16 +52,18 @@
 
     {% assign items = category.items | sort: sort_by %}
 
+
     {% for doc in items %}
 
       {% if doc.as_nested_collection %}
         {% comment %}------------------ AS NESTED COLLECTION ------------------{% endcomment %}
         {% assign n_collection = site[doc.as_nested_collection] %}
+        {% assign n_collection_name = doc.as_nested_collection %}
         {% assign n_collection_grouped = n_collection | group_by: 'category' %}
         {% assign n_firstHeader = true %}
         {% assign n_cat_indentAmount = 1 %}
 
-        {% capture n_col_id %}{{ n_collection.name | downcase | replace: ' ', '-' | replace: ':', ''}}{% endcapture %}
+        {% capture n_col_id %}{{ n_collection_name | downcase | replace: ' ', '-' | replace: ':', ''}}{% endcapture %}
         {% if doc.act_as_category == false %}
           {% assign n_cat_indentAmount = 0 %}
         {% endif %}
@@ -81,7 +83,7 @@
   aria-expanded='false'
   aria-controls='{{ n_col_id }}-{{ cat_id }}'>
   <span class='arrow-icon glyphicon glyphicon-triangle-bottom'></span>
-</span>[{{ doc.title }}]({{doc.url}}){% endcapture %}
+</span>[{{ doc.title }}]({{ site.baseurl }}{{doc.url}}){% endcapture %}
           {% assign n_cat_indentAmount = n_cat_indentAmount | plus: 1 %}
         {% endif %}
 
@@ -104,7 +106,7 @@
   aria-expanded='false'
   aria-controls='{{ col_id }}-{{ cat_id }}'>
 <span class='arrow-icon glyphicon glyphicon-triangle-bottom'></span>
-</span>[{{ n_category.name | replace: '-',' ' | replace: '%20', ' ' | capitalize }}]('/{{n_category.name}}'){% endcapture %}
+</span>[{{ n_category.name | replace: '-',' ' | replace: '%20', ' ' | capitalize }}]({{ site.baseurl }}/{{ n_collection_name | slugify }}#{{n_category.name}}){% endcapture %}
 
           {% assign n_items = n_category.items | sort: sort_by %}
 
@@ -130,7 +132,7 @@
   aria-expanded='false'
   aria-controls='{{ doc_id }}-{{ cat_id }}'>
 <span class='arrow-icon glyphicon glyphicon-triangle-bottom'></span>
-</span>[{{ n_doc.title }}]({{n_doc.url}}){% endcapture %}
+</span>[{{ n_doc.title }}]({{ site.baseurl }}{{ n_doc.url }}){% endcapture %}
 
             {% for node in n_nodes %}
               {% if node == "" %}
@@ -185,7 +187,7 @@
   aria-expanded='false'
   aria-controls='{{ n_col_id }}-{{ n_doc_id }}-{{ cat_id }}'>
   <span class='arrow-icon glyphicon glyphicon-triangle-bottom'></span>
-</span>[{{ heading_body | replace: "|", "\|" }}]({% if include.baseurl %}{{ include.baseurl }}{% endif %}{{n_doc.url}}#{{ html_id }}){% if include.anchor_class %}{:.{{ include.anchor_class }}}{% endif %}{% endcapture %}
+</span>[{{ heading_body | replace: "|", "\|" }}]({% if include.baseurl %}{{ include.baseurl }}{% endif %}{{ site.baseurl }}{{n_doc.url}}#{{ html_id }}){% if include.anchor_class %}{:.{{ include.anchor_class }}}{% endif %}{% endcapture %}
 
             {% endfor %}
 
@@ -209,7 +211,7 @@
     aria-expanded='false'
     aria-controls='{{ doc_id }}-{{ cat_id }}'>
   <span class='arrow-icon glyphicon glyphicon-triangle-bottom'></span>
-  </span>[{{ doc.title }}]({{doc.url}}){% endcapture %}
+  </span>[{{ doc.title }}]({{ site.baseurl }}{{ doc.url }}){% endcapture %}
         {% assign nodes = n_cont_md | split: '<h' %}
         {% for node in nodes %}
 
@@ -265,7 +267,7 @@
   aria-expanded='false'
   aria-controls='{{ doc_id }}-{{ cat_id }}-{{ increment level }}'>
   <span class='arrow-icon glyphicon glyphicon-triangle-bottom'></span>
-</span>[{{ heading_body | replace: "|", "\|" }}]({% if include.baseurl %}{{ include.baseurl }}{% endif %}{{doc.url}}#{{ html_id }}){% if include.anchor_class %}{:.{{ include.anchor_class }}}{% endif %}{% endcapture %}
+</span>[{{ heading_body | replace: "|", "\|" }}]({% if include.baseurl %}{{ include.baseurl }}{% endif %}{{ site.baseurl }}{{doc.url}}#{{ html_id }}){% if include.anchor_class %}{:.{{ include.anchor_class }}}{% endif %}{% endcapture %}
 
         {% endfor %}
 

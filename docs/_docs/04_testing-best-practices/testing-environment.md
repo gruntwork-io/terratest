@@ -3,7 +3,7 @@ layout: collection-browser-doc
 title: Testing environment
 category: testing-best-practices
 excerpt: >-
-  Learn more about testing environment
+  Learn more about testing environments.
 tags: ["testing-best-practices"]
 order: 402
 nav_title: Documentation

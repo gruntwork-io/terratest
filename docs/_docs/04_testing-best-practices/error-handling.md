@@ -3,8 +3,8 @@ layout: collection-browser-doc
 title: Error handling
 category: testing-best-practices
 excerpt: >-
-  Learn more about ...
-tags: ["testing-best-practices"]
+  Learn how to handle errors.
+tags: ["testing-best-practices", "terraform", "error"]
 order: 408
 nav_title: Documentation
 nav_title_link: /docs/

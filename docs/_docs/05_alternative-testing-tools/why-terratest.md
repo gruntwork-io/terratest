@@ -3,7 +3,7 @@ layout: collection-browser-doc
 title: Why Terratest?
 category: alternative-testing-tools
 excerpt: >-
-  Are you wondering why you should use Terratest?s
+  Are you wondering why you should use Terratest?
 tags: ["tools"]
 order: 500
 nav_title: Documentation

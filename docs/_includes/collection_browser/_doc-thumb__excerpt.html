@@ -1,0 +1,7 @@
+{% if doc.excerpt_md %}
+  {{ doc.excerpt_md | markdownify }}
+{% elsif doc.excerpt_html %}
+  {{ doc.excerpt_html }}
+{% else %}
+  <p class="card-text">{{ doc.excerpt | strip_html }}</p>
+{% endif %}

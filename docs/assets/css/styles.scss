@@ -2,10 +2,12 @@
 # Frontmatter
 ---
 
+@import "_variables";
 @import "bootstrap/scss/bootstrap";
 @import "global";
 @import "components";
 @import "collection_browser";
+@import "custom_doc_cards";
 @import "subpage";
 
 @import "pages/cookie-policy";

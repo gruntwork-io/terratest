@@ -3,7 +3,8 @@ layout: collection-browser-doc
 title: How Terratest compares to other testing tools
 category: alternative-testing-tools
 excerpt: >-
-  Check how Terratest compares to other tools
+  Comparing to other testing tools, Terratest doesn't check individual properties only. The question we're trying to answer is, "does the
+  infrastructure actually work?"
 tags: ["tools"]
 order: 501
 nav_title: Documentation

@@ -1,10 +1,11 @@
 ---
 layout: collection-browser-doc
 title: Terraform HTTP Example
-category: infrastructure-as-code-examples
+category: code-examples
 excerpt: >-
   A more complicated Terraform configuration that deploys a simple web server that responds to HTTP requests in AWS.
 tags: ["terraform", "example"]
+image: /assets/img/logos/terraform-logo.png
 order: 201
 nav_title: Examples
 nav_title_link: /examples/

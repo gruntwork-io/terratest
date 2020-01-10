@@ -3,8 +3,8 @@ layout: collection-browser-doc
 title: Namespacing
 category: testing-best-practices
 excerpt: >-
-  Learn more about Namespacing
-tags: ["testing-best-practices"]
+  Learn how to avoid conflicts due to duplicated identifiers.
+tags: ["testing-best-practices", "namespace", "id", "identifiers"]
 order: 403
 nav_title: Documentation
 nav_title_link: /docs/

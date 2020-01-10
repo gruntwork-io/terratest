@@ -3,8 +3,8 @@ layout: collection-browser-doc
 title: Iterating locally using test stages
 category: testing-best-practices
 excerpt: >-
-  Learn more about ...
-tags: ["testing-best-practices"]
+  Learn more about Terratest's `test_structure`.
+tags: ["testing-best-practices", "test_structure"]
 order: 410
 nav_title: Documentation
 nav_title_link: /docs/

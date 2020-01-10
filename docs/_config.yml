@@ -70,7 +70,7 @@ collections:
 has_nested_collections_as_categories:
   docs:
     - category_name: examples
-      collection_index_page: /examples
+      collection_index_page: '/examples'
 
 
 # Exclude from processing.

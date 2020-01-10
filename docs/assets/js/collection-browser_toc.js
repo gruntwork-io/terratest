@@ -49,7 +49,6 @@ $(document).ready(function () {
     expandToByURL(navExceptions[i][0], navExceptions[i][1])
   }
 
-  console.log('widnow pathname', window.location.pathname, window.location.pathname === '/use-cases/')
   if (window.location.pathname === '/use-cases/' || window.location.pathname === '/terragrunt/use-cases/') {
     expandToById('cat-nav-id-use-cases-')
   }
@@ -75,11 +74,12 @@ const docSidebarInitialExpand = function () {
   if (isException.length === 0) {
     toc.find('a[href="'+pathname+hash+'"]').each(function(i, nav) {
       $(nav).parents('ul').each(function(i, el) {
-        console.log('c', $(el))
+        console.log('c', $(el), $(el).siblings('span.nav-collapse-handler'))
         $(el).collapse('show')
-        $(el).siblings('span.nav-collapse-handler').removeClass('collapsed')
+        $(el).siblings('span.nav-collapse-handler:not(.no-children)').removeClass('collapsed')
       })
-      $(nav).siblings('ul').collapse("show")
+      $(nav).siblings('span.nav-collapse-handler:not(.no-children)').removeClass('collapsed')
+      $(nav).siblings('ul').collapse('show')
     })
   }
 }

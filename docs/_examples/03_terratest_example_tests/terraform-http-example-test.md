@@ -1,10 +1,11 @@
 ---
 layout: collection-browser-doc
 title: Terraform HTTP example test
-category: example-tests
+category: tests-for-examples
 excerpt: >-
   The test written in GoLang for "Terraform HTTP Example".
 tags: ["example"]
+image: /assets/img/logos/terraform-logo.png
 order: 300
 nav_title: Examples
 nav_title_link: /examples/

@@ -1,10 +1,11 @@
 ---
 layout: collection-browser-doc
 title: Terraform Basic Example
-category: infrastructure-as-code-examples
+category: code-examples
 excerpt: >-
   A simple "Hello, World" Terraform configuration.
 tags: ["terraform", "example"]
+image: /assets/img/logos/terraform-logo.png
 order: 200
 nav_title: Examples
 nav_title_link: /examples/

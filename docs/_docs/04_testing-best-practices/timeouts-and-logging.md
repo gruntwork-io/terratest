@@ -3,8 +3,8 @@ layout: collection-browser-doc
 title: Timeouts and logging
 category: testing-best-practices
 excerpt: >-
-  Learn more about Timeouts and logging
-tags: ["testing-best-practices"]
+  Long-running infrastructure tests may exceed timeouts or can be killed if they do not prompt logs.
+tags: ["testing-best-practices", "timeout", "error"]
 order: 405
 nav_title: Documentation
 nav_title_link: /docs/
@@ -44,5 +44,4 @@ difficulties with CI servers and debugging. The workaround is to tell Go to test
 go test -timeout 30m -p 1 ./...
 ```
 
-See the [Cleanup section](#cleanup) for more information on how to setup robust clean up procedures in the face of
-test timeouts and instabilities.
+See the [Cleanup]({{site.baseurl}}/docs/testing-best-practices/cleanup/) for more information on how to setup robust clean up procedures in the face of test timeouts and instabilities.
