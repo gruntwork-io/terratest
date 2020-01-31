@@ -108,6 +108,18 @@ func LoadString(t *testing.T, testFolder string, name string) string {
 	return val
 }
 
+// LoadOrSaveString loads and unserializes a uniquely named string value from the given folder. If the string is not found,
+// it will create and save it instead.
+func LoadOrSaveString(t *testing.T, testFolder string, name string, create func() string) string {
+	if IsTestDataPresent(t, formatNamedTestDataPath(testFolder, name)) {
+		return LoadString(t, testFolder, name)
+	}
+
+	val := create()
+	SaveString(t, testFolder, name, val)
+	return val
+}
+
 // SaveInt saves a uniquely named int value into the given folder. This allows you to create one or more int
 // values during one stage -- each with a unique name -- and to reuse those values during later stages.
 func SaveInt(t *testing.T, testFolder string, name string, val int) {

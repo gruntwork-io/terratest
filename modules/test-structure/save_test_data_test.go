@@ -197,6 +197,29 @@ func TestSaveDuplicateTestData(t *testing.T) {
 	assert.Equal(t, val2, actualVal, "Actual test data should use overwritten values")
 }
 
+func TestLoadOrSaveString(t *testing.T) {
+	t.Parallel()
+
+	tmpFolder, err := ioutil.TempDir("", "load-or-create-and-save-string")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+
+	name := "cluster-name"
+	expectedData := "app"
+
+	LoadOrSaveString(t, tmpFolder, name, func() string { return expectedData })
+
+	assert.Equal(t, expectedData, LoadString(t, tmpFolder, name))
+
+	LoadOrSaveString(t, tmpFolder, name, func() string {
+		t.Fatalf("Create callback should not be called if the value already exists")
+		return "something else"
+	})
+
+	assert.Equal(t, expectedData, LoadString(t, tmpFolder, name))
+}
+
 func TestSaveAndLoadNamedInts(t *testing.T) {
 	t.Parallel()
 
