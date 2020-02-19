@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -305,6 +306,26 @@ func AddTagsToResourceE(t *testing.T, region string, resource string, tags map[s
 	})
 
 	return err
+}
+
+// ExtractTagsFromResource extracts the tags out of an AWS TagSet for any resource such as EC2, AMI, or VPC.
+func ExtractTagsFromResource(tagSet interface{}) map[string]string {
+	tags := make(map[string]string)
+
+	switch reflect.TypeOf(tagSet).Kind() {
+	case reflect.Slice:
+		slice := reflect.ValueOf(tagSet)
+
+		for i := 0; i < slice.Len(); i++ {
+			s := slice.Index(i)
+
+			key := s.FieldByName("Key").Elem().String()
+			value := s.FieldByName("Value").Elem().String()
+
+			tags[key] = value
+		}
+	}
+	return tags
 }
 
 // TerminateInstance terminates the EC2 instance with the given ID in the given region.
