@@ -18,7 +18,7 @@ For example, let's say you have some `web_server` resources that you're creating
 
 ```hcl
 resource "aws_instance" "web_server" {
-  for_each = ["env1", "env2", "env3"]
+  for_each = toset(["env1", "env2", "env3"])
   name = "web_server_${each.value}"
   ...
 }
