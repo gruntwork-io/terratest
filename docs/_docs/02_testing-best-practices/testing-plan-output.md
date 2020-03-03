@@ -33,7 +33,6 @@ for _, rc := range plan.PlannedValues {
         expected := fmt.Sprintf("web_server_%s", rc.Index)
         assert.Equal(rc.Values["name"], expected)
     }
-
 }
 ```
 
