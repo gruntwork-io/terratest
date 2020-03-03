@@ -70,10 +70,6 @@ func NewPlanInfo(jsonOutput string) (PlanInfo, error) {
 	var v PlanInfo
 	err := json.Unmarshal([]byte(jsonOutput), &v)
 
-	if err != nil {
-		return v, err
-	}
-
 	allResources := []KnownResource{}
 
 	// Flatten the root module and child module planned resources
@@ -91,5 +87,5 @@ func NewPlanInfo(jsonOutput string) (PlanInfo, error) {
 
 	v.AllResources = allResources
 
-	return v, nil
+	return v, err
 }

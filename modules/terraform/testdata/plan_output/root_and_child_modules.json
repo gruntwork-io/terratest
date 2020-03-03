@@ -1,0 +1,89 @@
+{
+  "format_version": "0.1",
+  "terraform_version": "0.12.20",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "null_resource.my_null_resource[\"val1\"]",
+          "mode": "managed",
+          "type": "null_resource",
+          "name": "some-name",
+          "index": "val1",
+          "provider_name": "null",
+          "schema_version": 0,
+          "values": {
+            "triggers": {
+              "some_attribute": "attr-val1"
+            }
+          }
+        }
+      ]
+    },
+    "child_modules": [{
+      "address": "some-module-address",
+      "resources": [
+        {
+          "address": "some-other-address",
+          "mode": "managed",
+          "type": "null_resource",
+          "name": "some-other-name",
+          "index": "some-other-index",
+          "provider_name": "null",
+          "schema_version": 0,
+          "values": {
+            "triggers": {
+              "some_attribute": "some-other-index"
+            }
+          }
+        }
+      ]
+    }]
+  },
+  "resource_changes": [
+    {
+      "address": "null_resource.my_null_resource[\"val1\"]",
+      "mode": "managed",
+      "type": "null_resource",
+      "name": "some-name",
+      "index": "val1",
+      "provider_name": "null",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "triggers": {
+            "some_attribute": "attr-val1"
+          }
+        },
+        "after_unknown": {
+          "id": true,
+          "triggers": {}
+        }
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "null_resource.my_null_resource",
+          "mode": "managed",
+          "type": "null_resource",
+          "name": "some_name",
+          "provider_config_key": "null",
+          "expressions": {
+            "triggers": {
+              "references": [
+                "each.value"
+              ]
+            }
+          },
+          "schema_version": 0
+        }
+      ]
+    }
+  }
+}
