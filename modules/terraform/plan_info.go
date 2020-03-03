@@ -4,24 +4,22 @@ import (
 	"encoding/json"
 )
 
-type Attributes map[string]interface{}
-
 type Change struct {
 	Actions      []string
-	Before       Attributes
-	After        Attributes
-	AfterUnknown Attributes `json:"after_unknown"`
+	Before       map[string]interface{} `json:"before"`
+	After        map[string]interface{} `json:"after"`
+	AfterUnknown map[string]interface{} `json:"after_unknown"`
 }
 
 // TODO: The `Index` field can be a string or an int depending on if `count` or
 // `for_each` was use.  Doesn't parse as an int right now.
 type Resource struct {
-	Module       string
-	Address      string
-	Mode         string
-	Type         string
-	Name         string
-	Index        string
+	Module       string `json:"module"`
+	Address      string `json:"address"`
+	Mode         string `json:"mode"`
+	Type         string `json:"type"`
+	Name         string `json:"name"`
+	Index        string `json:"index"`
 	ProviderName string `json:"provider_name"`
 }
 
@@ -33,16 +31,6 @@ type ChangedResource struct {
 type KnownResource struct {
 	Resource
 	Attributes map[string]interface{} `json:"values"`
-}
-
-type Module struct {
-	Address   string
-	Resources []KnownResource
-}
-
-type PlannedValues struct {
-	RootModule   Module   `json:"root_module"`
-	ChildModules []Module `json:"child_modules"`
 }
 
 // PlanInfo contains information about a terraform plan.  The info in this data
@@ -60,7 +48,16 @@ type PlannedValues struct {
 // resources are in the `Attributes` field on the resources.  You can make
 // assertions about these attributes.
 type PlanInfo struct {
-	RawPlannedValues PlannedValues     `json:"planned_values"`
+	RawPlannedValues struct {
+		RootModule struct {
+			Address   string `json:"address"`
+			Resources []KnownResource
+		} `json:"root_module"`
+		ChildModules []struct {
+			Address   string `json:"address"`
+			Resources []KnownResource
+		} `json:"child_modules"`
+	} `json:"planned_values"`
 	ChangedResources []ChangedResource `json:"resource_changes"`
 	AllResources     []KnownResource
 }
