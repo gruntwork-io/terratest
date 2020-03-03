@@ -2,7 +2,6 @@ package terraform
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type Attributes map[string]interface{}
@@ -67,13 +66,12 @@ type PlanInfo struct {
 }
 
 // NewPlanInfo returns a PlanInfo struct given the json-formatted output of a terraform plan.
-func NewPlanInfo(jsonOutput string) PlanInfo {
+func NewPlanInfo(jsonOutput string) (PlanInfo, error) {
 	var v PlanInfo
 	err := json.Unmarshal([]byte(jsonOutput), &v)
 
 	if err != nil {
-		fmt.Println("TODO: Couldn't parse json")
-		fmt.Println(err)
+		return v, err
 	}
 
 	allResources := []KnownResource{}
@@ -93,5 +91,5 @@ func NewPlanInfo(jsonOutput string) PlanInfo {
 
 	v.AllResources = allResources
 
-	return v
+	return v, nil
 }

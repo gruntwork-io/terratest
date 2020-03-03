@@ -18,7 +18,8 @@ func TestTerraformPlanDetailsExample(t *testing.T) {
 
 	terraform.InitAndPlan(t, terraformOptions)
 	output := terraform.Show(t, terraformOptions, terraform.JSON, outputPath)
-	info := terraform.NewPlanInfo(output)
+	info, err := terraform.NewPlanInfo(output)
+	assert.Nil(t, err)
 
 	for _, resource := range info.AllResources {
 		if resource.Name == "my_null_resource" {
