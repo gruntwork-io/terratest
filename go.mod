@@ -13,12 +13,13 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/aws/aws-lambda-go v1.13.3
 	github.com/aws/aws-sdk-go v1.27.1
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
+	github.com/cosiner/argv v0.0.1 // indirect
 	github.com/docker/cli v0.0.0-20200109221225-a4f60165b7a3 // indirect
 	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
 	github.com/elazarl/goproxy v0.0.0-20190911111923-ecfe977594f1 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8 // indirect
+	github.com/go-delve/delve v1.4.0 // indirect
 	github.com/go-errors/errors v1.0.2-0.20180813162953-d98b870cc4e0 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/go-cmp v0.4.0 // indirect
@@ -30,22 +31,29 @@ require (
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1
 	github.com/magiconair/properties v1.8.1
+	github.com/mattn/go-colorable v0.1.6 // indirect
+	github.com/mattn/go-runewidth v0.0.8 // indirect
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oracle/oci-go-sdk v7.1.0+incompatible
+	github.com/peterh/liner v1.2.0 // indirect
 	github.com/pkg/errors v0.9.0 // indirect
 	github.com/pquerna/otp v1.2.0
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114 // indirect
 	github.com/sirupsen/logrus v1.4.2
+	github.com/spf13/cobra v0.0.6 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/cli v1.22.1
+	go.starlark.net v0.0.0-20200203144150-6677ee5c7211 // indirect
+	golang.org/x/arch v0.0.0-20191126211547-368ea8f32fff // indirect
 	golang.org/x/crypto v0.0.0-20200109152110-61a87790db17
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20200107162124-548cf772de50 // indirect
+	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
 	golang.org/x/tools v0.0.0-20200113040837-eac381796e91 // indirect
 	google.golang.org/api v0.15.0
 	google.golang.org/genproto v0.0.0-20200108215221-bd8f9a0ef82f
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
