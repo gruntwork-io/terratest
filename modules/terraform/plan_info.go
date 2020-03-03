@@ -23,8 +23,8 @@ type Resource struct {
 	Type         string
 	Name         string
 	Index        string
-	ProviderName string `json:"provider_name"`
-	Values       map[string]interface{}
+	ProviderName string                 `json:"provider_name"`
+	Attributes   map[string]interface{} `json:"values"`
 	Changes      []Change
 }
 

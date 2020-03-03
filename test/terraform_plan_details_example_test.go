@@ -22,7 +22,7 @@ func TestTerraformPlanDetailsExample(t *testing.T) {
 
 	for _, resource := range info.AllResources {
 		if resource.Name == "my_null_resource" {
-			triggers := resource.Values["triggers"].(map[string]interface{})
+			triggers := resource.Attributes["triggers"].(map[string]interface{})
 			assert.Equal(t, triggers["some_attribute"], "attr-val1")
 		}
 	}
