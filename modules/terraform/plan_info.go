@@ -23,14 +23,22 @@ type Resource struct {
 	Type         string
 	Name         string
 	Index        string
-	ProviderName string                 `json:"provider_name"`
-	Attributes   map[string]interface{} `json:"values"`
-	Changes      []Change
+	ProviderName string `json:"provider_name"`
+}
+
+type ChangedResource struct {
+	Resource
+	Changes []Change
+}
+
+type KnownResource struct {
+	Resource
+	Attributes map[string]interface{} `json:"values"`
 }
 
 type Module struct {
 	Address   string
-	Resources []Resource
+	Resources []KnownResource
 }
 
 type PlannedValues struct {
@@ -38,10 +46,24 @@ type PlannedValues struct {
 	ChildModules []Module `json:"child_modules"`
 }
 
+// PlanInfo contains information about a terraform plan.  The info in this data
+// structure is a (very) slight simplication of a JSON formatted terraform
+// plan, described here:
+// https://www.terraform.io/docs/internals/json-format.html#plan-representation
+//
+// ChangedResources is a list of resources that describe the changes that
+// terraform will make.  These changes are represented as `Change` structs in
+// the resource's `Changes` field.  If a resource would not be changed by a
+// plan, it will not show up in the `ChangedResources` field.
+//
+// AllResources is a list of all of the KNOWN project resources in the state
+// after config in the plan would be applied.  The attributes of these
+// resources are in the `Attributes` field on the resources.  You can make
+// assertions about these attributes.
 type PlanInfo struct {
-	RawPlannedValues PlannedValues `json:"planned_values"`
-	ChangedResources []Resource    `json:"resource_changes"`
-	AllResources     []Resource
+	RawPlannedValues PlannedValues     `json:"planned_values"`
+	ChangedResources []ChangedResource `json:"resource_changes"`
+	AllResources     []KnownResource
 }
 
 // NewPlanInfo returns a PlanInfo struct given the json-formatted output of a terraform plan.
@@ -54,7 +76,7 @@ func NewPlanInfo(jsonOutput string) PlanInfo {
 		fmt.Println(err)
 	}
 
-	allResources := []Resource{}
+	allResources := []KnownResource{}
 
 	// Flatten the root module and child module planned resources
 	for _, resource := range v.RawPlannedValues.RootModule.Resources {
