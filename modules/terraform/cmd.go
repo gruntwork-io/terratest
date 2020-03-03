@@ -32,6 +32,7 @@ func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
 		}
 		options.EnvVars["SSH_AUTH_SOCK"] = options.SshAgent.SocketFile()
 	}
+
 	return options, args
 }
 

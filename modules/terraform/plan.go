@@ -37,8 +37,15 @@ func Plan(t *testing.T, options *Options) string {
 }
 
 // PlanE runs terraform plan with the given options and returns stdout/stderr.
+// If PlanOutputFile is specified in the options, it will write a binary plan
+// output file to that path.
 func PlanE(t *testing.T, options *Options) (string, error) {
-	return RunTerraformCommandE(t, options, FormatArgs(options, "plan", "-input=false", "-lock=false")...)
+	args := []string{"plan", "-input=false", "-lock=false"}
+
+	if options.PlanOutputFile != "" {
+		args = append(args, fmt.Sprintf("-out=%s", options.PlanOutputFile))
+	}
+	return RunTerraformCommandE(t, options, FormatArgs(options, args...)...)
 }
 
 // InitAndPlanWithExitCode runs terraform init and plan with the given options and returns exitcode for the plan command.

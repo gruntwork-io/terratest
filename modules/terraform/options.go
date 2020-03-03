@@ -25,4 +25,5 @@ type Options struct {
 	SshAgent                 *ssh.SshAgent          // Overrides local SSH agent with the given in-process agent
 	NoStderr                 bool                   // Disable stderr redirection
 	OutputMaxLineSize        int                    // The max size of one line in stdout and stderr (in bytes)
+	PlanOutputFile           string                 // A path to use as the value of the -out option if set
 }
