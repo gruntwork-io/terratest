@@ -23,7 +23,7 @@ resource "aws_instance" "web_server" {
   ...
 }
 
-if you want to assert that the names of `web_server` resources that are definied with a terraform `for_each`, you can test this by making assertions against info in this `PlanInfo` struct:
+if you want to assert that the names of `web_server` resources that are defined with a terraform `for_each`, you can test this by making assertions against info in this `PlanInfo` struct:
 
 ```go
 plan := terraform.InitAndPlanWithInfo(t, terraformOptions)
