@@ -24,6 +24,7 @@ resource "aws_instance" "web_server" {
   name = "web_server_${each.value}"
   ...
 }
+```
 
 if you want to assert that the names of `web_server` resources that are defined with a terraform `for_each`, you can test this by making assertions against info in this `PlanInfo` struct:
 
