@@ -10,6 +10,8 @@ nav_title: Documentation
 nav_title_link: /docs/
 ---
 
+TODO: change the `order`s in the preambles of all of these best practices pages
+
 Sometimes you can get the information you need in your tests from a `terraform plan`; you may not need to do an `apply`.  Terratest provides a way to use certain information from a `terraform plan` in your tests.
 
 The `InitAndPlanWithInfo` function will return a `PlanInfo` struct that will contain information about which resources would be changed and what specifically about them would change.
