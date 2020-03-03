@@ -1,5 +1,5 @@
-resource "null_resource" test {
-  for_each = toset(["val1", "val2"])
+resource "null_resource" my_null_resource {
+  for_each = toset(["val1"])
 
   triggers = {
     some_attribute   = "attr-${each.value}"

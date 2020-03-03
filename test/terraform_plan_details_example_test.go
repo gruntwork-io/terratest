@@ -8,14 +8,22 @@ import (
 )
 
 func TestTerraformPlanDetailsExample(t *testing.T) {
+	outputPath := "/tmp/terraform-plan.plan"
 	terraformOptions := &terraform.Options{
-		// website::tag::1:: Set the path to the Terraform code that will be tested.
 		TerraformDir:   "../examples/terraform-plan-details-example",
-		PlanOutputFile: "/tmp/terraform-plan.plan",
+		PlanOutputFile: outputPath,
 	}
+
+	defer terraform.Destroy(t, terraformOptions)
+
 	terraform.InitAndPlan(t, terraformOptions)
-	output := terraform.Show(t, terraformOptions, terraform.JSON, terraformOptions.PlanOutputFile)
-	pinfo := terraform.NewPlanInfo(output)
-	t.Log(pinfo.PlannedValues.RootModule.Resources[0].Values["triggers"])
-	assert.True(t, true)
+	output := terraform.Show(t, terraformOptions, terraform.JSON, outputPath)
+	info := terraform.NewPlanInfo(output)
+
+	for _, resource := range info.AllResources {
+		if resource.Name == "my_null_resource" {
+			triggers := resource.Values["triggers"].(map[string]interface{})
+			assert.Equal(t, triggers["some_attribute"], "attr-val1")
+		}
+	}
 }
