@@ -28,8 +28,8 @@ if you want to assert that the names of `web_server` resources that are defined 
 ```go
 plan := terraform.InitAndPlanWithInfo(t, terraformOptions)
 
-for _, rc := range plan.PlannedValues {
-    if rc.Name == "web_server" {
+for _, pv := range plan.PlannedValues {
+    if pv.Name == "web_server" {
         expected := fmt.Sprintf("web_server_%s", rc.Index)
         assert.Equal(rc.Values["name"], expected)
     }
