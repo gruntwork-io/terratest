@@ -205,7 +205,7 @@ func fetchFilesFromAsg(t *testing.T, awsRegion string, workingDir string) {
 	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
 	keyPair := test_structure.LoadEc2KeyPair(t, workingDir)
 
-	sshOpts := ssh.Options{
+	sshOpts := ssh.AuthOptions{
 		SshUserName: "ubuntu",
 		SshKeyPair:  keyPair.KeyPair,
 	}

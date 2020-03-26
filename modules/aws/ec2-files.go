@@ -42,8 +42,8 @@ func FetchContentsOfFileFromInstanceE(t testing.TestingT, awsRegion string, sshO
 	}
 
 	host := ssh.Host{
-		Options:  sshOpts,
-		Hostname: publicIp,
+		AuthOptions: sshOpts,
+		Hostname:    publicIp,
 	}
 
 	return ssh.FetchContentsOfFileE(t, host, useSudo, filePath)
@@ -72,8 +72,8 @@ func FetchContentsOfFilesFromInstanceE(t testing.TestingT, awsRegion string, ssh
 	}
 
 	host := ssh.Host{
-		Options:  sshOpts,
-		Hostname: publicIp,
+		AuthOptions: sshOpts,
+		Hostname:    publicIp,
 	}
 
 	return ssh.FetchContentsOfFilesE(t, host, useSudo, filePaths...)
@@ -173,8 +173,8 @@ func FetchFilesFromInstanceE(t testing.TestingT, awsRegion string, sshOpts *ssh.
 	}
 
 	host := ssh.Host{
-		Options:  sshOpts,
-		Hostname: publicIp,
+		AuthOptions: sshOpts,
+		Hostname:    publicIp,
 	}
 
 	finalLocalDestDir := filepath.Join(localDirectory, publicIp, filepath.Base(remoteDirectory))
