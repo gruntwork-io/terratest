@@ -23,7 +23,7 @@ func TgDestroyAll(t testing.TestingT, options *Options) string {
 // DestroyE runs terraform destroy with the given options and return stdout/stderr.
 func DestroyE(t testing.TestingT, options *Options) (string, error) {
 	flag.Args()
-	return RunTerraformCommandE(t, options, FormatArgs(options, "destroy", "-input=false", "-auto-approve", "-input=false")...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, "destroy", "-input=false", "-auto-approve")...)
 }
 
 // TgDestroyAllE runs terragrunt destroy with the given options and return stdout.
