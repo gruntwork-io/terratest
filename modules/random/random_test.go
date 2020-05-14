@@ -66,3 +66,17 @@ func TestUniqueId(t *testing.T) {
 		previouslySeen[uniqueID] = true
 	}
 }
+
+func TestUniqueIdLc(t *testing.T) {
+	t.Parallel()
+
+	previouslySeen := map[string]bool{}
+
+	for i := 0; i < 1000; i++ {
+		uniqueID := UniqueIdLc()
+		assert.Len(t, uniqueID, 6)
+		assert.NotContains(t, previouslySeen, uniqueID)
+
+		previouslySeen[uniqueID] = true
+	}
+}

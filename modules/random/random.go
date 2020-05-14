@@ -27,7 +27,11 @@ func RandomString(elements []string) string {
 const base62chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 const uniqueIDLength = 6 // Should be good for 62^6 = 56+ billion combinations
 
-// UniqueId returns a unique (ish) id we can attach to resources and tfstate files so they don't conflict with each other
+// Some resources, like S3 in aws can only contain lowercase letters
+// It will create roughly 25 times fewer combinations, but still 36^6 = 2,1+ billion, which should still be ok
+const base36chars = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+// UniqueId returns a unique (ish) alphanumeric, mixed lower- and uppercase, id we can attach to resources and tfstate files so they don't conflict with each other
 // Uses base 62 to generate a 6 character string that's unlikely to collide with the handful of tests we run in
 // parallel. Based on code here: http://stackoverflow.com/a/9543797/483528
 func UniqueId() string {
@@ -36,6 +40,19 @@ func UniqueId() string {
 	generator := newRand()
 	for i := 0; i < uniqueIDLength; i++ {
 		out.WriteByte(base62chars[generator.Intn(len(base62chars))])
+	}
+
+	return out.String()
+}
+
+// UniqueIdLc returns a unique (ish) alphanumeric, only lowercase, id we can attach to resources and tfstate files so they don't conflict with each other
+// Uses base 36 to generate a 6 character string that's unlikely to collide with the handful of tests we run in parallel.
+func UniqueIdLc() string {
+	var out bytes.Buffer
+
+	generator := newRand()
+	for i := 0; i < uniqueIDLength; i++ {
+		out.WriteByte(base36chars[generator.Intn(len(base36chars))])
 	}
 
 	return out.String()
