@@ -58,7 +58,7 @@ func TestUniqueId(t *testing.T) {
 
 	previouslySeen := map[string]bool{}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		uniqueID := UniqueId()
 		assert.Len(t, uniqueID, 6)
 		assert.NotContains(t, previouslySeen, uniqueID)
