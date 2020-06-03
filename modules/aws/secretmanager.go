@@ -1,7 +1,6 @@
 package aws
 
 import (
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -62,7 +61,7 @@ func NewSecretManagerClient(t testing.TestingT, region string) *secretsmanager.S
 }
 
 //NewSecretManagerClientE creates a new SQS client.
-func NewSecretManagerClientE(t testing.TestingT, region string) ( *secretsmanager.SecretsManager, error) {
+func NewSecretManagerClientE(t testing.TestingT, region string) (*secretsmanager.SecretsManager, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err

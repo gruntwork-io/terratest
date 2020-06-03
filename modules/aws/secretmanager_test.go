@@ -7,13 +7,11 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
-	"github.com/gruntwork-io/terratest/modules/aws"
 )
 
 func TestSecretIsFound(t *testing.T) {
 	t.Parallel()
 
-	
 	expectedName := fmt.Sprintf("test-name-%s", random.UniqueId())
 	awsRegion := GetRandomRegion(t, nil, nil)
 	expectedValue := fmt.Sprintf("test-value-%s", random.UniqueId())
