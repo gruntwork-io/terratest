@@ -133,40 +133,6 @@ func parseMap(m map[string]interface{}) (map[string]interface{}, error) {
 	return result, nil
 }
 
-func parseMapOriginal(m map[string]interface{}) (map[string]interface{}, error) {
-
-	result := make(map[string]interface{})
-
-	for k, v := range m {
-		switch vt := v.(type) {
-		case map[string]interface{}:
-			nestedMap, err := parseMap(vt)
-			if err != nil {
-				return nil, err
-			}
-			result[k] = nestedMap
-		case []interface{}:
-			nestedList, err := parseListOfMaps(vt)
-			if err != nil {
-				return nil, err
-			}
-			result[k] = nestedList
-		case float64:
-			testInt, err := strconv.ParseInt((fmt.Sprintf("%v", vt)), 10, 0)
-			if err == nil {
-				result[k] = int(testInt)
-			} else {
-				result[k] = vt
-			}
-		default:
-			result[k] = vt
-		}
-
-	}
-
-	return result, nil
-}
-
 // OutputMapOfObjects calls terraform output for the given variable and returns its value as a map of lists/maps.
 // If the output value is not a map of lists/maps, then it fails the test.
 func OutputMapOfObjects(t testing.TestingT, options *Options, key string) map[string]interface{} {
