@@ -8,6 +8,9 @@ output "list_of_maps" {
         four = 4
         five = "five"
       }
+      even_more = [
+        "six"
+      ]
     },
     {
       one   = "one"
@@ -17,6 +20,9 @@ output "list_of_maps" {
         four = 4
         five = "five"
       }]
+      even_more = [
+        6
+      ]
     }
   ]
 }

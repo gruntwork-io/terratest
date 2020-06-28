@@ -160,33 +160,43 @@ func TestOutputListOfObjects(t *testing.T) {
 	out := OutputListOfObjects(t, options, "list_of_maps")
 
 	expectedLen := 2
+
 	nestedMap1 := map[string]interface{}{
 		"four": 4,
 		"five": "five",
 	}
-	nestedList1 := []map[string]interface{}{
+	nestedList1 := []string{"six"}
+
+	nestedMap2 := []map[string]interface{}{
 		map[string]interface{}{
 			"four": 4,
 			"five": "five",
 		},
 	}
-	expectedMap1 := map[string]interface{}{
-		"one":   1,
-		"two":   "two",
-		"three": "three",
-		"more":  nestedMap1,
-	}
 
+	// This feels like it should be consistent with other functions and return
+	// a []float64 or at least a []interface{}, but parseListOutputTerraform()
+	// returns a []string, so that's what we'll use for now.
+	nestedList2 := []string{"6"}
+
+	expectedMap1 := map[string]interface{}{
+		"one":       1,
+		"two":       "two",
+		"three":     "three",
+		"more":      nestedMap1,
+		"even_more": nestedList1,
+	}
 	expectedMap2 := map[string]interface{}{
-		"one":   "one",
-		"two":   2,
-		"three": 3,
-		"more":  nestedList1,
+		"one":       "one",
+		"two":       2,
+		"three":     3,
+		"more":      nestedMap2,
+		"even_more": nestedList2,
 	}
 
 	require.Len(t, out, expectedLen, "Output should contain %d items", expectedLen)
 	require.Equal(t, out[0], expectedMap1, "First map should be %q, got %q", expectedMap1, out[0])
-	require.Equal(t, out[1], expectedMap2, "First map should be %q, got %q", expectedMap2, out[1])
+	require.Equal(t, out[1], expectedMap2, "Second map should be %q, got %q", expectedMap2, out[1])
 }
 
 func TestOutputNotListOfObjectsError(t *testing.T) {
