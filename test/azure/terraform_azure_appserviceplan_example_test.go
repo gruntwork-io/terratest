@@ -25,10 +25,10 @@ func TestTerraformAzureAppServicePlanExample(t *testing.T) {
 	expectedEnvironment := "dev"
 	expectedLocation := "westus2"
 	expectedSkuSize := "S1",
-	expectedSkuTier := "Standard",
-	expectedSkuCapacity := 1,
-	expectedKind := "Windows",
-	expectedReserved := false,
+	expectedSkuTier := "Standard"
+	expectedSkuCapacity := 1
+	expectedKind := "Windows"
+	expectedReserved := false
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../../examples/azure/terraform-azure-appserviceplan-example",
