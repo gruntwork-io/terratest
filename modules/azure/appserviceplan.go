@@ -2,32 +2,15 @@ package azure
 
 import (
 	"context"
-	"github.com/Azure/azure-sdk-for-go/services/web/mgmt/2019-08-01/web"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/web/mgmt/web"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
-// GetSkuOfAppServicePlan returns the SkuDescription from the App Service Plan
-func GetSkuOfAppServicePlan(t testing.TestingT, planName string, resGroupName string, subscriptionID string) *web.SkuDescription {
-	plan := GetAppServicePlan(t, planName, resGroupName, subscriptionID)
-
-	return plan.Sku
-}
-
-// GetTagsOfAppServicePlan gets the tags of the given App Service Plan as a map
-func GetTagsOfAppServicePlan(t testing.TestingT, planName string, resGroupName string, subscriptionID string) map[string]string {
-	plan := GetAppServicePlan(t, planName, resGroupName, subscriptionID)
-
-	tags := make(map[string]string)
-	for k, v := range plan.Tags {
-		tags[k] = *v
-	}
-
-	return tags
-}
-
-// GetAppServicePlan gets the AppServicePlan after checking for a
-// valid SubscriptionID, Resource Group Name, and authenticating the App Service Plan Client
+// GetAppServicePlan gets the AppServicePlan.
+// planName - required to find the AppServicePlan.
+// resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
+// subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
 func GetAppServicePlan(t testing.TestingT, planName string, resGroupName string, subscriptionID string) *web.AppServicePlan {
 	plan, err := getAppServicePlanE(planName, resGroupName, subscriptionID)
 	require.NoError(t, err)
@@ -53,7 +36,6 @@ func getAppServicePlanE(planName string, resGroupName string, subscriptionID str
 
 	return &plan, nil
 }
-
 
 func getAppServicePlanClient(subscriptionID string) (*web.AppServicePlansClient, error) {
 	subID, err := getTargetAzureSubscription(subscriptionID)
