@@ -45,11 +45,11 @@ func TestTerraformAzureAppServicePlanExample(t *testing.T) {
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 	terraform.InitAndApply(t, terraformOptions)
 
-	outputValue := terraform.Output(t, terraformOptions, "sharedplanids")
+	outputValue := terraform.Output(t, terraformOptions, "planids")
 	assert.NotNil(outputValue)
 	assert.Contains(outputValue, expectedAppName)
 
-	plan := azure.GetAppServicePlan(t, expectedAppName, "", "")
+	plan := azure.GetAppServicePlan(t, expectedAppName, expectedResourceGroupName, "")
 
 	assert.Equal(expectedSkuSize, *plan.Sku.Size)
 	assert.Equal(expectedSkuTier, *plan.Sku.Tier)
