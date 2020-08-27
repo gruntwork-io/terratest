@@ -11,6 +11,7 @@ import (
 
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
@@ -21,22 +22,23 @@ func TestTerraformAzureAppServicePlanExample(t *testing.T) {
 	_random := strings.ToLower(random.UniqueId())
 
 	expectedResourceGroupName := fmt.Sprintf("tmp-rg-%s", _random)
-	expectedAppName := fmt.Sprintf("tmp-asp-$s", _random)
+	expectedAppName := fmt.Sprintf("tmp-asp-%s", _random)
 	expectedEnvironment := "dev"
 	expectedLocation := "westus2"
-	expectedSkuSize := "S1",
+	expectedSkuSize := "S1"
 	expectedSkuTier := "Standard"
-	expectedSkuCapacity := 1
+	var expectedSkuCapacity int32
+	expectedSkuCapacity = 1
 	expectedKind := "Windows"
 	expectedReserved := false
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../../examples/azure/terraform-azure-appserviceplan-example",
 		Vars: map[string]interface{}{
-			"resource_group_name": expectedResourceGroupName,
-			"appName": expectedAppName,
-			"environment": expectedEnvironment,
-			"location": expectedLocation
+			"resourceGroupName": expectedResourceGroupName,
+			"appName":           expectedAppName,
+			"environment":       expectedEnvironment,
+			"location":          expectedLocation,
 		},
 	}
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
@@ -44,6 +46,8 @@ func TestTerraformAzureAppServicePlanExample(t *testing.T) {
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 	terraform.InitAndApply(t, terraformOptions)
+
+	assert := assert.New(t)
 
 	outputValue := terraform.Output(t, terraformOptions, "planids")
 	assert.NotNil(outputValue)

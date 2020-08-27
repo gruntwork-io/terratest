@@ -1,4 +1,4 @@
-# Terraform Azure AKS Example
+# Terraform Azure App Service Plan Example
 
 This folder contains a Terraform module that deploys a basic App Service Plan in [Azure](https://azure.microsoft.com/) to demonstrate how you can use Terratest to write automated tests for your Azure Terraform code. 
 
@@ -38,7 +38,7 @@ $ terraform destroy
 1. Create [Service Principal](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest) then set the value to the environment variables. 
 1. Install [Golang](https://golang.org/) version `1.13+` required. 
 1. `cd test/azure`
-1. `go test -v -timeout 60m -tags azure -run TestTerraformAzureAppServicePlan`
+1. `go test -v -timeout 60m -tags azure -run TestTerraformAzureAppServicePlanExample`
 
 
 ### Example
@@ -49,5 +49,5 @@ $ export ARM_SUBSCRIPTION_ID={YOUR_SUBSCRIPTION_ID}
 $ export TF_VAR_client_id={YOUR_SERVICE_PRINCIPAL_APP_ID}
 $ export TF_VAR_client_secret={YOUR_SERVICE_PRINCIPAL_PASSWORD}
 $ cd test/azure
-$ go test -v -timeout 60m -tags azure -run TestTerraformAzureAppServicePlan
+$ go test -v -timeout 60m -tags azure -run TestTerraformAzureAppServicePlanExample
 ```

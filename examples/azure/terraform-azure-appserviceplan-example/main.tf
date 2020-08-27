@@ -9,6 +9,8 @@
 
 provider "azurerm" {
   features {}
+  skip_provider_registration = true
+  # To understand why ^ is here, see https://github.com/hashicorp/terraform/issues/18180
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -16,7 +18,7 @@ provider "azurerm" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
+  name     = var.resourceGroupName
   location = var.location
 }
 
@@ -28,10 +30,10 @@ resource "azurerm_app_service_plan" "plan" {
   count = var.instanceCount
 
   name                = var.appName
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
 
-  tags     = data.azurerm_resource_group.rg.tags
+  tags     = azurerm_resource_group.rg.tags
   kind     = var.kind
   reserved = lower(var.kind) == "linux" ? true : lower(var.kind) == "windows" || lower(var.kind) == "app" ? false : var.reserved
 

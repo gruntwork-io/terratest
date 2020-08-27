@@ -2,8 +2,9 @@ package azure
 
 import (
 	"context"
+	"testing"
+
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/web/mgmt/web"
-	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
@@ -11,7 +12,7 @@ import (
 // planName - required to find the AppServicePlan.
 // resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
-func GetAppServicePlan(t testing.TestingT, planName string, resGroupName string, subscriptionID string) *web.AppServicePlan {
+func GetAppServicePlan(t *testing.T, planName string, resGroupName string, subscriptionID string) *web.AppServicePlan {
 	plan, err := getAppServicePlanE(planName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
