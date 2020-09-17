@@ -1,0 +1,46 @@
+<div id="{{ include.id }}" class="examples__container {{ include.class }}">
+  <nav class="examples__nav">
+    <div class="hidden-navs">
+      {% for example in site.data.examples %}
+        {% if include.example_id == nil or include.example_id == example.id %}
+          <div
+            class="examples__nav-item nav-{{ example.id }}"
+            data-id="{{ example.id }}"
+            data-name="{{ example.name }}"
+            data-url="{{ site.github_api_url }}{{ example.url }}"
+            >
+            <img src="{{ site.baseurl }}{{ example.image }}" alt="{{ example.name }}" />
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if include.example_id == nil %}
+      <div class="hidden-navs__static-links">
+        <a
+          href="https://github.com/gruntwork-io/terratest/tree/master/examples"
+          class="examples__nav-item static-link nav-{{ example.id }}"
+          target="_blank"
+          >
+          See more examples
+        </a>
+      </div>
+
+      <div class="navs">
+        <div class="navs__visible-bar"></div>
+        <div class="navs__dropdown-input"></div>
+        <div class="navs__dropdown-arrow">
+          <span class="glyphicon glyphicon-menu-down"></span>
+        </div>
+        <div class="navs__dropdown-menu"></div>
+      </div>
+    {% endif %}
+  </nav>
+
+  {% for example in site.data.examples %}
+    {% if include.example_id == nil or include.example_id == example.id %}
+      {% include examples/example.html example=example file_id=include.file_id skip_learn_more=include.skip_learn_more skip_view_on_github=include.skip_view_on_github skip_tags=include.skip_tags %}
+    {% endif %}
+  {% endfor %}
+
+</div>

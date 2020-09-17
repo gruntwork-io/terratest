@@ -1,0 +1,60 @@
+{% assign cb_doc_card_class = '' %}
+
+{% if doc.index_list !=nil and doc.index_list.no_hover_enlarge_effect == true %}
+  {% assign cb_doc_card_class = 'no-hover-enlarge' %}
+{% endif %}
+
+<div
+  class="cb-doc-card card-shadow {{ cb_doc_card_class }}"
+  id="{{ doc.title | slugify | downcase | split: ' ' | join: '-' | append: '-card' }}"
+  >
+  <div class="card" ga-on="click" ga-event-category="cb-doc-{{ doc.title | slugify }}" ga-event-action="cb-doc-click">
+    <div class="row no-padding">
+
+      {% if doc.image %}
+        {% if doc.index_list !=nil and doc.index_list.read_more_btn == true %}
+          <a href="{{ site.baseurl }}{{ doc.url }}" class="read-more-btn btn btn-primary">Read more</a>
+        {% endif %}
+        {% unless doc.index_list !=nil and doc.index_list.disable_card_link == true %}
+          <a href="{{ site.baseurl }}{{ doc.url }}">
+        {% endunless %}
+          <div class="col-xs-2 img-inner no-padding">
+            <img src="{{ site.baseurl }}{{ doc.image }}" alt="card image" class="img-center">
+          </div>
+          <div class="col-xs-10 card-body cb-doc-card-description float-right">
+            {% if doc.index_list !=nil and doc.index_list.disable_card_link == true %}
+              <a href="{{ site.baseurl }}{{ doc.url }}" class="card-title__link">
+                <h5 class="card-title"><b>{{ doc.title }}</b></h5>
+              </a>
+            {% else %}
+              <h5 class="card-title"><b>{{ doc.title }}</b></h5>
+            {% endif %}
+            {% include collection_browser/_doc-thumb__excerpt.html doc=doc %}
+          </div>
+        {% unless doc.index_list !=nil and doc.index_list.disable_card_link == true %}
+          </a>
+        {% endunless %}
+      {% else %}
+        {% if doc.index_list !=nil and doc.index_list.read_more_btn == true %}
+          <a href="{{ site.baseurl }}{{ doc.url }}" class="read-more-btn btn btn-primary">Read more</a>
+        {% endif %}
+        {% unless doc.index_list !=nil and doc.index_list.disable_card_link == true %}
+          <a href="{{ site.baseurl }}{{ doc.url }}">
+        {% endunless %}
+          <div class="col-xs-12 card-body cb-doc-card-description float-right">
+            {% if doc.index_list !=nil and doc.index_list.disable_card_link == true %}
+              <a href="{{ site.baseurl }}{{ doc.url }}" class="card-title__link">
+                <h5 class="card-title"><b>{{ doc.title }}</b></h5>
+              </a>
+            {% else %}
+              <h5 class="card-title"><b>{{ doc.title }}</b></h5>
+            {% endif %}
+            {% include collection_browser/_doc-thumb__excerpt.html doc=doc %}
+          </div>
+        {% unless doc.index_list !=nil and doc.index_list.disable_card_link == true %}
+          </a>
+        {% endunless %}
+      {% endif %}
+    </div>
+  </div>
+</div>

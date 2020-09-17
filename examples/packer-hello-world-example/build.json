@@ -1,0 +1,18 @@
+{
+  "builders": [{
+    "name": "ubuntu-docker",
+    "type": "docker",
+    "image": "gruntwork/ubuntu-test:16.04",
+    "commit": true,
+    "changes": ["ENTRYPOINT [\"\"]"]
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "inline": ["echo 'Hello, World!' > /test.txt"]
+  }],
+  "post-processors": [{
+    "type": "docker-tag",
+    "repository": "gruntwork/packer-hello-world-example",
+    "tag": "latest"
+  }]
+}

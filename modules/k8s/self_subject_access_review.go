@@ -1,18 +1,20 @@
 package k8s
 
 import (
-	"testing"
+	"context"
 
 	"github.com/gruntwork-io/gruntwork-cli/errors"
 	"github.com/stretchr/testify/require"
 	authv1 "k8s.io/api/authorization/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // CanIDo returns whether or not the provided action is allowed by the client configured by the provided kubectl option.
 // This will fail if there are any errors accessing the kubernetes API (but not if the action is denied).
-func CanIDo(t *testing.T, options *KubectlOptions, action authv1.ResourceAttributes) bool {
+func CanIDo(t testing.TestingT, options *KubectlOptions, action authv1.ResourceAttributes) bool {
 	allowed, err := CanIDoE(t, options, action)
 	require.NoError(t, err)
 	return allowed
@@ -20,7 +22,7 @@ func CanIDo(t *testing.T, options *KubectlOptions, action authv1.ResourceAttribu
 
 // CanIDoE returns whether or not the provided action is allowed by the client configured by the provided kubectl option.
 // This will an error if there are problems accessing the kubernetes API (but not if the action is simply denied).
-func CanIDoE(t *testing.T, options *KubectlOptions, action authv1.ResourceAttributes) (bool, error) {
+func CanIDoE(t testing.TestingT, options *KubectlOptions, action authv1.ResourceAttributes) (bool, error) {
 	clientset, err := GetKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return false, err
@@ -28,7 +30,7 @@ func CanIDoE(t *testing.T, options *KubectlOptions, action authv1.ResourceAttrib
 	check := authv1.SelfSubjectAccessReview{
 		Spec: authv1.SelfSubjectAccessReviewSpec{ResourceAttributes: &action},
 	}
-	resp, err := clientset.AuthorizationV1().SelfSubjectAccessReviews().Create(&check)
+	resp, err := clientset.AuthorizationV1().SelfSubjectAccessReviews().Create(context.Background(), &check, metav1.CreateOptions{})
 	if err != nil {
 		return false, errors.WithStackTrace(err)
 	}

@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"testing"
 
 	"cloud.google.com/go/storage"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"google.golang.org/api/iterator"
 )
 
 // CreateStorageBucket creates a Google Cloud bucket with the given BucketAttrs. Note that Google Storage bucket names must be globally unique.
-func CreateStorageBucket(t *testing.T, projectID string, name string, attr *storage.BucketAttrs) {
+func CreateStorageBucket(t testing.TestingT, projectID string, name string, attr *storage.BucketAttrs) {
 	err := CreateStorageBucketE(t, projectID, name, attr)
 	if err != nil {
 		t.Fatal(err)
@@ -20,7 +20,7 @@ func CreateStorageBucket(t *testing.T, projectID string, name string, attr *stor
 }
 
 // CreateStorageBucketE creates a Google Cloud bucket with the given BucketAttrs. Note that Google Storage bucket names must be globally unique.
-func CreateStorageBucketE(t *testing.T, projectID string, name string, attr *storage.BucketAttrs) error {
+func CreateStorageBucketE(t testing.TestingT, projectID string, name string, attr *storage.BucketAttrs) error {
 	logger.Logf(t, "Creating bucket %s", name)
 
 	ctx := context.Background()
@@ -39,7 +39,7 @@ func CreateStorageBucketE(t *testing.T, projectID string, name string, attr *sto
 }
 
 // DeleteStorageBucket destroys the Google Storage bucket.
-func DeleteStorageBucket(t *testing.T, name string) {
+func DeleteStorageBucket(t testing.TestingT, name string) {
 	err := DeleteStorageBucketE(t, name)
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +47,7 @@ func DeleteStorageBucket(t *testing.T, name string) {
 }
 
 // DeleteStorageBucketE destroys the S3 bucket in the given region with the given name.
-func DeleteStorageBucketE(t *testing.T, name string) error {
+func DeleteStorageBucketE(t testing.TestingT, name string) error {
 	logger.Logf(t, "Deleting bucket %s", name)
 
 	ctx := context.Background()
@@ -61,7 +61,7 @@ func DeleteStorageBucketE(t *testing.T, name string) error {
 }
 
 // ReadBucketObject reads an object from the given Storage Bucket and returns its contents.
-func ReadBucketObject(t *testing.T, bucketName string, filePath string) io.Reader {
+func ReadBucketObject(t testing.TestingT, bucketName string, filePath string) io.Reader {
 	out, err := ReadBucketObjectE(t, bucketName, filePath)
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +70,7 @@ func ReadBucketObject(t *testing.T, bucketName string, filePath string) io.Reade
 }
 
 // ReadBucketObjectE reads an object from the given Storage Bucket and returns its contents.
-func ReadBucketObjectE(t *testing.T, bucketName string, filePath string) (io.Reader, error) {
+func ReadBucketObjectE(t testing.TestingT, bucketName string, filePath string) (io.Reader, error) {
 	logger.Logf(t, "Reading object from bucket %s using path %s", bucketName, filePath)
 
 	ctx := context.Background()
@@ -90,7 +90,7 @@ func ReadBucketObjectE(t *testing.T, bucketName string, filePath string) (io.Rea
 }
 
 // WriteBucketObject writes an object to the given Storage Bucket and returns its URL.
-func WriteBucketObject(t *testing.T, bucketName string, filePath string, body io.Reader, contentType string) string {
+func WriteBucketObject(t testing.TestingT, bucketName string, filePath string, body io.Reader, contentType string) string {
 	out, err := WriteBucketObjectE(t, bucketName, filePath, body, contentType)
 	if err != nil {
 		t.Fatal(err)
@@ -99,7 +99,7 @@ func WriteBucketObject(t *testing.T, bucketName string, filePath string, body io
 }
 
 // WriteBucketObjectE writes an object to the given Storage Bucket and returns its URL.
-func WriteBucketObjectE(t *testing.T, bucketName string, filePath string, body io.Reader, contentType string) (string, error) {
+func WriteBucketObjectE(t testing.TestingT, bucketName string, filePath string, body io.Reader, contentType string) (string, error) {
 	// set a default content type
 	if contentType == "" {
 		contentType = "application/octet-stream"
@@ -134,7 +134,7 @@ func WriteBucketObjectE(t *testing.T, bucketName string, filePath string, body i
 }
 
 // EmptyStorageBucket removes the contents of a storage bucket with the given name.
-func EmptyStorageBucket(t *testing.T, name string) {
+func EmptyStorageBucket(t testing.TestingT, name string) {
 	err := EmptyStorageBucketE(t, name)
 	if err != nil {
 		t.Fatal(err)
@@ -142,7 +142,7 @@ func EmptyStorageBucket(t *testing.T, name string) {
 }
 
 // EmptyStorageBucketE removes the contents of a storage bucket with the given name.
-func EmptyStorageBucketE(t *testing.T, name string) error {
+func EmptyStorageBucketE(t testing.TestingT, name string) error {
 	logger.Logf(t, "Emptying storage bucket %s", name)
 
 	ctx := context.Background()
@@ -178,7 +178,7 @@ func EmptyStorageBucketE(t *testing.T, name string) error {
 }
 
 // AssertStorageBucketExists checks if the given storage bucket exists and fails the test if it does not.
-func AssertStorageBucketExists(t *testing.T, name string) {
+func AssertStorageBucketExists(t testing.TestingT, name string) {
 	err := AssertStorageBucketExistsE(t, name)
 	if err != nil {
 		t.Fatal(err)
@@ -186,7 +186,7 @@ func AssertStorageBucketExists(t *testing.T, name string) {
 }
 
 // AssertStorageBucketExistsE checks if the given storage bucket exists and returns an error if it does not.
-func AssertStorageBucketExistsE(t *testing.T, name string) error {
+func AssertStorageBucketExistsE(t testing.TestingT, name string) error {
 	logger.Logf(t, "Finding bucket %s", name)
 
 	ctx := context.Background()

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="61px" height="68px" viewBox="0 0 61 68" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>terratest_icon_1</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="30.993838%" y1="0%" x2="69.006162%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="0%" y1="30.0350032%" x2="100%" y2="69.9649968%" id="linearGradient-2">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="terratest_icon_1">
+            <g id="Group-9">
+                <g id="Group-16">
+                    <g id="Group-Copy-13">
+                        <polygon id="Rectangle" fill="url(#linearGradient-1)" points="30.6 37.9741935 60.12 19.44 60.12 48.7858065 30.6 67.32"></polygon>
+                        <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(14.760000, 43.380000) scale(-1, 1) translate(-14.760000, -43.380000) " points="0 37.9741935 29.52 19.44 29.52 48.7858065 0 67.32"></polygon>
+                        <polygon id="Rectangle-Copy-15" stroke="#FFFFFF" stroke-width="1.2" fill="#1E252F" stroke-linejoin="round" transform="translate(7.800000, 39.600000) scale(-1, 1) translate(-7.800000, -39.600000) " points="3.6 37.9741935 12 32.4 12 41.2258065 3.6 46.8"></polygon>
+                        <polygon id="Rectangle-Copy-3" fill="url(#linearGradient-2)" transform="translate(30.060000, 18.540000) scale(-1, 1) translate(-30.060000, -18.540000) " points="0.72 18.54 30.06 0 59.4 18.54 30.06 37.08"></polygon>
+                        <polyline id="Path-3" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" points="6.6 38.4 7.8 40.8 15.6 34.8"></polyline>
+                    </g>
+                    <path d="M15,45.6 L21.9574968,49.6280245" id="Path-2" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"></path>
+                    <path d="M15,41.4 L26.4,48" id="Path-2-Copy" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

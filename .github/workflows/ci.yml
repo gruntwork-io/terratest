@@ -1,0 +1,162 @@
+name: ci-workflow
+
+# actors
+  # source repo: official terratest repo (gruntwork-io/terratest)
+  # forked repo: (e.g., xyz/terratest, abc/terratest)
+  # pr: created from forked repo, against source repo (gruntwork-io/terratest/pull/{PR NUMBER})
+# flow
+  # developer fork the source repo
+  # developer creates a branch in the forked repo
+  # developer does the development 😎
+  # developer creates a pr
+  # webhook on source repo calls a webapp when the pr has been created
+  # this pipeline will be triggered automatically by the webapp, with the following input values
+    # repo: name of the forked repo (e.g. xyz/terratest)
+    # branch: branch name on the forked repo (e.g. feature/adding-some-important-module)
+    # target_repository: home of the target_pr, which is the source repo (gruntwork-io/terratest)
+    # target_pr: pr number on the source repo (e.g. 14, 25, etc.)
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: 'Repository info'
+        required: true
+      branch:
+        description: 'Name of the branch'
+        required: true
+      target_repository:
+        description: 'Name of the official terratest repo'
+        required: false
+        default: 'gruntwork-io/terratest'
+      target_pr:
+        description: 'PR number on the official terratest repo'
+        required: false
+      skip_provider_registration:
+        description: 'When set to true, terraform will skip provider registration (see: https://www.terraform.io/docs/providers/azurerm/index.html#skip_provider_registration for more information)'
+        required: true
+        default: 'false'
+
+jobs:
+  ci-job:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: checkout to repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.event.inputs.repo }}
+          ref: ${{ github.event.inputs.branch }}
+      - name: install golangci-lint binary
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.31.0
+      - name: lint modules/azure folder
+        id: azure_module_lint
+        run: |
+          # list files to be linted
+          [ -d "modules/azure" ] && ls -li "modules/azure"
+
+          # run the linter
+          ./bin/golangci-lint run ./modules/azure/ --build-tags=azure --timeout 5m0s
+      - name: lint test/azure folder
+        id: azure_test_lint
+        run: |
+          # list files to be linted
+          [ -d "test/azure" ] && ls -li "test/azure"
+
+          # run the linter
+          ./bin/golangci-lint run ./test/azure/ --build-tags=azure --timeout 5m0s
+      - name: login to azure cli
+        uses: azure/login@v1.1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: run go test for azure
+        id: azure_test
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+        run: |
+          cd test
+
+          APP_ID=`echo $AZURE_CREDENTIALS | jq -r -c ".clientId"`
+          APP_PASSWORD=`echo $AZURE_CREDENTIALS | jq -r -c ".clientSecret"`
+          TENANT_ID=`echo $AZURE_CREDENTIALS | jq -r -c ".tenantId"`
+
+          # if clientId, subscriptionId, tenantId doesn't provide to the go tests
+          # by default, terratest reads them from below environment variables
+          export ARM_CLIENT_ID="$APP_ID"
+          export ARM_CLIENT_SECRET="$APP_PASSWORD"
+          export ARM_SUBSCRIPTION_ID=`az account show --query "id" --output tsv`
+          export ARM_TENANT_ID="$TENANT_ID"
+          export ARM_SKIP_PROVIDER_REGISTRATION=${{ github.event.inputs.skip_provider_registration }}
+
+          # some resources may require ssh keys (e.g. Kubernetes, VMs, etc.)
+          # terraform will read below environment variables
+          # if those values didn't provide to the terraform explicitly
+          rm -rf ssh_key*
+          ssh-keygen -m PEM -t rsa -b 4096 -f ./ssh_key -q -N ""
+          export TF_VAR_ssh_public_key="$PWD/ssh_key.pub"
+          export TF_VAR_client_id="$APP_ID"
+          export TF_VAR_client_secret="$APP_PASSWORD"
+
+          # run the actual tests under the `azure` subfolder
+          go test ./azure/* -v -timeout 90m
+      - name: report back the result
+        if: always()
+        env:
+          CURRENT_REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REPOSITORY: ${{ github.event.inputs.target_repository }}
+          TARGET_PR: ${{ github.event.inputs.target_pr }}
+          TEST_RESULT: ${{ steps.azure_test.conclusion }}
+          TEST_LINT_RESULT: ${{ steps.azure_test_lint.conclusion }}
+          MODULE_LINT_RESULT: ${{ steps.azure_module_lint.conclusion }}
+        run: |
+          # if no PR number provided, simply exit...
+          [[ -z "$TARGET_PR" ]] && { echo "No PR Number provided, exiting..." ; exit 0; }
+
+          echo "PR Number provided... ${TARGET_REPOSITORY}:#${TARGET_PR}"
+
+          BODY_PAYLOAD=""
+          # if all the previous steps finished successfully, create a comment on the PR with the "success" information
+          if [ "$TEST_RESULT" == "success" ] && [ "$TEST_LINT_RESULT" == "success" ] && [ "$MODULE_LINT_RESULT" == "success" ]; then
+            BODY_PAYLOAD="[Microsoft CI Bot] TL;DR; success :thumbsup:\n\nYou can check the status of the CI Pipeline logs here ; https://github.com/${CURRENT_REPOSITORY}/actions/runs/$RUN_ID"
+          # if at least one of the previous steps failed, create a comment on the PR with the "failure" information
+          elif [ "$TEST_RESULT" == "failure" ] || [ "$TEST_LINT_RESULT" == "failure" ] || [ "$MODULE_LINT_RESULT" == "failure" ]; then
+            BODY_PAYLOAD="[Microsoft CI Bot] TL;DR; failure :facepalm:\n\nYou can check the status of the CI Pipeline logs here ; https://github.com/${CURRENT_REPOSITORY}/actions/runs/$RUN_ID"
+          fi
+
+          echo "Comment message is ready..."
+          echo "${BODY_PAYLOAD}"
+
+          # if pipeline has something to report back to the PR
+
+          if [[ -z "$BODY_PAYLOAD" ]]
+          then
+            echo "BODY_PAYLOAD is empty"
+          else
+            echo "Here is the target repository: ${TARGET_REPOSITORY}"
+            # TARGET_REPOSITORY is in {owner}/{repo format}
+            [[ $TARGET_REPOSITORY =~ (.*)/(.*)$ ]]
+            # take the {owner} piece from the TARGET_REPOSITORY variable
+            TARGET_REPO_OWNER=${BASH_REMATCH[1]}
+            # take the {repo} piece from the TARGET_REPOSITORY variable
+            TARGET_REPO_NAME=${BASH_REMATCH[2]}
+
+            echo "Target repository is parsed: ${TARGET_REPO_OWNER} <-> ${TARGET_REPO_NAME}"
+
+            # create the query string to get the pr id
+            QUERY_PR_ID="query findPRID { repository(owner: \\\"$TARGET_REPO_OWNER\\\", name: \\\"$TARGET_REPO_NAME\\\") { pullRequest(number: $TARGET_PR) { id } } }"
+
+            # get the pr id from github api
+            PR_ID=$(curl --silent --request POST --header "Authorization: Bearer ${GITHUB_TOKEN}" --data-raw "{\"query\":\"${QUERY_PR_ID}\"}" "https://api.github.com/graphql" | jq -r '.data.repository.pullRequest.id')
+
+            echo "Target PR ID is ${PR_ID}"
+
+            # create the mutation string to create the comment on the pr
+            MUTATION_ADD_COMMENT="mutation addComment { addComment(input: {subjectId: \\\"${PR_ID}\\\", body: \\\"${BODY_PAYLOAD}\\\"}) { commentEdge { node { createdAt body } } subject { id } } }"
+
+            # call the github api to create the comment
+            curl --request POST --header "Authorization: Bearer ${GITHUB_TOKEN}" --data-raw "{\"query\":\"${MUTATION_ADD_COMMENT}\"}" "https://api.github.com/graphql"
+
+            echo "Comment is created..."
+          fi

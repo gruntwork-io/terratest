@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="61px" height="68px" viewBox="0 0 61 68" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>terratest_icon_3</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="30.993838%" y1="0%" x2="69.006162%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="terratest_icon_3">
+            <g id="Group-10">
+                <g id="Group-Copy-15">
+                    <polygon id="Rectangle" fill="url(#linearGradient-1)" points="30.6 37.9741935 60.12 19.44 60.12 48.7858065 30.6 67.32"></polygon>
+                    <polygon id="Rectangle-Copy-15" fill="url(#linearGradient-1)" transform="translate(14.760000, 43.380000) scale(-1, 1) translate(-14.760000, -43.380000) " points="-8.8817842e-14 37.9741935 29.52 19.44 29.52 48.7858065 -8.8817842e-14 67.32"></polygon>
+                    <polygon id="Rectangle-Copy-3" fill="#0237AE" transform="translate(30.060000, 18.540000) scale(-1, 1) translate(-30.060000, -18.540000) " points="0.72 18.54 30.06 7.10542736e-15 59.4 18.54 30.06 37.08"></polygon>
+                </g>
+                <ellipse id="Oval" stroke="#FFFFFF" stroke-width="1.2" cx="30.3" cy="18.3" rx="12.3" ry="8.1"></ellipse>
+                <polyline id="Path-8" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" points="25 16 30.6 19.2 46 8"></polyline>
+            </g>
+        </g>
+    </g>
+</svg>

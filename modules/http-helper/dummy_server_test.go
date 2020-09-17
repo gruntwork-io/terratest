@@ -1,6 +1,7 @@
 package http_helper
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"testing"
@@ -20,7 +21,7 @@ func TestRunDummyServer(t *testing.T) {
 	defer shutDownServer(t, listener)
 
 	url := fmt.Sprintf("http://localhost:%d", port)
-	HttpGetWithValidation(t, url, 200, text)
+	HttpGetWithValidation(t, url, &tls.Config{}, 200, text)
 }
 
 func TestContinuouslyCheck(t *testing.T) {

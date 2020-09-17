@@ -1,9 +1,8 @@
 package gcp
 
 import (
-	"testing"
-
 	"github.com/gruntwork-io/terratest/modules/environment"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 var credsEnvVars = []string{
@@ -33,21 +32,21 @@ var googleIdentityEmailEnvVars = []string{
 }
 
 // GetGoogleCredentialsFromEnvVar returns the Credentials for use with testing.
-func GetGoogleCredentialsFromEnvVar(t *testing.T) string {
+func GetGoogleCredentialsFromEnvVar(t testing.TestingT) string {
 	return environment.GetFirstNonEmptyEnvVarOrEmptyString(t, credsEnvVars)
 }
 
 // GetGoogleProjectIDFromEnvVar returns the Project Id for use with testing.
-func GetGoogleProjectIDFromEnvVar(t *testing.T) string {
+func GetGoogleProjectIDFromEnvVar(t testing.TestingT) string {
 	return environment.GetFirstNonEmptyEnvVarOrFatal(t, projectEnvVars)
 }
 
 // GetGoogleRegionFromEnvVar returns the Region for use with testing.
-func GetGoogleRegionFromEnvVar(t *testing.T) string {
+func GetGoogleRegionFromEnvVar(t testing.TestingT) string {
 	return environment.GetFirstNonEmptyEnvVarOrFatal(t, regionEnvVars)
 }
 
 // GetGoogleIdentityEmailEnvVar returns a Google identity (user) for use with testing.
-func GetGoogleIdentityEmailEnvVar(t *testing.T) string {
+func GetGoogleIdentityEmailEnvVar(t testing.TestingT) string {
 	return environment.GetFirstNonEmptyEnvVarOrFatal(t, googleIdentityEmailEnvVars)
 }

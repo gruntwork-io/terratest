@@ -99,3 +99,17 @@ func (err NoBucketPolicyError) Error() string {
 func NewNoBucketPolicyError(s3BucketName string, awsRegion string, bucketPolicy string) NoBucketPolicyError {
 	return NoBucketPolicyError{s3BucketName: s3BucketName, awsRegion: awsRegion, bucketPolicy: bucketPolicy}
 }
+
+// NoInstanceTypeError is returned when none of the given instance type options are available in all AZs in a region
+type NoInstanceTypeError struct {
+	InstanceTypeOptions []string
+	Azs                 []string
+}
+
+func (err NoInstanceTypeError) Error() string {
+	return fmt.Sprintf(
+		"None of the given instance types (%v) is available in all the AZs in this region (%v).",
+		err.InstanceTypeOptions,
+		err.Azs,
+	)
+}

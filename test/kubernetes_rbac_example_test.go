@@ -36,7 +36,7 @@ func TestKubernetesRBACExample(t *testing.T) {
 	// entries to be able to add a new authentication option.
 	tmpConfigPath := k8s.CopyHomeKubeConfigToTemp(t)
 	defer os.Remove(tmpConfigPath)
-	options := k8s.NewKubectlOptions("", tmpConfigPath)
+	options := k8s.NewKubectlOptions("", tmpConfigPath, namespaceName)
 
 	// At the end of the test, run `kubectl delete -f RESOURCE_CONFIG` to clean up any resources that were created.
 	defer k8s.KubectlDelete(t, options, kubeResourcePath)
@@ -45,8 +45,6 @@ func TestKubernetesRBACExample(t *testing.T) {
 	k8s.KubectlApply(t, options, kubeResourcePath)
 
 	// Retrieve authentication token for the newly created ServiceAccount
-	// Make sure to configure to access the right namespace
-	options.Namespace = namespaceName
 	token := k8s.GetServiceAccountAuthToken(t, options, serviceAccountName)
 
 	// Now update the configuration to add a new context that can be used to make requests as that service account
@@ -57,7 +55,7 @@ func TestKubernetesRBACExample(t *testing.T) {
 		serviceAccountName,
 		token,
 	))
-	serviceAccountKubectlOptions := k8s.NewKubectlOptions(serviceAccountName, tmpConfigPath)
+	serviceAccountKubectlOptions := k8s.NewKubectlOptions(serviceAccountName, tmpConfigPath, namespaceName)
 
 	// At this point all requests made with serviceAccountKubectlOptions will be auth'd as that ServiceAccount. So let's
 	// verify that! We will check:

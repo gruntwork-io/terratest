@@ -13,6 +13,7 @@ type IngressNotAvailable struct {
 	ingress *extensionsv1beta1.Ingress
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err IngressNotAvailable) Error() string {
 	return fmt.Sprintf("Ingress %s is not available", err.ingress.Name)
 }
@@ -33,6 +34,7 @@ type DesiredNumberOfPodsNotCreated struct {
 	DesiredCount int
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err DesiredNumberOfPodsNotCreated) Error() string {
 	return fmt.Sprintf("Desired number of pods (%d) matching filter %v not yet created", err.DesiredCount, err.Filter)
 }
@@ -42,6 +44,7 @@ type ServiceAccountTokenNotAvailable struct {
 	Name string
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err ServiceAccountTokenNotAvailable) Error() string {
 	return fmt.Sprintf("ServiceAccount %s does not have a token yet.", err.Name)
 }
@@ -51,10 +54,12 @@ type PodNotAvailable struct {
 	pod *corev1.Pod
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err PodNotAvailable) Error() string {
 	return fmt.Sprintf("Pod %s is not available", err.pod.Name)
 }
 
+// NewPodNotAvailableError returnes a PodNotAvailable struct when Kubernetes deems a pod is not available
 func NewPodNotAvailableError(pod *corev1.Pod) PodNotAvailable {
 	return PodNotAvailable{pod}
 }
@@ -64,10 +69,12 @@ type ServiceNotAvailable struct {
 	service *corev1.Service
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err ServiceNotAvailable) Error() string {
 	return fmt.Sprintf("Service %s is not available", err.service.Name)
 }
 
+// NewServiceNotAvailableError returnes a ServiceNotAvailable struct when Kubernetes deems a service is not available
 func NewServiceNotAvailableError(service *corev1.Service) ServiceNotAvailable {
 	return ServiceNotAvailable{service}
 }
@@ -77,10 +84,12 @@ type UnknownServiceType struct {
 	service *corev1.Service
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err UnknownServiceType) Error() string {
 	return fmt.Sprintf("Service %s has an unknown service type", err.service.Name)
 }
 
+// NewUnknownServiceTypeError returns an UnknownServiceType struct when is it deemed that Kubernetes does not know the service type provided
 func NewUnknownServiceTypeError(service *corev1.Service) UnknownServiceType {
 	return UnknownServiceType{service}
 }
@@ -91,10 +100,12 @@ type UnknownServicePort struct {
 	port    int32
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err UnknownServicePort) Error() string {
 	return fmt.Sprintf("Port %d is not a part of the service %s", err.port, err.service.Name)
 }
 
+// NewUnknownServicePortError returns an UnknownServicePort struct when it is deemed that Kuberenetes does not know of the provided Service Port
 func NewUnknownServicePortError(service *corev1.Service, port int32) UnknownServicePort {
 	return UnknownServicePort{service, port}
 }
@@ -102,10 +113,12 @@ func NewUnknownServicePortError(service *corev1.Service, port int32) UnknownServ
 // NoNodesInKubernetes is returned when the Kubernetes cluster has no nodes registered.
 type NoNodesInKubernetes struct{}
 
+// Error is a simple function to return a formatted error message as a string
 func (err NoNodesInKubernetes) Error() string {
 	return "There are no nodes in the Kubernetes cluster"
 }
 
+// NewNoNodesInKubernetesError returns a NoNodesInKubernetes struct when it is deemed that there are no Kubernetes nodes registered
 func NewNoNodesInKubernetesError() NoNodesInKubernetes {
 	return NoNodesInKubernetes{}
 }
@@ -115,10 +128,12 @@ type NodeHasNoHostname struct {
 	node *corev1.Node
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err NodeHasNoHostname) Error() string {
 	return fmt.Sprintf("Node %s has no hostname", err.node.Name)
 }
 
+// NewNodeHasNoHostnameError returns a NodeHasNoHostname struct when it is deemed that the provided node has no hostname
 func NewNodeHasNoHostnameError(node *corev1.Node) NodeHasNoHostname {
 	return NodeHasNoHostname{node}
 }
@@ -128,10 +143,12 @@ type MalformedNodeID struct {
 	node *corev1.Node
 }
 
+// Error is a simple function to return a formatted error message as a string
 func (err MalformedNodeID) Error() string {
 	return fmt.Sprintf("Node %s has malformed ID %s", err.node.Name, err.node.Spec.ProviderID)
 }
 
+// NewMalformedNodeIDError returns a MalformedNodeID struct when Kubernetes deems that a NodeID is malformed
 func NewMalformedNodeIDError(node *corev1.Node) MalformedNodeID {
 	return MalformedNodeID{node}
 }

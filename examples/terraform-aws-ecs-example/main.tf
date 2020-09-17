@@ -1,4 +1,16 @@
 # ---------------------------------------------------------------------------------------------------------------------
+# PIN TERRAFORM VERSION TO >= 0.12
+# The examples have been upgraded to 0.12 syntax
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
+  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
+  # forwards compatible with 0.13.x code.
+  required_version = ">= 0.12.26"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY INTO THE DEFAULT VPC AND SUBNETS
 # To keep this example simple, we are deploying into the Default VPC and its subnets. In real-world usage, you should
 # deploy into a custom VPC and private subnets.
@@ -9,7 +21,7 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "all" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -17,7 +29,7 @@ data "aws_subnet_ids" "all" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_ecs_cluster" "example" {
-  name = "${var.cluster_name}"
+  name = var.cluster_name
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -25,25 +37,25 @@ resource "aws_ecs_cluster" "example" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_ecs_service" "example" {
-  name = "${var.service_name}"
-  cluster = "${aws_ecs_cluster.example.arn}"
-  task_definition = "${aws_ecs_task_definition.example.arn}"
-  desired_count = 0
-  launch_type = "FARGATE"
+  name            = var.service_name
+  cluster         = aws_ecs_cluster.example.arn
+  task_definition = aws_ecs_task_definition.example.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
 
   network_configuration {
-    subnets = ["${data.aws_subnet_ids.all.ids}"]
+    subnets = data.aws_subnet_ids.all.ids
   }
 }
 
 resource "aws_ecs_task_definition" "example" {
-  family = "terratest"
-  network_mode = "awsvpc"
-  cpu = 256
-  memory = 512
+  family                   = "terratest"
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
   requires_compatibilities = ["FARGATE"]
-  execution_role_arn = "${aws_iam_role.execution.arn}"
-  container_definitions = <<-JSON
+  execution_role_arn       = aws_iam_role.execution.arn
+  container_definitions    = <<-JSON
     [
       {
         "image": "terraterst-example",
@@ -51,7 +63,8 @@ resource "aws_ecs_task_definition" "example" {
         "networkMode": "awsvpc"
       }
     ]
-  JSON
+JSON
+
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -59,22 +72,23 @@ resource "aws_ecs_task_definition" "example" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "execution" {
-  name = "${var.cluster_name}-ecs-execution"
-  assume_role_policy = "${data.aws_iam_policy_document.assume-execution.json}"
+  name               = "${var.cluster_name}-ecs-execution"
+  assume_role_policy = data.aws_iam_policy_document.assume-execution.json
 }
 
 resource "aws_iam_role_policy_attachment" "execution" {
-  role = "${aws_iam_role.execution.id}"
+  role       = aws_iam_role.execution.id
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 data "aws_iam_policy_document" "assume-execution" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["sts:AssumeRole"]
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["ecs-tasks.amazonaws.com"]
     }
   }
 }
+

@@ -11,12 +11,16 @@ package test
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
+	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/random"
 )
 
 // This file contains examples of how to use terratest to test helm chart template logic by rendering the templates
@@ -33,10 +37,14 @@ func TestHelmBasicExampleTemplateRenderedDeployment(t *testing.T) {
 
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-basic-example")
+	releaseName := "helm-basic"
 	require.NoError(t, err)
 
-	// Since we aren't deploying any resources, there is no need to setup kubectl authentication, helm home, or
-	// namespaces
+	// Since we aren't deploying any resources, there is no need to setup kubectl authentication or helm home.
+
+	// Set up the namespace; confirm that the template renders the expected value for the namespace.
+	namespaceName := "medieval-" + strings.ToLower(random.UniqueId())
+	logger.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	// - containerImageRepo=nginx
@@ -46,18 +54,22 @@ func TestHelmBasicExampleTemplateRenderedDeployment(t *testing.T) {
 			"containerImageRepo": "nginx",
 			"containerImageTag":  "1.15.8",
 		},
+		KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
 	}
 
 	// Run RenderTemplate to render the template and capture the output. Note that we use the version without `E`, since
 	// we want to assert that the template renders without any errors.
 	// Additionally, although we know there is only one yaml file in the template, we deliberately path a templateFiles
 	// arg to demonstrate how to select individual templates to render.
-	output := helm.RenderTemplate(t, options, helmChartPath, []string{"templates/deployment.yaml"})
+	output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{"templates/deployment.yaml"})
 
 	// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 	// ensure the Deployment resource is rendered correctly.
 	var deployment appsv1.Deployment
 	helm.UnmarshalK8SYaml(t, output, &deployment)
+
+	// Verify the namespace matches the expected supplied namespace.
+	require.Equal(t, namespaceName, deployment.Namespace)
 
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
 	expectedContainerImage := "nginx:1.15.8"
@@ -72,6 +84,7 @@ func TestHelmBasicExampleTemplateRequiredTemplateArgs(t *testing.T) {
 
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-basic-example")
+	releaseName := "helm-basic"
 	require.NoError(t, err)
 
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication, helm home, or
@@ -111,7 +124,7 @@ func TestHelmBasicExampleTemplateRequiredTemplateArgs(t *testing.T) {
 
 			// Now we try rendering the template, but verify we get an error
 			options := &helm.Options{SetValues: testCase.values}
-			_, err := helm.RenderTemplateE(t, options, helmChartPath, []string{})
+			_, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, []string{})
 			require.Error(t, err)
 		})
 	}

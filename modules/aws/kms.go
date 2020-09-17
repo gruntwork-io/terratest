@@ -1,15 +1,14 @@
 package aws
 
 import (
-	"testing"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // GetCmkArn gets the ARN of a KMS Customer Master Key (CMK) in the given region with the given ID. The ID can be an alias, such
 // as "alias/my-cmk".
-func GetCmkArn(t *testing.T, region string, cmkID string) string {
+func GetCmkArn(t testing.TestingT, region string, cmkID string) string {
 	out, err := GetCmkArnE(t, region, cmkID)
 	if err != nil {
 		t.Fatal(err)
@@ -19,7 +18,7 @@ func GetCmkArn(t *testing.T, region string, cmkID string) string {
 
 // GetCmkArnE gets the ARN of a KMS Customer Master Key (CMK) in the given region with the given ID. The ID can be an alias, such
 // as "alias/my-cmk".
-func GetCmkArnE(t *testing.T, region string, cmkID string) (string, error) {
+func GetCmkArnE(t testing.TestingT, region string, cmkID string) (string, error) {
 	kmsClient, err := NewKmsClientE(t, region)
 	if err != nil {
 		return "", err
@@ -37,7 +36,7 @@ func GetCmkArnE(t *testing.T, region string, cmkID string) (string, error) {
 }
 
 // NewKmsClient creates a KMS client.
-func NewKmsClient(t *testing.T, region string) *kms.KMS {
+func NewKmsClient(t testing.TestingT, region string) *kms.KMS {
 	client, err := NewKmsClientE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +45,7 @@ func NewKmsClient(t *testing.T, region string) *kms.KMS {
 }
 
 // NewKmsClientE creates a KMS client.
-func NewKmsClientE(t *testing.T, region string) (*kms.KMS, error) {
+func NewKmsClientE(t testing.TestingT, region string) (*kms.KMS, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err

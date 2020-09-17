@@ -14,6 +14,16 @@ func FileExists(path string) bool {
 	return err == nil
 }
 
+// FileExistsE returns true if the given file exists
+// It will return an error if os.Stat error is not an ErrNotExist
+func FileExistsE(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+	return err == nil, nil
+}
+
 // CopyTerraformFolderToTemp creates a copy of the given folder and all its contents in a temp folder with a unique name and the given prefix.
 // This is useful when running multiple tests in parallel against the same set of Terraform files to ensure the
 // tests don't overwrite each other's .terraform working directory and terraform.tfstate files. This method returns

@@ -1,10 +1,22 @@
 # ---------------------------------------------------------------------------------------------------------------------
+# PIN TERRAFORM VERSION TO >= 0.12
+# The examples have been upgraded to 0.12 syntax
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
+  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
+  # forwards compatible with 0.13.x code.
+  required_version = ">= 0.12.26"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY AN INSTANCE, THEN TRIGGER A PROVISIONER
 # See test/terraform_ssh_example.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -12,15 +24,15 @@ provider "aws" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_instance" "example_public" {
-  ami                    = "${data.aws_ami.ubuntu.id}"
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
-  vpc_security_group_ids = ["${aws_security_group.example.id}"]
-  key_name               = "${var.key_pair_name}"
+  vpc_security_group_ids = [aws_security_group.example.id]
+  key_name               = var.key_pair_name
 
   # This EC2 Instance has a public IP and will be accessible directly from the public Internet
   associate_public_ip_address = true
 
-  tags {
+  tags = {
     Name = "${var.instance_name}-public"
   }
 }
@@ -30,7 +42,7 @@ resource "aws_instance" "example_public" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "example" {
-  name = "${var.instance_name}"
+  name = var.instance_name
 
   egress {
     from_port   = 0
@@ -40,8 +52,8 @@ resource "aws_security_group" "example" {
   }
 
   ingress {
-    from_port = "${var.ssh_port}"
-    to_port   = "${var.ssh_port}"
+    from_port = var.ssh_port
+    to_port   = var.ssh_port
     protocol  = "tcp"
 
     # To keep this example simple, we allow incoming SSH requests from any IP. In real-world usage, you should only
@@ -55,15 +67,15 @@ resource "aws_security_group" "example" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "null_resource" "example_provisioner" {
-  triggers {
-    public_ip = "${aws_instance.example_public.public_ip}"
+  triggers = {
+    public_ip = aws_instance.example_public.public_ip
   }
 
   connection {
-    type = "ssh"
-    host = "${aws_instance.example_public.public_ip}"
-    user = "${var.ssh_user}"
-    port = "${var.ssh_port}"
+    type  = "ssh"
+    host  = aws_instance.example_public.public_ip
+    user  = var.ssh_user
+    port  = var.ssh_port
     agent = true
   }
 
@@ -85,7 +97,6 @@ resource "null_resource" "example_provisioner" {
     # copy the public-ip file back to CWD, which will be tested
     command = "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${var.ssh_user}@${aws_instance.example_public.public_ip}:/tmp/public-ip public-ip"
   }
-
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -116,3 +127,4 @@ data "aws_ami" "ubuntu" {
     values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
   }
 }
+

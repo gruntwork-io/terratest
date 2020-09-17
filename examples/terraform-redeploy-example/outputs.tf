@@ -1,5 +1,5 @@
 output "alb_dns_name" {
-  value = "${aws_alb.web_servers.dns_name}"
+  value = aws_alb.web_servers.dns_name
 }
 
 output "url" {
@@ -7,5 +7,6 @@ output "url" {
 }
 
 output "asg_name" {
-  value = "${aws_autoscaling_group.web_servers.name}"
+  value = aws_autoscaling_group.web_servers.name
 }
+

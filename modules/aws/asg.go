@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 type AsgCapacityInfo struct {
@@ -21,14 +21,14 @@ type AsgCapacityInfo struct {
 }
 
 // GetCapacityInfoForAsg returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
-func GetCapacityInfoForAsg(t *testing.T, asgName string, awsRegion string) AsgCapacityInfo {
+func GetCapacityInfoForAsg(t testing.TestingT, asgName string, awsRegion string) AsgCapacityInfo {
 	capacityInfo, err := GetCapacityInfoForAsgE(t, asgName, awsRegion)
 	require.NoError(t, err)
 	return capacityInfo
 }
 
 // GetCapacityInfoForAsgE returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
-func GetCapacityInfoForAsgE(t *testing.T, asgName string, awsRegion string) (AsgCapacityInfo, error) {
+func GetCapacityInfoForAsgE(t testing.TestingT, asgName string, awsRegion string) (AsgCapacityInfo, error) {
 	asgClient, err := NewAsgClientE(t, awsRegion)
 	if err != nil {
 		return AsgCapacityInfo{}, err
@@ -53,7 +53,7 @@ func GetCapacityInfoForAsgE(t *testing.T, asgName string, awsRegion string) (Asg
 }
 
 // GetInstanceIdsForAsg gets the IDs of EC2 Instances in the given ASG.
-func GetInstanceIdsForAsg(t *testing.T, asgName string, awsRegion string) []string {
+func GetInstanceIdsForAsg(t testing.TestingT, asgName string, awsRegion string) []string {
 	ids, err := GetInstanceIdsForAsgE(t, asgName, awsRegion)
 	if err != nil {
 		t.Fatal(err)
@@ -62,7 +62,7 @@ func GetInstanceIdsForAsg(t *testing.T, asgName string, awsRegion string) []stri
 }
 
 // GetInstanceIdsForAsgE gets the IDs of EC2 Instances in the given ASG.
-func GetInstanceIdsForAsgE(t *testing.T, asgName string, awsRegion string) ([]string, error) {
+func GetInstanceIdsForAsgE(t testing.TestingT, asgName string, awsRegion string) ([]string, error) {
 	asgClient, err := NewAsgClientE(t, awsRegion)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func GetInstanceIdsForAsgE(t *testing.T, asgName string, awsRegion string) ([]st
 
 // WaitForCapacity waits for the currently set desired capacity to be reached on the ASG
 func WaitForCapacity(
-	t *testing.T,
+	t testing.TestingT,
 	asgName string,
 	region string,
 	maxRetries int,
@@ -98,7 +98,7 @@ func WaitForCapacity(
 
 // WaitForCapacityE waits for the currently set desired capacity to be reached on the ASG
 func WaitForCapacityE(
-	t *testing.T,
+	t testing.TestingT,
 	asgName string,
 	region string,
 	maxRetries int,
@@ -116,9 +116,8 @@ func WaitForCapacityE(
 			}
 			if capacityInfo.CurrentCapacity != capacityInfo.DesiredCapacity {
 				return "", NewAsgCapacityNotMetError(asgName, capacityInfo.DesiredCapacity, capacityInfo.CurrentCapacity)
-			} else {
-				return fmt.Sprintf("ASG %s is now at desired capacity %d", asgName, capacityInfo.DesiredCapacity), nil
 			}
+			return fmt.Sprintf("ASG %s is now at desired capacity %d", asgName, capacityInfo.DesiredCapacity), nil
 		},
 	)
 	logger.Log(t, msg)
@@ -126,7 +125,7 @@ func WaitForCapacityE(
 }
 
 // NewAsgClient creates an Auto Scaling Group client.
-func NewAsgClient(t *testing.T, region string) *autoscaling.AutoScaling {
+func NewAsgClient(t testing.TestingT, region string) *autoscaling.AutoScaling {
 	client, err := NewAsgClientE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -135,7 +134,7 @@ func NewAsgClient(t *testing.T, region string) *autoscaling.AutoScaling {
 }
 
 // NewAsgClientE creates an Auto Scaling Group client.
-func NewAsgClientE(t *testing.T, region string) (*autoscaling.AutoScaling, error) {
+func NewAsgClientE(t testing.TestingT, region string) (*autoscaling.AutoScaling, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err

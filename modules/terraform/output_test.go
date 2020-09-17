@@ -92,6 +92,119 @@ func TestOutputNotMapError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestOutputMapOfObjects(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-mapofobjects", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+	out := OutputMapOfObjects(t, options, "map_of_objects")
+
+	nestedMap1 := map[string]interface{}{
+		"four": 4,
+		"five": "five",
+	}
+
+	nestedList1 := []map[string]interface{}{
+		map[string]interface{}{
+			"six":   6,
+			"seven": "seven",
+		},
+	}
+
+	expectedMap1 := map[string]interface{}{
+		"somebool":  true,
+		"somefloat": 1.1,
+		"one":       1,
+		"two":       "two",
+		"three":     "three",
+		"nest":      nestedMap1,
+		"nest_list": nestedList1,
+	}
+
+	require.Equal(t, expectedMap1, out)
+}
+
+func TestOutputNotMapOfObjectsError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-mapofobjects", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+	_, err = OutputMapOfObjectsE(t, options, "not_map_of_objects")
+
+	require.Error(t, err)
+}
+
+func TestOutputListOfObjects(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-listofobjects", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+	out := OutputListOfObjects(t, options, "list_of_maps")
+
+	expectedLen := 2
+	nestedMap1 := map[string]interface{}{
+		"four": 4,
+		"five": "five",
+	}
+	nestedList1 := []map[string]interface{}{
+		map[string]interface{}{
+			"four": 4,
+			"five": "five",
+		},
+	}
+	expectedMap1 := map[string]interface{}{
+		"one":   1,
+		"two":   "two",
+		"three": "three",
+		"more":  nestedMap1,
+	}
+
+	expectedMap2 := map[string]interface{}{
+		"one":   "one",
+		"two":   2,
+		"three": 3,
+		"more":  nestedList1,
+	}
+
+	require.Len(t, out, expectedLen, "Output should contain %d items", expectedLen)
+	require.Equal(t, out[0], expectedMap1, "First map should be %q, got %q", expectedMap1, out[0])
+	require.Equal(t, out[1], expectedMap2, "First map should be %q, got %q", expectedMap2, out[1])
+}
+
+func TestOutputNotListOfObjectsError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-listofobjects", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+	_, err = OutputListOfObjectsE(t, options, "not_list_of_maps")
+
+	require.Error(t, err)
+}
+
 func TestOutputsForKeys(t *testing.T) {
 	t.Parallel()
 
@@ -138,6 +251,63 @@ func TestOutputsForKeys(t *testing.T) {
 	outputNotPresentMap, ok := out["constellations"].(map[string]interface{})
 	require.False(t, ok)
 	require.Nil(t, outputNotPresentMap)
+}
+
+func TestOutputStruct(t *testing.T) {
+	t.Parallel()
+
+	type TestStruct struct {
+		Somebool    bool
+		Somefloat   float64
+		Someint     int
+		Somestring  string
+		Somemap     map[string]interface{}
+		Listmaps    []map[string]interface{}
+		Liststrings []string
+	}
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-struct", t.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+
+	expectedObject := TestStruct{
+		Somebool:    true,
+		Somefloat:   0.1,
+		Someint:     1,
+		Somestring:  "two",
+		Somemap:     map[string]interface{}{"three": 3.0, "four": "four"},
+		Listmaps:    []map[string]interface{}{{"five": 5.0, "six": "six"}},
+		Liststrings: []string{"seven", "eight", "nine"},
+	}
+	actualObject := TestStruct{}
+	OutputStruct(t, options, "object", &actualObject)
+
+	expectedList := []TestStruct{
+		{
+			Somebool:   true,
+			Somefloat:  0.1,
+			Someint:    1,
+			Somestring: "two",
+		},
+		{
+			Somebool:   false,
+			Somefloat:  0.3,
+			Someint:    4,
+			Somestring: "five",
+		},
+	}
+	actualList := []TestStruct{}
+	OutputStruct(t, options, "list_of_objects", &actualList)
+
+	require.Equal(t, expectedObject, actualObject, "Object should be %q, got %q", expectedObject, actualObject)
+	require.Equal(t, expectedList, actualList, "List should be %q, got %q", expectedList, actualList)
 }
 
 func TestOutputsAll(t *testing.T) {

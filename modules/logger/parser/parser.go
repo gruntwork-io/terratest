@@ -50,7 +50,7 @@ var (
 //   in:  "    --- FAIL: TestSnafu"
 //   out: "    "
 func getIndent(data string) string {
-	re := regexp.MustCompile("^\\s+")
+	re := regexp.MustCompile(`^\s+`)
 	indent := re.FindString(data)
 	return indent
 }
@@ -100,7 +100,7 @@ func isPanicLine(text string) bool {
 // See the `fixtures` directory for some examples.
 func parseAndStoreTestOutput(
 	logger *logrus.Logger,
-	reader io.Reader,
+	read io.Reader,
 	outputDir string,
 ) {
 	logWriter := LogWriter{
@@ -113,68 +113,89 @@ func parseAndStoreTestOutput(
 	testResultMarkers := TestResultMarkerStack{}
 	previousTestName := ""
 
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		data := scanner.Text()
-		indentLevel := len(getIndent(data))
-		isIndented := indentLevel > 0
-
-		// Garbage collection of test result markers. Primary purpose is to detect when we dedent out, which can only be
-		// detected when we reach a dedented line.
-		testResultMarkers = testResultMarkers.removeDedentedTestResultMarkers(indentLevel)
-
-		// Handle each possible category of test lines
-		if isSummaryLine(data) {
-			logWriter.writeLog(logger, "summary", data)
-		} else if isStatusLine(data) {
-			testName := getTestNameFromStatusLine(data)
-			logWriter.writeLog(logger, testName, data)
-		} else if strings.HasPrefix(data, "Test") {
-			// Heuristic: `go test` will only execute test functions named `Test.*`, so we assume any line prefixed
-			// with `Test` is a test output for a named test. Also assume that test output will be space delimeted and
-			// test names can't contain spaces (because they are function names).
-			// This must be modified when `logger.DoLog` changes.
-			vals := strings.Split(data, " ")
-			testName := vals[0]
-			logWriter.writeLog(logger, testName, data)
-			previousTestName = testName
-		} else if isIndented && previousTestName != "summary" {
-			// In a test result block, so collect the line into all the test results we have seen so far.
-			// Note that previousTestName would only be set to summary if we saw a panic line.
-			for _, marker := range testResultMarkers {
-				logWriter.writeLog(logger, marker.TestName, data)
-			}
-		} else if isPanicLine(data) {
-			// When panic, we want all subsequent nonstandard test lines to roll up to the summary
-			previousTestName = "summary"
-			logWriter.writeLog(logger, "summary", data)
-		} else if previousTestName != "" {
-			// Base case: roll up to the previous test line, if it exists.
-			// Handles case where terratest log has entries with newlines in them.
-			logWriter.writeLog(logger, previousTestName, data)
-		} else if !isResultLine(data) {
-			// Result Lines are handled below
-			logger.Warnf("Found test line that does not match known cases: %s", data)
+	var err error
+	reader := bufio.NewReader(read)
+	for {
+		var data string
+		data, err = reader.ReadString('\n')
+		if len(data) == 0 && err == io.EOF {
+			break
 		}
 
-		// This has to happen separately from main if block to handle the special case of nested tests (e.g table driven
-		// tests). For those result lines, we want it to roll up to the parent test, so we need to run the handler in
-		// the `isIndented` section. But for both root and indented result lines, we want to execute the following code,
-		// hence this special block.
-		if isResultLine(data) {
-			testName := getTestNameFromResultLine(data)
-			logWriter.writeLog(logger, testName, data)
-			logWriter.writeLog(logger, "summary", data)
+		data = strings.TrimSuffix(data, "\n")
 
-			marker := TestResultMarker{
-				TestName:    testName,
-				IndentLevel: indentLevel,
+		// separate block so that we do not overwrite the err variable that we need afterwards to check if we're done
+		{
+			indentLevel := len(getIndent(data))
+			isIndented := indentLevel > 0
+
+			// Garbage collection of test result markers. Primary purpose is to detect when we dedent out, which can only be
+			// detected when we reach a dedented line.
+			testResultMarkers = testResultMarkers.removeDedentedTestResultMarkers(indentLevel)
+
+			// Handle each possible category of test lines
+			switch {
+			case isSummaryLine(data):
+				logWriter.writeLog(logger, "summary", data)
+
+			case isStatusLine(data):
+				testName := getTestNameFromStatusLine(data)
+				logWriter.writeLog(logger, testName, data)
+
+			case strings.HasPrefix(data, "Test"):
+				// Heuristic: `go test` will only execute test functions named `Test.*`, so we assume any line prefixed
+				// with `Test` is a test output for a named test. Also assume that test output will be space delimeted and
+				// test names can't contain spaces (because they are function names).
+				// This must be modified when `logger.DoLog` changes.
+				vals := strings.Split(data, " ")
+				testName := vals[0]
+				logWriter.writeLog(logger, testName, data)
+				previousTestName = testName
+
+			case isIndented && previousTestName != "summary":
+				// In a test result block, so collect the line into all the test results we have seen so far.
+				// Note that previousTestName would only be set to summary if we saw a panic line.
+				for _, marker := range testResultMarkers {
+					logWriter.writeLog(logger, marker.TestName, data)
+				}
+
+			case isPanicLine(data):
+				// When panic, we want all subsequent nonstandard test lines to roll up to the summary
+				previousTestName = "summary"
+				logWriter.writeLog(logger, "summary", data)
+
+			case previousTestName != "":
+				// Base case: roll up to the previous test line, if it exists.
+				// Handles case where terratest log has entries with newlines in them.
+				logWriter.writeLog(logger, previousTestName, data)
+
+			case !isResultLine(data):
+				// Result Lines are handled below
+				logger.Warnf("Found test line that does not match known cases: %s", data)
 			}
-			testResultMarkers = testResultMarkers.push(marker)
+
+			// This has to happen separately from main if block to handle the special case of nested tests (e.g table driven
+			// tests). For those result lines, we want it to roll up to the parent test, so we need to run the handler in
+			// the `isIndented` section. But for both root and indented result lines, we want to execute the following code,
+			// hence this special block.
+			if isResultLine(data) {
+				testName := getTestNameFromResultLine(data)
+				logWriter.writeLog(logger, testName, data)
+				logWriter.writeLog(logger, "summary", data)
+
+				marker := TestResultMarker{
+					TestName:    testName,
+					IndentLevel: indentLevel,
+				}
+				testResultMarkers = testResultMarkers.push(marker)
+			}
+		}
+
+		if err != nil {
+			break
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		logger.Fatalf("Error reading from scanner: %s", err)
+	if err != io.EOF {
+		logger.Fatalf("Error reading from Reader: %s", err)
 	}
 }

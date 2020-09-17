@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // SKIP_STAGE_ENV_VAR_PREFIX is the prefix used for skipping stage environment variables.
@@ -17,7 +17,7 @@ const SKIP_STAGE_ENV_VAR_PREFIX = "SKIP_"
 
 // RunTestStage executes the given test stage (e.g., setup, teardown, validation) if an environment variable of the name
 // `SKIP_<stageName>` (e.g., SKIP_teardown) is not set.
-func RunTestStage(t *testing.T, stageName string, stage func()) {
+func RunTestStage(t testing.TestingT, stageName string, stage func()) {
 	envVarName := fmt.Sprintf("%s%s", SKIP_STAGE_ENV_VAR_PREFIX, stageName)
 	if os.Getenv(envVarName) == "" {
 		logger.Logf(t, "The '%s' environment variable is not set, so executing stage '%s'.", envVarName, stageName)
@@ -66,7 +66,7 @@ func SkipStageEnvVarSet() bool {
 // Note that if any of the SKIP_<stage> environment variables is set, we assume this is a test in the local dev where
 // there are no other concurrent tests running and we want to be able to cache test data between test stages, so in that
 // case, we do NOT copy anything to a temp folder, and return the path to the original terraform module folder instead.
-func CopyTerraformFolderToTemp(t *testing.T, rootFolder string, terraformModuleFolder string) string {
+func CopyTerraformFolderToTemp(t testing.TestingT, rootFolder string, terraformModuleFolder string) string {
 	if SkipStageEnvVarSet() {
 		logger.Logf(t, "A SKIP_XXX environment variable is set. Using original examples folder rather than a temp folder so we can cache data between stages for faster local testing.")
 		return filepath.Join(rootFolder, terraformModuleFolder)

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/retry"
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/compute/v1"
 )
 

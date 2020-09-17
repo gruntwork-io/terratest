@@ -8,6 +8,7 @@
 package test
 
 import (
+	"crypto/tls"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -31,18 +32,17 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 	helmChartPath, err := filepath.Abs("../examples/helm-basic-example")
 	require.NoError(t, err)
 
-	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
-	// - HOME/.kube/config for the kubectl config file
-	// - Current context of the kubectl config file
-	kubectlOptions := k8s.NewKubectlOptions("", "")
-
 	// To ensure we can reuse the resource config on the same cluster to test different scenarios, we setup a unique
 	// namespace for the resources for this test.
 	// Note that namespaces must be lowercase.
 	namespaceName := fmt.Sprintf("helm-basic-example-%s", strings.ToLower(random.UniqueId()))
+
+	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
+	// - HOME/.kube/config for the kubectl config file
+	// - Current context of the kubectl config file
+	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
+
 	k8s.CreateNamespace(t, kubectlOptions, namespaceName)
-	// Make sure we set the namespace on the options
-	kubectlOptions.Namespace = namespaceName
 	// ... and make sure to delete the namespace at the end of the test
 	defer k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 
@@ -83,11 +83,16 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 	// Now we verify that the service will successfully boot and start serving requests
 	service := k8s.GetService(t, kubectlOptions, serviceName)
 	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 80)
+
+	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
+	tlsConfig := tls.Config{}
+
 	// Test the endpoint for up to 5 minutes. This will only fail if we timeout waiting for the service to return a 200
 	// response.
 	http_helper.HttpGetWithRetryWithCustomValidation(
 		t,
 		fmt.Sprintf("http://%s", endpoint),
+		&tlsConfig,
 		30,
 		10*time.Second,
 		func(statusCode int, body string) bool {

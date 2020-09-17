@@ -1,13 +1,13 @@
 package aws
 
 import (
-	"testing"
-
 	"github.com/aws/aws-sdk-go/service/acm"
+
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // GetAcmCertificateArn gets the ACM certificate for the given domain name in the given region.
-func GetAcmCertificateArn(t *testing.T, awsRegion string, certDomainName string) string {
+func GetAcmCertificateArn(t testing.TestingT, awsRegion string, certDomainName string) string {
 	arn, err := GetAcmCertificateArnE(t, awsRegion, certDomainName)
 	if err != nil {
 		t.Fatal(err)
@@ -16,7 +16,7 @@ func GetAcmCertificateArn(t *testing.T, awsRegion string, certDomainName string)
 }
 
 // GetAcmCertificateArnE gets the ACM certificate for the given domain name in the given region.
-func GetAcmCertificateArnE(t *testing.T, awsRegion string, certDomainName string) (string, error) {
+func GetAcmCertificateArnE(t testing.TestingT, awsRegion string, certDomainName string) (string, error) {
 	acmClient, err := NewAcmClientE(t, awsRegion)
 	if err != nil {
 		return "", err
@@ -37,7 +37,7 @@ func GetAcmCertificateArnE(t *testing.T, awsRegion string, certDomainName string
 }
 
 // NewAcmClient create a new ACM client.
-func NewAcmClient(t *testing.T, region string) *acm.ACM {
+func NewAcmClient(t testing.TestingT, region string) *acm.ACM {
 	client, err := NewAcmClientE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +46,7 @@ func NewAcmClient(t *testing.T, region string) *acm.ACM {
 }
 
 // NewAcmClientE creates a new ACM client.
-func NewAcmClientE(t *testing.T, awsRegion string) (*acm.ACM, error) {
+func NewAcmClientE(t testing.TestingT, awsRegion string) (*acm.ACM, error) {
 	sess, err := NewAuthenticatedSession(awsRegion)
 	if err != nil {
 		return nil, err

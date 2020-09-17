@@ -23,7 +23,7 @@ func TestNamespaces(t *testing.T) {
 
 	uniqueId := random.UniqueId()
 	namespaceName := strings.ToLower(uniqueId)
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", namespaceName)
 	CreateNamespace(t, options, namespaceName)
 	defer func() {
 		DeleteNamespace(t, options, namespaceName)

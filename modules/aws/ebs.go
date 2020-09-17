@@ -1,15 +1,14 @@
 package aws
 
 import (
-	"testing"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // DeleteEbsSnapshot deletes the given EBS snapshot
-func DeleteEbsSnapshot(t *testing.T, region string, snapshot string) {
+func DeleteEbsSnapshot(t testing.TestingT, region string, snapshot string) {
 	err := DeleteEbsSnapshotE(t, region, snapshot)
 	if err != nil {
 		t.Fatal(err)
@@ -17,7 +16,7 @@ func DeleteEbsSnapshot(t *testing.T, region string, snapshot string) {
 }
 
 // DeleteEbsSnapshot deletes the given EBS snapshot
-func DeleteEbsSnapshotE(t *testing.T, region string, snapshot string) error {
+func DeleteEbsSnapshotE(t testing.TestingT, region string, snapshot string) error {
 	logger.Logf(t, "Deleting EBS snapshot %s", snapshot)
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {

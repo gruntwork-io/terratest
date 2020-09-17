@@ -3,17 +3,41 @@ package terraform
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
+
+	"github.com/gruntwork-io/terratest/modules/collections"
 )
+
+// TerraformDefaultLockingStatus - The terratest default command lock status (backwards compatibility)
+var TerraformCommandsWithLockSupport = []string{
+	"plan",
+	"apply",
+	"destroy",
+	"init",
+	"refresh",
+	"taint",
+	"untaint",
+	"import",
+}
 
 // FormatArgs converts the inputs to a format palatable to terraform. This includes converting the given vars to the
 // format the Terraform CLI expects (-var key=value).
 func FormatArgs(options *Options, args ...string) []string {
 	var terraformArgs []string
+	commandType := args[0]
+	lockSupported := collections.ListContains(TerraformCommandsWithLockSupport, commandType)
+
 	terraformArgs = append(terraformArgs, args...)
 	terraformArgs = append(terraformArgs, FormatTerraformVarsAsArgs(options.Vars)...)
 	terraformArgs = append(terraformArgs, FormatTerraformArgs("-var-file", options.VarFiles)...)
 	terraformArgs = append(terraformArgs, FormatTerraformArgs("-target", options.Targets)...)
+
+	if lockSupported {
+		// If command supports locking, handle lock arguments
+		terraformArgs = append(terraformArgs, FormatTerraformLockAsArgs(options.Lock, options.LockTimeout)...)
+	}
+
 	return terraformArgs
 }
 
@@ -21,6 +45,17 @@ func FormatArgs(options *Options, args ...string) []string {
 // -var key=value).
 func FormatTerraformVarsAsArgs(vars map[string]interface{}) []string {
 	return formatTerraformArgs(vars, "-var", true)
+}
+
+// FormatTerraformLockAsArgs formats the lock and lock-timeout variables
+// -lock, -lock-timeout
+func FormatTerraformLockAsArgs(lockCheck bool, lockTimeout string) []string {
+	lockArgs := []string{fmt.Sprintf("-lock=%v", lockCheck)}
+	if lockTimeout != "" {
+		lockTimeoutValue := fmt.Sprintf("%s=%s", "-lock-timeout", lockTimeout)
+		lockArgs = append(lockArgs, lockTimeoutValue)
+	}
+	return lockArgs
 }
 
 // FormatTerraformArgs will format multiple args with the arg name (e.g. "-var-file", []string{"foo.tfvars", "bar.tfvars"})
@@ -137,7 +172,7 @@ func mapToHclString(m map[string]interface{}) string {
 	keyValuePairs := []string{}
 
 	for key, value := range m {
-		keyValuePair := fmt.Sprintf("%s = %s", key, toHclString(value, true))
+		keyValuePair := fmt.Sprintf(`"%s" = %s`, key, toHclString(value, true))
 		keyValuePairs = append(keyValuePairs, keyValuePair)
 	}
 
@@ -147,13 +182,14 @@ func mapToHclString(m map[string]interface{}) string {
 // Convert a primitive, such as a bool, int, or string, to an HCL string. If this isn't a primitive, force its value
 // using Sprintf. See ToHclString for details.
 func primitiveToHclString(value interface{}, isNested bool) string {
+	if value == nil {
+		return "null"
+	}
+
 	switch v := value.(type) {
 
 	case bool:
-		if v {
-			return "1"
-		}
-		return "0"
+		return strconv.FormatBool(v)
 
 	case string:
 		// If string is nested in a larger data structure (e.g. list of string, map of string), ensure value is quoted

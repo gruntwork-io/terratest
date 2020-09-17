@@ -32,7 +32,7 @@
     "encrypt_boot": false
   }, {
     "type": "googlecompute",
-    "image_name": "terratest-packer-example-{{isotime | clean_image_name}}",
+    "image_name": "terratest-packer-example-{{isotime | clean_resource_name}}",
     "image_family": "terratest",
     "project_id": "{{user `gcp_project_id`}}",
     "source_image_family": "ubuntu-1804-lts",

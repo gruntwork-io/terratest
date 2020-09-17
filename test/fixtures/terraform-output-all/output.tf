@@ -12,16 +12,16 @@ output "our_star" {
 
 output "constellations" {
   value = {
-    Gemini = "Pollux",
+    Gemini  = "Pollux",
     Scorpio = "Antares",
-    Taurus = "Aldebaran",
-    Virgo = "Spica",
+    Taurus  = "Aldebaran",
+    Virgo   = "Spica",
   }
 }
 
 output "magnitudes" {
   value = {
-    Sirius = -1.46,
+    Sirius  = -1.46,
     Canopus = -0.72,
     Antares = 0.96,
   }

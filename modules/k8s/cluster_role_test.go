@@ -17,7 +17,7 @@ import (
 func TestGetClusterRoleEReturnsErrorForNonExistantClusterRole(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	_, err := GetClusterRoleE(t, options, "non-existing-role")
 	require.Error(t, err)
 }
@@ -25,7 +25,7 @@ func TestGetClusterRoleEReturnsErrorForNonExistantClusterRole(t *testing.T) {
 func TestGetClusterRoleEReturnsCorrectClusterRoleInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	defer KubectlDeleteFromString(t, options, EXAMPLE_CLUSTER_ROLE_YAML_TEMPLATE)
 	KubectlApplyFromString(t, options, EXAMPLE_CLUSTER_ROLE_YAML_TEMPLATE)
 

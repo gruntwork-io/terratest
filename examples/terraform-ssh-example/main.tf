@@ -1,10 +1,22 @@
 # ---------------------------------------------------------------------------------------------------------------------
+# PIN TERRAFORM VERSION TO >= 0.12
+# The examples have been upgraded to 0.12 syntax
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
+  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
+  # forwards compatible with 0.13.x code.
+  required_version = ">= 0.12.26"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY TWO EC2 INSTANCES THAT ALLOWS CONNECTIONS VIA SSH
 # See test/terraform_ssh_example.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -12,15 +24,15 @@ provider "aws" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_instance" "example_public" {
-  ami                    = "${data.aws_ami.ubuntu.id}"
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
-  vpc_security_group_ids = ["${aws_security_group.example.id}"]
-  key_name               = "${var.key_pair_name}"
+  vpc_security_group_ids = [aws_security_group.example.id]
+  key_name               = var.key_pair_name
 
   # This EC2 Instance has a public IP and will be accessible directly from the public Internet
   associate_public_ip_address = true
 
-  tags {
+  tags = {
     Name = "${var.instance_name}-public"
   }
 }
@@ -30,15 +42,15 @@ resource "aws_instance" "example_public" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_instance" "example_private" {
-  ami                    = "${data.aws_ami.ubuntu.id}"
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
-  vpc_security_group_ids = ["${aws_security_group.example.id}"]
-  key_name               = "${var.key_pair_name}"
+  vpc_security_group_ids = [aws_security_group.example.id]
+  key_name               = var.key_pair_name
 
   # This EC2 Instance has a private IP and will be accessible only from within the VPC
   associate_public_ip_address = false
 
-  tags {
+  tags = {
     Name = "${var.instance_name}-private"
   }
 }
@@ -48,7 +60,7 @@ resource "aws_instance" "example_private" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "example" {
-  name = "${var.instance_name}"
+  name = var.instance_name
 
   egress {
     from_port   = 0
@@ -58,8 +70,8 @@ resource "aws_security_group" "example" {
   }
 
   ingress {
-    from_port = "${var.ssh_port}"
-    to_port   = "${var.ssh_port}"
+    from_port = var.ssh_port
+    to_port   = var.ssh_port
     protocol  = "tcp"
 
     # To keep this example simple, we allow incoming SSH requests from any IP. In real-world usage, you should only
@@ -96,3 +108,4 @@ data "aws_ami" "ubuntu" {
     values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
   }
 }
+

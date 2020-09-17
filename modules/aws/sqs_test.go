@@ -38,6 +38,34 @@ func TestSqsQueueMethods(t *testing.T) {
 	assert.Error(t, secondResponse.Error, ReceiveMessageTimeout{QueueUrl: url, TimeoutSec: timeoutSec})
 }
 
+func TestFifoSqsQueueMethods(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	uniqueID := random.UniqueId()
+	namePrefix := fmt.Sprintf("sqs-queue-test-%s", uniqueID)
+	fifoMessageGroupID := "g1"
+
+	url := CreateRandomFifoQueue(t, region, namePrefix)
+	defer deleteQueue(t, region, url)
+
+	assert.True(t, queueExists(t, region, url))
+
+	message := fmt.Sprintf("test-message-%s", uniqueID)
+	timeoutSec := 20
+
+	SendMessageFifoToQueue(t, region, url, message, fifoMessageGroupID)
+
+	firstResponse := WaitForQueueMessage(t, region, url, timeoutSec)
+	assert.NoError(t, firstResponse.Error)
+	assert.Equal(t, message, firstResponse.MessageBody)
+
+	DeleteMessageFromQueue(t, region, url, firstResponse.ReceiptHandle)
+
+	secondResponse := WaitForQueueMessage(t, region, url, timeoutSec)
+	assert.Error(t, secondResponse.Error, ReceiveMessageTimeout{QueueUrl: url, TimeoutSec: timeoutSec})
+}
+
 func queueExists(t *testing.T, region string, url string) bool {
 	sqsClient := NewSqsClient(t, region)
 

@@ -8,8 +8,9 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"golang.org/x/crypto/ssh/agent"
 )
 
@@ -24,7 +25,7 @@ type SshAgent struct {
 
 // Create SSH agent, start it in background and returns control back to the main thread
 // You should stop the agent to cleanup files afterwards by calling `defer s.Stop()`
-func NewSshAgent(t *testing.T, socketDir string, socketFile string) (*SshAgent, error) {
+func NewSshAgent(t testing.TestingT, socketDir string, socketFile string) (*SshAgent, error) {
 	var err error
 	s := &SshAgent{make(chan bool), make(chan bool), socketDir, socketFile, agent.NewKeyring(), nil}
 	s.ln, err = net.Listen("unix", s.socketFile)
@@ -41,7 +42,7 @@ func (s *SshAgent) SocketFile() string {
 }
 
 // SSH Agent listener and handler
-func (s *SshAgent) run(t *testing.T) {
+func (s *SshAgent) run(t testing.TestingT) {
 	defer close(s.stopped)
 	for {
 		select {
@@ -57,7 +58,7 @@ func (s *SshAgent) run(t *testing.T) {
 					return
 					// When s.ln.Accept() returns a legit error, we print it and continue accepting further requests
 				default:
-					t.Logf("could not accept connection to agent %v", err)
+					logger.Logf(t, "could not accept connection to agent %v", err)
 					continue
 				}
 			} else {
@@ -65,7 +66,7 @@ func (s *SshAgent) run(t *testing.T) {
 				go func(c io.ReadWriter) {
 					err := agent.ServeAgent(s.agent, c)
 					if err != nil {
-						t.Logf("could not serve ssh agent %v", err)
+						logger.Logf(t, "could not serve ssh agent %v", err)
 					}
 				}(c)
 			}
@@ -83,7 +84,7 @@ func (s *SshAgent) Stop() {
 
 // Instantiates and returns an in-memory ssh agent with the given KeyPair already added
 // You should stop the agent to cleanup files afterwards by calling `defer sshAgent.Stop()`
-func SshAgentWithKeyPair(t *testing.T, keyPair *KeyPair) *SshAgent {
+func SshAgentWithKeyPair(t testing.TestingT, keyPair *KeyPair) *SshAgent {
 	sshAgent, err := SshAgentWithKeyPairE(t, keyPair)
 
 	if err != nil {
@@ -93,12 +94,12 @@ func SshAgentWithKeyPair(t *testing.T, keyPair *KeyPair) *SshAgent {
 	return sshAgent
 }
 
-func SshAgentWithKeyPairE(t *testing.T, keyPair *KeyPair) (*SshAgent, error) {
+func SshAgentWithKeyPairE(t testing.TestingT, keyPair *KeyPair) (*SshAgent, error) {
 	sshAgent, err := SshAgentWithKeyPairsE(t, []*KeyPair{keyPair})
 	return sshAgent, err
 }
 
-func SshAgentWithKeyPairs(t *testing.T, keyPairs []*KeyPair) *SshAgent {
+func SshAgentWithKeyPairs(t testing.TestingT, keyPairs []*KeyPair) *SshAgent {
 	sshAgent, err := SshAgentWithKeyPairsE(t, keyPairs)
 
 	if err != nil {
@@ -110,8 +111,8 @@ func SshAgentWithKeyPairs(t *testing.T, keyPairs []*KeyPair) *SshAgent {
 
 // Instantiates and returns an in-memory ssh agent with the given KeyPair(s) already added
 // You should stop the agent to cleanup files afterwards by calling `defer sshAgent.Stop()`
-func SshAgentWithKeyPairsE(t *testing.T, keyPairs []*KeyPair) (*SshAgent, error) {
-	t.Log("Generating SSH Agent with given KeyPair(s)")
+func SshAgentWithKeyPairsE(t testing.TestingT, keyPairs []*KeyPair) (*SshAgent, error) {
+	logger.Logf(t, "Generating SSH Agent with given KeyPair(s)")
 
 	// Instantiate a temporary SSH agent
 	socketDir, err := ioutil.TempDir("", "ssh-agent-")

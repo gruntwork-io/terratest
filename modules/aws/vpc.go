@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // Vpc is an Amazon Virtual Private Cloud.
@@ -29,40 +30,69 @@ var isDefaultFilterName = "isDefault"
 var isDefaultFilterValue = "true"
 
 // GetDefaultVpc fetches information about the default VPC in the given region.
-func GetDefaultVpc(t *testing.T, region string) *Vpc {
+func GetDefaultVpc(t testing.TestingT, region string) *Vpc {
 	vpc, err := GetDefaultVpcE(t, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return vpc
 }
 
 // GetDefaultVpcE fetches information about the default VPC in the given region.
-func GetDefaultVpcE(t *testing.T, region string) (*Vpc, error) {
+func GetDefaultVpcE(t testing.TestingT, region string) (*Vpc, error) {
+	defaultVpcFilter := ec2.Filter{Name: &isDefaultFilterName, Values: []*string{&isDefaultFilterValue}}
+	vpcs, err := GetVpcsE(t, []*ec2.Filter{&defaultVpcFilter}, region)
+
+	numVpcs := len(vpcs)
+	if numVpcs != 1 {
+		return nil, fmt.Errorf("Expected to find one default VPC in region %s but found %s", region, strconv.Itoa(numVpcs))
+	}
+
+	return vpcs[0], err
+}
+
+// GetVpcById fetches information about a VPC with given Id in the given region.
+func GetVpcById(t testing.TestingT, vpcId string, region string) *Vpc {
+	vpc, err := GetVpcByIdE(t, vpcId, region)
+	require.NoError(t, err)
+	return vpc
+}
+
+// GetVpcByIdE fetches information about a VPC with given Id in the given region.
+func GetVpcByIdE(t testing.TestingT, vpcId string, region string) (*Vpc, error) {
+	vpcIdFilter := ec2.Filter{Name: &vpcIDFilterName, Values: []*string{&vpcId}}
+	vpcs, err := GetVpcsE(t, []*ec2.Filter{&vpcIdFilter}, region)
+
+	numVpcs := len(vpcs)
+	if numVpcs != 1 {
+		return nil, fmt.Errorf("Expected to find one VPC with ID %s in region %s but found %s", vpcId, region, strconv.Itoa(numVpcs))
+	}
+
+	return vpcs[0], err
+}
+
+// GetVpcsE fetches informations about VPCs from given regions limited by filters
+func GetVpcsE(t testing.TestingT, filters []*ec2.Filter, region string) ([]*Vpc, error) {
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
 	}
 
-	defaultVpcFilter := ec2.Filter{Name: &isDefaultFilterName, Values: []*string{&isDefaultFilterValue}}
-	vpcs, err := client.DescribeVpcs(&ec2.DescribeVpcsInput{Filters: []*ec2.Filter{&defaultVpcFilter}})
+	vpcs, err := client.DescribeVpcs(&ec2.DescribeVpcsInput{Filters: filters})
 	if err != nil {
 		return nil, err
 	}
 
 	numVpcs := len(vpcs.Vpcs)
-	if numVpcs != 1 {
-		return nil, fmt.Errorf("Expected to find one default VPC in region %s but found %s", region, strconv.Itoa(numVpcs))
+	retVal := make([]*Vpc, numVpcs)
+
+	for i, vpc := range vpcs.Vpcs {
+		subnets, err := GetSubnetsForVpcE(t, aws.StringValue(vpc.VpcId), region)
+		if err != nil {
+			return nil, err
+		}
+		retVal[i] = &Vpc{Id: aws.StringValue(vpc.VpcId), Name: FindVpcName(vpc), Subnets: subnets}
 	}
 
-	defaultVpc := vpcs.Vpcs[0]
-
-	subnets, err := GetSubnetsForVpcE(t, aws.StringValue(defaultVpc.VpcId), region)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Vpc{Id: aws.StringValue(defaultVpc.VpcId), Name: FindVpcName(defaultVpc), Subnets: subnets}, nil
+	return retVal, nil
 }
 
 // FindVpcName extracts the VPC name from its tags (if any). Fall back to "Default" if it's the default VPC or empty string
@@ -82,7 +112,7 @@ func FindVpcName(vpc *ec2.Vpc) string {
 }
 
 // GetSubnetsForVpc gets the subnets in the specified VPC.
-func GetSubnetsForVpc(t *testing.T, vpcID string, region string) []Subnet {
+func GetSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
 	subnets, err := GetSubnetsForVpcE(t, vpcID, region)
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +121,7 @@ func GetSubnetsForVpc(t *testing.T, vpcID string, region string) []Subnet {
 }
 
 // GetSubnetsForVpcE gets the subnets in the specified VPC.
-func GetSubnetsForVpcE(t *testing.T, vpcID string, region string) ([]Subnet, error) {
+func GetSubnetsForVpcE(t testing.TestingT, vpcID string, region string) ([]Subnet, error) {
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
@@ -111,6 +141,43 @@ func GetSubnetsForVpcE(t *testing.T, vpcID string, region string) ([]Subnet, err
 	}
 
 	return subnets, nil
+}
+
+// IsPublicSubnet returns True if the subnet identified by the given id in the provided region is public.
+func IsPublicSubnet(t testing.TestingT, subnetId string, region string) bool {
+	isPublic, err := IsPublicSubnetE(t, subnetId, region)
+	require.NoError(t, err)
+	return isPublic
+}
+
+// IsPublicSubnetE returns True if the subnet identified by the given id in the provided region is public.
+func IsPublicSubnetE(t testing.TestingT, subnetId string, region string) (bool, error) {
+	subnetIdFilterName := "association.subnet-id"
+
+	subnetIdFilter := ec2.Filter{
+		Name:   &subnetIdFilterName,
+		Values: []*string{&subnetId},
+	}
+
+	client, err := NewEc2ClientE(t, region)
+	if err != nil {
+		return false, err
+	}
+
+	rts, err := client.DescribeRouteTables(&ec2.DescribeRouteTablesInput{Filters: []*ec2.Filter{&subnetIdFilter}})
+	if err != nil {
+		return false, err
+	}
+
+	for _, rt := range rts.RouteTables {
+		for _, r := range rt.Routes {
+			if strings.HasPrefix(aws.StringValue(r.GatewayId), "igw-") {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 // GetRandomPrivateCidrBlock gets a random CIDR block from the range of acceptable private IP addresses per RFC 1918

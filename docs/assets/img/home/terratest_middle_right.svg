@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="312px" height="661px" viewBox="0 0 312 661" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>terratest_middle_right</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="30.46875%" y1="0%" x2="69.53125%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="79.8583349%" y1="52.4542426%" x2="23.5716011%" y2="62.4146648%" id="linearGradient-2">
+            <stop stop-color="#1888CF" offset="0%"></stop>
+            <stop stop-color="#0352C2" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="30.46875%" y1="0%" x2="69.53125%" y2="100%" id="linearGradient-3">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="31.2421875%" y1="0%" x2="68.7578125%" y2="100%" id="linearGradient-4">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="30.46875%" y1="0%" x2="69.53125%" y2="100%" id="linearGradient-5">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="79.8583349%" y1="52.4977519%" x2="23.5716011%" y2="62.6347543%" id="linearGradient-6">
+            <stop stop-color="#0352C2" offset="0%"></stop>
+            <stop stop-color="#0352C2" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="terratest_middle_right">
+            <polygon id="Rectangle" fill="url(#linearGradient-1)" points="163 182.580645 193 164 193 193.419355 163 212"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(147.000000, 188.000000) scale(-1, 1) translate(-147.000000, -188.000000) " points="132 182.580645 162 164 162 193.419355 132 212"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="#0692EA" transform="translate(162.500000, 163.500000) scale(-1, 1) translate(-162.500000, -163.500000) " points="133 163.5 162.5 145 192 163.5 162.5 182"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-1)" points="30 236.580645 60 218 60 247.419355 30 266"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(15.000000, 242.000000) scale(-1, 1) translate(-15.000000, -242.000000) " points="0 236.580645 30 218 30 247.419355 0 266"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="url(#linearGradient-2)" transform="translate(30.500000, 217.500000) scale(-1, 1) translate(-30.500000, -217.500000) " points="1 217.5 30.5 199 60 217.5 30.5 236"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-1)" points="236 631.580645 266 613 266 642.419355 236 661"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(221.000000, 637.000000) scale(-1, 1) translate(-221.000000, -637.000000) " points="206 631.580645 236 613 236 642.419355 206 661"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="url(#linearGradient-2)" transform="translate(236.500000, 612.500000) scale(-1, 1) translate(-236.500000, -612.500000) " points="207 612.5 236.5 594 266 612.5 236.5 631"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-3)" points="162 235.290323 177 226 177 240.709677 162 250"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(154.500000, 238.000000) scale(-1, 1) translate(-154.500000, -238.000000) " points="147 235.290323 162 226 162 240.709677 147 250"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="#06A0FC" transform="translate(162.500000, 224.500000) scale(-1, 1) translate(-162.500000, -224.500000) " points="148 224.5 162.5 215 177 224.5 162.5 234"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-3)" points="297 19.2903226 312 10 312 24.7096774 297 34"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(288.500000, 22.000000) scale(-1, 1) translate(-288.500000, -22.000000) " points="281 19.2903226 296 10 296 24.7096774 281 34"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="#067ACB" transform="translate(296.500000, 9.500000) scale(-1, 1) translate(-296.500000, -9.500000) " points="282 9.5 296.5 0 311 9.5 296.5 19"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-3)" points="163 127.290323 178 118 178 132.709677 163 142"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(154.500000, 130.000000) scale(-1, 1) translate(-154.500000, -130.000000) " points="147 127.290323 162 118 162 132.709677 147 142"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="#0679C9" transform="translate(162.500000, 117.500000) scale(-1, 1) translate(-162.500000, -117.500000) " points="148 117.5 162.5 108 177 117.5 162.5 127"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-4)" points="262 327.967742 311 297 311 346.032258 262 377"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(235.500000, 337.000000) scale(-1, 1) translate(-235.500000, -337.000000) " points="211 327.967742 260 297 260 346.032258 211 377"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="#0352C2" transform="translate(261.000000, 296.000000) scale(-1, 1) translate(-261.000000, -296.000000) " points="212 296 261 265 310 296 261 327"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-5)" points="73 409.483871 98 394 98 418.516129 73 434"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(59.500000, 414.000000) scale(-1, 1) translate(-59.500000, -414.000000) " points="47 409.483871 72 394 72 418.516129 47 434"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="#067ACB" transform="translate(72.500000, 392.500000) scale(-1, 1) translate(-72.500000, -392.500000) " points="48 392.5 72.5 377 97 392.5 72.5 408"></polygon>
+            <polygon id="Rectangle" fill="url(#linearGradient-5)" points="100 366.483871 125 351 125 375.516129 100 391"></polygon>
+            <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(86.500000, 371.000000) scale(-1, 1) translate(-86.500000, -371.000000) " points="74 366.483871 99 351 99 375.516129 74 391"></polygon>
+            <polygon id="Rectangle-Copy-3" fill="url(#linearGradient-6)" transform="translate(99.500000, 349.500000) scale(-1, 1) translate(-99.500000, -349.500000) " points="75 349.5 99.5 334 124 349.5 99.5 365"></polygon>
+            <path d="M106,364 L211,298" id="Line-2-Copy-2" stroke="#07A7FD" stroke-width="2" stroke-linecap="square" stroke-dasharray="2,8" transform="translate(158.500000, 331.000000) scale(-1, -1) translate(-158.500000, -331.000000) "></path>
+        </g>
+    </g>
+</svg>

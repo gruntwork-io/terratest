@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="405px" height="188px" viewBox="0 0 405 188" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>terratest_subpage_left</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="30.993838%" y1="0%" x2="69.006162%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="30.993838%" y1="0%" x2="69.006162%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="terratest_subpage_left" transform="translate(-2.000000, 0.000000)">
+            <g id="Group-27-Copy" transform="translate(119.000000, 130.500000) scale(-1, 1) translate(-119.000000, -130.500000) translate(0.000000, 73.000000)">
+                <g id="Group-Copy-6" transform="translate(75.000000, 57.000000)">
+                    <polygon id="Rectangle" fill="url(#linearGradient-1)" points="26.5 32.6451613 51.1 17.2 51.1 41.6548387 26.5 57.1"></polygon>
+                    <polygon id="Rectangle-Copy-15" fill="#0127A2" transform="translate(12.300000, 37.150000) scale(-1, 1) translate(-12.300000, -37.150000) " points="2.27373675e-13 32.6451613 24.6 17.2 24.6 41.6548387 2.27373675e-13 57.1"></polygon>
+                    <polygon id="Rectangle-Copy-3" fill="#0352C2" transform="translate(25.650000, 15.450000) scale(-1, 1) translate(-25.650000, -15.450000) " points="1.2 15.45 25.65 -1.42108547e-14 50.1 15.45 25.65 30.9"></polygon>
+                </g>
+                <g id="Group-Copy-7" transform="translate(0.000000, 8.000000)">
+                    <polygon id="Rectangle" fill="url(#linearGradient-1)" points="26.5 32.6451613 51.1 17.2 51.1 41.6548387 26.5 57.1"></polygon>
+                    <polygon id="Rectangle-Copy-15" fill="#0124A0" transform="translate(12.300000, 37.150000) scale(-1, 1) translate(-12.300000, -37.150000) " points="1.82964754e-13 32.6451613 24.6 17.2 24.6 41.6548387 1.82964754e-13 57.1"></polygon>
+                    <polygon id="Rectangle-Copy-3" fill="#0237AE" transform="translate(25.650000, 15.450000) scale(-1, 1) translate(-25.650000, -15.450000) " points="1.2 15.45 25.65 0 50.1 15.45 25.65 30.9"></polygon>
+                </g>
+                <path d="M131,94 L237.38947,26.7243056" id="Line-2-Copy-3" stroke="#07A7FD" stroke-width="2" stroke-linecap="square" stroke-dasharray="2,8"></path>
+                <path d="M54,44.4436177 L124.28293,-5.68434189e-14 L199,51.4436177" id="Line-2-Copy-4" stroke="#07A7FD" stroke-width="2" stroke-linecap="square" stroke-dasharray="2,8"></path>
+            </g>
+            <g id="Group" transform="translate(336.000000, 0.000000)">
+                <polygon id="Rectangle" fill="url(#linearGradient-2)" points="35.6999994 44.3032251 70.1399988 22.6799996 70.1399988 56.9167732 35.6999994 78.5399987"></polygon>
+                <polygon id="Rectangle-Copy-15" fill="#00229E" transform="translate(17.220000, 50.609999) scale(-1, 1) translate(-17.220000, -50.609999) " points="-9.23705556e-14 44.3032251 34.4399994 22.6799996 34.4399994 56.9167732 -9.23705556e-14 78.5399987"></polygon>
+                <polygon id="Rectangle-Copy-3" fill="#0352C2" transform="translate(35.069999, 21.630000) scale(-1, 1) translate(-35.069999, -21.630000) " points="0.839999986 21.6299996 35.0699994 7.10542736e-15 69.2999988 21.6299996 35.0699994 43.2599993"></polygon>
+            </g>
+            <path d="M240,119.199999 L335.199998,59" id="Line-2" stroke="#07A7FD" stroke-width="1.39999998" stroke-linecap="square" stroke-dasharray="1.399999976158142,5.599999904632568"></path>
+        </g>
+    </g>
+</svg>

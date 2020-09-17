@@ -1,0 +1,95 @@
+- id: terraform-hello-world
+  name: Terraform Hello, World Example
+  image: /assets/img/logos/terraform-logo.png
+  files:
+    - url: /examples/terraform-hello-world-example/main.tf
+      id: terraform_code
+    - url: /test/terraform_hello_world_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Terraform Hello, World
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terraform-hello-world-example
+
+- id: packer-hello-world
+  name: Packer Hello, World Example
+  image: /assets/img/logos/packer-logo.png
+  files:
+    - url: /examples/packer-hello-world-example/build.json
+      id: packer_code
+    - url: /test/packer_hello_world_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Packer Hello, World
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/packer-hello-world-example
+
+- id: docker-hello-world
+  name: Docker Hello, World Example
+  image: /assets/img/logos/docker-logo.png
+  files:
+    - url: /examples/docker-hello-world-example/Dockerfile
+      id: docker_code
+      prism_lang: docker
+    - url: /test/docker_hello_world_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Docker Hello, World
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/docker-hello-world-example
+
+- id: kubernetes-hello-world
+  name: Kubernetes Hello, World Example
+  image: /assets/img/logos/kubernetes-logo.png
+  files:
+    - url: /examples/kubernetes-hello-world-example/hello-world-deployment.yml
+      id: k8s_code
+    - url: /test/kubernetes_hello_world_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Kubernetes Hello, World
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/kubernetes-hello-world-example
+
+- id: aws-hello-world
+  name: AWS Hello, World Example
+  image: /assets/img/logos/aws-logo.png
+  files:
+    - url: /examples/terraform-aws-hello-world-example/main.tf
+      id: terraform_code
+    - url: /test/terraform_aws_hello_world_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: AWS Hello, World
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terraform-aws-hello-world-example
+
+- id: gcp-hello-world
+  name: GCP Hello, World Example
+  image: /assets/img/logos/gcp-logo.png
+  files:
+    - url: /examples/terraform-gcp-hello-world-example/main.tf
+      id: terraform_code
+    - url: /test/terraform_gcp_hello_world_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: GCP Hello, World
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terraform-gcp-hello-world-example
+
+- id: azure-basic
+  name: Azure Hello, World Example
+  image: /assets/img/logos/azure-logo.png
+  files:
+    - url: /examples/azure/terraform-azure-example/main.tf
+      id: terraform_main_code
+    - url: /examples/azure/terraform-azure-example/outputs.tf
+      id: terraform_output_code
+    - url: /examples/azure/terraform-azure-example/variables.tf
+      id: terraform_var_code
+    - url: /test/azure/terraform_azure_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Terraform Azure Example
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/azure/terraform-azure-example

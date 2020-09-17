@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // WorkspaceSelectOrNew runs terraform workspace with the given options and the workspace name
 // and returns a name of the current workspace. It tries to select a workspace with the given
 // name, or it creates a new one if it doesn't exist.
-func WorkspaceSelectOrNew(t *testing.T, options *Options, name string) string {
+func WorkspaceSelectOrNew(t testing.TestingT, options *Options, name string) string {
 	out, err := WorkspaceSelectOrNewE(t, options, name)
 	if err != nil {
 		t.Fatal(err)
@@ -21,7 +22,7 @@ func WorkspaceSelectOrNew(t *testing.T, options *Options, name string) string {
 // WorkspaceSelectOrNewE runs terraform workspace with the given options and the workspace name
 // and returns a name of the current workspace. It tries to select a workspace with the given
 // name, or it creates a new one if it doesn't exist.
-func WorkspaceSelectOrNewE(t *testing.T, options *Options, name string) (string, error) {
+func WorkspaceSelectOrNewE(t testing.TestingT, options *Options, name string) (string, error) {
 	out, err := RunTerraformCommandE(t, options, "workspace", "list")
 	if err != nil {
 		return "", err

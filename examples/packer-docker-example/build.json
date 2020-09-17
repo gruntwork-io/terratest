@@ -5,7 +5,7 @@
   },
   "builders": [{
     "name": "ubuntu-ami",
-    "ami_name": "{{user `ami_name_base`}}-{{isotime | clean_ami_name}}",
+    "ami_name": "{{user `ami_name_base`}}-{{isotime | clean_resource_name}}",
     "ami_description": "An example of how to create a custom AMI with a simple web app on top of Ubuntu",
     "instance_type": "t2.micro",
     "region": "{{user `aws_region`}}",
@@ -27,7 +27,8 @@
     "name": "ubuntu-docker",
     "type": "docker",
     "image": "gruntwork/ubuntu-test:16.04",
-    "commit": true
+    "commit": true,
+    "changes": ["ENTRYPOINT [\"\"]"]
   }],
   "provisioners": [{
     "type": "shell",

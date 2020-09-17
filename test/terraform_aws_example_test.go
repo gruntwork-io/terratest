@@ -21,6 +21,7 @@ func TestTerraformAwsExample(t *testing.T) {
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 
+	// website::tag::1::Configure Terraform setting path to Terraform code, EC2 instance name, and AWS Region.
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located
 		TerraformDir: "../examples/terraform-aws-example",
@@ -36,10 +37,10 @@ func TestTerraformAwsExample(t *testing.T) {
 		},
 	}
 
-	// At the end of the test, run `terraform destroy` to clean up any resources that were created
+	// website::tag::4::At the end of the test, run `terraform destroy` to clean up any resources that were created
 	defer terraform.Destroy(t, terraformOptions)
 
-	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
+	// website::tag::2::Run `terraform init` and `terraform apply` and fail the test if there are any errors
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
@@ -50,6 +51,7 @@ func TestTerraformAwsExample(t *testing.T) {
 	// Look up the tags for the given Instance ID
 	instanceTags := aws.GetTagsForEc2Instance(t, awsRegion, instanceID)
 
+	// website::tag::3::Check if the EC2 instance with a given tag and name is set.
 	testingTag, containsTestingTag := instanceTags["testing"]
 	assert.True(t, containsTestingTag)
 	assert.Equal(t, "testing-tag-value", testingTag)

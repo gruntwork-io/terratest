@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/oracle/oci-go-sdk/common"
 	"github.com/oracle/oci-go-sdk/identity"
 )
 
 // GetRandomAvailabilityDomain gets a randomly chosen availability domain for given compartment.
 // The returned value can be overridden by of the environment variable TF_VAR_availability_domain.
-func GetRandomAvailabilityDomain(t *testing.T, compartmentID string) string {
+func GetRandomAvailabilityDomain(t testing.TestingT, compartmentID string) string {
 	ad, err := GetRandomAvailabilityDomainE(t, compartmentID)
 	if err != nil {
 		t.Fatal(err)
@@ -24,7 +24,7 @@ func GetRandomAvailabilityDomain(t *testing.T, compartmentID string) string {
 
 // GetRandomAvailabilityDomainE gets a randomly chosen availability domain for given compartment.
 // The returned value can be overridden by of the environment variable TF_VAR_availability_domain.
-func GetRandomAvailabilityDomainE(t *testing.T, compartmentID string) (string, error) {
+func GetRandomAvailabilityDomainE(t testing.TestingT, compartmentID string) (string, error) {
 	adFromEnvVar := os.Getenv(availabilityDomainEnvVar)
 	if adFromEnvVar != "" {
 		logger.Logf(t, "Using availability domain %s from environment variable %s", adFromEnvVar, availabilityDomainEnvVar)
@@ -43,7 +43,7 @@ func GetRandomAvailabilityDomainE(t *testing.T, compartmentID string) (string, e
 }
 
 // GetAllAvailabilityDomains gets the list of availability domains available in the given compartment.
-func GetAllAvailabilityDomains(t *testing.T, compartmentID string) []string {
+func GetAllAvailabilityDomains(t testing.TestingT, compartmentID string) []string {
 	ads, err := GetAllAvailabilityDomainsE(t, compartmentID)
 	if err != nil {
 		t.Fatal(err)
@@ -52,7 +52,7 @@ func GetAllAvailabilityDomains(t *testing.T, compartmentID string) []string {
 }
 
 // GetAllAvailabilityDomainsE gets the list of availability domains available in the given compartment.
-func GetAllAvailabilityDomainsE(t *testing.T, compartmentID string) ([]string, error) {
+func GetAllAvailabilityDomainsE(t testing.TestingT, compartmentID string) ([]string, error) {
 	configProvider := common.DefaultConfigProvider()
 	client, err := identity.NewIdentityClientWithConfigurationProvider(configProvider)
 	if err != nil {

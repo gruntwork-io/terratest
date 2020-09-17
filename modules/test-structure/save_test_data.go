@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
-	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -15,17 +13,19 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/packer"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // SaveTerraformOptions serializes and saves TerraformOptions into the given folder. This allows you to create TerraformOptions during setup
 // and to reuse that TerraformOptions later during validation and teardown.
-func SaveTerraformOptions(t *testing.T, testFolder string, terraformOptions *terraform.Options) {
+func SaveTerraformOptions(t testing.TestingT, testFolder string, terraformOptions *terraform.Options) {
 	SaveTestData(t, formatTerraformOptionsPath(testFolder), terraformOptions)
 }
 
 // LoadTerraformOptions loads and unserializes TerraformOptions from the given folder. This allows you to reuse a TerraformOptions that was
 // created during an earlier setup step in later validation and teardown steps.
-func LoadTerraformOptions(t *testing.T, testFolder string) *terraform.Options {
+func LoadTerraformOptions(t testing.TestingT, testFolder string) *terraform.Options {
 	var terraformOptions terraform.Options
 	LoadTestData(t, formatTerraformOptionsPath(testFolder), &terraformOptions)
 	return &terraformOptions
@@ -38,13 +38,13 @@ func formatTerraformOptionsPath(testFolder string) string {
 
 // SavePackerOptions serializes and saves PackerOptions into the given folder. This allows you to create PackerOptions during setup
 // and to reuse that PackerOptions later during validation and teardown.
-func SavePackerOptions(t *testing.T, testFolder string, packerOptions *packer.Options) {
+func SavePackerOptions(t testing.TestingT, testFolder string, packerOptions *packer.Options) {
 	SaveTestData(t, formatPackerOptionsPath(testFolder), packerOptions)
 }
 
 // LoadPackerOptions loads and unserializes PackerOptions from the given folder. This allows you to reuse a PackerOptions that was
 // created during an earlier setup step in later validation and teardown steps.
-func LoadPackerOptions(t *testing.T, testFolder string) *packer.Options {
+func LoadPackerOptions(t testing.TestingT, testFolder string) *packer.Options {
 	var packerOptions packer.Options
 	LoadTestData(t, formatPackerOptionsPath(testFolder), &packerOptions)
 	return &packerOptions
@@ -57,13 +57,13 @@ func formatPackerOptionsPath(testFolder string) string {
 
 // SaveEc2KeyPair serializes and saves an Ec2KeyPair into the given folder. This allows you to create an Ec2KeyPair during setup
 // and to reuse that Ec2KeyPair later during validation and teardown.
-func SaveEc2KeyPair(t *testing.T, testFolder string, keyPair *aws.Ec2Keypair) {
+func SaveEc2KeyPair(t testing.TestingT, testFolder string, keyPair *aws.Ec2Keypair) {
 	SaveTestData(t, formatEc2KeyPairPath(testFolder), keyPair)
 }
 
 // LoadEc2KeyPair loads and unserializes an Ec2KeyPair from the given folder. This allows you to reuse an Ec2KeyPair that was
 // created during an earlier setup step in later validation and teardown steps.
-func LoadEc2KeyPair(t *testing.T, testFolder string) *aws.Ec2Keypair {
+func LoadEc2KeyPair(t testing.TestingT, testFolder string) *aws.Ec2Keypair {
 	var keyPair aws.Ec2Keypair
 	LoadTestData(t, formatEc2KeyPairPath(testFolder), &keyPair)
 	return &keyPair
@@ -76,13 +76,13 @@ func formatEc2KeyPairPath(testFolder string) string {
 
 // SaveKubectlOptions serializes and saves KubectlOptions into the given folder. This allows you to create a KubectlOptions during setup
 // and reuse that KubectlOptions later during validation and teardown.
-func SaveKubectlOptions(t *testing.T, testFolder string, kubectlOptions *k8s.KubectlOptions) {
+func SaveKubectlOptions(t testing.TestingT, testFolder string, kubectlOptions *k8s.KubectlOptions) {
 	SaveTestData(t, formatKubectlOptionsPath(testFolder), kubectlOptions)
 }
 
 // LoadKubectlOptions loads and unserializes a KubectlOptions from the given folder. This allows you to reuse a KubectlOptions that was
 // created during an earlier setup step in later validation and teardown steps.
-func LoadKubectlOptions(t *testing.T, testFolder string) *k8s.KubectlOptions {
+func LoadKubectlOptions(t testing.TestingT, testFolder string) *k8s.KubectlOptions {
 	var kubectlOptions k8s.KubectlOptions
 	LoadTestData(t, formatKubectlOptionsPath(testFolder), &kubectlOptions)
 	return &kubectlOptions
@@ -95,14 +95,14 @@ func formatKubectlOptionsPath(testFolder string) string {
 
 // SaveString serializes and saves a uniquely named string value into the given folder. This allows you to create one or more string
 // values during one stage -- each with a unique name -- and to reuse those values during later stages.
-func SaveString(t *testing.T, testFolder string, name string, val string) {
+func SaveString(t testing.TestingT, testFolder string, name string, val string) {
 	path := formatNamedTestDataPath(testFolder, name)
 	SaveTestData(t, path, val)
 }
 
 // LoadString loads and unserializes a uniquely named string value from the given folder. This allows you to reuse one or more string
 // values that were created during an earlier setup step in later steps.
-func LoadString(t *testing.T, testFolder string, name string) string {
+func LoadString(t testing.TestingT, testFolder string, name string) string {
 	var val string
 	LoadTestData(t, formatNamedTestDataPath(testFolder, name), &val)
 	return val
@@ -110,14 +110,14 @@ func LoadString(t *testing.T, testFolder string, name string) string {
 
 // SaveInt saves a uniquely named int value into the given folder. This allows you to create one or more int
 // values during one stage -- each with a unique name -- and to reuse those values during later stages.
-func SaveInt(t *testing.T, testFolder string, name string, val int) {
+func SaveInt(t testing.TestingT, testFolder string, name string, val int) {
 	path := formatNamedTestDataPath(testFolder, name)
 	SaveTestData(t, path, val)
 }
 
 // LoadInt loads a uniquely named int value from the given folder. This allows you to reuse one or more int
 // values that were created during an earlier setup step in later steps.
-func LoadInt(t *testing.T, testFolder string, name string) int {
+func LoadInt(t testing.TestingT, testFolder string, name string) int {
 	var val int
 	LoadTestData(t, formatNamedTestDataPath(testFolder, name), &val)
 	return val
@@ -125,13 +125,13 @@ func LoadInt(t *testing.T, testFolder string, name string) int {
 
 // SaveArtifactID serializes and saves an Artifact ID into the given folder. This allows you to build an Artifact during setup and to reuse that
 // Artifact later during validation and teardown.
-func SaveArtifactID(t *testing.T, testFolder string, artifactID string) {
+func SaveArtifactID(t testing.TestingT, testFolder string, artifactID string) {
 	SaveString(t, testFolder, "Artifact", artifactID)
 }
 
 // LoadArtifactID loads and unserializes an Artifact ID from the given folder. This allows you to reuse an Artifact that was created during an
 // earlier setup step in later validation and teardown steps.
-func LoadArtifactID(t *testing.T, testFolder string) string {
+func LoadArtifactID(t testing.TestingT, testFolder string) string {
 	return LoadString(t, testFolder, "Artifact")
 }
 
@@ -139,7 +139,7 @@ func LoadArtifactID(t *testing.T, testFolder string) string {
 // AMI later during validation and teardown.
 //
 // Deprecated: Use SaveArtifactID instead.
-func SaveAmiId(t *testing.T, testFolder string, amiId string) {
+func SaveAmiId(t testing.TestingT, testFolder string, amiId string) {
 	SaveString(t, testFolder, "AMI", amiId)
 }
 
@@ -147,7 +147,7 @@ func SaveAmiId(t *testing.T, testFolder string, amiId string) {
 // earlier setup step in later validation and teardown steps.
 //
 // Deprecated: Use LoadArtifactID instead.
-func LoadAmiId(t *testing.T, testFolder string) string {
+func LoadAmiId(t testing.TestingT, testFolder string) string {
 	return LoadString(t, testFolder, "AMI")
 }
 
@@ -164,7 +164,7 @@ func FormatTestDataPath(testFolder string, filename string) string {
 
 // SaveTestData serializes and saves a value used at test time to the given path. This allows you to create some sort of test data
 // (e.g., TerraformOptions) during setup and to reuse this data later during validation and teardown.
-func SaveTestData(t *testing.T, path string, value interface{}) {
+func SaveTestData(t testing.TestingT, path string, value interface{}) {
 	logger.Logf(t, "Storing test data in %s so it can be reused later", path)
 
 	if IsTestDataPresent(t, path) {
@@ -176,7 +176,7 @@ func SaveTestData(t *testing.T, path string, value interface{}) {
 		t.Fatalf("Failed to convert value %s to JSON: %v", path, err)
 	}
 
-	t.Logf("Marshalled JSON: %s", string(bytes))
+	logger.Logf(t, "Marshalled JSON: %s", string(bytes))
 
 	parentDir := filepath.Dir(path)
 	if err := os.MkdirAll(parentDir, 0777); err != nil {
@@ -191,7 +191,7 @@ func SaveTestData(t *testing.T, path string, value interface{}) {
 // LoadTestData loads and unserializes a value stored at the given path. The value should be a pointer to a struct into which the
 // value will be deserialized. This allows you to reuse some sort of test data (e.g., TerraformOptions) from earlier
 // setup steps in later validation and teardown steps.
-func LoadTestData(t *testing.T, path string, value interface{}) {
+func LoadTestData(t testing.TestingT, path string, value interface{}) {
 	logger.Logf(t, "Loading test data from %s", path)
 
 	bytes, err := ioutil.ReadFile(path)
@@ -205,11 +205,18 @@ func LoadTestData(t *testing.T, path string, value interface{}) {
 }
 
 // IsTestDataPresent returns true if a file exists at $path and the test data there is non-empty.
-func IsTestDataPresent(t *testing.T, path string) bool {
-	bytes, err := ioutil.ReadFile(path)
-	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
+func IsTestDataPresent(t testing.TestingT, path string) bool {
+	exists, err := files.FileExistsE(path)
+	if err != nil {
+		t.Fatalf("Failed to load test data from %s due to unexpected error: %v", path, err)
+	}
+	if !exists {
 		return false
-	} else if err != nil {
+	}
+
+	bytes, err := ioutil.ReadFile(path)
+
+	if err != nil {
 		t.Fatalf("Failed to load test data from %s due to unexpected error: %v", path, err)
 	}
 
@@ -222,7 +229,7 @@ func IsTestDataPresent(t *testing.T, path string) bool {
 
 // isEmptyJSON returns true if the given bytes are empty, or in a valid JSON format that can reasonably be considered empty.
 // The types used are based on the type possibilities listed at https://golang.org/src/encoding/json/decode.go?s=4062:4110#L51
-func isEmptyJSON(t *testing.T, bytes []byte) bool {
+func isEmptyJSON(t testing.TestingT, bytes []byte) bool {
 	var value interface{}
 
 	if len(bytes) == 0 {
@@ -266,7 +273,7 @@ func isEmptyJSON(t *testing.T, bytes []byte) bool {
 }
 
 // CleanupTestData cleans up the test data at the given path.
-func CleanupTestData(t *testing.T, path string) {
+func CleanupTestData(t testing.TestingT, path string) {
 	if files.FileExists(path) {
 		logger.Logf(t, "Cleaning up test data from %s", path)
 		if err := os.Remove(path); err != nil {
@@ -275,4 +282,32 @@ func CleanupTestData(t *testing.T, path string) {
 	} else {
 		logger.Logf(t, "%s does not exist. Nothing to cleanup.", path)
 	}
+}
+
+// CleanupTestDataFolder cleans up the .test-data folder inside the given folder.
+// If there are any errors, fail the test.
+func CleanupTestDataFolder(t testing.TestingT, path string) {
+	err := CleanupTestDataFolderE(t, path)
+	require.NoError(t, err)
+}
+
+// CleanupTestDataFolderE cleans up the .test-data folder inside the given folder.
+func CleanupTestDataFolderE(t testing.TestingT, path string) error {
+	path = filepath.Join(path, ".test-data")
+	exists, err := files.FileExistsE(path)
+	if err != nil {
+		logger.Logf(t, "Failed to clean up test data folder at %s: %v", path, err)
+		return err
+	}
+
+	if !exists {
+		logger.Logf(t, "%s does not exist. Nothing to cleanup.", path)
+		return nil
+	}
+	if err := os.RemoveAll(path); err != nil {
+		logger.Logf(t, "Failed to clean up test data folder at %s: %v", path, err)
+		return err
+	}
+
+	return nil
 }

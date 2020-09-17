@@ -12,16 +12,16 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
-	"k8s.io/kubernetes/pkg/kubectl/generate"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // Global lock to synchronize port selections
@@ -31,7 +31,9 @@ var globalMutex sync.Mutex
 type KubeResourceType int
 
 const (
+	// ResourceTypePod is a k8s pod kind identifier
 	ResourceTypePod KubeResourceType = iota
+	// ResourceTypeService is a k8s service kind identifier
 	ResourceTypeService
 )
 
@@ -45,6 +47,15 @@ func (resourceType KubeResourceType) String() string {
 		// This should not happen
 		return "UNKNOWN_RESOURCE_TYPE"
 	}
+}
+
+// makeLabels is a helper to format a map of label key and value pairs into a single string for use as a selector.
+func makeLabels(labels map[string]string) string {
+	out := []string{}
+	for key, value := range labels {
+		out = append(out, fmt.Sprintf("%s=%s", key, value))
+	}
+	return strings.Join(out, ",")
 }
 
 // Tunnel is the main struct that configures and manages port forwading tunnels to Kubernetes resources.
@@ -86,7 +97,7 @@ func (tunnel *Tunnel) Close() {
 
 // getAttachablePodForResource will find a pod that can be port forwarded to given the provided resource type and return
 // the name.
-func (tunnel *Tunnel) getAttachablePodForResourceE(t *testing.T) (string, error) {
+func (tunnel *Tunnel) getAttachablePodForResourceE(t testing.TestingT) (string, error) {
 	switch tunnel.resourceType {
 	case ResourceTypePod:
 		return tunnel.resourceName, nil
@@ -98,12 +109,12 @@ func (tunnel *Tunnel) getAttachablePodForResourceE(t *testing.T) (string, error)
 }
 
 // getAttachablePodForServiceE will find an active pod associated with the Service and return the pod name.
-func (tunnel *Tunnel) getAttachablePodForServiceE(t *testing.T) (string, error) {
+func (tunnel *Tunnel) getAttachablePodForServiceE(t testing.TestingT) (string, error) {
 	service, err := GetServiceE(t, tunnel.kubectlOptions, tunnel.resourceName)
 	if err != nil {
 		return "", err
 	}
-	selectorLabelsOfPods := generate.MakeLabels(service.Spec.Selector)
+	selectorLabelsOfPods := makeLabels(service.Spec.Selector)
 	servicePods, err := ListPodsE(t, tunnel.kubectlOptions, metav1.ListOptions{LabelSelector: selectorLabelsOfPods})
 	if err != nil {
 		return "", err
@@ -118,12 +129,12 @@ func (tunnel *Tunnel) getAttachablePodForServiceE(t *testing.T) (string, error) 
 
 // ForwardPort opens a tunnel to a kubernetes resource, as specified by the provided tunnel struct. This will fail the
 // test if there is an error attempting to open the port.
-func (tunnel *Tunnel) ForwardPort(t *testing.T) {
+func (tunnel *Tunnel) ForwardPort(t testing.TestingT) {
 	require.NoError(t, tunnel.ForwardPortE(t))
 }
 
 // ForwardPortE opens a tunnel to a kubernetes resource, as specified by the provided tunnel struct.
-func (tunnel *Tunnel) ForwardPortE(t *testing.T) error {
+func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 	logger.Logf(
 		t,
 		"Creating a port forwarding tunnel for resource %s/%s routing local port %d to remote port %d",
@@ -226,7 +237,7 @@ func (tunnel *Tunnel) ForwardPortE(t *testing.T) error {
 // GetAvailablePort retrieves an available port on the host machine. This delegates the port selection to the golang net
 // library by starting a server and then checking the port that the server is using. This will fail the test if it could
 // not find an available port.
-func GetAvailablePort(t *testing.T) int {
+func GetAvailablePort(t testing.TestingT) int {
 	port, err := GetAvailablePortE(t)
 	require.NoError(t, err)
 	return port
@@ -234,7 +245,7 @@ func GetAvailablePort(t *testing.T) int {
 
 // GetAvailablePortE retrieves an available port on the host machine. This delegates the port selection to the golang net
 // library by starting a server and then checking the port that the server is using.
-func GetAvailablePortE(t *testing.T) (int, error) {
+func GetAvailablePortE(t testing.TestingT) (int, error) {
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return 0, err

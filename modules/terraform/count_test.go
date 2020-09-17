@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	ttesting "github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +40,7 @@ func TestGetResourceCountENoColor(t *testing.T) {
 func runTestGetResourceCountE(t *testing.T, noColor bool) {
 	testCases := []struct {
 		Name                                         string
-		tfFuncToRun                                  func(t *testing.T, options *Options) string
+		tfFuncToRun                                  func(t ttesting.TestingT, options *Options) string
 		cntValue                                     int
 		expectedAdd, expectedChange, expectedDestroy int
 	}{

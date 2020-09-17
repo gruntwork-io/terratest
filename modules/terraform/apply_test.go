@@ -2,10 +2,10 @@ package terraform
 
 import (
 	"testing"
-
-	"github.com/magiconair/properties/assert"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -119,4 +119,66 @@ func TestTgApplyOutput(t *testing.T) {
 
 	allOutputs := OutputForKeys(t, options, []string{"str", "list", "map"})
 	assert.Equal(t, allOutputs, map[string]interface{}{"str": "str", "list": []interface{}{"a", "b", "c"}, "map": map[string]interface{}{"foo": "bar"}})
+}
+
+func TestIdempotentNoChanges(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-no-error", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+		NoColor:      true,
+	}
+
+	InitAndApplyAndIdempotentE(t, options)
+}
+
+func TestIdempotentWithChanges(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-not-idempotent", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+		NoColor:      true,
+	}
+
+	out, err := InitAndApplyAndIdempotentE(t, options)
+
+	require.NotEmpty(t, out)
+	require.Error(t, err)
+	require.EqualError(t, err, "terraform configuration not idempotent")
+}
+
+func TestParallelism(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-parallelism", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+		NoColor:      true,
+	}
+
+	Init(t, options)
+
+	// Run the first time with parallelism set to 5 and it should take about 5 seconds (plus or minus 10 seconds to
+	// account for other CPU hogging stuff)
+	options.Parallelism = 5
+	start := time.Now()
+	Apply(t, options)
+	end := time.Now()
+	require.WithinDuration(t, end, start, 15*time.Second)
+
+	// Run the second time with parallelism set to 1 and it should take at least 25 seconds
+	options.Parallelism = 1
+	start = time.Now()
+	Apply(t, options)
+	end = time.Now()
+	duration := end.Sub(start)
+	require.Greater(t, int64(duration.Seconds()), int64(25))
 }

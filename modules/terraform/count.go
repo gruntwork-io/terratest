@@ -4,8 +4,8 @@ import (
 	"errors"
 	"regexp"
 	"strconv"
-	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,14 +28,14 @@ const getResourceCountErrMessage = "Can't parse Terraform output"
 
 // GetResourceCount parses stdout/stderr of apply/plan/destroy commands and returns number of affected resources.
 // This will fail the test if given stdout/stderr isn't a valid output of apply/plan/destroy.
-func GetResourceCount(t *testing.T, cmdout string) *ResourceCount {
+func GetResourceCount(t testing.TestingT, cmdout string) *ResourceCount {
 	cnt, err := GetResourceCountE(t, cmdout)
 	require.NoError(t, err)
 	return cnt
 }
 
 // GetResourceCountE parses stdout/stderr of apply/plan/destroy commands and returns number of affected resources.
-func GetResourceCountE(t *testing.T, cmdout string) (*ResourceCount, error) {
+func GetResourceCountE(t testing.TestingT, cmdout string) (*ResourceCount, error) {
 	cnt := ResourceCount{}
 
 	terraformCommandPatterns := []struct {

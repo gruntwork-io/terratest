@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="61px" height="68px" viewBox="0 0 61 68" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>terratest_icon_4</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="30.993838%" y1="0%" x2="69.006162%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="0%" y1="30.0350032%" x2="100%" y2="69.9649968%" id="linearGradient-2">
+            <stop stop-color="#4EB9FB" offset="0%"></stop>
+            <stop stop-color="#2683F5" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="terratest_icon_4" transform="translate(-0.239594, 0.000000)">
+            <g id="Group-22" transform="translate(0.239594, 0.000000)">
+                <g id="Group-Copy-16">
+                    <polygon id="Rectangle" fill="#0237AE" points="30.6 37.9741935 60.12 19.44 60.12 48.7858065 30.6 67.32"></polygon>
+                    <polygon id="Rectangle-Copy-15" fill="url(#linearGradient-1)" transform="translate(14.760000, 43.380000) scale(-1, 1) translate(-14.760000, -43.380000) " points="2.20268248e-13 37.9741935 29.52 19.44 29.52 48.7858065 2.20268248e-13 67.32"></polygon>
+                    <polygon id="Rectangle-Copy-3" fill="url(#linearGradient-2)" transform="translate(30.060000, 18.540000) scale(-1, 1) translate(-30.060000, -18.540000) " points="0.72 18.54 30.06 0 59.4 18.54 30.06 37.08"></polygon>
+                </g>
+            </g>
+            <g transform="translate(46.905254, 42.045278) rotate(-21.000000) translate(-46.905254, -42.045278) translate(35.405254, 32.045278)"></g>
+            <path d="M49.18347,51.4882146 L45.2957187,41.3602761" id="Path-4-Copy" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" transform="translate(47.239594, 46.424245) scale(-1, 1) rotate(21.000000) translate(-47.239594, -46.424245) "></path>
+            <path d="M49.5663885,33 C52.0516698,33 54.0663885,34.3431458 54.0663885,36 C54.0663885,36.1373808 54.0525369,36.2726049 54.0257141,36.4050852 C55.6778533,37.093115 56.7920259,38.3898514 56.7920259,39.8758451 C56.7920259,42.0849841 54.329592,43.8758451 51.2920259,43.8758451 C50.7384202,43.8758451 50.2039182,43.8163596 49.6999451,43.7056977 C48.7581924,44.9217287 46.9646137,45.7433336 44.9071779,45.7433336 C44.479488,45.7433336 44.0631999,45.7078303 43.6635817,45.6406551 C42.8174668,46.0277382 41.8145438,46.2520161 40.7395943,46.2520161 C37.7020282,46.2520161 35.2395943,44.4611551 35.2395943,42.2520161 C35.2395943,40.8889847 36.1770057,39.6851854 37.6085366,38.9630123 L37.6066466,38.8760624 C37.6066466,36.6669234 40.0690804,34.8760624 43.1066466,34.8760624 C43.8613844,34.8760624 44.5806157,34.9866236 45.2353901,35.1866912 C45.7659808,33.924767 47.5041915,33 49.5663885,33 Z" id="Oval-2" stroke="#FFFFFF" stroke-width="1.2" transform="translate(46.015810, 39.626008) rotate(-21.000000) translate(-46.015810, -39.626008) "></path>
+            <polyline id="Path-4" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" transform="translate(47.577888, 50.383910) rotate(-21.000000) translate(-47.577888, -50.383910) " points="44.2395943 49.6505336 46.663449 51.7678199 50.9161808 49"></polyline>
+        </g>
+    </g>
+</svg>

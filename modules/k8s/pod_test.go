@@ -24,8 +24,7 @@ func TestListPodsReturnsPodsInNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
@@ -40,7 +39,7 @@ func TestListPodsReturnsPodsInNamespace(t *testing.T) {
 func TestGetPodEReturnsErrorForNonExistantPod(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	_, err := GetPodE(t, options, "nginx-pod")
 	require.Error(t, err)
 }
@@ -49,8 +48,7 @@ func TestGetPodEReturnsCorrectPodInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
@@ -64,8 +62,7 @@ func TestWaitUntilNumPodsCreatedReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
@@ -77,9 +74,20 @@ func TestWaitUntilPodAvailableReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
+	defer KubectlDeleteFromString(t, options, configData)
+	KubectlApplyFromString(t, options, configData)
+
+	WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+}
+
+func TestWaitUntilPodWithMultipleContainersAvailableReturnsSuccessfully(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueId())
+	options := NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
 
@@ -100,6 +108,13 @@ metadata:
 spec:
   containers:
   - name: nginx
+    image: nginx:1.15.7
+    ports:
+    - containerPort: 80
+`
+
+const EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE = EXAMPLE_POD_YAML_TEMPLATE + `
+  - name: nginx-two
     image: nginx:1.15.7
     ports:
     - containerPort: 80

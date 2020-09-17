@@ -21,7 +21,7 @@ import (
 func TestGetSecretEReturnsErrorForNonExistantSecret(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	_, err := GetSecretE(t, options, "master-password")
 	require.Error(t, err)
 }
@@ -30,8 +30,7 @@ func TestGetSecretEReturnsCorrectSecretInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_SECRET_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)

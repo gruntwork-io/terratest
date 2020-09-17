@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,12 +24,12 @@ func TestTerraformFormatNestedOneLevelList(t *testing.T) {
 	}
 
 	options := GetTerraformOptionsForFormatTests(t)
-	options.Vars["example_list"] = testList
+	options.Vars["example_any"] = testList
 
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
-	outputMap := OutputJsonMap(t, options, "example_list")
-	actualExampleList := outputMap["value"]
+	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	actualExampleList := outputMap["example_any"]
 	AssertEqualJson(t, actualExampleList, testList)
 }
 
@@ -40,12 +41,12 @@ func TestTerraformFormatNestedTwoLevelList(t *testing.T) {
 	}
 
 	options := GetTerraformOptionsForFormatTests(t)
-	options.Vars["example_list"] = testList
+	options.Vars["example_any"] = testList
 
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
-	outputMap := OutputJsonMap(t, options, "example_list")
-	actualExampleList := outputMap["value"]
+	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	actualExampleList := outputMap["example_any"]
 	AssertEqualJson(t, actualExampleList, testList)
 }
 
@@ -58,12 +59,12 @@ func TestTerraformFormatNestedMultipleItems(t *testing.T) {
 	}
 
 	options := GetTerraformOptionsForFormatTests(t)
-	options.Vars["example_list"] = testList
+	options.Vars["example_any"] = testList
 
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
-	outputMap := OutputJsonMap(t, options, "example_list")
-	actualExampleList := outputMap["value"]
+	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	actualExampleList := outputMap["example_any"]
 	AssertEqualJson(t, actualExampleList, testList)
 }
 
@@ -77,12 +78,12 @@ func TestTerraformFormatNestedOneLevelMap(t *testing.T) {
 	}
 
 	options := GetTerraformOptionsForFormatTests(t)
-	options.Vars["example_map"] = testMap
+	options.Vars["example_any"] = testMap
 
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
-	outputMap := OutputJsonMap(t, options, "example_map")
-	actualExampleMap := outputMap["value"]
+	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	actualExampleMap := outputMap["example_any"]
 	AssertEqualJson(t, actualExampleMap, testMap)
 }
 
@@ -98,12 +99,12 @@ func TestTerraformFormatNestedTwoLevelMap(t *testing.T) {
 	}
 
 	options := GetTerraformOptionsForFormatTests(t)
-	options.Vars["example_map"] = testMap
+	options.Vars["example_any"] = testMap
 
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
-	outputMap := OutputJsonMap(t, options, "example_map")
-	actualExampleMap := outputMap["value"]
+	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	actualExampleMap := outputMap["example_any"]
 	AssertEqualJson(t, actualExampleMap, testMap)
 }
 
@@ -122,12 +123,12 @@ func TestTerraformFormatNestedMultipleItemsMap(t *testing.T) {
 	}
 
 	options := GetTerraformOptionsForFormatTests(t)
-	options.Vars["example_map"] = testMap
+	options.Vars["example_any"] = testMap
 
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
-	outputMap := OutputJsonMap(t, options, "example_map")
-	actualExampleMap := outputMap["value"]
+	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	actualExampleMap := outputMap["example_any"]
 	AssertEqualJson(t, actualExampleMap, testMap)
 }
 
@@ -139,38 +140,43 @@ func TestTerraformFormatNestedListMap(t *testing.T) {
 	}
 
 	options := GetTerraformOptionsForFormatTests(t)
-	options.Vars["example_map"] = testMap
+	options.Vars["example_any"] = testMap
 
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
-	outputMap := OutputJsonMap(t, options, "example_map")
-	actualExampleMap := outputMap["value"]
+	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	actualExampleMap := outputMap["example_any"]
 	AssertEqualJson(t, actualExampleMap, testMap)
 }
 
 func GetTerraformOptionsForFormatTests(t *testing.T) *terraform.Options {
 	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-basic-example")
 
+	// Set up terratest to retry on known failures
+	maxTerraformRetries := 3
+	sleepBetweenTerraformRetries := 5 * time.Second
+	retryableTerraformErrors := map[string]string{
+		// `terraform init` frequently fails in CI due to network issues accessing plugins. The reason is unknown, but
+		// eventually these succeed after a few retries.
+		".*unable to verify signature.*":             "Failed to retrieve plugin due to transient network error.",
+		".*unable to verify checksum.*":              "Failed to retrieve plugin due to transient network error.",
+		".*no provider exists with the given name.*": "Failed to retrieve plugin due to transient network error.",
+		".*registry service is unreachable.*":        "Failed to retrieve plugin due to transient network error.",
+		".*connection reset by peer.*":               "Failed to retrieve plugin due to transient network error.",
+	}
+
 	terraformOptions := &terraform.Options{
-		TerraformDir: exampleFolder,
-		Vars:         map[string]interface{}{},
-		NoColor:      true,
+		TerraformDir:             exampleFolder,
+		Vars:                     map[string]interface{}{},
+		NoColor:                  true,
+		RetryableTerraformErrors: retryableTerraformErrors,
+		MaxRetries:               maxTerraformRetries,
+		TimeBetweenRetries:       sleepBetweenTerraformRetries,
 	}
 	return terraformOptions
 }
 
-// To avoid conversion errors with nested data structures, we work directly off the json output when comparing the data.
-// This is because both OutputList and OutputMap assume the data is single level deep.
-func OutputJsonMap(t *testing.T, options *terraform.Options, key string) map[string]interface{} {
-	out, err := terraform.RunTerraformCommandE(t, options, "output", "-no-color", "-json", key)
-	require.NoError(t, err)
-
-	outputMap := map[string]interface{}{}
-	require.NoError(t, json.Unmarshal([]byte(out), &outputMap))
-	return outputMap
-}
-
-// The value of the output nested in the outputMap returned by OutputJsonMap uses the interface{} type for nested
+// The value of the output nested in the outputMap returned by OutputForKeys uses the interface{} type for nested
 // structures. This can't be compared to actual types like [][]string{}, so we instead compare the json versions.
 func AssertEqualJson(t *testing.T, actual interface{}, expected interface{}) {
 	actualJson, err := json.Marshal(actual)

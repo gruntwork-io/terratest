@@ -26,6 +26,6 @@ func TestCanIDoReturnsTrueForAllowedAction(t *testing.T) {
 		Verb:      "list",
 		Resource:  "pod",
 	}
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "kube-system")
 	assert.True(t, CanIDo(t, options, action))
 }

@@ -3,12 +3,12 @@ package aws
 import (
 	"fmt"
 	"sort"
-	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // These are commonly used AMI account IDs.
@@ -19,7 +19,7 @@ const (
 )
 
 // DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI
-func DeleteAmiAndAllSnapshots(t *testing.T, region string, ami string) {
+func DeleteAmiAndAllSnapshots(t testing.TestingT, region string, ami string) {
 	err := DeleteAmiAndAllSnapshotsE(t, region, ami)
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +27,7 @@ func DeleteAmiAndAllSnapshots(t *testing.T, region string, ami string) {
 }
 
 // DeleteAmiAndAllSnapshotsE will delete the given AMI along with all EBS snapshots that backed that AMI
-func DeleteAmiAndAllSnapshotsE(t *testing.T, region string, ami string) error {
+func DeleteAmiAndAllSnapshotsE(t testing.TestingT, region string, ami string) error {
 	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func DeleteAmiAndAllSnapshotsE(t *testing.T, region string, ami string) error {
 }
 
 // GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI
-func GetEbsSnapshotsForAmi(t *testing.T, region string, ami string) []string {
+func GetEbsSnapshotsForAmi(t testing.TestingT, region string, ami string) []string {
 	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +58,7 @@ func GetEbsSnapshotsForAmi(t *testing.T, region string, ami string) []string {
 }
 
 // GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI
-func GetEbsSnapshotsForAmiE(t *testing.T, region string, ami string) ([]string, error) {
+func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]string, error) {
 	logger.Logf(t, "Retrieving EBS snapshots backing AMI %s", ami)
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {
@@ -89,7 +89,7 @@ func GetEbsSnapshotsForAmiE(t *testing.T, region string, ami string) ([]string, 
 // GetMostRecentAmiId gets the ID of the most recent AMI in the given region that has the given owner and matches the given filters. Each
 // filter should correspond to the name and values of a filter supported by DescribeImagesInput:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
-func GetMostRecentAmiId(t *testing.T, region string, ownerId string, filters map[string][]string) string {
+func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filters map[string][]string) string {
 	amiID, err := GetMostRecentAmiIdE(t, region, ownerId, filters)
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +100,7 @@ func GetMostRecentAmiId(t *testing.T, region string, ownerId string, filters map
 // GetMostRecentAmiIdE gets the ID of the most recent AMI in the given region that has the given owner and matches the given filters. Each
 // filter should correspond to the name and values of a filter supported by DescribeImagesInput:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
-func GetMostRecentAmiIdE(t *testing.T, region string, ownerId string, filters map[string][]string) (string, error) {
+func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filters map[string][]string) (string, error) {
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return "", err
@@ -148,7 +148,7 @@ func mostRecentAMI(images []*ec2.Image) *ec2.Image {
 }
 
 // GetUbuntu1404Ami gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1404Ami(t *testing.T, region string) string {
+func GetUbuntu1404Ami(t testing.TestingT, region string) string {
 	amiID, err := GetUbuntu1404AmiE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -157,7 +157,7 @@ func GetUbuntu1404Ami(t *testing.T, region string) string {
 }
 
 // GetUbuntu1404AmiE gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1404AmiE(t *testing.T, region string) (string, error) {
+func GetUbuntu1404AmiE(t testing.TestingT, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*ubuntu-trusty-14.04-amd64-server-*"},
 		"virtualization-type":              {"hvm"},
@@ -170,7 +170,7 @@ func GetUbuntu1404AmiE(t *testing.T, region string) (string, error) {
 }
 
 // GetUbuntu1604Ami gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1604Ami(t *testing.T, region string) string {
+func GetUbuntu1604Ami(t testing.TestingT, region string) string {
 	amiID, err := GetUbuntu1604AmiE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -179,7 +179,7 @@ func GetUbuntu1604Ami(t *testing.T, region string) string {
 }
 
 // GetUbuntu1604AmiE gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1604AmiE(t *testing.T, region string) (string, error) {
+func GetUbuntu1604AmiE(t testing.TestingT, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*ubuntu-xenial-16.04-amd64-server-*"},
 		"virtualization-type":              {"hvm"},
@@ -194,7 +194,7 @@ func GetUbuntu1604AmiE(t *testing.T, region string) (string, error) {
 // GetCentos7Ami returns a CentOS 7 public AMI from the given region.
 // WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
 // you can successfully launch the AMI.
-func GetCentos7Ami(t *testing.T, region string) string {
+func GetCentos7Ami(t testing.TestingT, region string) string {
 	amiID, err := GetCentos7AmiE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -205,7 +205,7 @@ func GetCentos7Ami(t *testing.T, region string) string {
 // GetCentos7AmiE returns a CentOS 7 public AMI from the given region.
 // WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
 // you can successfully launch the AMI.
-func GetCentos7AmiE(t *testing.T, region string) (string, error) {
+func GetCentos7AmiE(t testing.TestingT, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*CentOS Linux 7 x86_64 HVM EBS*"},
 		"virtualization-type":              {"hvm"},
@@ -218,7 +218,7 @@ func GetCentos7AmiE(t *testing.T, region string) (string, error) {
 }
 
 // GetAmazonLinuxAmi returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
-func GetAmazonLinuxAmi(t *testing.T, region string) string {
+func GetAmazonLinuxAmi(t testing.TestingT, region string) string {
 	amiID, err := GetAmazonLinuxAmiE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -227,7 +227,7 @@ func GetAmazonLinuxAmi(t *testing.T, region string) string {
 }
 
 // GetAmazonLinuxAmiE returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
-func GetAmazonLinuxAmiE(t *testing.T, region string) (string, error) {
+func GetAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*amzn-ami-hvm-*-x86_64*"},
 		"virtualization-type":              {"hvm"},
@@ -240,7 +240,7 @@ func GetAmazonLinuxAmiE(t *testing.T, region string) (string, error) {
 }
 
 // GetEcsOptimizedAmazonLinuxAmi returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
-func GetEcsOptimizedAmazonLinuxAmi(t *testing.T, region string) string {
+func GetEcsOptimizedAmazonLinuxAmi(t testing.TestingT, region string) string {
 	amiID, err := GetEcsOptimizedAmazonLinuxAmiE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -249,7 +249,7 @@ func GetEcsOptimizedAmazonLinuxAmi(t *testing.T, region string) string {
 }
 
 // GetEcsOptimizedAmazonLinuxAmiE returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
-func GetEcsOptimizedAmazonLinuxAmiE(t *testing.T, region string) (string, error) {
+func GetEcsOptimizedAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*amzn-ami*amazon-ecs-optimized*"},
 		"virtualization-type":              {"hvm"},

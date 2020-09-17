@@ -7,8 +7,17 @@ terraform.tfvars
 .terragrunt-cache
 
 .idea
+.vscode
 *.iml
 vendor
 
 # Folder used to store temporary test data by Terratest
 .test-data
+
+# rbenv
+.ruby-version
+
+# OS X
+.DS_Store
+# Intermediate file for testing
+kubeconfig

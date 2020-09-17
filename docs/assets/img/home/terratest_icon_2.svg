@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="61px" height="68px" viewBox="0 0 61 68" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>terratest_icon_2</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="79.8583349%" y1="52.4918236%" x2="23.5716011%" y2="62.6047667%" id="linearGradient-1">
+            <stop stop-color="#1888CF" offset="0%"></stop>
+            <stop stop-color="#0352C2" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="terratest_icon_2">
+            <g id="Group-17">
+                <g id="Group-15">
+                    <g id="Group-Copy-14">
+                        <polygon id="Rectangle" fill="#0237AE" points="30.6 37.9741935 60.12 19.44 60.12 48.7858065 30.6 67.32"></polygon>
+                        <polygon id="Rectangle-Copy-15" fill="#0237AE" transform="translate(14.760000, 43.380000) scale(-1, 1) translate(-14.760000, -43.380000) " points="-8.8817842e-14 37.9741935 29.52 19.44 29.52 48.7858065 -8.8817842e-14 67.32"></polygon>
+                        <polygon id="Rectangle-Copy-3" fill="url(#linearGradient-1)" transform="translate(30.060000, 18.540000) scale(-1, 1) translate(-30.060000, -18.540000) " points="0.72 18.54 30.06 7.10542736e-15 59.4 18.54 30.06 37.08"></polygon>
+                    </g>
+                    <g id="Group-14" transform="translate(14.800000, 9.800000)" stroke="#FFFFFF" stroke-width="1.2">
+                        <path d="M15.2,20.2 L15.2,6.2" id="Path-4-Copy" stroke-linecap="round" stroke-linejoin="round" transform="translate(15.200000, 13.200000) scale(-1, 1) translate(-15.200000, -13.200000) "></path>
+                        <path d="M11.7,0.2 C14.0846581,0.2 16.2093781,0.867756311 17.5830878,1.90862566 C18.5878001,1.46350318 19.8411477,1.2 21.2,1.2 C24.5137085,1.2 27.2,2.76700338 27.2,4.7 C27.2,4.706404 27.1999705,4.71280398 27.1999116,4.7191999 C29.578962,5.47357975 31.2,6.97320576 31.2,8.7 C31.2,11.1852814 27.8421356,13.2 23.7,13.2 C21.7794036,13.2 20.0274197,12.7668503 18.7006003,12.0544821 C17.3734505,12.7666352 15.6210734,13.2 13.7,13.2 C12.6333324,13.2 11.6186735,13.0663946 10.6999728,12.8255535 C9.78206231,13.0662977 8.76705436,13.2 7.7,13.2 C3.55786438,13.2 0.2,11.1852814 0.2,8.7 C0.2,6.97320576 1.82103803,5.47357975 4.19986731,4.71907004 L4.2,4.7 C4.2,2.21471863 7.55786438,0.2 11.7,0.2 Z" id="Oval-2"></path>
+                    </g>
+                </g>
+                <polyline id="Path-5" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" points="26 18 30 16 34 18"></polyline>
+            </g>
+        </g>
+    </g>
+</svg>

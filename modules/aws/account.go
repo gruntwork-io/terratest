@@ -3,14 +3,15 @@ package aws
 import (
 	"errors"
 	"strings"
-	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
+
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // GetAccountId gets the Account ID for the currently logged in IAM User.
-func GetAccountId(t *testing.T) string {
+func GetAccountId(t testing.TestingT) string {
 	id, err := GetAccountIdE(t)
 	if err != nil {
 		t.Fatal(err)
@@ -19,7 +20,7 @@ func GetAccountId(t *testing.T) string {
 }
 
 // GetAccountIdE gets the Account ID for the currently logged in IAM User.
-func GetAccountIdE(t *testing.T) (string, error) {
+func GetAccountIdE(t testing.TestingT) (string, error) {
 	stsClient, err := NewStsClientE(t, defaultRegion)
 	if err != nil {
 		return "", err
@@ -46,7 +47,7 @@ func extractAccountIDFromARN(arn string) (string, error) {
 }
 
 // NewStsClientE creates a new STS client.
-func NewStsClientE(t *testing.T, region string) (*sts.STS, error) {
+func NewStsClientE(t testing.TestingT, region string) (*sts.STS, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err

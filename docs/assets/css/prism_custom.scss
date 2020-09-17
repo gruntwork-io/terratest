@@ -1,0 +1,28 @@
+.token.atrule, .token.attr-value, .token.keyword {
+  color: #07a7fd;
+}
+
+.token.function, .token.class-name {
+  color: #0352c2;
+}
+
+.token.selector, .token.attr-name, .token.string, .token.char, .token.builtin, .token.url, .token.inserted {
+  color: #7fae17;
+}
+
+code[class*="language-"], pre[class*="language-"] {
+  color: #1e252f;
+}
+
+.token.punctuation {
+  color: #1e252f;
+}
+
+.token.regex, .token.important, .token.variable {
+  color: #ea1473;
+}
+
+
+.highlight pre[class*="language-"] {
+  line-height: 25px;
+}

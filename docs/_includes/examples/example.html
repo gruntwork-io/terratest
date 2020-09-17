@@ -1,0 +1,82 @@
+<div id="example__block-{{ include.example.id }}" class="examples__block active" data-target="{{ include.example.id }}">
+
+  <div class="examples__tabs" data-target="{{ include.example.id }}">
+    {% for file in include.example.files %}
+      {% if include.file_id == nil or include.file_id == file.id %}
+        {% assign assign_class = '' %}
+        {% if file.default or include.file_id == file.id %}
+          {% assign assign_class = 'active' %}
+        {% endif %}
+
+        {% assign url_split = file.url | split: '/' %}
+        {% assign file_name = url_split.last %}
+        {% if file.name %}
+          {% assign file_name = file.name %}
+        {% endif %}
+
+        <div class="tab {{ assign_class }}" data-target="#example__code-{{ include.example.id }}-{{ file_name | replace: '.', '-' | replace: ' ', '-' }}">
+          <label>{{ file_name }}</label>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% for file in include.example.files %}
+    {% if include.file_id == nil or include.file_id == file.id %}
+      {% assign assign_class = '' %}
+      {% if file.default or include.file_id == file.id %}
+        {% assign assign_class = 'active' %}
+      {% endif %}
+
+      {% assign url_split = file.url | split: '/' %}
+      {% assign file_name = url_split.last %}
+      {% if file.name %}
+        {% assign file_name = file.name %}
+      {% endif %}
+
+      {% assign prism_lang = '' %}
+      {% assign file_name_splitted = file.url | split: '.' %}
+      {% if site.data.prism_extends[file_name_splitted.last] %}
+        {% assign prism_lang = site.data.prism_extends[file_name_splitted.last] %}
+      {% elsif file_name_splitted.last %}
+        {% assign prism_lang = file_name_splitted.last %}
+      {% endif %}
+      {% if file.prism_lang %}
+        {% assign prism_lang = file.prism_lang %}
+      {% endif %}
+
+      <div
+        id="example__code-{{ include.example.id }}-{{ file_name | replace: '.', '-' | replace: ' ', '-' }}"
+        class="examples__code examples__code--example {{ assign_class }}"
+        data-example="{{ include.example.id }}"
+        data-target="{{ file_name | replace: '.', '-' | replace: ' ', '-' }}"
+        data-url="{{ site.github_api_url }}{{ file.url }}"
+        data-skip-tags="{{include.skip_tags}}"
+        >
+        <pre><code class="language-{{ prism_lang }}">Loading...</code></pre>
+        {% unless include.skip_view_on_github %}
+          <div class="example__file-link">
+            <p>View on GitHub:</p>
+            <a href="https://{{ site.repository }}/tree/master{{ file.url }}">{{ site.repository }}{{ file.url }}</a>
+          </div>
+        {% endunless %}
+      </div>
+    {% endif %}
+  {% endfor %}
+
+  {% if include.example.learn_more and include.skip_learn_more != true %}
+  <div class="examples__learn-more">
+    <span class="title">Learn more:</span>
+    <ul>
+      {% for link in include.example.learn_more %}
+        <li>
+          <a href='{{ link.url }}'>
+            {{ link.name }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+</div>

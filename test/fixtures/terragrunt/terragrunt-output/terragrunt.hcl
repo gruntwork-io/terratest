@@ -1,0 +1,3 @@
+terraform {
+  # Intentionally empty
+}

@@ -31,7 +31,12 @@ func TestInitAndPlanWithNoError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	out, err := InitAndPlanE(t, options)
+	// In Terraform 0.12 and below, if there were no resources to create, update, or destroy, 'plan' command would
+	// report "No changes. Infrastructure is up-to-date." However, with 0.13 and above, if the Terraform configuration
+	// has never been applied at all, 'plan' always shows changes. So we have to run 'apply' first, and can then
+	// check that 'plan' returns the message we expect.
+	InitAndApply(t, options)
+	out, err := PlanE(t, options)
 	require.NoError(t, err)
 	require.Contains(t, out, "No changes. Infrastructure is up-to-date.")
 }
@@ -44,7 +49,13 @@ func TestPlanWithExitCodeWithNoChanges(t *testing.T) {
 	options := &Options{
 		TerraformDir: testFolder,
 	}
-	exitCode := InitAndPlanWithExitCode(t, options)
+
+	// In Terraform 0.12 and below, if there were no resources to create, update, or destroy, the -detailed-exitcode
+	// would return a code of 0. However, with 0.13 and above, if the Terraform configuration has never been applied
+	// at all, -detailed-exitcode always returns an exit code of 2. So we have to run 'apply' first, and can then
+	// check that 'plan' returns the exit code we expect.
+	InitAndApply(t, options)
+	exitCode := PlanExitCode(t, options)
 	require.Equal(t, DefaultSuccessExitCode, exitCode)
 }
 
@@ -73,8 +84,9 @@ func TestPlanWithExitCodeWithFailure(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	_, getExitCodeErr := InitAndPlanWithExitCodeE(t, options)
-	require.Error(t, getExitCodeErr)
+	exitCode, getExitCodeErr := InitAndPlanWithExitCodeE(t, options)
+	require.NoError(t, getExitCodeErr)
+	require.Equal(t, exitCode, 1)
 }
 
 func TestTgPlanAllNoError(t *testing.T) {
@@ -88,6 +100,11 @@ func TestTgPlanAllNoError(t *testing.T) {
 		TerraformBinary: "terragrunt",
 	}
 
+	// In Terraform 0.12 and below, if there were no resources to create, update, or destroy, the -detailed-exitcode
+	// would return a code of 0. However, with 0.13 and above, if the Terraform configuration has never been applied
+	// at all, -detailed-exitcode always returns an exit code of 2. So we have to run 'apply' first, and can then
+	// check that 'plan' returns the exit code we expect.
+	TgApplyAll(t, options)
 	getExitCode, errExitCode := TgPlanAllExitCodeE(t, options)
 	// GetExitCodeForRunCommandError was unable to determine the exit code correctly
 	if errExitCode != nil {

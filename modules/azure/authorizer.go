@@ -4,30 +4,38 @@ import (
 	"os"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/adal"
 	az "github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/azure/auth"
 )
 
-// DeploymentServicePrincipalAuthorizer - Returns an authorizer configured with the service principal
-// used to execute the terraform commands
-func DeploymentServicePrincipalAuthorizer() (autorest.Authorizer, error) {
-	return ServicePrincipalAuthorizer(
-		os.Getenv("ARM_CLIENT_ID"),
-		os.Getenv("ARM_CLIENT_SECRET"),
-		az.PublicCloud.ResourceManagerEndpoint)
-}
+const (
+	// AuthFromEnvClient is an env variable supported by the Azure SDK
+	AuthFromEnvClient = "AZURE_CLIENT_ID"
 
-// ServicePrincipalAuthorizer - Configures a service principal authorizer that can be used to create bearer tokens
-func ServicePrincipalAuthorizer(clientID string, clientSecret string, resource string) (autorest.Authorizer, error) {
-	oauthConfig, err := adal.NewOAuthConfig(az.PublicCloud.ActiveDirectoryEndpoint, os.Getenv("ARM_TENANT_ID"))
-	if err != nil {
-		return nil, err
+	// AuthFromEnvTenant is an env variable supported by the Azure SDK
+	AuthFromEnvTenant = "AZURE_TENANT_ID"
+
+	// AuthFromFile is an env variable supported by the Azure SDK
+	AuthFromFile = "AZURE_AUTH_LOCATION"
+)
+
+// NewAuthorizer creates an Azure authorizer adhering to standard auth mechanisms provided by the Azure Go SDK
+// See Azure Go Auth docs here: https://docs.microsoft.com/en-us/go/azure/azure-sdk-go-authorization
+func NewAuthorizer() (*autorest.Authorizer, error) {
+	// Carry out env var lookups
+	_, clientIDExists := os.LookupEnv(AuthFromEnvClient)
+	_, tenantIDExists := os.LookupEnv(AuthFromEnvTenant)
+	_, fileAuthSet := os.LookupEnv(AuthFromFile)
+
+	// Execute logic to return an authorizer from the correct method
+	if clientIDExists && tenantIDExists {
+		authorizer, err := auth.NewAuthorizerFromEnvironment()
+		return &authorizer, err
+	} else if fileAuthSet {
+		authorizer, err := auth.NewAuthorizerFromFile(az.PublicCloud.ResourceManagerEndpoint)
+		return &authorizer, err
+	} else {
+		authorizer, err := auth.NewAuthorizerFromCLI()
+		return &authorizer, err
 	}
-
-	token, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret, resource)
-	if err != nil {
-		return nil, err
-	}
-
-	return autorest.NewBearerAuthorizer(token), nil
 }

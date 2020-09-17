@@ -23,7 +23,7 @@ func TestGetNodes(t *testing.T) {
 	t.Parallel()
 
 	// Assumes local kubernetes (minikube or docker-for-desktop kube), where there is only one node
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	nodes := GetNodes(t, options)
 	require.Equal(t, len(nodes), 1)
 
@@ -39,7 +39,7 @@ func TestGetReadyNodes(t *testing.T) {
 	t.Parallel()
 
 	// Assumes local kubernetes (minikube or docker-for-desktop kube), where there is only one node
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	nodes := GetReadyNodes(t, options)
 	require.Equal(t, len(nodes), 1)
 
@@ -54,7 +54,7 @@ func TestGetReadyNodes(t *testing.T) {
 func TestWaitUntilAllNodesReady(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 
 	WaitUntilAllNodesReady(t, options, 12, 5*time.Second)
 

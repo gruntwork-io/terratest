@@ -1,6 +1,7 @@
 package test
 
 import (
+	"crypto/tls"
 	"fmt"
 	"testing"
 	"time"
@@ -50,10 +51,13 @@ func TestTerraformHttpExample(t *testing.T) {
 	// Run `terraform output` to get the value of an output variable
 	instanceURL := terraform.Output(t, terraformOptions, "instance_url")
 
+	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
+	tlsConfig := tls.Config{}
+
 	// It can take a minute or so for the Instance to boot up, so retry a few times
 	maxRetries := 30
 	timeBetweenRetries := 5 * time.Second
 
 	// Verify that we get back a 200 OK with the expected instanceText
-	http_helper.HttpGetWithRetry(t, instanceURL, 200, instanceText, maxRetries, timeBetweenRetries)
+	http_helper.HttpGetWithRetry(t, instanceURL, &tlsConfig, 200, instanceText, maxRetries, timeBetweenRetries)
 }

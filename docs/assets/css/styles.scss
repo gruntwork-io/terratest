@@ -1,0 +1,24 @@
+---
+# Frontmatter
+---
+
+@import "_variables";
+@import "bootstrap/scss/bootstrap";
+@import "global";
+@import "components";
+@import "collection_browser";
+@import "examples";
+@import "subpage";
+@import "prism_custom";
+
+@import "pages/cookie-policy";
+@import "pages/home";
+@import "pages/support";
+
+@import "utilities";
+
+body.index-page {
+  .header-shapes-bottom {
+    background-image: url('{{site.baseurl}}/assets/img/home/terratest_top_right.svg');
+  }
+}

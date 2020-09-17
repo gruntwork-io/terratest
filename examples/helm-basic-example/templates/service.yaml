@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ include "helm-basic-example.fullname" . }}
   labels:
-    # These labels are required by helm. You can read more about required labels in the chart best pracices guide:
+    # These labels are required by helm. You can read more about required labels in the chart best practices guide:
     # https://docs.helm.sh/chart_best_practices/#standard-labels
     helm.sh/chart: {{ include "helm-basic-example.chart" . }}
     app.kubernetes.io/name: {{ include "helm-basic-example.name" . }}

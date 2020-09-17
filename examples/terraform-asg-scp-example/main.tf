@@ -1,10 +1,22 @@
 # ---------------------------------------------------------------------------------------------------------------------
+# PIN TERRAFORM VERSION TO >= 0.12
+# The examples have been upgraded to 0.12 syntax
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
+  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
+  # forwards compatible with 0.13.x code.
+  required_version = ">= 0.12.26"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY AN ASG WITH ONE INSTANCE THAT ALLOWS CONNECTIONS VIA SSH
 # See test/terraform_scp_example.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -12,24 +24,23 @@ provider "aws" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_launch_template" "sample_launch_template" {
-  name_prefix            = "${var.instance_name}"
-  image_id               = "${data.aws_ami.ubuntu.id}"
+  name_prefix            = var.instance_name
+  image_id               = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
-  vpc_security_group_ids = ["${aws_security_group.example.id}"]
-  key_name               = "${var.key_pair_name}"
+  vpc_security_group_ids = [aws_security_group.example.id]
+  key_name               = var.key_pair_name
 }
 
 resource "aws_autoscaling_group" "sample_asg" {
-  vpc_zone_identifier = ["${data.aws_subnet_ids.default_subnets.ids}"]
-  availability_zones  = []
+  vpc_zone_identifier = data.aws_subnet_ids.default_subnets.ids
 
   desired_capacity = 1
   max_size         = 1
   min_size         = 1
 
-  launch_template = {
-    id      = "${aws_launch_template.sample_launch_template.id}"
-    version = "$$Latest"
+  launch_template {
+    id      = aws_launch_template.sample_launch_template.id
+    version = "$Latest"
   }
 }
 
@@ -38,7 +49,7 @@ resource "aws_autoscaling_group" "sample_asg" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "example" {
-  name = "${var.instance_name}"
+  name = var.instance_name
 
   egress {
     from_port   = 0
@@ -48,8 +59,8 @@ resource "aws_security_group" "example" {
   }
 
   ingress {
-    from_port = "${var.ssh_port}"
-    to_port   = "${var.ssh_port}"
+    from_port = var.ssh_port
+    to_port   = var.ssh_port
     protocol  = "tcp"
 
     # To keep this example simple, we allow incoming SSH requests from any IP. In real-world usage, you should only
@@ -92,5 +103,6 @@ data "aws_vpc" "default" {
 }
 
 data "aws_subnet_ids" "default_subnets" {
-  vpc_id = "${data.aws_vpc.default.id}"
+  vpc_id = data.aws_vpc.default.id
 }
+

@@ -21,7 +21,7 @@ import (
 func TestGetRoleEReturnsErrorForNonExistantRole(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	_, err := GetRoleE(t, options, "non-existing-role")
 	require.Error(t, err)
 }
@@ -30,8 +30,7 @@ func TestGetRoleEReturnsCorrectRoleInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_ROLE_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)

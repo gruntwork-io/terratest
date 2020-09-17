@@ -24,13 +24,14 @@ func TestGetServiceAccountWithAuthTokenGetsTokenThatCanBeUsedForAuth(t *testing.
 
 	// make a copy of kubeconfig to namespace it
 	tmpConfigPath := CopyHomeKubeConfigToTemp(t)
-	options := NewKubectlOptions("", tmpConfigPath)
 
 	// Create a new namespace to work in
 	namespaceName := strings.ToLower(random.UniqueId())
+
+	options := NewKubectlOptions("", tmpConfigPath, namespaceName)
+
 	CreateNamespace(t, options, namespaceName)
 	defer DeleteNamespace(t, options, namespaceName)
-	options.Namespace = namespaceName
 
 	// Create service account
 	serviceAccountName := strings.ToLower(random.UniqueId())
@@ -41,7 +42,7 @@ func TestGetServiceAccountWithAuthTokenGetsTokenThatCanBeUsedForAuth(t *testing.
 	// Now validate auth as service account. This is a bit tricky because we don't have an API endpoint in k8s that
 	// tells you who you are, so we will rely on the self subject access review and see if we have access to the
 	// kube-system namespace.
-	serviceAccountOptions := NewKubectlOptions(serviceAccountName, tmpConfigPath)
+	serviceAccountOptions := NewKubectlOptions(serviceAccountName, tmpConfigPath, namespaceName)
 	action := authv1.ResourceAttributes{
 		Namespace: "kube-system",
 		Verb:      "list",
@@ -53,7 +54,7 @@ func TestGetServiceAccountWithAuthTokenGetsTokenThatCanBeUsedForAuth(t *testing.
 func TestGetServiceAccountEReturnsErrorForNonExistantServiceAccount(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "")
+	options := NewKubectlOptions("", "", "default")
 	_, err := GetServiceAccountE(t, options, "terratest")
 	require.Error(t, err)
 }
@@ -62,8 +63,7 @@ func TestGetServiceAccountEReturnsCorrectServiceAccountInCorrectNamespace(t *tes
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_SERVICEACCOUNT_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
@@ -77,8 +77,7 @@ func TestCreateServiceAccountECreatesServiceAccountInNamespaceWithGivenName(t *t
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	defer DeleteNamespace(t, options, options.Namespace)
 	CreateNamespace(t, options, options.Namespace)
 

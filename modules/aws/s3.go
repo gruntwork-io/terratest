@@ -3,17 +3,17 @@ package aws
 import (
 	"bytes"
 	"strings"
-	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // FindS3BucketWithTag finds the name of the S3 bucket in the given region with the given tag key=value.
-func FindS3BucketWithTag(t *testing.T, awsRegion string, key string, value string) string {
+func FindS3BucketWithTag(t testing.TestingT, awsRegion string, key string, value string) string {
 	bucket, err := FindS3BucketWithTagE(t, awsRegion, key, value)
 	require.NoError(t, err)
 
@@ -21,7 +21,7 @@ func FindS3BucketWithTag(t *testing.T, awsRegion string, key string, value strin
 }
 
 // FindS3BucketWithTagE finds the name of the S3 bucket in the given region with the given tag key=value.
-func FindS3BucketWithTagE(t *testing.T, awsRegion string, key string, value string) (string, error) {
+func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, value string) (string, error) {
 	s3Client, err := NewS3ClientE(t, awsRegion)
 	if err != nil {
 		return "", err
@@ -55,7 +55,7 @@ func FindS3BucketWithTagE(t *testing.T, awsRegion string, key string, value stri
 }
 
 // GetS3ObjectContents fetches the contents of the object in the given bucket with the given key and return it as a string.
-func GetS3ObjectContents(t *testing.T, awsRegion string, bucket string, key string) string {
+func GetS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, key string) string {
 	contents, err := GetS3ObjectContentsE(t, awsRegion, bucket, key)
 	require.NoError(t, err)
 
@@ -63,7 +63,7 @@ func GetS3ObjectContents(t *testing.T, awsRegion string, bucket string, key stri
 }
 
 // GetS3ObjectContentsE fetches the contents of the object in the given bucket with the given key and return it as a string.
-func GetS3ObjectContentsE(t *testing.T, awsRegion string, bucket string, key string) (string, error) {
+func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, key string) (string, error) {
 	s3Client, err := NewS3ClientE(t, awsRegion)
 	if err != nil {
 		return "", err
@@ -91,13 +91,13 @@ func GetS3ObjectContentsE(t *testing.T, awsRegion string, bucket string, key str
 }
 
 // CreateS3Bucket creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
-func CreateS3Bucket(t *testing.T, region string, name string) {
+func CreateS3Bucket(t testing.TestingT, region string, name string) {
 	err := CreateS3BucketE(t, region, name)
 	require.NoError(t, err)
 }
 
 // CreateS3BucketE creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
-func CreateS3BucketE(t *testing.T, region string, name string) error {
+func CreateS3BucketE(t testing.TestingT, region string, name string) error {
 	logger.Logf(t, "Creating bucket %s in %s", name, region)
 
 	s3Client, err := NewS3ClientE(t, region)
@@ -113,13 +113,13 @@ func CreateS3BucketE(t *testing.T, region string, name string) error {
 }
 
 // PutS3BucketPolicy applies an IAM resource policy to a given S3 bucket to create it's bucket policy
-func PutS3BucketPolicy(t *testing.T, region string, bucketName string, policyJSONString string) {
+func PutS3BucketPolicy(t testing.TestingT, region string, bucketName string, policyJSONString string) {
 	err := PutS3BucketPolicyE(t, region, bucketName, policyJSONString)
 	require.NoError(t, err)
 }
 
 // PutS3BucketPolicyE applies an IAM resource policy to a given S3 bucket to create it's bucket policy
-func PutS3BucketPolicyE(t *testing.T, region string, bucketName string, policyJSONString string) error {
+func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, policyJSONString string) error {
 	logger.Logf(t, "Applying bucket policy for bucket %s in %s", bucketName, region)
 
 	s3Client, err := NewS3ClientE(t, region)
@@ -137,13 +137,13 @@ func PutS3BucketPolicyE(t *testing.T, region string, bucketName string, policyJS
 }
 
 // PutS3BucketVersioning creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
-func PutS3BucketVersioning(t *testing.T, region string, bucketName string) {
+func PutS3BucketVersioning(t testing.TestingT, region string, bucketName string) {
 	err := PutS3BucketVersioningE(t, region, bucketName)
 	require.NoError(t, err)
 }
 
 // PutS3BucketVersioningE creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
-func PutS3BucketVersioningE(t *testing.T, region string, bucketName string) error {
+func PutS3BucketVersioningE(t testing.TestingT, region string, bucketName string) error {
 	logger.Logf(t, "Creating bucket versioning configuration for bucket %s in %s", bucketName, region)
 
 	s3Client, err := NewS3ClientE(t, region)
@@ -164,13 +164,13 @@ func PutS3BucketVersioningE(t *testing.T, region string, bucketName string) erro
 }
 
 // DeleteS3Bucket destroys the S3 bucket in the given region with the given name.
-func DeleteS3Bucket(t *testing.T, region string, name string) {
+func DeleteS3Bucket(t testing.TestingT, region string, name string) {
 	err := DeleteS3BucketE(t, region, name)
 	require.NoError(t, err)
 }
 
 // DeleteS3BucketE destroys the S3 bucket in the given region with the given name.
-func DeleteS3BucketE(t *testing.T, region string, name string) error {
+func DeleteS3BucketE(t testing.TestingT, region string, name string) error {
 	logger.Logf(t, "Deleting bucket %s in %s", region, name)
 
 	s3Client, err := NewS3ClientE(t, region)
@@ -185,14 +185,14 @@ func DeleteS3BucketE(t *testing.T, region string, name string) error {
 	return err
 }
 
-// EmptyS3BucketE removes the contents of an S3 bucket in the given region with the given name.
-func EmptyS3Bucket(t *testing.T, region string, name string) {
+// EmptyS3Bucket removes the contents of an S3 bucket in the given region with the given name.
+func EmptyS3Bucket(t testing.TestingT, region string, name string) {
 	err := EmptyS3BucketE(t, region, name)
 	require.NoError(t, err)
 }
 
 // EmptyS3BucketE removes the contents of an S3 bucket in the given region with the given name.
-func EmptyS3BucketE(t *testing.T, region string, name string) error {
+func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 	logger.Logf(t, "Emptying bucket %s in %s", name, region)
 
 	s3Client, err := NewS3ClientE(t, region)
@@ -227,6 +227,14 @@ func EmptyS3BucketE(t *testing.T, region string, name string) error {
 			objectsToDelete = append(objectsToDelete, &obj)
 		}
 
+		for _, object := range (*bucketObjects).DeleteMarkers {
+			obj := s3.ObjectIdentifier{
+				Key:       object.Key,
+				VersionId: object.VersionId,
+			}
+			objectsToDelete = append(objectsToDelete, &obj)
+		}
+
 		//Creating JSON payload for bulk delete
 		deleteArray := s3.Delete{Objects: objectsToDelete}
 		deleteParams := &s3.DeleteObjectsInput{
@@ -253,7 +261,7 @@ func EmptyS3BucketE(t *testing.T, region string, name string) error {
 }
 
 // GetS3BucketVersioning fetches the given bucket's versioning configuration status and returns it as a string
-func GetS3BucketVersioning(t *testing.T, awsRegion string, bucket string) string {
+func GetS3BucketVersioning(t testing.TestingT, awsRegion string, bucket string) string {
 	versioningStatus, err := GetS3BucketVersioningE(t, awsRegion, bucket)
 	require.NoError(t, err)
 
@@ -261,7 +269,7 @@ func GetS3BucketVersioning(t *testing.T, awsRegion string, bucket string) string
 }
 
 // GetS3BucketVersioningE fetches the given bucket's versioning configuration status and returns it as a string
-func GetS3BucketVersioningE(t *testing.T, awsRegion string, bucket string) (string, error) {
+func GetS3BucketVersioningE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
 	s3Client, err := NewS3ClientE(t, awsRegion)
 	if err != nil {
 		return "", err
@@ -278,7 +286,7 @@ func GetS3BucketVersioningE(t *testing.T, awsRegion string, bucket string) (stri
 }
 
 // GetS3BucketPolicy fetches the given bucket's resource policy and returns it as a string
-func GetS3BucketPolicy(t *testing.T, awsRegion string, bucket string) string {
+func GetS3BucketPolicy(t testing.TestingT, awsRegion string, bucket string) string {
 	bucketPolicy, err := GetS3BucketPolicyE(t, awsRegion, bucket)
 	require.NoError(t, err)
 
@@ -286,7 +294,7 @@ func GetS3BucketPolicy(t *testing.T, awsRegion string, bucket string) string {
 }
 
 // GetS3BucketPolicyE fetches the given bucket's resource policy and returns it as a string
-func GetS3BucketPolicyE(t *testing.T, awsRegion string, bucket string) (string, error) {
+func GetS3BucketPolicyE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
 	s3Client, err := NewS3ClientE(t, awsRegion)
 	if err != nil {
 		return "", err
@@ -303,13 +311,13 @@ func GetS3BucketPolicyE(t *testing.T, awsRegion string, bucket string) (string, 
 }
 
 // AssertS3BucketExists checks if the given S3 bucket exists in the given region and fail the test if it does not.
-func AssertS3BucketExists(t *testing.T, region string, name string) {
+func AssertS3BucketExists(t testing.TestingT, region string, name string) {
 	err := AssertS3BucketExistsE(t, region, name)
 	require.NoError(t, err)
 }
 
 // AssertS3BucketExistsE checks if the given S3 bucket exists in the given region and return an error if it does not.
-func AssertS3BucketExistsE(t *testing.T, region string, name string) error {
+func AssertS3BucketExistsE(t testing.TestingT, region string, name string) error {
 	s3Client, err := NewS3ClientE(t, region)
 	if err != nil {
 		return err
@@ -323,13 +331,13 @@ func AssertS3BucketExistsE(t *testing.T, region string, name string) error {
 }
 
 // AssertS3BucketVersioningExists checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
-func AssertS3BucketVersioningExists(t *testing.T, region string, bucketName string) {
+func AssertS3BucketVersioningExists(t testing.TestingT, region string, bucketName string) {
 	err := AssertS3BucketVersioningExistsE(t, region, bucketName)
 	require.NoError(t, err)
 }
 
 // AssertS3BucketVersioningExistsE checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
-func AssertS3BucketVersioningExistsE(t *testing.T, region string, bucketName string) error {
+func AssertS3BucketVersioningExistsE(t testing.TestingT, region string, bucketName string) error {
 	status, err := GetS3BucketVersioningE(t, region, bucketName)
 	if err != nil {
 		return err
@@ -337,19 +345,18 @@ func AssertS3BucketVersioningExistsE(t *testing.T, region string, bucketName str
 
 	if status == "Enabled" {
 		return nil
-	} else {
-		return NewBucketVersioningNotEnabledError(bucketName, region, status)
 	}
+	return NewBucketVersioningNotEnabledError(bucketName, region, status)
 }
 
 // AssertS3BucketPolicyExists checks if the given S3 bucket has a resource policy attached and returns an error if it does not
-func AssertS3BucketPolicyExists(t *testing.T, region string, bucketName string) {
+func AssertS3BucketPolicyExists(t testing.TestingT, region string, bucketName string) {
 	err := AssertS3BucketPolicyExistsE(t, region, bucketName)
 	require.NoError(t, err)
 }
 
 // AssertS3BucketPolicyExistsE checks if the given S3 bucket has a resource policy attached and returns an error if it does not
-func AssertS3BucketPolicyExistsE(t *testing.T, region string, bucketName string) error {
+func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName string) error {
 	policy, err := GetS3BucketPolicyE(t, region, bucketName)
 	if err != nil {
 		return err
@@ -357,13 +364,12 @@ func AssertS3BucketPolicyExistsE(t *testing.T, region string, bucketName string)
 
 	if policy == "" {
 		return NewNoBucketPolicyError(bucketName, region, policy)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // NewS3Client creates an S3 client.
-func NewS3Client(t *testing.T, region string) *s3.S3 {
+func NewS3Client(t testing.TestingT, region string) *s3.S3 {
 	client, err := NewS3ClientE(t, region)
 	require.NoError(t, err)
 
@@ -371,7 +377,7 @@ func NewS3Client(t *testing.T, region string) *s3.S3 {
 }
 
 // NewS3ClientE creates an S3 client.
-func NewS3ClientE(t *testing.T, region string) (*s3.S3, error) {
+func NewS3ClientE(t testing.TestingT, region string) (*s3.S3, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
@@ -381,14 +387,14 @@ func NewS3ClientE(t *testing.T, region string) (*s3.S3, error) {
 }
 
 // NewS3Uploader creates an S3 Uploader.
-func NewS3Uploader(t *testing.T, region string) *s3manager.Uploader {
+func NewS3Uploader(t testing.TestingT, region string) *s3manager.Uploader {
 	uploader, err := NewS3UploaderE(t, region)
 	require.NoError(t, err)
 	return uploader
 }
 
 // NewS3UploaderE creates an S3 Uploader.
-func NewS3UploaderE(t *testing.T, region string) (*s3manager.Uploader, error) {
+func NewS3UploaderE(t testing.TestingT, region string) (*s3manager.Uploader, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err

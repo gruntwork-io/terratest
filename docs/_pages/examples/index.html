@@ -1,0 +1,45 @@
+---
+layout: collection-browser
+title: Examples
+subtitle: The best way to learn how to use Terratest is through examples.
+excerpt: The best way to learn how to use Terratest is through examples.
+permalink: /examples/
+slug: examples
+nav_title: Documentation
+nav_title_link: /docs/
+custom_js:
+- prism
+- examples
+- collection-browser_scroll
+- collection-browser_toc
+---
+
+<div class="main">
+  <div class="cb-section-white">
+
+    <div class="row">
+      <div class="container-cb-lg">
+        <div id="cb-doc-listings">
+          <div class="row equal">
+
+            {% assign data_scroll_after_selector = '.main' %}
+            {% assign data_scroll_until_selector = '#cb-doc-listings' %}
+            {% include collection_browser/_sidebar.html data_scroll_until_selector=data_scroll_until_selector data_scroll_after_selector=data_scroll_after_selector %}
+
+            <div class="col-xs-12 col-md-7 col-lg-9">
+              <div class="row">
+                <div class="cb-doc-listing js-scroll-spy" data-scroll-spy-nav-selector="#toc">
+
+                  {% include examples/explorer.html class='wide' id='examples_page' %}
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

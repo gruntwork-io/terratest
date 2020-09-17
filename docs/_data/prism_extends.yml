@@ -1,0 +1,5 @@
+sh: bash
+tpl: yaml
+tf: hcl
+tfvars: hcl
+yml: yaml

@@ -1,4 +1,3 @@
-package azure
+// Package `azure` allows users to interact with resources on the Microsoft Azure platform
 
-// azure - This package contains terratest functions that make interacting with Microsoft's Azure
-// platform simpler
+package azure

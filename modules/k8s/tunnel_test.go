@@ -9,6 +9,7 @@
 package k8s
 
 import (
+	"crypto/tls"
 	"fmt"
 	"strings"
 	"testing"
@@ -22,8 +23,7 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
@@ -34,10 +34,14 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	defer tunnel.Close()
 	tunnel.ForwardPort(t)
 
+	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
+	tlsConfig := tls.Config{}
+
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
 	http_helper.HttpGetWithRetryWithCustomValidation(
 		t,
 		fmt.Sprintf("http://%s", tunnel.Endpoint()),
+		&tlsConfig,
 		60,
 		5*time.Second,
 		verifyNginxWelcomePage,
@@ -48,8 +52,7 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueId())
-	options := NewKubectlOptions("", "")
-	options.Namespace = uniqueID
+	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_WITH_SERVICE_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
@@ -61,10 +64,14 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 	defer tunnel.Close()
 	tunnel.ForwardPort(t)
 
+	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
+	tlsConfig := tls.Config{}
+
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
 	http_helper.HttpGetWithRetryWithCustomValidation(
 		t,
 		fmt.Sprintf("http://%s", tunnel.Endpoint()),
+		&tlsConfig,
 		60,
 		5*time.Second,
 		verifyNginxWelcomePage,

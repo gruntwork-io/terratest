@@ -1,19 +1,21 @@
 package docker
 
 import (
-	"testing"
-
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/shell"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // Options are Docker options.
 type Options struct {
 	WorkingDir string
 	EnvVars    map[string]string
+	// Set a logger that should be used. See the logger package for more info.
+	Logger *logger.Logger
 }
 
 // RunDockerCompose runs docker-compose with the given arguments and options and return stdout/stderr.
-func RunDockerCompose(t *testing.T, options *Options, args ...string) string {
+func RunDockerCompose(t testing.TestingT, options *Options, args ...string) string {
 	out, err := RunDockerComposeE(t, options, args...)
 	if err != nil {
 		t.Fatal(err)
@@ -22,7 +24,7 @@ func RunDockerCompose(t *testing.T, options *Options, args ...string) string {
 }
 
 // RunDockerComposeE runs docker-compose with the given arguments and options and return stdout/stderr.
-func RunDockerComposeE(t *testing.T, options *Options, args ...string) (string, error) {
+func RunDockerComposeE(t testing.TestingT, options *Options, args ...string) (string, error) {
 	cmd := shell.Command{
 		Command: "docker-compose",
 		// We append --project-name to ensure containers from multiple different tests using Docker Compose don't end
@@ -30,6 +32,7 @@ func RunDockerComposeE(t *testing.T, options *Options, args ...string) (string, 
 		Args:       append([]string{"--project-name", t.Name()}, args...),
 		WorkingDir: options.WorkingDir,
 		Env:        options.EnvVars,
+		Logger:     options.Logger,
 	}
 
 	return shell.RunCommandAndGetOutputE(t, cmd)

@@ -3,13 +3,13 @@ package helm
 import (
 	"fmt"
 	"path/filepath"
-	"testing"
 
 	"github.com/gruntwork-io/gruntwork-cli/collections"
 	"github.com/gruntwork-io/gruntwork-cli/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // formatSetValuesAsArgs formats the given values as command line args for helm using the given flag (e.g flags of
@@ -30,7 +30,7 @@ func formatSetValuesAsArgs(setValues map[string]string, flag string) []string {
 
 // formatValuesFilesAsArgs formats the given list of values file paths as command line args for helm (e.g of the format
 // -f path). This will fail the test if one of the paths do not exist or the absolute path can not be determined.
-func formatValuesFilesAsArgs(t *testing.T, valuesFiles []string) []string {
+func formatValuesFilesAsArgs(t testing.TestingT, valuesFiles []string) []string {
 	args, err := formatValuesFilesAsArgsE(t, valuesFiles)
 	require.NoError(t, err)
 	return args
@@ -38,7 +38,7 @@ func formatValuesFilesAsArgs(t *testing.T, valuesFiles []string) []string {
 
 // formatValuesFilesAsArgsE formats the given list of values file paths as command line args for helm (e.g of the format
 // -f path). This will error if the file does not exist.
-func formatValuesFilesAsArgsE(t *testing.T, valuesFiles []string) ([]string, error) {
+func formatValuesFilesAsArgsE(t testing.TestingT, valuesFiles []string) ([]string, error) {
 	args := []string{}
 
 	for _, valuesFilePath := range valuesFiles {
@@ -59,7 +59,7 @@ func formatValuesFilesAsArgsE(t *testing.T, valuesFiles []string) ([]string, err
 // formatSetFilesAsArgs formats the given list of keys and file paths as command line args for helm to set from file
 // (e.g of the format --set-file key=path). This will fail the test if one of the paths do not exist or the absolute
 // path can not be determined.
-func formatSetFilesAsArgs(t *testing.T, setFiles map[string]string) []string {
+func formatSetFilesAsArgs(t testing.TestingT, setFiles map[string]string) []string {
 	args, err := formatSetFilesAsArgsE(t, setFiles)
 	require.NoError(t, err)
 	return args
@@ -67,7 +67,7 @@ func formatSetFilesAsArgs(t *testing.T, setFiles map[string]string) []string {
 
 // formatSetFilesAsArgsE formats the given list of keys and file paths as command line args for helm to set from file
 // (e.g of the format --set-file key=path)
-func formatSetFilesAsArgsE(t *testing.T, setFiles map[string]string) ([]string, error) {
+func formatSetFilesAsArgsE(t testing.TestingT, setFiles map[string]string) ([]string, error) {
 	args := []string{}
 
 	// To make it easier to test, go through the keys in sorted order

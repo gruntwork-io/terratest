@@ -1,11 +1,12 @@
 package http_helper
 
 import (
+	"crypto/tls"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 type GetResponse struct {
@@ -18,7 +19,7 @@ type GetResponse struct {
 // to stream the responses for each check.
 // Note that the channel has a buffer of 1000, after which it will start to drop the send events
 func ContinuouslyCheckUrl(
-	t *testing.T,
+	t testing.TestingT,
 	url string,
 	stopChecking <-chan bool,
 	sleepBetweenChecks time.Duration,
@@ -35,8 +36,8 @@ func ContinuouslyCheckUrl(
 				logger.Logf(t, "Got signal to stop downtime checks for URL %s.\n", url)
 				return
 			case <-time.After(sleepBetweenChecks):
-				statusCode, body, err := HttpGetE(t, url)
-				// Nonblocking send, defaulting to logging a warning if there is no channel reader
+				statusCode, body, err := HttpGetE(t, url, &tls.Config{})
+				// Non-blocking send, defaulting to logging a warning if there is no channel reader
 				select {
 				case responses <- GetResponse{StatusCode: statusCode, Body: body}:
 					// do nothing since all we want to do is send the response

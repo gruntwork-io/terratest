@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"regexp"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/retry"
@@ -14,6 +13,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/customerrors"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/shell"
+	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
 // Options are the options for Packer.
@@ -26,13 +26,15 @@ type Options struct {
 	RetryableErrors    map[string]string // If packer build fails with one of these (transient) errors, retry. The keys are a regexp to match against the error and the message is what to display to a user if that error is matched.
 	MaxRetries         int               // Maximum number of times to retry errors matching RetryableErrors
 	TimeBetweenRetries time.Duration     // The amount of time to wait between retries
+	WorkingDir         string            // The directory to run packer in
+	Logger             *logger.Logger    // If set, use a non-default logger
 }
 
 // BuildArtifacts can take a map of identifierName <-> Options and then parallelize
 // the packer builds. Once all the packer builds have completed a map of identifierName <-> generated identifier
 // is returned. The identifierName can be anything you want, it is only used so that you can
 // know which generated artifact is which.
-func BuildArtifacts(t *testing.T, artifactNameToOptions map[string]*Options) map[string]string {
+func BuildArtifacts(t testing.TestingT, artifactNameToOptions map[string]*Options) map[string]string {
 	result, err := BuildArtifactsE(t, artifactNameToOptions)
 
 	if err != nil {
@@ -47,7 +49,7 @@ func BuildArtifacts(t *testing.T, artifactNameToOptions map[string]*Options) map
 // is returned. If any artifact fails to build, the errors are accumulated and returned
 // as a MultiError. The identifierName can be anything you want, it is only used so that you can
 // know which generated artifact is which.
-func BuildArtifactsE(t *testing.T, artifactNameToOptions map[string]*Options) (map[string]string, error) {
+func BuildArtifactsE(t testing.TestingT, artifactNameToOptions map[string]*Options) (map[string]string, error) {
 	var waitForArtifacts sync.WaitGroup
 	waitForArtifacts.Add(len(artifactNameToOptions))
 
@@ -77,7 +79,7 @@ func BuildArtifactsE(t *testing.T, artifactNameToOptions map[string]*Options) (m
 }
 
 // BuildArtifact builds the given Packer template and return the generated Artifact ID.
-func BuildArtifact(t *testing.T, options *Options) string {
+func BuildArtifact(t testing.TestingT, options *Options) string {
 	artifactID, err := BuildArtifactE(t, options)
 	if err != nil {
 		t.Fatal(err)
@@ -86,13 +88,14 @@ func BuildArtifact(t *testing.T, options *Options) string {
 }
 
 // BuildArtifactE builds the given Packer template and return the generated Artifact ID.
-func BuildArtifactE(t *testing.T, options *Options) (string, error) {
-	logger.Logf(t, "Running Packer to generate a custom artifact for template %s", options.Template)
+func BuildArtifactE(t testing.TestingT, options *Options) (string, error) {
+	options.Logger.Logf(t, "Running Packer to generate a custom artifact for template %s", options.Template)
 
 	cmd := shell.Command{
-		Command: "packer",
-		Args:    formatPackerArgs(options),
-		Env:     options.Env,
+		Command:    "packer",
+		Args:       formatPackerArgs(options),
+		Env:        options.Env,
+		WorkingDir: options.WorkingDir,
 	}
 
 	description := fmt.Sprintf("%s %v", cmd.Command, cmd.Args)
@@ -110,14 +113,14 @@ func BuildArtifactE(t *testing.T, options *Options) (string, error) {
 // BuildAmi builds the given Packer template and return the generated AMI ID.
 //
 // Deprecated: Use BuildArtifact instead.
-func BuildAmi(t *testing.T, options *Options) string {
+func BuildAmi(t testing.TestingT, options *Options) string {
 	return BuildArtifact(t, options)
 }
 
 // BuildAmiE builds the given Packer template and return the generated AMI ID.
 //
 // Deprecated: Use BuildArtifactE instead.
-func BuildAmiE(t *testing.T, options *Options) (string, error) {
+func BuildAmiE(t testing.TestingT, options *Options) (string, error) {
 	return BuildArtifactE(t, options)
 }
 
@@ -151,8 +154,8 @@ func formatPackerArgs(options *Options) []string {
 		args = append(args, "-var", fmt.Sprintf("%s=%s", key, value))
 	}
 
-	for _, file_path := range options.VarFiles {
-		args = append(args, "-var-file", file_path)
+	for _, filePath := range options.VarFiles {
+		args = append(args, "-var-file", filePath)
 	}
 
 	if options.Only != "" {

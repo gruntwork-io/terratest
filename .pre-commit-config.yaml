@@ -1,4 +1,13 @@
 - repo: https://github.com/gruntwork-io/pre-commit
-  rev: v0.0.2
+  rev: v0.1.10
   hooks:
     - id: goimports
+    - id: terraform-fmt
+- repo: local
+  hooks:
+    - id: test-interfaces-used
+      name: test-interfaces-used
+      entry: bash -c 'grep -Rw "*testing.T" modules | grep -v _test.go | wc -l'
+      language: system
+      types: [go]
+      pass_filenames: false

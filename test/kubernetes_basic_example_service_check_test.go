@@ -9,6 +9,7 @@
 package test
 
 import (
+	"crypto/tls"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -30,18 +31,17 @@ func TestKubernetesBasicExampleServiceCheck(t *testing.T) {
 	kubeResourcePath, err := filepath.Abs("../examples/kubernetes-basic-example/nginx-deployment.yml")
 	require.NoError(t, err)
 
-	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
-	// - HOME/.kube/config for the kubectl config file
-	// - Current context of the kubectl config file
-	options := k8s.NewKubectlOptions("", "")
-
 	// To ensure we can reuse the resource config on the same cluster to test different scenarios, we setup a unique
 	// namespace for the resources for this test.
 	// Note that namespaces must be lowercase.
 	namespaceName := strings.ToLower(random.UniqueId())
+
+	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
+	// - HOME/.kube/config for the kubectl config file
+	// - Current context of the kubectl config file
+	options := k8s.NewKubectlOptions("", "", namespaceName)
+
 	k8s.CreateNamespace(t, options, namespaceName)
-	// Make sure we set the namespace on the options
-	options.Namespace = namespaceName
 	// ... and make sure to delete the namespace at the end of the test
 	defer k8s.DeleteNamespace(t, options, namespaceName)
 
@@ -57,11 +57,16 @@ func TestKubernetesBasicExampleServiceCheck(t *testing.T) {
 	// Now we verify that the service will successfully boot and start serving requests
 	service := k8s.GetService(t, options, "nginx-service")
 	endpoint := k8s.GetServiceEndpoint(t, options, service, 80)
+
+	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
+	tlsConfig := tls.Config{}
+
 	// Test the endpoint for up to 5 minutes. This will only fail if we timeout waiting for the service to return a 200
 	// response.
 	http_helper.HttpGetWithRetryWithCustomValidation(
 		t,
 		fmt.Sprintf("http://%s", endpoint),
+		&tlsConfig,
 		30,
 		10*time.Second,
 		func(statusCode int, body string) bool {
