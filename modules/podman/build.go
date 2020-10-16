@@ -34,10 +34,7 @@ func Build(t testing.TestingT, path string, options *BuildOptions) {
 func BuildE(t testing.TestingT, path string, options *BuildOptions) error {
 	options.Logger.Logf(t, "Running 'podman build' in %s", path)
 
-	args, err := formatPodmanBuildArgs(path, options)
-	if err != nil {
-		return err
-	}
+	args := formatPodmanBuildArgs(path, options)
 
 	cmd := shell.Command{
 		Command: "podman",
@@ -46,11 +43,12 @@ func BuildE(t testing.TestingT, path string, options *BuildOptions) error {
 	}
 
 	_, buildErr := shell.RunCommandAndGetOutputE(t, cmd)
+
 	return buildErr
 }
 
 // formatPodmanBuildArgs formats the arguments for the 'podman build' command.
-func formatPodmanBuildArgs(path string, options *BuildOptions) ([]string, error) {
+func formatPodmanBuildArgs(path string, options *BuildOptions) []string {
 	args := []string{"build"}
 
 	for _, tag := range options.Tags {
@@ -65,5 +63,5 @@ func formatPodmanBuildArgs(path string, options *BuildOptions) ([]string, error)
 
 	args = append(args, path)
 
-	return args, nil
+	return args
 }
