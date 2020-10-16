@@ -86,15 +86,39 @@ func GetParameterValueForParameterOfRdsInstance(t testing.TestingT, parameterNam
 	return parameterValue
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------------
 // GetParameterValueForParameterOfRdsInstanceE gets the value of the parameter name specified for the RDS instance in the given region.
+// modified to use previos token and page through all parameters
 func GetParameterValueForParameterOfRdsInstanceE(t testing.TestingT, parameterName string, dbInstanceID string, awsRegion string) (string, error) {
-	output := GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion)
-	for _, parameter := range output {
-		if aws.StringValue(parameter.ParameterName) == parameterName {
-			return aws.StringValue(parameter.ParameterValue), nil
+	lastmarker := ""			// var to store the returned Marker value
+	morepages := true 			// initialize morepages to indicate more pages need to be pulled
+	pagecnt := 1				// initialize pagecnt to be used to limit the number if loops in the event the parameter cannot be found
+	for morepages == true {
+		//  *** on the first pass, the lastmarker is nil, if additional records exist, the api call will return a marker. cnt holds the number of items in output
+		output, marker, cnt := GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion, lastmarker)
+		// store the new marker to a local var
+		lastmarker = marker
+		//  check if the number of records returned are less than 100 or if a marker was not returned to have function stop on this current page
+		if (cnt < 100) || (marker == "") {
+			morepages = false
+		}
+		
+		// examine the parameters returned for any matches to the specified
+		for _, parameter := range output {
+			//  ### debug print each of the parameters to match to the parameterName 
+			// fmt.Println(aws.StringValue(parameter.ParameterName))
+			if aws.StringValue(parameter.ParameterName) == parameterName {
+				return aws.StringValue(parameter.ParameterValue), nil
+			}
+		}
+		
+		//  the above code should prevent paging beyond the actual records but just in case, included a stop
+		pagecnt++
+		if pagecnt > 6 {
+			return "", fmt.Errorf("Error: scanned beyond 6 pages")
 		}
 	}
-	return "", ParameterForDbInstanceNotFound{ParameterName: parameterName, DbInstanceID: dbInstanceID, AwsRegion: awsRegion}
+	return "", aws.ParameterForDbInstanceNotFound{ParameterName: parameterName, DbInstanceID: dbInstanceID, AwsRegion: awsRegion}
 }
 
 // GetOptionSettingForOfRdsInstance gets the value of the option name in the option group specified for the RDS instance in the given region.
@@ -160,31 +184,57 @@ func GetOptionsOfOptionGroupE(t testing.TestingT, optionGroupName string, awsReg
 	return output.OptionGroupsList[0].Options, nil
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------
 // GetAllParametersOfRdsInstance gets all the parameters defined in the parameter group for the RDS instance in the given region.
-func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string) []*rds.Parameter {
-	parameters, err := GetAllParametersOfRdsInstanceE(t, dbInstanceID, awsRegion)
+// Modified to accept a Marker Token to pass on to GetAllParametersOfRdsInstanceE and return the ending marker and the item count in parameters
+func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string, startMarker string) ([]*rds.Parameter, string, int) {
+	parameters, endmarker, cnt, err := GetAllParametersOfRdsInstanceE(t, dbInstanceID, awsRegion, startMarker)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return parameters
+	return parameters, endmarker, cnt
 }
 
+
+//------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------
 // GetAllParametersOfRdsInstanceE gets all the parameters defined in the parameter group for the RDS instance in the given region.
-func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string) ([]*rds.Parameter, error) {
-	dbInstance, dbInstanceErr := GetRdsInstanceDetailsE(t, dbInstanceID, awsRegion)
+// Modified to accept a Marker Token to pass on to DescribeDBParameters API call. Returns rds parameters, the ending marker from search, and count of records pulled
+func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string, strtmarker string) ([]*rds.Parameter, string, int, error) {
+	//  Get RDS instance details which include Parameter Group Name
+	var lastmarker string = ""
+
+	//  ***Get Instance Details
+	dbInstance, dbInstanceErr := aws.GetRdsInstanceDetailsE(t, dbInstanceID, awsRegion)
 	if dbInstanceErr != nil {
-		return []*rds.Parameter{}, dbInstanceErr
+		return []*rds.Parameter{}, "", 0, dbInstanceErr
 	}
+	// Extract parameter group name for defined instance
 	parameterGroupName := aws.StringValue(dbInstance.DBParameterGroups[0].DBParameterGroupName)
-
-	rdsClient := NewRdsClient(t, awsRegion)
-	input := rds.DescribeDBParametersInput{DBParameterGroupName: aws.String(parameterGroupName)}
-	output, err := rdsClient.DescribeDBParameters(&input)
-
-	if err != nil {
-		return []*rds.Parameter{}, err
+	
+	// create RDSclient interface
+	rdsClient := aws.NewRdsClient(t, awsRegion)
+	
+	// set the input parameters for DescribeDBParameters api call.  Marker will be nil first pass
+	input := rds.DescribeDBParametersInput{
+		DBParameterGroupName: aws.String(parameterGroupName),
+		Marker: aws.String(strtmarker),
+		MaxRecords: aws.Int64(100),
 	}
-	return output.Parameters, nil
+
+	//   *** call DescribeDBParameters api to retreive parmaters
+	p_output, err := rdsClient.DescribeDBParameters(&input)
+	if err != nil {
+		return []*rds.Parameter{}, "", 0, err
+	}
+	numofparms := len(p_output.Parameters)
+
+	//  check if marker was returned,  if not, leave lastmarker as nil as declared above
+	if p_output.Marker != nil {
+		lastmarker = *p_output.Marker
+	}
+	return p_output.Parameters, lastmarker, numofparms, nil
 }
 
 // GetRdsInstanceDetailsE gets the details of a single DB instance whose identifier is passed.
