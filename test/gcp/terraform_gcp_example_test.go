@@ -18,7 +18,7 @@ import (
 func TestTerraformGcpExample(t *testing.T) {
 	t.Parallel()
 
-	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-gcp-example")
+	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/gcp/terraform-gcp-example")
 
 	// Get the Project Id to use
 	projectId := gcp.GetGoogleProjectIDFromEnvVar(t)
@@ -97,7 +97,7 @@ func TestTerraformGcpExample(t *testing.T) {
 func TestSshAccessToComputeInstance(t *testing.T) {
 	t.Parallel()
 
-	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-gcp-example")
+	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/gcp/terraform-gcp-example")
 
 	// Setup values for our Terraform apply
 	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
