@@ -135,7 +135,7 @@ func GetParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegi
 
 //------------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------------
-// GetAllParametersOfRdsInstanceE gets all the parameters defined in the parameter group for the RDS instance in the given region.
+// GetParametersOfRdsInstanceE gets all the parameters defined in the parameter group for the RDS instance in the given region.
 // Modified to accept a Marker Token to pass on to DescribeDBParameters API call. Returns rds parameters, the ending marker from search, and count of records pulled
 func GetParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string, strtmarker string) ([]*rds.Parameter, string, int, error) {
 	//  Get RDS instance details which include Parameter Group Name
