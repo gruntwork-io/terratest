@@ -95,7 +95,7 @@ func GetParameterValueForParameterOfRdsInstanceE(t testing.TestingT, parameterNa
 	pagecnt := 1				// initialize pagecnt to be used to limit the number if loops in the event the parameter cannot be found
 	for morepages == true {
 		//  *** on the first pass, the lastmarker is nil, if additional records exist, the api call will return a marker. cnt holds the number of items in output
-		output, marker, cnt := GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion, lastmarker)
+		output, marker, cnt := GetParametersOfRdsInstance(t, dbInstanceID, awsRegion, lastmarker)
 		// store the new marker to a local var
 		lastmarker = marker
 		//  check if the number of records returned are less than 100 or if a marker was not returned to have function stop on this current page
@@ -123,10 +123,10 @@ func GetParameterValueForParameterOfRdsInstanceE(t testing.TestingT, parameterNa
 
 //------------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------------
-// GetAllParametersOfRdsInstance gets all the parameters defined in the parameter group for the RDS instance in the given region.
-// Modified to accept a Marker Token to pass on to GetAllParametersOfRdsInstanceE and return the ending marker and the item count in parameters
-func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string, startMarker string) ([]*rds.Parameter, string, int) {
-	parameters, endmarker, cnt, err := GetAllParametersOfRdsInstanceE(t, dbInstanceID, awsRegion, startMarker)
+// GetParametersOfRdsInstance gets all the parameters defined in the parameter group for the RDS instance in the given region.
+// Modified to accept a Marker Token to pass on to GetParametersOfRdsInstanceE and return the ending marker and the item count in parameters
+func GetParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string, startMarker string) ([]*rds.Parameter, string, int) {
+	parameters, endmarker, cnt, err := GetParametersOfRdsInstanceE(t, dbInstanceID, awsRegion, startMarker)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsR
 //------------------------------------------------------------------------------------------------------------------------------------------------
 // GetAllParametersOfRdsInstanceE gets all the parameters defined in the parameter group for the RDS instance in the given region.
 // Modified to accept a Marker Token to pass on to DescribeDBParameters API call. Returns rds parameters, the ending marker from search, and count of records pulled
-func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string, strtmarker string) ([]*rds.Parameter, string, int, error) {
+func GetParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string, strtmarker string) ([]*rds.Parameter, string, int, error) {
 	//  Get RDS instance details which include Parameter Group Name
 	var lastmarker string = ""
 
