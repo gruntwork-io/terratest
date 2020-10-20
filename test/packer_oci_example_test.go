@@ -6,6 +6,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/oci"
 	"github.com/gruntwork-io/terratest/modules/packer"
+	"github.com/gruntwork-io/terratest/test/common"
 )
 
 // An example of how to test the Packer template in examples/packer-basic-example using Terratest.
@@ -41,9 +42,9 @@ func TestPackerOciExample(t *testing.T) {
 		Only: "oracle-oci",
 
 		// Configure retries for intermittent errors
-		RetryableErrors:    DefaultRetryablePackerErrors,
-		TimeBetweenRetries: DefaultTimeBetweenPackerRetries,
-		MaxRetries:         DefaultMaxPackerRetries,
+		RetryableErrors:    common.DefaultRetryablePackerErrors,
+		TimeBetweenRetries: common.DefaultTimeBetweenPackerRetries,
+		MaxRetries:         common.DefaultMaxPackerRetries,
 	}
 
 	// Make sure the Packer build completes successfully

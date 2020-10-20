@@ -1,3 +1,5 @@
+// +build gcp
+
 package test
 
 import (

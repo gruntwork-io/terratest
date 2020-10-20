@@ -1,3 +1,5 @@
+// +build gcp
+
 package test
 
 import (
@@ -5,6 +7,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/packer"
+	"github.com/gruntwork-io/terratest/test/common"
 )
 
 // An example of how to test the Packer template in examples/packer-basic-example using Terratest.
@@ -32,9 +35,9 @@ func TestPackerGCPBasicExample(t *testing.T) {
 		Only: "googlecompute",
 
 		// Configure retries for intermittent errors
-		RetryableErrors:    DefaultRetryablePackerErrors,
-		TimeBetweenRetries: DefaultTimeBetweenPackerRetries,
-		MaxRetries:         DefaultMaxPackerRetries,
+		RetryableErrors:    common.DefaultRetryablePackerErrors,
+		TimeBetweenRetries: common.DefaultTimeBetweenPackerRetries,
+		MaxRetries:         common.DefaultMaxPackerRetries,
 	}
 
 	// Make sure the Packer build completes successfully
