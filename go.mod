@@ -1,4 +1,4 @@
-module github.com/smeyer53027/terratest
+module github.com/gruntwork-io/terratest
 
 go 1.14
 
