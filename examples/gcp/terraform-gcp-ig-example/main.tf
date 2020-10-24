@@ -13,7 +13,7 @@ terraform {
 
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY A REGIONAL MANAGED INSTANCE GROUP
-# See test/terraform_gcp_ig_example_test.go for how to write automated tests for this code.
+# See test/gcp/terraform_gcp_ig_example_test.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Create a Regional Managed Instance Group

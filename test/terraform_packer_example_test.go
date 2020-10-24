@@ -13,6 +13,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/test/common"
 )
 
 // This is a complicated, end-to-end integration test. It builds the AMI from examples/packer-docker-example,
@@ -79,9 +80,9 @@ func buildAMI(t *testing.T, awsRegion string, workingDir string) {
 		},
 
 		// Configure retries for intermittent errors
-		RetryableErrors:    DefaultRetryablePackerErrors,
-		TimeBetweenRetries: DefaultTimeBetweenPackerRetries,
-		MaxRetries:         DefaultMaxPackerRetries,
+		RetryableErrors:    common.DefaultRetryablePackerErrors,
+		TimeBetweenRetries: common.DefaultTimeBetweenPackerRetries,
+		MaxRetries:         common.DefaultMaxPackerRetries,
 	}
 
 	// Save the Packer Options so future test stages can use them

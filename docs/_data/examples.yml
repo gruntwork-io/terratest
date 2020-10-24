@@ -68,14 +68,14 @@
   name: GCP Hello, World Example
   image: /assets/img/logos/gcp-logo.png
   files:
-    - url: /examples/terraform-gcp-hello-world-example/main.tf
+    - url: /examples/gcp/terraform-gcp-hello-world-example/main.tf
       id: terraform_code
-    - url: /test/terraform_gcp_hello_world_example_test.go
+    - url: /test/gcp/terraform_gcp_hello_world_example_test.go
       id: test_code
       default: true
   learn_more:
     - name: GCP Hello, World
-      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terraform-gcp-hello-world-example
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/gcp/terraform-gcp-hello-world-example
 
 - id: azure-basic
   name: Azure Hello, World Example
