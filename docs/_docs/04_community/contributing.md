@@ -151,7 +151,7 @@ to include the following:
 
 #### Validate the Pull Request for Azure Platform
 
-If you're contributing code for the [Azure Platform](https://azure.com) and if you have and active _Azure subscription_, it's recommended to follow the below guidelines after [creating a pull request](https://help.github.com/articles/creating-a-pull-request/). If you're contributing code for any other platform (e.g., AWS, GCP, etc), you can skip these steps.
+If you're contributing code for the [Azure Platform](https://azure.com) and if you have an active _Azure subscription_, it's recommended to follow the below guidelines after [creating a pull request](https://help.github.com/articles/creating-a-pull-request/). If you're contributing code for any other platform (e.g., AWS, GCP, etc), you can skip these steps.
 
 > Once the Terratest maintainers add `Azure` tag and _Approve_ the PR, following pipeline will run automatically to perform a full validation of the Azure contribution. You also can run the pipeline manually on your forked repo by following the below guideline.
 
@@ -176,7 +176,7 @@ We have a separate CI pipeline for _Azure_ code. To run it on a forked repo:
 
     > `PAT` will be stored in _your_ GitHub account; neither the Terratest maintainers nor anyone else will have any access to it. Under the hood, GitHub stores your secrets in a secure, encrypted format (see: [GitHub Actions Secrets Reference](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets) for more information). Once the secret is created, it's only possible to update or delete it; the value of the secret can't be viewed. GitHub uses a [libsodium sealed box](https://libsodium.gitbook.io/doc/public-key_cryptography/sealed_boxes) to help ensure that secrets are encrypted before they reach GitHub.
 
-1. Go to Actions tab on GitHub ([https://github.com/<GITHUB_ACCOUNT>/terratest/actions](https://github.com/<GITHUB_ACCOUNT>/terratest/actions))
+1. Go to Actions tab on GitHub (https://github.com/<GITHUB_ACCOUNT>/terratest/actions)
 
 1. Click `ci-workflow` workflow
 
@@ -197,7 +197,6 @@ We have a separate CI pipeline for _Azure_ code. To run it on a forked repo:
 ### Merge and release
 
 The maintainers for this repo will review your code and provide feedback. Once the PR is accepted, they will merge the
-
 code and release a new version, which you'll be able to find in the [releases page](https://github.com/gruntwork-io/terratest/releases).
 
 ## Developing Terratest

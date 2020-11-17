@@ -19,13 +19,13 @@ Here are some techniques we use with Docker:
 
 - If your script is used in a Packer template, add a [Docker
   builder](https://www.packer.io/docs/builders/docker.html) to the template so you can create a Docker image from the
-  same code. See the [Packer Docker Example]({{ site.baseurl }}/examples/code-examples/packer-docker-example/) for working sample code.
+  same code. See the [Packer Docker Example](https://github.com/gruntwork-io/terratest/tree/master/examples/packer-docker-example) for working sample code.
 
 - We have prebuilt Docker images for major Linux distros that have many important dependencies (e.g., curl, vim,
   tar, sudo) already installed. See the [test-docker-images folder](https://github.com/gruntwork-io/terratest/tree/master/test-docker-images) for more details.
 
 - Create a `docker-compose.yml` to make it easier to run your Docker image with all the ports, environment variables,
-  and other settings it needs. See the [Packer Docker Example]({{ site.baseurl }}/examples/code-examples/packer-docker-example/) for working sample code.
+  and other settings it needs. See the [Packer Docker Example](https://github.com/gruntwork-io/terratest/tree/master/examples/packer-docker-example) for working sample code.
 
 - With scripts in Docker, you can replace _some_ real-world dependencies with mocks! One way to do this is to create
   some "mock scripts" and to bind-mount them in `docker-compose.yml` in a way that replaces the real dependency. For

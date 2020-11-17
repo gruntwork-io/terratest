@@ -184,7 +184,7 @@ extra sure that the test always has a chance to finish cleanly.
 
 ## Example #3: Docker
 
-You can use Terratest for testing a variety of infrastructure code and not Terraform. For example, you can use it to 
+You can use Terratest for testing a variety of infrastructure code, not just Terraform. For example, you can use it to
 test your [Docker](https://www.docker.com/) images:
 
 {% include examples/explorer.html example_id='docker-hello-world' file_id='docker_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}

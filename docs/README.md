@@ -57,17 +57,17 @@ The Terratest website contains *Docs* collection stored in `/docs/_docs`.
 
 When you work with the documentation, it's good to preview the changes. To do that, run project as it is described in [Run section](#run).
 
-1. [A) Change content on the existing page](#change-content-on-the-existing-page)
-2. [B) Add a new page](#add-a-new-page)
-3. [C) Remove or rename page](#remove-or-rename-page)
-4. [D) Add custom redirection](#add-custom-redirection)
+1. [Change content on the existing page](#change-content-on-the-existing-page)
+2. [Add a new page](#add-a-new-page)
+3. [Remove or rename page](#remove-or-rename-page)
+4. [Add custom redirection](#add-custom-redirection)
 
-## A) Change content on the existing page
+## Change content on the existing page
 
 1. Find page in `_docs` by file name (it's the same as page's title).
 2. Edit content and save file.
 
-## B) Add a new page
+## Add a new page
 
 1. Create a new file in `_docs`. The file's name and title have to be the same.
 2. At the beginning of the file, add:
@@ -98,12 +98,12 @@ nav_title_link: /docs/                          # X Cannot be changed
 
 3. Add content at the end of the file.
 
-## C) Remove or rename page
+## Remove or rename page
 
 1. Find page in `_docs` by file name (it's the same as page's title).
 2. Delete page or rename.
 
-## D) Add custom redirection
+## Add custom redirection
 
 To add link to any page, including subpages outside of any collection, you can create a new file in specific collection (e.g. `_docs`), and set following content in the file:
 

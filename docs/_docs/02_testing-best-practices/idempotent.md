@@ -10,7 +10,7 @@ nav_title: Documentation
 nav_title_link: /docs/
 ---
 
-A Terraform configuration is idempotent when a second apply results in 0 changes. A idempotent configuration ensures that:
+A Terraform configuration is idempotent when a second apply results in 0 changes. An idempotent configuration ensures that:
 
 1.  What you define in Terraform is exactly what is being deployed. 
 1.  Detection of bugs in Terraform resources and providers that might affect your configuration.

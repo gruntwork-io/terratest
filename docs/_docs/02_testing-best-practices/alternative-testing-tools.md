@@ -21,7 +21,7 @@ Terratest compares to other testing tools]({{site.baseurl}}/docs/testing-best-pr
 1.  [inspec](https://www.inspec.io/)
 1.  [Goss](https://github.com/aelsabbahy/goss)
 1.  [awspec](https://github.com/k1LoW/awspec)
-1.  [Terraform's acceptance testing framework](https://github.com/hashicorp/terraform/blob/master/.github/CONTRIBUTING.md#writing-an-acceptance-test)
+1.  [Terraform's acceptance testing framework](https://github.com/hashicorp/terraform/blob/master/.github/CONTRIBUTING.md#acceptance-tests-testing-interactions-with-external-services)
 1.  [ruby_terraform](https://github.com/infrablocks/ruby_terraform)
 
 
