@@ -137,6 +137,10 @@ hook from failing, make sure to :
 1. Install [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
 1. Run `goimports -w .`.
 
+We have a [style guide](https://gruntwork.io/guides/style%20guides/golang-style-guide/) for the Go programming language,
+in which we documented some best practices for writing Go code. Please ensure your code adheres to the guidelines
+outlined in the guide.
+
 ### Create a pull request
 
 [Create a pull request](https://help.github.com/articles/creating-a-pull-request/) with your changes. Please make sure
