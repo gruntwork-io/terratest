@@ -142,7 +142,7 @@ func IsPodAvailable(pod *corev1.Pod) bool {
 		isContainerStarted := containerStatus.Started
 		isContainerReady := containerStatus.Ready
 
-		if !isContainerReady && isContainerStarted != nil && !*isContainerStarted {
+		if !isContainerReady || (isContainerStarted != nil && !*isContainerStarted) {
 			return false
 		}
 	}
