@@ -57,6 +57,27 @@ func PutParameterE(t testing.TestingT, awsRegion string, keyName string, keyDesc
 	return *resp.Version, nil
 }
 
+// DeleteParameter deletes all versions of SSM Parameter at keyName.
+func DeleteParameter(t testing.TestingT, awsRegion string, keyName string) {
+	err := DeleteParameterE(t, awsRegion, keyName)
+	require.NoError(t, err)
+}
+
+// DeleteParameterE deletes all versions of SSM Parameter at keyName.
+func DeleteParameterE(t testing.TestingT, awsRegion string, keyName string) error {
+	ssmClient, err := NewSsmClientE(t, awsRegion)
+	if err != nil {
+		return err
+	}
+
+	_, err = ssmClient.DeleteParameter(&ssm.DeleteParameterInput{Name: aws.String(keyName)})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // NewSsmClient creates a SSM client.
 func NewSsmClient(t testing.TestingT, region string) *ssm.SSM {
 	client, err := NewSsmClientE(t, region)
