@@ -46,6 +46,34 @@ func OutputRequiredE(t testing.TestingT, options *Options, key string) (string, 
 	return out, nil
 }
 
+// OutputInt calls terraform output for the given variable and returns its value as an int.
+func OutputInt(t testing.TestingT, options *Options, key string) int {
+	out, err := OutputIntE(t, options, key)
+	require.NoError(t, err)
+	return out
+}
+
+// OutputIntE calls terraform output for the given variable and returns its value as an int.
+func OutputIntE(t testing.TestingT, options *Options, key string) (int, error) {
+	var i int
+	err := OutputStructE(t, options, key, &i)
+	return i, err
+}
+
+// OutputFloat calls terraform output for the given variable and returns its value as a float64.
+func OutputFloat(t testing.TestingT, options *Options, key string) float64 {
+	out, err := OutputFloatE(t, options, key)
+	require.NoError(t, err)
+	return out
+}
+
+// OutputFloatE calls terraform output for the given variable and returns its value as a float64.
+func OutputFloatE(t testing.TestingT, options *Options, key string) (float64, error) {
+	var f float64
+	err := OutputStructE(t, options, key, &f)
+	return f, err
+}
+
 // parseListOfMaps takes a list of maps and parses the types.
 // It is mainly a wrapper for parseMap to support lists.
 func parseListOfMaps(l []interface{}) ([]map[string]interface{}, error) {

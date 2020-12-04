@@ -8,6 +8,76 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestOutputInt(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-int", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+	out := OutputInt(t, options, "int")
+
+	require.Equal(t, 1, out)
+}
+
+func TestOutputIntError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-int", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+	_, err = OutputIntE(t, options, "float")
+
+	require.Error(t, err)
+}
+
+func TestOutputFloat(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-float", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+
+	out := OutputFloat(t, options, "float")
+	require.Equal(t, 1.1, out)
+
+	out = OutputFloat(t, options, "float_0")
+	require.Equal(t, 1.0, out)
+
+	out = OutputFloat(t, options, "int")
+	require.Equal(t, 1, out)
+}
+
+func TestOutputFloatError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-float", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+	_, err = OutputFloatE(t, options, "string")
+
+	require.Error(t, err)
+}
+
 func TestOutputList(t *testing.T) {
 	t.Parallel()
 
