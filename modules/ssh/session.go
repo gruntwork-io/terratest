@@ -1,10 +1,10 @@
 package ssh
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"reflect"
+	"strconv"
 
 	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -24,7 +24,7 @@ type SshConnectionOptions struct {
 
 // ConnectionString returns the connection string for an SSH connection.
 func (options *SshConnectionOptions) ConnectionString() string {
-	return fmt.Sprintf("%s:%d", options.Address, options.Port)
+	return net.JoinHostPort(options.Address, strconv.Itoa(options.Port))
 }
 
 // SshSession is a container object for all resources created by an SSH session. The reason we need this is so that we can do a
