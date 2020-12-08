@@ -64,6 +64,8 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 		"replicaCount": "2",
 		"service.type": "NodePort",
 	}
+	// Test that passing extra arguments doesn't error, by changing default timeout
+	options.ExtraArgs = []string{"--timeout", "5m1s"}
 	Upgrade(t, options, helmChart, releaseName)
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 2)
 

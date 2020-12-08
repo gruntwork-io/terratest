@@ -15,4 +15,5 @@ type Options struct {
 	EnvVars        map[string]string   // Environment variables to set when running helm
 	Version        string              // Version of chart
 	Logger         *logger.Logger      // Set a non-default logger that should be used. See the logger package for more info.
+	ExtraArgs      []string            // Extra arguments to pass to the helm install/upgrade command
 }
