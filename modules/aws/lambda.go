@@ -75,7 +75,6 @@ func GetLambdaFunctionConfigurationE(t testing.TestingT, region, functionName st
 	}
 
 	out, err = lambdaClient.GetFunction(input)
-	require.NoError(t, err)
 	if err != nil {
 		return nil, err
 	}
