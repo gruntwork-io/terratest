@@ -131,3 +131,29 @@ func GetCosmosDBSQLContainerE(t testing.TestingT, subscriptionID string, resourc
 	//Return DB
 	return &cosmosSQLContainer, nil
 }
+
+// GetCosmosDBSQLDatabaseThroughput is a helper function that gets a SQL database. This function would fail the test if there is an error.
+func GetCosmosDBSQLDatabaseThroughput(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.ThroughputSettingsGetResults {
+	cosmosSQLDBThroughput, err := GetCosmosDBSQLDatabaseThroughputE(t, subscriptionID, resourceGroupName, accountName, databaseName)
+	require.NoError(t, err)
+
+	return cosmosSQLDBThroughput
+}
+
+// GetCosmosDBSQLDatabaseThroughputE is a helper function that gets a SQL database.
+func GetCosmosDBSQLDatabaseThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.ThroughputSettingsGetResults, error) {
+	// Create a CosmosDB client
+	cosmosClient, err := GetCosmosDBSQLClient(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the corresponding database account
+	cosmosSQLDBThroughput, err := cosmosClient.GetSQLDatabaseThroughput(context.Background(), resourceGroupName, accountName, databaseName)
+	if err != nil {
+		return nil, err
+	}
+
+	//Return DB
+	return &cosmosSQLDBThroughput, nil
+}
