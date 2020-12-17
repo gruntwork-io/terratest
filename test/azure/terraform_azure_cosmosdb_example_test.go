@@ -54,6 +54,7 @@ func TestTerraformAzureCosmosDBExample(t *testing.T) {
 	cosmosSQLDB := azure.GetCosmosDBSQLDatabase(t, "", expectedResourceGroupName, expectedAccountName, "testdb")
 	assert.Equal(t, "testdb", *cosmosSQLDB.Name)
 
+	// SQL Database throughput
 	cosmosSQLDBThroughput := azure.GetCosmosDBSQLDatabaseThroughput(t, "", expectedResourceGroupName, expectedAccountName, "testdb")
 	assert.Equal(t, int32(400), *cosmosSQLDBThroughput.ThroughputSettingsGetProperties.Resource.Throughput)
 
@@ -67,4 +68,8 @@ func TestTerraformAzureCosmosDBExample(t *testing.T) {
 	assert.Equal(t, "/key2", (*cosmosSQLContainer2.SQLContainerGetProperties.Resource.PartitionKey.Paths)[0])
 	assert.Equal(t, "test-container-3", *cosmosSQLContainer3.Name)
 	assert.Equal(t, "/key3", (*cosmosSQLContainer3.SQLContainerGetProperties.Resource.PartitionKey.Paths)[0])
+
+	// SQL Container throughput
+	cosmosSQLContainer1Throughput := azure.GetCosmosDBSQLContainerThroughput(t, "", expectedResourceGroupName, expectedAccountName, "testdb", "test-container-1")
+	assert.Equal(t, int32(400), *cosmosSQLContainer1Throughput.ThroughputSettingsGetProperties.Resource.Throughput)
 }
