@@ -238,6 +238,7 @@ workflows:
       - setup:
           context:
             - Gruntwork Admin
+            - Gruntwork GCP
           filters:
             tags:
               only: /^v.*/
@@ -245,6 +246,7 @@ workflows:
       - test:
           context:
             - Gruntwork Admin
+            - Gruntwork GCP
           requires:
             - setup
           filters:
@@ -254,6 +256,7 @@ workflows:
       - kubernetes_test:
           context:
             - Gruntwork Admin
+            - Gruntwork GCP
           requires:
             - setup
           filters:
@@ -263,6 +266,7 @@ workflows:
       - helm_test:
           context:
             - Gruntwork Admin
+            - Gruntwork GCP
           requires:
             - setup
           filters:
@@ -272,6 +276,7 @@ workflows:
       - deploy:
           context:
             - Gruntwork Admin
+            - Gruntwork GCP
           requires:
             - setup
           filters:
