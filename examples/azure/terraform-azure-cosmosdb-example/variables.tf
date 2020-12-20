@@ -18,3 +18,8 @@ variable "location" {
   description = "The location to set for the CosmosDB instance."
   default     = "East US"
 }
+
+variable "throughput" {
+  description = "The RU/s throughput for the database account."
+  default     = 400
+}

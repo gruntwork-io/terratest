@@ -18,13 +18,15 @@ func TestTerraformAzureCosmosDBExample(t *testing.T) {
 
 	subscriptionID := ""
 	uniquePostfix := random.Random(10000, 99999)
+	throughput := 400
 
 	// website::tag::1:: Configure Terraform setting up a path to Terraform code.
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located
 		TerraformDir: "../../examples/azure/terraform-azure-cosmosdb-example",
 		Vars: map[string]interface{}{
-			"postfix": uniquePostfix,
+			"postfix":    uniquePostfix,
+			"throughput": throughput,
 		},
 	}
 
@@ -54,7 +56,7 @@ func TestTerraformAzureCosmosDBExample(t *testing.T) {
 
 	// SQL Database throughput
 	cosmosSQLDBThroughput := azure.GetCosmosDBSQLDatabaseThroughput(t, subscriptionID, resourceGroupName, accountName, "testdb")
-	assert.Equal(t, int32(400), *cosmosSQLDBThroughput.ThroughputSettingsGetProperties.Resource.Throughput)
+	assert.Equal(t, int32(throughput), *cosmosSQLDBThroughput.ThroughputSettingsGetProperties.Resource.Throughput)
 
 	// SQL Container properties
 	cosmosSQLContainer1 := azure.GetCosmosDBSQLContainer(t, subscriptionID, resourceGroupName, accountName, "testdb", "test-container-1")

@@ -57,14 +57,14 @@ resource "azurerm_cosmosdb_account" "test" {
 
 resource "azurerm_cosmosdb_sql_database" "testdb" {
   name                = "testdb"
-  throughput          = 400
+  throughput          = var.throughput
   resource_group_name = azurerm_resource_group.rg.name
   account_name        = azurerm_cosmosdb_account.test.name
 }
 
 resource "azurerm_cosmosdb_sql_container" "container1" {
   name                = "test-container-1"
-  throughput          = 400
+  throughput          = var.throughput
   partition_key_path  = "/key1"
   resource_group_name = azurerm_cosmosdb_account.test.resource_group_name
   account_name        = azurerm_cosmosdb_account.test.name
