@@ -1,4 +1,8 @@
-output "name" {
+output "resource_group_name" {
+  value = azurerm_resource_group.rg.name
+}
+
+output "account_name" {
   value = azurerm_cosmosdb_account.test.name
 }
 

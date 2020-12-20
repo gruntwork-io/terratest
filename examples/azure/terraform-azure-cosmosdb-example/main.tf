@@ -28,7 +28,7 @@ terraform {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
+  name     = "terratest-cosmos-rg-${var.postfix}"
   location = var.location
 }
 
@@ -37,7 +37,7 @@ resource "azurerm_resource_group" "rg" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_cosmosdb_account" "test" {
-  name                = var.cosmosdb_account_name
+  name                = "terratest-${var.postfix}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   offer_type          = "Standard"
