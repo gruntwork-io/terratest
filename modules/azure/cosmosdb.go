@@ -8,8 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetCosmosDBAccountClient is a helper function that will setup a CosmosDB account client.
-func GetCosmosDBAccountClient(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
+// GetCosmosDBAccountClient is a helper function that will setup a CosmosDB account client. This function would fail the test if there is an error.
+func GetCosmosDBAccountClient(t testing.TestingT, subscriptionID string) *documentdb.DatabaseAccountsClient {
+	cosmosDBAccount, err := GetCosmosDBAccountClientE(subscriptionID)
+	require.NoError(t, err)
+
+	return cosmosDBAccount
+}
+
+// GetCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client.
+func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -42,7 +50,7 @@ func GetCosmosDBAccount(t testing.TestingT, subscriptionID string, resourceGroup
 // GetCosmosDBAccountE is a helper function that gets the database account.
 func GetCosmosDBAccountE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string) (*documentdb.DatabaseAccountGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBAccountClient(subscriptionID)
+	cosmosClient, err := GetCosmosDBAccountClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +65,16 @@ func GetCosmosDBAccountE(t testing.TestingT, subscriptionID string, resourceGrou
 	return &cosmosDBAccount, nil
 }
 
-// GetCosmosDBSQLClient is a helper function that will setup a CosmosDB account client.
-func GetCosmosDBSQLClient(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
+// GetCosmosDBSQLClient is a helper function that will setup a CosmosDB SQL client. This function would fail the test if there is an error.
+func GetCosmosDBSQLClient(t testing.TestingT, subscriptionID string) *documentdb.SQLResourcesClient {
+	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
+	require.NoError(t, err)
+
+	return cosmosClient
+}
+
+// GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client.
+func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -91,7 +107,7 @@ func GetCosmosDBSQLDatabase(t testing.TestingT, subscriptionID string, resourceG
 // GetCosmosDBSQLDatabaseE is a helper function that gets a SQL database.
 func GetCosmosDBSQLDatabaseE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.SQLDatabaseGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClient(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +133,7 @@ func GetCosmosDBSQLContainer(t testing.TestingT, subscriptionID string, resource
 // GetCosmosDBSQLContainerE is a helper function that gets a SQL container.
 func GetCosmosDBSQLContainerE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.SQLContainerGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClient(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +159,7 @@ func GetCosmosDBSQLDatabaseThroughput(t testing.TestingT, subscriptionID string,
 // GetCosmosDBSQLDatabaseThroughputE is a helper function that gets a SQL database.
 func GetCosmosDBSQLDatabaseThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClient(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +185,7 @@ func GetCosmosDBSQLContainerThroughput(t testing.TestingT, subscriptionID string
 // GetCosmosDBSQLContainerThroughputE is a helper function that gets a SQL database.
 func GetCosmosDBSQLContainerThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClient(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
