@@ -14,6 +14,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
@@ -92,6 +93,66 @@ func CreateManagedClustersClientE(subscriptionID string) (containerservice.Manag
 
 	// Create correct client based on type passed
 	return containerservice.NewManagedClustersClientWithBaseURI(baseURI, subscriptionID), nil
+}
+
+// GetCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a CosmosDB client
+	cosmosClient := documentdb.NewDatabaseAccountsClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	cosmosClient.Authorizer = *authorizer
+
+	return &cosmosClient, nil
+}
+
+// GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a CosmosDB client
+	cosmosClient := documentdb.NewSQLResourcesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	cosmosClient.Authorizer = *authorizer
+
+	return &cosmosClient, nil
 }
 
 // getDefaultEnvironmentName returns either a configured Azure environment name, or the public default

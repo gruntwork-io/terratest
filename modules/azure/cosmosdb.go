@@ -16,29 +16,6 @@ func GetCosmosDBAccountClient(t testing.TestingT, subscriptionID string) *docume
 	return cosmosDBAccount
 }
 
-// GetCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client.
-func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a CosmosDB client
-	cosmosClient := documentdb.NewDatabaseAccountsClient(subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	cosmosClient.Authorizer = *authorizer
-
-	return &cosmosClient, nil
-}
-
 // GetCosmosDBAccount is a helper function that gets the database account. This function would fail the test if there is an error.
 func GetCosmosDBAccount(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string) *documentdb.DatabaseAccountGetResults {
 	cosmosDBAccount, err := GetCosmosDBAccountE(t, subscriptionID, resourceGroupName, accountName)
@@ -71,29 +48,6 @@ func GetCosmosDBSQLClient(t testing.TestingT, subscriptionID string) *documentdb
 	require.NoError(t, err)
 
 	return cosmosClient
-}
-
-// GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client.
-func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a CosmosDB client
-	cosmosClient := documentdb.NewSQLResourcesClient(subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	cosmosClient.Authorizer = *authorizer
-
-	return &cosmosClient, nil
 }
 
 // GetCosmosDBSQLDatabase is a helper function that gets a SQL database. This function would fail the test if there is an error.
