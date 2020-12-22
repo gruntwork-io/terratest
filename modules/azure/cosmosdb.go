@@ -8,6 +8,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// GetCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client.
+func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
+
+	// Create a CosmosDB client
+	cosmosClient, err := CreateCosmosDBAccountClientE(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	cosmosClient.Authorizer = *authorizer
+
+	return cosmosClient, nil
+}
+
 // GetCosmosDBAccountClient is a helper function that will setup a CosmosDB account client. This function would fail the test if there is an error.
 func GetCosmosDBAccountClient(t testing.TestingT, subscriptionID string) *documentdb.DatabaseAccountsClient {
 	cosmosDBAccount, err := GetCosmosDBAccountClientE(subscriptionID)
@@ -40,6 +61,27 @@ func GetCosmosDBAccountE(t testing.TestingT, subscriptionID string, resourceGrou
 
 	//Return DB
 	return &cosmosDBAccount, nil
+}
+
+// GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB account client.
+func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
+
+	// Create a CosmosDB client
+	cosmosClient, err := CreateCosmosDBSQLClientE(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	cosmosClient.Authorizer = *authorizer
+
+	return cosmosClient, nil
 }
 
 // GetCosmosDBSQLClient is a helper function that will setup a CosmosDB SQL client. This function would fail the test if there is an error.

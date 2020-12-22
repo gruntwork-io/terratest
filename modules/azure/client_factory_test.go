@@ -180,7 +180,7 @@ func TestCosmosDBAccountClientBaseURISetCorrectly(t *testing.T) {
 			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
 			// Get a VM client
-			client, err := GetCosmosDBAccountClientE("")
+			client, err := CreateCosmosDBAccountClientE("")
 			require.NoError(t, err)
 
 			// Check for correct ARM URI
@@ -214,7 +214,7 @@ func TestCosmosDBSQLClientBaseURISetCorrectly(t *testing.T) {
 			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
 			// Get a VM client
-			client, err := GetCosmosDBSQLClientE("")
+			client, err := CreateCosmosDBSQLClientE("")
 			require.NoError(t, err)
 
 			// Check for correct ARM URI

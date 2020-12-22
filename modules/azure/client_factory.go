@@ -95,9 +95,9 @@ func CreateManagedClustersClientE(subscriptionID string) (containerservice.Manag
 	return containerservice.NewManagedClustersClientWithBaseURI(baseURI, subscriptionID), nil
 }
 
-// GetCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client with the correct BaseURI depending on
+// CreateCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client with the correct BaseURI depending on
 // the Azure environment that is currently setup (or "Public", if none is setup).
-func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
+func CreateCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -113,21 +113,12 @@ func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccou
 	// Create a CosmosDB client
 	cosmosClient := documentdb.NewDatabaseAccountsClientWithBaseURI(baseURI, subscriptionID)
 
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	cosmosClient.Authorizer = *authorizer
-
 	return &cosmosClient, nil
 }
 
-// GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client with the correct BaseURI depending on
+// CreateCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client with the correct BaseURI depending on
 // the Azure environment that is currently setup (or "Public", if none is setup).
-func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
+func CreateCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -142,15 +133,6 @@ func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClien
 
 	// Create a CosmosDB client
 	cosmosClient := documentdb.NewSQLResourcesClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	cosmosClient.Authorizer = *authorizer
 
 	return &cosmosClient, nil
 }
