@@ -1,14 +1,17 @@
 # Terraform Azure CosmosDB Example
 
-This folder contains a Terraform module that deploys resources in [Azure](https://azure.microsoft.com/) to demonstrate how you can use Terratest to write automated tests for your Azure Terraform code.
+This folder contains a complete Terraform Cosmos DB module that deploys resources in [Azure](https://azure.microsoft.com/) to demonstrate how you can use Terratest to write automated tests for your Azure Terraform code. This module deploys the following resources:
 
-This module deploys a [CosmosDB](https://azure.microsoft.com/services/cosmos-db/) instance.
+- A [Cosmos DB Account](https://azure.microsoft.com/services/cosmos-db/) configured with:
+  - A [SQL Database](https://docs.microsoft.com/en-gb/azure/cosmos-db/account-databases-containers-items#azure-cosmos-databases)
+  - Three [SQL Containers](https://docs.microsoft.com/en-gb/azure/cosmos-db/account-databases-containers-items#azure-cosmos-containers)
 
 Check out [test/azure/terraform_azure_cosmosdb_example_test.go](./../../../test/azure/terraform_azure_cosmosdb_example_test.go) to see how you can write automated tests for this module and validate the configuration of the parameters and options. 
 
 **WARNING**: This module and the automated tests for it deploy real resources into your Azure account which can cost you money. 
 
 ## Running this module manually
+
 1. Sign up for [Azure](https://azure.microsoft.com/).
 1. Configure your Azure credentials using one of the [supported methods for Azure CLI
    tools](https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration?view=azure-cli-latest)
@@ -18,8 +21,8 @@ Check out [test/azure/terraform_azure_cosmosdb_example_test.go](./../../../test/
 1. Run `terraform apply`
 1. When you're done, run `terraform destroy`.
 
-
 ## Running automated tests against this module
+
 1. Sign up for [Azure](https://azure.microsoft.com/)
 1. Configure your Azure credentials using one of the [supported methods for Azure CLI
    tools](https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration?view=azure-cli-latest)
