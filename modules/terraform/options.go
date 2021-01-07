@@ -25,6 +25,8 @@ var (
 		".*registry service is unreachable.*":             "Failed to retrieve plugin due to transient network error.",
 		".*Error installing provider.*":                   "Failed to retrieve plugin due to transient network error.",
 		".*Failed to query available provider packages.*": "Failed to retrieve plugin due to transient network error.",
+		".*timeout while waiting for plugin to start.*": "Failed to retrieve plugin due to transient network error.",
+		".*timed out waiting for server handshake.*":    "Failed to retrieve plugin due to transient network error.",
 
 		// Provider bugs where the data after apply is not propagated. This is usually an eventual consistency issue, so
 		// retrying should self resolve it.
