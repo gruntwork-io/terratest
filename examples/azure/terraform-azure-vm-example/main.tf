@@ -127,6 +127,10 @@ resource "azurerm_virtual_machine" "vm_example" {
     provision_vm_agent = true
   }
 
+  tags = {
+    environment = "terratest"
+  }
+
   depends_on = [random_password.rand]
 }
 

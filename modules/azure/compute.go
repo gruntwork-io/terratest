@@ -240,12 +240,12 @@ func GetVirtualMachineTags(t testing.TestingT, vmName string, resGroupName strin
 // GetVirtualMachineTagsE gets the Tags of the specified Virtual Machine as a map.
 func GetVirtualMachineTagsE(vmName string, resGroupName string, subscriptionID string) (map[string]string, error) {
 	// Setup a blank map to populate and return
-	var tags map[string]string
+	tags := make(map[string]string)
 
 	// Get VM Object
 	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
 	if err != nil {
-		return nil, err
+		return tags, nil
 	}
 
 	// Range through existing tags and populate above map accordingly
