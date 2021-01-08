@@ -63,7 +63,7 @@ func GetCosmosDBAccountE(t testing.TestingT, subscriptionID string, resourceGrou
 	return &cosmosDBAccount, nil
 }
 
-// GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB account client.
+// GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client.
 func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
 
 	// Create a CosmosDB client
@@ -108,7 +108,7 @@ func GetCosmosDBSQLDatabaseE(t testing.TestingT, subscriptionID string, resource
 		return nil, err
 	}
 
-	// Get the corresponding database account
+	// Get the corresponding database
 	cosmosSQLDB, err := cosmosClient.GetSQLDatabase(context.Background(), resourceGroupName, accountName, databaseName)
 	if err != nil {
 		return nil, err
@@ -134,17 +134,17 @@ func GetCosmosDBSQLContainerE(t testing.TestingT, subscriptionID string, resourc
 		return nil, err
 	}
 
-	// Get the corresponding database account
+	// Get the corresponding SQL container
 	cosmosSQLContainer, err := cosmosClient.GetSQLContainer(context.Background(), resourceGroupName, accountName, databaseName, containerName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return DB
+	//Return container
 	return &cosmosSQLContainer, nil
 }
 
-// GetCosmosDBSQLDatabaseThroughput is a helper function that gets a SQL database. This function would fail the test if there is an error.
+// GetCosmosDBSQLDatabaseThroughput is a helper function that gets a SQL database throughput configuration. This function would fail the test if there is an error.
 func GetCosmosDBSQLDatabaseThroughput(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.ThroughputSettingsGetResults {
 	cosmosSQLDBThroughput, err := GetCosmosDBSQLDatabaseThroughputE(t, subscriptionID, resourceGroupName, accountName, databaseName)
 	require.NoError(t, err)
@@ -152,7 +152,7 @@ func GetCosmosDBSQLDatabaseThroughput(t testing.TestingT, subscriptionID string,
 	return cosmosSQLDBThroughput
 }
 
-// GetCosmosDBSQLDatabaseThroughputE is a helper function that gets a SQL database.
+// GetCosmosDBSQLDatabaseThroughputE is a helper function that gets a SQL database throughput configuration.
 func GetCosmosDBSQLDatabaseThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
 	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
@@ -160,17 +160,17 @@ func GetCosmosDBSQLDatabaseThroughputE(t testing.TestingT, subscriptionID string
 		return nil, err
 	}
 
-	// Get the corresponding database account
+	// Get the corresponding database throughput config
 	cosmosSQLDBThroughput, err := cosmosClient.GetSQLDatabaseThroughput(context.Background(), resourceGroupName, accountName, databaseName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return DB
+	//Return throughput config
 	return &cosmosSQLDBThroughput, nil
 }
 
-// GetCosmosDBSQLContainerThroughput is a helper function that gets a SQL database. This function would fail the test if there is an error.
+// GetCosmosDBSQLContainerThroughput is a helper function that gets a SQL container throughput configuration. This function would fail the test if there is an error.
 func GetCosmosDBSQLContainerThroughput(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) *documentdb.ThroughputSettingsGetResults {
 	cosmosSQLCtrThroughput, err := GetCosmosDBSQLContainerThroughputE(t, subscriptionID, resourceGroupName, accountName, databaseName, containerName)
 	require.NoError(t, err)
@@ -178,7 +178,7 @@ func GetCosmosDBSQLContainerThroughput(t testing.TestingT, subscriptionID string
 	return cosmosSQLCtrThroughput
 }
 
-// GetCosmosDBSQLContainerThroughputE is a helper function that gets a SQL database.
+// GetCosmosDBSQLContainerThroughputE is a helper function that gets a SQL container throughput configuration.
 func GetCosmosDBSQLContainerThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
 	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
@@ -186,12 +186,12 @@ func GetCosmosDBSQLContainerThroughputE(t testing.TestingT, subscriptionID strin
 		return nil, err
 	}
 
-	// Get the corresponding database account
+	// Get the corresponding container throughput config
 	cosmosSQLCtrThroughput, err := cosmosClient.GetSQLContainerThroughput(context.Background(), resourceGroupName, accountName, databaseName, containerName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return DB
+	//Return throughput config
 	return &cosmosSQLCtrThroughput, nil
 }
