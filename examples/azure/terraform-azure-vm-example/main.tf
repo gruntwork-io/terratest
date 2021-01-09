@@ -128,7 +128,7 @@ resource "azurerm_virtual_machine" "vm_example" {
   }
 
   tags = {
-    environment = "terratest"
+    environment = var.tag_environment
   }
 
   depends_on = [random_password.rand]
