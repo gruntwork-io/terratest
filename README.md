@@ -31,6 +31,8 @@ Please see the following for more info:
 * [Contributing to Terratest](https://terratest.gruntwork.io/docs/community/contributing/)
 * [Commercial Support](https://terratest.gruntwork.io/commercial-support/)
 
+Demonstration:
+<a href="https://youtu.be/jeZCOqAvd0A"><img src="https://pbs.twimg.com/media/ErzA72hXYAEcfjH?format=jpg&name=4096x4096" width="60%"></a>
 
 
 ## License
