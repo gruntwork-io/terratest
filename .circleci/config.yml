@@ -116,7 +116,7 @@ jobs:
           at: /home/circleci
 
       # make sure sudo is available in the docker image
-      - run: apt-get update && apt-get install -y sudo
+      - run: apt-get update && apt-get install -y sudo wget jq unzip
 
       - run:
           <<: *install_gruntwork_utils
@@ -282,6 +282,7 @@ workflows:
 
       - testgcp:
           context:
+            - Gruntwork Admin
             - Gruntwork GCP
           requires:
             - setup
