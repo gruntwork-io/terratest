@@ -126,7 +126,7 @@ jobs:
       - run: echo 'export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcloud-service-key.json' >> $BASH_ENV
 
       - run: mkdir -p /tmp/logs
-      - run: run-go-tests --packages "-p 1 -tags=gcp ./test/gcp | tee /tmp/logs/test_output.log
+      - run: run-go-tests --packages "-p 1 -tags=gcp ./test/gcp" | tee /tmp/logs/test_output.log
 
       - run:
           command: ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
@@ -281,34 +281,34 @@ workflows:
             tags:
               only: /^v.*/
 
-      - test:
-          context:
-            - Gruntwork Admin
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /^v.*/
+      # - test:
+      #     context:
+      #       - Gruntwork Admin
+      #     requires:
+      #       - setup
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
 
-      - kubernetes_test:
-          context:
-            - Gruntwork Admin
-            - Gruntwork GCP
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /^v.*/
+      # - kubernetes_test:
+      #     context:
+      #       - Gruntwork Admin
+      #       - Gruntwork GCP
+      #     requires:
+      #       - setup
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
 
-      - helm_test:
-          context:
-            - Gruntwork Admin
-            - Gruntwork GCP
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /^v.*/
+      # - helm_test:
+      #     context:
+      #       - Gruntwork Admin
+      #       - Gruntwork GCP
+      #     requires:
+      #       - setup
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
 
       - deploy:
           context:
