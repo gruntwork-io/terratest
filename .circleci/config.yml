@@ -109,7 +109,7 @@ jobs:
   testgcp:
     <<: *env
     docker:
-      - image: circleci/go:1.13
+      - image: circleci/golang:1.14
 
     steps:
       - attach_workspace:
