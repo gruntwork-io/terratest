@@ -115,9 +115,6 @@ jobs:
       - attach_workspace:
           at: /home/circleci
 
-      # make sure sudo is available in the docker image
-      - run: sudo apt-get update && sudo apt-get install -y google-cloud-sdk
-
       - run:
           <<: *install_gruntwork_utils
 
@@ -127,12 +124,6 @@ jobs:
       # Make GCP Service Account creds available as a file
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run: echo 'export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcloud-service-key.json' >> $BASH_ENV
-
-      - run:
-          command: |
-            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
 
       - run: mkdir -p /tmp/logs
       - run: run-go-tests --packages "-p 1 -tags=gcp ./test/gcp | tee /tmp/logs/test_output.log
