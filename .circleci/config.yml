@@ -277,10 +277,18 @@ workflows:
             tags:
               only: /^v.*/
 
+      - testgcp:
+          context:
+            - Gruntwork GCP
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
+
       - test:
           context:
             - Gruntwork Admin
-            - Gruntwork GCP
           requires:
             - setup
           filters:
