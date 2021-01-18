@@ -116,7 +116,7 @@ jobs:
           at: /home/circleci
 
       # make sure sudo is available in the docker image
-      - run: apt-get update && apt-get install -y google-cloud-sdk
+      - run: sudo apt-get update && sudo apt-get install -y google-cloud-sdk
 
       - run:
           <<: *install_gruntwork_utils
