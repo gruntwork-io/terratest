@@ -4,10 +4,22 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/packer"
 )
+
+// Occasionally, a Packer build may fail due to intermittent issues (e.g., brief network outage or EC2 issue). We try
+// to make our tests resilient to that by specifying those known common errors here and telling our builds to retry if
+// they hit those errors.
+var DefaultRetryablePackerErrors = map[string]string{
+	"Script disconnected unexpectedly":                                                 "Occasionally, Packer seems to lose connectivity to AWS, perhaps due to a brief network outage",
+	"can not open /var/lib/apt/lists/archive.ubuntu.com_ubuntu_dists_xenial_InRelease": "Occasionally, apt-get fails on ubuntu to update the cache",
+}
+var DefaultTimeBetweenPackerRetries = 15 * time.Second
+
+const DefaultMaxPackerRetries = 3
 
 // An example of how to test the Packer template in examples/packer-basic-example using Terratest.
 func TestPackerGCPBasicExample(t *testing.T) {
@@ -22,7 +34,7 @@ func TestPackerGCPBasicExample(t *testing.T) {
 
 	packerOptions := &packer.Options{
 		// The path to where the Packer template is located
-		Template: "../examples/packer-basic-example/build.json",
+		Template: "../../examples/packer-basic-example/build.json",
 
 		// Variables to pass to our Packer build using -var options
 		Vars: map[string]string{
