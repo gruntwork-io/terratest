@@ -115,6 +115,9 @@ jobs:
       - attach_workspace:
           at: /home/circleci
 
+      # make sure sudo is available in the docker image
+      - run: apt-get update && apt-get install -y sudo
+
       - run:
           <<: *install_gruntwork_utils
 
