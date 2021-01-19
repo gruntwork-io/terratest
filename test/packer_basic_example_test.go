@@ -41,7 +41,8 @@ func TestPackerBasicExample(t *testing.T) {
 
 		// Variables to pass to our Packer build using -var options
 		Vars: map[string]string{
-			"aws_region": awsRegion,
+			"aws_region":    awsRegion,
+			"ami_base_name": fmt.Sprintf("%s", random.UniqueId()),
 		},
 
 		// Only build the AWS AMI
@@ -155,7 +156,7 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 			// Variables to pass to our Packer build using -var options
 			Vars: map[string]string{
 				"aws_region":    awsRegion,
-				"ami_base_name": fmt.Sprintf("%s-terratest-packer", random.UniqueId()),
+				"ami_base_name": fmt.Sprintf("%s", random.UniqueId()),
 			},
 
 			// Only build the AWS AMI

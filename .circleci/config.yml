@@ -29,9 +29,6 @@ install_helm: &install_helm
     chmod +x linux-amd64/helm
     sudo mv linux-amd64/helm /usr/local/bin/
 
-    # Initialize stable repository
-    helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-
 
 install_gruntwork_utils: &install_gruntwork_utils
   name: install gruntwork utils
