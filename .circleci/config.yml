@@ -288,7 +288,15 @@ workflows:
       - setup:
           context:
             - Gruntwork Admin
-            - Gruntwork GCP
+          filters:
+            tags:
+              only: /^v.*/
+
+      - test:
+          context:
+            - Gruntwork Admin
+          requires:
+            - setup
           filters:
             tags:
               only: /^v.*/
@@ -302,39 +310,27 @@ workflows:
             tags:
               only: /^v.*/
 
-      # - test:
-      #     context:
-      #       - Gruntwork Admin
-      #     requires:
-      #       - setup
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
+      - kubernetes_test:
+          context:
+            - Gruntwork Admin
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
 
-      # - kubernetes_test:
-      #     context:
-      #       - Gruntwork Admin
-      #       - Gruntwork GCP
-      #     requires:
-      #       - setup
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
-
-      # - helm_test:
-      #     context:
-      #       - Gruntwork Admin
-      #       - Gruntwork GCP
-      #     requires:
-      #       - setup
-      #     filters:
-      #       tags:
-      #         only: /^v.*/
+      - helm_test:
+          context:
+            - Gruntwork Admin
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
 
       - deploy:
           context:
             - Gruntwork Admin
-            - Gruntwork GCP
           requires:
             - setup
           filters:
