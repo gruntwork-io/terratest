@@ -1,3 +1,7 @@
+// +build gcp
+
+// NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
+
 package test
 
 import (
@@ -18,7 +22,7 @@ import (
 func TestTerraformGcpExample(t *testing.T) {
 	t.Parallel()
 
-	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-gcp-example")
+	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-example")
 
 	// Get the Project Id to use
 	projectId := gcp.GetGoogleProjectIDFromEnvVar(t)
@@ -99,7 +103,7 @@ func TestTerraformGcpExample(t *testing.T) {
 func TestSshAccessToComputeInstance(t *testing.T) {
 	t.Parallel()
 
-	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-gcp-example")
+	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-example")
 
 	// Setup values for our Terraform apply
 	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)

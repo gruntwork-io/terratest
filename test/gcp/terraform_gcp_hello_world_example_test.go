@@ -1,3 +1,7 @@
+// +build gcp
+
+// NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
+
 package test
 
 import (
@@ -23,7 +27,7 @@ func TestTerraformGcpHelloWorldExample(t *testing.T) {
 	// retryable errors in terraform testing.
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		// website::tag::3:: The path to where our Terraform code is located
-		TerraformDir: "../examples/terraform-gcp-hello-world-example",
+		TerraformDir: "../../examples/terraform-gcp-hello-world-example",
 
 		// website::tag::4:: Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
