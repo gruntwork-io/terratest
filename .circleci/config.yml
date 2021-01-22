@@ -29,13 +29,13 @@ install_helm: &install_helm
     chmod +x linux-amd64/helm
     sudo mv linux-amd64/helm /usr/local/bin/
 
-
 install_gruntwork_utils: &install_gruntwork_utils
   name: install gruntwork utils
   command: |
     curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "${GRUNTWORK_INSTALLER_VERSION}"
     gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "${MODULE_CI_VERSION}"
     gruntwork-install --module-name "kubernetes-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "${MODULE_CI_VERSION}"
+    gruntwork-install --module-name "gcp-helpers" --repo "https://github.com/gruntwork-io/module-ci" --branch "gcp-helpers"
     configure-environment-for-gruntwork-module \
       --terraform-version ${TERRAFORM_VERSION} \
       --terragrunt-version ${TERRAGRUNT_VERSION} \
@@ -43,6 +43,20 @@ install_gruntwork_utils: &install_gruntwork_utils
       --go-version ${GOLANG_VERSION} \
       --go-src-path ./
 
+configure_environment_for_gcp: &configure_environment_for_gcp
+  name: configure environment for gcp
+  command: |
+    # install the Google Cloud SDK CLI
+    install-gcloud
+
+    # Make GCP Service Account credentials available as a file
+    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+    echo 'export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcloud-service-key.json' >> $BASH_ENV
+
+    # Tell gcloud to use the credentials and set defaults
+    echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
+    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+    gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
 
 version: 2
 jobs:
@@ -136,6 +150,9 @@ jobs:
       - store_test_results:
           path: /tmp/logs
 
+  # We run the GCP tests in a separate build step using the Docker executor for better isolation and resiliency. Using
+  # The Docker executor ensures GCP tests do not erroneously make metadata network calls within CircleCI's private
+  # environment. For more information see: https://github.com/gruntwork-io/terratest/pull/765.
   gcp_test:
     <<: *env
     docker:
@@ -145,30 +162,14 @@ jobs:
       - attach_workspace:
           at: /home/circleci
 
-      # install the google cloud sdk
-      - run:
-          command: |
-            echo 'deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main' | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-            sudo apt-get install -y apt-transport-https ca-certificates gnupg
-            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-            sudo apt-get update && sudo apt-get install -y google-cloud-sdk
-
       - run:
           <<: *install_gruntwork_utils
 
       # The weird way you have to set PATH in Circle 2.0
       - run: echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
 
-      # Make GCP Service Account credentials available as a file
-      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run: echo 'export GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcloud-service-key.json' >> $BASH_ENV
-
-      # Tell gcloud to use the credentials and set defaults
       - run:
-          command: |
-            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-            gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+          <<: *configure_environment_for_gcp
 
       # Run the GCP tests. These tests are run because the gcp build tag is included, and we explicitly
       # select the GCP tests
