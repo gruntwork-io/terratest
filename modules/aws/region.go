@@ -37,6 +37,7 @@ var stableRegions = []string{
 	"ap-northeast-1", // Launched 2011
 	"ap-northeast-2", // Launched 2016
 	"ap-south-1",     // Launched 2016
+	"eu-north-1",     // Launched 2018
 }
 
 // GetRandomStableRegion gets a randomly chosen AWS region that is considered stable. Like GetRandomRegion, you can
