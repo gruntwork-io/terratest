@@ -245,7 +245,7 @@ func GetVirtualMachineTagsE(vmName string, resGroupName string, subscriptionID s
 	// Get VM Object
 	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
 	if err != nil {
-		return tags, nil
+		return tags, err
 	}
 
 	// Range through existing tags and populate above map accordingly
