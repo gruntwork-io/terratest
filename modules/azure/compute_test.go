@@ -57,7 +57,7 @@ func TestGetVirtualMachineTagsE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	tags, err := GetVirtualMachineTagsE(vmName, rgName, subID)
+	_, err := GetVirtualMachineTagsE(vmName, rgName, subID)
 
 	require.Error(t, err)
 }
