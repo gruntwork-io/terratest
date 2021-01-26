@@ -8,6 +8,7 @@ package azure
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -57,9 +58,9 @@ func TestGetVirtualMachineTagsE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineTagsE(vmName, rgName, subID)
+	tags, err := GetVirtualMachineTagsE(vmName, rgName, subID)
 
-	require.Error(t, err)
+	assert.Equal(t, tags, nil)
 }
 
 func TestGetSizeOfVirtualMachineE(t *testing.T) {
