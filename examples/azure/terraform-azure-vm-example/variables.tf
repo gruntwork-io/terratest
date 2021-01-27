@@ -48,12 +48,6 @@ variable "subnet_prefix" {
   default     = "10.0.17.0/24"
 }
 
-variable "tag_environment" {
-  description = "A tag to assign to the resource."
-  type        = string
-  default     = "Development"
-}
-
 variable "user_name" {
   description = "The username to be provisioned into the vm"
   type        = string

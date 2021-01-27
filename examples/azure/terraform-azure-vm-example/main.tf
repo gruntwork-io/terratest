@@ -128,7 +128,8 @@ resource "azurerm_virtual_machine" "vm_example" {
   }
 
   tags = {
-    environment = var.tag_environment
+    "Version"     = "0.0.1"
+    "Environment" = "dev"
   }
 
   depends_on = [random_password.rand]
