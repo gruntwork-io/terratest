@@ -113,8 +113,7 @@ func testInformationOfVM(t *testing.T, terraformOptions *terraform.Options, subs
 	expectedImageSKU := terraform.OutputList(t, terraformOptions, "vm_image_sku")
 	expectedImageVersion := terraform.OutputList(t, terraformOptions, "vm_image_version")
 	expectedAvsName := terraform.Output(t, terraformOptions, "availability_set_name")
-	expectedVMTag02Name := "Environment"
-	expectedVMTag02Value := "dev"
+	expectedVMTags := terraform.OutputMap(t, terraformOptions, "vm_tags")
 
 	// Check if the Virtual Machine exists.
 	assert.True(t, azure.VirtualMachineExists(t, virtualMachineName, resourceGroupName, subscriptionID))
@@ -136,7 +135,7 @@ func testInformationOfVM(t *testing.T, terraformOptions *terraform.Options, subs
 
 	// Check the assigned Tags of the VM, assert empty if no tags.
 	actualVMTags := azure.GetVirtualMachineTags(t, virtualMachineName, resourceGroupName, "")
-	assert.Equal(t, actualVMTags[expectedVMTag02Name], expectedVMTag02Value)
+	assert.Equal(t, expectedVMTags, actualVMTags)
 }
 
 // These tests check the OS Disk and Attached Managed Disks for the Azure Virtual Machine.
