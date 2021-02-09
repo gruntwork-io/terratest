@@ -2,6 +2,7 @@ env: &env
   environment:
     GRUNTWORK_INSTALLER_VERSION: v0.0.34
     MODULE_CI_VERSION: v0.29.2
+    MODULE_GCP_CI_VERSION: v0.1.1
     TERRAFORM_VERSION: 0.14.0
     TERRAGRUNT_VERSION: v0.24.2
     PACKER_VERSION: 1.6.6
@@ -35,10 +36,7 @@ install_gruntwork_utils: &install_gruntwork_utils
     curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "${GRUNTWORK_INSTALLER_VERSION}"
     gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "${MODULE_CI_VERSION}"
     gruntwork-install --module-name "kubernetes-circleci-helpers" --repo "https://github.com/gruntwork-io/module-ci" --tag "${MODULE_CI_VERSION}"
-
-    # TODO: Switch to a release version when https://github.com/gruntwork-io/terraform-google-ci/pull/10 is merged!!
-    gruntwork-install --module-name "gcp-helpers" --repo "https://github.com/gruntwork-io/terraform-google-ci" --branch "gcp-helpers"
-
+    gruntwork-install --module-name "gcp-helpers" --repo "https://github.com/gruntwork-io/terraform-google-ci" --tag "${MODULE_GCP_CI_VERSION}"
     configure-environment-for-gruntwork-module \
       --terraform-version ${TERRAFORM_VERSION} \
       --terragrunt-version ${TERRAGRUNT_VERSION} \
