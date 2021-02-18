@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/hcl"
+	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/stretchr/testify/require"
 )
 
@@ -99,16 +102,15 @@ func GetVariableAsListFromVarFile(t *testing.T, fileName string, key string) []s
 // Note that this returns a list of strings. For lists containing complex types, use GetAllVariablesFromVarFile.
 // Will return error if GetAllVariablesFromVarFileE returns an error, the key provided does not exist, or the value associated with the key is not a list
 func GetVariableAsListFromVarFileE(t *testing.T, fileName string, key string) ([]string, error) {
-	var variables map[string]interface{}
 	resultArray := []string{}
-	err := GetAllVariablesFromVarFileE(t, fileName, &variables)
 
+	var variables map[string]interface{}
+	err := GetAllVariablesFromVarFileE(t, fileName, &variables)
 	if err != nil {
 		return nil, err
 	}
 
 	variable, exists := variables[key]
-
 	if !exists {
 		return nil, InputFileKeyNotFound{FilePath: fileName, Key: key}
 	}
@@ -130,20 +132,52 @@ func GetAllVariablesFromVarFile(t *testing.T, fileName string, out interface{}) 
 	require.NoError(t, err)
 }
 
-// GetAllVariablesFromVarFileE Parses all data from a provided input file found ind in VarFile and stores the result in the value pointed to by out
-// Returns an error if the specified file does not exist, the specified file is not readable, or the specified file cannot be decoded from HCL
+// GetAllVariablesFromVarFileE Parses all data from a provided input file found ind in VarFile and stores the result in
+// the value pointed to by out. Returns an error if the specified file does not exist, the specified file is not
+// readable, or the specified file cannot be decoded from HCL
 func GetAllVariablesFromVarFileE(t *testing.T, fileName string, out interface{}) error {
 	fileContents, err := ioutil.ReadFile(fileName)
-
 	if err != nil {
 		return err
 	}
 
-	err = hcl.Decode(out, string(fileContents))
+	if err := parseAndDecodeHcl(string(fileContents), fileName, out); err != nil {
+		return err
+	}
+	return nil
+}
 
-	if err != nil {
-		return HclDecodeError{FilePath: fileName, ErrorText: err.Error()}
+// parseAndDecodeHcl uses the HCL2 parser to parse the given string into an HCL file body, and then decode it into the
+// given interface{}.
+func parseAndDecodeHcl(hclContents string, filename string, out interface{}) (err error) {
+	// The HCL2 parser and especially cty conversions will panic in many types of errors, so we have to recover from
+	// those panics here and convert them to normal errors
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			err = PanicWhileParsingVarFile{RecoveredValue: recovered, ConfigFile: filename}
+		}
+	}()
+
+	parser := hclparse.NewParser()
+
+	var file *hcl.File
+	if filepath.Ext(filename) == ".json" {
+		rawFile, parseDiagnostics := parser.ParseJSON([]byte(hclContents), filename)
+		if parseDiagnostics != nil && parseDiagnostics.HasErrors() {
+			return parseDiagnostics
+		}
+		file = rawFile
+	} else {
+		rawFile, parseDiagnostics := parser.ParseHCL([]byte(hclContents), filename)
+		if parseDiagnostics != nil && parseDiagnostics.HasErrors() {
+			return parseDiagnostics
+		}
+		file = rawFile
 	}
 
+	decodeDiagnostics := gohcl.DecodeBody(file.Body, nil, out)
+	if decodeDiagnostics != nil && decodeDiagnostics.HasErrors() {
+		return decodeDiagnostics
+	}
 	return nil
 }

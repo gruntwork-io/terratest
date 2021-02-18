@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"fmt"
+	"reflect"
 )
 
 // TgInvalidBinary occurs when a terragrunt function is called and the TerraformBinary is
@@ -77,11 +78,12 @@ func (err InputFileKeyNotFound) Error() string {
 	return fmt.Sprintf("tfvar file %q doesn't contain a value for the key %q", err.FilePath, err.Key)
 }
 
-type HclDecodeError struct {
-	FilePath  string
-	ErrorText string
+// PanicWhileParsingVarFile is returned when the HCL parsing routine panics due to errors.
+type PanicWhileParsingVarFile struct {
+	ConfigFile     string
+	RecoveredValue interface{}
 }
 
-func (err HclDecodeError) Error() string {
-	return fmt.Sprintf("%s - %s", err.FilePath, err.ErrorText)
+func (err PanicWhileParsingVarFile) Error() string {
+	return fmt.Sprintf("Recovering panic while parsing '%s'. Got error of type '%v': %v", err.ConfigFile, reflect.TypeOf(err.RecoveredValue), err.RecoveredValue)
 }

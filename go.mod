@@ -22,7 +22,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gruntwork-io/gruntwork-cli v0.7.0
 	github.com/hashicorp/go-multierror v1.1.0
-	github.com/hashicorp/hcl v1.0.0
+	github.com/hashicorp/hcl/v2 v2.8.2
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jstemmer/go-junit-report v0.9.1
