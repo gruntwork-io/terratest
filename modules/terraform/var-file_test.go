@@ -74,7 +74,6 @@ func TestGetVariableAsMapFromVarFile(t *testing.T) {
 	defer os.Remove(randomFileName)
 
 	val := GetVariableAsMapFromVarFile(t, randomFileName, "tags")
-
 	require.Equal(t, expected, val)
 }
 
@@ -174,31 +173,21 @@ func TestGetVariableAsListKeyDoesNotExist(t *testing.T) {
 	require.Error(t, err)
 }
 func TestGetAllVariablesFromVarFileEFileDoesNotExist(t *testing.T) {
-	var variables map[string]interface{}
-
-	err := GetAllVariablesFromVarFileE(t, "filea", variables)
-
+	_, err := GetAllVariablesFromVarFileE(t, "filea")
 	require.Equal(t, "open filea: no such file or directory", err.Error())
 }
 
 func TestGetAllVariablesFromVarFileBadFile(t *testing.T) {
-	var variables map[string]interface{}
-
 	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
 	testHcl := []byte(`
 		thiswillnotwork`)
 
 	err := ioutil.WriteFile(randomFileName, testHcl, 0644)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	defer os.Remove(randomFileName)
 
-	err = GetAllVariablesFromVarFileE(t, randomFileName, variables)
-
+	_, err = GetAllVariablesFromVarFileE(t, randomFileName)
 	require.Error(t, err)
 
 	// HCL library could change their error string, so we are only testing the error string contains what we add to it
@@ -207,8 +196,6 @@ func TestGetAllVariablesFromVarFileBadFile(t *testing.T) {
 }
 
 func TestGetAllVariablesFromVarFile(t *testing.T) {
-	var variables map[string]interface{}
-
 	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
 	testHcl := []byte(`
 	aws_region     = "us-east-2"
@@ -223,11 +210,8 @@ func TestGetAllVariablesFromVarFile(t *testing.T) {
 
 	defer os.Remove(randomFileName)
 
-	err = GetAllVariablesFromVarFileE(t, randomFileName, &variables)
-
-	if err != nil {
-		t.FailNow()
-	}
+	variables, err := GetAllVariablesFromVarFileE(t, randomFileName)
+	require.NoError(t, err)
 
 	expected := make(map[string]interface{})
 	expected["aws_region"] = "us-east-2"
