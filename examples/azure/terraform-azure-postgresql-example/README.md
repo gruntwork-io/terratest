@@ -3,7 +3,7 @@
 This folder contains a Terraform module that deploys resources in [Azure](https://azure.microsoft.com/) to demonstrate how you can use Terratest to write automated tests for your Azure Terraform code.
 This module deploys a database for PostgreSQL.
 
-- A [Azure PostgreSQL Database](https://azure.microsoft.com/services/mysql/).
+- A [Azure PostgreSQL Database](https://azure.microsoft.com/services/postgresql/).
 
 Check out [test/azure/terraform_azure_postgresqldb_example_test.go](./../../../test/azure/terraform_azure_postgresqldb_example_test.go) to see how you can write automated tests for this module and validate the configuration of the parameters and options. 
 
@@ -27,6 +27,5 @@ Check out [test/azure/terraform_azure_postgresqldb_example_test.go](./../../../t
 1. Install [Terraform](https://www.terraform.io/) and make sure it's on your `PATH`
 1. Configure your Terratest [Go test environment](../README.md) 
 1. `cd test/azure`
-1. `go build terraform_azure_mysqldb_example_test.go`
+1. `go build terraform_azure_postgresql_example_test.go`
 1. `go test -v -timeout 60m -tags azure -run TestPostgreSQLDatabase`
-

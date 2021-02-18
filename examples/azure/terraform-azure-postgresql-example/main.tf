@@ -16,8 +16,8 @@ provider "azurerm" {
 # DEPLOY A RESOURCE GROUP
 # ---------------------------------------------------------------------------------------------------------------------
 resource "azurerm_resource_group" "rg" {
-  name     = "postgresql-rg"
-  location = "West Europe"
+  name     = "${var.resource_group_name}-${var.postfix}"
+  location = var.location
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ resource "azurerm_postgresql_server" "postgresqlserver" {
   auto_grow_enabled            = true
 
   administrator_login          = "pgsqladmin"
-  administrator_login_password = "H@Sh1CoR3!"
+  administrator_login_password = random_password.password.result
   version                      = "11"
   ssl_enforcement_enabled      = true
 }
@@ -50,4 +50,15 @@ resource "azurerm_postgresql_database" "postgresqldb" {
   server_name         = azurerm_postgresql_server.postgresqlserver.name
   charset             = "UTF8"
   collation           = "English_United States.1252"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Use a random password geneerator
+# ---------------------------------------------------------------------------------------------------------------------
+resource "random_password" "password" {
+  length  = 20
+  special = true
+  upper   = true
+  lower   = true
+  number  = true
 }
