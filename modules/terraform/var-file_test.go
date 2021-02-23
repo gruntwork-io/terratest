@@ -173,7 +173,8 @@ func TestGetVariableAsListKeyDoesNotExist(t *testing.T) {
 	require.Error(t, err)
 }
 func TestGetAllVariablesFromVarFileEFileDoesNotExist(t *testing.T) {
-	_, err := GetAllVariablesFromVarFileE(t, "filea")
+	var variables map[string]interface{}
+	err := GetAllVariablesFromVarFileE(t, "filea", &variables)
 	require.Equal(t, "open filea: no such file or directory", err.Error())
 }
 
@@ -182,12 +183,11 @@ func TestGetAllVariablesFromVarFileBadFile(t *testing.T) {
 	testHcl := []byte(`
 		thiswillnotwork`)
 
-	err := ioutil.WriteFile(randomFileName, testHcl, 0644)
-	require.NoError(t, err)
-
+	WriteFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	_, err = GetAllVariablesFromVarFileE(t, randomFileName)
+	var variables map[string]interface{}
+	err := GetAllVariablesFromVarFileE(t, randomFileName, &variables)
 	require.Error(t, err)
 
 	// HCL library could change their error string, so we are only testing the error string contains what we add to it
@@ -201,22 +201,34 @@ func TestGetAllVariablesFromVarFile(t *testing.T) {
 	aws_region     = "us-east-2"
 	`)
 
-	err := ioutil.WriteFile(randomFileName, testHcl, 0644)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		t.FailNow()
-	}
-
+	WriteFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	variables, err := GetAllVariablesFromVarFileE(t, randomFileName)
+	var variables map[string]interface{}
+	err := GetAllVariablesFromVarFileE(t, randomFileName, &variables)
 	require.NoError(t, err)
 
 	expected := make(map[string]interface{})
 	expected["aws_region"] = "us-east-2"
 
 	require.Equal(t, expected, variables)
+}
+
+func TestGetAllVariablesFromVarFileStructOut(t *testing.T) {
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	testHcl := []byte(`
+	aws_region     = "us-east-2"
+	`)
+
+	WriteFile(t, randomFileName, testHcl)
+	defer os.Remove(randomFileName)
+
+	var region struct {
+		AwsRegion string `cty:"aws_region"`
+	}
+	err := GetAllVariablesFromVarFileE(t, randomFileName, &region)
+	require.NoError(t, err)
+	require.Equal(t, "us-east-2", region.AwsRegion)
 
 }
 
