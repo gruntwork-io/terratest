@@ -191,8 +191,7 @@ func TestGetAllVariablesFromVarFileBadFile(t *testing.T) {
 	require.Error(t, err)
 
 	// HCL library could change their error string, so we are only testing the error string contains what we add to it
-	require.Regexp(t, fmt.Sprintf("^%s - ", randomFileName), err.Error())
-
+	require.Regexp(t, fmt.Sprintf("^%s:2,3-18: ", randomFileName), err.Error())
 }
 
 func TestGetAllVariablesFromVarFile(t *testing.T) {
