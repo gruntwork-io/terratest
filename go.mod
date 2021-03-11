@@ -20,7 +20,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/go-containerregistry v0.0.0-20200110202235-f4fb41bf00a3
 	github.com/google/uuid v1.1.1
-	github.com/gruntwork-io/gruntwork-cli v0.7.0
+	github.com/gruntwork-io/go-commons v0.8.0
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/hcl/v2 v2.8.2
 	github.com/imdario/mergo v0.3.7 // indirect
