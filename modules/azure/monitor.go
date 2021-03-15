@@ -46,7 +46,7 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 		return nil, err
 	}
 
-	client, err := GetDiagnosticsSettingsClientE(subscriptionID)
+	client, err := CreateDiagnosticsSettingsClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,25 +57,6 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 	}
 
 	return &settings, nil
-}
-
-// GetDiagnosticsSettingsClientE returns a diagnostics settings client
-func GetDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	client := insights.NewDiagnosticSettingsClient(subscriptionID)
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
 }
 
 // GetVMInsightsOnboardingStatus get diagnostics VM onboarding status
@@ -89,7 +70,7 @@ func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subsc
 
 // GetVMInsightsOnboardingStatusE get diagnostics VM onboarding status
 func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
-	client, err := GetVMInsightsClientE(t, subscriptionID)
+	client, err := CreateVMInsightsClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,26 +81,6 @@ func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subs
 	}
 
 	return &status, nil
-}
-
-// GetVMInsightsClientE gets a VM Insights client
-func GetVMInsightsClientE(t testing.TestingT, subscriptionID string) (*insights.VMInsightsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	client := insights.NewVMInsightsClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
 }
 
 // GetActivityLogAlertResource gets a Action Group in the specified Azure Resource Group
@@ -140,7 +101,7 @@ func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName stri
 	}
 
 	// Get the client reference
-	client, err := GetActivityLogAlertsClientE(subscriptionID)
+	client, err := CreateActivityLogAlertsClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -152,26 +113,4 @@ func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName stri
 	}
 
 	return &activityLogAlertResource, nil
-}
-
-// GetActivityLogAlertsClientE gets an Action Groups client in the specified Azure Subscription
-func GetActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the Action Groups client
-	client := insights.NewActivityLogAlertsClient(subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
 }
