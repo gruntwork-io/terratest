@@ -59,3 +59,25 @@ func GetDiskE(diskName string, resGroupName string, subscriptionID string) (*com
 
 	return &disk, nil
 }
+
+// GetDiskClientE returns a new Disk client in the specified Azure Subscription
+// TODO: remove in next major/minor version
+func GetDiskClientE(subscriptionID string) (*compute.DisksClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the Disk client
+	client := compute.NewDisksClient(subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+	client.Authorizer = *authorizer
+
+	return &client, nil
+}
