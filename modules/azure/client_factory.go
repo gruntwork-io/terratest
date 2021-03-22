@@ -206,6 +206,33 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 	return &blobContainerClient, nil
 }
 
+// CreateAvailabilitySetClientE creates a new Availability Set client in the specified Azure Subscription
+func CreateAvailabilitySetClientE(subscriptionID string) (*compute.AvailabilitySetsClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the Availability Set client
+	client := compute.NewAvailabilitySetsClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+	client.Authorizer = *authorizer
+
+	return &client, nil
+}
+
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
 // This function would fail the test if there is an error.
 func GetKeyVaultURISuffixE() (string, error) {
