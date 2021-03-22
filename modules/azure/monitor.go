@@ -59,6 +59,25 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 	return &settings, nil
 }
 
+// GetDiagnosticsSettingsClientE returns a diagnostics settings client
+func GetDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	client := insights.NewDiagnosticSettingsClient(subscriptionID)
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	client.Authorizer = *authorizer
+
+	return &client, nil
+}
+
 // GetVMInsightsOnboardingStatus get diagnostics VM onboarding status
 // This function would fail the test if there is an error.
 func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subscriptionID string) *insights.VMInsightsOnboardingStatus {
