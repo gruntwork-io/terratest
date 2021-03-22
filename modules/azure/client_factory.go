@@ -14,6 +14,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/Azure/azure-sdk-for-go/profiles/2019-03-01/resources/mgmt/insights"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
@@ -204,6 +205,30 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 	}
 	blobContainerClient.Authorizer = *authorizer
 	return &blobContainerClient, nil
+}
+
+func CreateActionGroupClient(subscriptionID string) (*insights.ActionGroupsClient, error) {
+	subID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	metricAlertsClient := insights.NewActionGroupsClientWithBaseURI(baseURI, subID)
+
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	metricAlertsClient.Authorizer = *authorizer
+
+	return &metricAlertsClient, nil
 }
 
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.

@@ -29,7 +29,7 @@ func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionI
 		return nil, err
 	}
 
-	client, err := getActionGroupClient(subscriptionID)
+	client, err := CreateActionGroupClient(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +42,7 @@ func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionI
 	return &actionGroup, nil
 }
 
+// TODO: remove in next version
 func getActionGroupClient(subscriptionID string) (*insights.ActionGroupsClient, error) {
 	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {

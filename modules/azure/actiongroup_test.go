@@ -41,12 +41,12 @@ func TestGetActionGroupResourceEWithInvalidResourceGroupName(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestGetActionGroupClient(t *testing.T) {
+func TestCreateActionGroupClient(t *testing.T) {
 	t.Parallel()
 
 	subscriptionID := ""
 
-	client, err := getActionGroupClient(subscriptionID)
+	client, err := CreateActionGroupClient(subscriptionID)
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, *client)
