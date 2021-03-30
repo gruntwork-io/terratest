@@ -43,6 +43,7 @@ func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionI
 }
 
 // TODO: remove in next version
+// nolint
 func getActionGroupClient(subscriptionID string) (*insights.ActionGroupsClient, error) {
 	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
