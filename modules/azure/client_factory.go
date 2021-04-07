@@ -45,7 +45,7 @@ type ClientType int
 // the Azure environment that is currently setup (or "Public", if none is setup).
 func CreateSubscriptionsClientE() (subscriptions.Client, error) {
 	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	baseURI, err := getBaseURI()
 	if err != nil {
 		return subscriptions.Client{}, err
 	}
@@ -66,7 +66,7 @@ func CreateVirtualMachinesClientE(subscriptionID string) (compute.VirtualMachine
 	}
 
 	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	baseURI, err := getBaseURI()
 	if err != nil {
 		return compute.VirtualMachinesClient{}, err
 	}
@@ -87,7 +87,7 @@ func CreateManagedClustersClientE(subscriptionID string) (containerservice.Manag
 	}
 
 	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	baseURI, err := getBaseURI()
 	if err != nil {
 		return containerservice.ManagedClustersClient{}, err
 	}
@@ -106,7 +106,7 @@ func CreateCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAc
 	}
 
 	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	baseURI, err := getBaseURI()
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func CreateCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesCl
 	}
 
 	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	baseURI, err := getBaseURI()
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func CreateKeyVaultManagementClientE(subscriptionID string) (*kvmng.VaultsClient
 	}
 
 	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	baseURI, err := getBaseURI()
 	if err != nil {
 		return nil, err
 	}
@@ -196,4 +196,14 @@ func getFieldValue(env *autorestAzure.Environment, field string) string {
 	structValue := reflect.ValueOf(env)
 	fieldVal := reflect.Indirect(structValue).FieldByName(field)
 	return fieldVal.String()
+}
+
+// getBaseURI gets the base URI endpoint.
+func getBaseURI() (string, error) {
+	// Lookup environment URI
+	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	if err != nil {
+		return "", err
+	}
+	return baseURI, nil
 }
