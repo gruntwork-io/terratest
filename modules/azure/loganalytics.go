@@ -28,7 +28,7 @@ func GetLogAnalyticsWorkspace(t testing.TestingT, workspaceName string, resource
 
 // GetLogAnalyticsWorkspaceE gets an operational insights workspace if it exists in a subscription.
 func GetLogAnalyticsWorkspaceE(workspaceName, resoureGroupName, subscriptionID string) (*operationalinsights.Workspace, error) {
-	client, err := GetLogAnalyticsWorkspacesClientE(subscriptionID)
+	client, err := CreateLogAnalyticsWorkspacesClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +53,7 @@ func LogAnalyticsWorkspaceExistsE(workspaceName string, resourceGroupName string
 }
 
 // GetLogAnalyticsWorkspacesClientE return workspaces client; otherwise error.
+// TODO: remove in next version
 func GetLogAnalyticsWorkspacesClientE(subscriptionID string) (*operationalinsights.WorkspacesClient, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
