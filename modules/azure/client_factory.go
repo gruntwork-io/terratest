@@ -18,6 +18,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
+	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
@@ -157,6 +158,35 @@ func CreateKeyVaultManagementClientE(subscriptionID string) (*kvmng.VaultsClient
 	vaultClient := kvmng.NewVaultsClientWithBaseURI(baseURI, subscriptionID)
 
 	return &vaultClient, nil
+}
+
+// CreateMySQLServerClientE is a helper function that will setup a mysql server client.
+func CreateMySQLServerClientE(subscriptionID string) (*mysql.ServersClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a mysql server client
+	mysqlClient := mysql.NewServersClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	mysqlClient.Authorizer = *authorizer
+
+	return &mysqlClient, nil
 }
 
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
