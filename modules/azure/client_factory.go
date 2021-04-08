@@ -18,6 +18,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
@@ -204,6 +205,29 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 	}
 	blobContainerClient.Authorizer = *authorizer
 	return &blobContainerClient, nil
+}
+
+// CreateResourceGroupClientE gets a resource group client in a subscription
+func CreateResourceGroupClientE(subscriptionID string) (*resources.GroupsClient, error) {
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	resourceGroupClient := resources.NewGroupsClientWithBaseURI(baseURI, subscriptionID)
+
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+	resourceGroupClient.Authorizer = *authorizer
+	return &resourceGroupClient, nil
 }
 
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
