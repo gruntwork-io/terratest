@@ -30,6 +30,24 @@ func TestFormatTerraformPlanFileAsArgs(t *testing.T) {
 	}
 }
 
+func TestFormatTerraformPluginDirAsArgs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		dir      string
+		expected []string
+	}{
+		{"/some/plugin/dir", []string{"-plugin-dir=/some/plugin/dir"}},
+		{"", nil},
+	}
+
+	for _, testCase := range testCases {
+		checkResultWithRetry(t, 100, testCase.expected, fmt.Sprintf("FormatTerraformPluginDirAsArgs(%v)", testCase.dir), func() interface{} {
+			return FormatTerraformPluginDirAsArgs(testCase.dir)
+		})
+	}
+}
+
 func TestFormatTerraformVarsAsArgs(t *testing.T) {
 	t.Parallel()
 

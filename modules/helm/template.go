@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/ghodss/yaml"
-	"github.com/gruntwork-io/gruntwork-cli/errors"
+	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -61,7 +61,7 @@ func RenderTemplateE(t testing.TestingT, options *Options, chartDir string, rele
 	args = append(args, releaseName, chartDir)
 
 	// Finally, call out to helm template command
-	return RunHelmCommandAndGetOutputE(t, options, "template", args...)
+	return RunHelmCommandAndGetStdOutE(t, options, "template", args...)
 }
 
 // UnmarshalK8SYaml is the same as UnmarshalK8SYamlE, but will fail the test if there is an error.

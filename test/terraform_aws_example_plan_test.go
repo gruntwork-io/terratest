@@ -51,17 +51,23 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 	})
 
 	// website::tag::2::Run `terraform init`, `terraform plan`, and `terraform show` and fail the test if there are any errors
-	jsonOut := terraform.InitAndPlanAndShow(t, terraformOptions)
+	plan := terraform.InitAndPlanAndShowWithStruct(t, terraformOptions)
 
-	// website::tag::3::Use jsonpath to extract the expected tags on the instance from the plan. You can alternatively
-	// use https://github.com/hashicorp/terraform-json to get a concrete struct with all the types resolved.
-	var ec2Tags []map[string]interface{}
+	// website::tag::3::Use the go struct to introspect the plan values.
+	terraform.RequirePlannedValuesMapKeyExists(t, plan, "aws_instance.example")
+	ec2Resource := plan.ResourcePlannedValuesMap["aws_instance.example"]
+	ec2Tags := ec2Resource.AttributeValues["tags"].(map[string]interface{})
+	assert.Equal(t, map[string]interface{}{"Name": expectedName}, ec2Tags)
+
+	// website::tag::4::Alternatively, you can get the direct JSON output and use jsonpath to extract the data.
+	// jsonpath only returns lists.
+	var jsonEC2Tags []map[string]interface{}
+	jsonOut := terraform.InitAndPlanAndShow(t, terraformOptions)
 	k8s.UnmarshalJSONPath(
 		t,
 		[]byte(jsonOut),
 		"{ .planned_values.root_module.resources[0].values.tags }",
-		&ec2Tags,
+		&jsonEC2Tags,
 	)
-	tags := ec2Tags[0]
-	assert.Equal(t, map[string]interface{}{"Name": expectedName}, tags)
+	assert.Equal(t, map[string]interface{}{"Name": expectedName}, jsonEC2Tags[0])
 }

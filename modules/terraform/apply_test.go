@@ -182,3 +182,21 @@ func TestParallelism(t *testing.T) {
 	duration := end.Sub(start)
 	require.Greater(t, int64(duration.Seconds()), int64(25))
 }
+func TestTgApplyUseLockNoError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+	require.NoError(t, err)
+
+	options := WithDefaultRetryableErrors(t, &Options{
+		TerraformDir:    testFolder,
+		TerraformBinary: "terragrunt",
+		Lock:            true,
+	})
+
+	out := TgApplyAll(t, options)
+
+	require.Contains(t, out, "Hello, World")
+	// make sure -lock CLI option is passed down correctly
+	require.Contains(t, out, "-lock=true")
+}

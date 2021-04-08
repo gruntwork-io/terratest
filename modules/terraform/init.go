@@ -19,5 +19,6 @@ func Init(t testing.TestingT, options *Options) string {
 func InitE(t testing.TestingT, options *Options) (string, error) {
 	args := []string{"init", fmt.Sprintf("-upgrade=%t", options.Upgrade)}
 	args = append(args, FormatTerraformBackendConfigAsArgs(options.BackendConfig)...)
+	args = append(args, FormatTerraformPluginDirAsArgs(options.PluginDir)...)
 	return RunTerraformCommandE(t, options, args...)
 }

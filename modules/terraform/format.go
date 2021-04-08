@@ -14,7 +14,9 @@ import (
 var TerraformCommandsWithLockSupport = []string{
 	"plan",
 	"apply",
+	"apply-all",
 	"destroy",
+	"destroy-all",
 	"init",
 	"refresh",
 	"taint",
@@ -85,6 +87,16 @@ func FormatTerraformLockAsArgs(lockCheck bool, lockTimeout string) []string {
 		lockArgs = append(lockArgs, lockTimeoutValue)
 	}
 	return lockArgs
+}
+
+// FormatTerraformPluginDirAsArgs formats the plugin-dir variable
+// -plugin-dir
+func FormatTerraformPluginDirAsArgs(pluginDir string) []string {
+	pluginArgs := []string{fmt.Sprintf("-plugin-dir=%v", pluginDir)}
+	if pluginDir == "" {
+		return nil
+	}
+	return pluginArgs
 }
 
 // FormatTerraformArgs will format multiple args with the arg name (e.g. "-var-file", []string{"foo.tfvars", "bar.tfvars"})

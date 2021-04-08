@@ -105,7 +105,7 @@ resource "aws_db_instance" "example" {
   name                   = var.database_name
   username               = var.username
   password               = var.password
-  instance_class         = "db.t2.micro"
+  instance_class         = var.instance_class
   allocated_storage      = var.allocated_storage
   skip_final_snapshot    = true
   license_model          = var.license_model

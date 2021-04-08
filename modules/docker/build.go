@@ -15,6 +15,9 @@ type BuildOptions struct {
 	// Build args to pass the 'docker build' command
 	BuildArgs []string
 
+	// Target build arg to pass to the 'docker build' command
+	Target string
+
 	// Custom CLI options that will be passed as-is to the 'docker build' command. This is an "escape hatch" that allows
 	// Terratest to not have to support every single command-line option offered by the 'docker build' command, and
 	// solely focus on the most important ones.
@@ -59,6 +62,10 @@ func formatDockerBuildArgs(path string, options *BuildOptions) ([]string, error)
 
 	for _, arg := range options.BuildArgs {
 		args = append(args, "--build-arg", arg)
+	}
+
+	if len(options.Target) > 0 {
+		args = append(args, "--target", options.Target)
 	}
 
 	args = append(args, options.OtherOptions...)

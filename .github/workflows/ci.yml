@@ -17,6 +17,8 @@ name: ci-workflow
     # target_pr: pr number on the source repo (e.g. 14, 25, etc.)
 
 on:
+  push:
+    branches: master
   workflow_dispatch:
     inputs:
       repo:

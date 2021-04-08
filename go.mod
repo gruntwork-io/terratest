@@ -20,9 +20,10 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/go-containerregistry v0.0.0-20200110202235-f4fb41bf00a3
 	github.com/google/uuid v1.1.1
-	github.com/gruntwork-io/gruntwork-cli v0.7.0
+	github.com/gruntwork-io/go-commons v0.8.0
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/hcl/v2 v2.8.2
+	github.com/hashicorp/terraform-json v0.9.0
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/jstemmer/go-junit-report v0.9.1
@@ -35,11 +36,11 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/cli v1.22.2
-	github.com/zclconf/go-cty v1.2.0
+	github.com/zclconf/go-cty v1.2.1
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/tools v0.0.0-20200113040837-eac381796e91 // indirect
+	golang.org/x/tools v0.0.0-20201110201400-7099162a900a // indirect
 	google.golang.org/api v0.15.0
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	k8s.io/api v0.19.3

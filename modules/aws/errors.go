@@ -113,3 +113,19 @@ func (err NoInstanceTypeError) Error() string {
 		err.Azs,
 	)
 }
+
+// NoRdsInstanceTypeError is returned when none of the given instance types are avaiable for the region, database engine, and database engine combination given
+type NoRdsInstanceTypeError struct {
+	InstanceTypeOptions   []string
+	DatabaseEngine        string
+	DatabaseEngineVersion string
+}
+
+func (err NoRdsInstanceTypeError) Error() string {
+	return fmt.Sprintf(
+		"None of the given RDS instance types (%v) is available in this region for database engine (%v) of version (%v).",
+		err.InstanceTypeOptions,
+		err.DatabaseEngine,
+		err.DatabaseEngineVersion,
+	)
+}

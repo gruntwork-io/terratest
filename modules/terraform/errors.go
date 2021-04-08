@@ -87,3 +87,17 @@ type PanicWhileParsingVarFile struct {
 func (err PanicWhileParsingVarFile) Error() string {
 	return fmt.Sprintf("Recovering panic while parsing '%s'. Got error of type '%v': %v", err.ConfigFile, reflect.TypeOf(err.RecoveredValue), err.RecoveredValue)
 }
+
+// UnsupportedDefaultWorkspaceDeletion is returned when user tries to delete the workspace "default"
+type UnsupportedDefaultWorkspaceDeletion struct{}
+
+func (err *UnsupportedDefaultWorkspaceDeletion) Error() string {
+	return "Deleting the workspace 'default' is not supported"
+}
+
+// WorkspaceDoesNotExist is returned when user tries to delete a workspace which does not exist
+type WorkspaceDoesNotExist string
+
+func (err WorkspaceDoesNotExist) Error() string {
+	return fmt.Sprintf("The workspace %q does not exist.", string(err))
+}

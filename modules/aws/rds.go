@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // GetAddressOfRdsInstance gets the address of the given RDS Instance in the given region.
@@ -215,6 +216,65 @@ func NewRdsClientE(t testing.TestingT, region string) (*rds.RDS, error) {
 	}
 
 	return rds.New(sess), nil
+}
+
+// GetRecommendedRdsInstanceType takes in a list of RDS instance types (e.g., "db.t2.micro", "db.t3.micro") and returns the
+// first instance type in the list that is available in the given region and for the given database engine type.
+// If none of the instances provided are avaiable for your combination of region and database engine, this function will exit with an error.
+func GetRecommendedRdsInstanceType(t testing.TestingT, region string, engine string, engineVersion string, instanceTypeOptions []string) string {
+	out, err := GetRecommendedRdsInstanceTypeE(t, region, engine, engineVersion, instanceTypeOptions)
+	require.NoError(t, err)
+	return out
+}
+
+// GetRecommendedRdsInstanceTypeE takes in a list of RDS instance types (e.g., "db.t2.micro", "db.t3.micro") and returns the
+// first instance type in the list that is available in the given region and for the given database engine type.
+// If none of the instances provided are avaiable for your combination of region and database engine, this function will return an error.
+func GetRecommendedRdsInstanceTypeE(t testing.TestingT, region string, engine string, engineVersion string, instanceTypeOptions []string) (string, error) {
+	client, err := NewRdsClientE(t, region)
+	if err != nil {
+		return "", err
+	}
+	return GetRecommendedRdsInstanceTypeWithClientE(t, client, engine, engineVersion, instanceTypeOptions)
+}
+
+// GetRecommendedRdsInstanceTypeWithClientE takes in a list of RDS instance types (e.g., "db.t2.micro", "db.t3.micro") and returns the
+// first instance type in the list that is available in the given region and for the given database engine type.
+// If none of the instances provided are avaiable for your combination of region and database engine, this function will return an error.
+// This function expects an authenticated RDS client from the AWS SDK Go library.
+func GetRecommendedRdsInstanceTypeWithClientE(t testing.TestingT, rdsClient *rds.RDS, engine string, engineVersion string, instanceTypeOptions []string) (string, error) {
+	for _, instanceTypeOption := range instanceTypeOptions {
+		instanceTypeExists, err := instanceTypeExistsForEngineAndRegionE(rdsClient, engine, engineVersion, instanceTypeOption)
+		if err != nil {
+			return "", err
+		}
+
+		if instanceTypeExists {
+			return instanceTypeOption, nil
+		}
+	}
+	return "", NoRdsInstanceTypeError{InstanceTypeOptions: instanceTypeOptions, DatabaseEngine: engine, DatabaseEngineVersion: engineVersion}
+}
+
+// instanceTypeExistsForEngineAndRegionE returns a boolean that represents whether the provided instance type (e.g. db.t2.micro) exists for the given region and db engine type
+// This function will return an error if the RDS AWS SDK call fails.
+func instanceTypeExistsForEngineAndRegionE(client *rds.RDS, engine string, engineVersion string, instanceType string) (bool, error) {
+	input := rds.DescribeOrderableDBInstanceOptionsInput{
+		Engine:          aws.String(engine),
+		EngineVersion:   aws.String(engineVersion),
+		DBInstanceClass: aws.String(instanceType),
+	}
+
+	out, err := client.DescribeOrderableDBInstanceOptions(&input)
+	if err != nil {
+		return false, err
+	}
+
+	if len(out.OrderableDBInstanceOptions) > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // ParameterForDbInstanceNotFound is an error that occurs when the parameter group specified is not found for the DB instance

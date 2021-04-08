@@ -24,6 +24,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 	password := "password"
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+	instanceType := aws.GetRecommendedRdsInstanceType(t, awsRegion, "mysql", "5.7.21", []string{"db.t2.micro", "db.t3.micro"})
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -38,6 +39,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			"engine_name":          "mysql",
 			"major_engine_version": "5.7",
 			"family":               "mysql5.7",
+			"instance_class":       instanceType,
 			"username":             username,
 			"password":             password,
 			"allocated_storage":    5,

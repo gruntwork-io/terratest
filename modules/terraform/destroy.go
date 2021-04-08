@@ -30,5 +30,5 @@ func TgDestroyAllE(t testing.TestingT, options *Options) (string, error) {
 		return "", TgInvalidBinary(options.TerraformBinary)
 	}
 
-	return RunTerraformCommandE(t, options, FormatArgs(options, "destroy-all", "-force", "-input=false", "-lock=false")...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, "destroy-all", "-force", "-input=false")...)
 }

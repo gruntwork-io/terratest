@@ -63,6 +63,24 @@ func InitAndPlanAndShowE(t testing.TestingT, options *Options) (string, error) {
 	return ShowE(t, options)
 }
 
+// InitAndPlanAndShowWithStruct runs terraform init, then terraform plan, and then terraform show with the given
+// options, and parses the json result into a go struct. This will fail the test if there is an error in the command.
+func InitAndPlanAndShowWithStruct(t testing.TestingT, options *Options) *PlanStruct {
+	plan, err := InitAndPlanAndShowWithStructE(t, options)
+	require.NoError(t, err)
+	return plan
+}
+
+// InitAndPlanAndShowWithStructE runs terraform init, then terraform plan, and then terraform show with the given options, and
+// parses the json result into a go struct.
+func InitAndPlanAndShowWithStructE(t testing.TestingT, options *Options) (*PlanStruct, error) {
+	jsonOut, err := InitAndPlanAndShowE(t, options)
+	if err != nil {
+		return nil, err
+	}
+	return parsePlanJson(jsonOut)
+}
+
 // InitAndPlanWithExitCode runs terraform init and plan with the given options and returns exitcode for the plan command.
 // This will fail the test if there is an error in the command.
 func InitAndPlanWithExitCode(t testing.TestingT, options *Options) int {

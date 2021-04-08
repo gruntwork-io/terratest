@@ -45,3 +45,9 @@ variable "ssh_user" {
   default     = "ubuntu"
 }
 
+variable "instance_type" {
+  description = "Instance type to use for EC2 Instance"
+  type        = string
+  default     = "t2.micro"
+}
+

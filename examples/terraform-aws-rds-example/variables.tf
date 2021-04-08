@@ -80,3 +80,9 @@ variable "license_model" {
   default     = "general-public-license"
 }
 
+variable "instance_class" {
+  description = "Instance class to be used to run the database"
+  type        = string
+  default     = "db.t2.micro"
+}
+
