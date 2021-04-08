@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	kvauth "github.com/Azure/azure-sdk-for-go/services/keyvault/auth"
-	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
+	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2019-09-01/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/stretchr/testify/require"
