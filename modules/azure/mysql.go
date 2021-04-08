@@ -9,6 +9,7 @@ import (
 )
 
 // GetMYSQLServerClientE is a helper function that will setup a mysql server client.
+// TODO: remove in next version
 func GetMYSQLServerClientE(subscriptionID string) (*mysql.ServersClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
@@ -43,7 +44,7 @@ func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, 
 // GetMYSQLServerE is a helper function that gets the server.
 func GetMYSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*mysql.Server, error) {
 	// Create a mySQl Server client
-	mysqlClient, err := GetMYSQLServerClientE(subscriptionID)
+	mysqlClient, err := CreateMySQLServerClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
