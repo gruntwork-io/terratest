@@ -3,22 +3,21 @@ package yandex
 import (
 	"context"
 	"os"
+	"strings"
+	"testing"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/endpoint"
+	ycsdk "github.com/yandex-cloud/go-sdk"
 	"github.com/yandex-cloud/go-sdk/iamkey"
 	"github.com/yandex-cloud/go-sdk/pkg/requestid"
 	"github.com/yandex-cloud/go-sdk/pkg/retry"
 	"google.golang.org/grpc/codes"
 
-	"testing"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
-
-import ycsdk "github.com/yandex-cloud/go-sdk"
 
 const MaxRetries = 3
 
@@ -34,8 +33,14 @@ func NewYandexClientE(t *testing.T) (*ycsdk.SDK, error) {
 		sdkConfig.Credentials = ycsdk.InstanceServiceAccount()
 
 	case os.Getenv("YC_TOKEN") != "":
-		logger.Log(t, "Use OAuth token for authentication")
-		sdkConfig.Credentials = ycsdk.OAuthToken(os.Getenv("YC_TOKEN"))
+		ycToken := os.Getenv("YC_TOKEN")
+		if strings.HasPrefix(ycToken, "t1.") && strings.Count(ycToken, ".") == 2 {
+			logger.Log(t, "Use IAM token for authentication (from YC_TOKEN env var)")
+			sdkConfig.Credentials = ycsdk.OAuthToken(os.Getenv("YC_TOKEN"))
+		} else {
+			logger.Log(t, "Use OAuth token for authentication")
+			sdkConfig.Credentials = ycsdk.OAuthToken(os.Getenv("YC_TOKEN"))
+		}
 
 	case os.Getenv("YC_SERVICE_ACCOUNT_KEY_FILE") != "":
 		logger.Logf(t, " Use Service Account key file %q for authentication", os.Getenv("YC_SERVICE_ACCOUNT_KEY_FILE"))

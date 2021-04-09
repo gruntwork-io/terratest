@@ -20,6 +20,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/go-containerregistry v0.0.0-20200110202235-f4fb41bf00a3
 	github.com/google/uuid v1.1.1
+	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/gruntwork-io/go-commons v0.8.0
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/hcl/v2 v2.8.2
@@ -34,8 +35,10 @@ require (
 	github.com/oracle/oci-go-sdk v7.1.0+incompatible
 	github.com/pquerna/otp v1.2.0
 	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli v1.22.2
+	github.com/yandex-cloud/go-genproto v0.0.0-20210408155340-51e428a9a812
+	github.com/yandex-cloud/go-sdk v0.0.0-20210326140609-dcebefcc0553
 	github.com/zclconf/go-cty v1.2.1
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
@@ -43,6 +46,7 @@ require (
 	golang.org/x/tools v0.0.0-20201110201400-7099162a900a // indirect
 	google.golang.org/api v0.15.0
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
+	google.golang.org/grpc v1.28.0
 	k8s.io/api v0.19.3
 	k8s.io/apimachinery v0.19.3
 	k8s.io/client-go v0.19.3
