@@ -31,17 +31,17 @@ func GetPostgreSQLServerClientE(subscriptionID string) (*postgresql.ServersClien
 	return &postgresqlClient, nil
 }
 
-// GetPostgresqlServer is a helper function that gets the server.
+// GetPostgreSQLServer is a helper function that gets the server.
 // This function would fail the test if there is an error.
-func GetPostgresqlServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *postgresql.Server {
-	postgresqlServer, err := GetPostgresqlServerE(t, subscriptionID, resGroupName, serverName)
+func GetPostgreSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *postgresql.Server {
+	postgresqlServer, err := GetPostgreSQLServerE(t, subscriptionID, resGroupName, serverName)
 	require.NoError(t, err)
 
 	return postgresqlServer
 }
 
-// GetPostgresqlServerE is a helper function that gets the server.
-func GetPostgresqlServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*postgresql.Server, error) {
+// GetPostgreSQLServerE is a helper function that gets the server.
+func GetPostgreSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*postgresql.Server, error) {
 	// Create a postgresql Server client
 	postgresqlClient, err := GetPostgreSQLServerClientE(subscriptionID)
 	if err != nil {
@@ -58,8 +58,8 @@ func GetPostgresqlServerE(t testing.TestingT, subscriptionID string, resGroupNam
 	return &postgresqlServer, nil
 }
 
-// GetPostgresqlDBClientE is a helper function that will setup a postgresql DB client.
-func GetPostgresqlDBClientE(subscriptionID string) (*postgresql.DatabasesClient, error) {
+// GetPostgreSQLDBClientE is a helper function that will setup a postgresql DB client.
+func GetPostgreSQLDBClientE(subscriptionID string) (*postgresql.DatabasesClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -81,19 +81,19 @@ func GetPostgresqlDBClientE(subscriptionID string) (*postgresql.DatabasesClient,
 	return &postgresqlDBClient, nil
 }
 
-//GetPostgresqlDB is a helper function that gets the database.
+//GetPostgreSQLDB is a helper function that gets the database.
 // This function would fail the test if there is an error.
-func GetPostgresqlDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *postgresql.Database {
-	database, err := GetPostgresqlDBE(t, subscriptionID, resGroupName, serverName, dbName)
+func GetPostgreSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *postgresql.Database {
+	database, err := GetPostgreSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
 	require.NoError(t, err)
 
 	return database
 }
 
-//GetPostgresqlDBE is a helper function that gets the database.
-func GetPostgresqlDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*postgresql.Database, error) {
+//GetPostgreSQLDBE is a helper function that gets the database.
+func GetPostgreSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*postgresql.Database, error) {
 	// Create a postgresql db client
-	postgresqldbClient, err := GetPostgresqlDBClientE(subscriptionID)
+	postgresqldbClient, err := GetPostgreSQLDBClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -108,18 +108,18 @@ func GetPostgresqlDBE(t testing.TestingT, subscriptionID string, resGroupName st
 	return &postgresqlDb, nil
 }
 
-//ListPostgresqlDB is a helper function that gets all databases per server.
-func ListPostgresqlDB(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) []postgresql.Database {
-	dblist, err := ListPostgresqlDBE(t, subscriptionID, resGroupName, serverName)
+//ListPostgreSQLDB is a helper function that gets all databases per server.
+func ListPostgreSQLDB(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) []postgresql.Database {
+	dblist, err := ListPostgreSQLDBE(t, subscriptionID, resGroupName, serverName)
 	require.NoError(t, err)
 
 	return dblist
 }
 
-//ListPostgresqlDBE is a helper function that gets all databases per server.
-func ListPostgresqlDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]postgresql.Database, error) {
+//ListPostgreSQLDBE is a helper function that gets all databases per server.
+func ListPostgreSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]postgresql.Database, error) {
 	// Create a postgresql db client
-	postgresqldbClient, err := GetPostgresqlDBClientE(subscriptionID)
+	postgresqldbClient, err := GetPostgreSQLDBClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
