@@ -9,6 +9,7 @@ import (
 )
 
 // GetSQLServerClient is a helper function that will setup a sql server client
+// TODO: remove in next version
 func GetSQLServerClient(subscriptionID string) (*sql.ServersClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
@@ -43,7 +44,7 @@ func GetSQLServer(t testing.TestingT, resGroupName string, serverName string, su
 // GetSQLServerE is a helper function that gets the sql server object.
 func GetSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*sql.Server, error) {
 	// Create a SQl Server client
-	sqlClient, err := GetSQLServerClient(subscriptionID)
+	sqlClient, err := CreateSQLServerClient(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +60,7 @@ func GetSQLServerE(t testing.TestingT, subscriptionID string, resGroupName strin
 }
 
 // GetDatabaseClient  is a helper function that will setup a sql DB client
+// TODO: remove in next version
 func GetDatabaseClient(subscriptionID string) (*sql.DatabasesClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
@@ -92,7 +94,7 @@ func ListSQLServerDatabases(t testing.TestingT, resGroupName string, serverName 
 //ListSQLServerDatabasesE is a helper function that gets a list of databases on a sql server
 func ListSQLServerDatabasesE(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) (*[]sql.Database, error) {
 	// Create a SQl db client
-	sqlClient, err := GetDatabaseClient(subscriptionID)
+	sqlClient, err := CreateDatabaseClient(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +121,7 @@ func GetSQLDatabase(t testing.TestingT, resGroupName string, serverName string, 
 // GetSQLDatabaseE is a helper function that gets the sql db.
 func GetSQLDatabaseE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*sql.Database, error) {
 	// Create a SQl db client
-	sqlClient, err := GetDatabaseClient(subscriptionID)
+	sqlClient, err := CreateDatabaseClient(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
