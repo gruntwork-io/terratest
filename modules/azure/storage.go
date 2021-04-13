@@ -141,7 +141,7 @@ func GetStorageBlobContainerE(containerName, storageAccountName, resourceGroupNa
 	if err2 != nil {
 		return nil, err2
 	}
-	client, err := GetStorageBlobContainerClientE(subscriptionID)
+	client, err := CreateStorageBlobContainerClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func GetStorageAccountPropertyE(storageAccountName, resourceGroupName, subscript
 	if err2 != nil {
 		return nil, err2
 	}
-	client, err := GetStorageAccountClientE(subscriptionID)
+	client, err := CreateStorageAccountClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +174,7 @@ func GetStorageAccountPropertyE(storageAccountName, resourceGroupName, subscript
 }
 
 // GetStorageAccountClientE creates a storage account client.
+// TODO: remove in next version
 func GetStorageAccountClientE(subscriptionID string) (*storage.AccountsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
@@ -191,6 +192,7 @@ func GetStorageAccountClientE(subscriptionID string) (*storage.AccountsClient, e
 }
 
 // GetStorageBlobContainerClientE creates a storage container client.
+// TODO: remove in next version
 func GetStorageBlobContainerClientE(subscriptionID string) (*storage.BlobContainersClient, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {

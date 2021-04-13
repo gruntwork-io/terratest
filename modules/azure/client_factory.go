@@ -19,6 +19,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
+	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -157,6 +158,52 @@ func CreateKeyVaultManagementClientE(subscriptionID string) (*kvmng.VaultsClient
 	vaultClient := kvmng.NewVaultsClientWithBaseURI(baseURI, subscriptionID)
 
 	return &vaultClient, nil
+}
+
+// CreateStorageAccountClientE creates a storage account client.
+func CreateStorageAccountClientE(subscriptionID string) (*storage.AccountsClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	storageAccountClient := storage.NewAccountsClientWithBaseURI(baseURI, subscriptionID)
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+	storageAccountClient.Authorizer = *authorizer
+	return &storageAccountClient, nil
+}
+
+// CreateStorageBlobContainerClientE creates a storage container client.
+func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobContainersClient, error) {
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	blobContainerClient := storage.NewBlobContainersClientWithBaseURI(baseURI, subscriptionID)
+	authorizer, err := NewAuthorizer()
+
+	if err != nil {
+		return nil, err
+	}
+	blobContainerClient.Authorizer = *authorizer
+	return &blobContainerClient, nil
 }
 
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
