@@ -14,12 +14,13 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/storage/mgmt/storage"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
+	"github.com/Azure/azure-sdk-for-go/profiles/preview/sql/mgmt/sql"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -204,6 +205,64 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 	}
 	blobContainerClient.Authorizer = *authorizer
 	return &blobContainerClient, nil
+}
+
+// CreateSQLServerClient is a helper function that will create and setup a sql server client
+func CreateSQLServerClient(subscriptionID string) (*sql.ServersClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a sql server client
+	sqlClient := sql.NewServersClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	sqlClient.Authorizer = *authorizer
+
+	return &sqlClient, nil
+}
+
+// CreateDatabaseClient is a helper function that will create and setup a SQL DB client
+func CreateDatabaseClient(subscriptionID string) (*sql.DatabasesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a sql DB client
+	sqlDBClient := sql.NewDatabasesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	sqlDBClient.Authorizer = *authorizer
+
+	return &sqlDBClient, nil
 }
 
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
