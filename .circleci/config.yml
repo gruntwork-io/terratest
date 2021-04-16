@@ -6,7 +6,7 @@ env: &env
     TERRAFORM_VERSION: 0.14.0
     TERRAGRUNT_VERSION: v0.24.2
     PACKER_VERSION: 1.6.6
-    GOLANG_VERSION: 1.14
+    GO_VERSION: 1.14
     K8S_VERSION: v1.15.0  # Same as EKS
     MINIKUBE_VERSION: v1.9.2
     HELM_VERSION: v3.1.1
@@ -41,8 +41,18 @@ install_gruntwork_utils: &install_gruntwork_utils
       --terraform-version ${TERRAFORM_VERSION} \
       --terragrunt-version ${TERRAGRUNT_VERSION} \
       --packer-version ${PACKER_VERSION} \
-      --go-version ${GOLANG_VERSION} \
+      --go-version NONE \
       --go-src-path ./
+
+    # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
+    echo "Installing Go version $version"
+    curl -O --silent --location --fail --show-error "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
+    sudo rm -rf /usr/local/go
+    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+    sudo ln -s /usr/local/go/bin/go /usr/bin/go
+    local installed_version
+    installed_version="$(go version)"
+    echo "The installed version of Go is now $installed_version"
 
 configure_environment_for_gcp: &configure_environment_for_gcp
   name: configure environment for gcp
