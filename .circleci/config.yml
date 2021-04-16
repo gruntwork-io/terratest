@@ -49,9 +49,7 @@ install_gruntwork_utils: &install_gruntwork_utils
     sudo rm -rf /usr/local/go
     sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
     sudo ln -s /usr/local/go/bin/go /usr/bin/go
-    local installed_version
-    installed_version="$(go version)"
-    echo "The installed version of Go is now $installed_version"
+    echo "The installed version of Go is now $(go version)"
 
 configure_environment_for_gcp: &configure_environment_for_gcp
   name: configure environment for gcp
