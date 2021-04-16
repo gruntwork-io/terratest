@@ -41,8 +41,7 @@ install_gruntwork_utils: &install_gruntwork_utils
       --terraform-version ${TERRAFORM_VERSION} \
       --terragrunt-version ${TERRAGRUNT_VERSION} \
       --packer-version ${PACKER_VERSION} \
-      --go-version NONE \
-      --go-src-path ./
+      --go-version NONE
 
     # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
     echo "Installing Go version $version"
