@@ -161,7 +161,6 @@ func CreateKeyVaultManagementClientE(subscriptionID string) (*kvmng.VaultsClient
 	return &vaultClient, nil
 }
 
-<<<<<<< HEAD
 // CreateStorageAccountClientE creates a storage account client.
 func CreateStorageAccountClientE(subscriptionID string) (*storage.AccountsClient, error) {
 	// Validate Azure subscription ID
@@ -208,8 +207,6 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 	return &blobContainerClient, nil
 }
 
-=======
->>>>>>> 8466f53cb5702c08e6acf2d737c1746693cdc1ab
 // CreateLogAnalyticsWorkspacesClientE return workspaces client; otherwise error.
 func CreateLogAnalyticsWorkspacesClientE(subscriptionID string) (*operationalinsights.WorkspacesClient, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
