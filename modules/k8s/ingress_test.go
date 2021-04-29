@@ -26,7 +26,7 @@ func TestGetIngressEReturnsErrorForNonExistantIngress(t *testing.T) {
 	t.Parallel()
 
 	options := NewKubectlOptions("", "", "default")
-	_, err := GetIngressE(t, options, "i-dont-exist")
+	_, err := GetIngressV1Beta1E(t, options, "i-dont-exist")
 	require.Error(t, err)
 }
 
@@ -39,7 +39,7 @@ func TestGetIngressEReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 	KubectlApplyFromString(t, options, configData)
 	defer KubectlDeleteFromString(t, options, configData)
 
-	service := GetIngress(t, options, "nginx-service-ingress")
+	service := GetIngressV1Beta1(t, options, "nginx-service-ingress")
 	require.Equal(t, service.Name, "nginx-service-ingress")
 	require.Equal(t, service.Namespace, uniqueID)
 }
@@ -53,7 +53,7 @@ func TestListIngressesReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 	KubectlApplyFromString(t, options, configData)
 	defer KubectlDeleteFromString(t, options, configData)
 
-	ingresses := ListIngresses(t, options, metav1.ListOptions{})
+	ingresses := ListIngressesV1Beta1(t, options, metav1.ListOptions{})
 	require.Equal(t, len(ingresses), 1)
 
 	ingress := ingresses[0]
@@ -70,7 +70,7 @@ func TestWaitUntilIngressAvailableReturnsSuccessfully(t *testing.T) {
 	KubectlApplyFromString(t, options, configData)
 	defer KubectlDeleteFromString(t, options, configData)
 
-	WaitUntilIngressAvailable(t, options, ExampleIngressName, 60, 5*time.Second)
+	WaitUntilIngressAvailableV1Beta1(t, options, ExampleIngressName, 60, 5*time.Second)
 }
 
 const EXAMPLE_INGRESS_DEPLOYMENT_YAML_TEMPLATE = `---
