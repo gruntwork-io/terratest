@@ -39,7 +39,7 @@ func CheckAvailabilitySetContainsVM(t testing.TestingT, vmName string, avsName s
 
 // CheckAvailabilitySetContainsVME checks if the Virtual Machine is contained in the Availability Set VMs
 func CheckAvailabilitySetContainsVME(t testing.TestingT, vmName string, avsName string, resGroupName string, subscriptionID string) (bool, error) {
-	client, err := GetAvailabilitySetClientE(subscriptionID)
+	client, err := CreateAvailabilitySetClientE(subscriptionID)
 	if err != nil {
 		return false, err
 	}
@@ -71,7 +71,7 @@ func GetAvailabilitySetVMNamesInCaps(t testing.TestingT, avsName string, resGrou
 
 // GetAvailabilitySetVMNamesInCapsE gets a list of VM names in the specified Azure Availability Set
 func GetAvailabilitySetVMNamesInCapsE(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) ([]string, error) {
-	client, err := GetAvailabilitySetClientE(subscriptionID)
+	client, err := CreateAvailabilitySetClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func GetAvailabilitySetE(t testing.TestingT, avsName string, resGroupName string
 	}
 
 	// Get the client reference
-	client, err := GetAvailabilitySetClientE(subscriptionID)
+	client, err := CreateAvailabilitySetClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +135,7 @@ func GetAvailabilitySetE(t testing.TestingT, avsName string, resGroupName string
 }
 
 // GetAvailabilitySetClientE gets a new Availability Set client in the specified Azure Subscription
+// TODO: remove in next version
 func GetAvailabilitySetClientE(subscriptionID string) (*compute.AvailabilitySetsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)

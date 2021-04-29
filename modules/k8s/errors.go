@@ -4,17 +4,28 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // IngressNotAvailable is returned when a Kubernetes service is not yet available to accept traffic.
 type IngressNotAvailable struct {
-	ingress *extensionsv1beta1.Ingress
+	ingress *networkingv1.Ingress
 }
 
 // Error is a simple function to return a formatted error message as a string
 func (err IngressNotAvailable) Error() string {
+	return fmt.Sprintf("Ingress %s is not available", err.ingress.Name)
+}
+
+// IngressNotAvailableV1Beta1 is returned when a Kubernetes service is not yet available to accept traffic.
+type IngressNotAvailableV1Beta1 struct {
+	ingress *networkingv1beta1.Ingress
+}
+
+// Error is a simple function to return a formatted error message as a string
+func (err IngressNotAvailableV1Beta1) Error() string {
 	return fmt.Sprintf("Ingress %s is not available", err.ingress.Name)
 }
 

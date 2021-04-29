@@ -21,10 +21,6 @@ func InitAndPlanE(t testing.TestingT, options *Options) (string, error) {
 		return "", err
 	}
 
-	if _, err := GetE(t, options); err != nil {
-		return "", err
-	}
-
 	return PlanE(t, options)
 }
 

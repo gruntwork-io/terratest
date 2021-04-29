@@ -80,7 +80,7 @@ func TestInitAndPlanWithPlanFile(t *testing.T) {
 	out, err := InitAndPlanE(t, options)
 	require.NoError(t, err)
 	assert.Contains(t, out, "1 to add, 0 to change, 0 to destroy.")
-	assert.Contains(t, out, fmt.Sprintf("This plan was saved to: %s", planFilePath))
+	assert.Contains(t, out, fmt.Sprintf("Saved the plan to: %s", planFilePath))
 	assert.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
 }
 

@@ -30,6 +30,9 @@ func TestTerraformHttpExample(t *testing.T) {
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 
+	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
+	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
@@ -41,6 +44,7 @@ func TestTerraformHttpExample(t *testing.T) {
 			"aws_region":    awsRegion,
 			"instance_name": instanceName,
 			"instance_text": instanceText,
+			"instance_type": instanceType,
 		},
 	})
 

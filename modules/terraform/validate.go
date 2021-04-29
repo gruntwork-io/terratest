@@ -31,9 +31,5 @@ func InitAndValidateE(t testing.TestingT, options *Options) (string, error) {
 		return "", err
 	}
 
-	if _, err := GetE(t, options); err != nil {
-		return "", err
-	}
-
 	return ValidateE(t, options)
 }
