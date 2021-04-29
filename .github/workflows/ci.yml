@@ -43,6 +43,10 @@ jobs:
   ci-job:
     runs-on: [ubuntu-latest]
     steps:
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.15.1
+          terraform_wrapper: false  
       - name: checkout to repo
         uses: actions/checkout@v2
         with:

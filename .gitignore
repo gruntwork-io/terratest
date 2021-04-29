@@ -5,7 +5,7 @@ terraform.tfvars
 *.tfstate*
 .terragrunt
 .terragrunt-cache
-
+.terraform.lock.hcl
 # IDE files
 .idea
 .vscode

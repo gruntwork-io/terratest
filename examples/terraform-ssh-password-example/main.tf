@@ -25,7 +25,7 @@ provider "aws" {
 
 resource "aws_instance" "example_public" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
+  instance_type = var.instance_type
   user_data     = data.template_file.user_data.rendered
 
   vpc_security_group_ids = [

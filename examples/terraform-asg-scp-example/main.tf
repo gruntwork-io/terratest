@@ -26,7 +26,7 @@ provider "aws" {
 resource "aws_launch_template" "sample_launch_template" {
   name_prefix            = var.instance_name
   image_id               = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
+  instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.example.id]
   key_name               = var.key_pair_name
 }

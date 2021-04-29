@@ -58,3 +58,8 @@ variable "key_pair_name" {
   default     = ""
 }
 
+variable "instance_type" {
+  description = "The EC2 instance type to run."
+  type        = string
+  default     = "t2.micro"
+}

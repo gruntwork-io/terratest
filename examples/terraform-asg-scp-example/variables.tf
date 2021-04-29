@@ -39,3 +39,8 @@ variable "ssh_port" {
   default     = 22
 }
 
+variable "instance_type" {
+  description = "The EC2 instance type to run."
+  type        = string
+  default     = "t2.micro"
+}
