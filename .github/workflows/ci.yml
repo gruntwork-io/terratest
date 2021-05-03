@@ -40,7 +40,7 @@ on:
         default: 'false'
 
 jobs:
-  ci-job:
+  go-get-job:
     runs-on: [windows-latest]
     steps:
       - name: checkout to repo
