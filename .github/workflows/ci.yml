@@ -41,6 +41,23 @@ on:
 
 jobs:
   ci-job:
+    runs-on: [windows-latest]
+    steps:
+      - name: checkout to repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.event.inputs.repo }}
+          ref: ${{ github.event.inputs.branch }}  
+      - name: go get
+          run: |
+            $branch="${{ github.event.inputs.branch  }}"
+            $branch=$branch.Trim('refs/heads/')
+            $find="module github.com/gruntwork-io/terratest"
+            $replace="module github.com/${{ github.repository_owner }}/terratest@refs/heads/" + $branch
+            (Get-Content $file).replace($find, $replace) | Set-Content $file
+            go get github.com/${{ github.repository_owner }}/terratest/modules/azure@$branch
+          shell: pwsh            
+  ci-job:
     runs-on: [ubuntu-latest]
     steps:
       - uses: hashicorp/setup-terraform@v1
