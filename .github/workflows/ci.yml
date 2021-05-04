@@ -50,6 +50,7 @@ jobs:
           ref: ${{ github.event.inputs.branch }}  
       - name: go get
         run: |
+          $file="go.mod"
           $branch="${{ github.event.inputs.branch  }}"
           $branch=$branch.Trim('refs/heads/')
           $find="module github.com/gruntwork-io/terratest"
