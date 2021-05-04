@@ -56,6 +56,7 @@ jobs:
           $find="module github.com/gruntwork-io/terratest"
           $replace="module github.com/${{ github.repository_owner }}/terratest@refs/heads/" + $branch
           (Get-Content $file).replace($find, $replace) | Set-Content $file
+          cat go.mod
           go get github.com/${{ github.repository_owner }}/terratest/modules/azure@$branch
         shell: pwsh            
   ci-job:
