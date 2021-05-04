@@ -39,7 +39,7 @@ on:
         required: true
         default: 'false'
 
-jobs:     
+jobs:
   ci-job:
     runs-on: [ubuntu-latest]
     steps:
