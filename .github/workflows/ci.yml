@@ -39,26 +39,7 @@ on:
         required: true
         default: 'false'
 
-jobs:
-  go-get-job:
-    runs-on: [windows-latest]
-    steps:
-      - name: checkout to repo
-        uses: actions/checkout@v2
-        with:
-          repository: ${{ github.event.inputs.repo }}
-          ref: ${{ github.event.inputs.branch }}  
-      - name: go get
-        run: |
-          $file="go.mod"
-          $branch="${{ github.event.inputs.branch  }}"
-          $branch=$branch.Trim('refs/heads/')
-          $find="module github.com/gruntwork-io/terratest"
-          $replace="module github.com/${{ github.repository_owner }}/terratest@refs/heads/" + $branch
-          (Get-Content $file).replace($find, $replace) | Set-Content $file
-          cat go.mod
-          go get github.com/${{ github.repository_owner }}/terratest/modules/azure@$branch
-        shell: pwsh            
+jobs:     
   ci-job:
     runs-on: [ubuntu-latest]
     steps:
@@ -71,6 +52,10 @@ jobs:
         with:
           repository: ${{ github.event.inputs.repo }}
           ref: ${{ github.event.inputs.branch }}
+      - name: go get modules/azure
+        id: azure_module_get
+        run: |
+          go get -v -u github.com/gruntwork-io/terratest/modules/azure
       - name: install golangci-lint binary
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.31.0
