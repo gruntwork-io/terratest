@@ -11,6 +11,7 @@ env: &env
     MINIKUBE_VERSION: v1.9.2
     HELM_VERSION: v3.1.1
     KUBECONFIG: /home/circleci/.kube/config
+    BIN_BUILD_PARALLELISM: 3
 
 defaults: &defaults
   machine:
@@ -108,12 +109,14 @@ jobs:
       - run:
           command: |
             GO_ENABLED=0 build-go-binaries \
+              --parallel "$BIN_BUILD_PARALLELISM" \
               --app-name terratest_log_parser \
               --src-path ./cmd/terratest_log_parser \
               --dest-path ./cmd/bin \
               --ld-flags "-X main.VERSION=$CIRCLE_TAG -extldflags '-static'"
 
             GO_ENABLED=0 build-go-binaries \
+              --parallel "$BIN_BUILD_PARALLELISM" \
               --app-name pick-instance-type \
               --src-path ./cmd/pick-instance-type \
               --dest-path ./cmd/bin \
