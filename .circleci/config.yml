@@ -15,6 +15,7 @@ env: &env
     BIN_BUILD_PARALLELISM: 3
 
 defaults: &defaults
+  working_directory: /home/circleci/go/src/github.com/gruntwork-io/terratest
   machine:
     enabled: true
     image: "ubuntu-1604:201903-01"
