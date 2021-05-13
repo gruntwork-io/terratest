@@ -14,13 +14,13 @@
 		<testcase classname="parser" name="TestRemoveDedentedTestResultMarkersEmpty" time="0.000"></testcase>
 		<testcase classname="parser" name="TestRemoveDedentedTestResultMarkersAll" time="0.000"></testcase>
 		<testcase classname="parser" name="TestBasicExample" time="0.000">
-			<failure message="Failed" type="">integration_test.go:10: &#xA;Error Trace:&#x9;integration_test.go:10&#xA;Error:      &#x9;Expected value not to be nil.&#xA;Test:       &#x9;TestBasicExample</failure>
+			<failure message="Failed" type="">integration_test.go:10:&#xA;Error Trace:&#x9;integration_test.go:10&#xA;Error:      &#x9;Expected value not to be nil.&#xA;Test:       &#x9;TestBasicExample</failure>
 		</testcase>
 		<testcase classname="parser" name="TestPanicExample" time="0.000">
-			<failure message="Failed" type="">integration_test.go:14: &#xA;Error Trace:&#x9;integration_test.go:14&#xA;Error:      &#x9;Expected value not to be nil.&#xA;Test:       &#x9;TestPanicExample</failure>
+			<failure message="Failed" type="">integration_test.go:14:&#xA;Error Trace:&#x9;integration_test.go:14&#xA;Error:      &#x9;Expected value not to be nil.&#xA;Test:       &#x9;TestPanicExample</failure>
 		</testcase>
 		<testcase classname="parser" name="TestRealWorldExample" time="0.000">
-			<failure message="Failed" type="">integration_test.go:18: &#xA;Error Trace:&#x9;integration_test.go:18&#xA;Error:      &#x9;Expected value not to be nil.&#xA;Test:       &#x9;TestRealWorldExample</failure>
+			<failure message="Failed" type="">integration_test.go:18:&#xA;Error Trace:&#x9;integration_test.go:18&#xA;Error:      &#x9;Expected value not to be nil.&#xA;Test:       &#x9;TestRealWorldExample</failure>
 		</testcase>
 		<testcase classname="parser" name="TestGetIndent" time="0.000"></testcase>
 		<testcase classname="parser" name="TestGetTestNameFromResultLine" time="0.000"></testcase>

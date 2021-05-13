@@ -1,0 +1,4 @@
+=== RUN   TestIntegrationPanicExample
+=== PAUSE TestIntegrationPanicExample
+=== CONT  TestIntegrationPanicExample
+--- PASS: TestIntegrationPanicExample (0.00s)

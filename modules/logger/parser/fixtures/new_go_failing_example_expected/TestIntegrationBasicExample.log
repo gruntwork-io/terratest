@@ -1,0 +1,9 @@
+=== RUN   TestIntegrationBasicExample
+=== PAUSE TestIntegrationBasicExample
+=== CONT  TestIntegrationBasicExample
+=== CONT  TestIntegrationBasicExample
+    integration_test.go:57: 
+        	Error Trace:	integration_test.go:57
+        	Error:      	Should be true
+        	Test:       	TestIntegrationBasicExample
+--- FAIL: TestIntegrationBasicExample (0.00s)

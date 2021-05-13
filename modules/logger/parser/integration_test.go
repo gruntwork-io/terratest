@@ -52,17 +52,22 @@ func testExample(t *testing.T, example string) {
 	assert.True(t, DirectoryEqual(t, dir, expectedOutputDirName))
 }
 
-func TestBasicExample(t *testing.T) {
+func TestIntegrationBasicExample(t *testing.T) {
 	t.Parallel()
 	testExample(t, "basic")
 }
 
-func TestFailingExample(t *testing.T) {
+func TestIntegrationFailingExample(t *testing.T) {
 	t.Parallel()
 	testExample(t, "failing")
 }
 
-func TestPanicExample(t *testing.T) {
+func TestIntegrationPanicExample(t *testing.T) {
 	t.Parallel()
 	testExample(t, "panic")
+}
+
+func TestIntegrationNewGoExample(t *testing.T) {
+	t.Parallel()
+	testExample(t, "new_go_failing")
 }

@@ -1,6 +1,6 @@
 === RUN   TestBasicExample
 --- FAIL: TestBasicExample (0.00s)
-    integration_test.go:10: 
+    integration_test.go:10:
         	Error Trace:	integration_test.go:10
         	Error:      	Expected value not to be nil.
         	Test:       	TestBasicExample

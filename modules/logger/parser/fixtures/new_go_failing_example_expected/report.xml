@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+	<testsuite tests="3" failures="1" time="1.589" name="github.com/gruntwork-io/terratest/modules/logger/parser">
+		<properties>
+			<property name="go.version" value="go1.16.3"></property>
+		</properties>
+		<testcase classname="parser" name="TestIntegrationBasicExample" time="0.000">
+			<failure message="Failed" type="">    integration_test.go:57: </failure>
+		</testcase>
+		<testcase classname="parser" name="TestIntegrationFailingExample" time="0.000"></testcase>
+		<testcase classname="parser" name="TestIntegrationPanicExample" time="0.000"></testcase>
+	</testsuite>
+</testsuites>

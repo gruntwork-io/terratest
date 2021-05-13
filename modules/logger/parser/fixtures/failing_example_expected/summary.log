@@ -53,4 +53,5 @@
 --- PASS: TestEnsureDirectoryExistsCreatesDirectory (0.00s)
 --- PASS: TestLogCollectorCreatesAndWritesToFile (1.01s)
 --- PASS: TestGetOrCreateChannelSpawnsLogCollectorOnCreate (1.01s)
+FAIL
 FAIL	github.com/gruntwork-io/terratest/modules/logger/parser	1.020s

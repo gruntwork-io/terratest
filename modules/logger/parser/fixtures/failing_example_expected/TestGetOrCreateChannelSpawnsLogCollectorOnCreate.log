@@ -5,6 +5,4 @@ TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:15:09-07:00 
 TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:15:09-07:00 Storing logs for test TestGetOrCreateChannelSpawnsLogCollectorOnCreate to /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestEnsureDirectoryCreatesDirectory945346773/TestGetOrCreateChannelSpawnsLogCollectorOnCreate.log
 TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:15:09-07:00 Directory /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestEnsureDirectoryCreatesDirectory945346773 already exists
 TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:15:09-07:00 Channel closed for log writer of test TestGetOrCreateChannelSpawnsLogCollectorOnCreate
---- PASS: TestGetOrCreateChannelCreatesNewChannel (0.00s)
---- PASS: TestIsResultLine (0.00s)
 --- PASS: TestGetOrCreateChannelSpawnsLogCollectorOnCreate (1.01s)
