@@ -1,5 +1,4 @@
 env: &env
-  working_directory: /home/circleci/go/src/github.com/gruntwork-io/terratest
   environment:
     GRUNTWORK_INSTALLER_VERSION: v0.0.36
     MODULE_CI_VERSION: v0.33.3
@@ -110,6 +109,11 @@ jobs:
       # binaries to GitHub as release assets.
       - run:
           command: |
+            # For some reason, the circleci environment requires additional module dependencies that are not captured by
+            # our Linux or Mac OSX dev environments. We workaround this by running `go mod tidy` in the CircleCI
+            # environment so it pulls in what it needs.
+            go mod tidy
+
             GO_ENABLED=0 build-go-binaries \
               --parallel "$BIN_BUILD_PARALLELISM" \
               --app-name terratest_log_parser \
