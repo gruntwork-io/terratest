@@ -2,7 +2,7 @@
 <testsuites>
 	<testsuite tests="55" failures="3" time="1.020" name="github.com/gruntwork-io/terratest/modules/logger/parser">
 		<properties>
-			<property name="go.version" value="go1.14"></property>
+			<property name="go.version" value="go1.16.3"></property>
 		</properties>
 		<testcase classname="parser" name="TestStackPush" time="0.000"></testcase>
 		<testcase classname="parser" name="TestStackPop" time="0.000"></testcase>
