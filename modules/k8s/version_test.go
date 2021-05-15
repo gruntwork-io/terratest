@@ -9,17 +9,36 @@
 package k8s
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+type KubectlVersion struct {
+	ServerVersion struct {
+		GitVersion string `json:"gitVersion"`
+	} `json:"serverVersion"`
+}
 
 func TestGetKubernetesClusterVersionE(t *testing.T) {
 	t.Parallel()
 
 	kubernetesClusterVersion, err := GetKubernetesClusterVersionE(t)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, kubernetesClusterVersion)
+	require.NoError(t, err)
+
+	options := NewKubectlOptions("", "", "")
+	kubernetesClusterVersionFromKubectl, err := RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
+	require.NoError(t, err)
+
+	var kctlClusterVersion KubectlVersion
+	require.NoError(
+		t,
+		json.Unmarshal([]byte(kubernetesClusterVersionFromKubectl), &kctlClusterVersion),
+	)
+
+	assert.EqualValues(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
 }
 
 func TestGetKubernetesClusterVersionWithOptionsE(t *testing.T) {
@@ -27,6 +46,16 @@ func TestGetKubernetesClusterVersionWithOptionsE(t *testing.T) {
 
 	options := NewKubectlOptions("", "", "")
 	kubernetesClusterVersion, err := GetKubernetesClusterVersionWithOptionsE(t, options)
-	assert.NoError(t, err)
-	assert.NotEmpty(t, kubernetesClusterVersion)
+	require.NoError(t, err)
+
+	kubernetesClusterVersionFromKubectl, err := RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
+	require.NoError(t, err)
+
+	var kctlClusterVersion KubectlVersion
+	require.NoError(
+		t,
+		json.Unmarshal([]byte(kubernetesClusterVersionFromKubectl), &kctlClusterVersion),
+	)
+
+	assert.EqualValues(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
 }
