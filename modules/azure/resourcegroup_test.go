@@ -22,3 +22,13 @@ func TestResourceGroupExists(t *testing.T) {
 	_, err := ResourceGroupExistsE(resourceGroupName, "")
 	require.Error(t, err)
 }
+
+func TestGetAResourceGroup(t *testing.T) {
+	t.Parallel()
+
+	resGroupName := ""
+	subscriptionID := ""
+
+	_, err := GetAResourceGroup(t, resGroupName, subscriptionID)
+	require.Error(t, err)
+}

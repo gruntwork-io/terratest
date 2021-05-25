@@ -2,9 +2,10 @@ package azure
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2020-06-01/resources"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,15 +32,8 @@ func ResourceGroupExistsE(resourceGroupName, subscriptionID string) (bool, error
 
 // GetResourceGroupE gets a resource group within a subscription
 func GetResourceGroupE(resourceGroupName, subscriptionID string) (bool, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return false, err
-	}
-	client, err := CreateResourceGroupClientE(subscriptionID)
-	if err != nil {
-		return false, err
-	}
-	rg, err := client.Get(context.Background(), resourceGroupName)
+
+	rg, err := GetAResourceGroupE(resourceGroupName, subscriptionID)
 	if err != nil {
 		return false, err
 	}
@@ -60,4 +54,48 @@ func GetResourceGroupClientE(subscriptionID string) (*resources.GroupsClient, er
 	}
 	resourceGroupClient.Authorizer = *authorizer
 	return &resourceGroupClient, nil
+}
+
+// GetAResourceGroup returns a resource group within a subscription
+// This function would fail the test if there is an error.
+func GetAResourceGroup(t *testing.T, resourceGroupName string, subscriptionID string) *resources.Group {
+	rg, err := GetAResourceGroupE(resourceGroupName, subscriptionID)
+	require.NoError(t, err)
+	return rg
+}
+
+// GetAResourceGroupE gets a resource group within a subscription
+func GetAResourceGroupE(resourceGroupName, subscriptionID string) (*resources.Group, error) {
+	client, err := CreateResourceGroupClientE(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	rg, err := client.Get(context.Background(), resourceGroupName)
+	if err != nil {
+		return nil, err
+	}
+	return &rg, nil
+}
+
+// ListResourceGroupsByTag returns a resource group list within a subscription based on a tag key
+// This function would fail the test if there is an error.
+func ListResourceGroupsByTag(t *testing.T, tag, subscriptionID string) []resources.Group {
+	rg, err := ListResourceGroupsByTagE(tag, subscriptionID)
+	require.NoError(t, err)
+	return rg
+}
+
+// ListResourceGroupsByTagE returns a resource group list within a subscription based on a tag key
+func ListResourceGroupsByTagE(tag string, subscriptionID string) ([]resources.Group, error) {
+	client, err := CreateResourceGroupClientE(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	rg, err := client.List(context.Background(), fmt.Sprintf("tagName eq '%s'", tag), nil)
+	if err != nil {
+		return nil, err
+	}
+	return rg.Values(), nil
 }
