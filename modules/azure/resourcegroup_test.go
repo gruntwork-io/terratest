@@ -27,8 +27,7 @@ func TestGetAResourceGroup(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
-	subscriptionID := ""
 
-	_, err := GetAResourceGroup(t, resGroupName, subscriptionID)
+	_, err := GetAResourceGroup(t, resGroupName, "")
 	require.Error(t, err)
 }
