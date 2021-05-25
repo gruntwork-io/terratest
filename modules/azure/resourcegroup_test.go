@@ -26,8 +26,8 @@ func TestResourceGroupExists(t *testing.T) {
 func TestGetAResourceGroup(t *testing.T) {
 	t.Parallel()
 
-	resGroupName := ""
+	resourceGroupName := "fakeResourceGroupName"
 
-	_, err := GetAResourceGroup(t, resGroupName, "")
+	_, err := GetAResourceGroupE(resourceGroupName, "")
 	require.Error(t, err)
 }
