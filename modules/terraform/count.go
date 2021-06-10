@@ -21,7 +21,7 @@ const (
 	applyRegexp             = `Apply complete! Resources: (\d+) added, (\d+) changed, (\d+) destroyed\.`
 	destroyRegexp           = `Destroy complete! Resources: (\d+) destroyed\.`
 	planWithChangesRegexp   = `(\033\[1m)?Plan:(\033\[0m)? (\d+) to add, (\d+) to change, (\d+) to destroy\.`
-	planWithNoChangesRegexp = `No changes\. Infrastructure is up-to-date\.`
+	planWithNoChangesRegexp = `No changes\. (Infrastructure is up-to-date)|(Your infrastructure matches the configuration)\.`
 )
 
 const getResourceCountErrMessage = "Can't parse Terraform output"
