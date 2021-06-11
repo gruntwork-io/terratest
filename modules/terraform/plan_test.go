@@ -41,7 +41,7 @@ func TestInitAndPlanWithNoError(t *testing.T) {
 	InitAndApply(t, options)
 	out, err := PlanE(t, options)
 	require.NoError(t, err)
-	require.Contains(t, out, "No changes. Infrastructure is up-to-date.")
+	require.Contains(t, out, "No changes.")
 }
 
 func TestInitAndPlanWithOutput(t *testing.T) {
