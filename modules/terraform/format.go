@@ -9,13 +9,15 @@ import (
 	"github.com/gruntwork-io/terratest/modules/collections"
 )
 
+const runAllCmd = "run-all"
+
 // TerraformCommandsWithLockSupport is a list of all the Terraform commands that
 // can obtain locks on Terraform state
 var TerraformCommandsWithLockSupport = []string{
 	"plan",
+	"plan-all",
 	"apply",
 	"apply-all",
-	"run-all",
 	"destroy",
 	"destroy-all",
 	"init",
@@ -39,6 +41,12 @@ var TerraformCommandsWithPlanFileSupport = []string{
 func FormatArgs(options *Options, args ...string) []string {
 	var terraformArgs []string
 	commandType := args[0]
+	// If the user is trying to run with run-all, then we need to make sure the command based args are based on the
+	// actual terraform command. E.g., we want to base the logic on `plan` when `run-all plan` is passed in, not
+	// `run-all`.
+	if commandType == runAllCmd {
+		commandType = args[1]
+	}
 	lockSupported := collections.ListContains(TerraformCommandsWithLockSupport, commandType)
 	planFileSupported := collections.ListContains(TerraformCommandsWithPlanFileSupport, commandType)
 

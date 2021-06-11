@@ -259,3 +259,22 @@ func TestTryToConvertToGenericMap(t *testing.T) {
 		assert.Equal(t, testCase.expectedIsMap, actualIsMap, "Value: %v", testCase.value)
 	}
 }
+
+func TestFormatArgsAppliesLockCorrectly(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		command  []string
+		expected []string
+	}{
+		{[]string{"plan"}, []string{"plan", "-lock=false"}},
+		{[]string{"validate"}, []string{"validate"}},
+		{[]string{"plan-all"}, []string{"plan-all", "-lock=false"}},
+		{[]string{"run-all", "validate"}, []string{"run-all", "validate"}},
+		{[]string{"run-all", "plan"}, []string{"run-all", "plan", "-lock=false"}},
+	}
+
+	for _, testCase := range testCases {
+		assert.Equal(t, testCase.expected, FormatArgs(&Options{}, testCase.command...))
+	}
+}
