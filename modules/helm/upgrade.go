@@ -34,7 +34,6 @@ func UpgradeE(t testing.TestingT, options *Options, chart string, releaseName st
 			args = append(args, upgradeArgs...)
 		}
 	}
-	args = append(args, getNamespaceArgs(options)...)
 	args, err = getValuesArgsE(t, options, args...)
 	if err != nil {
 		return err

@@ -65,6 +65,7 @@ func RunHelmCommandAndGetStdOutE(t testing.TestingT, options *Options, cmd strin
 func prepareHelmCommand(t testing.TestingT, options *Options, cmd string, additionalArgs ...string) shell.Command {
 	args := []string{cmd}
 	args = getCommonArgs(options, args...)
+	args = append(args, getNamespaceArgs(options)...)
 	args = append(args, additionalArgs...)
 
 	helmCmd := shell.Command{

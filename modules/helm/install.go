@@ -37,7 +37,6 @@ func InstallE(t testing.TestingT, options *Options, chart string, releaseName st
 			args = append(args, installArgs...)
 		}
 	}
-	args = append(args, getNamespaceArgs(options)...)
 	if options.Version != "" {
 		args = append(args, "--version", options.Version)
 	}
