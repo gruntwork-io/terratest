@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// AppExistsE indicates whether the specified application exists.
+// AppExists indicates whether the specified application exists.
 // This function would fail the test if there is an error.
 func AppExists(t *testing.T, appName string, resourceGroupName string, subscriptionID string) bool {
 	exists, err := AppExistsE(appName, resourceGroupName, subscriptionID)
