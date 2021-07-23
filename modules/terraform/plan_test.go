@@ -84,6 +84,22 @@ func TestInitAndPlanWithPlanFile(t *testing.T) {
 	assert.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
 }
 
+func TestInitAndPlanAndShowWithStructNoLogTempPlanFile(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+		Vars: map[string]interface{}{
+			"cnt": 1,
+		},
+	}
+	planStruct := InitAndPlanAndShowWithStructNoLogTempPlanFile(t, options)
+	assert.Equal(t, 1, len(planStruct.ResourceChangesMap))
+}
+
 func TestPlanWithExitCodeWithNoChanges(t *testing.T) {
 	t.Parallel()
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-no-error", t.Name())

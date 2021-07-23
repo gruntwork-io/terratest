@@ -2,7 +2,10 @@ package terraform
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -57,6 +60,22 @@ func InitAndPlanAndShowE(t testing.TestingT, options *Options) (string, error) {
 		return "", err
 	}
 	return ShowE(t, options)
+}
+
+// InitAndPlanAndShowWithStructNoLog runs InitAndPlanAndShowWithStruct without logging and also by allocating a
+// temporary plan file destination that is discarded before returning the struct.
+func InitAndPlanAndShowWithStructNoLogTempPlanFile(t testing.TestingT, options *Options) *PlanStruct {
+	oldLogger := options.Logger
+	options.Logger = logger.Discard
+	defer func() { options.Logger = oldLogger }()
+
+	tmpFile, err := ioutil.TempFile("", "terratest-plan-file-")
+	require.NoError(t, err)
+	require.NoError(t, tmpFile.Close())
+	defer require.NoError(t, os.Remove(tmpFile.Name()))
+
+	options.PlanFilePath = tmpFile.Name()
+	return InitAndPlanAndShowWithStruct(t, options)
 }
 
 // InitAndPlanAndShowWithStruct runs terraform init, then terraform plan, and then terraform show with the given
