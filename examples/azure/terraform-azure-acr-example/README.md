@@ -1,4 +1,4 @@
-# Terraform Azure Example
+# Terraform Azure Container Registry Example
 
 This folder contains a Terraform module that deploys resources in [Azure](https://azure.microsoft.com/) to demonstrate
 how you can use Terratest to write automated tests for your Azure Terraform code. This module deploys an [Azure Container Registry](https://azure.microsoft.com/en-us/services/container-registry/).
@@ -28,7 +28,7 @@ it should be free, but you are completely responsible for all Azure charges.
 1. Configure your Azure credentials using one of the [supported methods for Azure CLI
    tools](https://docs.microsoft.com/en-us/cli/azure/azure-cli-configuration?view=azure-cli-latest)
 1. Install [Terraform](https://www.terraform.io/) and make sure it's on your `PATH`
-1. Configure your Terratest [Go test environment](../README.md) 
+1. Configure your Terratest [Go test environment](../README.md)
 1. `cd test/azure`
 1. `go build terraform_azure_acr_example_test.go`
 1. `go test -v -timeout 60m -tags azure -run TestTerraformAzureACRExample`
