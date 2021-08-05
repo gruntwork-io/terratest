@@ -20,9 +20,9 @@ func TestEcrRepo(t *testing.T) {
 	defer DeleteECRRepo(t, region, repo1)
 	require.NoError(t, err)
 
-	assert.Equal(t, "terratest", aws.StringValue(repo1.RepositoryName))
+	assert.Equal(t, ecrRepoName, aws.StringValue(repo1.RepositoryName))
 
 	repo2, err := GetECRRepoE(t, region, ecrRepoName)
 	require.NoError(t, err)
-	assert.Equal(t, "terratest", aws.StringValue(repo2.RepositoryName))
+	assert.Equal(t, ecrRepoName, aws.StringValue(repo2.RepositoryName))
 }
