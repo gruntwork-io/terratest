@@ -53,6 +53,14 @@ install_gruntwork_utils: &install_gruntwork_utils
     sudo ln -s /usr/local/go/bin/go /usr/bin/go
     echo "The installed version of Go is now $(go version)"
 
+install_docker_buildx: &install_docker_buildx
+  name: install docker buildx
+  command: |
+    curl -sLO https://github.com/docker/buildx/releases/download/v0.6.1/buildx-v0.6.1.linux-amd64
+    mkdir -p ~/.docker/cli-plugins
+    mv buildx-v0.6.1.linux-amd64 ~/.docker/cli-plugins/docker-buildx
+    chmod a+x ~/.docker/cli-plugins/docker-buildx
+
 configure_environment_for_gcp: &configure_environment_for_gcp
   name: configure environment for gcp
   command: |
@@ -143,6 +151,8 @@ jobs:
 
       - run:
           <<: *install_gruntwork_utils
+      - run:
+          <<: *install_docker_buildx
 
       # The weird way you have to set PATH in Circle 2.0
       - run: echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
