@@ -70,7 +70,6 @@ install_docker_buildx: &install_docker_buildx
 
     # Verify buildx is available
     docker buildx --help
-    exit 1
 
 configure_environment_for_gcp: &configure_environment_for_gcp
   name: configure environment for gcp
