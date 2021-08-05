@@ -15,14 +15,14 @@ func TestEcrRepo(t *testing.T) {
 	t.Parallel()
 
 	region := GetRandomStableRegion(t, nil, nil)
-	repo1, err := CreateECRRepoE(t, region, fmt.Sprintf("terratest%s", strings.ToLower(random.UniqueId())))
+	ecrRepoName := fmt.Sprintf("terratest%s", strings.ToLower(random.UniqueId()))
+	repo1, err := CreateECRRepoE(t, region, ecrRepoName)
 	defer DeleteECRRepo(t, region, repo1)
-
 	require.NoError(t, err)
+
 	assert.Equal(t, "terratest", aws.StringValue(repo1.RepositoryName))
 
-	repo2, err := GetECRRepoE(t, region, "terratest")
-
+	repo2, err := GetECRRepoE(t, region, ecrRepoName)
 	require.NoError(t, err)
 	assert.Equal(t, "terratest", aws.StringValue(repo2.RepositoryName))
 }
