@@ -17,6 +17,13 @@ env: &env
 defaults: &defaults
   machine:
     enabled: true
+    image: "ubuntu-2004:202107-02"
+  <<: *env
+
+# minikube setup requires ubuntu16.04
+minikube_defaults: &minikube_defaults
+  machine:
+    enabled: true
     image: "ubuntu-1604:201903-01"
   <<: *env
 
@@ -60,6 +67,10 @@ install_docker_buildx: &install_docker_buildx
     mkdir -p ~/.docker/cli-plugins
     mv buildx-v0.6.1.linux-amd64 ~/.docker/cli-plugins/docker-buildx
     chmod a+x ~/.docker/cli-plugins/docker-buildx
+
+    # Verify buildx is available
+    docker buildx --help
+    exit 1
 
 configure_environment_for_gcp: &configure_environment_for_gcp
   name: configure environment for gcp
@@ -219,7 +230,7 @@ jobs:
           path: /tmp/logs
 
   kubernetes_test:
-    <<: *defaults
+    <<: *minikube_defaults
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -255,7 +266,7 @@ jobs:
 
 
   helm_test:
-    <<: *defaults
+    <<: *minikube_defaults
     steps:
       - attach_workspace:
           at: /home/circleci
