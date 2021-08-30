@@ -13,7 +13,7 @@ how you can use Terratest to write automated tests for your Azure Virtual Machin
   - [Public Address](https://docs.microsoft.com/azure/virtual-network/public-ip-addresses) with the name specified in the `public_ip_name` variable.
   - [Network Interface](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface) with the name specified in the `network_interface_name` variable.
 
-Check out [test/azure/terraform_azure_vm_test.go](/test/azure/terraform_azure_vm_test.go) to see how you can write
+Check out [test/azure/terraform_azure_vm_test.go](/test/azure/terraform_azure_vm_example_test.go) to see how you can write
 automated tests for this module.
 
 Note that the Virtual Machine module creates a Microsoft Windows Server Image with a managed disk, availability set and network configuration for demonstration purposes.
