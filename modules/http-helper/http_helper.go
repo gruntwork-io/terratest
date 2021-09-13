@@ -155,9 +155,9 @@ func HTTPDoE(
 ) (int, string, error) {
 	logger.Logf(t, "Making an HTTP %s call to URL %s", method, url)
 
-	tr := &http.Transport{
-		TLSClientConfig: tlsConfig,
-	}
+	// Set HTTP client transport config
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr.TLSClientConfig = tlsConfig
 
 	client := http.Client{
 		// By default, Go does not impose a timeout, so an HTTP connection attempt can hang for a LONG time.
