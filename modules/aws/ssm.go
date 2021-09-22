@@ -156,7 +156,6 @@ func WaitForSsmInstance(t testing.TestingT, awsRegion, instanceID string, timeou
 }
 
 // CheckSsmCommand checks that you can run the given command on the given instance through AWS SSM.
-// Deprecated
 func CheckSsmCommand(t testing.TestingT, awsRegion, instanceID, command string, timeout time.Duration) *CommandOutput {
 	return CheckSsmCommandWithDocument(t, awsRegion, instanceID, command, "AWS-RunShellScript", timeout)
 }
@@ -169,13 +168,11 @@ type CommandOutput struct {
 }
 
 // CheckSsmCommandE checks that you can run the given command on the given instance through AWS SSM. Returns the result and an error if one occurs.
-// Deprecated
 func CheckSsmCommandE(t testing.TestingT, awsRegion, instanceID, command string, timeout time.Duration) (*CommandOutput, error) {
 	return CheckSsmCommandWithDocumentE(t, awsRegion, instanceID, command, "AWS-RunShellScript", timeout)
 }
 
-// CheckSsmCommandE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client. Returns the result and an error if one occurs.
-// Deprecated
+// CheckSSMCommandWithClientE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client. Returns the result and an error if one occurs.
 func CheckSSMCommandWithClientE(t testing.TestingT, client *ssm.SSM, instanceID, command string, timeout time.Duration) (*CommandOutput, error) {
 	return CheckSSMCommandWithClientWithDocumentE(t, client, instanceID, command, "AWS-RunShellScript", timeout)
 }
@@ -199,7 +196,7 @@ func CheckSsmCommandWithDocumentE(t testing.TestingT, awsRegion, instanceID, com
 	return CheckSSMCommandWithClientWithDocumentE(t, client, instanceID, command, commandDocName, timeout)
 }
 
-// CheckSsmCommandE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client with specified Command Doc type. Returns the result and an error if one occurs.
+// CheckSSMCommandWithClientWithDocumentE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client with specified Command Doc type. Returns the result and an error if one occurs.
 func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.SSM, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
 
 	timeBetweenRetries := 2 * time.Second
