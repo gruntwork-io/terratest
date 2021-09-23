@@ -51,6 +51,21 @@
     - name: Kubernetes Hello, World
       url: https://github.com/gruntwork-io/terratest/tree/master/examples/kubernetes-hello-world-example
 
+- id: terragrunt-hello-world
+  name: Terragrunt Example
+  image: /assets/img/logos/terragrunt-logo.png
+  files:
+    - url: /examples/terragrunt-example/terragrunt.hcl
+      id: terragrunt_code
+    - url: /examples/terragrunt-example/main.tf
+      id: terraform_code
+    - url: /test/terragrunt_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Terragrunt
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terragrunt-example
+
 - id: aws-hello-world
   name: AWS Hello, World Example
   image: /assets/img/logos/aws-logo.png
