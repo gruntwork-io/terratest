@@ -1,11 +1,5 @@
-terraform {
-  # This module is now only being tested with Terraform 1.0.x. However, to make upgrading easier, we are setting
-  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
-  # forwards compatible with 1.0.x code.
-  required_version = ">= 0.12.26"
-}
-
 module "instance_types" {
+  # website::tag::1:: We expect this to fail the OPA check since it is sourcing the module locally and not from gruntwork-io GitHub.
   source     = "../pass"
   aws_region = var.aws_region
 }

@@ -24,6 +24,7 @@ variety of helper functions and patterns for common infrastructure testing tasks
 - Working with Azure APIs
 - Working with GCP APIs
 - Working with Kubernetes APIs
+- Enforcing policies with OPA
 - Testing Helm Charts
 - Making HTTP requests
 - Running shell commands

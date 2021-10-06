@@ -12,10 +12,13 @@
 # }
 package enforce_source
 
+
+# website::tag::1:: Only define the allow variable and set to true if the violation set is empty.
 allow = true {
     count(violation) == 0
 }
 
+# website::tag::1:: Add modules with module_label to the violation set if the source attribute does not start with a string indicating it came from gruntwork-io GitHub org.
 violation[module_label] {
     some module_label, i
     startswith(input.module[module_label][i].source, "git::git@github.com:gruntwork-io") == false

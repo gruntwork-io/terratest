@@ -109,6 +109,23 @@
     - name: Terraform Azure Example
       url: https://github.com/gruntwork-io/terratest/tree/master/examples/azure/terraform-azure-example
 
+- id: opa-terraform
+  name: OPA Terraform Example
+  image: /assets/img/logos/opa-logo.png
+  files:
+    - url: /examples/terraform-opa-example/pass/main.tf
+      id: pass_terraform_main_code
+    - url: /examples/terraform-opa-example/fail/main.tf
+      id: fail_terraform_main_code
+    - url: /examples/terraform-opa-example/policy/enforce_source.rego
+      id: policy_main_code
+    - url: /test/terraform_opa_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Terraform OPA Example
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terraform-opa-example
+
 - id: client-factory
   name: Azure Client Factory
   display_in_examples: false
