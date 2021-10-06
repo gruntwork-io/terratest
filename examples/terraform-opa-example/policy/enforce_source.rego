@@ -1,5 +1,7 @@
-# Enforces that all module blocks source the module from the gruntwork-io github repo on the json representation of the
-# terraform source files. A module block in the json representation looks like the following:
+# An example rego policy of how to enforce that all module blocks in terraform json representation source the module
+# from the gruntwork-io github repo on the json representation of the terraform source files. A module block in the json
+# representation looks like the
+# following:
 #
 # {
 #   "module": {
