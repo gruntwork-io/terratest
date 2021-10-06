@@ -49,7 +49,9 @@ func OPAEvalE(
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tmpDir)
+	if !opaEvalOptions.DebugKeepTempFiles {
+		defer os.RemoveAll(tmpDir)
+	}
 
 	// Convert all the found tf files to json format so OPA works.
 	jsonFiles := make([]string, len(tfFiles))

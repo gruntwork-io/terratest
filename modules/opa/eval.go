@@ -21,6 +21,11 @@ type EvalOptions struct {
 
 	// Set a logger that should be used. See the logger package for more info.
 	Logger *logger.Logger
+
+	// The following options can be used to change the behavior of the related functions for debuggability.
+
+	// When true, keep any temp files and folders that are created for the purpose of running opa eval.
+	DebugKeepTempFiles bool
 }
 
 // FailMode signals whether `opa eval` should fail when the query returns an undefined value (FailUndefined), a
