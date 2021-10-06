@@ -10,6 +10,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/opa"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -111,6 +112,51 @@ func cleanName(originalName string) string {
 // Note that we have opted to place the ValidateAllTerraformModules function here instead of in the terraform package
 // to avoid import cycling
 func ValidateAllTerraformModules(t *go_test.T, opts *ValidationOptions) {
+	runValidateOnAllTerraformModules(
+		t,
+		opts,
+		func(t *go_test.T, fileType ValidateFileType, tfOpts *terraform.Options) {
+			if fileType == TG {
+				tfOpts.TerraformBinary = "terragrunt"
+				// First call init and terraform validate
+				terraform.InitAndValidate(t, tfOpts)
+				// Next, call terragrunt validate-inputs which will catch mis-aligned inputs provided via Terragrunt
+				terraform.ValidateInputs(t, tfOpts)
+			} else if fileType == TF {
+				terraform.InitAndValidate(t, tfOpts)
+			}
+		},
+	)
+}
+
+// OPAEvalAllTerraformModules automatically finds all folders specified in RootDir that contain .tf files and runs
+// OPAEval in all of them. The behavior of this function is similar to ValidateAllTerraformModules. Refer to the docs of
+// that function for more details.
+func OPAEvalAllTerraformModules(
+	t *go_test.T,
+	opts *ValidationOptions,
+	opaEvalOpts *opa.EvalOptions,
+	resultQuery string,
+) {
+	if opts.FileType != TF {
+		t.Fatalf("OPAEvalAllTerraformModules currently only works with Terraform modules")
+	}
+	runValidateOnAllTerraformModules(
+		t,
+		opts,
+		func(t *go_test.T, _ ValidateFileType, tfOpts *terraform.Options) {
+			terraform.OPAEval(t, tfOpts, opaEvalOpts, resultQuery)
+		},
+	)
+}
+
+// runValidateOnAllTerraformModules main driver for ValidateAllTerraformModules and OPAEvalAllTerraformModules. Refer to
+// the function docs of ValidateAllTerraformModules for more details.
+func runValidateOnAllTerraformModules(
+	t *go_test.T,
+	opts *ValidationOptions,
+	validationFunc func(t *go_test.T, fileType ValidateFileType, tfOps *terraform.Options),
+) {
 	dirsToValidate, readErr := FindTerraformModulePathsInRootE(opts)
 	require.NoError(t, readErr)
 
@@ -133,16 +179,7 @@ func ValidateAllTerraformModules(t *go_test.T, opts *ValidationOptions) {
 			// Run Terraform init and terraform validate on the test folder that was copied to /tmp
 			// to avoid any potential conflicts with tests that may not use the same copy to /tmp behavior
 			tfOpts := &terraform.Options{TerraformDir: testFolder}
-			if opts.FileType == TG {
-				tfOpts.TerraformBinary = "terragrunt"
-				// First call init and terraform validate
-				terraform.InitAndValidate(t, tfOpts)
-				// Next, call terragrunt validate-inputs which will catch mis-aligned inputs provided via Terragrunt
-				terraform.ValidateInputs(t, tfOpts)
-			} else if opts.FileType == TF {
-				terraform.InitAndValidate(t, tfOpts)
-			}
-
+			validationFunc(t, opts.FileType, tfOpts)
 		})
 	}
 }
