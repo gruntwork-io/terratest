@@ -2,10 +2,13 @@
 package files
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mattn/go-zglob"
 )
 
 // FileExists returns true if the given file exists.
@@ -212,4 +215,24 @@ func copySymLink(source string, destination string) error {
 	}
 
 	return nil
+}
+
+// FindTerraformSourceFilesInDir given a directory path, finds all the terraform source files contained in it. This will
+// recursively search subdirectories, but will ignore any hidden files (which in turn ignores terraform data dirs like
+// .terraform folder).
+func FindTerraformSourceFilesInDir(dirPath string) ([]string, error) {
+	pattern := fmt.Sprintf("%s/**/*.tf", dirPath)
+	matches, err := zglob.Glob(pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	tfFiles := []string{}
+	for _, match := range matches {
+		// Don't include hidden .terraform directories when finding paths to validate
+		if !PathContainsHiddenFileOrFolder(match) {
+			tfFiles = append(tfFiles, match)
+		}
+	}
+	return tfFiles, nil
 }
