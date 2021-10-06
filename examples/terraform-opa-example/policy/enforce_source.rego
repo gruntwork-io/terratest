@@ -2,7 +2,7 @@
 # terraform source files. A module block in the json representation looks like the following:
 #
 # {
-#   "modules": {
+#   "module": {
 #     "MODULE_LABEL": [{
 #       #BLOCK_CONTENT
 #     }]
