@@ -54,9 +54,10 @@ install_gruntwork_utils: &install_gruntwork_utils
       --go-version NONE
 
     # Install OPA
+    echo "Installing OPA version ${OPA_VERSION}"
     curl -sLO "https://github.com/open-policy-agent/opa/releases/download/${OPA_VERSION}/opa_linux_amd64_static"
     chmod +x ./opa_linux_amd64_static
-    sudo mv ./opa_linux_amd64_static /usr/local/bin
+    sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
 
     # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
     echo "Installing Go version $version"
