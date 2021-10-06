@@ -61,7 +61,7 @@ func OPAEvalE(
 		tfFileBaseName := strings.TrimSuffix(tfFileBase, filepath.Ext(tfFileBase))
 		outPath := filepath.Join(tmpDir, tfFileBaseName+".json")
 		tfOptions.Logger.Logf(t, "Converting %s to json %s", tfFile, outPath)
-		if err := hclToJSON(tfFile, outPath); err != nil {
+		if err := HCLFileToJSONFile(tfFile, outPath); err != nil {
 			errorsOccurred = multierror.Append(errorsOccurred, err)
 		}
 		jsonFiles[i] = outPath
@@ -74,14 +74,16 @@ func OPAEvalE(
 	return opa.EvalE(t, opaEvalOptions, jsonFiles, resultQuery)
 }
 
-func hclToJSON(origPath, targetPath string) error {
-	fileBytes, err := ioutil.ReadFile(origPath)
+// HCLFileToJSONFile is a function that takes a path containing HCL code, and converts it to JSON representation and
+// writes out the contents to the given path.
+func HCLFileToJSONFile(hclPath, jsonOutPath string) error {
+	fileBytes, err := ioutil.ReadFile(hclPath)
 	if err != nil {
 		return err
 	}
-	converted, err := convert.Bytes(fileBytes, origPath, convert.Options{})
+	converted, err := convert.Bytes(fileBytes, hclPath, convert.Options{})
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(targetPath, converted, 0600)
+	return ioutil.WriteFile(jsonOutPath, converted, 0600)
 }
