@@ -52,6 +52,7 @@ func OPAEvalE(
 	if !opaEvalOptions.DebugKeepTempFiles {
 		defer os.RemoveAll(tmpDir)
 	}
+	tfOptions.Logger.Logf(t, "Using temporary folder %s for json representation of terraform module %s", tmpDir, tfOptions.TerraformDir)
 
 	// Convert all the found tf files to json format so OPA works.
 	jsonFiles := make([]string, len(tfFiles))
