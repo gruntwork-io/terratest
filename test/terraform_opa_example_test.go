@@ -42,8 +42,11 @@ func TestOPAEvalTerraformModuleFailsCheck(t *testing.T) {
 	opaOpts := &opa.EvalOptions{
 		FailMode: opa.FailUndefined,
 		RulePath: policyPath,
+
+		// website::tag::6:: For failure testing, enable debug mode so that it shows more detailed outputs when a file fails the check. You can use this when a test is failing to understand what part of the check caused the failure.
+		DebugQueryDataOnError: true,
 	}
 
-	// website::tag::6:: Here we expect the checks to fail, so we use `OPAEvalE` to check the error.
+	// website::tag::7:: Here we expect the checks to fail, so we use `OPAEvalE` to check the error.
 	require.Error(t, terraform.OPAEvalE(t, tfOpts, opaOpts, "data.enforce_source.allow"))
 }

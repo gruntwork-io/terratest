@@ -1,6 +1,8 @@
 package opa
 
 import (
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -26,6 +28,9 @@ type EvalOptions struct {
 
 	// When true, keep any temp files and folders that are created for the purpose of running opa eval.
 	DebugKeepTempFiles bool
+
+	// When true, rerun the opa check on the same file and query all elements on error.
+	DebugQueryDataOnError bool
 }
 
 // FailMode signals whether `opa eval` should fail when the query returns an undefined value (FailUndefined), a
@@ -82,13 +87,23 @@ func asyncEval(
 	cmd := shell.Command{
 		Command: "opa",
 		Args:    formatOPAEvalArgs(options, jsonFilePath, resultQuery),
-		Logger:  options.Logger,
+
+		// Do not log output from shell package so we can log the full json without breaking it up. This is ok, because
+		// opa eval is typically very quick.
+		Logger: logger.Discard,
 	}
-	err := shell.RunCommandE(t, cmd)
+	err := runCommandWithFullLoggingE(t, options.Logger, cmd)
+	ruleBasePath := filepath.Base(options.RulePath)
 	if err == nil {
-		options.Logger.Logf(t, "opa eval passed on file %s", jsonFilePath)
+		options.Logger.Logf(t, "opa eval passed on file %s (policy %s; query %s)", jsonFilePath, ruleBasePath, resultQuery)
 	} else {
-		options.Logger.Logf(t, "Failed opa eval on file %s", jsonFilePath)
+		options.Logger.Logf(t, "Failed opa eval on file %s (policy %s; query %s)", jsonFilePath, ruleBasePath, resultQuery)
+		if options.DebugQueryDataOnError {
+			options.Logger.Logf(t, "DEBUG: rerunning opa eval to query for full data.")
+			cmd.Args = formatOPAEvalArgs(options, jsonFilePath, "data")
+			// We deliberately ignore the error here as we want to only return the original error. This command rerun is
+			runCommandWithFullLoggingE(t, options.Logger, cmd)
+		}
 	}
 	errChan <- err
 }
@@ -113,4 +128,13 @@ func formatOPAEvalArgs(options *EvalOptions, jsonFilePath string, resultQuery st
 		}...,
 	)
 	return args
+}
+
+// runCommandWithFullLogging will log the command output in its entirety with buffering. This avoids breaking up the
+// logs when commands are run concurrently. This is a private function used in the context of opa only because opa runs
+// very quickly, and the output of opa is hard to parse if it is broken up by interleaved logs.
+func runCommandWithFullLoggingE(t testing.TestingT, logger *logger.Logger, cmd shell.Command) error {
+	output, err := shell.RunCommandAndGetOutputE(t, cmd)
+	logger.Logf(t, "Output of command `%s %s`:\n%s", cmd.Command, strings.Join(cmd.Args, " "), output)
+	return err
 }
