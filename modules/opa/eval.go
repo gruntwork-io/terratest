@@ -29,8 +29,10 @@ type EvalOptions struct {
 	// When true, keep any temp files and folders that are created for the purpose of running opa eval.
 	DebugKeepTempFiles bool
 
-	// When true, rerun the opa check on the same file and query all elements on error.
-	DebugQueryDataOnError bool
+	// When true, disable the functionality where terratest reruns the opa check on the same file and query all elements
+	// on error. By default, terratest will rerun the opa eval call with `data` query so you can see all the contents
+	// evaluated.
+	DebugDisableQueryDataOnError bool
 }
 
 // FailMode signals whether `opa eval` should fail when the query returns an undefined value (FailUndefined), a
@@ -98,7 +100,7 @@ func asyncEval(
 		options.Logger.Logf(t, "opa eval passed on file %s (policy %s; query %s)", jsonFilePath, ruleBasePath, resultQuery)
 	} else {
 		options.Logger.Logf(t, "Failed opa eval on file %s (policy %s; query %s)", jsonFilePath, ruleBasePath, resultQuery)
-		if options.DebugQueryDataOnError {
+		if options.DebugDisableQueryDataOnError == false {
 			options.Logger.Logf(t, "DEBUG: rerunning opa eval to query for full data.")
 			cmd.Args = formatOPAEvalArgs(options, jsonFilePath, "data")
 			// We deliberately ignore the error here as we want to only return the original error.
