@@ -101,7 +101,7 @@ func asyncEval(
 		if options.DebugQueryDataOnError {
 			options.Logger.Logf(t, "DEBUG: rerunning opa eval to query for full data.")
 			cmd.Args = formatOPAEvalArgs(options, jsonFilePath, "data")
-			// We deliberately ignore the error here as we want to only return the original error. This command rerun is
+			// We deliberately ignore the error here as we want to only return the original error.
 			runCommandWithFullLoggingE(t, options.Logger, cmd)
 		}
 	}
