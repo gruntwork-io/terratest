@@ -10,7 +10,6 @@ import (
 	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
 	"github.com/Azure/go-autorest/autorest"
-	az "github.com/Azure/go-autorest/autorest/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -136,7 +135,7 @@ func NewKeyVaultAuthorizerE() (*autorest.Authorizer, error) {
 		authorizer, err := kvauth.NewAuthorizerFromEnvironment()
 		return &authorizer, err
 	} else if fileAuthSet {
-		authorizer, err := kvauth.NewAuthorizerFromFile(az.PublicCloud.ResourceManagerEndpoint)
+		authorizer, err := kvauth.NewAuthorizerFromFile()
 		return &authorizer, err
 	} else {
 		authorizer, err := kvauth.NewAuthorizerFromCLI()

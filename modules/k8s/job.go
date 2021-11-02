@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -87,7 +88,13 @@ func WaitUntilJobSucceedE(t testing.TestingT, options *KubectlOptions, jobName s
 	return nil
 }
 
-// IsJobSucceeded returns true if all containers in the job are completed & succeeded
+// IsJobSucceeded returns true when the job status condition "Complete" is true. This behavior is documented in the kubernetes API reference:
+// https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/job-v1/#JobStatus
 func IsJobSucceeded(job *batchv1.Job) bool {
-	return job.Status.Active == 0 && job.Status.Failed == 0
+	for _, condition := range job.Status.Conditions {
+		if condition.Type == batchv1.JobComplete && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }

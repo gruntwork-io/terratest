@@ -51,6 +51,21 @@
     - name: Kubernetes Hello, World
       url: https://github.com/gruntwork-io/terratest/tree/master/examples/kubernetes-hello-world-example
 
+- id: terragrunt-hello-world
+  name: Terragrunt Example
+  image: /assets/img/logos/terragrunt-logo.png
+  files:
+    - url: /examples/terragrunt-example/terragrunt.hcl
+      id: terragrunt_code
+    - url: /examples/terragrunt-example/main.tf
+      id: terraform_code
+    - url: /test/terragrunt_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Terragrunt
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terragrunt-example
+
 - id: aws-hello-world
   name: AWS Hello, World Example
   image: /assets/img/logos/aws-logo.png
@@ -93,6 +108,23 @@
   learn_more:
     - name: Terraform Azure Example
       url: https://github.com/gruntwork-io/terratest/tree/master/examples/azure/terraform-azure-example
+
+- id: opa-terraform
+  name: OPA Terraform Example
+  image: /assets/img/logos/opa-logo.png
+  files:
+    - url: /examples/terraform-opa-example/pass/main_pass.tf
+      id: pass_terraform_main_code
+    - url: /examples/terraform-opa-example/fail/main_fail.tf
+      id: fail_terraform_main_code
+    - url: /examples/terraform-opa-example/policy/enforce_source.rego
+      id: policy_main_code
+    - url: /test/terraform_opa_example_test.go
+      id: test_code
+      default: true
+  learn_more:
+    - name: Terraform OPA Example
+      url: https://github.com/gruntwork-io/terratest/tree/master/examples/terraform-opa-example
 
 - id: client-factory
   name: Azure Client Factory

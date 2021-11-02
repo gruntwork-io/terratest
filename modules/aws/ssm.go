@@ -157,9 +157,7 @@ func WaitForSsmInstance(t testing.TestingT, awsRegion, instanceID string, timeou
 
 // CheckSsmCommand checks that you can run the given command on the given instance through AWS SSM.
 func CheckSsmCommand(t testing.TestingT, awsRegion, instanceID, command string, timeout time.Duration) *CommandOutput {
-	result, err := CheckSsmCommandE(t, awsRegion, instanceID, command, timeout)
-	require.NoErrorf(t, err, "failed to execute '%s' on %s (%v):]\n  stdout: %#v\n  stderr: %#v", command, instanceID, err, result.Stdout, result.Stderr)
-	return result
+	return CheckSsmCommandWithDocument(t, awsRegion, instanceID, command, "AWS-RunShellScript", timeout)
 }
 
 // CommandOutput contains the result of the SSM command.
@@ -171,6 +169,23 @@ type CommandOutput struct {
 
 // CheckSsmCommandE checks that you can run the given command on the given instance through AWS SSM. Returns the result and an error if one occurs.
 func CheckSsmCommandE(t testing.TestingT, awsRegion, instanceID, command string, timeout time.Duration) (*CommandOutput, error) {
+	return CheckSsmCommandWithDocumentE(t, awsRegion, instanceID, command, "AWS-RunShellScript", timeout)
+}
+
+// CheckSSMCommandWithClientE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client. Returns the result and an error if one occurs.
+func CheckSSMCommandWithClientE(t testing.TestingT, client *ssm.SSM, instanceID, command string, timeout time.Duration) (*CommandOutput, error) {
+	return CheckSSMCommandWithClientWithDocumentE(t, client, instanceID, command, "AWS-RunShellScript", timeout)
+}
+
+// CheckSsmCommandWithDocument checks that you can run the given command on the given instance through AWS SSM with specified Command Doc type.
+func CheckSsmCommandWithDocument(t testing.TestingT, awsRegion, instanceID, command string, commandDocName string, timeout time.Duration) *CommandOutput {
+	result, err := CheckSsmCommandWithDocumentE(t, awsRegion, instanceID, command, commandDocName, timeout)
+	require.NoErrorf(t, err, "failed to execute '%s' on %s (%v):]\n  stdout: %#v\n  stderr: %#v", command, instanceID, err, result.Stdout, result.Stderr)
+	return result
+}
+
+// CheckSsmCommandWithDocumentE checks that you can run the given command on the given instance through AWS SSM with specified Command Doc type. Returns the result and an error if one occurs.
+func CheckSsmCommandWithDocumentE(t testing.TestingT, awsRegion, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
 	logger.Logf(t, "Running command '%s' on EC2 instance with ID '%s'", command, instanceID)
 
 	// Now that we know the instance in the SSM inventory, we can send the command
@@ -178,18 +193,18 @@ func CheckSsmCommandE(t testing.TestingT, awsRegion, instanceID, command string,
 	if err != nil {
 		return nil, err
 	}
-	return CheckSSMCommandWithClientE(t, client, instanceID, command, timeout)
+	return CheckSSMCommandWithClientWithDocumentE(t, client, instanceID, command, commandDocName, timeout)
 }
 
-// CheckSsmCommandE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client. Returns the result and an error if one occurs.
-func CheckSSMCommandWithClientE(t testing.TestingT, client *ssm.SSM, instanceID, command string, timeout time.Duration) (*CommandOutput, error) {
+// CheckSSMCommandWithClientWithDocumentE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client with specified Command Doc type. Returns the result and an error if one occurs.
+func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.SSM, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
 
 	timeBetweenRetries := 2 * time.Second
 	maxRetries := int(timeout.Seconds() / timeBetweenRetries.Seconds())
 
 	resp, err := client.SendCommand(&ssm.SendCommandInput{
 		Comment:      aws.String("Terratest SSM"),
-		DocumentName: aws.String("AWS-RunShellScript"),
+		DocumentName: aws.String(commandDocName),
 		InstanceIds:  aws.StringSlice([]string{instanceID}),
 		Parameters: map[string][]*string{
 			"commands": aws.StringSlice([]string{command}),
@@ -240,7 +255,7 @@ func CheckSSMCommandWithClientE(t testing.TestingT, client *ssm.SSM, instanceID,
 		if actualErr, ok := err.(retry.FatalError); ok {
 			return result, actualErr.Underlying
 		}
-		return result, fmt.Errorf("Unexpected error: %v", err)
+		return result, fmt.Errorf("unexpected error: %v", err)
 	}
 
 	return result, nil

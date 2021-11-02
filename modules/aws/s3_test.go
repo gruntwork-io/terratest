@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -144,6 +145,47 @@ func TestAssertS3BucketPolicyExists(t *testing.T) {
 
 	AssertS3BucketPolicyExists(t, region, s3BucketName)
 
+}
+
+func TestGetS3BucketTags(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	id := random.UniqueId()
+	logger.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
+	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
+
+	CreateS3Bucket(t, region, s3BucketName)
+	defer DeleteS3Bucket(t, region, s3BucketName)
+
+	s3Client, err := NewS3ClientE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = s3Client.PutBucketTagging(&s3.PutBucketTaggingInput{
+		Bucket: &s3BucketName,
+		Tagging: &s3.Tagging{
+			TagSet: []*s3.Tag{
+				{
+					Key:   aws.String("Key1"),
+					Value: aws.String("Value1"),
+				},
+				{
+					Key:   aws.String("Key2"),
+					Value: aws.String("Value2"),
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualTags := GetS3BucketTags(t, region, s3BucketName)
+	assert.True(t, actualTags["Key1"] == "Value1")
+	assert.True(t, actualTags["Key2"] == "Value2")
+	assert.True(t, actualTags["NonExistentKey"] == "")
 }
 
 func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName string) {

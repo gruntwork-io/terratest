@@ -14,20 +14,26 @@ import (
 
 // Vpc is an Amazon Virtual Private Cloud.
 type Vpc struct {
-	Id      string   // The ID of the VPC
-	Name    string   // The name of the VPC
-	Subnets []Subnet // A list of subnets in the VPC
+	Id      string            // The ID of the VPC
+	Name    string            // The name of the VPC
+	Subnets []Subnet          // A list of subnets in the VPC
+	Tags    map[string]string // The tags associated with the VPC
 }
 
 // Subnet is a subnet in an availability zone.
 type Subnet struct {
-	Id               string // The ID of the Subnet
-	AvailabilityZone string // The Availability Zone the subnet is in
+	Id               string            // The ID of the Subnet
+	AvailabilityZone string            // The Availability Zone the subnet is in
+	Tags             map[string]string // The tags associated with the subnet
 }
 
-var vpcIDFilterName = "vpc-id"
-var isDefaultFilterName = "isDefault"
-var isDefaultFilterValue = "true"
+const vpcIDFilterName = "vpc-id"
+const resourceTypeFilterName = "resource-id"
+const resourceIdFilterName = "resource-type"
+const vpcResourceTypeFilterValue = "vpc"
+const subnetResourceTypeFilterValue = "subnet"
+const isDefaultFilterName = "isDefault"
+const isDefaultFilterValue = "true"
 
 // GetDefaultVpc fetches information about the default VPC in the given region.
 func GetDefaultVpc(t testing.TestingT, region string) *Vpc {
@@ -38,7 +44,7 @@ func GetDefaultVpc(t testing.TestingT, region string) *Vpc {
 
 // GetDefaultVpcE fetches information about the default VPC in the given region.
 func GetDefaultVpcE(t testing.TestingT, region string) (*Vpc, error) {
-	defaultVpcFilter := ec2.Filter{Name: &isDefaultFilterName, Values: []*string{&isDefaultFilterValue}}
+	defaultVpcFilter := ec2.Filter{Name: aws.String(isDefaultFilterName), Values: []*string{aws.String(isDefaultFilterValue)}}
 	vpcs, err := GetVpcsE(t, []*ec2.Filter{&defaultVpcFilter}, region)
 
 	numVpcs := len(vpcs)
@@ -58,7 +64,7 @@ func GetVpcById(t testing.TestingT, vpcId string, region string) *Vpc {
 
 // GetVpcByIdE fetches information about a VPC with given Id in the given region.
 func GetVpcByIdE(t testing.TestingT, vpcId string, region string) (*Vpc, error) {
-	vpcIdFilter := ec2.Filter{Name: &vpcIDFilterName, Values: []*string{&vpcId}}
+	vpcIdFilter := ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcId}}
 	vpcs, err := GetVpcsE(t, []*ec2.Filter{&vpcIdFilter}, region)
 
 	numVpcs := len(vpcs)
@@ -89,7 +95,13 @@ func GetVpcsE(t testing.TestingT, filters []*ec2.Filter, region string) ([]*Vpc,
 		if err != nil {
 			return nil, err
 		}
-		retVal[i] = &Vpc{Id: aws.StringValue(vpc.VpcId), Name: FindVpcName(vpc), Subnets: subnets}
+
+		tags, err := GetTagsForVpcE(t, aws.StringValue(vpc.VpcId), region)
+		if err != nil {
+			return nil, err
+		}
+
+		retVal[i] = &Vpc{Id: aws.StringValue(vpc.VpcId), Name: FindVpcName(vpc), Subnets: subnets, Tags: tags}
 	}
 
 	return retVal, nil
@@ -127,7 +139,7 @@ func GetSubnetsForVpcE(t testing.TestingT, vpcID string, region string) ([]Subne
 		return nil, err
 	}
 
-	vpcIDFilter := ec2.Filter{Name: &vpcIDFilterName, Values: []*string{&vpcID}}
+	vpcIDFilter := ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcID}}
 	subnetOutput, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: []*ec2.Filter{&vpcIDFilter}})
 	if err != nil {
 		return nil, err
@@ -136,11 +148,64 @@ func GetSubnetsForVpcE(t testing.TestingT, vpcID string, region string) ([]Subne
 	subnets := []Subnet{}
 
 	for _, ec2Subnet := range subnetOutput.Subnets {
-		subnet := Subnet{Id: aws.StringValue(ec2Subnet.SubnetId), AvailabilityZone: aws.StringValue(ec2Subnet.AvailabilityZone)}
+		subnetTags := GetTagsForSubnet(t, *ec2Subnet.SubnetId, region)
+		subnet := Subnet{Id: aws.StringValue(ec2Subnet.SubnetId), AvailabilityZone: aws.StringValue(ec2Subnet.AvailabilityZone), Tags: subnetTags}
 		subnets = append(subnets, subnet)
 	}
 
 	return subnets, nil
+}
+
+// GetTagsForVpc gets the tags for the specified VPC.
+func GetTagsForVpc(t testing.TestingT, vpcID string, region string) map[string]string {
+	tags, err := GetTagsForVpcE(t, vpcID, region)
+	require.NoError(t, err)
+
+	return tags
+}
+
+// GetTagsForVpcE gets the tags for the specified VPC.
+func GetTagsForVpcE(t testing.TestingT, vpcID string, region string) (map[string]string, error) {
+	client, err := NewEc2ClientE(t, region)
+	require.NoError(t, err)
+
+	vpcResourceTypeFilter := ec2.Filter{Name: aws.String(resourceIdFilterName), Values: []*string{aws.String(vpcResourceTypeFilterValue)}}
+	vpcResourceIdFilter := ec2.Filter{Name: aws.String(resourceTypeFilterName), Values: []*string{&vpcID}}
+	tagsOutput, err := client.DescribeTags(&ec2.DescribeTagsInput{Filters: []*ec2.Filter{&vpcResourceTypeFilter, &vpcResourceIdFilter}})
+	require.NoError(t, err)
+
+	tags := map[string]string{}
+	for _, tag := range tagsOutput.Tags {
+		tags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+	}
+
+	return tags, nil
+}
+
+// GetTagsForSubnet gets the tags for the specified subnet.
+func GetTagsForSubnet(t testing.TestingT, subnetId string, region string) map[string]string {
+	tags, err := GetTagsForSubnetE(t, subnetId, region)
+	require.NoError(t, err)
+
+	return tags
+}
+
+// GetTagsForSubnetE gets the tags for the specified subnet.
+func GetTagsForSubnetE(t testing.TestingT, subnetId string, region string) (map[string]string, error) {
+	client, err := NewEc2ClientE(t, region)
+	require.NoError(t, err)
+
+	subnetResourceTypeFilter := ec2.Filter{Name: aws.String(resourceIdFilterName), Values: []*string{aws.String(subnetResourceTypeFilterValue)}}
+	subnetResourceIdFilter := ec2.Filter{Name: aws.String(resourceTypeFilterName), Values: []*string{&subnetId}}
+	tagsOutput, err := client.DescribeTags(&ec2.DescribeTagsInput{Filters: []*ec2.Filter{&subnetResourceTypeFilter, &subnetResourceIdFilter}})
+	require.NoError(t, err)
+
+	tags := map[string]string{}
+	for _, tag := range tagsOutput.Tags {
+		tags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+	}
+
+	return tags, nil
 }
 
 // IsPublicSubnet returns True if the subnet identified by the given id in the provided region is public.

@@ -62,6 +62,36 @@ func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, valu
 	return "", nil
 }
 
+// GetS3BucketTags fetches the given bucket's tags and returns them as a string map of strings.
+func GetS3BucketTags(t testing.TestingT, awsRegion string, bucket string) map[string]string {
+	tags, err := GetS3BucketTagsE(t, awsRegion, bucket)
+	require.NoError(t, err)
+
+	return tags
+}
+
+//  GetS3BucketTagsE fetches the given bucket's tags and returns them as a string map of strings.
+func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[string]string, error) {
+	s3Client, err := NewS3ClientE(t, awsRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := s3Client.GetBucketTagging(&s3.GetBucketTaggingInput{
+		Bucket: &bucket,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	tags := map[string]string{}
+	for _, tag := range out.TagSet {
+		tags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+	}
+
+	return tags, nil
+}
+
 // GetS3ObjectContents fetches the contents of the object in the given bucket with the given key and return it as a string.
 func GetS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, key string) string {
 	contents, err := GetS3ObjectContentsE(t, awsRegion, bucket, key)
