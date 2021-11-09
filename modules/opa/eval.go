@@ -18,7 +18,8 @@ type EvalOptions struct {
 	// Whether OPA should run checks with failure.
 	FailMode FailMode
 
-	// Path to rego file containing the OPA rules.
+	// Path to rego file containing the OPA rules. Can also be a remote path defined in go-getter syntax. Refer to
+	// https://github.com/hashicorp/go-getter#url-format for supported options.
 	RulePath string
 
 	// Set a logger that should be used. See the logger package for more info.
@@ -57,6 +58,11 @@ func Eval(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, resu
 //     opa eval -i $JSONFile -d $RulePath $ResultQuery
 // This will asynchronously run OPA on each file concurrently using goroutines.
 func EvalE(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, resultQuery string) error {
+	downloadedPolicyPath, err := downloadPolicyE(t, options.RulePath)
+	if err != nil {
+		return err
+	}
+
 	wg := new(sync.WaitGroup)
 	wg.Add(len(jsonFilePaths))
 	errorsOccurred := new(multierror.Error)
@@ -64,7 +70,7 @@ func EvalE(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, res
 	for i, jsonFilePath := range jsonFilePaths {
 		errChan := make(chan error, 1)
 		errChans[i] = errChan
-		go asyncEval(t, wg, errChan, options, jsonFilePath, resultQuery)
+		go asyncEval(t, wg, errChan, options, downloadedPolicyPath, jsonFilePath, resultQuery)
 	}
 	wg.Wait()
 	for _, errChan := range errChans {
@@ -82,27 +88,28 @@ func asyncEval(
 	wg *sync.WaitGroup,
 	errChan chan error,
 	options *EvalOptions,
+	downloadedPolicyPath string,
 	jsonFilePath string,
 	resultQuery string,
 ) {
 	defer wg.Done()
 	cmd := shell.Command{
 		Command: "opa",
-		Args:    formatOPAEvalArgs(options, jsonFilePath, resultQuery),
+		Args:    formatOPAEvalArgs(options, downloadedPolicyPath, jsonFilePath, resultQuery),
 
 		// Do not log output from shell package so we can log the full json without breaking it up. This is ok, because
 		// opa eval is typically very quick.
 		Logger: logger.Discard,
 	}
 	err := runCommandWithFullLoggingE(t, options.Logger, cmd)
-	ruleBasePath := filepath.Base(options.RulePath)
+	ruleBasePath := filepath.Base(downloadedPolicyPath)
 	if err == nil {
 		options.Logger.Logf(t, "opa eval passed on file %s (policy %s; query %s)", jsonFilePath, ruleBasePath, resultQuery)
 	} else {
 		options.Logger.Logf(t, "Failed opa eval on file %s (policy %s; query %s)", jsonFilePath, ruleBasePath, resultQuery)
 		if options.DebugDisableQueryDataOnError == false {
 			options.Logger.Logf(t, "DEBUG: rerunning opa eval to query for full data.")
-			cmd.Args = formatOPAEvalArgs(options, jsonFilePath, "data")
+			cmd.Args = formatOPAEvalArgs(options, downloadedPolicyPath, jsonFilePath, "data")
 			// We deliberately ignore the error here as we want to only return the original error.
 			runCommandWithFullLoggingE(t, options.Logger, cmd)
 		}
@@ -111,7 +118,7 @@ func asyncEval(
 }
 
 // formatOPAEvalArgs formats the arguments for the `opa eval` command.
-func formatOPAEvalArgs(options *EvalOptions, jsonFilePath string, resultQuery string) []string {
+func formatOPAEvalArgs(options *EvalOptions, rulePath, jsonFilePath, resultQuery string) []string {
 	args := []string{"eval"}
 
 	switch options.FailMode {
@@ -125,7 +132,7 @@ func formatOPAEvalArgs(options *EvalOptions, jsonFilePath string, resultQuery st
 		args,
 		[]string{
 			"-i", jsonFilePath,
-			"-d", options.RulePath,
+			"-d", rulePath,
 			resultQuery,
 		}...,
 	)
