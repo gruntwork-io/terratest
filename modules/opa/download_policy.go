@@ -18,7 +18,7 @@ var (
 	policyDirCache sync.Map
 )
 
-// downloadPolicy takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
+// downloadPolicyE takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
 // can be passed to opa. The temporary directory that is used is cached based on the go-getter base path, and reused
 // across calls.
 // For example, if you call downloadPolicyE with the go-getter URL multiple times:
