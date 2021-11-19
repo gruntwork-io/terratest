@@ -194,7 +194,7 @@ func GetStorageAccountPropertyE(storageAccountName, resourceGroupName, subscript
 	return &account, nil
 }
 
-// GetStorageFileShare returns specified file share.This function would fail the test if there is an error.
+// GetStorageFileShare returns specified file share. This function would fail the test if there is an error.
 func GetStorageFileShare(t *testing.T, fileShareName, storageAccountName, resourceGroupName, subscriptionID string) *storage.FileShare {
 	fileSahre, err := GetStorageFileShareE(fileShareName, storageAccountName, resourceGroupName, subscriptionID)
 	require.NoError(t, err)
