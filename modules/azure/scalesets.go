@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -54,6 +55,71 @@ func VirtualMachineScaleSetExistsE(vmssName string, resGroupName string, subscri
 		return false, err
 	}
 	return true, nil
+}
+
+// GetVirtualMachineScaleSetCapacity gets the capacity of a Virtual Machine Scale Set.
+// This function would fail the test if there is an error.
+func GetVirtualMachineScaleSetCapacity(t testing.TestingT, vmssName string, resGroupName string, subscriptionID string) string {
+	capacity, err := GetVirtualMachineScaleSetCapacityE(vmssName, resGroupName, subscriptionID)
+	require.NoError(t, err)
+	return capacity
+}
+
+// GetVirtualMachineScaleSetCapacityE gets the capacity of a Virtual Machine Scale Set.
+func GetVirtualMachineScaleSetCapacityE(vmssName string, resGroupName string, subscriptionID string) (string, error) {
+	vmss, err := GetVirtualMachineScaleSetE(vmssName, resGroupName, subscriptionID)
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.FormatInt(*vmss.Sku.Capacity, 10), nil
+}
+
+// GetVirtualMachineScaleSetTags gets the Tags of the specified Virtual Machine Scale Set as a map.
+// This function would fail the test if there is an error.
+func GetVirtualMachineScaleSetTags(t testing.TestingT, vmssName string, resGroupName string, subscriptionID string) map[string]string {
+	tags, err := GetVirtualMachineScaleSetTagsE(vmssName, resGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return tags
+}
+
+// GetVirtualMachineScaleSetTagsE gets the Tags of the specified Virtual Machine Scale Set as a map.
+func GetVirtualMachineScaleSetTagsE(vmssName string, resGroupName string, subscriptionID string) (map[string]string, error) {
+	// Setup a blank map to populate and return
+	tags := make(map[string]string)
+
+	// Get VM Scale Set Object
+	vmss, err := GetVirtualMachineScaleSetE(vmssName, resGroupName, subscriptionID)
+	if err != nil {
+		return tags, err
+	}
+
+	// Range through existing tags and populate above map accordingly
+	for k, v := range vmss.Tags {
+		tags[k] = *v
+	}
+
+	return tags, nil
+}
+
+// GetSizeOfVirtualMachineScaleSet gets the Size Type of the specified Azure Virtual Machine Scale Set.
+func GetSizeOfVirtualMachineScaleSet(t testing.TestingT, vmssName string, resGroupName string, subscriptionID string) compute.VirtualMachineSizeTypes {
+	size, err := GetSizeOfVirtualMachineScaleSetE(vmssName, resGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return size
+}
+
+// GetSizeOfVirtualMachineE gets the Size Type of the specified Azure Virtual Machine Scale Set.
+func GetSizeOfVirtualMachineScaleSetE(vmssName string, resGroupName string, subscriptionID string) (compute.VirtualMachineSizeTypes, error) {
+	// Get VM Scale Set Object
+	vmss, err := GetVirtualMachineScaleSetE(vmssName, resGroupName, subscriptionID)
+	if err != nil {
+		return "", err
+	}
+
+	return compute.VirtualMachineSizeTypes(*vmss.Sku.Name), nil
 }
 
 // GetVirtualMachineScaleSet gets a Virtual Machine Scale Set in the specified Azure Resource Group.
