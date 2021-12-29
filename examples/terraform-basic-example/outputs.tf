@@ -1,9 +1,9 @@
 output "example" {
-  value = data.template_file.example.rendered
+  value = var.example
 }
 
 output "example2" {
-  value = data.template_file.example2.rendered
+  value = var.example2
 }
 
 output "example_list" {
