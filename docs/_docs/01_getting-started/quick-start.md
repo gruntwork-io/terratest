@@ -230,7 +230,7 @@ Here's how you automate this process with Terratest:
 
 The test code above uses Kuberenetes helpers built into Terratest to run `kubectl apply`, wait for the service to come
 up, get the service endpoint, make HTTP requests to the service (with plenty of retries), check the response is what
-we expect, and runs `kubectly delete` at the end. You run this test with `go test` as well! 
+we expect, and runs `kubectl delete` at the end. You run this test with `go test` as well! 
 
 
 ## Give it a shot!
