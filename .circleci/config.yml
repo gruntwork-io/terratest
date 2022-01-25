@@ -1,7 +1,7 @@
 env: &env
   environment:
     GRUNTWORK_INSTALLER_VERSION: v0.0.36
-    MODULE_CI_VERSION: v0.33.3
+    MODULE_CI_VERSION: v0.41.1
     MODULE_GCP_CI_VERSION: v0.1.1
     TERRAFORM_VERSION: 1.0.3
     PACKER_VERSION: 1.7.4
@@ -9,9 +9,9 @@ env: &env
     OPA_VERSION: v0.33.1
     GO_VERSION: 1.16.3
     GO111MODULE: auto
-    K8S_VERSION: v1.15.0  # Same as EKS
-    MINIKUBE_VERSION: v1.9.2
-    HELM_VERSION: v3.1.1
+    K8S_VERSION: v1.18.20  # Same as EKS
+    MINIKUBE_VERSION: v1.24.0
+    HELM_VERSION: v3.7.2
     KUBECONFIG: /home/circleci/.kube/config
     BIN_BUILD_PARALLELISM: 3
 
@@ -25,11 +25,14 @@ defaults: &defaults
 minikube_defaults: &minikube_defaults
   machine:
     enabled: true
-    image: "ubuntu-1604:201903-01"
+    image: ubuntu-1604:202104-01
   <<: *env
 
 setup_minikube: &setup_minikube
-  command: setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "$MINIKUBE_VERSION"
+  command: |
+    sudo apt update -y
+    sudo apt install -y conntrack
+    setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "$MINIKUBE_VERSION"
 
 install_helm: &install_helm
   name: install helm
@@ -333,24 +336,6 @@ workflows:
             tags:
               only: /^v.*/
 
-      - test:
-          context:
-            - Gruntwork Admin
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /^v.*/
-
-      - gcp_test:
-          context:
-            - Gruntwork GCP
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /^v.*/
-
       - kubernetes_test:
           context:
             - Gruntwork Admin
@@ -369,13 +354,32 @@ workflows:
             tags:
               only: /^v.*/
 
-      - deploy:
-          context:
-            - Gruntwork Admin
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+      # TODO: Temporarily disable all non-k8s testing
+      #- test:
+      #    context:
+      #      - Gruntwork Admin
+      #    requires:
+      #      - setup
+      #    filters:
+      #      tags:
+      #        only: /^v.*/
+
+      #- gcp_test:
+      #    context:
+      #      - Gruntwork GCP
+      #    requires:
+      #      - setup
+      #    filters:
+      #      tags:
+      #        only: /^v.*/
+
+      #- deploy:
+      #    context:
+      #      - Gruntwork Admin
+      #    requires:
+      #      - setup
+      #    filters:
+      #      tags:
+      #        only: /^v.*/
+      #      branches:
+      #        ignore: /.*/
