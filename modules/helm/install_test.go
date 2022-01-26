@@ -29,7 +29,7 @@ const (
 	remoteChartVersion = "9.7.4"
 )
 
-// Test that we can install a remote chart (e.g stable/chartmuseum)
+// Test that we can install a remote chart (e.g bitnami/nginx)
 func TestRemoteChartInstall(t *testing.T) {
 	t.Parallel()
 
@@ -79,8 +79,7 @@ func TestRemoteChartInstall(t *testing.T) {
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 1)
 
 	// Verify service is accessible. Wait for it to become available and then hit the endpoint.
-	// Service name is RELEASE_NAME-CHART_NAME
-	serviceName := fmt.Sprintf("%s-%s", releaseName, remoteChartName)
+	serviceName := releaseName
 	k8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 10, 1*time.Second)
 	service := k8s.GetService(t, kubectlOptions, serviceName)
 	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 8080)
