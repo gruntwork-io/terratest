@@ -354,32 +354,31 @@ workflows:
             tags:
               only: /^v.*/
 
-      # TODO: Temporarily disable all non-k8s testing
-      #- test:
-      #    context:
-      #      - Gruntwork Admin
-      #    requires:
-      #      - setup
-      #    filters:
-      #      tags:
-      #        only: /^v.*/
+      - test:
+          context:
+            - Gruntwork Admin
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
 
-      #- gcp_test:
-      #    context:
-      #      - Gruntwork GCP
-      #    requires:
-      #      - setup
-      #    filters:
-      #      tags:
-      #        only: /^v.*/
+      - gcp_test:
+          context:
+            - Gruntwork GCP
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
 
-      #- deploy:
-      #    context:
-      #      - Gruntwork Admin
-      #    requires:
-      #      - setup
-      #    filters:
-      #      tags:
-      #        only: /^v.*/
-      #      branches:
-      #        ignore: /.*/
+      - deploy:
+          context:
+            - Gruntwork Admin
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
