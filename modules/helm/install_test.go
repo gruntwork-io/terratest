@@ -82,7 +82,7 @@ func TestRemoteChartInstall(t *testing.T) {
 	serviceName := releaseName
 	k8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 10, 1*time.Second)
 	service := k8s.GetService(t, kubectlOptions, serviceName)
-	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 8080)
+	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 80)
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
