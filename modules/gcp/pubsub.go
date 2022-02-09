@@ -52,7 +52,7 @@ func AssertPubSubSubscriptionExists(t testing.TestingT, projectID, subID string)
 
 // AssertPubSubSubscriptionExistsE checks if the given pubsub subscription exists and returns an error if it does not.
 func AssertPubSubSubscriptionExistsE(t testing.TestingT, projectID, subID string) error {
-    logger.Logf(t, "Finding topic %s", topicID)
+    logger.Logf(t, "Finding subscription %s", subID)
     
     ctx := context.Background()
     
