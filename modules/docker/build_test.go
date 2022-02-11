@@ -71,9 +71,8 @@ func TestGitCloneAndBuild(t *testing.T) {
 	text := "Hello, World!"
 
 	buildOpts := &BuildOptions{
-		Tags:          []string{imageTag},
-		BuildArgs:     []string{fmt.Sprintf("text=%s", text)},
-		Architectures: []string{"linux/arm64", "linux/amd64"},
+		Tags:      []string{imageTag},
+		BuildArgs: []string{fmt.Sprintf("text=%s", text)},
 	}
 	gitBranchName := git.GetCurrentBranchName(t)
 	if gitBranchName == "" {
