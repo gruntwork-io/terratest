@@ -1,6 +1,9 @@
 package docker
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -94,6 +97,59 @@ func BuildE(t testing.TestingT, path string, options *BuildOptions) error {
 		return shell.RunCommandE(t, loadCmd)
 	}
 
+	return nil
+}
+
+// GitCloneAndBuild builds a new Docker image from a given Git repo. This function will clone the given repo at the
+// specified ref, and call the docker build command on the cloned repo from the given relative path (relative to repo
+// root). This will fail the test if there are any errors.
+func GitCloneAndBuild(
+	t testing.TestingT,
+	repo string,
+	ref string,
+	path string,
+	dockerBuildOpts *BuildOptions,
+) {
+	require.NoError(t, GitCloneAndBuildE(t, repo, ref, path, dockerBuildOpts))
+}
+
+// GitCloneAndBuildE builds a new Docker image from a given Git repo. This function will clone the given repo at the
+// specified ref, and call the docker build command on the cloned repo from the given relative path (relative to repo
+// root).
+func GitCloneAndBuildE(
+	t testing.TestingT,
+	repo string,
+	ref string,
+	path string,
+	dockerBuildOpts *BuildOptions,
+) error {
+	workingDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(workingDir)
+
+	cloneCmd := shell.Command{
+		Command: "git",
+		Args:    []string{"clone", repo, workingDir},
+	}
+	if err := shell.RunCommandE(t, cloneCmd); err != nil {
+		return err
+	}
+
+	checkoutCmd := shell.Command{
+		Command:    "git",
+		Args:       []string{"checkout", ref},
+		WorkingDir: workingDir,
+	}
+	if err := shell.RunCommandE(t, checkoutCmd); err != nil {
+		return err
+	}
+
+	contextPath := filepath.Join(workingDir, path)
+	if err := BuildE(t, contextPath, dockerBuildOpts); err != nil {
+		return err
+	}
 	return nil
 }
 
