@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // GetFirstNonEmptyEnvVarOrFatal returns the first non-empty environment variable from envVarNames, or throws a fatal
@@ -26,4 +27,9 @@ func GetFirstNonEmptyEnvVarOrEmptyString(t testing.TestingT, envVarNames []strin
 	}
 
 	return ""
+}
+
+// RequireEnvVar fails the test if the specified environment variable is not defined or is blank.
+func RequireEnvVar(t testing.TestingT, envVarName string) {
+	require.NotEmptyf(t, os.Getenv(envVarName), "Environment variable %s must be set for this test.", envVarName)
 }
