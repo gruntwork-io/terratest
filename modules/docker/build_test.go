@@ -66,6 +66,8 @@ func TestBuildWithTarget(t *testing.T) {
 }
 
 func TestGitCloneAndBuild(t *testing.T) {
+	t.Parallel()
+
 	uniqueID := strings.ToLower(random.UniqueId())
 	imageTag := "gruntwork-io-foo-test:" + uniqueID
 	text := "Hello, World!"
