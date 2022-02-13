@@ -27,7 +27,7 @@ func TestGetPublicIpOfInstance(t *testing.T) {
 
 	instanceName := RandomValidGcpName()
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	zone := GetRandomZone(t, projectID, nil, nil, nil)
+	zone := GetRandomZone(t, projectID, nil, nil, []string{"southamerica-west1"})
 
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
