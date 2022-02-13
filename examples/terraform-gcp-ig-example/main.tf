@@ -47,7 +47,7 @@ resource "google_compute_instance_template" "example" {
   disk {
     boot         = true
     auto_delete  = true
-    source_image = "ubuntu-os-cloud/ubuntu-1604-lts"
+    source_image = "ubuntu-os-cloud/ubuntu-2004-lts"
   }
 
   network_interface {
