@@ -118,7 +118,7 @@ func CopyTerraformFolderToTemp(t testing.TestingT, rootFolder string, terraformM
 //       terraformFolderRelativeToRoot := "examples/terraform-aws-example"
 //
 //       // Copy the terraform folder to a temp folder
-//       tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, destRootFolder, rootFolder, terraformFolderRelativeToRoot)
+//       tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot, destRootFolder)
 //
 //       // Make sure to use the temp test folder in the terraform options
 //       terraformOptions := &terraform.Options{
@@ -142,7 +142,7 @@ func CopyTerraformFolderToDest(t testing.TestingT, rootFolder string, terraformM
 		t.Fatal(files.DirNotFoundError{Directory: fullTerraformModuleFolder})
 	}
 
-	tmpRootFolder, err := files.CopyTerraformFolderToDest(rootFolder, cleanName(t.Name()), destRootFolder)
+	tmpRootFolder, err := files.CopyTerraformFolderToDest(rootFolder, destRootFolder, cleanName(t.Name()))
 	if err != nil {
 		t.Fatal(err)
 	}
