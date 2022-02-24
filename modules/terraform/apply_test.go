@@ -155,7 +155,8 @@ func TestIdempotentWithChanges(t *testing.T) {
 }
 
 func TestParallelism(t *testing.T) {
-	t.Parallel()
+	// This test depends on precise timing of the concurrent parallel calls in terraform, so we need to run this test
+	// serially by itself so that other concurrent test runs won't influence the timing.
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-parallelism", t.Name())
 	require.NoError(t, err)
