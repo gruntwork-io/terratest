@@ -77,3 +77,15 @@ func TestGitRefChecks(t *testing.T) {
 	t.Run("GetCurrentRefReturnsTagValue", testGetCurrentRefReturnsTagValue)
 	t.Run("GetCurrentRefReturnsLightTagValue", testGetCurrentRefReturnsLightTagValue)
 }
+
+func TestGetRepoRoot(t *testing.T) {
+	t.Parallel()
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	expectedRepoRoot, err := filepath.Abs(filepath.Join(cwd, "..", ".."))
+	require.NoError(t, err)
+
+	repoRoot := GetRepoRoot(t)
+	assert.Equal(t, expectedRepoRoot, repoRoot)
+}
