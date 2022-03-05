@@ -3,7 +3,6 @@ package parser
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"testing"
 	"time"
@@ -32,12 +31,4 @@ func (formatter *LogTestFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	)
 	b.WriteString(outStr)
 	return b.Bytes(), nil
-}
-
-func getTempDir(t *testing.T) string {
-	dir, err := ioutil.TempDir("", t.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-	return dir
 }

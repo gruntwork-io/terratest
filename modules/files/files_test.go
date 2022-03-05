@@ -2,7 +2,6 @@ package files
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,8 +52,7 @@ func TestCopyFolderToDest(t *testing.T) {
 
 	tempFolderPrefix := "someprefix"
 	destFolder := os.TempDir()
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContents")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
 	filter := func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path) && !PathContainsTerraformState(path)
@@ -74,10 +72,9 @@ func TestCopyFolderContents(t *testing.T) {
 
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "original")
 	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "full-copy")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContents")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContents(originalDir, tmpDir)
+	err := CopyFolderContents(originalDir, tmpDir)
 	require.NoError(t, err)
 
 	requireDirectoriesEqual(t, expectedDir, tmpDir)
@@ -88,10 +85,9 @@ func TestCopyFolderContentsWithHiddenFilesFilter(t *testing.T) {
 
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "original")
 	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "no-hidden-files")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContentsWithFilter")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
+	err := CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path)
 	})
 	require.NoError(t, err)
@@ -105,10 +101,9 @@ func TestCopyFolderContentsWithSymLinks(t *testing.T) {
 
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "symlinks")
 	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "symlinks")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContentsWithFilter")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
+	err := CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path)
 	})
 	require.NoError(t, err)
@@ -134,10 +129,9 @@ func TestCopyFolderContentsWithBrokenSymLinks(t *testing.T) {
 
 	// Test copying folder
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "symlinks-broken")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContentsWithFilter")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
+	err := CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path)
 	})
 	require.NoError(t, err)

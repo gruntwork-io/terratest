@@ -1,7 +1,6 @@
 package terraform
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,10 +13,7 @@ import (
 func TestInitBackendConfig(t *testing.T) {
 	t.Parallel()
 
-	stateDirectory, err := ioutil.TempDir("", t.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
+	stateDirectory := t.TempDir()
 
 	remoteStateFile := filepath.Join(stateDirectory, "backend.tfstate")
 
@@ -41,9 +37,7 @@ func TestInitBackendConfig(t *testing.T) {
 func TestInitPluginDir(t *testing.T) {
 	t.Parallel()
 
-	testingDir, err := ioutil.TempDir("", t.Name())
-	require.NoError(t, err)
-	defer os.RemoveAll(testingDir)
+	testingDir := t.TempDir()
 
 	terraformFixture := "../../test/fixtures/terraform-basic-configuration"
 
@@ -86,9 +80,7 @@ func TestInitPluginDir(t *testing.T) {
 func TestInitReconfigureBackend(t *testing.T) {
 	t.Parallel()
 
-	stateDirectory, err := ioutil.TempDir("", t.Name())
-	require.NoError(t, err)
-	defer os.RemoveAll(stateDirectory)
+	stateDirectory := t.TempDir()
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-backend", t.Name())
 	require.NoError(t, err)
@@ -116,9 +108,7 @@ func TestInitReconfigureBackend(t *testing.T) {
 func TestInitBackendMigration(t *testing.T) {
 	t.Parallel()
 
-	stateDirectory, err := ioutil.TempDir("", t.Name())
-	require.NoError(t, err)
-	defer os.RemoveAll(stateDirectory)
+	stateDirectory := t.TempDir()
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-backend", t.Name())
 	require.NoError(t, err)
