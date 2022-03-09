@@ -2,6 +2,7 @@ env: &env
   environment:
     GRUNTWORK_INSTALLER_VERSION: v0.0.36
     MODULE_CI_VERSION: v0.41.1
+    MODULE_CI_BRANCH: feature/bump-kubernetes-helper-ubuntu20  # TODO: update to tag when released
     MODULE_GCP_CI_VERSION: v0.1.1
     TERRAFORM_VERSION: 1.1.4
     PACKER_VERSION: 1.7.4
@@ -19,13 +20,6 @@ defaults: &defaults
   machine:
     enabled: true
     image: "ubuntu-2004:202107-02"
-  <<: *env
-
-# minikube setup requires ubuntu16.04
-minikube_defaults: &minikube_defaults
-  machine:
-    enabled: true
-    image: ubuntu-1604:202104-01
   <<: *env
 
 setup_minikube: &setup_minikube
@@ -48,7 +42,7 @@ install_gruntwork_utils: &install_gruntwork_utils
   command: |
     curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "${GRUNTWORK_INSTALLER_VERSION}"
     gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_VERSION}"
-    gruntwork-install --module-name "kubernetes-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_VERSION}"
+    gruntwork-install --module-name "kubernetes-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --branch "${MODULE_CI_BRANCH}"
     gruntwork-install --module-name "gcp-helpers" --repo "https://github.com/gruntwork-io/terraform-google-ci" --tag "${MODULE_GCP_CI_VERSION}"
     configure-environment-for-gruntwork-module \
       --terraform-version ${TERRAFORM_VERSION} \
@@ -239,7 +233,7 @@ jobs:
           path: /tmp/logs
 
   kubernetes_test:
-    <<: *minikube_defaults
+    <<: *defaults
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -275,7 +269,7 @@ jobs:
 
 
   helm_test:
-    <<: *minikube_defaults
+    <<: *defaults
     steps:
       - attach_workspace:
           at: /home/circleci
