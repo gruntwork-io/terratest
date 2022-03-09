@@ -111,8 +111,9 @@ func TestGetAndSetMetadata(t *testing.T) {
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 	instanceName := RandomValidGcpName()
 
-	// On October 22, 2018, GCP launched the asia-east2 region, which promptly failed all our tests, so blacklist asia-east2.
-	zone := GetRandomZone(t, projectID, nil, nil, []string{"asia-east2"})
+	// The following zones do not have f1-micro instances available, so we avoid them
+	zonesToAvoid := []string{"asia-east2", "southamerica-west1"}
+	zone := GetRandomZone(t, projectID, nil, nil, zonesToAvoid)
 
 	// Create a new Compute Instance
 	createComputeInstance(t, projectID, zone, instanceName)
