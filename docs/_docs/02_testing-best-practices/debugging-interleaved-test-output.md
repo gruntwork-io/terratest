@@ -53,8 +53,24 @@ Terratest also ships utility binaries that you can use to improve the debugging 
 test output](#debugging-interleaved-test-output)). The compiled binaries are shipped separately from the library in the
 [Releases page](https://github.com/gruntwork-io/terratest/releases).
 
-To install a binary, download the version that matches your platform and place it somewhere on your `PATH`. For example
-to install version 0.13.13 of `terratest_log_parser`:
+The following binaries are currently available with `terratest`:
+
+{:.doc-styled-table}
+| Command                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **terratest_log_parser** | Parses test output from the `go test` command and breaks out the interleaved logs into logs for each test. Integrate with your CI environment to help debug failing tests.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **pick-instance-type**   | Takes an AWS region and a list of EC2 instance types and returns the first instance type in the list that is available in all Availability Zones in the given region, or exits with an error if no instance type is available in all AZs. This is useful because certain instance types, such as t2.micro, are not available in some newer AZs, while t3.micro is not available in some older AZs. If you have code that needs to run on a "small" instance across all AZs in many regions, you can use this CLI tool to automatically figure out which instance type you should use. |
+
+You can install any binary using one of the following methods:
+
+- [Manual installation](#manual-installation)
+- [go install](#go-install)
+- [gruntwork-installer](#gruntwork-installer)
+
+### Manual installation
+
+To install the binary manually, download the version that matches your platform and place it somewhere on your `PATH`.
+For example to install version 0.13.13 of `terratest_log_parser`:
 
 ```bash
 # This example assumes a linux 64bit machine
@@ -66,17 +82,28 @@ chmod +x terratest_log_parser
 sudo mv terratest_log_parser /usr/local/bin
 ```
 
-Alternatively, you can use [the gruntwork-installer](https://github.com/gruntwork-io/gruntwork-installer), which will do
-the above steps and automatically select the right binary for your platform:
+### go install
+
+`go` supports building and installing packages and commands from source using the [go
+install](https://pkg.go.dev/cmd/go#hdr-Compile_and_install_packages_and_dependencies) command. To install the binaries
+with `go install`, point `go install` to the repo and path where the main code for each relevant command lives. For
+example, you can install the terratest log parser binary with:
+
+```
+go install github.com/gruntwork-io/terratest/cmd/terratest_log_parser@latest
+```
+
+Similarly, to install `pick-instance-type`, you can run:
+
+```
+go install github.com/gruntwork-io/terratest/cmd/pick-instance-type@latest
+```
+
+### gruntwork-installer
+
+You can also use [the gruntwork-installer utility](https://github.com/gruntwork-io/gruntwork-installer) to install the
+binaries, which will do the above steps and automatically select the right binary for your platform:
 
 ```bash
 gruntwork-install --binary-name 'terratest_log_parser' --repo 'https://github.com/gruntwork-io/terratest' --tag 'v0.13.13'
 ```
-
-The following binaries are currently available with `terratest`:
-
-{:.doc-styled-table}
-| Command                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **terratest_log_parser** | Parses test output from the `go test` command and breaks out the interleaved logs into logs for each test. Integrate with your CI environment to help debug failing tests.                                                                                                                                                                                                                                                                                                                                                                                                            |
-| **pick-instance-type**   | Takes an AWS region and a list of EC2 instance types and returns the first instance type in the list that is available in all Availability Zones in the given region, or exits with an error if no instance type is available in all AZs. This is useful because certain instance types, such as t2.micro, are not available in some newer AZs, while t3.micro is not available in some older AZs. If you have code that needs to run on a "small" instance across all AZs in many regions, you can use this CLI tool to automatically figure out which instance type you should use. |
