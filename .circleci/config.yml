@@ -119,7 +119,7 @@ jobs:
       - run:
           name: run precommit
           command: |
-            go get golang.org/x/tools/cmd/goimports
+            go install golang.org/x/tools/cmd/goimports@latest
             # Install the latest minor version for v2
             pip install pre-commit~=2.9
             pre-commit install
