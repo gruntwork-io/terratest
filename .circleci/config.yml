@@ -136,6 +136,8 @@ jobs:
             # environment so it pulls in what it needs.
             go mod tidy
 
+            go install github.com/mitchellh/gox@latest
+
             GO_ENABLED=0 build-go-binaries \
               --parallel "$BIN_BUILD_PARALLELISM" \
               --app-name terratest_log_parser \
