@@ -182,7 +182,7 @@ func TestParallelism(t *testing.T) {
 	Apply(t, options)
 	end = time.Now()
 	duration := end.Sub(start)
-	require.Greater(t, int64(duration.Seconds()), int64(25))
+	require.GreaterOrEqual(t, int64(duration.Seconds()), int64(25))
 }
 func TestTgApplyUseLockNoError(t *testing.T) {
 	t.Parallel()
