@@ -24,8 +24,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 	// Setup values for our Terraform apply
 	projectId := gcp.GetGoogleProjectIDFromEnvVar(t)
 
-	// On October 22, 2018, GCP launched the asia-east2 region, which promptly failed all our tests, so blacklist asia-east2.
-	region := gcp.GetRandomRegion(t, projectId, nil, []string{"asia-east2"})
+	region := gcp.GetRandomRegion(t, projectId, nil, RegionsToAvoid)
 
 	randomValidGcpName := gcp.RandomValidGcpName()
 	clusterSize := 3

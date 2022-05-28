@@ -109,9 +109,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	// Setup values for our Terraform apply
 	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 	randomValidGcpName := gcp.RandomValidGcpName()
-	// zones that don't support n1-standard-1 instances
-	zonesToAvoid := []string{"asia-east2", "southamerica-west1"}
-	zone := gcp.GetRandomZone(t, projectID, nil, nil, zonesToAvoid)
+	zone := gcp.GetRandomZone(t, projectID, nil, nil, RegionsToAvoid)
 
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located

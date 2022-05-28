@@ -22,6 +22,9 @@ var DefaultRetryablePackerErrors = map[string]string{
 }
 var DefaultTimeBetweenPackerRetries = 15 * time.Second
 
+// Regions that don't support n1-standard-1 instances
+var RegionsToAvoid = []string{"asia-east2", "southamerica-west1", "europe-west8"}
+
 const DefaultMaxPackerRetries = 3
 
 // An example of how to test the Packer template in examples/packer-basic-example using Terratest.
@@ -32,9 +35,7 @@ func TestPackerGCPBasicExample(t *testing.T) {
 	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 
 	// Pick a random GCP zone to test in. This helps ensure your code works in all regions.
-	// zones that don't support n1-standard-1 instances
-	zonesToAvoid := []string{"asia-east2", "southamerica-west1"}
-	zone := gcp.GetRandomZone(t, projectID, nil, nil, zonesToAvoid)
+	zone := gcp.GetRandomZone(t, projectID, nil, nil, RegionsToAvoid)
 
 	packerOptions := &packer.Options{
 		// The path to where the Packer template is located
