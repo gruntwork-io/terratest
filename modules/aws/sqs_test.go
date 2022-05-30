@@ -66,7 +66,7 @@ func TestFifoSqsQueueMethods(t *testing.T) {
 	assert.Error(t, secondResponse.Error, ReceiveMessageTimeout{QueueUrl: url, TimeoutSec: timeoutSec})
 }
 
-func queueExists(t *testing.T, region string, url string) bool {
+func QueueExists(t *testing.T, region string, url string) bool {
 	sqsClient := NewSqsClient(t, region)
 
 	input := sqs.GetQueueAttributesInput{QueueUrl: aws.String(url)}
