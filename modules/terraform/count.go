@@ -18,10 +18,11 @@ type ResourceCount struct {
 
 // Regular expressions for terraform commands stdout pattern matching.
 const (
-	applyRegexp             = `Apply complete! Resources: (\d+) added, (\d+) changed, (\d+) destroyed\.`
-	destroyRegexp           = `Destroy complete! Resources: (\d+) destroyed\.`
-	planWithChangesRegexp   = `(\033\[1m)?Plan:(\033\[0m)? (\d+) to add, (\d+) to change, (\d+) to destroy\.`
-	planWithNoChangesRegexp = `No changes\. (Infrastructure is up-to-date)|(Your infrastructure matches the configuration)\.`
+	applyRegexp                  = `Apply complete! Resources: (\d+) added, (\d+) changed, (\d+) destroyed\.`
+	destroyRegexp                = `Destroy complete! Resources: (\d+) destroyed\.`
+	planWithChangesRegexp        = `(\033\[1m)?Plan:(\033\[0m)? (\d+) to add, (\d+) to change, (\d+) to destroy\.`
+	planWithNoChangesRegexp      = `No changes\. (Infrastructure is up-to-date)|(Your infrastructure matches the configuration)\.`
+	planWithNoInfraChangesRegexp = `You can apply this plan.*without changing any real infrastructure`
 )
 
 const getResourceCountErrMessage = "Can't parse Terraform output"
@@ -48,6 +49,7 @@ func GetResourceCountE(t testing.TestingT, cmdout string) (*ResourceCount, error
 		{destroyRegexp, -1, -1, 1},
 		{planWithChangesRegexp, 3, 4, 5},
 		{planWithNoChangesRegexp, -1, -1, -1},
+		{planWithNoInfraChangesRegexp, -1, -1, -1},
 	}
 
 	for _, tc := range terraformCommandPatterns {
