@@ -145,7 +145,7 @@ spec:
     spec:
       containers:
       - name: pi
-        image: perl
+        image: "perl:5.34.1"
         command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
       restartPolicy: Never
   backoffLimit: 4
