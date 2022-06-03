@@ -23,7 +23,7 @@ const DEFAULT_IMAGE_FAMILY_PROJECT_NAME = "ubuntu-os-cloud"
 const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-1804-lts"
 
 // Regions that don't support running f1-micro instances
-var RegionsToAvoid = []string{"asia-east2", "southamerica-west1", "europe-west8"}
+var RegionsToAvoid = []string{"asia-east2", "southamerica-west1", "europe-west8", "europe-southwest1"}
 
 func TestGetPublicIpOfInstance(t *testing.T) {
 	t.Parallel()

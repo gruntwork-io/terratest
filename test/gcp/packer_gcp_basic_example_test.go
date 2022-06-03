@@ -23,7 +23,7 @@ var DefaultRetryablePackerErrors = map[string]string{
 var DefaultTimeBetweenPackerRetries = 15 * time.Second
 
 // Regions that don't support n1-standard-1 instances
-var RegionsToAvoid = []string{"asia-east2", "southamerica-west1", "europe-west8"}
+var RegionsToAvoid = []string{"asia-east2", "southamerica-west1", "europe-west8", "europe-southwest1"}
 
 const DefaultMaxPackerRetries = 3
 
