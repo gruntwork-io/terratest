@@ -25,6 +25,7 @@ type Subnet struct {
 	Id               string            // The ID of the Subnet
 	AvailabilityZone string            // The Availability Zone the subnet is in
 	Tags             map[string]string // The tags associated with the subnet
+	CidrBlock        string            // IPv4 CIDR block assigned to the subnet
 }
 
 const vpcIDFilterName = "vpc-id"
@@ -138,21 +139,24 @@ func GetSubnetsForVpcE(t testing.TestingT, vpcID string, region string) ([]Subne
 	if err != nil {
 		return nil, err
 	}
-
-	vpcIDFilter := ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcID}}
-	subnetOutput, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: []*ec2.Filter{&vpcIDFilter}})
-	if err != nil {
-		return nil, err
+	var next *string = nil
+	var subnets []Subnet
+	for {
+		vpcIDFilter := ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcID}}
+		subnetOutput, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: []*ec2.Filter{&vpcIDFilter}, NextToken: next})
+		if err != nil {
+			return nil, err
+		}
+		for _, ec2Subnet := range subnetOutput.Subnets {
+			subnetTags := GetTagsForSubnet(t, *ec2Subnet.SubnetId, region)
+			subnet := Subnet{Id: aws.StringValue(ec2Subnet.SubnetId), AvailabilityZone: aws.StringValue(ec2Subnet.AvailabilityZone), Tags: subnetTags, CidrBlock: *ec2Subnet.CidrBlock}
+			subnets = append(subnets, subnet)
+		}
+		if subnetOutput.NextToken == nil || len(*subnetOutput.NextToken) == 0 {
+			break
+		}
+		next = subnetOutput.NextToken
 	}
-
-	subnets := []Subnet{}
-
-	for _, ec2Subnet := range subnetOutput.Subnets {
-		subnetTags := GetTagsForSubnet(t, *ec2Subnet.SubnetId, region)
-		subnet := Subnet{Id: aws.StringValue(ec2Subnet.SubnetId), AvailabilityZone: aws.StringValue(ec2Subnet.AvailabilityZone), Tags: subnetTags}
-		subnets = append(subnets, subnet)
-	}
-
 	return subnets, nil
 }
 
