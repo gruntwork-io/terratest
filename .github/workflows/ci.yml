@@ -39,6 +39,9 @@ on:
         required: true
         default: 'false'
 
+permissions:
+  contents: read
+
 jobs:
   ci-job:
     runs-on: [ubuntu-latest]
