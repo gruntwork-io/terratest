@@ -58,7 +58,7 @@ func Eval(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, resu
 //     opa eval -i $JSONFile -d $RulePath $ResultQuery
 // This will asynchronously run OPA on each file concurrently using goroutines.
 func EvalE(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, resultQuery string) error {
-	downloadedPolicyPath, err := downloadPolicyE(t, options.RulePath)
+	downloadedPolicyPath, err := DownloadPolicyE(t, options.RulePath)
 	if err != nil {
 		return err
 	}

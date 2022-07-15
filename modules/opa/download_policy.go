@@ -18,10 +18,10 @@ var (
 	policyDirCache sync.Map
 )
 
-// downloadPolicyE takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
+// DownloadPolicyE takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
 // can be passed to opa. The temporary directory that is used is cached based on the go-getter base path, and reused
 // across calls.
-// For example, if you call downloadPolicyE with the go-getter URL multiple times:
+// For example, if you call DownloadPolicyE with the go-getter URL multiple times:
 //   git::https://github.com/gruntwork-io/terratest.git//policies/foo.rego?ref=master
 // The first time the gruntwork-io/terratest repo will be downloaded to a new temp directory. All subsequent calls will
 // reuse that first temporary dir where the repo was cloned. This is preserved even if a different subdir is requested
@@ -29,7 +29,7 @@ var (
 // Note that the query parameters are always included in the base URL. This means that if you use a different ref (e.g.,
 // git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=v0.39.3), then that will be cloned to a new
 // temporary directory rather than the cached dir.
-func downloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
+func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", err

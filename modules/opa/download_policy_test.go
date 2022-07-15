@@ -15,17 +15,17 @@ import (
 	"github.com/gruntwork-io/terratest/modules/git"
 )
 
-// Test to make sure the downloadPolicyE function returns a local path without processing it.
+// Test to make sure the DownloadPolicyE function returns a local path without processing it.
 func TestDownloadPolicyReturnsLocalPath(t *testing.T) {
 	t.Parallel()
 
 	localPath := "../../examples/terraform-opa-example/policy/enforce_source.rego"
-	path, err := downloadPolicyE(t, localPath)
+	path, err := DownloadPolicyE(t, localPath)
 	require.NoError(t, err)
 	assert.Equal(t, localPath, path)
 }
 
-// Test to make sure the downloadPolicyE function returns a remote path to a temporary directory.
+// Test to make sure the DownloadPolicyE function returns a remote path to a temporary directory.
 func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 	t.Parallel()
 
@@ -46,7 +46,7 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 		assert.NoError(t, os.RemoveAll(downloadPath))
 	}()
 
-	path, err := downloadPolicyE(t, remotePath)
+	path, err := DownloadPolicyE(t, remotePath)
 	require.NoError(t, err)
 
 	absPath, err := filepath.Abs(localPath)
@@ -60,7 +60,7 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 	assert.Equal(t, localContents, remoteContents)
 }
 
-// Test to make sure the downloadPolicyE function uses the cache if it has already downloaded an existing base path.
+// Test to make sure the DownloadPolicyE function uses the cache if it has already downloaded an existing base path.
 func TestDownloadPolicyReusesCachedDir(t *testing.T) {
 	t.Parallel()
 
@@ -81,7 +81,7 @@ func TestDownloadPolicyReusesCachedDir(t *testing.T) {
 		assert.NoError(t, os.RemoveAll(downloadPath))
 	}()
 
-	path, err := downloadPolicyE(t, remotePath)
+	path, err := DownloadPolicyE(t, remotePath)
 	require.NoError(t, err)
 	files.FileExists(path)
 
@@ -90,12 +90,12 @@ func TestDownloadPolicyReusesCachedDir(t *testing.T) {
 	downloadPath := downloadPathRaw.(string)
 
 	// make sure the second call is exactly equal to the first call
-	newPath, err := downloadPolicyE(t, remotePath)
+	newPath, err := DownloadPolicyE(t, remotePath)
 	require.NoError(t, err)
 	assert.Equal(t, path, newPath)
 
 	// Also make sure the cache is reused for alternative sub dirs.
-	newAltPath, err := downloadPolicyE(t, remotePathAltSubPath)
+	newAltPath, err := DownloadPolicyE(t, remotePathAltSubPath)
 	require.NoError(t, err)
 	assert.True(t, strings.HasPrefix(path, downloadPath))
 	assert.True(t, strings.HasPrefix(newAltPath, downloadPath))
