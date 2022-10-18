@@ -1,3 +1,4 @@
+//go:build gcp
 // +build gcp
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.

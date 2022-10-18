@@ -173,7 +173,7 @@ func GetLoadBalancerE(loadBalancerName string, resourceGroupName string, subscri
 	}
 
 	// Get the Load Balancer
-	lb, err := client.Get(context.Background(), resourceGroupName, loadBalancerName, subscriptionID)
+	lb, err := client.Get(context.Background(), resourceGroupName, loadBalancerName, "")
 	if err != nil {
 		return nil, err
 	}

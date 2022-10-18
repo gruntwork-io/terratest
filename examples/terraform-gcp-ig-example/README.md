@@ -4,7 +4,7 @@ This folder contains a simple Terraform configuration that deploys resources in 
 how you can use Terratest to write automated tests for your GCP Terraform code. This module deploys an [Instance Group](
 https://cloud.google.com/compute/docs/instance-groups/).
 
-Check out [test/terraform_gcp_ig_example_test.go](/test/terraform_gcp_ig_example_test.go) to see how you can write
+Check out [test/terraform_gcp_ig_example_test.go](/test/gcp/terraform_gcp_ig_example_test.go) to see how you can write
 automated tests for this module.
 
 Note that the Instance Group in this module doesn't actually do anything; it just runs a cluster of vanilla Ubuntu 16.04

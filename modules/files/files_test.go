@@ -2,7 +2,6 @@ package files
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -48,22 +47,22 @@ func TestIsExistingDir(t *testing.T) {
 	assert.True(t, IsExistingDir(currentFileDir))
 }
 
-func TestCopyFolderToTemp(t *testing.T) {
+func TestCopyFolderToDest(t *testing.T) {
 	t.Parallel()
 
 	tempFolderPrefix := "someprefix"
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContents")
-	require.NoError(t, err)
+	destFolder := os.TempDir()
+	tmpDir := t.TempDir()
 
 	filter := func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path) && !PathContainsTerraformState(path)
 	}
 
-	folder, err := CopyFolderToTemp("/not/a/real/path", tempFolderPrefix, filter)
+	folder, err := CopyFolderToDest("/not/a/real/path", destFolder, tempFolderPrefix, filter)
 	require.Error(t, err)
 	assert.False(t, FileExists(folder))
 
-	folder, err = CopyFolderToTemp(tmpDir, tempFolderPrefix, filter)
+	folder, err = CopyFolderToDest(tmpDir, destFolder, tempFolderPrefix, filter)
 	assert.DirExists(t, folder)
 	assert.NoError(t, err)
 }
@@ -73,10 +72,9 @@ func TestCopyFolderContents(t *testing.T) {
 
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "original")
 	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "full-copy")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContents")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContents(originalDir, tmpDir)
+	err := CopyFolderContents(originalDir, tmpDir)
 	require.NoError(t, err)
 
 	requireDirectoriesEqual(t, expectedDir, tmpDir)
@@ -87,10 +85,9 @@ func TestCopyFolderContentsWithHiddenFilesFilter(t *testing.T) {
 
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "original")
 	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "no-hidden-files")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContentsWithFilter")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
+	err := CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path)
 	})
 	require.NoError(t, err)
@@ -104,10 +101,9 @@ func TestCopyFolderContentsWithSymLinks(t *testing.T) {
 
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "symlinks")
 	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "symlinks")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContentsWithFilter")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
+	err := CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path)
 	})
 	require.NoError(t, err)
@@ -133,10 +129,9 @@ func TestCopyFolderContentsWithBrokenSymLinks(t *testing.T) {
 
 	// Test copying folder
 	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "symlinks-broken")
-	tmpDir, err := ioutil.TempDir("", "TestCopyFolderContentsWithFilter")
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
 
-	err = CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
+	err := CopyFolderContentsWithFilter(originalDir, tmpDir, func(path string) bool {
 		return !PathContainsHiddenFileOrFolder(path)
 	})
 	require.NoError(t, err)
@@ -161,6 +156,19 @@ func TestCopyTerraformFolderToTemp(t *testing.T) {
 	requireDirectoriesEqual(t, expectedDir, tmpDir)
 }
 
+func TestCopyTerraformFolderToDest(t *testing.T) {
+	t.Parallel()
+
+	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "original")
+	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "no-hidden-files-no-terraform-files")
+	destFolder := os.TempDir()
+
+	tmpDir, err := CopyTerraformFolderToDest(originalDir, destFolder, "TestCopyTerraformFolderToTemp")
+	require.NoError(t, err)
+
+	requireDirectoriesEqual(t, expectedDir, tmpDir)
+}
+
 func TestCopyTerragruntFolderToTemp(t *testing.T) {
 	t.Parallel()
 
@@ -168,6 +176,19 @@ func TestCopyTerragruntFolderToTemp(t *testing.T) {
 	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "no-state-files")
 
 	tmpDir, err := CopyTerragruntFolderToTemp(originalDir, t.Name())
+	require.NoError(t, err)
+
+	requireDirectoriesEqual(t, expectedDir, tmpDir)
+}
+
+func TestCopyTerragruntFolderToDest(t *testing.T) {
+	t.Parallel()
+
+	originalDir := filepath.Join(copyFolderContentsFixtureRoot, "terragrunt-files")
+	expectedDir := filepath.Join(copyFolderContentsFixtureRoot, "no-state-files")
+	destFolder := os.TempDir()
+
+	tmpDir, err := CopyTerragruntFolderToDest(originalDir, destFolder, t.Name())
 	require.NoError(t, err)
 
 	requireDirectoriesEqual(t, expectedDir, tmpDir)

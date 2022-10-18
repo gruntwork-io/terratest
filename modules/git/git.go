@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // GetCurrentBranchName retrieves the current branch name or
@@ -89,6 +90,23 @@ func GetCurrentGitRefE(t testing.TestingT) (string, error) {
 // to the commit exact tag value.
 func GetTagE(t testing.TestingT) (string, error) {
 	cmd := exec.Command("git", "describe", "--tags")
+	bytes, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(bytes)), nil
+}
+
+// GetRepoRoot retrieves the path to the root directory of the repo. This fails the test if there is an error.
+func GetRepoRoot(t testing.TestingT) string {
+	out, err := GetRepoRootE(t)
+	require.NoError(t, err)
+	return out
+}
+
+// GetRepoRootE retrieves the path to the root directory of the repo.
+func GetRepoRootE(t testing.TestingT) (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	bytes, err := cmd.Output()
 	if err != nil {
 		return "", err

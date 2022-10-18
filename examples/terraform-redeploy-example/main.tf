@@ -35,7 +35,7 @@ resource "aws_autoscaling_group" "web_servers" {
   min_elb_capacity = 3
 
   # Deploy into all the subnets (and therefore AZs) available
-  vpc_zone_identifier = data.aws_subnet_ids.default.ids
+  vpc_zone_identifier = data.aws_subnets.default.ids
 
   # Automatically register this ASG's Instances in the ALB and use the ALB's health check to determine when an Instance
   # needs to be replaced
@@ -173,7 +173,7 @@ resource "aws_security_group_rule" "web_server_allow_all_outbound" {
 resource "aws_alb" "web_servers" {
   name            = var.instance_name
   security_groups = [aws_security_group.alb.id]
-  subnets         = data.aws_subnet_ids.default.ids
+  subnets         = data.aws_subnets.default.ids
 
   # This is here because aws_alb_listener.http depends on this resource and sets create_before_destroy to true
   lifecycle {
@@ -294,7 +294,10 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_subnet_ids" "default" {
-  vpc_id = data.aws_vpc.default.id
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
 }
 

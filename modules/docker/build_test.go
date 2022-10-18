@@ -2,8 +2,12 @@ package docker
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/git"
+	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,4 +63,26 @@ func TestBuildWithTarget(t *testing.T) {
 
 	out := Run(t, tag, &RunOptions{Remove: true})
 	require.Contains(t, out, text1)
+}
+
+func TestGitCloneAndBuild(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueId())
+	imageTag := "gruntwork-io-foo-test:" + uniqueID
+	text := "Hello, World!"
+
+	buildOpts := &BuildOptions{
+		Tags:      []string{imageTag},
+		BuildArgs: []string{fmt.Sprintf("text=%s", text)},
+	}
+	gitBranchName := git.GetCurrentBranchName(t)
+	if gitBranchName == "" {
+		logger.Logf(t, "WARNING: git.GetCurrentBranchName returned an empty string; falling back to master")
+		gitBranchName = "master"
+	}
+	GitCloneAndBuild(t, "git@github.com:gruntwork-io/terratest.git", gitBranchName, "test/fixtures/docker", buildOpts)
+
+	out := Run(t, imageTag, &RunOptions{Remove: true})
+	require.Contains(t, out, text)
 }

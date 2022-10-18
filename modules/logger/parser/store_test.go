@@ -12,10 +12,9 @@ import (
 )
 
 func createLogWriter(t *testing.T) LogWriter {
-	dir := getTempDir(t)
 	logWriter := LogWriter{
 		lookup:    make(map[string]*os.File),
-		outputDir: dir,
+		outputDir: t.TempDir(),
 	}
 	return logWriter
 }
@@ -23,8 +22,7 @@ func createLogWriter(t *testing.T) LogWriter {
 func TestEnsureDirectoryExistsCreatesDirectory(t *testing.T) {
 	t.Parallel()
 
-	dir := getTempDir(t)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	logger := NewTestLogger(t)
 	tmpd := filepath.Join(dir, "tmpdir")
@@ -36,8 +34,7 @@ func TestEnsureDirectoryExistsCreatesDirectory(t *testing.T) {
 func TestEnsureDirectoryExistsHandlesExistingDirectory(t *testing.T) {
 	t.Parallel()
 
-	dir := getTempDir(t)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	logger := NewTestLogger(t)
 	assert.True(t, files.IsDir(dir))
@@ -49,7 +46,6 @@ func TestGetOrCreateFileCreatesNewFile(t *testing.T) {
 	t.Parallel()
 
 	logWriter := createLogWriter(t)
-	defer os.RemoveAll(logWriter.outputDir)
 
 	logger := NewTestLogger(t)
 	testFileName := filepath.Join(logWriter.outputDir, t.Name()+".log")
@@ -65,7 +61,6 @@ func TestGetOrCreateFileCreatesNewFileIfTestNameHasDir(t *testing.T) {
 	t.Parallel()
 
 	logWriter := createLogWriter(t)
-	defer os.RemoveAll(logWriter.outputDir)
 
 	logger := NewTestLogger(t)
 	dirName := filepath.Join(logWriter.outputDir, "TestMain")
@@ -84,7 +79,6 @@ func TestGetOrCreateChannelReturnsExistingFileHandle(t *testing.T) {
 	t.Parallel()
 
 	logWriter := createLogWriter(t)
-	defer os.RemoveAll(logWriter.outputDir)
 
 	testName := t.Name()
 	logger := NewTestLogger(t)
@@ -105,7 +99,6 @@ func TestCloseFilesClosesAll(t *testing.T) {
 	t.Parallel()
 
 	logWriter := createLogWriter(t)
-	defer os.RemoveAll(logWriter.outputDir)
 
 	logger := NewTestLogger(t)
 	testName := t.Name()
@@ -134,7 +127,6 @@ func TestWriteLogWritesToCorrectLogFile(t *testing.T) {
 	t.Parallel()
 
 	logWriter := createLogWriter(t)
-	defer os.RemoveAll(logWriter.outputDir)
 
 	logger := NewTestLogger(t)
 	testName := t.Name()
@@ -173,7 +165,6 @@ func TestWriteLogCreatesLogFileIfNotExists(t *testing.T) {
 	t.Parallel()
 
 	logWriter := createLogWriter(t)
-	defer os.RemoveAll(logWriter.outputDir)
 
 	logger := NewTestLogger(t)
 	testName := t.Name()

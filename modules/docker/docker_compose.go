@@ -1,10 +1,13 @@
 package docker
 
 import (
+	"strings"
+
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/icmd"
 )
 
 // Options are Docker options.
@@ -15,7 +18,7 @@ type Options struct {
 	Logger *logger.Logger
 }
 
-// RunDockerCompose runs docker-compose with the given arguments and options and return stdout/stderr.
+// RunDockerCompose runs docker compose with the given arguments and options and return stdout/stderr.
 func RunDockerCompose(t testing.TestingT, options *Options, args ...string) string {
 	out, err := runDockerComposeE(t, false, options, args...)
 	if err != nil {
@@ -24,27 +27,43 @@ func RunDockerCompose(t testing.TestingT, options *Options, args ...string) stri
 	return out
 }
 
-// RunDockerComposeAndGetStdout runs docker-compose with the given arguments and options and returns only stdout.
+// RunDockerComposeAndGetStdout runs docker compose with the given arguments and options and returns only stdout.
 func RunDockerComposeAndGetStdOut(t testing.TestingT, options *Options, args ...string) string {
 	out, err := runDockerComposeE(t, true, options, args...)
 	require.NoError(t, err)
 	return out
 }
 
-// RunDockerComposeE runs docker-compose with the given arguments and options and return stdout/stderr.
+// RunDockerComposeE runs docker compose with the given arguments and options and return stdout/stderr.
 func RunDockerComposeE(t testing.TestingT, options *Options, args ...string) (string, error) {
 	return runDockerComposeE(t, false, options, args...)
 }
 
 func runDockerComposeE(t testing.TestingT, stdout bool, options *Options, args ...string) (string, error) {
-	cmd := shell.Command{
-		Command: "docker-compose",
-		// We append --project-name to ensure containers from multiple different tests using Docker Compose don't end
-		// up in the same project and end up conflicting with each other.
-		Args:       append([]string{"--project-name", t.Name()}, args...),
-		WorkingDir: options.WorkingDir,
-		Env:        options.EnvVars,
-		Logger:     options.Logger,
+	var cmd shell.Command
+
+	dockerComposeVersionCmd := icmd.Command("docker", "compose", "version")
+
+	result := icmd.RunCmd(dockerComposeVersionCmd)
+
+	if result.ExitCode == 0 {
+		cmd = shell.Command{
+			Command:    "docker",
+			Args:       append([]string{"compose", "--project-name", strings.ToLower(t.Name())}, args...),
+			WorkingDir: options.WorkingDir,
+			Env:        options.EnvVars,
+			Logger:     options.Logger,
+		}
+	} else {
+		cmd = shell.Command{
+			Command: "docker-compose",
+			// We append --project-name to ensure containers from multiple different tests using Docker Compose don't end
+			// up in the same project and end up conflicting with each other.
+			Args:       append([]string{"--project-name", strings.ToLower(t.Name())}, args...),
+			WorkingDir: options.WorkingDir,
+			Env:        options.EnvVars,
+			Logger:     options.Logger,
+		}
 	}
 
 	if stdout {

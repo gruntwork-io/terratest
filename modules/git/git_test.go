@@ -1,7 +1,6 @@
 package git
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -59,13 +58,11 @@ func testGetCurrentRefReturnsLightTagValue(t *testing.T) {
 func TestGitRefChecks(t *testing.T) {
 	t.Parallel()
 
-	tmpdir, err := ioutil.TempDir("", "")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpdir)
+	tmpdir := t.TempDir()
 	gitWorkDir := filepath.Join(tmpdir, "terratest")
 
 	url := "https://github.com/gruntwork-io/terratest.git"
-	err = exec.Command("git", "clone", url, gitWorkDir).Run()
+	err := exec.Command("git", "clone", url, gitWorkDir).Run()
 	require.NoError(t, err)
 
 	err = os.Chdir(gitWorkDir)
@@ -76,4 +73,16 @@ func TestGitRefChecks(t *testing.T) {
 	t.Run("GetCurrentRefReturnsBranchName", testGetCurrentRefReturnsBranchName)
 	t.Run("GetCurrentRefReturnsTagValue", testGetCurrentRefReturnsTagValue)
 	t.Run("GetCurrentRefReturnsLightTagValue", testGetCurrentRefReturnsLightTagValue)
+}
+
+func TestGetRepoRoot(t *testing.T) {
+	t.Parallel()
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+	expectedRepoRoot, err := filepath.Abs(filepath.Join(cwd, "..", ".."))
+	require.NoError(t, err)
+
+	repoRoot := GetRepoRoot(t)
+	assert.Equal(t, expectedRepoRoot, repoRoot)
 }

@@ -1,3 +1,4 @@
+//go:build kubernetes
 // +build kubernetes
 
 // NOTE: we have build tags to differentiate kubernetes tests from non-kubernetes tests. This is done because minikube
@@ -35,7 +36,7 @@ func TestGetIngressEReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 
 	uniqueID := strings.ToLower(random.UniqueId())
 	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_INGRESS_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID, uniqueID)
+	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
 	defer KubectlDeleteFromString(t, options, configData)
 
@@ -49,7 +50,7 @@ func TestListIngressesReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 
 	uniqueID := strings.ToLower(random.UniqueId())
 	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_INGRESS_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID, uniqueID)
+	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
 	defer KubectlDeleteFromString(t, options, configData)
 
@@ -66,14 +67,14 @@ func TestWaitUntilIngressAvailableReturnsSuccessfully(t *testing.T) {
 
 	uniqueID := strings.ToLower(random.UniqueId())
 	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_INGRESS_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID, uniqueID)
+	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
 	defer KubectlDeleteFromString(t, options, configData)
 
 	WaitUntilIngressAvailableV1Beta1(t, options, ExampleIngressName, 60, 5*time.Second)
 }
 
-const EXAMPLE_INGRESS_DEPLOYMENT_YAML_TEMPLATE = `---
+const exampleIngressDeploymentYamlTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -123,7 +124,7 @@ spec:
   rules:
   - http:
       paths:
-      - path: /app
+      - path: /app-%s
         backend:
           serviceName: nginx-service
           servicePort: 80

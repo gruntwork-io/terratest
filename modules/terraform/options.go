@@ -81,6 +81,24 @@ func (options *Options) Clone() (*Options, error) {
 	if err := copier.Copy(newOptions, options); err != nil {
 		return nil, err
 	}
+	// copier does not deep copy maps, so we have to do it manually.
+	newOptions.EnvVars = make(map[string]string)
+	for key, val := range options.EnvVars {
+		newOptions.EnvVars[key] = val
+	}
+	newOptions.Vars = make(map[string]interface{})
+	for key, val := range options.Vars {
+		newOptions.Vars[key] = val
+	}
+	newOptions.BackendConfig = make(map[string]interface{})
+	for key, val := range options.BackendConfig {
+		newOptions.BackendConfig[key] = val
+	}
+	newOptions.RetryableTerraformErrors = make(map[string]string)
+	for key, val := range options.RetryableTerraformErrors {
+		newOptions.RetryableTerraformErrors[key] = val
+	}
+
 	return newOptions, nil
 }
 

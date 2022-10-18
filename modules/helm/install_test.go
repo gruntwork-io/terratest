@@ -1,3 +1,4 @@
+//go:build kubeall || helm
 // +build kubeall helm
 
 // NOTE: we have build tags to differentiate kubernetes tests from non-kubernetes tests, and further differentiate helm
@@ -22,7 +23,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Test that we can install a remote chart (e.g stable/chartmuseum)
+const (
+	remoteChartSource  = "https://charts.bitnami.com/bitnami"
+	remoteChartName    = "nginx"
+	remoteChartVersion = "9.7.4"
+)
+
+// Test that we can install a remote chart (e.g bitnami/nginx)
 func TestRemoteChartInstall(t *testing.T) {
 	t.Parallel()
 
@@ -49,13 +56,13 @@ func TestRemoteChartInstall(t *testing.T) {
 	// Add the stable repo under a random name so as not to touch existing repo configs
 	uniqueName := strings.ToLower(fmt.Sprintf("terratest-%s", random.UniqueId()))
 	defer RemoveRepo(t, options, uniqueName)
-	AddRepo(t, options, uniqueName, "https://charts.helm.sh/stable")
-	helmChart := fmt.Sprintf("%s/chartmuseum", uniqueName)
+	AddRepo(t, options, uniqueName, remoteChartSource)
+	helmChart := fmt.Sprintf("%s/%s", uniqueName, remoteChartName)
 
 	// Generate a unique release name so we can defer the delete before installing
 	releaseName := fmt.Sprintf(
-		"chartmuseum-%s",
-		strings.ToLower(random.UniqueId()),
+		"%s-%s",
+		remoteChartName, strings.ToLower(random.UniqueId()),
 	)
 	defer Delete(t, options, releaseName, true)
 
@@ -64,7 +71,7 @@ func TestRemoteChartInstall(t *testing.T) {
 	require.Error(t, InstallE(t, options, helmChart, releaseName))
 
 	// Fix chart version and retry install
-	options.Version = "2.3.0"
+	options.Version = remoteChartVersion
 	// Test that passing extra arguments doesn't error, by changing default timeout
 	options.ExtraArgs = map[string][]string{"install": []string{"--timeout", "5m1s"}}
 	options.ExtraArgs["delete"] = []string{"--timeout", "5m1s"}
@@ -72,11 +79,10 @@ func TestRemoteChartInstall(t *testing.T) {
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 1)
 
 	// Verify service is accessible. Wait for it to become available and then hit the endpoint.
-	// Service name is RELEASE_NAME-CHART_NAME
-	serviceName := fmt.Sprintf("%s-chartmuseum", releaseName)
+	serviceName := releaseName
 	k8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 10, 1*time.Second)
 	service := k8s.GetService(t, kubectlOptions, serviceName)
-	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 8080)
+	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 80)
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
@@ -97,7 +103,10 @@ func waitForRemoteChartPods(t *testing.T, kubectlOptions *k8s.KubectlOptions, re
 	// Get pod and wait for it to be avaialable
 	// To get the pod, we need to filter it using the labels that the helm chart creates
 	filters := metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=chartmuseum,release=%s", releaseName),
+		LabelSelector: fmt.Sprintf(
+			"app.kubernetes.io/name=%s,app.kubernetes.io/instance=%s",
+			remoteChartName, releaseName,
+		),
 	}
 	k8s.WaitUntilNumPodsCreated(t, kubectlOptions, filters, podCount, 30, 10*time.Second)
 	pods := k8s.ListPods(t, kubectlOptions, filters)

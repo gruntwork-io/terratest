@@ -1,3 +1,4 @@
+//go:build kubeall || helm
 // +build kubeall helm
 
 // **NOTE**: we have build tags to differentiate kubernetes tests from non-kubernetes tests, and further differentiate helm

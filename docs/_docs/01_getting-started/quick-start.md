@@ -16,7 +16,7 @@ custom_js:
 
 Terratest uses the Go testing framework. To use Terratest, you need to install:
 
-- [Go](https://golang.org/) (requires version >=1.13)
+- [Go](https://golang.org/) (requires version >=1.17)
 
 ## Setting up your project
 
@@ -35,6 +35,7 @@ types of infrastructure code you can test (e.g., Packer, Kubernetes, etc).
     ```bash
     cd test
     go mod init "<MODULE_NAME>"
+    go mod tidy
     ```
 
     Where `<MODULE_NAME>` is the name of your module, typically in the format
@@ -230,7 +231,7 @@ Here's how you automate this process with Terratest:
 
 The test code above uses Kuberenetes helpers built into Terratest to run `kubectl apply`, wait for the service to come
 up, get the service endpoint, make HTTP requests to the service (with plenty of retries), check the response is what
-we expect, and runs `kubectly delete` at the end. You run this test with `go test` as well! 
+we expect, and runs `kubectl delete` at the end. You run this test with `go test` as well! 
 
 
 ## Give it a shot!

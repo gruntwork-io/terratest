@@ -1,35 +1,32 @@
 env: &env
   environment:
     GRUNTWORK_INSTALLER_VERSION: v0.0.36
-    MODULE_CI_VERSION: v0.33.3
+    MODULE_CI_VERSION: v0.46.0
     MODULE_GCP_CI_VERSION: v0.1.1
-    TERRAFORM_VERSION: 1.0.3
+    TERRAFORM_VERSION: 1.1.4
     PACKER_VERSION: 1.7.4
-    TERRAGRUNT_VERSION: v0.32.3
+    TERRAGRUNT_VERSION: v0.36.0
     OPA_VERSION: v0.33.1
-    GO_VERSION: 1.16.3
+    GO_VERSION: 1.17
     GO111MODULE: auto
-    K8S_VERSION: v1.15.0  # Same as EKS
-    MINIKUBE_VERSION: v1.9.2
-    HELM_VERSION: v3.1.1
+    K8S_VERSION: v1.18.20  # Same as EKS
+    MINIKUBE_VERSION: v1.22.0
+    HELM_VERSION: v3.8.0
     KUBECONFIG: /home/circleci/.kube/config
     BIN_BUILD_PARALLELISM: 3
+    DOCKER_COMPOSE_VERSION: v2.5.0
 
 defaults: &defaults
   machine:
     enabled: true
-    image: "ubuntu-2004:202107-02"
-  <<: *env
-
-# minikube setup requires ubuntu16.04
-minikube_defaults: &minikube_defaults
-  machine:
-    enabled: true
-    image: "ubuntu-1604:201903-01"
+    image: ubuntu-2004:202111-02
   <<: *env
 
 setup_minikube: &setup_minikube
-  command: setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "$MINIKUBE_VERSION"
+  command: |
+    sudo apt update -y
+    sudo apt install -y conntrack
+    setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "$MINIKUBE_VERSION"
 
 install_helm: &install_helm
   name: install helm
@@ -78,6 +75,16 @@ install_docker_buildx: &install_docker_buildx
     # Verify buildx is available
     docker buildx create --use
 
+# Installation script for the docker compose plugin. See: https://docs.docker.com/compose/install/#install-compose-on-linux-systems
+install_docker_compose: &install_docker_compose
+  name: install docker compose
+  command: |
+    curl -sLO https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-x86_64
+    mkdir -p ~/.docker/cli-plugins
+    mv docker-compose-linux-x86_64 ~/.docker/cli-plugins/docker-compose
+    chmod a+x ~/.docker/cli-plugins/docker-compose
+    docker compose version
+
 configure_environment_for_gcp: &configure_environment_for_gcp
   name: configure environment for gcp
   command: |
@@ -98,13 +105,13 @@ jobs:
   setup:
     <<: *env
     docker:
-      - image: circleci/python:3.8.5
+      - image: cimg/python:3.10.2
 
     steps:
       - checkout
       - restore_cache:
           keys:
-          - gomod-{{ checksum "go.sum" }}
+            - gomod-{{ checksum "go.sum" }}
 
       # Install gruntwork utilities
       - run:
@@ -113,16 +120,17 @@ jobs:
       - save_cache:
           key: gomod-{{ checksum "go.sum" }}
           paths:
-          - $HOME/go/src/
+            - $HOME/go/src/
 
       # The weird way you have to set PATH in Circle 2.0
-      - run: echo 'export PATH=$HOME/.local/bin:$HOME/go/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      - run: |
+          echo 'export PATH=$HOME/.local/bin:$HOME/go/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
 
       # Run pre-commit hooks and fail the build if any hook finds required changes.
       - run:
           name: run precommit
           command: |
-            go get golang.org/x/tools/cmd/goimports
+            go install golang.org/x/tools/cmd/goimports@latest
             # Install the latest minor version for v2
             pip install pre-commit~=2.9
             pre-commit install
@@ -138,6 +146,8 @@ jobs:
             # our Linux or Mac OSX dev environments. We workaround this by running `go mod tidy` in the CircleCI
             # environment so it pulls in what it needs.
             go mod tidy
+
+            go install github.com/mitchellh/gox@latest
 
             GO_ENABLED=0 build-go-binaries \
               --parallel "$BIN_BUILD_PARALLELISM" \
@@ -170,9 +180,12 @@ jobs:
           <<: *install_gruntwork_utils
       - run:
           <<: *install_docker_buildx
+      - run:
+          <<: *install_docker_compose
 
       # The weird way you have to set PATH in Circle 2.0
-      - run: echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      - run: |
+          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
 
       # Run the tests. Note that we set the "-p 1" flag to tell Go to run tests in each package sequentially. Without
       # this, Go buffers all log output until all packages are done, which with slower running tests can cause CircleCI
@@ -185,7 +198,8 @@ jobs:
       - run: run-go-tests --packages "-p 1 ./..." | tee /tmp/logs/test_output.log
 
       - run:
-          command: ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
+          command: |
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
 
       # Store test result and log artifacts for browsing purposes
@@ -200,7 +214,7 @@ jobs:
   gcp_test:
     <<: *env
     docker:
-      - image: cimg/base:2020.01
+      - image: cimg/base:2022.03
 
     steps:
       - attach_workspace:
@@ -210,7 +224,8 @@ jobs:
           <<: *install_gruntwork_utils
 
       # The weird way you have to set PATH in Circle 2.0
-      - run: echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      - run: |
+          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
 
       - run:
           <<: *configure_environment_for_gcp
@@ -226,7 +241,8 @@ jobs:
             run-go-tests --packages "-tags=gcp ./test/gcp" | tee /tmp/logs/test_output.log
 
       - run:
-          command: ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
+          command: |
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
 
       # Store test result and log artifacts for browsing purposes
@@ -236,7 +252,7 @@ jobs:
           path: /tmp/logs
 
   kubernetes_test:
-    <<: *minikube_defaults
+    <<: *defaults
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -245,7 +261,8 @@ jobs:
           <<: *install_gruntwork_utils
 
       # The weird way you have to set PATH in Circle 2.0
-      - run: echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      - run: |
+          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
 
       - run:
           <<: *setup_minikube
@@ -261,7 +278,8 @@ jobs:
             run-go-tests --packages "-tags kubernetes -run TestKubernetes ./test" | tee -a /tmp/logs/test_output.log
 
       - run:
-          command: ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
+          command: |
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
 
       # Store test result and log artifacts for browsing purposes
@@ -272,7 +290,7 @@ jobs:
 
 
   helm_test:
-    <<: *minikube_defaults
+    <<: *defaults
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -281,7 +299,8 @@ jobs:
           <<: *install_gruntwork_utils
 
       # The weird way you have to set PATH in Circle 2.0
-      - run: echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      - run: |
+          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
 
       - run:
           <<: *setup_minikube
@@ -300,7 +319,8 @@ jobs:
             run-go-tests --packages "-tags helm -run TestHelm ./test" | tee -a /tmp/logs/test_output.log
 
       - run:
-          command: ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
+          command: |
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
 
       # Store test result and log artifacts for browsing purposes
@@ -316,8 +336,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: /home/circleci
-      - run: curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "$GRUNTWORK_INSTALLER_VERSION"
-      - run: gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "$MODULE_CI_VERSION"
+      - run: |
+          curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version "$GRUNTWORK_INSTALLER_VERSION"
+      - run: |
+          gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "$MODULE_CI_VERSION"
       - run: cd cmd/bin && sha256sum * > SHA256SUMS
       - run: upload-github-release-assets cmd/bin/*
 
@@ -329,24 +351,6 @@ workflows:
       - setup:
           context:
             - Gruntwork Admin
-          filters:
-            tags:
-              only: /^v.*/
-
-      - test:
-          context:
-            - Gruntwork Admin
-          requires:
-            - setup
-          filters:
-            tags:
-              only: /^v.*/
-
-      - gcp_test:
-          context:
-            - Gruntwork GCP
-          requires:
-            - setup
           filters:
             tags:
               only: /^v.*/
@@ -363,6 +367,25 @@ workflows:
       - helm_test:
           context:
             - Gruntwork Admin
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
+
+      - test:
+          context:
+            - Gruntwork Admin
+            - Slack Token For Test
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
+
+      - gcp_test:
+          context:
+            - Gruntwork GCP
           requires:
             - setup
           filters:

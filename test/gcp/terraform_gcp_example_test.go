@@ -1,3 +1,4 @@
+//go:build gcp
 // +build gcp
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
@@ -108,8 +109,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	// Setup values for our Terraform apply
 	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 	randomValidGcpName := gcp.RandomValidGcpName()
-	// On October 22, 2018, GCP launched the asia-east2 region, which promptly failed all our tests, so blacklist asia-east2.
-	zone := gcp.GetRandomZone(t, projectID, nil, nil, []string{"asia-east2"})
+	zone := gcp.GetRandomZone(t, projectID, nil, nil, RegionsToAvoid)
 
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located

@@ -1,3 +1,4 @@
+//go:build kubeall || helm
 // +build kubeall helm
 
 // NOTE: we have build tags to differentiate kubernetes tests from non-kubernetes tests, and further differentiate helm
@@ -46,20 +47,20 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 	// Add the stable repo under a random name so as not to touch existing repo configs
 	uniqueName := strings.ToLower(fmt.Sprintf("terratest-%s", random.UniqueId()))
 	defer RemoveRepo(t, options, uniqueName)
-	AddRepo(t, options, uniqueName, "https://charts.helm.sh/stable")
-	helmChart := fmt.Sprintf("%s/chartmuseum", uniqueName)
+	AddRepo(t, options, uniqueName, remoteChartSource)
+	helmChart := fmt.Sprintf("%s/%s", uniqueName, remoteChartName)
 
 	// Generate a unique release name so we can defer the delete before installing
 	releaseName := fmt.Sprintf(
-		"chartmuseum-%s",
-		strings.ToLower(random.UniqueId()),
+		"%s-%s",
+		remoteChartName, strings.ToLower(random.UniqueId()),
 	)
 	defer Delete(t, options, releaseName, true)
 	Install(t, options, helmChart, releaseName)
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 1)
 
 	// Setting replica count to 2 to check the upgrade functionality.
-	// After successful upgrade , the count of pods should be equal to 2.
+	// After successful upgrade, the count of pods should be equal to 2.
 	options.SetValues = map[string]string{
 		"replicaCount": "2",
 		"service.type": "NodePort",
@@ -71,11 +72,10 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 2)
 
 	// Verify service is accessible. Wait for it to become available and then hit the endpoint.
-	// Service name is RELEASE_NAME-CHART_NAME
-	serviceName := fmt.Sprintf("%s-chartmuseum", releaseName)
+	serviceName := releaseName
 	k8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 10, 1*time.Second)
 	service := k8s.GetService(t, kubectlOptions, serviceName)
-	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 8080)
+	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 80)
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}

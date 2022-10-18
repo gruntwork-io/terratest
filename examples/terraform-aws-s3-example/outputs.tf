@@ -7,9 +7,9 @@ output "bucket_arn" {
 }
 
 output "logging_target_bucket" {
-  value = tolist(aws_s3_bucket.test_bucket.logging)[0].target_bucket
+  value = aws_s3_bucket_logging.test_bucket.target_bucket
 }
 
 output "logging_target_prefix" {
-  value = tolist(aws_s3_bucket.test_bucket.logging)[0].target_prefix
+  value = aws_s3_bucket_logging.test_bucket.target_prefix
 }

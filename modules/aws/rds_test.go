@@ -30,7 +30,7 @@ func TestGetRecommendedRdsInstanceTypeHappyPath(t *testing.T) {
 			name:                  "EU region, postgres, 2nd offering available based on region",
 			region:                "eu-north-1",
 			databaseEngine:        "postgres",
-			databaseEngineVersion: "13.1",
+			databaseEngineVersion: "13.5",
 			instanceTypes:         []string{"db.t2.micro", "db.m5.large"},
 			expected:              "db.m5.large",
 		},

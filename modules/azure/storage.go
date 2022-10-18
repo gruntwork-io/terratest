@@ -26,6 +26,27 @@ func StorageBlobContainerExists(t *testing.T, containerName string, storageAccou
 	return result
 }
 
+// StorageFileShareExists returns true if the file share name exactly matches; otherwise false
+// This function would fail the test if there is an error.
+func StorageFileShareExists(t *testing.T, fileSahreName string, storageAccountName string, resourceGroupName string, subscriptionID string) bool {
+	result, err := StorageFileShareExistsE(t, fileSahreName, storageAccountName, resourceGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// StorageFileShareExists returns true if the file share name exactly matches; otherwise false
+func StorageFileShareExistsE(t *testing.T, fileSahreName string, storageAccountName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	_, err := GetStorageFileShareE(fileSahreName, storageAccountName, resourceGroupName, subscriptionID)
+	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
 // GetStorageBlobContainerPublicAccess indicates whether a storage container has public access; otherwise false.
 // This function would fail the test if there is an error.
 func GetStorageBlobContainerPublicAccess(t *testing.T, containerName string, storageAccountName string, resourceGroupName string, subscriptionID string) bool {
@@ -171,6 +192,31 @@ func GetStorageAccountPropertyE(storageAccountName, resourceGroupName, subscript
 		return nil, err
 	}
 	return &account, nil
+}
+
+// GetStorageFileShare returns specified file share. This function would fail the test if there is an error.
+func GetStorageFileShare(t *testing.T, fileShareName, storageAccountName, resourceGroupName, subscriptionID string) *storage.FileShare {
+	fileSahre, err := GetStorageFileShareE(fileShareName, storageAccountName, resourceGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return fileSahre
+}
+
+// GetStorageFileSharesE returns specified file share.
+func GetStorageFileShareE(fileShareName, storageAccountName, resourceGroupName, subscriptionID string) (*storage.FileShare, error) {
+	resourceGroupName, err2 := getTargetAzureResourceGroupName(resourceGroupName)
+	if err2 != nil {
+		return nil, err2
+	}
+	client, err := CreateStorageFileSharesClientE(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	fileShare, err := client.Get(context.Background(), resourceGroupName, storageAccountName, fileShareName, "stats")
+	if err != nil {
+		return nil, err
+	}
+	return &fileShare, nil
 }
 
 // GetStorageAccountClientE creates a storage account client.

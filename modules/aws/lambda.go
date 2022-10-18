@@ -170,7 +170,7 @@ type FunctionError struct {
 }
 
 func (err *FunctionError) Error() string {
-	return fmt.Sprintf("%s error invoking lambda function: %v", err.Message, err.Payload)
+	return fmt.Sprintf("%q error with status code %d invoking lambda function: %q", err.Message, err.StatusCode, err.Payload)
 }
 
 // NewLambdaClient creates a new Lambda client.

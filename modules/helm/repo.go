@@ -14,7 +14,16 @@ func AddRepo(t testing.TestingT, options *Options, repoName string, repoURL stri
 
 // AddRepoE will setup the provided helm repository to the local helm client configuration.
 func AddRepoE(t testing.TestingT, options *Options, repoName string, repoURL string) error {
-	_, err := RunHelmCommandAndGetOutputE(t, options, "repo", "add", repoName, repoURL)
+	// Set required args
+	args := []string{"add", repoName, repoURL}
+
+	// Append helm repo add ExtraArgs if available
+	if options.ExtraArgs != nil {
+		if repoAddArgs, ok := options.ExtraArgs["repoAdd"]; ok {
+			args = append(args, repoAddArgs...)
+		}
+	}
+	_, err := RunHelmCommandAndGetOutputE(t, options, "repo", args...)
 	return err
 }
 
