@@ -16,7 +16,7 @@ custom_js:
 
 Terratest uses the Go testing framework. To use Terratest, you need to install:
 
-- [Go](https://golang.org/) (requires version >=1.17)
+- [Go](https://golang.org/) (requires version >=1.18)
 
 ## Setting up your project
 
