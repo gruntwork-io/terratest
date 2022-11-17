@@ -70,7 +70,7 @@ func GetS3BucketTags(t testing.TestingT, awsRegion string, bucket string) map[st
 	return tags
 }
 
-//  GetS3BucketTagsE fetches the given bucket's tags and returns them as a string map of strings.
+// GetS3BucketTagsE fetches the given bucket's tags and returns them as a string map of strings.
 func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[string]string, error) {
 	s3Client, err := NewS3ClientE(t, awsRegion)
 	if err != nil {

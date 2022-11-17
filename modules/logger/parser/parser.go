@@ -47,8 +47,9 @@ var (
 
 // getIndent takes a line and returns the indent string
 // Example:
-//   in:  "    --- FAIL: TestSnafu"
-//   out: "    "
+//
+//	in:  "    --- FAIL: TestSnafu"
+//	out: "    "
 func getIndent(data string) string {
 	re := regexp.MustCompile(`^\s+`)
 	indent := re.FindString(data)
@@ -57,8 +58,9 @@ func getIndent(data string) string {
 
 // getTestNameFromResultLine takes a go testing result line and extracts out the test name
 // Example:
-//   in:  --- FAIL: TestSnafu
-//   out: TestSnafu
+//
+//	in:  --- FAIL: TestSnafu
+//	out: TestSnafu
 func getTestNameFromResultLine(text string) string {
 	m := regexResult.FindStringSubmatch(text)
 	return m[2]
@@ -71,8 +73,9 @@ func isResultLine(text string) bool {
 
 // getTestNameFromStatusLine takes a go testing status line and extracts out the test name
 // Example:
-//   in:  === RUN  TestSnafu
-//   out: TestSnafu
+//
+//	in:  === RUN  TestSnafu
+//	out: TestSnafu
 func getTestNameFromStatusLine(text string) string {
 	m := regexStatus.FindStringSubmatch(text)
 	return m[2]

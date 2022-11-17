@@ -162,7 +162,6 @@ func BuildAmiE(t testing.TestingT, options *Options) (string, error) {
 //
 // 1456332887,amazon-ebs,artifact,0,id,us-east-1:ami-b481b3de
 // 1533742764,googlecompute,artifact,0,id,terratest-packer-example-2018-08-08t15-35-19z
-//
 func extractArtifactID(packerLogOutput string) (string, error) {
 	re := regexp.MustCompile(`.+artifact,\d+?,id,(?:.+?:|)(.+)`)
 	matches := re.FindStringSubmatch(packerLogOutput)

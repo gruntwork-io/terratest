@@ -127,16 +127,16 @@ func TestMapToHclString(t *testing.T) {
 //
 // We have a few unsatisfactory ways to solve this problem:
 //
-// 1. Enforce iteration order. This is easy to do in other languages, where you have built-in sorted maps. In Go, no
-//    such map exists, and if you create a custom one, you can't use the range keyword on it
-//    (http://stackoverflow.com/a/35810932/483528). As a result, we'd have to modify our implementation code to take
-//    iteration order into account which is a totally unnecessary feature that increases complexity.
-// 2. We could parse the output string and do an order-independent comparison. However, that adds a bunch of parsing
-//    logic into the test code which is a totally unnecessary feature that increases complexity.
-// 3. We accept that Go is a shitty language and, if the test fails, we re-run it a bunch of times in the hope that, if
-//    the bug is caused by key ordering, we will randomly get the proper order in a future run. The code being tested
-//    here is tiny & fast, so doing a hundred retries is still sub millisecond, so while ugly, this provides a very
-//    simple solution.
+//  1. Enforce iteration order. This is easy to do in other languages, where you have built-in sorted maps. In Go, no
+//     such map exists, and if you create a custom one, you can't use the range keyword on it
+//     (http://stackoverflow.com/a/35810932/483528). As a result, we'd have to modify our implementation code to take
+//     iteration order into account which is a totally unnecessary feature that increases complexity.
+//  2. We could parse the output string and do an order-independent comparison. However, that adds a bunch of parsing
+//     logic into the test code which is a totally unnecessary feature that increases complexity.
+//  3. We accept that Go is a shitty language and, if the test fails, we re-run it a bunch of times in the hope that, if
+//     the bug is caused by key ordering, we will randomly get the proper order in a future run. The code being tested
+//     here is tiny & fast, so doing a hundred retries is still sub millisecond, so while ugly, this provides a very
+//     simple solution.
 //
 // Isn't it great that Go's designers built features into the language to prevent bugs that now force every Go
 // developer to write thousands of lines of extra code like this, which is of course likely to contain bugs itself?

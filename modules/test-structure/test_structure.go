@@ -53,19 +53,19 @@ func SkipStageEnvVarSet() bool {
 // relative to the repo root. If your tests reside in the "/test" relative to the root, then you will use this as
 // follows:
 //
-//       // Root folder where terraform files should be (relative to the test folder)
-//       rootFolder := ".."
+//	// Root folder where terraform files should be (relative to the test folder)
+//	rootFolder := ".."
 //
-//       // Relative path to terraform module being tested from the root folder
-//       terraformFolderRelativeToRoot := "examples/terraform-aws-example"
+//	// Relative path to terraform module being tested from the root folder
+//	terraformFolderRelativeToRoot := "examples/terraform-aws-example"
 //
-//       // Copy the terraform folder to a temp folder
-//       tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
+//	// Copy the terraform folder to a temp folder
+//	tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 //
-//       // Make sure to use the temp test folder in the terraform options
-//       terraformOptions := &terraform.Options{
-//       		TerraformDir: tempTestFolder,
-//       }
+//	// Make sure to use the temp test folder in the terraform options
+//	terraformOptions := &terraform.Options{
+//			TerraformDir: tempTestFolder,
+//	}
 //
 // Note that if any of the SKIP_<stage> environment variables is set, we assume this is a test in the local dev where
 // there are no other concurrent tests running and we want to be able to cache test data between test stages, so in that
@@ -84,23 +84,23 @@ func CopyTerraformFolderToTemp(t testing.TestingT, rootFolder string, terraformM
 // relative to the repo root. If your tests reside in the "/test" relative to the root, then you will use this as
 // follows:
 //
-//       // Destination for the copy of the files.  In this example we are using the Azure Dev Ops variable
-//       // for the folder that is cleaned after each pipeline job.
-//       destRootFolder := os.Getenv("AGENT_TEMPDIRECTORY")
+//	// Destination for the copy of the files.  In this example we are using the Azure Dev Ops variable
+//	// for the folder that is cleaned after each pipeline job.
+//	destRootFolder := os.Getenv("AGENT_TEMPDIRECTORY")
 //
-//       // Root folder where terraform files should be (relative to the test folder)
-//       rootFolder := ".."
+//	// Root folder where terraform files should be (relative to the test folder)
+//	rootFolder := ".."
 //
-//       // Relative path to terraform module being tested from the root folder
-//       terraformFolderRelativeToRoot := "examples/terraform-aws-example"
+//	// Relative path to terraform module being tested from the root folder
+//	terraformFolderRelativeToRoot := "examples/terraform-aws-example"
 //
-//       // Copy the terraform folder to a temp folder
-//       tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot, destRootFolder)
+//	// Copy the terraform folder to a temp folder
+//	tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot, destRootFolder)
 //
-//       // Make sure to use the temp test folder in the terraform options
-//       terraformOptions := &terraform.Options{
-//       		TerraformDir: tempTestFolder,
-//       }
+//	// Make sure to use the temp test folder in the terraform options
+//	terraformOptions := &terraform.Options{
+//			TerraformDir: tempTestFolder,
+//	}
 //
 // Note that if any of the SKIP_<stage> environment variables is set, we assume this is a test in the local dev where
 // there are no other concurrent tests running and we want to be able to cache test data between test stages, so in that

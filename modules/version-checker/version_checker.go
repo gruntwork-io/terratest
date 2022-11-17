@@ -148,8 +148,8 @@ func extractVersionFromShellCommandOutput(output string) (string, error) {
 // It returns Error for ill-formatted version string and VersionMismatchErr for
 // minimum version check failure.
 //
-//    checkVersionConstraint(t, "1.2.31",  ">= 1.2.0, < 2.0.0") - no error
-//    checkVersionConstraint(t, "1.0.31",  ">= 1.2.0, < 2.0.0") - error
+//	checkVersionConstraint(t, "1.2.31",  ">= 1.2.0, < 2.0.0") - no error
+//	checkVersionConstraint(t, "1.0.31",  ">= 1.2.0, < 2.0.0") - error
 func checkVersionConstraint(actualVersionStr string, versionConstraintStr string) error {
 	actualVersion, err := version.NewVersion(actualVersionStr)
 	if err != nil {
