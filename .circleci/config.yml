@@ -14,12 +14,11 @@ env: &env
     HELM_VERSION: v3.8.0
     KUBECONFIG: /home/circleci/.kube/config
     BIN_BUILD_PARALLELISM: 3
-    DOCKER_COMPOSE_VERSION: v2.5.0
 
 defaults: &defaults
   machine:
     enabled: true
-    image: ubuntu-2004:202111-02
+    image: ubuntu-2004:2022.10.1
   <<: *env
 
 setup_minikube: &setup_minikube
@@ -74,16 +73,6 @@ install_docker_buildx: &install_docker_buildx
 
     # Verify buildx is available
     docker buildx create --use
-
-# Installation script for the docker compose plugin. See: https://docs.docker.com/compose/install/#install-compose-on-linux-systems
-install_docker_compose: &install_docker_compose
-  name: install docker compose
-  command: |
-    curl -sLO https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-x86_64
-    mkdir -p ~/.docker/cli-plugins
-    mv docker-compose-linux-x86_64 ~/.docker/cli-plugins/docker-compose
-    chmod a+x ~/.docker/cli-plugins/docker-compose
-    docker compose version
 
 configure_environment_for_gcp: &configure_environment_for_gcp
   name: configure environment for gcp
@@ -180,8 +169,6 @@ jobs:
           <<: *install_gruntwork_utils
       - run:
           <<: *install_docker_buildx
-      - run:
-          <<: *install_docker_compose
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
