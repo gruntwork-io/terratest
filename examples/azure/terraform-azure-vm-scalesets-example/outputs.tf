@@ -1,9 +1,9 @@
-output "public_ip_name" {
-  value = azurerm_public_ip.pip.name
-}
-
 output "resource_group_name" {
   value = azurerm_resource_group.vmss_rg.name
+}
+
+output "public_ip_name" {
+  value = azurerm_public_ip.pip.name
 }
 
 output "subnet_name" {

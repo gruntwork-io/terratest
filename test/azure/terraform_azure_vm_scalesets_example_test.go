@@ -55,7 +55,7 @@ func TestTerraformAzureVmScaleSetsExample(t *testing.T) {
 		vmss := azure.GetVirtualMachineScaleSet(t, scaleSetName, resourceGroupName, subscriptionID)
 
 		// Size of VM instance in a VM Scale Set
-		actualVMSize := azure.GetSizeOfVirtualMachineScaleSet(t, scaleSetName, resourceGroupName, subscriptionID)
+		actualVMSize := *vmss.Sku.Name
 		assert.Equal(t, expectedVMSize, actualVMSize)
 
 		// VM Scale Set's VM instance name prefix
@@ -66,7 +66,7 @@ func TestTerraformAzureVmScaleSetsExample(t *testing.T) {
 		assert.Equal(t, expectedTags, actualTags)
 
 		// VM Scale Set capacity
-		actualCapacity := azure.GetVirtualMachineScaleSetCapacity(t, scaleSetName, resourceGroupName, subscriptionID)
+		actualCapacity := strconv.FormatInt(*vmss.Sku.Capacity, 10)
 		assert.Equal(t, expectedCapacity, actualCapacity)
 	})
 

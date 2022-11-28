@@ -17,17 +17,6 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when methods to create and delete network resources are added, these tests can be extended.
 */
 
-func TestCreateVirtualMachineScaleSetsClientE(t *testing.T) {
-	t.Parallel()
-
-	subscriptionID := ""
-
-	client, err := CreateVirtualMachineScaleSetsClientE(subscriptionID)
-
-	require.NoError(t, err)
-	assert.NotEmpty(t, *client)
-}
-
 func TestGetVirtualMachineScaleSetsClientE(t *testing.T) {
 	t.Parallel()
 
