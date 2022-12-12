@@ -56,8 +56,8 @@ func FormatArgs(options *Options, args ...string) []string {
 	terraformArgs = append(terraformArgs, args...)
 
 	if includeVars {
-		terraformArgs = append(terraformArgs, FormatTerraformVarsAsArgs(options.Vars)...)
 		terraformArgs = append(terraformArgs, FormatTerraformArgs("-var-file", options.VarFiles)...)
+		terraformArgs = append(terraformArgs, FormatTerraformVarsAsArgs(options.Vars)...)
 	}
 
 	terraformArgs = append(terraformArgs, FormatTerraformArgs("-target", options.Targets)...)
