@@ -28,6 +28,10 @@ func InitE(t testing.TestingT, options *Options) (string, error) {
 		args = append(args, "-migrate-state", "-force-copy")
 	}
 
+	if options.NoBackend {
+		args = append(args, "-backend=false")
+	}
+
 	args = append(args, FormatTerraformBackendConfigAsArgs(options.BackendConfig)...)
 	args = append(args, FormatTerraformPluginDirAsArgs(options.PluginDir)...)
 	return RunTerraformCommandE(t, options, args...)
