@@ -20,7 +20,8 @@ type Options struct {
 	EnableBuildKit bool
 
 	// Set a logger that should be used. See the logger package for more info.
-	Logger *logger.Logger
+	Logger      *logger.Logger
+	ProjectName string
 }
 
 // RunDockerCompose runs docker compose with the given arguments and options and return stdout/stderr.
@@ -47,8 +48,12 @@ func RunDockerComposeE(t testing.TestingT, options *Options, args ...string) (st
 func runDockerComposeE(t testing.TestingT, stdout bool, options *Options, args ...string) (string, error) {
 	var cmd shell.Command
 
-	dockerComposeVersionCmd := icmd.Command("docker", "compose", "version")
+	projectName := options.ProjectName
+	if len(projectName) <= 0 {
+		projectName = strings.ToLower(t.Name())
+	}
 
+	dockerComposeVersionCmd := icmd.Command("docker", "compose", "version")
 	result := icmd.RunCmd(dockerComposeVersionCmd)
 
 	if options.EnableBuildKit {
@@ -63,7 +68,7 @@ func runDockerComposeE(t testing.TestingT, stdout bool, options *Options, args .
 	if result.ExitCode == 0 {
 		cmd = shell.Command{
 			Command:    "docker",
-			Args:       append([]string{"compose", "--project-name", generateValidDockerComposeProjectName(t.Name())}, args...),
+			Args:       append([]string{"compose", "--project-name", generateValidDockerComposeProjectName(projectName)}, args...),
 			WorkingDir: options.WorkingDir,
 			Env:        options.EnvVars,
 			Logger:     options.Logger,
@@ -73,7 +78,7 @@ func runDockerComposeE(t testing.TestingT, stdout bool, options *Options, args .
 			Command: "docker-compose",
 			// We append --project-name to ensure containers from multiple different tests using Docker Compose don't end
 			// up in the same project and end up conflicting with each other.
-			Args:       append([]string{"--project-name", generateValidDockerComposeProjectName(t.Name())}, args...),
+			Args:       append([]string{"--project-name", generateValidDockerComposeProjectName(projectName)}, args...),
 			WorkingDir: options.WorkingDir,
 			Env:        options.EnvVars,
 			Logger:     options.Logger,
@@ -83,6 +88,7 @@ func runDockerComposeE(t testing.TestingT, stdout bool, options *Options, args .
 	if stdout {
 		return shell.RunCommandAndGetStdOut(t, cmd), nil
 	}
+
 	return shell.RunCommandAndGetOutputE(t, cmd)
 }
 

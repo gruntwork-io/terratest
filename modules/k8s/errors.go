@@ -68,7 +68,7 @@ type PodNotAvailable struct {
 
 // Error is a simple function to return a formatted error message as a string
 func (err PodNotAvailable) Error() string {
-	return fmt.Sprintf("Pod %s is not available", err.pod.Name)
+	return fmt.Sprintf("Pod %s is not available, reason: %s, message: %s", err.pod.Name, err.pod.Status.Reason, err.pod.Status.Message)
 }
 
 // NewPodNotAvailableError returnes a PodNotAvailable struct when Kubernetes deems a pod is not available

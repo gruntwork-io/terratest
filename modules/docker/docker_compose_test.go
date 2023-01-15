@@ -25,3 +25,40 @@ func TestDockerComposeWithBuildKit(t *testing.T) {
 
 	require.Contains(t, out, testToken)
 }
+
+func TestDockerComposeWithCustomProjectName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		options  *Options
+		expected string
+	}{
+		{
+			name: "Testing ",
+			options: &Options{
+				WorkingDir: "../../test/fixtures/docker-compose-with-custom-project-name",
+			},
+			expected: "testdockercomposewithcustomprojectname",
+		},
+		{
+			name: "Testing",
+			options: &Options{
+				WorkingDir:  "../../test/fixtures/docker-compose-with-custom-project-name",
+				ProjectName: "testingProjectName",
+			},
+			expected: "testingprojectname",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Log(test.name)
+
+			output := RunDockerCompose(t, test.options, "up", "-d")
+			defer RunDockerCompose(t, test.options, "down", "--remove-orphans", "--timeout", "2")
+
+			require.Contains(t, output, test.expected)
+		})
+	}
+}
