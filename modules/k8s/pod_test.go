@@ -212,3 +212,32 @@ func TestIsPodAvailable(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPodLogsEReturnsErrorForNonExistentPod(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueId())
+	options := NewKubectlOptions("", "", uniqueID)
+	podLogOptions := &corev1.PodLogOptions{}
+
+	_, err := GetPodLogsE(t, options, uniqueID, podLogOptions)
+	require.Error(t, err)
+}
+
+func TestGetPodLogsEReturnsNoErrorForValidPod(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueId())
+	options := NewKubectlOptions("", "", uniqueID)
+	podLogOptions := &corev1.PodLogOptions{Container: "sample-container"}
+
+	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
+	KubectlApplyFromString(t, options, configData)
+	defer KubectlDeleteFromString(t, options, configData)
+
+	WaitUntilPodAvailable(t, options, "sample-pod", 6, 5*time.Second)
+	logs, err := GetPodLogsE(t, options, "sample-pod", podLogOptions)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, logs)
+}

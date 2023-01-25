@@ -1,8 +1,10 @@
 package k8s
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -147,4 +149,37 @@ func IsPodAvailable(pod *corev1.Pod) bool {
 		}
 	}
 	return pod.Status.Phase == corev1.PodRunning
+}
+
+// GetPodLogs returns a string containing the logs for a pod resource in the provided namespace with the given name. This will
+// fail the test if there is an error.
+func GetPodLogs(t testing.TestingT, options *KubectlOptions, podName string, podLogOpts *corev1.PodLogOptions) string {
+	podLogs, err := GetPodLogsE(t, options, podName, podLogOpts)
+	require.NoError(t, err)
+	return podLogs
+}
+
+// GetPodLogsE returns a string containing the logs for a pod resource in the provided namespace with the given name.
+func GetPodLogsE(t testing.TestingT, options *KubectlOptions, podName string, podLogOpts *corev1.PodLogOptions) (string, error) {
+	clientSet, err := GetKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return "", err
+	}
+
+	req := clientSet.CoreV1().Pods(options.Namespace).GetLogs(podName, podLogOpts)
+	podLogs, err := req.Stream(context.Background())
+	if err != nil {
+		return "", err
+	}
+
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		return "", err
+	}
+	str := buf.String()
+
+	return str, nil
 }
