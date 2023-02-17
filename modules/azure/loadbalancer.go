@@ -173,7 +173,7 @@ func GetLoadBalancerE(loadBalancerName string, resourceGroupName string, subscri
 	}
 
 	// Get the Load Balancer
-	lb, err := client.Get(context.Background(), resourceGroupName, loadBalancerName, subscriptionID)
+	lb, err := client.Get(context.Background(), resourceGroupName, loadBalancerName, "")
 	if err != nil {
 		return nil, err
 	}
@@ -183,14 +183,11 @@ func GetLoadBalancerE(loadBalancerName string, resourceGroupName string, subscri
 
 // GetLoadBalancerClientE gets a new Load Balancer client in the specified Azure Subscription.
 func GetLoadBalancerClientE(subscriptionID string) (*network.LoadBalancersClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Get the Load Balancer client
+	client, err := CreateLoadBalancerClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the Load Balancer client
-	client := network.NewLoadBalancersClient(subscriptionID)
 
 	// Create an authorizer
 	authorizer, err := NewAuthorizer()
@@ -199,5 +196,5 @@ func GetLoadBalancerClientE(subscriptionID string) (*network.LoadBalancersClient
 	}
 	client.Authorizer = *authorizer
 
-	return &client, nil
+	return client, nil
 }

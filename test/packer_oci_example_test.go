@@ -26,7 +26,7 @@ func TestPackerOciExample(t *testing.T) {
 
 	packerOptions := &packer.Options{
 		// The path to where the Packer template is located
-		Template: "../examples/packer-basic-example/build.json",
+		Template: "../examples/packer-basic-example/build.pkr.hcl",
 
 		// Variables to pass to our Packer build using -var options
 		Vars: map[string]string{

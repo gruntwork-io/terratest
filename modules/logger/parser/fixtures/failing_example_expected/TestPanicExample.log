@@ -1,6 +1,6 @@
 === RUN   TestPanicExample
 --- FAIL: TestPanicExample (0.00s)
-    integration_test.go:14: 
+    integration_test.go:14:
         	Error Trace:	integration_test.go:14
         	Error:      	Expected value not to be nil.
         	Test:       	TestPanicExample

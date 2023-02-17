@@ -2,5 +2,4 @@
 === PAUSE TestCloseChannelsClosesAll
 === CONT  TestCloseChannelsClosesAll
 TestCloseChannelsClosesAll INFO 2018-10-20T13:15:09-07:00 Closing all the channels in log writer
---- PASS: TestStackPop (0.00s)
 --- PASS: TestCloseChannelsClosesAll (0.00s)

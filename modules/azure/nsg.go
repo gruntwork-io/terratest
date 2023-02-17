@@ -46,13 +46,11 @@ func GetDefaultNsgRulesClient(t *testing.T, subscriptionID string) network.Defau
 // defined on an network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
 func GetDefaultNsgRulesClientE(subscriptionID string) (network.DefaultSecurityRulesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Get new default client from client factory
+	nsgClient, err := CreateNsgDefaultRulesClientE(subscriptionID)
 	if err != nil {
 		return network.DefaultSecurityRulesClient{}, err
 	}
-
-	nsgClient := network.NewDefaultSecurityRulesClient(subscriptionID)
 
 	// Get an authorizer
 	auth, err := NewAuthorizer()
@@ -61,7 +59,7 @@ func GetDefaultNsgRulesClientE(subscriptionID string) (network.DefaultSecurityRu
 	}
 
 	nsgClient.Authorizer = *auth
-	return nsgClient, nil
+	return *nsgClient, nil
 }
 
 // GetCustomNsgRulesClient returns a rules client which can be used to read the list of *custom* security rules
@@ -78,13 +76,11 @@ func GetCustomNsgRulesClient(t *testing.T, subscriptionID string) network.Securi
 // defined on an network security group. Note that the "custom" rules are those defined by
 // end users.
 func GetCustomNsgRulesClientE(subscriptionID string) (network.SecurityRulesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Get new custom rules client from client factory
+	nsgClient, err := CreateNsgCustomRulesClientE(subscriptionID)
 	if err != nil {
 		return network.SecurityRulesClient{}, err
 	}
-
-	nsgClient := network.NewSecurityRulesClient(subscriptionID)
 
 	// Get an authorizer
 	auth, err := NewAuthorizer()
@@ -93,7 +89,7 @@ func GetCustomNsgRulesClientE(subscriptionID string) (network.SecurityRulesClien
 	}
 
 	nsgClient.Authorizer = *auth
-	return nsgClient, nil
+	return *nsgClient, nil
 }
 
 // GetAllNSGRules returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules from a network

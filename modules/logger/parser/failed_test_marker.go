@@ -4,8 +4,10 @@ package parser
 // TestResultMarker tracks the indentation level of a test result line in go test output.
 // Example:
 // --- FAIL: TestSnafu
-//     --- PASS: TestSnafu/Situation
-//     --- FAIL: TestSnafu/Normal
+//
+//	--- PASS: TestSnafu/Situation
+//	--- FAIL: TestSnafu/Normal
+//
 // The three markers for the above in order are:
 // TestResultMarker{TestName: "TestSnafu", IndentLevel: 0}
 // TestResultMarker{TestName: "TestSnafu/Situation", IndentLevel: 4}

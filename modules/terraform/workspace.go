@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // WorkspaceSelectOrNew runs terraform workspace with the given options and the workspace name
@@ -59,4 +60,50 @@ func nameMatchesWorkspace(name string, workspace string) bool {
 	//    "  terratest"
 	match, _ := regexp.MatchString(fmt.Sprintf("^\\*?\\s*%s$", name), workspace)
 	return match
+}
+
+// WorkspaceDelete removes the specified terraform workspace with the given options.
+// It returns the name of the current workspace AFTER deletion, and the returned error (that can be nil).
+// If the workspace to delete is the current one, then it tries to switch to the "default" workspace.
+// Deleting the workspace "default" is not supported.
+func WorkspaceDeleteE(t testing.TestingT, options *Options, name string) (string, error) {
+	currentWorkspace, err := RunTerraformCommandE(t, options, "workspace", "show")
+	if err != nil {
+		return currentWorkspace, err
+	}
+
+	if name == "default" {
+		return currentWorkspace, &UnsupportedDefaultWorkspaceDeletion{}
+	}
+
+	out, err := RunTerraformCommandE(t, options, "workspace", "list")
+	if err != nil {
+		return currentWorkspace, err
+	}
+	if !isExistingWorkspace(out, name) {
+		return currentWorkspace, WorkspaceDoesNotExist(name)
+	}
+
+	// Switch workspace before deleting if it is the current
+	if currentWorkspace == name {
+		currentWorkspace, err = WorkspaceSelectOrNewE(t, options, "default")
+		if err != nil {
+			return currentWorkspace, err
+		}
+	}
+
+	// delete workspace
+	_, err = RunTerraformCommandE(t, options, "workspace", "delete", name)
+
+	return currentWorkspace, err
+}
+
+// WorkspaceDelete removes the specified terraform workspace with the given options.
+// It returns the name of the current workspace AFTER deletion.
+// If the workspace to delete is the current one, then it tries to switch to the "default" workspace.
+// Deleting the workspace "default" is not supported and only return an empty string (to avoid a fatal error).
+func WorkspaceDelete(t testing.TestingT, options *Options, name string) string {
+	out, err := WorkspaceDeleteE(t, options, name)
+	require.NoError(t, err)
+	return out
 }

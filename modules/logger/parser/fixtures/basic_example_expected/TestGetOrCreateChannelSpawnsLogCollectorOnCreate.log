@@ -3,13 +3,6 @@
 === CONT  TestGetOrCreateChannelSpawnsLogCollectorOnCreate
 TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:03:33-07:00 Spawned log writer for test TestGetOrCreateChannelSpawnsLogCollectorOnCreate
 TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:03:33-07:00 Storing logs for test TestGetOrCreateChannelSpawnsLogCollectorOnCreate to /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestEnsureDirectoryCreatesDirectory894837527/TestGetOrCreateChannelSpawnsLogCollectorOnCreate.log
---- PASS: TestCloseChannelsClosesAll (0.00s)
 TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:03:33-07:00 Directory /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestEnsureDirectoryCreatesDirectory894837527 already exists
---- PASS: TestIsStatusLine (0.00s)
---- PASS: TestGetIndent (0.00s)
---- PASS: TestIsEmpty (0.00s)
---- PASS: TestPeekEmpty (0.00s)
 TestGetOrCreateChannelSpawnsLogCollectorOnCreate INFO 2018-10-20T13:03:33-07:00 Channel closed for log writer of test TestGetOrCreateChannelSpawnsLogCollectorOnCreate
---- PASS: TestGetTestNameFromResultLine (0.00s)
---- PASS: TestIsResultLine (0.00s)
 --- PASS: TestGetOrCreateChannelSpawnsLogCollectorOnCreate (1.01s)

@@ -3,7 +3,7 @@ package helm
 import (
 	"path/filepath"
 
-	"github.com/gruntwork-io/gruntwork-cli/errors"
+	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -34,7 +34,6 @@ func UpgradeE(t testing.TestingT, options *Options, chart string, releaseName st
 			args = append(args, upgradeArgs...)
 		}
 	}
-	args = append(args, getNamespaceArgs(options)...)
 	args, err = getValuesArgsE(t, options, args...)
 	if err != nil {
 		return err

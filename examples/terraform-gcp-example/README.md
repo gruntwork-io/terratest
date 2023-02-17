@@ -5,7 +5,7 @@ how you can use Terratest to write automated tests for your GCP Terraform code. 
 Instance](https://cloud.google.com/compute/) and gives that Instance a `Name` with the value specified in the
 `instance_name` variable. It also creates a Cloud Storage Bucket using the `bucket_name` and `bucket_location` variables.
 
-Check out [test/terraform_gcp_example_test.go](/test/terraform_gcp_example_test.go) to see how you can write
+Check out [test/terraform_gcp_example_test.go](/test/gcp/terraform_gcp_example_test.go) to see how you can write
 automated tests for this module.
 
 Note that the Compute Instance in this module doesn't actually do anything; it just runs a Vanilla Ubuntu 16.04 Image for

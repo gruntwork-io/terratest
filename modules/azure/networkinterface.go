@@ -118,14 +118,11 @@ func GetNetworkInterfaceConfigurationE(nicName string, nicConfigName string, res
 
 // GetNetworkInterfaceConfigurationClientE creates a new Network Interface Configuration client in the specified Azure Subscription.
 func GetNetworkInterfaceConfigurationClientE(subscriptionID string) (*network.InterfaceIPConfigurationsClient, error) {
-	// Validate Azure Subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Create a new client from client factory
+	client, err := CreateNewNetworkInterfaceIPConfigurationClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the NIC client
-	client := network.NewInterfaceIPConfigurationsClient(subscriptionID)
 
 	// Create an authorizer
 	authorizer, err := NewAuthorizer()
@@ -134,7 +131,7 @@ func GetNetworkInterfaceConfigurationClientE(subscriptionID string) (*network.In
 	}
 	client.Authorizer = *authorizer
 
-	return &client, nil
+	return client, nil
 }
 
 // GetNetworkInterfaceE gets a Network Interface in the specified Azure Resource Group.
@@ -162,14 +159,11 @@ func GetNetworkInterfaceE(nicName string, resGroupName string, subscriptionID st
 
 // GetNetworkInterfaceClientE creates a new Network Interface client in the specified Azure Subscription.
 func GetNetworkInterfaceClientE(subscriptionID string) (*network.InterfacesClient, error) {
-	// Validate Azure Subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Create new NIC client from client factory
+	client, err := CreateNewNetworkInterfacesClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the NIC client
-	client := network.NewInterfacesClient(subscriptionID)
 
 	// Create an authorizer
 	authorizer, err := NewAuthorizer()
@@ -178,5 +172,5 @@ func GetNetworkInterfaceClientE(subscriptionID string) (*network.InterfacesClien
 	}
 	client.Authorizer = *authorizer
 
-	return &client, nil
+	return client, nil
 }

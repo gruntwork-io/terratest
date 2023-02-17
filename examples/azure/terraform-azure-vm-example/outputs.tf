@@ -40,7 +40,7 @@ output "virtual_network_name" {
 }
 
 output "vm_admin_username" {
-  value = azurerm_virtual_machine.vm_example.os_profile[*].admin_username
+  value = nonsensitive(azurerm_virtual_machine.vm_example.os_profile[*].admin_username)
 }
 
 output "vm_image_sku" {
@@ -57,4 +57,8 @@ output "vm_name" {
 
 output "vm_size" {
   value = azurerm_virtual_machine.vm_example.vm_size
+}
+
+output "vm_tags" {
+  value = azurerm_virtual_machine.vm_example.tags
 }

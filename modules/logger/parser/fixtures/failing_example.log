@@ -18,19 +18,19 @@
 --- PASS: TestRemoveDedentedTestResultMarkersAll (0.00s)
 === RUN   TestBasicExample
 --- FAIL: TestBasicExample (0.00s)
-    integration_test.go:10: 
+    integration_test.go:10:
         	Error Trace:	integration_test.go:10
         	Error:      	Expected value not to be nil.
         	Test:       	TestBasicExample
 === RUN   TestPanicExample
 --- FAIL: TestPanicExample (0.00s)
-    integration_test.go:14: 
+    integration_test.go:14:
         	Error Trace:	integration_test.go:14
         	Error:      	Expected value not to be nil.
         	Test:       	TestPanicExample
 === RUN   TestRealWorldExample
 --- FAIL: TestRealWorldExample (0.00s)
-    integration_test.go:18: 
+    integration_test.go:18:
         	Error Trace:	integration_test.go:18
         	Error:      	Expected value not to be nil.
         	Test:       	TestRealWorldExample

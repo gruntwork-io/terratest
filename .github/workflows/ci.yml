@@ -17,6 +17,8 @@ name: ci-workflow
     # target_pr: pr number on the source repo (e.g. 14, 25, etc.)
 
 on:
+  push:
+    branches: master
   workflow_dispatch:
     inputs:
       repo:
@@ -37,10 +39,17 @@ on:
         required: true
         default: 'false'
 
+permissions:
+  contents: read
+
 jobs:
   ci-job:
     runs-on: [ubuntu-latest]
     steps:
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.15.1
+          terraform_wrapper: false  
       - name: checkout to repo
         uses: actions/checkout@v2
         with:

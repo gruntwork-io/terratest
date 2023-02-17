@@ -23,7 +23,7 @@ resource "google_compute_instance" "example" {
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-1604-lts"
+      image = "ubuntu-os-cloud/ubuntu-2004-lts"
     }
   }
 

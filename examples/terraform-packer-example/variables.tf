@@ -12,7 +12,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 variable "ami_id" {
-  description = "The ID of the AMI to run on each EC2 Instance. Should be an AMI built from the Packer template in examples/packer-docker-example/build.json."
+  description = "The ID of the AMI to run on each EC2 Instance. Should be an AMI built from the Packer templates in examples/packer-docker-example (build.json or build.pkr.hcl)."
   type        = string
 }
 
@@ -45,3 +45,8 @@ variable "instance_text" {
   default     = "Hello, World!"
 }
 
+variable "instance_type" {
+  description = "The EC2 instance type to run."
+  type        = string
+  default     = "t2.micro"
+}

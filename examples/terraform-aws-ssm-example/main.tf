@@ -66,7 +66,7 @@ data "aws_ami" "amazon_linux_2" {
 
 resource "aws_instance" "example" {
   ami                         = data.aws_ami.amazon_linux_2.id
-  instance_type               = "t2.micro"
+  instance_type               = var.instance_type
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.example.name
 }

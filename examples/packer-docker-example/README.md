@@ -14,14 +14,22 @@ The Docker-based tests in this folder are in some sense "unit tests" for the Pac
 [terraform-packer-example](/examples/terraform-packer-example).
 
 
-
-
-## Building a Docker image for local testing
-
+## Installation steps
 1. Install [Packer](https://www.packer.io/) and make sure it's on your `PATH`.
 1. Install [Docker](https://www.docker.com/) and make sure it's on your `PATH`.
-1. Run `packer build -only=ubuntu-docker build.json`.
-1. Run `docker-compose up`.
+
+
+## Building a Docker image for local testing (Packer >= 1.7.0)
+1. Run `packer init build.pkr.hcl`.
+1. Run `packer build build.pkr.hcl`.
+
+
+## Building a Docker image for local testing (Packer < 1.7.0)
+1. Run `packer build build.json`.
+
+
+## Run the container
+1. Run `docker compose up`.
 1. You should now be able to access the sample web app at http://localhost:8080
 
 

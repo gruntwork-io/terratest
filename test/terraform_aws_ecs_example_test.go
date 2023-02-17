@@ -32,11 +32,7 @@ func TestTerraformAwsEcsExample(t *testing.T) {
 		Vars: map[string]interface{}{
 			"cluster_name": expectedClusterName,
 			"service_name": expectedServiceName,
-		},
-
-		// Environment variables to set when running Terraform
-		EnvVars: map[string]string{
-			"AWS_DEFAULT_REGION": awsRegion,
+			"region":       awsRegion,
 		},
 	})
 

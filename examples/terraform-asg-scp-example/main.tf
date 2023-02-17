@@ -26,13 +26,13 @@ provider "aws" {
 resource "aws_launch_template" "sample_launch_template" {
   name_prefix            = var.instance_name
   image_id               = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
+  instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.example.id]
   key_name               = var.key_pair_name
 }
 
 resource "aws_autoscaling_group" "sample_asg" {
-  vpc_zone_identifier = data.aws_subnet_ids.default_subnets.ids
+  vpc_zone_identifier = data.aws_subnets.default_subnets.ids
 
   desired_capacity = 1
   max_size         = 1
@@ -102,7 +102,10 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_subnet_ids" "default_subnets" {
-  vpc_id = data.aws_vpc.default.id
+data "aws_subnets" "default_subnets" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
 }
 

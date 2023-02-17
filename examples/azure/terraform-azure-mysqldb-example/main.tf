@@ -31,8 +31,11 @@ resource "azurerm_resource_group" "mysql_rg" {
 # This is not as a production recommendation as the password is stored in the Terraform state file.
 resource "random_password" "password" {
   length           = 16
-  special          = true
   override_special = "_%@"
+  min_upper        = "1"
+  min_lower        = "1"
+  min_numeric      = "1"
+  min_special      = "1"
 }
 
 resource "azurerm_mysql_server" "mysqlserver" {

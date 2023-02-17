@@ -9,12 +9,17 @@ import (
 	"github.com/gruntwork-io/terratest/modules/collections"
 )
 
+const runAllCmd = "run-all"
+
 // TerraformCommandsWithLockSupport is a list of all the Terraform commands that
 // can obtain locks on Terraform state
 var TerraformCommandsWithLockSupport = []string{
 	"plan",
+	"plan-all",
 	"apply",
+	"apply-all",
 	"destroy",
+	"destroy-all",
 	"init",
 	"refresh",
 	"taint",
@@ -36,13 +41,35 @@ var TerraformCommandsWithPlanFileSupport = []string{
 func FormatArgs(options *Options, args ...string) []string {
 	var terraformArgs []string
 	commandType := args[0]
+	// If the user is trying to run with run-all, then we need to make sure the command based args are based on the
+	// actual terraform command. E.g., we want to base the logic on `plan` when `run-all plan` is passed in, not
+	// `run-all`.
+	if commandType == runAllCmd {
+		commandType = args[1]
+	}
 	lockSupported := collections.ListContains(TerraformCommandsWithLockSupport, commandType)
 	planFileSupported := collections.ListContains(TerraformCommandsWithPlanFileSupport, commandType)
 
+	// Include -var and -var-file flags unless we're running 'apply' with a plan file
+	includeVars := !(commandType == "apply" && len(options.PlanFilePath) > 0)
+
 	terraformArgs = append(terraformArgs, args...)
-	terraformArgs = append(terraformArgs, FormatTerraformVarsAsArgs(options.Vars)...)
-	terraformArgs = append(terraformArgs, FormatTerraformArgs("-var-file", options.VarFiles)...)
+
+	if includeVars {
+		if options.SetVarsAfterVarFiles {
+			terraformArgs = append(terraformArgs, FormatTerraformArgs("-var-file", options.VarFiles)...)
+			terraformArgs = append(terraformArgs, FormatTerraformVarsAsArgs(options.Vars)...)
+		} else {
+			terraformArgs = append(terraformArgs, FormatTerraformVarsAsArgs(options.Vars)...)
+			terraformArgs = append(terraformArgs, FormatTerraformArgs("-var-file", options.VarFiles)...)
+		}
+	}
+
 	terraformArgs = append(terraformArgs, FormatTerraformArgs("-target", options.Targets)...)
+
+	if options.NoColor {
+		terraformArgs = append(terraformArgs, "-no-color")
+	}
 
 	if lockSupported {
 		// If command supports locking, handle lock arguments
@@ -87,8 +114,18 @@ func FormatTerraformLockAsArgs(lockCheck bool, lockTimeout string) []string {
 	return lockArgs
 }
 
-// FormatTerraformArgs will format multiple args with the arg name (e.g. "-var-file", []string{"foo.tfvars", "bar.tfvars"})
-// returns "-var-file foo.tfvars -var-file bar.tfvars"
+// FormatTerraformPluginDirAsArgs formats the plugin-dir variable
+// -plugin-dir
+func FormatTerraformPluginDirAsArgs(pluginDir string) []string {
+	pluginArgs := []string{fmt.Sprintf("-plugin-dir=%v", pluginDir)}
+	if pluginDir == "" {
+		return nil
+	}
+	return pluginArgs
+}
+
+// FormatTerraformArgs will format multiple args with the arg name (e.g. "-var-file", []string{"foo.tfvars", "bar.tfvars", "baz.tfvars.json"})
+// returns "-var-file foo.tfvars -var-file bar.tfvars -var-file baz.tfvars.json"
 func FormatTerraformArgs(argName string, args []string) []string {
 	argsList := []string{}
 	for _, argValue := range args {

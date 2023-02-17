@@ -1,3 +1,4 @@
+//go:build gcp
 // +build gcp
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
@@ -21,12 +22,15 @@ const DEFAULT_MACHINE_TYPE = "f1-micro"
 const DEFAULT_IMAGE_FAMILY_PROJECT_NAME = "ubuntu-os-cloud"
 const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-1804-lts"
 
+// Zones that support running f1-micro instances
+var ZonesThatSupportF1Micro = []string{"us-central1-a", "us-east1-b", "us-west1-a", "europe-north1-a", "europe-west1-b", "europe-central2-a"}
+
 func TestGetPublicIpOfInstance(t *testing.T) {
 	t.Parallel()
 
 	instanceName := RandomValidGcpName()
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	zone := GetRandomZone(t, projectID, nil, nil, nil)
+	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
@@ -73,8 +77,7 @@ func TestGetAndSetLabels(t *testing.T) {
 	instanceName := RandomValidGcpName()
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 
-	// On October 22, 2018, GCP launched the asia-east2 region, which promptly failed all our tests, so blacklist asia-east2.
-	zone := GetRandomZone(t, projectID, nil, nil, []string{"asia-east2"})
+	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
@@ -110,8 +113,7 @@ func TestGetAndSetMetadata(t *testing.T) {
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 	instanceName := RandomValidGcpName()
 
-	// On October 22, 2018, GCP launched the asia-east2 region, which promptly failed all our tests, so blacklist asia-east2.
-	zone := GetRandomZone(t, projectID, nil, nil, []string{"asia-east2"})
+	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	// Create a new Compute Instance
 	createComputeInstance(t, projectID, zone, instanceName)

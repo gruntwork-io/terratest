@@ -1,3 +1,4 @@
+//go:build kubeall || kubernetes
 // +build kubeall kubernetes
 
 // NOTE: we have build tags to differentiate kubernetes tests from non-kubernetes tests. This is done because minikube
@@ -113,6 +114,7 @@ preferences: {}
 users:
 - name: minikube
   user:
+    as-user-extra: null
     client-certificate: /home/terratest/.minikube/client.crt
     client-key: /home/terratest/.minikube/client.key
 `
@@ -263,6 +265,7 @@ preferences: {}
 users:
 - name: minikube
   user:
+    as-user-extra: null
     client-certificate: /home/terratest/.minikube/client.crt
     client-key: /home/terratest/.minikube/client.key
 `

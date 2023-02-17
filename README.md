@@ -6,7 +6,6 @@
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/mod/github.com/gruntwork-io/terratest?tab=overview)
 ![go.mod version](https://img.shields.io/github/go-mod/go-version/gruntwork-io/terratest)
 
-
 Terratest is a Go library that makes it easier to write automated tests for your infrastructure code. It provides a
 variety of helper functions and patterns for common infrastructure testing tasks, including:
 
@@ -25,13 +24,11 @@ variety of helper functions and patterns for common infrastructure testing tasks
 
 Please see the following for more info:
 
-* [Terratest Website](https://terratest.gruntwork.io)
-* [Getting started with Terratest](https://terratest.gruntwork.io/docs/getting-started/quick-start/)
-* [Terratest Documentation](https://terratest.gruntwork.io/docs/)
-* [Contributing to Terratest](https://terratest.gruntwork.io/docs/community/contributing/)
-* [Commercial Support](https://terratest.gruntwork.io/commercial-support/)
-
-
+- [Terratest Website](https://terratest.gruntwork.io)
+- [Getting started with Terratest](https://terratest.gruntwork.io/docs/getting-started/quick-start/)
+- [Terratest Documentation](https://terratest.gruntwork.io/docs/)
+- [Contributing to Terratest](https://terratest.gruntwork.io/docs/community/contributing/)
+- [Commercial Support](https://gruntwork.io/support/)
 
 ## License
 

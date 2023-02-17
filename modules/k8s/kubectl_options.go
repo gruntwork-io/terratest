@@ -6,10 +6,11 @@ import (
 
 // KubectlOptions represents common options necessary to specify for all Kubectl calls
 type KubectlOptions struct {
-	ContextName string
-	ConfigPath  string
-	Namespace   string
-	Env         map[string]string
+	ContextName   string
+	ConfigPath    string
+	Namespace     string
+	Env           map[string]string
+	InClusterAuth bool
 }
 
 // NewKubectlOptions will return a pointer to new instance of KubectlOptions with the configured options
@@ -19,6 +20,13 @@ func NewKubectlOptions(contextName string, configPath string, namespace string) 
 		ConfigPath:  configPath,
 		Namespace:   namespace,
 		Env:         map[string]string{},
+	}
+}
+
+// NewKubectlOptionsWithInClusterAuth will return a pointer to a new instance of KubectlOptions with the InClusterAuth field set to true
+func NewKubectlOptionsWithInClusterAuth() *KubectlOptions {
+	return &KubectlOptions{
+		InClusterAuth: true,
 	}
 }
 

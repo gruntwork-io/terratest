@@ -41,14 +41,15 @@ func SpawnParsers(logger *logrus.Logger, reader io.Reader, outputDir string) {
 var (
 	regexResult  = regexp.MustCompile(`--- (PASS|FAIL|SKIP): (.+) \((\d+\.\d+)(?: ?seconds|s)\)`)
 	regexStatus  = regexp.MustCompile(`=== (RUN|PAUSE|CONT)\s+(.+)`)
-	regexSummary = regexp.MustCompile(`^(ok|FAIL)\s+([^ ]+)\s+(?:(\d+\.\d+)s|\(cached\)|(\[\w+ failed]))(?:\s+coverage:\s+(\d+\.\d+)%\sof\sstatements(?:\sin\s.+)?)?$`)
+	regexSummary = regexp.MustCompile(`(^FAIL$)|(^(ok|FAIL)\s+([^ ]+)\s+(?:(\d+\.\d+)s|\(cached\)|(\[\w+ failed]))(?:\s+coverage:\s+(\d+\.\d+)%\sof\sstatements(?:\sin\s.+)?)?$)`)
 	regexPanic   = regexp.MustCompile(`^panic:`)
 )
 
 // getIndent takes a line and returns the indent string
 // Example:
-//   in:  "    --- FAIL: TestSnafu"
-//   out: "    "
+//
+//	in:  "    --- FAIL: TestSnafu"
+//	out: "    "
 func getIndent(data string) string {
 	re := regexp.MustCompile(`^\s+`)
 	indent := re.FindString(data)
@@ -57,8 +58,9 @@ func getIndent(data string) string {
 
 // getTestNameFromResultLine takes a go testing result line and extracts out the test name
 // Example:
-//   in:  --- FAIL: TestSnafu
-//   out: TestSnafu
+//
+//	in:  --- FAIL: TestSnafu
+//	out: TestSnafu
 func getTestNameFromResultLine(text string) string {
 	m := regexResult.FindStringSubmatch(text)
 	return m[2]
@@ -71,8 +73,9 @@ func isResultLine(text string) bool {
 
 // getTestNameFromStatusLine takes a go testing status line and extracts out the test name
 // Example:
-//   in:  === RUN  TestSnafu
-//   out: TestSnafu
+//
+//	in:  === RUN  TestSnafu
+//	out: TestSnafu
 func getTestNameFromStatusLine(text string) string {
 	m := regexStatus.FindStringSubmatch(text)
 	return m[2]
@@ -140,6 +143,7 @@ func parseAndStoreTestOutput(
 
 			case isStatusLine(data):
 				testName := getTestNameFromStatusLine(data)
+				previousTestName = testName
 				logWriter.writeLog(logger, testName, data)
 
 			case strings.HasPrefix(data, "Test"):
@@ -149,12 +153,11 @@ func parseAndStoreTestOutput(
 				// This must be modified when `logger.DoLog` changes.
 				vals := strings.Split(data, " ")
 				testName := vals[0]
-				logWriter.writeLog(logger, testName, data)
 				previousTestName = testName
+				logWriter.writeLog(logger, testName, data)
 
-			case isIndented && previousTestName != "summary":
-				// In a test result block, so collect the line into all the test results we have seen so far.
-				// Note that previousTestName would only be set to summary if we saw a panic line.
+			case isIndented && isResultLine(data):
+				// In a nested test result block, so collect the line into all the test results we have seen so far.
 				for _, marker := range testResultMarkers {
 					logWriter.writeLog(logger, marker.TestName, data)
 				}
@@ -164,13 +167,15 @@ func parseAndStoreTestOutput(
 				previousTestName = "summary"
 				logWriter.writeLog(logger, "summary", data)
 
+			case isResultLine(data):
+				// We ignore result lines, because that is handled specially below.
+
 			case previousTestName != "":
 				// Base case: roll up to the previous test line, if it exists.
 				// Handles case where terratest log has entries with newlines in them.
 				logWriter.writeLog(logger, previousTestName, data)
 
-			case !isResultLine(data):
-				// Result Lines are handled below
+			default:
 				logger.Warnf("Found test line that does not match known cases: %s", data)
 			}
 

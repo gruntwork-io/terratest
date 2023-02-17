@@ -1,7 +1,6 @@
 package azure
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -21,7 +20,6 @@ func GetTargetAzureSubscription(subscriptionID string) (string, error) {
 }
 
 func getTargetAzureSubscription(subscriptionID string) (string, error) {
-	fmt.Printf("Initial subscription ID is %s\n", subscriptionID)
 	if subscriptionID == "" {
 		if id, exists := os.LookupEnv(AzureSubscriptionID); exists {
 			return id, nil
@@ -29,8 +27,6 @@ func getTargetAzureSubscription(subscriptionID string) (string, error) {
 
 		return "", SubscriptionIDNotFound{}
 	}
-
-	fmt.Printf("Final subscription ID is %s\n", subscriptionID)
 
 	return subscriptionID, nil
 }

@@ -3,8 +3,6 @@
 === CONT  TestLogCollectorCreatesAndWritesToFile
 TestLogCollectorCreatesAndWritesToFile INFO 2018-10-20T13:15:09-07:00 Spawned log writer for test TestLogCollectorCreatesAndWritesToFile
 TestLogCollectorCreatesAndWritesToFile INFO 2018-10-20T13:15:09-07:00 Storing logs for test TestLogCollectorCreatesAndWritesToFile to /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestLogCollectorCreatesAndWritesToFile262063152/TestLogCollectorCreatesAndWritesToFile.log
---- PASS: TestCloseChannelsClosesAll (0.00s)
 TestLogCollectorCreatesAndWritesToFile INFO 2018-10-20T13:15:09-07:00 Directory /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestLogCollectorCreatesAndWritesToFile262063152 already exists
---- PASS: TestIsSummaryLine (0.00s)
 TestLogCollectorCreatesAndWritesToFile INFO 2018-10-20T13:15:09-07:00 Channel closed for log writer of test TestLogCollectorCreatesAndWritesToFile
 --- PASS: TestLogCollectorCreatesAndWritesToFile (1.01s)

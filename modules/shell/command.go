@@ -176,7 +176,14 @@ func readData(t testing.TestingT, log *logger.Logger, reader *bufio.Reader, writ
 			break
 		}
 
-		log.Logf(t, line)
+		// logger.Logger has a Logf method, but not a Log method.
+		// We have to use the format string indirection to avoid
+		// interpreting any possible formatting characters in
+		// the line.
+		//
+		// See https://github.com/gruntwork-io/terratest/issues/982.
+		log.Logf(t, "%s", line)
+
 		if _, err := writer.WriteString(line); err != nil {
 			return err
 		}

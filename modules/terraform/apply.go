@@ -24,10 +24,6 @@ func InitAndApplyE(t testing.TestingT, options *Options) (string, error) {
 		return "", err
 	}
 
-	if _, err := GetE(t, options); err != nil {
-		return "", err
-	}
-
 	return ApplyE(t, options)
 }
 
@@ -60,7 +56,7 @@ func TgApplyAllE(t testing.TestingT, options *Options) (string, error) {
 		return "", TgInvalidBinary(options.TerraformBinary)
 	}
 
-	return RunTerraformCommandE(t, options, FormatArgs(options, "apply-all", "-input=false", "-lock=false", "-auto-approve")...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, "run-all", "apply", "-input=false", "-auto-approve")...)
 }
 
 // ApplyAndIdempotent runs terraform apply with the given options and return stdout/stderr from the apply command. It then runs

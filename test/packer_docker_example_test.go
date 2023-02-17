@@ -21,10 +21,10 @@ func TestPackerDockerExampleLocal(t *testing.T) {
 	// website::tag::1::Configure Packer to build Docker image.
 	packerOptions := &packer.Options{
 		// The path to where the Packer template is located
-		Template: "../examples/packer-docker-example/build.json",
+		Template: "../examples/packer-docker-example/build.pkr.hcl",
 
 		// Only build the Docker image for local testing
-		Only: "ubuntu-docker",
+		Only: "docker.ubuntu-docker",
 
 		// Configure retries for intermittent errors
 		RetryableErrors:    DefaultRetryablePackerErrors,

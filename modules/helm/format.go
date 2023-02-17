@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/gruntwork-io/gruntwork-cli/collections"
-	"github.com/gruntwork-io/gruntwork-cli/errors"
+	"github.com/gruntwork-io/go-commons/collections"
+	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/files"

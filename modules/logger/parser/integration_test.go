@@ -43,8 +43,7 @@ func openFile(t *testing.T, filename string) *os.File {
 
 func testExample(t *testing.T, example string) {
 	logger := NewTestLogger(t)
-	dir := getTempDir(t)
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	logFileName := fmt.Sprintf("./fixtures/%s_example.log", example)
 	expectedOutputDirName := fmt.Sprintf("./fixtures/%s_example_expected", example)
 	file := openFile(t, logFileName)
@@ -52,17 +51,22 @@ func testExample(t *testing.T, example string) {
 	assert.True(t, DirectoryEqual(t, dir, expectedOutputDirName))
 }
 
-func TestBasicExample(t *testing.T) {
+func TestIntegrationBasicExample(t *testing.T) {
 	t.Parallel()
 	testExample(t, "basic")
 }
 
-func TestFailingExample(t *testing.T) {
+func TestIntegrationFailingExample(t *testing.T) {
 	t.Parallel()
 	testExample(t, "failing")
 }
 
-func TestPanicExample(t *testing.T) {
+func TestIntegrationPanicExample(t *testing.T) {
 	t.Parallel()
 	testExample(t, "panic")
+}
+
+func TestIntegrationNewGoExample(t *testing.T) {
+	t.Parallel()
+	testExample(t, "new_go_failing")
 }

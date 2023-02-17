@@ -25,16 +25,13 @@ var commandsWithParallelism = []string{
 	"apply",
 	"destroy",
 	"plan-all",
+	"run-all",
 	"apply-all",
 	"destroy-all",
 }
 
 // GetCommonOptions extracts commons terraform options
 func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
-	if options.NoColor && !collections.ListContains(args, "-no-color") {
-		args = append(args, "-no-color")
-	}
-
 	if options.TerraformBinary == "" {
 		options.TerraformBinary = "terraform"
 	}

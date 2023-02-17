@@ -187,14 +187,15 @@ func transformContainer(t *testing.T, container inspectOutput) (*ContainerInspec
 }
 
 // transformContainerPorts converts Docker's ports from the following json into a more testable format
-// {
-//   "80/tcp": [
-//     {
-// 	     "HostIp": ""
-//       "HostPort": "8080"
-//     }
-//   ]
-// }
+//
+//	{
+//	  "80/tcp": [
+//	    {
+//		     "HostIp": ""
+//	      "HostPort": "8080"
+//	    }
+//	  ]
+//	}
 func transformContainerPorts(container inspectOutput) ([]Port, error) {
 	var ports []Port
 
@@ -228,6 +229,16 @@ func transformContainerPorts(container inspectOutput) ([]Port, error) {
 	}
 
 	return ports, nil
+}
+
+// GetExposedHostPort returns an exposed host port according to requested container port. Returns 0 if the requested port is not exposed.
+func (inspectOutput ContainerInspect) GetExposedHostPort(containerPort uint16) uint16 {
+	for _, port := range inspectOutput.Ports {
+		if port.ContainerPort == containerPort {
+			return port.HostPort
+		}
+	}
+	return uint16(0)
 }
 
 // transformContainerVolumes converts Docker's volume bindings from the

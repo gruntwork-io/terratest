@@ -56,6 +56,26 @@ func TestInspectWithExposedPort(t *testing.T) {
 	require.EqualValues(t, port, c.Ports[0].HostPort)
 }
 
+func TestInspectWithRandomExposedPort(t *testing.T) {
+	t.Parallel()
+
+	var expectedPort uint16 = 80
+	var unexpectedPort uint16 = 1234
+	options := &RunOptions{
+		Detach:       true,
+		OtherOptions: []string{fmt.Sprintf("-P")},
+	}
+
+	id := RunAndGetID(t, dockerInspectTestImage, options)
+	defer removeContainer(t, id)
+
+	c := Inspect(t, id)
+
+	require.NotEmptyf(t, c.Ports, "Container's exposed ports should not be empty")
+	require.NotEqualf(t, uint16(0), c.GetExposedHostPort(expectedPort), fmt.Sprintf("There are no exposed port %d!", expectedPort))
+	require.Equalf(t, uint16(0), c.GetExposedHostPort(unexpectedPort), fmt.Sprintf("There is an unexpected exposed port %d!", unexpectedPort))
+}
+
 func TestInspectWithHostVolume(t *testing.T) {
 	t.Parallel()
 

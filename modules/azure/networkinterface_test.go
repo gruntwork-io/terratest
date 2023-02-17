@@ -1,3 +1,4 @@
+//go:build azure || (azureslim && network)
 // +build azure azureslim,network
 
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for

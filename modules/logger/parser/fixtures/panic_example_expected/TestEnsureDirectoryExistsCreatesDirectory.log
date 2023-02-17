@@ -2,5 +2,3 @@
 === PAUSE TestEnsureDirectoryExistsCreatesDirectory
 === CONT  TestEnsureDirectoryExistsCreatesDirectory
 TestEnsureDirectoryExistsCreatesDirectory INFO 2018-10-20T13:03:19-07:00 Creating directory /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestEnsureDirectoryCreatesDirectory601920052/tmpdir
---- PASS: TestGetOrCreateChannelCreatesNewChannel (0.00s)
---- FAIL: TestIsPanicLine (0.00s)

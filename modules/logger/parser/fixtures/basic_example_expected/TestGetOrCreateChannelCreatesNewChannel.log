@@ -4,14 +4,6 @@
 TestGetOrCreateChannelCreatesNewChannel INFO 2018-10-20T13:03:33-07:00 Spawned log writer for test TestGetOrCreateChannelCreatesNewChannel
 TestGetOrCreateChannelCreatesNewChannel INFO 2018-10-20T13:03:33-07:00 Storing logs for test TestGetOrCreateChannelCreatesNewChannel to /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestEnsureDirectoryCreatesDirectory272503116/TestGetOrCreateChannelCreatesNewChannel.log
 --- PASS: TestGetOrCreateChannelCreatesNewChannel (0.00s)
---- PASS: TestGetOrCreateChannelCreatesNewChannel (0.00s)
---- PASS: TestEnsureDirectoryExistsHandlesExistingDirectory (0.00s)
 TestGetOrCreateChannelCreatesNewChannel INFO 2018-10-20T13:03:33-07:00 Creating directory /var/folders/n2/pljz6dq52bd1ksmw23qyr3sr0000gn/T/TestEnsureDirectoryCreatesDirectory272503116
---- PASS: TestIsPanicLine (0.00s)
---- PASS: TestStackPop (0.00s)
---- PASS: TestStackPopEmpty (0.00s)
 TestGetOrCreateChannelCreatesNewChannel INFO 2018-10-20T13:03:33-07:00 Channel closed for log writer of test TestGetOrCreateChannelCreatesNewChannel
---- PASS: TestEnsureDirectoryExistsCreatesDirectory (0.00s)
---- PASS: TestGetOrCreateChannelSpawnsLogCollectorOnCreate (1.01s)
---- PASS: TestLogCollectorCreatesAndWritesToFile (1.01s)
 PASS

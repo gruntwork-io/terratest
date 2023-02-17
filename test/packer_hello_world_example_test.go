@@ -11,7 +11,7 @@ import (
 func TestPackerHelloWorldExample(t *testing.T) {
 	packerOptions := &packer.Options{
 		// website::tag::1:: The path to where the Packer template is located
-		Template: "../examples/packer-hello-world-example/build.json",
+		Template: "../examples/packer-hello-world-example/build.pkr.hcl",
 	}
 
 	// website::tag::2:: Build the Packer template. This template will create a Docker image.

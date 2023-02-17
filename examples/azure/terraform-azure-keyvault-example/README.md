@@ -1,4 +1,4 @@
-# Terraform Azure Availability Set Example
+# Terraform Azure Keyvault Example
 
 This folder contains a simple Terraform module that deploys resources in [Azure](https://azure.microsoft.com/) to demonstrate
 how you can use Terratest to write automated tests for your Azure Terraform code. This module deploys a Key Vault with one secret, key, and certificate each.

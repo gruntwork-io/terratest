@@ -28,6 +28,9 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 
+	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
+	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+
 	// website::tag::1::Configure Terraform setting path to Terraform code, EC2 instance name, and AWS Region. We also
 	// configure the options with default retryable errors to handle the most common retryable errors encountered in
 	// terraform testing.
@@ -39,6 +42,7 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 		// Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
 			"instance_name": expectedName,
+			"instance_type": instanceType,
 		},
 
 		// Environment variables to set when running Terraform
@@ -51,17 +55,23 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 	})
 
 	// website::tag::2::Run `terraform init`, `terraform plan`, and `terraform show` and fail the test if there are any errors
-	jsonOut := terraform.InitAndPlanAndShow(t, terraformOptions)
+	plan := terraform.InitAndPlanAndShowWithStruct(t, terraformOptions)
 
-	// website::tag::3::Use jsonpath to extract the expected tags on the instance from the plan. You can alternatively
-	// use https://github.com/hashicorp/terraform-json to get a concrete struct with all the types resolved.
-	var ec2Tags []map[string]interface{}
+	// website::tag::3::Use the go struct to introspect the plan values.
+	terraform.RequirePlannedValuesMapKeyExists(t, plan, "aws_instance.example")
+	ec2Resource := plan.ResourcePlannedValuesMap["aws_instance.example"]
+	ec2Tags := ec2Resource.AttributeValues["tags"].(map[string]interface{})
+	assert.Equal(t, map[string]interface{}{"Name": expectedName}, ec2Tags)
+
+	// website::tag::4::Alternatively, you can get the direct JSON output and use jsonpath to extract the data.
+	// jsonpath only returns lists.
+	var jsonEC2Tags []map[string]interface{}
+	jsonOut := terraform.InitAndPlanAndShow(t, terraformOptions)
 	k8s.UnmarshalJSONPath(
 		t,
 		[]byte(jsonOut),
 		"{ .planned_values.root_module.resources[0].values.tags }",
-		&ec2Tags,
+		&jsonEC2Tags,
 	)
-	tags := ec2Tags[0]
-	assert.Equal(t, map[string]interface{}{"Name": expectedName}, tags)
+	assert.Equal(t, map[string]interface{}{"Name": expectedName}, jsonEC2Tags[0])
 }

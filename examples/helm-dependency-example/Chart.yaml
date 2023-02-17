@@ -1,0 +1,10 @@
+apiVersion: v1
+name: helm-dependency-example
+description: A minimal Helm chart to demonstrate how to use terratest to test helm charts with dependency
+version: 0.0.1
+dependencies:
+  - name: helm-basic-example
+    alias: basic
+    repository: file://../helm-basic-example
+    condition: basic.enabled
+    version: 0.0.1

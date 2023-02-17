@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"fmt"
+	"reflect"
 )
 
 // TgInvalidBinary occurs when a terragrunt function is called and the TerraformBinary is
@@ -55,4 +56,48 @@ type UnexpectedOutputType struct {
 
 func (err UnexpectedOutputType) Error() string {
 	return fmt.Sprintf("Expected output '%s' to be of type '%s' but got '%s'", err.Key, err.ExpectedType, err.ActualType)
+}
+
+// VarFileNotFound is an error that occurs when a var file cannot be found in an option's VarFile list
+type VarFileNotFound struct {
+	Path string
+}
+
+func (err VarFileNotFound) Error() string {
+	return fmt.Sprintf("Var file '%s' not found", err.Path)
+}
+
+// InputFileKeyNotFound occurs when tfvar file does not contain a value for the key
+// specified in the function call
+type InputFileKeyNotFound struct {
+	FilePath string
+	Key      string
+}
+
+func (err InputFileKeyNotFound) Error() string {
+	return fmt.Sprintf("tfvar file %q doesn't contain a value for the key %q", err.FilePath, err.Key)
+}
+
+// PanicWhileParsingVarFile is returned when the HCL parsing routine panics due to errors.
+type PanicWhileParsingVarFile struct {
+	ConfigFile     string
+	RecoveredValue interface{}
+}
+
+func (err PanicWhileParsingVarFile) Error() string {
+	return fmt.Sprintf("Recovering panic while parsing '%s'. Got error of type '%v': %v", err.ConfigFile, reflect.TypeOf(err.RecoveredValue), err.RecoveredValue)
+}
+
+// UnsupportedDefaultWorkspaceDeletion is returned when user tries to delete the workspace "default"
+type UnsupportedDefaultWorkspaceDeletion struct{}
+
+func (err *UnsupportedDefaultWorkspaceDeletion) Error() string {
+	return "Deleting the workspace 'default' is not supported"
+}
+
+// WorkspaceDoesNotExist is returned when user tries to delete a workspace which does not exist
+type WorkspaceDoesNotExist string
+
+func (err WorkspaceDoesNotExist) Error() string {
+	return fmt.Sprintf("The workspace %q does not exist.", string(err))
 }

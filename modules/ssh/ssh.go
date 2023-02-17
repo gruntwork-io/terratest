@@ -14,6 +14,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/hashicorp/go-multierror"
 	"golang.org/x/crypto/ssh"
@@ -199,6 +200,33 @@ func CheckSshConnectionE(t testing.TestingT, host Host) error {
 	return err
 }
 
+// CheckSshConnectionWithRetry attempts to connect via SSH until max retries has been exceeded and fails the test
+// if the connection fails
+func CheckSshConnectionWithRetry(t testing.TestingT, host Host, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host) error) {
+	handler := CheckSshConnectionE
+	if f != nil {
+		handler = f[0]
+	}
+	err := CheckSshConnectionWithRetryE(t, host, retries, sleepBetweenRetries, handler)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// CheckSshConnectionWithRetryE attempts to connect via SSH until max retries has been exceeded and returns an error if
+// the connection fails
+func CheckSshConnectionWithRetryE(t testing.TestingT, host Host, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host) error) error {
+	handler := CheckSshConnectionE
+	if f != nil {
+		handler = f[0]
+	}
+	_, err := retry.DoWithRetryE(t, fmt.Sprintf("Checking SSH connection to %s", host.Hostname), retries, sleepBetweenRetries, func() (string, error) {
+		return "", handler(t, host)
+	})
+
+	return err
+}
+
 // CheckSshCommand checks that you can connect via SSH to the given host and run the given command. Returns the stdout/stderr.
 func CheckSshCommand(t testing.TestingT, host Host, command string) string {
 	out, err := CheckSshCommandE(t, host, command)
@@ -231,6 +259,32 @@ func CheckSshCommandE(t testing.TestingT, host Host, command string) (string, er
 	defer sshSession.Cleanup(t)
 
 	return runSSHCommand(t, sshSession)
+}
+
+// CheckSshCommandWithRetry checks that you can connect via SSH to the given host and run the given command until max retries have been exceeded. Returns the stdout/stderr.
+func CheckSshCommandWithRetry(t testing.TestingT, host Host, command string, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host, string) (string, error)) string {
+	handler := CheckSshCommandE
+	if f != nil {
+		handler = f[0]
+	}
+	out, err := CheckSshCommandWithRetryE(t, host, command, retries, sleepBetweenRetries, handler)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// CheckSshCommandWithRetryE checks that you can connect via SSH to the given host and run the given command until max retries has been exceeded.
+// It return an error if the command fails after max retries has been exceeded.
+
+func CheckSshCommandWithRetryE(t testing.TestingT, host Host, command string, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host, string) (string, error)) (string, error) {
+	handler := CheckSshCommandE
+	if f != nil {
+		handler = f[0]
+	}
+	return retry.DoWithRetryE(t, fmt.Sprintf("Checking SSH connection to %s", host.Hostname), retries, sleepBetweenRetries, func() (string, error) {
+		return handler(t, host, command)
+	})
 }
 
 // CheckPrivateSshConnection attempts to connect to privateHost (which is not addressable from the Internet) via a

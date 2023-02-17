@@ -162,14 +162,11 @@ func GetSubnetE(subnetName string, vnetName string, resGroupName string, subscri
 
 // GetSubnetClientE creates a subnet client.
 func GetSubnetClientE(subscriptionID string) (*network.SubnetsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Create a new Subnet client from client factory
+	client, err := CreateNewSubnetClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the Subnet client
-	client := network.NewSubnetsClient(subscriptionID)
 
 	// Create an authorizer
 	authorizer, err := NewAuthorizer()
@@ -178,7 +175,7 @@ func GetSubnetClientE(subscriptionID string) (*network.SubnetsClient, error) {
 	}
 	client.Authorizer = *authorizer
 
-	return &client, nil
+	return client, nil
 }
 
 // GetVirtualNetworkE gets Virtual Network in the specified Azure Resource Group.
@@ -205,14 +202,11 @@ func GetVirtualNetworkE(vnetName string, resGroupName string, subscriptionID str
 
 // GetVirtualNetworksClientE creates a virtual network client in the specified Azure Subscription.
 func GetVirtualNetworksClientE(subscriptionID string) (*network.VirtualNetworksClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Create a new Virtual Network client from client factory
+	client, err := CreateNewVirtualNetworkClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the Virtual Network client
-	client := network.NewVirtualNetworksClient(subscriptionID)
 
 	// Create an authorizer
 	authorizer, err := NewAuthorizer()
@@ -221,5 +215,5 @@ func GetVirtualNetworksClientE(subscriptionID string) (*network.VirtualNetworksC
 	}
 	client.Authorizer = *authorizer
 
-	return &client, nil
+	return client, nil
 }

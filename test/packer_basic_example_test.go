@@ -40,7 +40,7 @@ func TestPackerBasicExample(t *testing.T) {
 	// website::tag::1::Read Packer's template and set AWS Region variable.
 	packerOptions := &packer.Options{
 		// The path to where the Packer template is located
-		Template: "../examples/packer-basic-example/build.json",
+		Template: "../examples/packer-basic-example/build.pkr.hcl",
 
 		// Variables to pass to our Packer build using -var options
 		Vars: map[string]string{
@@ -50,7 +50,7 @@ func TestPackerBasicExample(t *testing.T) {
 		},
 
 		// Only build the AWS AMI
-		Only: "amazon-ebs",
+		Only: "amazon-ebs.ubuntu-example",
 
 		// Configure retries for intermittent errors
 		RetryableErrors:    DefaultRetryablePackerErrors,
@@ -108,15 +108,20 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 
 	packerOptions := &packer.Options{
 		// The path to where the Packer template is located
-		Template: "../examples/packer-basic-example/build.json",
+		Template: "../examples/packer-basic-example/build.pkr.hcl",
 
 		// Variable file to to pass to our Packer build using -var-file option
 		VarFiles: []string{
 			varFile.Name(),
 		},
 
+		// Environment settings to avoid plugin conflicts
+		Env: map[string]string{
+			"PACKER_PLUGIN_PATH": "../examples/packer-basic-example/.packer.d/plugins",
+		},
+
 		// Only build the AWS AMI
-		Only: "amazon-ebs",
+		Only: "amazon-ebs.ubuntu-example",
 
 		// Configure retries for intermittent errors
 		RetryableErrors:    DefaultRetryablePackerErrors,
@@ -161,7 +166,7 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 
 		packerOptions := &packer.Options{
 			// The path to where the Packer template is located
-			Template: "../examples/packer-basic-example/build.json",
+			Template: "../examples/packer-basic-example/build.pkr.hcl",
 
 			// Variables to pass to our Packer build using -var options
 			Vars: map[string]string{
@@ -171,7 +176,7 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 			},
 
 			// Only build the AWS AMI
-			Only: "amazon-ebs",
+			Only: "amazon-ebs.ubuntu-example",
 
 			// Configure retries for intermittent errors
 			RetryableErrors:    DefaultRetryablePackerErrors,

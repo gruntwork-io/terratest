@@ -108,16 +108,17 @@ func (_ terratestLogger) Logf(t testing.TestingT, format string, args ...interfa
 // immediately, rather than buffering all log output and only displaying it at the very end of the test. This is useful
 // because:
 //
-// 1. It allows you to iterate faster locally, as you get feedback on whether your code changes are working as expected
-//    right away, rather than at the very end of the test run.
+//  1. It allows you to iterate faster locally, as you get feedback on whether your code changes are working as expected
+//     right away, rather than at the very end of the test run.
 //
-// 2. If you have a bug in your code that causes a test to never complete or if the test code crashes, t.Logf would
-//    show you no log output whatsoever, making debugging very hard, where as this method will show you all the log
-//    output available.
+//  2. If you have a bug in your code that causes a test to never complete or if the test code crashes, t.Logf would
+//     show you no log output whatsoever, making debugging very hard, where as this method will show you all the log
+//     output available.
 //
-// 3. If you have a test that takes a long time to complete, some CI systems will kill the test suite prematurely
-//    because there is no log output with t.Logf (e.g., CircleCI kills tests after 10 minutes of no log output). With
-//    this log method, you get log output continuously.
+//  3. If you have a test that takes a long time to complete, some CI systems will kill the test suite prematurely
+//     because there is no log output with t.Logf (e.g., CircleCI kills tests after 10 minutes of no log output). With
+//     this log method, you get log output continuously.
+//
 // Although t.Logf now supports streaming output since Go 1.14, this is kept for compatibility purposes.
 func Logf(t testing.TestingT, format string, args ...interface{}) {
 	if tt, ok := t.(helper); ok {

@@ -3,18 +3,30 @@ package k8s
 import (
 	"fmt"
 
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // IngressNotAvailable is returned when a Kubernetes service is not yet available to accept traffic.
 type IngressNotAvailable struct {
-	ingress *extensionsv1beta1.Ingress
+	ingress *networkingv1.Ingress
 }
 
 // Error is a simple function to return a formatted error message as a string
 func (err IngressNotAvailable) Error() string {
+	return fmt.Sprintf("Ingress %s is not available", err.ingress.Name)
+}
+
+// IngressNotAvailableV1Beta1 is returned when a Kubernetes service is not yet available to accept traffic.
+type IngressNotAvailableV1Beta1 struct {
+	ingress *networkingv1beta1.Ingress
+}
+
+// Error is a simple function to return a formatted error message as a string
+func (err IngressNotAvailableV1Beta1) Error() string {
 	return fmt.Sprintf("Ingress %s is not available", err.ingress.Name)
 }
 
@@ -56,12 +68,27 @@ type PodNotAvailable struct {
 
 // Error is a simple function to return a formatted error message as a string
 func (err PodNotAvailable) Error() string {
-	return fmt.Sprintf("Pod %s is not available", err.pod.Name)
+	return fmt.Sprintf("Pod %s is not available, reason: %s, message: %s", err.pod.Name, err.pod.Status.Reason, err.pod.Status.Message)
 }
 
 // NewPodNotAvailableError returnes a PodNotAvailable struct when Kubernetes deems a pod is not available
 func NewPodNotAvailableError(pod *corev1.Pod) PodNotAvailable {
 	return PodNotAvailable{pod}
+}
+
+// JobNotSucceeded is returned when a Kubernetes job is not Succeeded
+type JobNotSucceeded struct {
+	job *batchv1.Job
+}
+
+// Error is a simple function to return a formatted error message as a string
+func (err JobNotSucceeded) Error() string {
+	return fmt.Sprintf("Job %s is not Succeeded", err.job.Name)
+}
+
+// NewJobNotSucceeded returnes a JobNotSucceeded when the status of the job is not Succeeded
+func NewJobNotSucceeded(job *batchv1.Job) JobNotSucceeded {
+	return JobNotSucceeded{job}
 }
 
 // ServiceNotAvailable is returned when a Kubernetes service is not yet available to accept traffic.

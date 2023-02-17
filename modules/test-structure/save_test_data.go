@@ -12,6 +12,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/packer"
+	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -72,6 +73,25 @@ func LoadEc2KeyPair(t testing.TestingT, testFolder string) *aws.Ec2Keypair {
 // formatEc2KeyPairPath formats a path to save an Ec2KeyPair in the given folder.
 func formatEc2KeyPairPath(testFolder string) string {
 	return FormatTestDataPath(testFolder, "Ec2KeyPair.json")
+}
+
+// SaveSshKeyPair serializes and saves an SshKeyPair into the given folder. This allows you to create an SshKeyPair during setup
+// and to reuse that SshKeyPair later during validation and teardown.
+func SaveSshKeyPair(t testing.TestingT, testFolder string, keyPair *ssh.KeyPair) {
+	SaveTestData(t, formatSshKeyPairPath(testFolder), keyPair)
+}
+
+// LoadSshKeyPair loads and unserializes an SshKeyPair from the given folder. This allows you to reuse an SshKeyPair that was
+// created during an earlier setup step in later validation and teardown steps.
+func LoadSshKeyPair(t testing.TestingT, testFolder string) *ssh.KeyPair {
+	var keyPair ssh.KeyPair
+	LoadTestData(t, formatSshKeyPairPath(testFolder), &keyPair)
+	return &keyPair
+}
+
+// formatSshKeyPairPath formats a path to save an SshKeyPair in the given folder.
+func formatSshKeyPairPath(testFolder string) string {
+	return FormatTestDataPath(testFolder, "SshKeyPair.json")
 }
 
 // SaveKubectlOptions serializes and saves KubectlOptions into the given folder. This allows you to create a KubectlOptions during setup

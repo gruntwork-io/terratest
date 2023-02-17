@@ -97,14 +97,11 @@ func GetPublicIPAddressE(publicIPAddressName string, resGroupName string, subscr
 
 // GetPublicIPAddressClientE creates a Public IP Addresses client in the specified Azure Subscription.
 func GetPublicIPAddressClientE(subscriptionID string) (*network.PublicIPAddressesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	// Get the Public IP Address client from clientfactory
+	client, err := CreatePublicIPAddressesClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the Public IP Address client
-	client := network.NewPublicIPAddressesClient(subscriptionID)
 
 	// Create an authorizer
 	authorizer, err := NewAuthorizer()
@@ -113,5 +110,5 @@ func GetPublicIPAddressClientE(subscriptionID string) (*network.PublicIPAddresse
 	}
 	client.Authorizer = *authorizer
 
-	return &client, nil
+	return client, nil
 }

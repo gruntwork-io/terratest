@@ -1,0 +1,4 @@
+=== RUN   TestIntegrationFailingExample
+=== PAUSE TestIntegrationFailingExample
+=== CONT  TestIntegrationFailingExample
+--- PASS: TestIntegrationFailingExample (0.00s)

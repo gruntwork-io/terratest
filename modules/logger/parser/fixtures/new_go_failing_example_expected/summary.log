@@ -1,0 +1,6 @@
+--- PASS: TestIntegrationPanicExample (0.00s)
+--- PASS: TestIntegrationFailingExample (0.00s)
+--- FAIL: TestIntegrationBasicExample (0.00s)
+FAIL
+FAIL	github.com/gruntwork-io/terratest/modules/logger/parser	1.589s
+FAIL

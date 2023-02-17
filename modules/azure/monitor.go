@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/preview/monitor/mgmt/2019-06-01/insights"
+	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -46,7 +46,7 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 		return nil, err
 	}
 
-	client, err := GetDiagnosticsSettingsClientE(subscriptionID)
+	client, err := CreateDiagnosticsSettingsClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +60,7 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 }
 
 // GetDiagnosticsSettingsClientE returns a diagnostics settings client
+// TODO: delete in next version
 func GetDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
@@ -89,7 +90,7 @@ func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subsc
 
 // GetVMInsightsOnboardingStatusE get diagnostics VM onboarding status
 func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
-	client, err := GetVMInsightsClientE(t, subscriptionID)
+	client, err := CreateVMInsightsClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +104,7 @@ func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subs
 }
 
 // GetVMInsightsClientE gets a VM Insights client
+// TODO: delete in next version
 func GetVMInsightsClientE(t testing.TestingT, subscriptionID string) (*insights.VMInsightsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
@@ -140,7 +142,7 @@ func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName stri
 	}
 
 	// Get the client reference
-	client, err := GetActivityLogAlertsClientE(subscriptionID)
+	client, err := CreateActivityLogAlertsClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -155,6 +157,7 @@ func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName stri
 }
 
 // GetActivityLogAlertsClientE gets an Action Groups client in the specified Azure Subscription
+// TODO: delete in next version
 func GetActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)

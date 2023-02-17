@@ -7,7 +7,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 provider "azurerm" {
-  version = "~> 2.29"
+  version = "~> 2.50"
   features {}
 }
 
@@ -125,6 +125,11 @@ resource "azurerm_virtual_machine" "vm_example" {
 
   os_profile_windows_config {
     provision_vm_agent = true
+  }
+
+  tags = {
+    "Version"     = "0.0.1"
+    "Environment" = "dev"
   }
 
   depends_on = [random_password.rand]

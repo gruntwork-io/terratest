@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -154,7 +155,8 @@ func TestIdempotentWithChanges(t *testing.T) {
 }
 
 func TestParallelism(t *testing.T) {
-	t.Parallel()
+	// This test depends on precise timing of the concurrent parallel calls in terraform, so we need to run this test
+	// serially by itself so that other concurrent test runs won't influence the timing.
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-parallelism", t.Name())
 	require.NoError(t, err)
@@ -180,5 +182,49 @@ func TestParallelism(t *testing.T) {
 	Apply(t, options)
 	end = time.Now()
 	duration := end.Sub(start)
-	require.Greater(t, int64(duration.Seconds()), int64(25))
+	require.GreaterOrEqual(t, int64(duration.Seconds()), int64(25))
+}
+func TestTgApplyUseLockNoError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+	require.NoError(t, err)
+
+	options := WithDefaultRetryableErrors(t, &Options{
+		TerraformDir:    testFolder,
+		TerraformBinary: "terragrunt",
+		Lock:            true,
+		EnvVars:         map[string]string{"TF_LOG": "DEBUG"}, // debug level to get -lock CLI option passed down
+	})
+
+	out := TgApplyAll(t, options)
+
+	require.Contains(t, out, "Hello, World")
+	// make sure -lock CLI option is passed down correctly
+	require.Contains(t, out, "-lock=true")
+}
+
+func TestApplyWithPlanFile(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
+	require.NoError(t, err)
+	planFilePath := filepath.Join(testFolder, "plan.out")
+
+	options := &Options{
+		TerraformDir: testFolder,
+		Vars: map[string]interface{}{
+			"cnt": 1,
+		},
+		NoColor:      true,
+		PlanFilePath: planFilePath,
+	}
+	_, err = InitAndPlanE(t, options)
+	require.NoError(t, err)
+	require.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
+
+	out, err := ApplyE(t, options)
+	require.NoError(t, err)
+	require.Contains(t, out, "1 added, 0 changed, 0 destroyed.")
+	require.NotRegexp(t, `\[\d*m`, out, "Output should not contain color escape codes")
 }

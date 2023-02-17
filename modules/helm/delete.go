@@ -23,7 +23,6 @@ func DeleteE(t testing.TestingT, options *Options, releaseName string, purge boo
 			args = append(args, deleteArgs...)
 		}
 	}
-	args = append(args, getNamespaceArgs(options)...)
 	args = append(args, releaseName)
 	_, err := RunHelmCommandAndGetOutputE(t, options, "delete", args...)
 	return err

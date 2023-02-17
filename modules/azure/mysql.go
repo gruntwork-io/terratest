@@ -3,12 +3,13 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // GetMYSQLServerClientE is a helper function that will setup a mysql server client.
+// TODO: remove in next version
 func GetMYSQLServerClientE(subscriptionID string) (*mysql.ServersClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
@@ -43,7 +44,7 @@ func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, 
 // GetMYSQLServerE is a helper function that gets the server.
 func GetMYSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*mysql.Server, error) {
 	// Create a mySQl Server client
-	mysqlClient, err := GetMYSQLServerClientE(subscriptionID)
+	mysqlClient, err := CreateMySQLServerClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func GetMYSQLDBClientE(subscriptionID string) (*mysql.DatabasesClient, error) {
 	return &mysqlDBClient, nil
 }
 
-//GetMYSQLDB is a helper function that gets the database.
+// GetMYSQLDB is a helper function that gets the database.
 // This function would fail the test if there is an error.
 func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *mysql.Database {
 	database, err := GetMYSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
@@ -90,7 +91,7 @@ func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbNa
 	return database
 }
 
-//GetMYSQLDBE is a helper function that gets the database.
+// GetMYSQLDBE is a helper function that gets the database.
 func GetMYSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*mysql.Database, error) {
 	// Create a mySQl db client
 	mysqldbClient, err := GetMYSQLDBClientE(subscriptionID)
@@ -108,7 +109,7 @@ func GetMYSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string,
 	return &mysqlDb, nil
 }
 
-//ListMySQLDB is a helper function that gets all databases per server.
+// ListMySQLDB is a helper function that gets all databases per server.
 func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) []mysql.Database {
 	dblist, err := ListMySQLDBE(t, subscriptionID, resGroupName, serverName)
 	require.NoError(t, err)
@@ -116,7 +117,7 @@ func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, sub
 	return dblist
 }
 
-//ListMySQLDBE is a helper function that gets all databases per server.
+// ListMySQLDBE is a helper function that gets all databases per server.
 func ListMySQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]mysql.Database, error) {
 	// Create a mySQl db client
 	mysqldbClient, err := GetMYSQLDBClientE(subscriptionID)

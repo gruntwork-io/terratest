@@ -1,3 +1,4 @@
+//go:build azure || (azureslim && compute)
 // +build azure azureslim,compute
 
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
@@ -113,6 +114,7 @@ func testInformationOfVM(t *testing.T, terraformOptions *terraform.Options, subs
 	expectedImageSKU := terraform.OutputList(t, terraformOptions, "vm_image_sku")
 	expectedImageVersion := terraform.OutputList(t, terraformOptions, "vm_image_version")
 	expectedAvsName := terraform.Output(t, terraformOptions, "availability_set_name")
+	expectedVMTags := terraform.OutputMap(t, terraformOptions, "vm_tags")
 
 	// Check if the Virtual Machine exists.
 	assert.True(t, azure.VirtualMachineExists(t, virtualMachineName, resourceGroupName, subscriptionID))
@@ -131,6 +133,10 @@ func testInformationOfVM(t *testing.T, terraformOptions *terraform.Options, subs
 	// The AVS ID returned from the VM is always CAPS so ignoring case in the assertion.
 	actualexpectedAvsName := azure.GetVirtualMachineAvailabilitySetID(t, virtualMachineName, resourceGroupName, subscriptionID)
 	assert.True(t, strings.EqualFold(expectedAvsName, actualexpectedAvsName))
+
+	// Check the assigned Tags of the VM, assert empty if no tags.
+	actualVMTags := azure.GetVirtualMachineTags(t, virtualMachineName, resourceGroupName, "")
+	assert.Equal(t, expectedVMTags, actualVMTags)
 }
 
 // These tests check the OS Disk and Attached Managed Disks for the Azure Virtual Machine.

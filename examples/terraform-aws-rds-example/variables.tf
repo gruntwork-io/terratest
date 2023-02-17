@@ -11,6 +11,10 @@
 # You must provide a value for each of these parameters.
 # Given these are credentials, security of the values should be considered.
 # ---------------------------------------------------------------------------------------------------------------------
+variable "region" {
+  description = "The AWS region to deploy to"
+  type        = string
+}
 
 variable "username" {
   description = "Master username of the DB"
@@ -78,5 +82,11 @@ variable "license_model" {
   description = "License model of the DB instance"
   type        = string
   default     = "general-public-license"
+}
+
+variable "instance_class" {
+  description = "Instance class to be used to run the database"
+  type        = string
+  default     = "db.t2.micro"
 }
 

@@ -20,7 +20,6 @@ func RollbackE(t testing.TestingT, options *Options, releaseName string, revisio
 			args = append(args, rollbackArgs...)
 		}
 	}
-	args = append(args, getNamespaceArgs(options)...)
 	args = append(args, releaseName)
 	if revision != "" {
 		args = append(args, revision)
