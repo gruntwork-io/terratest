@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -30,5 +31,21 @@ func InitE(t testing.TestingT, options *Options) (string, error) {
 
 	args = append(args, FormatTerraformBackendConfigAsArgs(options.BackendConfig)...)
 	args = append(args, FormatTerraformPluginDirAsArgs(options.PluginDir)...)
+
+	// Down to the user to supply to correct flags
+	// AdditionalInitFlags should not overwrite previously set
+	// flags via Options public properties
+	if len(options.AdditionalInitFlags) > 0 {
+		for _, v := range options.AdditionalInitFlags {
+			if strings.HasPrefix(v, "-upgrade") ||
+				strings.HasPrefix(v, "-reconfigure") ||
+				strings.HasPrefix(v, "-migrate-state") ||
+				strings.HasPrefix(v, "-force-copy") {
+				continue
+			}
+			args = append(args, v)
+		}
+	}
+
 	return RunTerraformCommandE(t, options, args...)
 }
