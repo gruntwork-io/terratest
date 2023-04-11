@@ -23,6 +23,7 @@ func ContinuouslyCheckUrl(
 	url string,
 	stopChecking <-chan bool,
 	sleepBetweenChecks time.Duration,
+	tlsConfig *tls.Config,
 ) (*sync.WaitGroup, <-chan GetResponse) {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -36,7 +37,7 @@ func ContinuouslyCheckUrl(
 				logger.Logf(t, "Got signal to stop downtime checks for URL %s.\n", url)
 				return
 			case <-time.After(sleepBetweenChecks):
-				statusCode, body, err := HttpGetE(t, url, &tls.Config{})
+				statusCode, body, err := HttpGetE(t, url, tlsConfig)
 				// Non-blocking send, defaulting to logging a warning if there is no channel reader
 				select {
 				case responses <- GetResponse{StatusCode: statusCode, Body: body}:
