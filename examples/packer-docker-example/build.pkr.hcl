@@ -48,7 +48,7 @@ source "amazon-ebs" "ubuntu-ami" {
 source "docker" "ubuntu-docker" {
   changes = ["ENTRYPOINT [\"\"]"]
   commit  = true
-  image   = "gruntwork/ubuntu-test:18.04"
+  image   = "gruntwork/ubuntu-test:22.04"
 }
 
 build {
