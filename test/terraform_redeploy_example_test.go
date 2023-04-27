@@ -129,7 +129,7 @@ func validateAsgRunningWebServer(t *testing.T, awsRegion string, workingDir stri
 	// Wait and verify the ASG is scaled to the desired capacity. It can take a few minutes for the ASG to boot up, so
 	// retry a few times.
 	maxRetries := 30
-	timeBetweenRetries := 5 * time.Second
+	timeBetweenRetries := 10 * time.Second
 	aws.WaitForCapacity(t, asgName, awsRegion, maxRetries, timeBetweenRetries)
 	capacityInfo := aws.GetCapacityInfoForAsg(t, asgName, awsRegion)
 	assert.Equal(t, capacityInfo.DesiredCapacity, int64(3))

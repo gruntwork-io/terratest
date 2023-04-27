@@ -96,7 +96,7 @@ data "template_file" "user_data" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# FOR THIS EXAMPLE, WE JUST RUN A PLAIN UBUNTU 16.04 AMI
+# FOR THIS EXAMPLE, WE JUST RUN A PLAIN UBUNTU 22.04 AMI
 # ---------------------------------------------------------------------------------------------------------------------
 
 data "aws_ami" "ubuntu" {
@@ -120,7 +120,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 }
 

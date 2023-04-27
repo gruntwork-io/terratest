@@ -98,7 +98,7 @@ func testSSHPasswordToPublicHost(t *testing.T, terraformOptions *terraform.Optio
 
 	// It can take a minute or so for the instance to boot up, so retry a few times.
 	maxRetries := 30
-	timeBetweenRetries := 5 * time.Second
+	timeBetweenRetries := 10 * time.Second
 	description := fmt.Sprintf("SSH to public host %s", publicInstanceIP)
 
 	// Run a simple echo command on the server.
