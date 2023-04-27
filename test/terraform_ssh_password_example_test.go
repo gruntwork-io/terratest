@@ -61,7 +61,7 @@ func configureTerraformSshPasswordOptions(t *testing.T, exampleFolder string) *t
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create a random password that we can use for SSH access.
 	password := random.UniqueId()

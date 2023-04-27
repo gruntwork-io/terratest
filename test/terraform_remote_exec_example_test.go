@@ -55,7 +55,7 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 		awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 
 		// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-		instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+		instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 		// Create an EC2 KeyPair that we can use for SSH access
 		keyPairName := fmt.Sprintf("terratest-remote-exec-example-%s", uniqueID)
