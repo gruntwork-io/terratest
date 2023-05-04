@@ -41,6 +41,23 @@ func UniqueId() string {
 	return out.String()
 }
 
+const base36chars = "0123456789abcdefghijklmnopqrstuvwxyz"
+const uniqueLowercaseIDLength = 6 // Should be good for 36^6 = 2+ billion combinations
+
+// UniqueLowercaseId returns a unique (ish) id we can attach to resources and tfstate files so they don't conflict with each other
+// Uses base 36 to generate a 6 character string that's unlikely to collide with the handful of tests we run in
+// parallel. Based on code here: http://stackoverflow.com/a/9543797/483528
+func UniqueLowercaseId() string {
+	var out bytes.Buffer
+
+	generator := newRand()
+	for i := 0; i < uniqueLowercaseIDLength; i++ {
+		out.WriteByte(base36chars[generator.Intn(len(base36chars))])
+	}
+
+	return out.String()
+}
+
 // newRand creates a new random number generator, seeding it with the current system time.
 func newRand() *rand.Rand {
 	return rand.New(rand.NewSource(time.Now().UnixNano()))

@@ -66,3 +66,17 @@ func TestUniqueId(t *testing.T) {
 		previouslySeen[uniqueID] = true
 	}
 }
+
+func TestUniqueLowercaseId(t *testing.T) {
+	t.Parallel()
+
+	previouslySeen := map[string]bool{}
+
+	for i := 0; i < 100; i++ {
+		uniqueLowercaseID := UniqueLowercaseId()
+		assert.Len(t, uniqueLowercaseID, 6)
+		assert.NotContains(t, previouslySeen, uniqueLowercaseID)
+
+		previouslySeen[uniqueLowercaseID] = true
+	}
+}
