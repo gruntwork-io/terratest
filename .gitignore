@@ -26,3 +26,8 @@ kubeconfig
 
 # environment files
 .env
+
+# transient testing files
+ssh_key
+ssh_key.pub
+*.log
