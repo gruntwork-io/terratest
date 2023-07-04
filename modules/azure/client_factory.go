@@ -14,6 +14,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/automation/mgmt/automation"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
@@ -869,6 +870,120 @@ func GetKeyVaultURISuffixE() (string, error) {
 		return "", err
 	}
 	return env.KeyVaultDNSSuffix, nil
+}
+
+// CreateAutomationAccountClientE returns a Automation Account client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func CreateAutomationAccountClientE(subscriptionID string) (automation.AccountClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return automation.AccountClient{}, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return automation.AccountClient{}, err
+	}
+
+	// Create correct client based on type passed
+	return automation.NewAccountClientWithBaseURI(baseURI, subscriptionID), nil
+}
+
+// CreateAutomationAccountDscConfigurationClientE returns a Automation Account client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func CreateAutomationAccountDscConfigurationClientE(subscriptionID string) (automation.DscConfigurationClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return automation.DscConfigurationClient{}, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return automation.DscConfigurationClient{}, err
+	}
+
+	// Create correct client based on type passed
+	return automation.NewDscConfigurationClientWithBaseURI(baseURI, subscriptionID), nil
+}
+
+// CreateAutomationAccountDscCompilationJobClientE returns a Automation Account client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func CreateAutomationAccountDscCompilationJobClientE(subscriptionID string) (automation.DscCompilationJobClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return automation.DscCompilationJobClient{}, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return automation.DscCompilationJobClient{}, err
+	}
+
+	// Create correct client based on type passed
+	return automation.NewDscCompilationJobClientWithBaseURI(baseURI, subscriptionID), nil
+}
+
+// CreateAutomationAccountCertficateClientE returns a Automation Account client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func CreateAutomationAccountCertficateClientE(subscriptionID string) (automation.CertificateClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return automation.CertificateClient{}, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return automation.CertificateClient{}, err
+	}
+
+	// Create correct client based on type passed
+	return automation.NewCertificateClientWithBaseURI(baseURI, subscriptionID), nil
+}
+
+// CreateAutomationAccountDscNodeConfigClientE returns a Automation Account client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func CreateAutomationAccountDscNodeConfigClientE(subscriptionID string) (automation.DscNodeClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return automation.DscNodeClient{}, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return automation.DscNodeClient{}, err
+	}
+
+	// Create correct client based on type passed
+	return automation.NewDscNodeClientWithBaseURI(baseURI, subscriptionID), nil
+}
+
+// CreateAutomationAccountRunAsConnectionClientE returns a Automation Account client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+func CreateAutomationAccountRunAsConnectionClientE(subscriptionID string) (automation.ConnectionClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return automation.ConnectionClient{}, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return automation.ConnectionClient{}, err
+	}
+
+	// Create correct client based on type passed
+	return automation.NewConnectionClientWithBaseURI(baseURI, subscriptionID), nil
 }
 
 // getDefaultEnvironmentName returns either a configured Azure environment name, or the public default

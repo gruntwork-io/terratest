@@ -1,4 +1,4 @@
-name: ci-workflow
+name: ci-workflow-automation
 
 # actors
   # source repo: official terratest repo (gruntwork-io/terratest)
@@ -39,17 +39,10 @@ on:
         required: true
         default: 'false'
 
-permissions:
-  contents: read
-
 jobs:
   ci-job:
     runs-on: [ubuntu-latest]
     steps:
-      - uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 0.15.1
-          terraform_wrapper: false  
       - name: checkout to repo
         uses: actions/checkout@v2
         with:
@@ -57,7 +50,7 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
       - name: install golangci-lint binary
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.2
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.31.0
       - name: lint modules/azure folder
         id: azure_module_lint
         run: |
@@ -65,7 +58,7 @@ jobs:
           [ -d "modules/azure" ] && ls -li "modules/azure"
 
           # run the linter
-          ./bin/golangci-lint run ./modules/azure/ --build-tags=azure --timeout 5m0s
+          ./bin/golangci-lint run ./modules/azure/ --build-tags=azureautomation --timeout 5m0s
       - name: lint test/azure folder
         id: azure_test_lint
         run: |
@@ -73,7 +66,7 @@ jobs:
           [ -d "test/azure" ] && ls -li "test/azure"
 
           # run the linter
-          ./bin/golangci-lint run ./test/azure/ --build-tags=azure --timeout 5m0s
+          ./bin/golangci-lint run ./test/azure/ --build-tags=azureautomation --timeout 5m0s
       - name: run terraform format
         id: azure_terraform_format
         run: terraform fmt -check -recursive ./examples/azure
@@ -102,6 +95,15 @@ jobs:
 
           # run the unit tests under the `azure` subfolder
           go test ./azure/* -v -timeout 90m
+
+      - name: configure powershell environment and install modules
+        shell: pwsh
+        run: |
+          Install-Module Az.Accounts -Scope CurrentUser -Force 
+          Import-Module Az.Accounts
+          Install-Module Az.Automation -Scope CurrentUser -Force 
+          Import-Module Az.Automation
+
       - name: run go test for azure
         id: azure_test
         env:
@@ -121,17 +123,18 @@ jobs:
           export ARM_TENANT_ID="$TENANT_ID"
           export ARM_SKIP_PROVIDER_REGISTRATION=${{ github.event.inputs.skip_provider_registration }}
 
-          # some resources may require ssh keys (e.g. Kubernetes, VMs, etc.)
-          # terraform will read below environment variables
-          # if those values didn't provide to the terraform explicitly
-          rm -rf ssh_key*
-          ssh-keygen -m PEM -t rsa -b 4096 -f ./ssh_key -q -N ""
-          export TF_VAR_ssh_public_key="$PWD/ssh_key.pub"
+          # automation account requires an x.509 certificate for configuration on the resource and service principal run as account
+          export TF_VAR_automation_run_as_certificate_thumbprint=${{ secrets.SP_CERTIFICATE_THUMBPRINT }}
+          export TF_VAR_automation_run_as_certificate_base64=${{ secrets.SP_CERTIFICATE_BASE64 }}
+          export TF_VAR_ARM_SUBSCRIPTION_ID="$ARM_SUBSCRIPTION_ID"
+          export TF_VAR_ARM_TENANT_ID="$ARM_TENANT_ID"
           export TF_VAR_client_id="$APP_ID"
           export TF_VAR_client_secret="$APP_PASSWORD"
+          export TF_VAR_location=${{ secrets.DEPLOYMENT_LOCATION }}
 
-          # run tests under the `test/azure` subfolder with the default build tag of azure
-          go test -tags=azure -v -timeout 90m
+          # run the automation account test under the `test/azure` subfolder
+          go test -tags=azureautomation -v -timeout 90m
+
       - name: report back the result
         if: always()
         env:

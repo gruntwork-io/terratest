@@ -18,6 +18,7 @@ var TerraformCommandsWithLockSupport = []string{
 	"plan-all",
 	"apply",
 	"apply-all",
+	"run-all",
 	"destroy",
 	"destroy-all",
 	"init",
