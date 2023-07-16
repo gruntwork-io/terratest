@@ -41,6 +41,22 @@ func WorkspaceSelectOrNewE(t testing.TestingT, options *Options, name string) (s
 	return RunTerraformCommandE(t, options, "workspace", "show")
 }
 
+func PullWorkspaceState(t testing.TestingT, options *Options, name string) {
+	if name == "" {
+		name = "terratest.terraform.tfstate"
+	}
+	_, err := RunTerraformCommandE(t, options, "state", "pull", ">",name)
+	require.NoError(t, err)
+}
+
+func PushWorkspaceState(t testing.TestingT, options *Options, name string) {
+	if name == "" {
+		name = "terratest.terraform.tfstate"
+	}
+	_, err := RunTerraformCommandE(t, options, "state", "push", name)
+	require.NoError(t, err)
+}
+
 func isExistingWorkspace(out string, name string) bool {
 	workspaces := strings.Split(out, "\n")
 	for _, ws := range workspaces {
