@@ -27,6 +27,12 @@ func UpgradeE(t testing.TestingT, options *Options, chart string, releaseName st
 		chart = absChartDir
 	}
 
+	// build chart dependencies
+	if options.BuildDependencies {
+		if _, err := RunHelmCommandAndGetOutputE(t, options, "dependency", "build", chart); err != nil {
+			return errors.WithStackTrace(err)
+		}
+	}
 	var err error
 	args := []string{}
 	if options.ExtraArgs != nil {

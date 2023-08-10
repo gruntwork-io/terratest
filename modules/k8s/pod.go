@@ -148,3 +148,28 @@ func IsPodAvailable(pod *corev1.Pod) bool {
 	}
 	return pod.Status.Phase == corev1.PodRunning
 }
+
+// GetPodLogsE returns the logs of a Pod at the time when the function was called. Pass container name if there are more containers in the Pod or set to "" if there is only one.
+// If the Pod is not running an Error is returned.
+// If the provided containerName is not the name of a container in the Pod an Error is returned.
+func GetPodLogsE(t testing.TestingT, options *KubectlOptions, pod *corev1.Pod, containerName string) (string, error) {
+	var output string
+	var err error
+	if containerName == "" {
+		output, err = RunKubectlAndGetOutputE(t, options, "logs", pod.Name)
+	} else {
+		output, err = RunKubectlAndGetOutputE(t, options, "logs", pod.Name, fmt.Sprintf("-c%s", containerName))
+	}
+
+	if err != nil {
+		return "", err
+	}
+	return output, nil
+}
+
+// GetPodLogsE returns the logs of a Pod at the time when the function was called.  Pass container name if there are more containers in the Pod or set to "" if there is only one.
+func GetPodLogs(t testing.TestingT, options *KubectlOptions, pod *corev1.Pod, containerName string) string {
+	logs, err := GetPodLogsE(t, options, pod, containerName)
+	require.NoError(t, err)
+	return logs
+}

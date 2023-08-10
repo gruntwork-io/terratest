@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
@@ -11,6 +12,7 @@ type KubectlOptions struct {
 	Namespace     string
 	Env           map[string]string
 	InClusterAuth bool
+	Logger        *logger.Logger
 }
 
 // NewKubectlOptions will return a pointer to new instance of KubectlOptions with the configured options

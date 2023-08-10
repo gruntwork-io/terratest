@@ -36,12 +36,22 @@ func TestSaveAndLoadTestData(t *testing.T) {
 	isTestDataPresent = IsTestDataPresent(t, tmpFile.Name())
 	assert.False(t, isTestDataPresent, "Expected no test data would be present because file exists but no data has been written yet.")
 
-	SaveTestData(t, tmpFile.Name(), expectedData)
+	overwrite := true
+	SaveTestData(t, tmpFile.Name(), overwrite, expectedData)
 
 	isTestDataPresent = IsTestDataPresent(t, tmpFile.Name())
 	assert.True(t, isTestDataPresent, "Expected test data would be present because file exists and data has been written to file.")
 
 	actualData := testData{}
+	LoadTestData(t, tmpFile.Name(), &actualData)
+	assert.Equal(t, expectedData, actualData)
+
+	overwritingData := testData{
+		Foo: "foo",
+		Bar: false,
+		Baz: map[string]interface{}{"123": "456", "789": 1.0, "0": false},
+	}
+	SaveTestData(t, tmpFile.Name(), !overwrite, overwritingData)
 	LoadTestData(t, tmpFile.Name(), &actualData)
 	assert.Equal(t, expectedData, actualData)
 
@@ -105,6 +115,48 @@ func TestSaveAndLoadTerraformOptions(t *testing.T) {
 
 	actualData := LoadTerraformOptions(t, tmpFolder)
 	assert.Equal(t, expectedData, actualData)
+}
+
+func TestSaveTerraformOptionsIfNotPresent(t *testing.T) {
+	t.Parallel()
+
+	tmpFolder := t.TempDir()
+
+	expectedData := &terraform.Options{
+		TerraformDir: "/abc/def/ghi",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptionsIfNotPresent(t, tmpFolder, expectedData)
+
+	overwritingData := &terraform.Options{
+		TerraformDir: "/123/456/789",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptionsIfNotPresent(t, tmpFolder, overwritingData)
+
+	actualData := LoadTerraformOptions(t, tmpFolder)
+	assert.Equal(t, expectedData, actualData)
+}
+
+func TestSaveTerraformOptionsOverwrite(t *testing.T) {
+	t.Parallel()
+
+	tmpFolder := t.TempDir()
+
+	originaData := &terraform.Options{
+		TerraformDir: "/abc/def/ghi",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptions(t, tmpFolder, originaData)
+
+	overwritingData := &terraform.Options{
+		TerraformDir: "/123/456/789",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptions(t, tmpFolder, overwritingData)
+
+	actualData := LoadTerraformOptions(t, tmpFolder)
+	assert.Equal(t, overwritingData, actualData)
 }
 
 func TestSaveAndLoadAmiId(t *testing.T) {

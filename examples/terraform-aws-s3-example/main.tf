@@ -41,9 +41,18 @@ resource "aws_s3_bucket_versioning" "test_bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "test_bucket" {
+resource "aws_s3_bucket_ownership_controls" "test_bucket" {
   bucket = aws_s3_bucket.test_bucket.id
-  acl    = "private"
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+  depends_on = [aws_s3_bucket.test_bucket]
+}
+
+resource "aws_s3_bucket_acl" "test_bucket" {
+  bucket     = aws_s3_bucket.test_bucket.id
+  acl        = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.test_bucket]
 }
 
 
@@ -59,9 +68,18 @@ resource "aws_s3_bucket" "test_bucket_logs" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test_bucket_logs" {
+resource "aws_s3_bucket_ownership_controls" "test_bucket_logs" {
   bucket = aws_s3_bucket.test_bucket_logs.id
-  acl    = "log-delivery-write"
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+  depends_on = [aws_s3_bucket.test_bucket_logs]
+}
+
+resource "aws_s3_bucket_acl" "test_bucket_logs" {
+  bucket     = aws_s3_bucket.test_bucket_logs.id
+  acl        = "log-delivery-write"
+  depends_on = [aws_s3_bucket_ownership_controls.test_bucket_logs]
 }
 
 # Configure bucket access policies

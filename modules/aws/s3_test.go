@@ -137,7 +137,7 @@ func TestAssertS3BucketPolicyExists(t *testing.T) {
 	logger.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
-	exampleBucketPolicy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":"s3:Get*","Resource":"arn:aws:s3:::%s/*","Condition":{"Bool":{"aws:SecureTransport":"false"}}}]}`, s3BucketName)
+	exampleBucketPolicy := fmt.Sprintf(`{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":["*"]},"Action":"s3:Get*","Resource":"arn:aws:s3:::%s/*","Condition":{"Bool":{"aws:SecureTransport":"false"}}}]}`, s3BucketName)
 
 	CreateS3Bucket(t, region, s3BucketName)
 	defer DeleteS3Bucket(t, region, s3BucketName)

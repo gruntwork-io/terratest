@@ -145,6 +145,8 @@ func CreateS3BucketE(t testing.TestingT, region string, name string) error {
 
 	params := &s3.CreateBucketInput{
 		Bucket: aws.String(name),
+		// https://github.com/aws/aws-sdk-go/blob/v1.44.122/service/s3/api.go#L41646
+		ObjectOwnership: aws.String(s3.ObjectOwnershipObjectWriter),
 	}
 	_, err = s3Client.CreateBucket(params)
 	return err

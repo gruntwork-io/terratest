@@ -29,6 +29,7 @@ type Subnet struct {
 }
 
 const vpcIDFilterName = "vpc-id"
+const defaultForAzFilterName = "default-for-az"
 const resourceTypeFilterName = "resource-id"
 const resourceIdFilterName = "resource-type"
 const vpcResourceTypeFilterValue = "vpc"
@@ -93,7 +94,8 @@ func GetVpcsE(t testing.TestingT, filters []*ec2.Filter, region string) ([]*Vpc,
 	retVal := make([]*Vpc, numVpcs)
 
 	for i, vpc := range vpcs.Vpcs {
-		subnets, err := GetSubnetsForVpcE(t, aws.StringValue(vpc.VpcId), region)
+		vpcIdFilter := generateVpcIdFilter(aws.StringValue(vpc.VpcId))
+		subnets, err := GetSubnetsForVpcE(t, region, []*ec2.Filter{&vpcIdFilter})
 		if err != nil {
 			return nil, err
 		}
@@ -127,22 +129,41 @@ func FindVpcName(vpc *ec2.Vpc) string {
 
 // GetSubnetsForVpc gets the subnets in the specified VPC.
 func GetSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
-	subnets, err := GetSubnetsForVpcE(t, vpcID, region)
+	vpcIDFilter := generateVpcIdFilter(vpcID)
+	subnets, err := GetSubnetsForVpcE(t, region, []*ec2.Filter{&vpcIDFilter})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return subnets
 }
 
+// GetAzDefaultSubnetsForVpc gets the default az subnets in the specified VPC.
+func GetAzDefaultSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
+	vpcIDFilter := generateVpcIdFilter(vpcID)
+	defaultForAzFilter := ec2.Filter{
+		Name:   aws.String(defaultForAzFilterName),
+		Values: []*string{aws.String("true")},
+	}
+	subnets, err := GetSubnetsForVpcE(t, region, []*ec2.Filter{&vpcIDFilter, &defaultForAzFilter})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return subnets
+}
+
+// generateVpcIdFilter is a helper method to generate vpc id filter
+func generateVpcIdFilter(vpcID string) ec2.Filter {
+	return ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcID}}
+}
+
 // GetSubnetsForVpcE gets the subnets in the specified VPC.
-func GetSubnetsForVpcE(t testing.TestingT, vpcID string, region string) ([]Subnet, error) {
+func GetSubnetsForVpcE(t testing.TestingT, region string, filters []*ec2.Filter) ([]Subnet, error) {
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
 	}
 
-	vpcIDFilter := ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcID}}
-	subnetOutput, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: []*ec2.Filter{&vpcIDFilter}})
+	subnetOutput, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: filters})
 	if err != nil {
 		return nil, err
 	}

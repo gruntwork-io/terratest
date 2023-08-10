@@ -11,9 +11,12 @@ package helm
 import (
 	"crypto/tls"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,7 +29,7 @@ import (
 const (
 	remoteChartSource  = "https://charts.bitnami.com/bitnami"
 	remoteChartName    = "nginx"
-	remoteChartVersion = "9.7.4"
+	remoteChartVersion = "13.2.23"
 )
 
 // Test that we can install a remote chart (e.g bitnami/nginx)
@@ -97,6 +100,54 @@ func TestRemoteChartInstall(t *testing.T) {
 			return statusCode == 200
 		},
 	)
+}
+
+// Test deployment of helm chart with dependencies.
+func TestHelmDependencyInstall(t *testing.T) {
+	t.Parallel()
+
+	// Path to the helm chart with dependencies which we will test
+	helmChartPath, err := filepath.Abs("../../examples/helm-dependency-example")
+	require.NoError(t, err)
+
+	// Custom namespace name.
+	namespaceName := fmt.Sprintf("helm-dependency-example-%s", strings.ToLower(random.UniqueId()))
+
+	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
+	// - HOME/.kube/config for the kubectl config file
+	// - Current context of the kubectl config file
+	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
+
+	k8s.CreateNamespace(t, kubectlOptions, namespaceName)
+	defer k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+
+	// Helm chart deployment options.
+	options := &Options{
+		KubectlOptions: kubectlOptions,
+		SetValues: map[string]string{
+			"containerImageRepo":       "nginx",
+			"containerImageTag":        "1.15.8",
+			"basic.containerImageRepo": "nginx",
+			"basic.containerImageTag":  "1.15.8",
+		},
+		BuildDependencies: true,
+	}
+	// We generate a unique release name so that we can refer to after deployment.
+	// By doing so, we can schedule the delete call here so that at the end of the test, we run
+	// `helm delete RELEASE_NAME` to clean up any resources that were created.
+	releaseName := fmt.Sprintf(
+		"helm-dependency-example-%s",
+		strings.ToLower(random.UniqueId()),
+	)
+	defer Delete(t, options, releaseName, true)
+
+	// Deploy the chart using `helm install`.
+	err = InstallE(t, options, helmChartPath, releaseName)
+	assert.NoError(t, err)
+
+	// Verify that Kubernetes service is available after helm chart deployment.
+	_, err = k8s.GetServiceE(t, kubectlOptions, releaseName)
+	assert.NoError(t, err)
 }
 
 func waitForRemoteChartPods(t *testing.T, kubectlOptions *k8s.KubectlOptions, releaseName string, podCount int) {

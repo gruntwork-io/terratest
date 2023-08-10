@@ -23,7 +23,7 @@ func TestPlannedValuesMapWithBasicJson(t *testing.T) {
 
 	// Retrieve test data from the terraform-json project.
 	_, jsonData := http_helper.HttpGet(t, basicJsonUrl, nil)
-	plan, err := parsePlanJson(jsonData)
+	plan, err := ParsePlanJSON(jsonData)
 	require.NoError(t, err)
 
 	query := []string{
@@ -48,7 +48,7 @@ func TestPlannedValuesMapWithDeepModuleJson(t *testing.T) {
 
 	// Retrieve test data from the terraform-json project.
 	_, jsonData := http_helper.HttpGet(t, deepModuleJsonUrl, nil)
-	plan, err := parsePlanJson(jsonData)
+	plan, err := ParsePlanJSON(jsonData)
 	require.NoError(t, err)
 
 	query := []string{
@@ -64,7 +64,7 @@ func TestResourceChangesJson(t *testing.T) {
 
 	// Retrieve test data from the terraform-json project.
 	_, jsonData := http_helper.HttpGet(t, changesJsonUrl, nil)
-	plan, err := parsePlanJson(jsonData)
+	plan, err := ParsePlanJSON(jsonData)
 	require.NoError(t, err)
 
 	// Spot check a few changes to make sure the right address was registered

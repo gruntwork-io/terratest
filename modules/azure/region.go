@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/gruntwork-io/terratest/modules/collections"
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -115,7 +114,6 @@ func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenReg
 	regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
-	logger.Logf(t, "Using region %s", region)
 	return region, nil
 }
 
@@ -138,7 +136,6 @@ func GetAllAzureRegions(t testing.TestingT, subscriptionID string) []string {
 
 // GetAllAzureRegionsE gets the list of Azure regions available in this subscription
 func GetAllAzureRegionsE(t testing.TestingT, subscriptionID string) ([]string, error) {
-	logger.Log(t, "Looking up all Azure regions available in this account")
 
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)

@@ -7,7 +7,7 @@ env: &env
     PACKER_VERSION: 1.7.4
     TERRAGRUNT_VERSION: v0.36.0
     OPA_VERSION: v0.33.1
-    GO_VERSION: 1.18
+    GO_VERSION: 1.19
     GO111MODULE: auto
     K8S_VERSION: v1.18.20  # Same as EKS
     MINIKUBE_VERSION: v1.22.0
@@ -337,14 +337,16 @@ workflows:
     jobs:
       - setup:
           context:
-            - Gruntwork Admin
+            - AWS__PHXDEVOPS__circle-ci-test
+            - GITHUB__PAT__gruntwork-ci
           filters:
             tags:
               only: /^v.*/
 
       - kubernetes_test:
           context:
-            - Gruntwork Admin
+            - AWS__PHXDEVOPS__circle-ci-test
+            - GITHUB__PAT__gruntwork-ci
           requires:
             - setup
           filters:
@@ -353,7 +355,8 @@ workflows:
 
       - helm_test:
           context:
-            - Gruntwork Admin
+            - AWS__PHXDEVOPS__circle-ci-test
+            - GITHUB__PAT__gruntwork-ci
           requires:
             - setup
           filters:
@@ -362,8 +365,11 @@ workflows:
 
       - test:
           context:
-            - Gruntwork Admin
-            - Slack Token For Test
+            - AWS__PHXDEVOPS__circle-ci-test
+            - GITHUB__PAT__gruntwork-ci
+            - SLACK__TOKEN__refarch-deployer-test
+            - SLACK__WEBHOOK__refarch-deployer-test
+            - SLACK__CHANNEL__test-workflow-approvals
           requires:
             - setup
           filters:
@@ -372,7 +378,8 @@ workflows:
 
       - gcp_test:
           context:
-            - Gruntwork GCP
+            - GCP__automated-tests
+            - GITHUB__PAT__gruntwork-ci
           requires:
             - setup
           filters:
@@ -381,7 +388,8 @@ workflows:
 
       - deploy:
           context:
-            - Gruntwork Admin
+            - AWS__PHXDEVOPS__circle-ci-test
+            - GITHUB__PAT__gruntwork-ci
           requires:
             - setup
           filters:

@@ -191,3 +191,52 @@ func TestTgPlanAllWithError(t *testing.T) {
 
 	require.Equal(t, DefaultErrorExitCode, getExitCode)
 }
+
+func TestAssertTgPlanAllExitCodeNoError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir:    testFolder,
+		TerraformBinary: "terragrunt",
+	}
+
+	getExitCode, errExitCode := TgPlanAllExitCodeE(t, options)
+	if errExitCode != nil {
+		t.Fatal(errExitCode)
+	}
+
+	// since there is no state file we expect `2` to be the success exit code
+	assert.Equal(t, 2, getExitCode)
+	AssertTgPlanAllExitCode(t, getExitCode, true)
+
+	TgApplyAll(t, options)
+
+	getExitCode, errExitCode = TgPlanAllExitCodeE(t, options)
+	if errExitCode != nil {
+		t.Fatal(errExitCode)
+	}
+
+	// since there is a state file we expect `0` to be the success exit code
+	assert.Equal(t, 0, getExitCode)
+	AssertTgPlanAllExitCode(t, getExitCode, true)
+}
+
+func TestAssertTgPlanAllExitCodeWithError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-with-plan-error", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir:    testFolder,
+		TerraformBinary: "terragrunt",
+	}
+
+	getExitCode, errExitCode := TgPlanAllExitCodeE(t, options)
+	require.NoError(t, errExitCode)
+
+	AssertTgPlanAllExitCode(t, getExitCode, false)
+}

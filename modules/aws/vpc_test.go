@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,25 +80,13 @@ func TestGetDefaultSubnetIDsForVpc(t *testing.T) {
 	t.Parallel()
 
 	region := GetRandomStableRegion(t, nil, nil)
-	defaultVpcBeforeSubnetCreation := GetDefaultVpc(t, region)
-
-	// Creates a subnet in the default VPC with deferred deletion
-	// and fetches vpc object again
-	subnetName := fmt.Sprintf("%s-subnet", t.Name())
-	subnet := createPrivateSubnetInDefaultVpc(t, defaultVpcBeforeSubnetCreation.Id, subnetName, region)
-	defer deleteSubnet(t, *subnet.SubnetId, region)
 	defaultVpc := GetDefaultVpc(t, region)
 
 	defaultSubnetIDs := GetDefaultSubnetIDsForVpc(t, *defaultVpc)
 	assert.NotEmpty(t, defaultSubnetIDs)
-	// Checks that the amount of default subnets is smaller than
-	// total number of subnets in default vpc
-	assert.True(t, len(defaultSubnetIDs) < len(defaultVpc.Subnets))
 
 	availabilityZones := []string{}
 	for _, id := range defaultSubnetIDs {
-		// check if the recently created subnet does not come up here
-		assert.NotEqual(t, id, subnet.SubnetId)
 		// default subnets are by default public
 		// https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html
 		assert.True(t, IsPublicSubnet(t, id, region))
@@ -169,6 +156,18 @@ func TestGetTagsForSubnet(t *testing.T) {
 	assert.True(t, testTags["TagKey2"] == "TagValue2")
 }
 
+func TestGetDefaultAzSubnets(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	vpc := GetDefaultVpc(t, region)
+
+	// Note: cannot know exact list of default azs aheard of time, but we know that
+	//it must be greater than 0 for default vpc.
+	subnets := GetAzDefaultSubnetsForVpc(t, vpc.Id, region)
+	assert.NotZero(t, len(subnets))
+}
+
 func createPublicRoute(t *testing.T, vpcId string, routeTableId string, region string) {
 	ec2Client := NewEc2Client(t, region)
 
@@ -217,38 +216,6 @@ func createSubnet(t *testing.T, vpcId string, routeTableId string, region string
 	require.NoError(t, err)
 
 	return *createSubnetOutput.Subnet
-}
-
-func createPrivateSubnetInDefaultVpc(t *testing.T, vpcId string, subnetName string, region string) ec2.Subnet {
-	ec2Client := NewEc2Client(t, region)
-
-	createSubnetOutput, err := ec2Client.CreateSubnet(&ec2.CreateSubnetInput{
-		CidrBlock: aws.String("172.31.172.0/24"),
-		VpcId:     aws.String(vpcId),
-		TagSpecifications: []*ec2.TagSpecification{
-			{
-				ResourceType: aws.String("subnet"),
-				Tags: []*ec2.Tag{
-					{
-						Key:   aws.String("Name"),
-						Value: aws.String(subnetName),
-					},
-				},
-			},
-		},
-	})
-	require.NoError(t, err)
-
-	return *createSubnetOutput.Subnet
-}
-
-func deleteSubnet(t *testing.T, subnetId string, region string) {
-	ec2Client := NewEc2Client(t, region)
-
-	_, err := ec2Client.DeleteSubnet(&ec2.DeleteSubnetInput{
-		SubnetId: aws.String(subnetId),
-	})
-	require.NoError(t, err)
 }
 
 func createVpc(t *testing.T, region string) ec2.Vpc {

@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 # Reduce Docker image size per https://blog.replicated.com/refactoring-a-dockerfile-for-image-size/
 # - dnsutils: Install handy DNS checking tools like dig
@@ -15,8 +15,8 @@ RUN DEBIAN_FRONTEND=noninteractive \
         dnsutils \
         jq \
         libcrypt-hcesha-perl \
-        python \
-        python-pip \
+        python3 \
+        python3-pip \
         rsyslog \
         software-properties-common \
         sudo \
@@ -25,14 +25,9 @@ RUN DEBIAN_FRONTEND=noninteractive \
         rm -rf /var/lib/apt/lists/*
 
 # Install the AWS CLI per https://docs.aws.amazon.com/cli/latest/userguide/installing.html. The last line upgrades pip
-# to the latest version. Note that we need to remove python-pip before we can use the updated pip, as pip does not
-# automatically remove the ubuntu managed pip. We also need to refresh the cached pip path in the current bash session so
-# that it picks up the new pip.
-RUN pip install --upgrade setuptools && \
-    pip install --upgrade pip && \
-    apt-get remove -y python-pip python-pip-whl && \
-    hash pip && \
-    pip install awscli --upgrade
+# to the latest version.
+RUN pip3 install --upgrade setuptools && \
+    pip3 install awscli --upgrade
 
 # Install the latest version of Docker, Consumer Edition
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \

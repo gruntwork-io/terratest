@@ -8,8 +8,16 @@
 # CONFIGURE OUR AZURE CONNECTION
 # ------------------------------------------------------------------------------
 
+terraform {
+  required_providers {
+    azurerm = {
+      version = "~>2.29.0"
+      source  = "hashicorp/azurerm"
+    }
+  }
+}
+
 provider "azurerm" {
-  version = "~>2.29.0"
   features {}
 }
 

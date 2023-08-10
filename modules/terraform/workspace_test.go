@@ -219,7 +219,9 @@ func TestWorkspaceDeleteE(t *testing.T) {
 
 			// Check for errors
 			if testCase.expectedError != nil {
-				assert.True(t, errors.As(gotErr, &testCase.expectedError))
+				if !errors.Is(gotErr, testCase.expectedError) {
+					t.Errorf("expected error: %v, got error: %v", testCase.expectedError, gotErr)
+				}
 			} else {
 				assert.NoError(t, gotErr)
 				// Check for results

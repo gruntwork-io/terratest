@@ -5,9 +5,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # See test/azure/terraform_azure_availabilityset_example_test.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
-
 provider "azurerm" {
-  version = "~> 2.50"
   features {}
 }
 
@@ -15,12 +13,17 @@ provider "azurerm" {
 # PIN TERRAFORM VERSION TO >= 0.12
 # The examples have been upgraded to 0.12 syntax
 # ---------------------------------------------------------------------------------------------------------------------
-
 terraform {
   # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
   # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
   # forwards compatible with 0.13.x code.
   required_version = ">= 0.12.26"
+  required_providers {
+    azurerm = {
+      version = "~> 2.50"
+      source  = "hashicorp/azurerm"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

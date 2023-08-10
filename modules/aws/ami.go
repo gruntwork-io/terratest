@@ -112,8 +112,9 @@ func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filt
 	}
 
 	input := ec2.DescribeImagesInput{
-		Filters: ec2Filters,
-		Owners:  []*string{aws.String(ownerId)},
+		Filters:           ec2Filters,
+		IncludeDeprecated: aws.Bool(true),
+		Owners:            []*string{aws.String(ownerId)},
 	}
 
 	out, err := ec2Client.DescribeImages(&input)

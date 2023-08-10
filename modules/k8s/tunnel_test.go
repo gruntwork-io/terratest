@@ -49,6 +49,35 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	)
 }
 
+func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueId())
+	options := NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
+	KubectlApplyFromString(t, options, configData)
+	defer KubectlDeleteFromString(t, options, configData)
+	WaitUntilDeploymentAvailable(t, options, "nginx-deployment", 60, 1*time.Second)
+
+	// Open a tunnel to pod from any available port locally
+	tunnel := NewTunnel(options, ResourceTypeDeployment, "nginx-deployment", 0, 80)
+	defer tunnel.Close()
+	tunnel.ForwardPort(t)
+
+	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
+	tlsConfig := tls.Config{}
+
+	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
+	http_helper.HttpGetWithRetryWithCustomValidation(
+		t,
+		fmt.Sprintf("http://%s", tunnel.Endpoint()),
+		&tlsConfig,
+		60,
+		5*time.Second,
+		verifyNginxWelcomePage,
+	)
+}
+
 func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 	t.Parallel()
 

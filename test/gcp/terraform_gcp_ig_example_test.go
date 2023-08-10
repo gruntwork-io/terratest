@@ -24,7 +24,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 	// Setup values for our Terraform apply
 	projectId := gcp.GetGoogleProjectIDFromEnvVar(t)
 
-	region := gcp.GetRandomRegion(t, projectId, nil, RegionsToAvoid)
+	region := gcp.GetRandomRegion(t, projectId, RegionsThatSupportF1Micro, nil)
 
 	randomValidGcpName := gcp.RandomValidGcpName()
 	clusterSize := 3

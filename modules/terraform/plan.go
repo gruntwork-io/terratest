@@ -7,6 +7,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -93,7 +94,7 @@ func InitAndPlanAndShowWithStructE(t testing.TestingT, options *Options) (*PlanS
 	if err != nil {
 		return nil, err
 	}
-	return parsePlanJson(jsonOut)
+	return ParsePlanJSON(jsonOut)
 }
 
 // InitAndPlanWithExitCode runs terraform init and plan with the given options and returns exitcode for the plan command.
@@ -142,6 +143,24 @@ func TgPlanAllExitCodeE(t testing.TestingT, options *Options) (int, error) {
 
 	return GetExitCodeForTerraformCommandE(t, options, FormatArgs(options, "run-all", "plan", "--input=false",
 		"--lock=true", "--detailed-exitcode")...)
+}
+
+// AssertTgPlanAllExitCode asserts the succuess (or failure) of a terragrunt run-all plan.
+// On success, terragrunt will exit 0 on a plan that has previously been applied (has state)
+// and exit with 2 for plans that have never been applied when ran with `-detailed-exitcode`.
+func AssertTgPlanAllExitCode(t testing.TestingT, exitCode int, assertTrue bool) {
+
+	validExitCodes := map[int]bool{
+		0: true,
+		2: true,
+	}
+
+	_, hasKey := validExitCodes[exitCode]
+	if assertTrue {
+		assert.True(t, hasKey)
+	} else {
+		assert.False(t, hasKey)
+	}
 }
 
 // Custom errors

@@ -27,9 +27,9 @@ type PlanStruct struct {
 	ResourceChangesMap map[string]*tfjson.ResourceChange
 }
 
-// parsePlanJson takes in the json string representation of the terraform plan and returns a go struct representation
+// ParsePlanJSON takes in the json string representation of the terraform plan and returns a go struct representation
 // for easy introspection.
-func parsePlanJson(jsonStr string) (*PlanStruct, error) {
+func ParsePlanJSON(jsonStr string) (*PlanStruct, error) {
 	plan := &PlanStruct{}
 
 	if err := json.Unmarshal([]byte(jsonStr), &plan.RawPlan); err != nil {

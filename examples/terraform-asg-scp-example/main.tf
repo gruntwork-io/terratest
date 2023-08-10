@@ -107,5 +107,9 @@ data "aws_subnets" "default_subnets" {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
   }
+  filter {
+    name   = "defaultForAz"
+    values = [true]
+  }
 }
 
