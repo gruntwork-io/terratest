@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"fmt"
+	"os/exec"
 
 	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/retry"
@@ -30,10 +31,20 @@ var commandsWithParallelism = []string{
 	"destroy-all",
 }
 
+const (
+	// TofuDefaultPath command to run tofu
+	TofuDefaultPath = "tofu"
+
+	// TerraformDefaultPath to run terraform
+	TerraformDefaultPath = "terraform"
+)
+
+var DefaultExecutable = defaultTerraformExecutable()
+
 // GetCommonOptions extracts commons terraform options
 func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
 	if options.TerraformBinary == "" {
-		options.TerraformBinary = "terraform"
+		options.TerraformBinary = DefaultExecutable
 	}
 
 	if options.TerraformBinary == "terragrunt" {
@@ -111,4 +122,18 @@ func GetExitCodeForTerraformCommandE(t testing.TestingT, additionalOptions *Opti
 		return exitCode, nil
 	}
 	return DefaultErrorExitCode, getExitCodeErr
+}
+
+func defaultTerraformExecutable() string {
+	cmd := exec.Command(TerraformDefaultPath, "-version")
+	cmd.Stdin = nil
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+
+	if err := cmd.Run(); err == nil {
+		return TerraformDefaultPath
+	}
+
+	// fallback to Tofu if terraform is not available
+	return TofuDefaultPath
 }

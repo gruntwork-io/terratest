@@ -28,6 +28,23 @@ func TestBuild(t *testing.T) {
 	require.Contains(t, out, text)
 }
 
+func TestBuildWithBuildKit(t *testing.T) {
+	t.Parallel()
+
+	tag := "gruntwork-io/test-image-with-buildkit:v1"
+	testToken := "testToken"
+	options := &BuildOptions{
+		Tags:           []string{tag},
+		EnableBuildKit: true,
+		OtherOptions:   []string{"--secret", fmt.Sprintf("id=github-token,env=%s", "GITHUB_OAUTH_TOKEN")},
+		Env:            map[string]string{"GITHUB_OAUTH_TOKEN": testToken},
+	}
+
+	Build(t, "../../test/fixtures/docker-with-buildkit", options)
+	out := Run(t, tag, &RunOptions{Remove: false})
+	require.Contains(t, out, testToken)
+}
+
 func TestBuildMultiArch(t *testing.T) {
 	t.Parallel()
 

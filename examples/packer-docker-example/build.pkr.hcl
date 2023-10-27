@@ -26,7 +26,7 @@ data "amazon-ami" "aws" {
   filters = {
     architecture                       = "x86_64"
     "block-device-mapping.volume-type" = "gp2"
-    name                               = "*ubuntu-xenial-16.04-amd64-server-*"
+    name                               = "*ubuntu-jammy-22.04-amd64-server-*"
     root-device-type                   = "ebs"
     virtualization-type                = "hvm"
   }
@@ -48,7 +48,7 @@ source "amazon-ebs" "ubuntu-ami" {
 source "docker" "ubuntu-docker" {
   changes = ["ENTRYPOINT [\"\"]"]
   commit  = true
-  image   = "gruntwork/ubuntu-test:16.04"
+  image   = "gruntwork/ubuntu-test:22.04"
 }
 
 build {

@@ -74,7 +74,7 @@ func createTestEC2Instance(t *testing.T, region string, name string) ec2.Instanc
 	imageID := GetAmazonLinuxAmi(t, region)
 	params := &ec2.RunInstancesInput{
 		ImageId:      aws.String(imageID),
-		InstanceType: aws.String("t2.micro"),
+		InstanceType: aws.String(GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})),
 		MinCount:     aws.Int64(1),
 		MaxCount:     aws.Int64(1),
 	}

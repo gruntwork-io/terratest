@@ -7,8 +7,6 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 provider "azurerm" {
-  version = "~> 2.29"
-
   features {
     key_vault {
       purge_soft_delete_on_destroy = true
@@ -16,16 +14,21 @@ provider "azurerm" {
   }
 }
 
-# Configure the Microsoft Azure Active Directory Provider
-provider "azuread" {
-  version = "=0.7.0"
-}
-
 terraform {
   # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
   # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
   # forwards compatible with 0.13.x code.
   required_version = ">= 0.12.26"
+  required_providers {
+    azurerm = {
+      version = "~> 2.29"
+      source  = "hashicorp/azurerm"
+    }
+    azuread = {
+      version = "=0.7.0"
+      source  = "hashicorp/azuread"
+    }
+  }
 }
 
 resource "random_string" "short" {

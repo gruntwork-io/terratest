@@ -2,7 +2,6 @@ package helm
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,16 +14,20 @@ func TestFormatSetValuesAsArgs(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		name         string
-		setValues    map[string]string
-		setStrValues map[string]string
-		expected     []string
-		expectedStr  []string
+		name          string
+		setValues     map[string]string
+		setStrValues  map[string]string
+		setJsonValues map[string]string
+		expected      []string
+		expectedStr   []string
+		expectedJson  []string
 	}{
 		{
 			"EmptyValue",
 			map[string]string{},
 			map[string]string{},
+			map[string]string{},
+			[]string{},
 			[]string{},
 			[]string{},
 		},
@@ -32,8 +35,10 @@ func TestFormatSetValuesAsArgs(t *testing.T) {
 			"SingleValue",
 			map[string]string{"containerImage": "null"},
 			map[string]string{"numericString": "123123123123"},
+			map[string]string{"limits": `{"cpu": 1}`},
 			[]string{"--set", "containerImage=null"},
 			[]string{"--set-string", "numericString=123123123123"},
+			[]string{"--set-json", fmt.Sprintf("limits=%s", `{"cpu": 1}`)},
 		},
 		{
 			"MultipleValues",
@@ -45,6 +50,10 @@ func TestFormatSetValuesAsArgs(t *testing.T) {
 				"numericString": "123123123123",
 				"otherString":   "null",
 			},
+			map[string]string{
+				"containerImage": `{"repository": "nginx", "tag": "v1.15.4"}`,
+				"otherString":    "{}",
+			},
 			[]string{
 				"--set", "containerImage.repository=nginx",
 				"--set", "containerImage.tag=v1.15.4",
@@ -52,6 +61,10 @@ func TestFormatSetValuesAsArgs(t *testing.T) {
 			[]string{
 				"--set-string", "numericString=123123123123",
 				"--set-string", "otherString=null",
+			},
+			[]string{
+				"--set-json", fmt.Sprintf("containerImage=%s", `{"repository": "nginx", "tag": "v1.15.4"}`),
+				"--set-json", "otherString={}",
 			},
 		},
 	}
@@ -65,6 +78,7 @@ func TestFormatSetValuesAsArgs(t *testing.T) {
 			t.Parallel()
 			assert.Equal(t, formatSetValuesAsArgs(testCase.setValues, "--set"), testCase.expected)
 			assert.Equal(t, formatSetValuesAsArgs(testCase.setStrValues, "--set-string"), testCase.expectedStr)
+			assert.Equal(t, formatSetValuesAsArgs(testCase.setJsonValues, "--set-json"), testCase.expectedJson)
 		})
 	}
 }
@@ -174,7 +188,7 @@ func TestFormatValuesFilesAsArgs(t *testing.T) {
 func createTempFiles(numFiles int) ([]string, error) {
 	paths := []string{}
 	for i := 0; i < numFiles; i++ {
-		tmpFile, err := ioutil.TempFile("", "")
+		tmpFile, err := os.CreateTemp("", "")
 		defer tmpFile.Close()
 		// We don't use require or t.Fatal here so that we give a chance to delete any temp files that were created
 		// before this error

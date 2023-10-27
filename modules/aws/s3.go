@@ -70,7 +70,7 @@ func GetS3BucketTags(t testing.TestingT, awsRegion string, bucket string) map[st
 	return tags
 }
 
-//  GetS3BucketTagsE fetches the given bucket's tags and returns them as a string map of strings.
+// GetS3BucketTagsE fetches the given bucket's tags and returns them as a string map of strings.
 func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[string]string, error) {
 	s3Client, err := NewS3ClientE(t, awsRegion)
 	if err != nil {
@@ -145,6 +145,8 @@ func CreateS3BucketE(t testing.TestingT, region string, name string) error {
 
 	params := &s3.CreateBucketInput{
 		Bucket: aws.String(name),
+		// https://github.com/aws/aws-sdk-go/blob/v1.44.122/service/s3/api.go#L41646
+		ObjectOwnership: aws.String(s3.ObjectOwnershipObjectWriter),
 	}
 	_, err = s3Client.CreateBucket(params)
 	return err

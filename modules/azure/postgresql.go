@@ -81,7 +81,7 @@ func GetPostgreSQLDBClientE(subscriptionID string) (*postgresql.DatabasesClient,
 	return &postgresqlDBClient, nil
 }
 
-//GetPostgreSQLDB is a helper function that gets the database.
+// GetPostgreSQLDB is a helper function that gets the database.
 // This function would fail the test if there is an error.
 func GetPostgreSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *postgresql.Database {
 	database, err := GetPostgreSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
@@ -90,7 +90,7 @@ func GetPostgreSQLDB(t testing.TestingT, resGroupName string, serverName string,
 	return database
 }
 
-//GetPostgreSQLDBE is a helper function that gets the database.
+// GetPostgreSQLDBE is a helper function that gets the database.
 func GetPostgreSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*postgresql.Database, error) {
 	// Create a postgresql db client
 	postgresqldbClient, err := GetPostgreSQLDBClientE(subscriptionID)
@@ -108,7 +108,7 @@ func GetPostgreSQLDBE(t testing.TestingT, subscriptionID string, resGroupName st
 	return &postgresqlDb, nil
 }
 
-//ListPostgreSQLDB is a helper function that gets all databases per server.
+// ListPostgreSQLDB is a helper function that gets all databases per server.
 func ListPostgreSQLDB(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) []postgresql.Database {
 	dblist, err := ListPostgreSQLDBE(t, subscriptionID, resGroupName, serverName)
 	require.NoError(t, err)
@@ -116,7 +116,7 @@ func ListPostgreSQLDB(t testing.TestingT, subscriptionID string, resGroupName st
 	return dblist
 }
 
-//ListPostgreSQLDBE is a helper function that gets all databases per server.
+// ListPostgreSQLDBE is a helper function that gets all databases per server.
 func ListPostgreSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]postgresql.Database, error) {
 	// Create a postgresql db client
 	postgresqldbClient, err := GetPostgreSQLDBClientE(subscriptionID)

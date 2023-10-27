@@ -3,7 +3,7 @@ package terraform
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 
@@ -127,7 +127,7 @@ func GetAllVariablesFromVarFile(t testing.TestingT, fileName string, out interfa
 // the value pointed to by out. Returns an error if the specified file does not exist, the specified file is not
 // readable, or the specified file cannot be decoded from HCL.
 func GetAllVariablesFromVarFileE(t testing.TestingT, fileName string, out interface{}) error {
-	fileContents, err := ioutil.ReadFile(fileName)
+	fileContents, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
 	}

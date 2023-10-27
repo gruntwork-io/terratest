@@ -12,6 +12,13 @@ terraform {
   # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
   # forwards compatible with 0.13.x code.
   required_version = ">= 0.12.26"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 4.61.0, < 5.0.0"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -109,7 +116,7 @@ resource "aws_db_instance" "example" {
   engine                 = var.engine_name
   engine_version         = var.engine_version
   port                   = var.port
-  name                   = var.database_name
+  db_name                = var.database_name
   username               = var.username
   password               = var.password
   instance_class         = var.instance_class

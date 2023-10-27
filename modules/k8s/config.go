@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -167,7 +166,7 @@ func CopyHomeKubeConfigToTempE(t testing.TestingT) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmpConfig, err := ioutil.TempFile("", "")
+	tmpConfig, err := os.CreateTemp("", "")
 	if err != nil {
 		return "", gwErrors.WithStackTrace(err)
 	}

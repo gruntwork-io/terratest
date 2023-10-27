@@ -20,17 +20,17 @@ import (
 
 const DEFAULT_MACHINE_TYPE = "f1-micro"
 const DEFAULT_IMAGE_FAMILY_PROJECT_NAME = "ubuntu-os-cloud"
-const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-1804-lts"
+const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-2204-lts"
 
-// Regions that don't support running f1-micro instances
-var RegionsToAvoid = []string{"asia-east2", "southamerica-west1", "europe-west8", "europe-southwest1"}
+// Zones that support running f1-micro instances
+var ZonesThatSupportF1Micro = []string{"us-central1-a", "us-east1-b", "us-west1-a", "europe-north1-a", "europe-west1-b", "europe-central2-a"}
 
 func TestGetPublicIpOfInstance(t *testing.T) {
 	t.Parallel()
 
 	instanceName := RandomValidGcpName()
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	zone := GetRandomZone(t, projectID, nil, nil, RegionsToAvoid)
+	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
@@ -77,7 +77,7 @@ func TestGetAndSetLabels(t *testing.T) {
 	instanceName := RandomValidGcpName()
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 
-	zone := GetRandomZone(t, projectID, nil, nil, RegionsToAvoid)
+	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
@@ -113,7 +113,7 @@ func TestGetAndSetMetadata(t *testing.T) {
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 	instanceName := RandomValidGcpName()
 
-	zone := GetRandomZone(t, projectID, nil, nil, RegionsToAvoid)
+	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	// Create a new Compute Instance
 	createComputeInstance(t, projectID, zone, instanceName)

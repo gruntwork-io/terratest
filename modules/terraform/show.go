@@ -40,7 +40,7 @@ func ShowWithStructE(t testing.TestingT, options *Options) (*PlanStruct, error) 
 	if err != nil {
 		return nil, err
 	}
-	planStruct, err := parsePlanJson(json)
+	planStruct, err := ParsePlanJSON(json)
 	if err != nil {
 		return nil, err
 	}

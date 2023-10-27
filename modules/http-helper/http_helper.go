@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -75,7 +74,7 @@ func HttpGetWithOptionsE(t testing.TestingT, options HttpGetOptions) (int, strin
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return -1, "", err
@@ -280,7 +279,7 @@ func HTTPDoWithOptionsE(
 	}
 
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return -1, "", err

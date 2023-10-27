@@ -21,7 +21,7 @@ source "googlecompute" "ubuntu-bionic" {
   image_family        = "terratest"
   image_name          = "terratest-packer-example-${formatdate("YYYYMMDD-hhmm", timestamp())}"
   project_id          = var.gcp_project_id
-  source_image_family = "ubuntu-1804-lts"
+  source_image_family = "ubuntu-2204-lts"
   ssh_username        = "ubuntu"
   zone                = var.gcp_zone
 }

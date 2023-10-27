@@ -112,8 +112,9 @@ func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filt
 	}
 
 	input := ec2.DescribeImagesInput{
-		Filters: ec2Filters,
-		Owners:  []*string{aws.String(ownerId)},
+		Filters:           ec2Filters,
+		IncludeDeprecated: aws.Bool(true),
+		Owners:            []*string{aws.String(ownerId)},
 	}
 
 	out, err := ec2Client.DescribeImages(&input)
@@ -182,6 +183,50 @@ func GetUbuntu1604Ami(t testing.TestingT, region string) string {
 func GetUbuntu1604AmiE(t testing.TestingT, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*ubuntu-xenial-16.04-amd64-server-*"},
+		"virtualization-type":              {"hvm"},
+		"architecture":                     {"x86_64"},
+		"root-device-type":                 {"ebs"},
+		"block-device-mapping.volume-type": {"gp2"},
+	}
+
+	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+}
+
+// GetUbuntu2004Ami gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2004Ami(t testing.TestingT, region string) string {
+	amiID, err := GetUbuntu2004AmiE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return amiID
+}
+
+// GetUbuntu2004AmiE gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2004AmiE(t testing.TestingT, region string) (string, error) {
+	filters := map[string][]string{
+		"name":                             {"*ubuntu-focal-20.04-amd64-server-*"},
+		"virtualization-type":              {"hvm"},
+		"architecture":                     {"x86_64"},
+		"root-device-type":                 {"ebs"},
+		"block-device-mapping.volume-type": {"gp2"},
+	}
+
+	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+}
+
+// GetUbuntu2204Ami gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2204Ami(t testing.TestingT, region string) string {
+	amiID, err := GetUbuntu2204AmiE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return amiID
+}
+
+// GetUbuntu2204AmiE gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2204AmiE(t testing.TestingT, region string) (string, error) {
+	filters := map[string][]string{
+		"name":                             {"*ubuntu-jammy-22.04-amd64-server-*"},
 		"virtualization-type":              {"hvm"},
 		"architecture":                     {"x86_64"},
 		"root-device-type":                 {"ebs"},

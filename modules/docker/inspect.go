@@ -187,14 +187,15 @@ func transformContainer(t *testing.T, container inspectOutput) (*ContainerInspec
 }
 
 // transformContainerPorts converts Docker's ports from the following json into a more testable format
-// {
-//   "80/tcp": [
-//     {
-// 	     "HostIp": ""
-//       "HostPort": "8080"
-//     }
-//   ]
-// }
+//
+//	{
+//	  "80/tcp": [
+//	    {
+//		     "HostIp": ""
+//	      "HostPort": "8080"
+//	    }
+//	  ]
+//	}
 func transformContainerPorts(container inspectOutput) ([]Port, error) {
 	var ports []Port
 

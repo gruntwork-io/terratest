@@ -6,7 +6,6 @@
 # See test/azure/terraform_azure_loadbalancer_example_test.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 provider "azurerm" {
-  version = "~>2.29"
   features {}
 }
 
@@ -20,6 +19,12 @@ terraform {
   # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
   # forwards compatible with 0.13.x code.
   required_version = ">= 0.12.26"
+  required_providers {
+    azurerm = {
+      version = "~>2.29"
+      source  = "hashicorp/azurerm"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

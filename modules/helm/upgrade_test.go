@@ -11,9 +11,13 @@ package helm
 import (
 	"crypto/tls"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/k8s"
@@ -94,4 +98,52 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 	// Finally, test rollback functionality. When rolling back, we should see the pods go back down to 1.
 	Rollback(t, options, releaseName, "")
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 1)
+}
+
+// Test deployment of helm chart with dependencies.
+func TestHelmDependencyUpgrade(t *testing.T) {
+	t.Parallel()
+
+	// Path to the helm chart with dependencies which we will test
+	helmChartPath, err := filepath.Abs("../../examples/helm-dependency-example")
+	require.NoError(t, err)
+
+	// Custom namespace name.
+	namespaceName := fmt.Sprintf("helm-dependency-example-%s", strings.ToLower(random.UniqueId()))
+
+	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
+	// - HOME/.kube/config for the kubectl config file
+	// - Current context of the kubectl config file
+	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
+
+	k8s.CreateNamespace(t, kubectlOptions, namespaceName)
+	defer k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+
+	// Helm chart deployment options.
+	options := &Options{
+		KubectlOptions: kubectlOptions,
+		SetValues: map[string]string{
+			"containerImageRepo":       "nginx",
+			"containerImageTag":        "1.15.8",
+			"basic.containerImageRepo": "nginx",
+			"basic.containerImageTag":  "1.15.8",
+		},
+		BuildDependencies: true,
+	}
+	// We generate a unique release name so that we can refer to after deployment.
+	// By doing so, we can schedule the delete call here so that at the end of the test, we run
+	// `helm delete RELEASE_NAME` to clean up any resources that were created.
+	releaseName := fmt.Sprintf(
+		"helm-dependency-example-%s",
+		strings.ToLower(random.UniqueId()),
+	)
+	defer Delete(t, options, releaseName, true)
+
+	// Deploy the chart using `helm install`.
+	err = InstallE(t, options, helmChartPath, releaseName)
+	assert.NoError(t, err)
+
+	// Verify that upgrade is working as expected.
+	err = UpgradeE(t, options, helmChartPath, releaseName)
+	assert.NoError(t, err)
 }

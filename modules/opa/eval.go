@@ -47,7 +47,9 @@ const (
 )
 
 // EvalE runs `opa eval` on the given JSON files using the configured policy file and result query. Translates to:
-//     opa eval -i $JSONFile -d $RulePath $ResultQuery
+//
+//	opa eval -i $JSONFile -d $RulePath $ResultQuery
+//
 // This will asynchronously run OPA on each file concurrently using goroutines.
 // This will fail the test if any one of the files failed.
 func Eval(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, resultQuery string) {
@@ -55,7 +57,9 @@ func Eval(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, resu
 }
 
 // EvalE runs `opa eval` on the given JSON files using the configured policy file and result query. Translates to:
-//     opa eval -i $JSONFile -d $RulePath $ResultQuery
+//
+//	opa eval -i $JSONFile -d $RulePath $ResultQuery
+//
 // This will asynchronously run OPA on each file concurrently using goroutines.
 func EvalE(t testing.TestingT, options *EvalOptions, jsonFilePaths []string, resultQuery string) error {
 	downloadedPolicyPath, err := DownloadPolicyE(t, options.RulePath)

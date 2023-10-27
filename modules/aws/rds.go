@@ -277,6 +277,31 @@ func instanceTypeExistsForEngineAndRegionE(client *rds.RDS, engine string, engin
 	return false, nil
 }
 
+// GetValidEngineVersion returns a string containing a valid RDS engine version for the provided region and engine type.
+// This function will fail the test if no valid engine is found.
+func GetValidEngineVersion(t testing.TestingT, region string, engine string, majorVersion string) string {
+	out, err := GetValidEngineVersionE(t, region, engine, majorVersion)
+	require.NoError(t, err)
+	return out
+}
+
+// GetValidEngineVersionE returns a string containing a valid RDS engine version or an error if no valid version is found.
+func GetValidEngineVersionE(t testing.TestingT, region string, engine string, majorVersion string) (string, error) {
+	client, err := NewRdsClientE(t, region)
+	if err != nil {
+		return "", err
+	}
+	input := rds.DescribeDBEngineVersionsInput{
+		Engine:        aws.String(engine),
+		EngineVersion: aws.String(majorVersion),
+	}
+	out, err := client.DescribeDBEngineVersions(&input)
+	if err != nil || len(out.DBEngineVersions) == 0 {
+		return "", err
+	}
+	return *out.DBEngineVersions[0].EngineVersion, nil
+}
+
 // ParameterForDbInstanceNotFound is an error that occurs when the parameter group specified is not found for the DB instance
 type ParameterForDbInstanceNotFound struct {
 	ParameterName string

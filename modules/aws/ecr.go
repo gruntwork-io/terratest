@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/gruntwork-io/go-commons/errors"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -96,4 +97,47 @@ func NewECRClientE(t testing.TestingT, region string) (*ecr.ECR, error) {
 		return nil, err
 	}
 	return ecr.New(sess), nil
+}
+
+// GetECRRepoLifecyclePolicy gets the policies for the given ECR repository.
+// This will fail the test and stop execution if there is an error.
+func GetECRRepoLifecyclePolicy(t testing.TestingT, region string, repo *ecr.Repository) string {
+	policy, err := GetECRRepoLifecyclePolicyE(t, region, repo)
+	require.NoError(t, err)
+	return policy
+}
+
+// GetECRRepoLifecyclePolicyE gets the policies for the given ECR repository.
+func GetECRRepoLifecyclePolicyE(t testing.TestingT, region string, repo *ecr.Repository) (string, error) {
+	client := NewECRClient(t, region)
+	resp, err := client.GetLifecyclePolicy(&ecr.GetLifecyclePolicyInput{RepositoryName: repo.RepositoryName})
+	if err != nil {
+		return "", err
+	}
+	return *resp.LifecyclePolicyText, nil
+}
+
+// PutECRRepoLifecyclePolicy puts the given policy for the given ECR repository.
+// This will fail the test and stop execution if there is an error.
+func PutECRRepoLifecyclePolicy(t testing.TestingT, region string, repo *ecr.Repository, policy string) {
+	err := PutECRRepoLifecyclePolicyE(t, region, repo, policy)
+	require.NoError(t, err)
+}
+
+// PutEcrRepoLifecyclePolicy puts the given policy for the given ECR repository.
+func PutECRRepoLifecyclePolicyE(t testing.TestingT, region string, repo *ecr.Repository, policy string) error {
+	logger.Logf(t, "Applying policy for repository %s in %s", *repo.RepositoryName, region)
+
+	client, err := NewECRClientE(t, region)
+	if err != nil {
+		return err
+	}
+
+	input := &ecr.PutLifecyclePolicyInput{
+		RepositoryName:      repo.RepositoryName,
+		LifecyclePolicyText: aws.String(policy),
+	}
+
+	_, err = client.PutLifecyclePolicy(input)
+	return err
 }

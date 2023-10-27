@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,6 +49,12 @@ type BuildOptions struct {
 	// solely focus on the most important ones.
 	OtherOptions []string
 
+	// Whether ot not to enable buildkit. You can find more information about buildkit here https://docs.docker.com/build/buildkit/#getting-started.
+	EnableBuildKit bool
+
+	// Additional environment variables to pass in when running docker build command.
+	Env map[string]string
+
 	// Set a logger that should be used. See the logger package for more info.
 	Logger *logger.Logger
 }
@@ -64,10 +69,20 @@ func Build(t testing.TestingT, path string, options *BuildOptions) {
 func BuildE(t testing.TestingT, path string, options *BuildOptions) error {
 	options.Logger.Logf(t, "Running 'docker build' in %s", path)
 
+	env := make(map[string]string)
+	if options.Env != nil {
+		env = options.Env
+	}
+
+	if options.EnableBuildKit {
+		env["DOCKER_BUILDKIT"] = "1"
+	}
+
 	cmd := shell.Command{
 		Command: "docker",
 		Args:    formatDockerBuildArgs(path, options),
 		Logger:  options.Logger,
+		Env:     env,
 	}
 
 	if err := shell.RunCommandE(t, cmd); err != nil {
@@ -123,7 +138,7 @@ func GitCloneAndBuildE(
 	path string,
 	dockerBuildOpts *BuildOptions,
 ) error {
-	workingDir, err := ioutil.TempDir("", "")
+	workingDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return err
 	}

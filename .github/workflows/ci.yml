@@ -57,7 +57,7 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
       - name: install golangci-lint binary
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.31.0
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.2
       - name: lint modules/azure folder
         id: azure_module_lint
         run: |
@@ -107,7 +107,7 @@ jobs:
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
         run: |
-          cd test
+          cd test/azure
 
           APP_ID=`echo $AZURE_CREDENTIALS | jq -r -c ".clientId"`
           APP_PASSWORD=`echo $AZURE_CREDENTIALS | jq -r -c ".clientSecret"`
@@ -131,7 +131,7 @@ jobs:
           export TF_VAR_client_secret="$APP_PASSWORD"
 
           # run the actual tests under the `azure` subfolder
-          go test ./azure/* -v -timeout 90m
+          go test --tags=azure -v -timeout 90m
       - name: report back the result
         if: always()
         env:

@@ -1,7 +1,6 @@
 package opa
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,7 +21,9 @@ var (
 // can be passed to opa. The temporary directory that is used is cached based on the go-getter base path, and reused
 // across calls.
 // For example, if you call DownloadPolicyE with the go-getter URL multiple times:
-//   git::https://github.com/gruntwork-io/terratest.git//policies/foo.rego?ref=master
+//
+//	git::https://github.com/gruntwork-io/terratest.git//policies/foo.rego?ref=master
+//
 // The first time the gruntwork-io/terratest repo will be downloaded to a new temp directory. All subsequent calls will
 // reuse that first temporary dir where the repo was cloned. This is preserved even if a different subdir is requested
 // later, e.g.: git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=master.
@@ -56,7 +57,7 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	}
 
 	// Not downloaded, so use go-getter to download the remote source to a temp dir.
-	tempDir, err := ioutil.TempDir("", "terratest-opa-policy-*")
+	tempDir, err := os.MkdirTemp("", "terratest-opa-policy-*")
 	if err != nil {
 		return "", err
 	}

@@ -35,6 +35,7 @@ func getNamespaceArgs(options *Options) []string {
 func getValuesArgsE(t testing.TestingT, options *Options, args ...string) ([]string, error) {
 	args = append(args, formatSetValuesAsArgs(options.SetValues, "--set")...)
 	args = append(args, formatSetValuesAsArgs(options.SetStrValues, "--set-string")...)
+	args = append(args, formatSetValuesAsArgs(options.SetJsonValues, "--set-json")...)
 
 	valuesFilesArgs, err := formatValuesFilesAsArgsE(t, options.ValuesFiles)
 	if err != nil {

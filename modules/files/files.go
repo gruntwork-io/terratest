@@ -3,7 +3,6 @@ package files
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -110,7 +109,7 @@ func CopyFolderToDest(folderPath string, destRootFolder string, tempFolderPrefix
 		return "", DirNotFoundError{Directory: folderPath}
 	}
 
-	tmpDir, err := ioutil.TempDir(destRootFolder, tempFolderPrefix)
+	tmpDir, err := os.MkdirTemp(destRootFolder, tempFolderPrefix)
 	if err != nil {
 		return "", err
 	}
@@ -149,7 +148,7 @@ func CopyFolderContents(source string, destination string) error {
 // CopyFolderContentsWithFilter copies the files and folders within the given source folder that pass the given filter (return true) to the
 // destination folder.
 func CopyFolderContentsWithFilter(source string, destination string, filter func(path string) bool) error {
-	files, err := ioutil.ReadDir(source)
+	files, err := os.ReadDir(source)
 	if err != nil {
 		return err
 	}
@@ -157,11 +156,11 @@ func CopyFolderContentsWithFilter(source string, destination string, filter func
 	for _, file := range files {
 		src := filepath.Join(source, file.Name())
 		dest := filepath.Join(destination, file.Name())
-
+		f, _ := file.Info()
 		if !filter(src) {
 			continue
 		} else if file.IsDir() {
-			if err := os.MkdirAll(dest, file.Mode()); err != nil {
+			if err := os.MkdirAll(dest, f.Mode()); err != nil {
 				return err
 			}
 
@@ -169,7 +168,7 @@ func CopyFolderContentsWithFilter(source string, destination string, filter func
 				return err
 			}
 
-		} else if isSymLink(file) {
+		} else if isSymLink(f) {
 			if err := copySymLink(src, dest); err != nil {
 				return err
 			}
@@ -218,7 +217,7 @@ func PathIsTerraformLockFile(path string) bool {
 
 // CopyFile copies a file from source to destination.
 func CopyFile(source string, destination string) error {
-	contents, err := ioutil.ReadFile(source)
+	contents, err := os.ReadFile(source)
 	if err != nil {
 		return err
 	}
@@ -233,7 +232,7 @@ func WriteFileWithSamePermissions(source string, destination string, contents []
 		return err
 	}
 
-	return ioutil.WriteFile(destination, contents, fileInfo.Mode())
+	return os.WriteFile(destination, contents, fileInfo.Mode())
 }
 
 // isSymLink returns true if the given file is a symbolic link

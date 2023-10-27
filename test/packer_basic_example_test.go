@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -35,7 +34,7 @@ func TestPackerBasicExample(t *testing.T) {
 	awsRegion := terratest_aws.GetRandomStableRegion(t, nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+	instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// website::tag::1::Read Packer's template and set AWS Region variable.
 	packerOptions := &packer.Options{
@@ -92,10 +91,10 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 	awsRegion := terratest_aws.GetRandomStableRegion(t, nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+	instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create temporary packer variable file to store aws region
-	varFile, err := ioutil.TempFile("", "*.json")
+	varFile, err := os.CreateTemp("", "*.json")
 	require.NoError(t, err, "Did not expect temp file creation to cause error")
 
 	// Be sure to clean up temp file
@@ -162,7 +161,7 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 		awsRegion := terratest_aws.GetRandomStableRegion(t, nil, nil)
 
 		// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-		instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+		instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 		packerOptions := &packer.Options{
 			// The path to where the Packer template is located

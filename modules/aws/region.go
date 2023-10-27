@@ -1,10 +1,12 @@
 package aws
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -155,4 +157,53 @@ func GetAvailabilityZonesE(t testing.TestingT, region string) ([]string, error) 
 	}
 
 	return out, nil
+}
+
+// GetRegionsForService gets all AWS regions in which a service is available.
+func GetRegionsForService(t testing.TestingT, serviceName string) []string {
+	out, err := GetRegionsForServiceE(t, serviceName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// GetRegionsForService gets all AWS regions in which a service is available and returns errors.
+// See https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-public-parameters-global-infrastructure.html
+func GetRegionsForServiceE(t testing.TestingT, serviceName string) ([]string, error) {
+	// These values are available in any region, defaulting to us-east-1 since it's the oldest
+	ssmClient, err := NewSsmClientE(t, "us-east-1")
+
+	if err != nil {
+		return nil, err
+	}
+
+	paramPath := "/aws/service/global-infrastructure/services/%s/regions"
+	req, resp := ssmClient.GetParametersByPathRequest(&ssm.GetParametersByPathInput{
+		Path: aws.String(fmt.Sprintf(paramPath, serviceName)),
+	})
+
+	ssmErr := req.Send()
+	if ssmErr != nil {
+		return nil, err
+	}
+
+	var availableRegions []string
+	for _, p := range resp.Parameters {
+		availableRegions = append(availableRegions, *p.Value)
+	}
+
+	return availableRegions, nil
+}
+
+// GetRandomRegionForService retrieves a list of AWS regions in which a service is available
+// Then returns one region randomly from the list
+func GetRandomRegionForService(t testing.TestingT, serviceName string) string {
+	availableRegions, err := GetRegionsForServiceE(t, serviceName)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return GetRandomRegion(t, availableRegions, nil)
 }

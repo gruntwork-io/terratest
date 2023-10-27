@@ -8,7 +8,6 @@ package k8s
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strconv"
@@ -33,12 +32,16 @@ type KubeResourceType int
 const (
 	// ResourceTypePod is a k8s pod kind identifier
 	ResourceTypePod KubeResourceType = iota
+	// ResourceTypeDeployment is a k8s deployment kind identifier
+	ResourceTypeDeployment
 	// ResourceTypeService is a k8s service kind identifier
 	ResourceTypeService
 )
 
 func (resourceType KubeResourceType) String() string {
 	switch resourceType {
+	case ResourceTypeDeployment:
+		return "deploy"
 	case ResourceTypePod:
 		return "pod"
 	case ResourceTypeService:
@@ -88,7 +91,7 @@ func NewTunnelWithLogger(
 	logger logger.TestLogger,
 ) *Tunnel {
 	return &Tunnel{
-		out:            ioutil.Discard,
+		out:            io.Discard,
 		localPort:      local,
 		remotePort:     remote,
 		kubectlOptions: kubectlOptions,
@@ -118,9 +121,30 @@ func (tunnel *Tunnel) getAttachablePodForResourceE(t testing.TestingT) (string, 
 		return tunnel.resourceName, nil
 	case ResourceTypeService:
 		return tunnel.getAttachablePodForServiceE(t)
+	case ResourceTypeDeployment:
+		return tunnel.getAttachablePodForDeploymentE(t)
 	default:
 		return "", UnknownKubeResourceType{tunnel.resourceType}
 	}
+}
+
+// getAttachablePodForDeploymentE will find an active pod associated with the Deployment and return the pod name.
+func (tunnel *Tunnel) getAttachablePodForDeploymentE(t testing.TestingT) (string, error) {
+	deploy, err := GetDeploymentE(t, tunnel.kubectlOptions, tunnel.resourceName)
+	if err != nil {
+		return "", err
+	}
+	selectorLabelsOfPods := makeLabels(deploy.Spec.Selector.MatchLabels)
+	deploymentPods, err := ListPodsE(t, tunnel.kubectlOptions, metav1.ListOptions{LabelSelector: selectorLabelsOfPods})
+	if err != nil {
+		return "", err
+	}
+	for _, pod := range deploymentPods {
+		if IsPodAvailable(&pod) {
+			return pod.Name, nil
+		}
+	}
+	return "", DeploymentNotAvailable{deploy}
 }
 
 // getAttachablePodForServiceE will find an active pod associated with the Service and return the pod name.

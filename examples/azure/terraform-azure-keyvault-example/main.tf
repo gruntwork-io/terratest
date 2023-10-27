@@ -6,7 +6,6 @@
 # ---------------------------------------------------------------------------------------------------------------------
 
 provider "azurerm" {
-  version = "~>2.20"
   features {
     key_vault {
       purge_soft_delete_on_destroy = false
@@ -24,6 +23,12 @@ terraform {
   # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
   # forwards compatible with 0.13.x code.
   required_version = ">= 0.12.26"
+  required_providers {
+    azurerm = {
+      version = "~>3.0"
+      source  = "hashicorp/azurerm"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -70,35 +75,37 @@ resource "azurerm_key_vault" "key_vault" {
     object_id = data.azurerm_client_config.current.object_id
 
     key_permissions = [
-      "create",
-      "get",
-      "list",
-      "delete",
-      "purge",
+      "Create",
+      "Get",
+      "List",
+      "Delete",
+      "Purge",
+      "SetRotationPolicy",
+      "GetRotationPolicy"
     ]
 
     secret_permissions = [
-      "set",
-      "get",
-      "list",
-      "delete",
-      "purge",
+      "Set",
+      "Get",
+      "List",
+      "Delete",
+      "Purge",
     ]
 
     certificate_permissions = [
-      "create",
-      "delete",
-      "deleteissuers",
-      "get",
-      "getissuers",
-      "import",
-      "list",
-      "listissuers",
-      "managecontacts",
-      "manageissuers",
-      "setissuers",
-      "update",
-      "purge",
+      "Create",
+      "Delete",
+      "DeleteIssuers",
+      "Get",
+      "GetIssuers",
+      "Import",
+      "List",
+      "ListIssuers",
+      "ManageContacts",
+      "ManageIssuers",
+      "SetIssuers",
+      "Update",
+      "Purge",
     ]
   }
 }

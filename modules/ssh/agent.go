@@ -4,7 +4,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -115,7 +114,7 @@ func SshAgentWithKeyPairsE(t testing.TestingT, keyPairs []*KeyPair) (*SshAgent, 
 	logger.Logf(t, "Generating SSH Agent with given KeyPair(s)")
 
 	// Instantiate a temporary SSH agent
-	socketDir, err := ioutil.TempDir("", "ssh-agent-")
+	socketDir, err := os.MkdirTemp("", "ssh-agent-")
 	if err != nil {
 		return nil, err
 	}
