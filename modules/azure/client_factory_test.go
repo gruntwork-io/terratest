@@ -357,3 +357,71 @@ func TestFrontDoorFrontendEndpointClientBaseURISetCorrectly(t *testing.T) {
 		})
 	}
 }
+
+func TestMySQLFlexibleServerEndpointClientBaseURISetCorrectly(t *testing.T) {
+	var cases = []struct {
+		CaseName        string
+		EnvironmentName string
+		ExpectedBaseURI string
+	}{
+		{"GovCloud/MySQLFlexibleServer", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
+		{"PublicCloud/MySQLFlexibleServer", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
+		{"ChinaCloud/MySQLFlexibleServer", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
+		{"GermanCloud/MySQLFlexibleServer", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
+	}
+
+	// save any current env value and restore on exit
+	currentEnv := os.Getenv(AzureEnvironmentEnvName)
+	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
+
+	for _, tt := range cases {
+		// The following is necessary to make sure testCase's values don't
+		// get updated due to concurrency within the scope of t.Run(..) below
+		tt := tt
+		t.Run(tt.CaseName, func(t *testing.T) {
+			// Override env setting
+			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+
+			// Get a Database for MySQL Flexible Server endpoint client
+			client, err := CreateMySqlFlexibleServerClientE("")
+			require.NoError(t, err)
+
+			// Check for correct ARM URI
+			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
+		})
+	}
+}
+
+func TestMySQLFlexibleServerDBEndpointClientBaseURISetCorrectly(t *testing.T) {
+	var cases = []struct {
+		CaseName        string
+		EnvironmentName string
+		ExpectedBaseURI string
+	}{
+		{"GovCloud/MySQLFlexibleServerDB", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
+		{"PublicCloud/MySQLFlexibleServerDB", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
+		{"ChinaCloud/MySQLFlexibleServerDB", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
+		{"GermanCloud/MySQLFlexibleServerDB", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
+	}
+
+	// save any current env value and restore on exit
+	currentEnv := os.Getenv(AzureEnvironmentEnvName)
+	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
+
+	for _, tt := range cases {
+		// The following is necessary to make sure testCase's values don't
+		// get updated due to concurrency within the scope of t.Run(..) below
+		tt := tt
+		t.Run(tt.CaseName, func(t *testing.T) {
+			// Override env setting
+			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+
+			// Get a Database for MySQL Flexible Server endpoint client
+			client, err := CreateMySqlFlexibleServerDBClientE("")
+			require.NoError(t, err)
+
+			// Check for correct ARM URI
+			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
+		})
+	}
+}

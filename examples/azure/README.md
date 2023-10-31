@@ -22,7 +22,7 @@ Let's make sure [go.mod](https://github.com/gruntwork-io/terratest/blob/master/g
 ```go
 require (
     ...
-    github.com/Azure/azure-sdk-for-go v46.1.0+incompatible
+    github.com/Azure/azure-sdk-for-go v57.1.0+incompatible
     ...
 )
 ```

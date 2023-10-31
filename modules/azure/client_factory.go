@@ -16,6 +16,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
@@ -436,6 +437,64 @@ func CreateMySQLServerClientE(subscriptionID string) (*mysql.ServersClient, erro
 	mysqlClient.Authorizer = *authorizer
 
 	return &mysqlClient, nil
+}
+
+// CreateMySqlFlexibleServerClientE is a helper function that will setup a mysql flexible server client.
+func CreateMySqlFlexibleServerClientE(subscriptionID string) (*mysqlflexibleservers.ServersClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a mysql server client
+	flexibleMySqlClient := mysqlflexibleservers.NewServersClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	flexibleMySqlClient.Authorizer = *authorizer
+
+	return &flexibleMySqlClient, nil
+}
+
+// CreateMySqlFlexibleServerDBClientE is a helper function that will setup a mysql db flexible server client.
+func CreateMySqlFlexibleServerDBClientE(subscriptionID string) (*mysqlflexibleservers.DatabasesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a mysql server client
+	flexibleMySqlDBClient := mysqlflexibleservers.NewDatabasesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	flexibleMySqlDBClient.Authorizer = *authorizer
+
+	return &flexibleMySqlDBClient, nil
 }
 
 // CreateDisksClientE returns a new Disks client in the specified Azure Subscription
