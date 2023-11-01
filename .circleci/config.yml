@@ -9,9 +9,9 @@ env: &env
     OPA_VERSION: v0.33.1
     GO_VERSION: 1.21.1
     GO111MODULE: auto
-    K8S_VERSION: v1.25.0  # Same as EKS
-    MINIKUBE_VERSION: v1.25.0
-    HELM_VERSION: v3.8.0
+    K8S_VERSION: v1.25.0
+    MINIKUBE_VERSION: v1.31.2
+    HELM_VERSION: v3.13.1
     KUBECONFIG: /home/circleci/.kube/config
     BIN_BUILD_PARALLELISM: 3
 
