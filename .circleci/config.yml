@@ -25,7 +25,7 @@ setup_minikube: &setup_minikube
   command: |
     sudo apt update -y
     sudo apt install -y conntrack
-    setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "$MINIKUBE_VERSION"
+    setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "$MINIKUBE_VERSION" --driver=docker --container-runtime=containerd
 
 install_helm: &install_helm
   name: install helm
