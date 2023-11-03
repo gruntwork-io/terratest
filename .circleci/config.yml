@@ -18,7 +18,7 @@ env: &env
 defaults: &defaults
   machine:
     enabled: true
-    image: ubuntu-2004:2022.10.1
+    image: ubuntu-2204:2022.10.1
   <<: *env
 
 setup_minikube: &setup_minikube
