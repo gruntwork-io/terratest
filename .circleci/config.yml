@@ -9,7 +9,7 @@ env: &env
     OPA_VERSION: v0.33.1
     GO_VERSION: 1.21.1
     GO111MODULE: auto
-    K8S_VERSION: v1.25.0
+    K8S_VERSION: v1.23.0
     MINIKUBE_VERSION: v1.31.2
     HELM_VERSION: v3.13.1
     KUBECONFIG: /home/circleci/.kube/config
