@@ -173,6 +173,29 @@ func (err *FunctionError) Error() string {
 	return fmt.Sprintf("%q error with status code %d invoking lambda function: %q", err.Message, err.StatusCode, err.Payload)
 }
 
+//GetLambdaFunctionConfiguration gets ARN for a given function.
+func GetLambdaFunctionConfiguration(t testing.TestingT, region, functionName string) lambda.FunctionConfiguration {
+	out, err := GetLambdaFunctionArnE(t, region, functionName)
+	require.NoError(t, err)
+	return out
+}
+
+//GetLambdaFunctionConfigurationE gets ARN for a given function.
+func GetLambdaFunctionConfigurationE(t testing.TestingT, region, functionName string) (lambda.FunctionConfiguration, error) {
+	lambdaClient, err := NewLambdaClient(t, region)
+
+	input := &lambda.GetFunctionInput{
+		FunctionName: &functionName
+	}
+
+	out, err = lambdaClient.GetFunction(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return *out.Configuration, nil
+}
+
 // NewLambdaClient creates a new Lambda client.
 func NewLambdaClient(t testing.TestingT, region string) *lambda.Lambda {
 	client, err := NewLambdaClientE(t, region)
