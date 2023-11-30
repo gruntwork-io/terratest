@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"os"
 	"time"
 
@@ -37,7 +38,7 @@ func NewAuthenticatedSessionFromDefaultCredentials(region string) (*session.Sess
 		SharedConfigState: session.SharedConfigEnable,
 	}
 
-	sess, err := session.NewSessionWithOptions(sessionOptions)
+	sess, err := getNewSessionWithOptions(sessionOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func NewAuthenticatedSessionFromRole(region string, roleARN string) (*session.Se
 // CreateAwsSessionFromRole returns a new AWS session after assuming the role
 // whose ARN is provided in roleARN.
 func CreateAwsSessionFromRole(region string, roleARN string) (*session.Session, error) {
-	sess, err := session.NewSession(aws.NewConfig().WithRegion(region))
+	sess, err := getNewSession(aws.NewConfig().WithRegion(region))
 	if err != nil {
 		return nil, err
 	}
@@ -97,10 +98,12 @@ func CreateAwsSessionWithMfa(region string, stsClient *sts.STS, mfaDevice *iam.V
 		return nil, err
 	}
 
-	output, err := stsClient.GetSessionToken(&sts.GetSessionTokenInput{
-		SerialNumber: mfaDevice.SerialNumber,
-		TokenCode:    aws.String(tokenCode),
-	})
+	output, err := stsClient.GetSessionToken(
+		&sts.GetSessionTokenInput{
+			SerialNumber: mfaDevice.SerialNumber,
+			TokenCode:    aws.String(tokenCode),
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +113,7 @@ func CreateAwsSessionWithMfa(region string, stsClient *sts.STS, mfaDevice *iam.V
 	sessionToken := *output.Credentials.SessionToken
 
 	creds := CreateAwsCredentialsWithSessionToken(accessKeyID, secretAccessKey, sessionToken)
-	return session.NewSession(aws.NewConfig().WithRegion(region).WithCredentials(creds))
+	return getNewSession(aws.NewConfig().WithRegion(region).WithCredentials(creds))
 }
 
 // CreateAwsCredentials creates an AWS Credentials configuration with specific AWS credentials.
@@ -158,5 +161,40 @@ type CredentialsError struct {
 }
 
 func (err CredentialsError) Error() string {
-	return fmt.Sprintf("Error finding AWS credentials. Did you set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables or configure an AWS profile? Underlying error: %v", err.UnderlyingErr)
+	return fmt.Sprintf(
+		"Error finding AWS credentials. Did you set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables or configure an AWS profile? Underlying error: %v",
+		err.UnderlyingErr,
+	)
+}
+
+// The goal of this function is handle the aws custom endpoint configuration
+// focus to use any tool (i.e: localstack) to allow us do tests locally or isolated
+func getNewSession(config *aws.Config) (*session.Session, error) {
+	enableWithS3ForcePathStyle(config)
+
+	return session.NewSession(config)
+}
+
+func getNewSessionWithOptions(opts session.Options) (*session.Session, error) {
+	enableWithS3ForcePathStyle(&opts.Config)
+
+	return session.NewSessionWithOptions(opts)
+}
+
+func enableWithS3ForcePathStyle(config *aws.Config) {
+	if HasAwsCustomEndPoints() {
+		config.WithS3ForcePathStyle(true).WithEndpointResolver(endpoints.ResolverFunc(endPointsCustomResolver))
+	}
+}
+
+func endPointsCustomResolver(service, region string, optionalFunctions ...func(*endpoints.Options)) (endpoints.ResolvedEndpoint, error) {
+	customServiceEndpoint, endpointShouldBeOverride := EndpointShouldBeOverride(service)
+	if endpointShouldBeOverride {
+		return endpoints.ResolvedEndpoint{
+			URL:           customServiceEndpoint,
+			SigningRegion: "custom-signing-region",
+		}, nil
+	}
+
+	return endpoints.DefaultResolver().EndpointFor(service, region, optionalFunctions...)
 }
