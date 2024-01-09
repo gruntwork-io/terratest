@@ -15,6 +15,8 @@ type KubectlOptions struct {
 	InClusterAuth bool
 	RestConfig    *rest.Config
 	Logger        *logger.Logger
+	// ConfigLogger is useful to set a different logger when configuring kubectl with a config. This can significantly reduce verbosity of tests
+	ConfigLogger *logger.Logger
 }
 
 // NewKubectlOptions will return a pointer to new instance of KubectlOptions with the configured options
