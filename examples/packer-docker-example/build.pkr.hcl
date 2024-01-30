@@ -4,6 +4,10 @@ packer {
       version = ">=v1.0.0"
       source  = "github.com/hashicorp/amazon"
     }
+    docker = {
+      version = ">=v1.0.1"
+      source  = "github.com/hashicorp/docker"
+    }
   }
 }
 
