@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -111,6 +112,18 @@ func WaitUntilPodAvailable(t testing.TestingT, options *KubectlOptions, podName 
 // WaitUntilPodAvailableE waits until all of the containers within the pod are ready and started, retrying the check for the specified amount of times, sleeping
 // for the provided duration between each try.
 func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration) error {
+	return WaitUntilPodConsistentlyAvailableE(t, options, podName, retries, sleepBetweenRetries, 0)
+}
+
+// WaitUntilPodConsistentlyAvailable similar to WaitUntilPodAvailable but one the pod is available we will retry `successes` occurrences and fail if ever the pod becomes unavailable.
+// This is useful to make sure a pod doesn't become unhealthy shortly after starting
+func WaitUntilPodConsistentlyAvailable(t testing.TestingT, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration, successes int) {
+	require.NoError(t, WaitUntilPodConsistentlyAvailableE(t, options, podName, retries, sleepBetweenRetries, successes))
+}
+
+// WaitUntilPodConsistentlyAvailableE similar to WaitUntilPodAvailable but one the pod is available we will retry `successes` occurrences and fail if ever the pod becomes unavailable.
+// This is useful to make sure a pod doesn't become unhealthy shortly after starting
+func WaitUntilPodConsistentlyAvailableE(t testing.TestingT, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration, successes int) error {
 	statusMsg := fmt.Sprintf("Wait for pod %s to be provisioned.", podName)
 	message, err := retry.DoWithRetryE(
 		t,
@@ -128,11 +141,38 @@ func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName
 			return "Pod is now available", nil
 		},
 	)
+	if err == nil {
+		for i := successes; ; i-- {
+			var pod *corev1.Pod
+			pod, err = GetPodE(t, options, podName)
+			if err != nil {
+				break
+			}
+			if !IsPodAvailable(pod) {
+				err = NewPodNotAvailableError(pod)
+				break
+			}
+			if i == 0 {
+				break
+			}
+			logger.Logf(t, "Wait %s before checking if pod %s is still available", sleepBetweenRetries, podName)
+			time.Sleep(sleepBetweenRetries)
+		}
+	}
 	if err != nil {
-		logger.Logf(t, "Timedout waiting for Pod to be provisioned: %s", err)
+		logger.Log(t, "Failed waiting for pod to be provisioned", err)
+		notAvailableError := PodNotAvailable{}
+		if errors.As(err, &notAvailableError) {
+			if notAvailableError.pod.Status.Phase == corev1.PodRunning {
+				_, logsError := GetPodLogsE(t, options, notAvailableError.pod, "")
+				if logsError != nil {
+					logger.Log(t, "Failed to retrieve logs", err)
+				}
+			}
+		}
 		return err
 	}
-	logger.Logf(t, message)
+	logger.Log(t, message)
 	return nil
 }
 
