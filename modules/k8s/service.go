@@ -77,7 +77,7 @@ func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serv
 
 			// For minikube, all services will be available immediately so we only do the check if we are not on
 			// minikube.
-			if !isMinikube && !IsServiceAvailable(service) {
+			if !isMinikube && !IsServiceAvailable(t, options, service) {
 				return "", NewServiceNotAvailableError(service)
 			}
 			return "Service is now available", nil
@@ -88,13 +88,29 @@ func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serv
 
 // IsServiceAvailable returns true if the service endpoint is ready to accept traffic. Note that for Minikube, this
 // function is moot as all services, even LoadBalancer, is available immediately.
-func IsServiceAvailable(service *corev1.Service) bool {
-	// Only the LoadBalancer type has a delay. All other service types are available if the resource exists.
+func IsServiceAvailable(t testing.TestingT, options *KubectlOptions, service *corev1.Service) bool {
+	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return false
+	}
+
 	switch service.Spec.Type {
+	// type: LoadBalancer has delays as ingress controllers wire up the backend services.
 	case corev1.ServiceTypeLoadBalancer:
 		ingress := service.Status.LoadBalancer.Ingress
 		// The load balancer is ready if it has at least one ingress point
 		return len(ingress) > 0
+	// type: ClusterIP is available when the Pods matched by the Service selector are in the Status == Ready
+	case corev1.ServiceTypeClusterIP:
+		endpoint, err := clientset.CoreV1().Endpoints(options.Namespace).Get(context.Background(), service.Name, metav1.GetOptions{})
+		if err != nil {
+			return false
+		}
+		activeEndpointCount := 0
+		for _, subset := range endpoint.Subsets {
+			activeEndpointCount += len(subset.Addresses)
+		}
+		return activeEndpointCount > 0
 	default:
 		return true
 	}
