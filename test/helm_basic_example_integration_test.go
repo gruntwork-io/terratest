@@ -11,6 +11,7 @@ package test
 import (
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -56,6 +57,9 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 			"containerImageRepo": "nginx",
 			"containerImageTag":  "1.15.8",
 		},
+		ExtraArgs: map[string][]string{
+			"install": []string{"--wait", "--timeout", "1m30s"},
+		},
 	}
 
 	// We generate a unique release name so that we can refer to after deployment.
@@ -81,10 +85,13 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 	// to ensure that we can access it.
 	k8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 10, 1*time.Second)
 
-	// Now we verify that the service will successfully boot and start serving requests
-	service := k8s.GetService(t, kubectlOptions, serviceName)
-	endpoint := k8s.GetServiceEndpoint(t, kubectlOptions, service, 80)
-
+	// Now we open a tunnel to port forward service port to localhost
+	tunnel := k8s.NewTunnel(
+		kubectlOptions, k8s.ResourceTypeService, serviceName, 0, 80)
+	defer tunnel.Close()
+	tunnel.ForwardPort(t)
+	// Get endpoint
+	endpoint := tunnel.Endpoint()
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
 
@@ -97,7 +104,7 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 		30,
 		10*time.Second,
 		func(statusCode int, body string) bool {
-			return statusCode == 200
+			return statusCode == http.StatusOK
 		},
 	)
 }
