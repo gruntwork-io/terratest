@@ -213,10 +213,18 @@ func packerInit(t testing.TestingT, options *Options) error {
 		return nil
 	}
 
-	extension := filepath.Ext(options.Template)
-	if extension != ".hcl" {
-		options.Logger.Logf(t, "Skipping 'packer init' because it is only supported for HCL2 templates")
-		return nil
+	f, err := os.Stat(options.Template)
+	if err != nil {
+		return err
+	}
+
+	// Only check for extensions when template is a file. If it's a directory, assume it's HCL2
+	if !f.IsDir() {
+		extension := filepath.Ext(options.Template)
+		if extension != ".hcl" {
+			options.Logger.Logf(t, "Skipping 'packer init' because it is only supported for HCL2 templates")
+			return nil
+		}
 	}
 
 	cmd := shell.Command{
