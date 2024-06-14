@@ -61,6 +61,28 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 
 	// Make sure the function-specific error comes back
 	assert.Contains(t, string(functionError.Payload), "Failed to handle")
+
+	// Get function configuration
+	functionConfiguration := aws.GetLambdaFunctionConfiguration(t, awsRegion, functionName)
+
+	// Extract some specific values from function configuration
+	expectedFunctionHash := *functionConfiguration.CodeSha256
+	expectedFunctionArn := *functionConfiguration.FunctionArn
+
+	// Get outputs from terraform module
+	actualFunctionHash := terraform.Output(t, terraformOptions, "lambda_function_arn")
+	actualFunctionArn := terraform.Output(t, terraformOptions, "lambda_source_code_hash")
+
+	// Make sure that the values match
+	assert.Equal(t, expectedFunctionArn, actualFunctionArn)
+	assert.Equal(t, expectedFunctionHash, actualFunctionHash)
+
+	// Get configuration of non-existing lambda function
+	response, err := aws.GetLambdaFunctionConfigurationE(t, awsRegion, fmt.Sprintf("fake-function-%s", random.UniqueId()))
+
+	// Verify that the error is returned
+	assert.NotNil(t, err)
+
 }
 
 // Annother example of how to test the Terraform module in
