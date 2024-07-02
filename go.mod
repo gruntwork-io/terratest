@@ -30,6 +30,7 @@ require (
 	github.com/miekg/dns v1.1.31
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oracle/oci-go-sdk v7.1.0+incompatible
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/pquerna/otp v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.8.4
