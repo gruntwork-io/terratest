@@ -375,6 +375,56 @@ jobs:
       - store_test_results:
           path: /tmp/logs
 
+  mock_aws_test:
+    <<: *env
+    docker:
+      - image: cimg/python:3.10.2
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+
+      - run:
+          <<: *install_gruntwork_utils
+
+      # The weird way you have to set PATH in Circle 2.0
+      - run: |
+          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      - run:
+          name: install mock aws server
+          command: |
+            pip install moto[server]
+      - run:
+          name: install aws cli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: run mock aws server
+          command: |
+            mkdir -p /tmp/logs
+            moto_server | tee /tmp/logs/moto_server_output.log
+          background: true
+      - run:
+          name: wait for mock aws server
+          command: |
+            # Disable AWS_PAGER because the CI system isn't an
+            # interactive terminal, and will throw warnings otherwise:
+            # https://stackoverflow.com/questions/60122188/how-to-turn-off-the-pager-for-aws-cli-return-value
+            while ! AWS_PAGER="" AWS_REGION=us-west-2 AWS_ACCESS_KEY_ID=dummy AWS_SECRET_ACCESS_KEY=dummy aws --endpoint http://localhost:5000 sts get-caller-identity; do
+              echo "Waiting for local mock AWS server"
+              sleep 1
+            done
+      - run:
+          command: |
+            mkdir -p /tmp/logs
+            run-go-tests --packages "-tags=mockaws -run TestTerraformAwsEndpointExample ./test/" | tee /tmp/logs/test_output.log
+
+      # Store test result and log artifacts for browsing purposes
+      - store_artifacts:
+          path: /tmp/logs
+      - store_test_results:
+          path: /tmp/logs
 
   deploy:
     <<: *defaults
@@ -451,6 +501,16 @@ workflows:
       - gcp_test:
           context:
             - GCP__automated-tests
+            - GITHUB__PAT__gruntwork-ci
+          requires:
+            - setup
+          filters:
+            tags:
+              only: /^v.*/
+
+      - mock_aws_test:
+          context:
+            - AWS__PHXDEVOPS__circle-ci-test
             - GITHUB__PAT__gruntwork-ci
           requires:
             - setup
