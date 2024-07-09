@@ -2,6 +2,7 @@
 package retry
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -87,15 +88,15 @@ func DoWithRetryInterfaceE(t testing.TestingT, actionDescription string, maxRetr
 	var output interface{}
 	var err error
 
+	logger.Log(t, actionDescription)
 	for i := 0; i <= maxRetries; i++ {
-		logger.Log(t, actionDescription)
 
 		output, err = action()
 		if err == nil {
 			return output, nil
 		}
 
-		if _, isFatalErr := err.(FatalError); isFatalErr {
+		if errors.Is(err, FatalError{}) {
 			logger.Logf(t, "Returning due to fatal error: %v", err)
 			return output, err
 		}
@@ -104,7 +105,7 @@ func DoWithRetryInterfaceE(t testing.TestingT, actionDescription string, maxRetr
 		time.Sleep(sleepBetweenRetries)
 	}
 
-	return output, MaxRetriesExceeded{Description: actionDescription, MaxRetries: maxRetries}
+	return output, MaxRetriesExceeded{Description: actionDescription, MaxRetries: maxRetries, LastError: err}
 }
 
 // DoWithRetryableErrors runs the specified action. If it returns a value, return that value. If it returns an error,
@@ -202,10 +203,15 @@ func (err TimeoutExceeded) Error() string {
 type MaxRetriesExceeded struct {
 	Description string
 	MaxRetries  int
+	LastError   error
 }
 
 func (err MaxRetriesExceeded) Error() string {
 	return fmt.Sprintf("'%s' unsuccessful after %d retries", err.Description, err.MaxRetries)
+}
+
+func (err MaxRetriesExceeded) Unwrap() error {
+	return err.LastError
 }
 
 // FatalError is a marker interface for errors that should not be retried.
@@ -215,4 +221,8 @@ type FatalError struct {
 
 func (err FatalError) Error() string {
 	return fmt.Sprintf("FatalError{Underlying: %v}", err.Underlying)
+}
+
+func (err FatalError) Unwrap() error {
+	return err.Underlying
 }

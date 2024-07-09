@@ -1,0 +1,21 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app
+spec:
+  selector:
+    matchLabels:
+      app: test-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+        - name: app
+          image: busybox
+          command:
+            ["/bin/sh", "-c", "for i in `seq 1 2`; do echo ${i} sleeping 1 sec; sleep 1; done; echo Finished!"]
+

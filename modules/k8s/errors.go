@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"fmt"
+	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -99,7 +100,36 @@ type PodNotAvailable struct {
 
 // Error is a simple function to return a formatted error message as a string
 func (err PodNotAvailable) Error() string {
-	return fmt.Sprintf("Pod %s is not available, reason: %s, message: %s", err.pod.Name, err.pod.Status.Reason, err.pod.Status.Message)
+	msg := fmt.Sprintf("Pod %s is not available, phase:%s", err.pod.Name, err.pod.Status.Phase)
+	if err.pod.Status.Reason != "" {
+		msg += fmt.Sprintf(", reason:%s", err.pod.Status.Reason)
+	}
+	if err.pod.Status.Message != "" {
+		msg += fmt.Sprintf(", message:'%s'", err.pod.Status.Message)
+	}
+	var res []string
+	for _, s := range err.pod.Status.Conditions {
+		if s.Status == "True" {
+			continue
+		}
+		res = append(res, fmt.Sprintf("'%s:%s->%s'", s.Type, s.Reason, s.Message))
+	}
+	if len(res) > 0 {
+		msg += fmt.Sprintf(", failingConditions:[%s]", strings.Join(res, ","))
+	}
+	res = []string{}
+	for _, s := range err.pod.Status.ContainerStatuses {
+		if s.State.Waiting != nil {
+			res = append(res, fmt.Sprintf("'waiting(%s):%s->%s'", s.Name, s.State.Waiting.Reason, s.State.Waiting.Message))
+		}
+		if s.State.Terminated != nil {
+			res = append(res, fmt.Sprintf("'terminated(%s):%s->%s'", s.Name, s.State.Terminated.Reason, s.State.Terminated.Message))
+		}
+	}
+	if len(res) > 0 {
+		msg += fmt.Sprintf(", nonRunningContainerState:[%s]", strings.Join(res, ","))
+	}
+	return msg
 }
 
 // NewPodNotAvailableError returnes a PodNotAvailable struct when Kubernetes deems a pod is not available
