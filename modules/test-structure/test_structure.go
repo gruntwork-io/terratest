@@ -45,6 +45,37 @@ func SkipStageEnvVarSet() bool {
 	return false
 }
 
+// CopyTerraformFolderToTempWithFilter copies the given root folder to a randomly-named temp folder and return the path to the
+// given terraform modules folder within the new temp root folder. This is useful when running multiple tests in
+// parallel against the same set of Terraform files to ensure the tests don't overwrite each other's .terraform working
+// directory and terraform.tfstate files. To ensure relative paths work, we copy over the entire root folder to a temp
+// folder, and then return the path within that temp folder to the given terraform module dir, which is where the actual
+// test will be running.
+// For example, suppose you had the target terraform folder you want to test in "/examples/terraform-aws-example"
+// relative to the repo root. If your tests reside in the "/test" relative to the root, then you will use this as
+// follows:
+//
+//	// Root folder where terraform files should be (relative to the test folder)
+//	rootFolder := ".."
+//
+//	// Relative path to terraform module being tested from the root folder
+//	terraformFolderRelativeToRoot := "examples/terraform-aws-example"
+//
+//	// Copy the terraform folder to a temp folder
+//	tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
+//
+//	// Make sure to use the temp test folder in the terraform options
+//	terraformOptions := &terraform.Options{
+//			TerraformDir: tempTestFolder,
+//	}
+//
+// Note that if any of the SKIP_<stage> environment variables is set, we assume this is a test in the local dev where
+// there are no other concurrent tests running and we want to be able to cache test data between test stages, so in that
+// case, we do NOT copy anything to a temp folder, and return the path to the original terraform module folder instead.
+func CopyTerraformFolderToTempWithFilter(t testing.TestingT, rootFolder string, terraformModuleFolder string, filter func(string) bool) string {
+	return CopyTerraformFolderToDestWithFilter(t, rootFolder, terraformModuleFolder, os.TempDir(), filter)
+}
+
 // CopyTerraformFolderToTemp copies the given root folder to a randomly-named temp folder and return the path to the
 // given terraform modules folder within the new temp root folder. This is useful when running multiple tests in
 // parallel against the same set of Terraform files to ensure the tests don't overwrite each other's .terraform working
@@ -74,6 +105,64 @@ func SkipStageEnvVarSet() bool {
 // case, we do NOT copy anything to a temp folder, and return the path to the original terraform module folder instead.
 func CopyTerraformFolderToTemp(t testing.TestingT, rootFolder string, terraformModuleFolder string) string {
 	return CopyTerraformFolderToDest(t, rootFolder, terraformModuleFolder, os.TempDir())
+}
+
+// CopyTerraformFolderToDestWithFilter copies the given root folder to a randomly-named temp folder and return the path to the
+// given terraform modules folder within the new temp root folder. This is useful when running multiple tests in
+// parallel against the same set of Terraform files to ensure the tests don't overwrite each other's .terraform working
+// directory and terraform.tfstate files. To ensure relative paths work, we copy over the entire root folder to a temp
+// folder, and then return the path within that temp folder to the given terraform module dir, which is where the actual
+// test will be running.
+// For example, suppose you had the target terraform folder you want to test in "/examples/terraform-aws-example"
+// relative to the repo root. If your tests reside in the "/test" relative to the root, then you will use this as
+// follows:
+//
+//	// Destination for the copy of the files.  In this example we are using the Azure Dev Ops variable
+//	// for the folder that is cleaned after each pipeline job.
+//	destRootFolder := os.Getenv("AGENT_TEMPDIRECTORY")
+//
+//	// Root folder where terraform files should be (relative to the test folder)
+//	rootFolder := ".."
+//
+//	// Relative path to terraform module being tested from the root folder
+//	terraformFolderRelativeToRoot := "examples/terraform-aws-example"
+//
+//	// Copy the terraform folder to a temp folder
+//	tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot, destRootFolder)
+//
+//	// Make sure to use the temp test folder in the terraform options
+//	terraformOptions := &terraform.Options{
+//			TerraformDir: tempTestFolder,
+//	}
+//
+// Note that if any of the SKIP_<stage> environment variables is set, we assume this is a test in the local dev where
+// there are no other concurrent tests running and we want to be able to cache test data between test stages, so in that
+// case, we do NOT copy anything to a temp folder, and return the path to the original terraform module folder instead.
+func CopyTerraformFolderToDestWithFilter(t testing.TestingT, rootFolder string, terraformModuleFolder string, destRootFolder string, filter func(string) bool) string {
+	if SkipStageEnvVarSet() {
+		logger.Logf(t, "A SKIP_XXX environment variable is set. Using original examples folder rather than a temp folder so we can cache data between stages for faster local testing.")
+		return filepath.Join(rootFolder, terraformModuleFolder)
+	}
+
+	fullTerraformModuleFolder := filepath.Join(rootFolder, terraformModuleFolder)
+
+	exists, err := files.FileExistsE(fullTerraformModuleFolder)
+	require.NoError(t, err)
+	if !exists {
+		t.Fatal(files.DirNotFoundError{Directory: fullTerraformModuleFolder})
+	}
+
+	tmpRootFolder, err := files.CopyTerraformFolderToDestWithFilter(rootFolder, destRootFolder, cleanName(t.Name()), filter)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tmpTestFolder := filepath.Join(tmpRootFolder, terraformModuleFolder)
+
+	// Log temp folder so we can see it
+	logger.Logf(t, "Copied terraform folder %s to %s", fullTerraformModuleFolder, tmpTestFolder)
+
+	return tmpTestFolder
 }
 
 // CopyTerraformFolderToDest copies the given root folder to a randomly-named temp folder and return the path to the
@@ -108,30 +197,7 @@ func CopyTerraformFolderToTemp(t testing.TestingT, rootFolder string, terraformM
 // there are no other concurrent tests running and we want to be able to cache test data between test stages, so in that
 // case, we do NOT copy anything to a temp folder, and return the path to the original terraform module folder instead.
 func CopyTerraformFolderToDest(t testing.TestingT, rootFolder string, terraformModuleFolder string, destRootFolder string) string {
-	if SkipStageEnvVarSet() {
-		logger.Logf(t, "A SKIP_XXX environment variable is set. Using original examples folder rather than a temp folder so we can cache data between stages for faster local testing.")
-		return filepath.Join(rootFolder, terraformModuleFolder)
-	}
-
-	fullTerraformModuleFolder := filepath.Join(rootFolder, terraformModuleFolder)
-
-	exists, err := files.FileExistsE(fullTerraformModuleFolder)
-	require.NoError(t, err)
-	if !exists {
-		t.Fatal(files.DirNotFoundError{Directory: fullTerraformModuleFolder})
-	}
-
-	tmpRootFolder, err := files.CopyTerraformFolderToDest(rootFolder, destRootFolder, cleanName(t.Name()))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tmpTestFolder := filepath.Join(tmpRootFolder, terraformModuleFolder)
-
-	// Log temp folder so we can see it
-	logger.Logf(t, "Copied terraform folder %s to %s", fullTerraformModuleFolder, tmpTestFolder)
-
-	return tmpTestFolder
+	return CopyTerraformFolderToDestWithFilter(t, rootFolder, terraformModuleFolder, destRootFolder, files.DefaultPathFilter)
 }
 
 func cleanName(originalName string) string {
