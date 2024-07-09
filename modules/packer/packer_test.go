@@ -2,8 +2,11 @@ package packer
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/files"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -172,5 +175,60 @@ func TestFormatPackerArgs(t *testing.T) {
 	for _, test := range tests {
 		args := formatPackerArgs(test.option)
 		assert.Equal(t, strings.Join(args, " "), test.expected)
+	}
+}
+
+func TestPackertInitWithFile(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		packerTestFile string
+	}{
+		{
+			packerTestFile: "packer.pkr.hcl",
+		}, {
+			packerTestFile: "packer.json",
+		},
+	}
+	for _, test := range tests {
+		packerDirectory := t.TempDir()
+		packerTestFile := filepath.Join("../../test/fixtures/packer-basic", test.packerTestFile)
+		packerFile := filepath.Join(packerDirectory, test.packerTestFile)
+		err := files.CopyFile(packerTestFile, packerFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		options := &Options{
+			Template:   packerFile,
+			WorkingDir: packerDirectory,
+		}
+		err = packerInit(t, options)
+		assert.NoError(t, err)
+	}
+}
+
+func TestPackertInitWithDirectory(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		packerTestDirectory string
+	}{
+		{
+			packerTestDirectory: "packer-basic",
+		},
+	}
+	for _, test := range tests {
+		packerTestDirectory := filepath.Join("../../test/fixtures", test.packerTestDirectory)
+		packerDirectory, err := files.CopyFolderToTemp(packerTestDirectory, t.Name(), func(path string) bool { return true })
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		options := &Options{
+			Template:   ".",
+			WorkingDir: packerDirectory,
+		}
+
+		err = packerInit(t, options)
+		assert.NoError(t, err)
 	}
 }

@@ -1,0 +1,14 @@
+{
+  "builders": [
+    {
+      "type": "null",
+      "communicator": "none"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": ["echo hellooooo"]
+    }
+  ]
+}
