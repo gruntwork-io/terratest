@@ -48,6 +48,7 @@ require (
 
 require (
 	cloud.google.com/go/cloudbuild v1.9.0
+	github.com/gogo/protobuf v1.3.2
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/homeport/dyff v1.6.0
 	github.com/slack-go/slack v0.10.3
@@ -75,7 +76,7 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/docker/cli v20.10.7+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.9+incompatible // indirect
+	github.com/docker/docker v26.1.4+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.6.3 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.2+incompatible // indirect
@@ -83,7 +84,6 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/gonvenience/bunt v1.3.5 // indirect
