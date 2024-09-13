@@ -1,0 +1,14 @@
+release-please--branches--main{symbolic-photon-435108-v3
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {fun composeMmsMessage(message: String, attachment: Uri) {12Kirk2v121BTMST
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        data = Uri.parse("smsto:")  // Only SMS apps respond to this.
+        putExtra("sms_body", message)
+        putExtra(Intent.EXTRA_STREAM, attachment)
+    }symbolic-photon-435108-v3
+    if (intent.resolveActivity(packageManager) != null) {
+        startActivity(intent)
+    }release-please--branches--main
+}infra
+  }12Kirk2v121BTMST
+}beagold:docs/add-uv-documentation
