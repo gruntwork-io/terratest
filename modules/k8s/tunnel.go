@@ -6,6 +6,7 @@ package k8s
 // See: https://github.com/helm/helm/blob/master/pkg/kube/tunnel.go
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -208,6 +209,24 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 	}
 	tunnel.logger.Logf(t, "Selected pod %s to open port forward to", podName)
 
+	var targetPort = tunnel.remotePort
+
+	// in case of services, find target port on pod based on service definition
+	if tunnel.resourceType == ResourceTypeService {
+		service := GetService(t, tunnel.kubectlOptions, tunnel.resourceName)
+		var portFound = false
+		for _, portSpec := range service.Spec.Ports {
+			if portSpec.Port == int32(targetPort) {
+				targetPort = portSpec.TargetPort.IntValue()
+				portFound = true
+				break
+			}
+		}
+		if !portFound {
+			return errors.New(fmt.Sprintf("Target port %d not found in service %s definition.", targetPort, tunnel.resourceName))
+		}
+	}
+
 	// Build a url to the portforward endpoint
 	// example: http://localhost:8080/api/v1/namespaces/helm/pods/tiller-deploy-9itlq/portforward
 	postEndpoint := clientset.CoreV1().RESTClient().Post()
@@ -248,7 +267,7 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 	}
 
 	// Construct a new PortForwarder struct that manages the instructed port forward tunnel
-	ports := []string{fmt.Sprintf("%d:%d", tunnel.localPort, tunnel.remotePort)}
+	ports := []string{fmt.Sprintf("%d:%d", tunnel.localPort, targetPort)}
 	portforwarder, err := portforward.New(dialer, ports, tunnel.stopChan, tunnel.readyChan, tunnel.out, tunnel.out)
 	if err != nil {
 		tunnel.logger.Logf(t, "Error creating port forwarding tunnel: %s", err)
