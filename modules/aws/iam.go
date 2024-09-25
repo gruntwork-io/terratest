@@ -68,7 +68,7 @@ func CreateMfaDevice(t testing.TestingT, iamClient *iam.IAM, deviceName string) 
 
 // CreateMfaDeviceE creates an MFA device using the given IAM client.
 func CreateMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, deviceName string) (*iam.VirtualMFADevice, error) {
-	logger.Logf(t, "Creating an MFA device called %s", deviceName)
+	logger.Default.Logf(t, "Creating an MFA device called %s", deviceName)
 
 	output, err := iamClient.CreateVirtualMFADevice(&iam.CreateVirtualMFADeviceInput{
 		VirtualMFADeviceName: aws.String(deviceName),
@@ -96,7 +96,7 @@ func EnableMfaDevice(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.Virt
 // EnableMfaDeviceE enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
 // logins by the given IAM User.
 func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.VirtualMFADevice) error {
-	logger.Logf(t, "Enabling MFA device %s", aws.StringValue(mfaDevice.SerialNumber))
+	logger.Default.Logf(t, "Enabling MFA device %s", aws.StringValue(mfaDevice.SerialNumber))
 
 	iamUserName, err := GetIamCurrentUserArnE(t)
 	if err != nil {
@@ -108,7 +108,7 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.Vir
 		return err
 	}
 
-	logger.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
+	logger.Default.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
 	time.Sleep(30 * time.Second)
 
 	authCode2, err := GetTimeBasedOneTimePassword(mfaDevice)
@@ -127,7 +127,7 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.Vir
 		return err
 	}
 
-	logger.Log(t, "Waiting for MFA Device enablement to propagate.")
+	logger.Default.Logf(t, "Waiting for MFA Device enablement to propagate.")
 	time.Sleep(10 * time.Second)
 
 	return nil

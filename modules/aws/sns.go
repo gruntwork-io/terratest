@@ -18,7 +18,7 @@ func CreateSnsTopic(t testing.TestingT, region string, snsTopicName string) stri
 
 // CreateSnsTopicE creates an SNS Topic and return the ARN.
 func CreateSnsTopicE(t testing.TestingT, region string, snsTopicName string) (string, error) {
-	logger.Logf(t, "Creating SNS topic %s in %s", snsTopicName, region)
+	logger.Default.Logf(t, "Creating SNS topic %s in %s", snsTopicName, region)
 
 	snsClient, err := NewSnsClientE(t, region)
 	if err != nil {
@@ -47,7 +47,7 @@ func DeleteSNSTopic(t testing.TestingT, region string, snsTopicArn string) {
 
 // DeleteSNSTopicE deletes an SNS Topic.
 func DeleteSNSTopicE(t testing.TestingT, region string, snsTopicArn string) error {
-	logger.Logf(t, "Deleting SNS topic %s in %s", snsTopicArn, region)
+	logger.Default.Logf(t, "Deleting SNS topic %s in %s", snsTopicArn, region)
 
 	snsClient, err := NewSnsClientE(t, region)
 	if err != nil {

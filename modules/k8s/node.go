@@ -9,7 +9,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -30,7 +29,7 @@ func GetNodesE(t testing.TestingT, options *KubectlOptions) ([]corev1.Node, erro
 // GetNodesByFilterE queries Kubernetes for information about the worker nodes registered to the cluster, filtering the
 // list of nodes using the provided ListOptions.
 func GetNodesByFilterE(t testing.TestingT, options *KubectlOptions, filter metav1.ListOptions) ([]corev1.Node, error) {
-	logger.Logf(t, "Getting list of nodes from Kubernetes")
+	options.Logger.Logf(t, "Getting list of nodes from Kubernetes")
 
 	clientset, err := GetKubernetesClientFromOptionsE(t, options)
 	if err != nil {
@@ -59,7 +58,7 @@ func GetReadyNodesE(t testing.TestingT, options *KubectlOptions) ([]corev1.Node,
 	if err != nil {
 		return nil, err
 	}
-	logger.Logf(t, "Filtering list of nodes from Kubernetes for Ready nodes")
+	options.Logger.Logf(t, "Filtering list of nodes from Kubernetes for Ready nodes")
 	nodesFiltered := []corev1.Node{}
 	for _, node := range nodes {
 		if IsNodeReady(node) {
@@ -102,7 +101,7 @@ func WaitUntilAllNodesReadyE(t testing.TestingT, options *KubectlOptions, retrie
 			return "All nodes ready", nil
 		},
 	)
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 	return err
 }
 

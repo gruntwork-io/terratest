@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -49,5 +48,5 @@ func WaitUntilNetworkPolicyAvailable(t testing.TestingT, options *KubectlOptions
 			return "networkpolicy is now available", nil
 		},
 	)
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 }

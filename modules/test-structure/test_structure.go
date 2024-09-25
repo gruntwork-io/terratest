@@ -26,10 +26,10 @@ const SKIP_STAGE_ENV_VAR_PREFIX = "SKIP_"
 func RunTestStage(t testing.TestingT, stageName string, stage func()) {
 	envVarName := fmt.Sprintf("%s%s", SKIP_STAGE_ENV_VAR_PREFIX, stageName)
 	if os.Getenv(envVarName) == "" {
-		logger.Logf(t, "The '%s' environment variable is not set, so executing stage '%s'.", envVarName, stageName)
+		logger.Default.Logf(t, "The '%s' environment variable is not set, so executing stage '%s'.", envVarName, stageName)
 		stage()
 	} else {
-		logger.Logf(t, "The '%s' environment variable is set, so skipping stage '%s'.", envVarName, stageName)
+		logger.Default.Logf(t, "The '%s' environment variable is set, so skipping stage '%s'.", envVarName, stageName)
 	}
 }
 
@@ -109,7 +109,7 @@ func CopyTerraformFolderToTemp(t testing.TestingT, rootFolder string, terraformM
 // case, we do NOT copy anything to a temp folder, and return the path to the original terraform module folder instead.
 func CopyTerraformFolderToDest(t testing.TestingT, rootFolder string, terraformModuleFolder string, destRootFolder string) string {
 	if SkipStageEnvVarSet() {
-		logger.Logf(t, "A SKIP_XXX environment variable is set. Using original examples folder rather than a temp folder so we can cache data between stages for faster local testing.")
+		logger.Default.Logf(t, "A SKIP_XXX environment variable is set. Using original examples folder rather than a temp folder so we can cache data between stages for faster local testing.")
 		return filepath.Join(rootFolder, terraformModuleFolder)
 	}
 
@@ -129,7 +129,7 @@ func CopyTerraformFolderToDest(t testing.TestingT, rootFolder string, terraformM
 	tmpTestFolder := filepath.Join(tmpRootFolder, terraformModuleFolder)
 
 	// Log temp folder so we can see it
-	logger.Logf(t, "Copied terraform folder %s to %s", fullTerraformModuleFolder, tmpTestFolder)
+	logger.Default.Logf(t, "Copied terraform folder %s to %s", fullTerraformModuleFolder, tmpTestFolder)
 
 	return tmpTestFolder
 }

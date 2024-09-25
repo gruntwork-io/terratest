@@ -34,7 +34,7 @@ func RunDummyServerE(t testing.TestingT, text string) (net.Listener, int, error)
 		fmt.Fprintf(w, text)
 	})
 
-	logger.Logf(t, "Starting dummy HTTP server in port %d that will return the text '%s'", port, text)
+	logger.Default.Logf(t, "Starting dummy HTTP server in port %d that will return the text '%s'", port, text)
 
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
@@ -67,7 +67,7 @@ func RunDummyServerWithHandlersE(t testing.TestingT, handlers map[string]func(ht
 		http.HandleFunc(path, handler)
 	}
 
-	logger.Logf(t, "Starting dummy HTTP server in port %d", port)
+	logger.Default.Logf(t, "Starting dummy HTTP server in port %d", port)
 
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {

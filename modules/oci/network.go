@@ -51,7 +51,7 @@ func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDo
 
 	subnetID := random.RandomString(allSubnetIDs[availabilityDomain])
 
-	logger.Logf(t, "Using subnet with OCID %s", subnetID)
+	logger.Default.Logf(t, "Using subnet with OCID %s", subnetID)
 	return subnetID, nil
 }
 

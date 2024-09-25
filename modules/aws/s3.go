@@ -53,7 +53,7 @@ func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, valu
 
 		for _, tag := range tagResponse.TagSet {
 			if *tag.Key == key && *tag.Value == value {
-				logger.Logf(t, "Found S3 bucket %s with tag %s=%s", *bucket.Name, key, value)
+				logger.Default.Logf(t, "Found S3 bucket %s with tag %s=%s", *bucket.Name, key, value)
 				return *bucket.Name, nil
 			}
 		}
@@ -123,7 +123,7 @@ func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, k
 	}
 
 	contents := buf.String()
-	logger.Logf(t, "Read contents from s3://%s/%s", bucket, key)
+	logger.Default.Logf(t, "Read contents from s3://%s/%s", bucket, key)
 
 	return contents, nil
 }
@@ -136,7 +136,7 @@ func CreateS3Bucket(t testing.TestingT, region string, name string) {
 
 // CreateS3BucketE creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
 func CreateS3BucketE(t testing.TestingT, region string, name string) error {
-	logger.Logf(t, "Creating bucket %s in %s", name, region)
+	logger.Default.Logf(t, "Creating bucket %s in %s", name, region)
 
 	s3Client, err := NewS3ClientE(t, region)
 	if err != nil {
@@ -160,7 +160,7 @@ func PutS3BucketPolicy(t testing.TestingT, region string, bucketName string, pol
 
 // PutS3BucketPolicyE applies an IAM resource policy to a given S3 bucket to create it's bucket policy
 func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, policyJSONString string) error {
-	logger.Logf(t, "Applying bucket policy for bucket %s in %s", bucketName, region)
+	logger.Default.Logf(t, "Applying bucket policy for bucket %s in %s", bucketName, region)
 
 	s3Client, err := NewS3ClientE(t, region)
 	if err != nil {
@@ -184,7 +184,7 @@ func PutS3BucketVersioning(t testing.TestingT, region string, bucketName string)
 
 // PutS3BucketVersioningE creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
 func PutS3BucketVersioningE(t testing.TestingT, region string, bucketName string) error {
-	logger.Logf(t, "Creating bucket versioning configuration for bucket %s in %s", bucketName, region)
+	logger.Default.Logf(t, "Creating bucket versioning configuration for bucket %s in %s", bucketName, region)
 
 	s3Client, err := NewS3ClientE(t, region)
 	if err != nil {
@@ -211,7 +211,7 @@ func DeleteS3Bucket(t testing.TestingT, region string, name string) {
 
 // DeleteS3BucketE destroys the S3 bucket in the given region with the given name.
 func DeleteS3BucketE(t testing.TestingT, region string, name string) error {
-	logger.Logf(t, "Deleting bucket %s in %s", region, name)
+	logger.Default.Logf(t, "Deleting bucket %s in %s", region, name)
 
 	s3Client, err := NewS3ClientE(t, region)
 	if err != nil {
@@ -233,7 +233,7 @@ func EmptyS3Bucket(t testing.TestingT, region string, name string) {
 
 // EmptyS3BucketE removes the contents of an S3 bucket in the given region with the given name.
 func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
-	logger.Logf(t, "Emptying bucket %s in %s", name, region)
+	logger.Default.Logf(t, "Emptying bucket %s in %s", name, region)
 
 	s3Client, err := NewS3ClientE(t, region)
 	if err != nil {
@@ -253,7 +253,7 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 
 		//Checks if the bucket is already empty
 		if len((*bucketObjects).Versions) == 0 {
-			logger.Logf(t, "Bucket %s is already empty", name)
+			logger.Default.Logf(t, "Bucket %s is already empty", name)
 			return nil
 		}
 
@@ -291,12 +291,12 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 		if *(*bucketObjects).IsTruncated { //if there are more objects in the bucket, IsTruncated = true
 			// params.Marker = (*deleteParams).Delete.Objects[len((*deleteParams).Delete.Objects)-1].Key
 			params.KeyMarker = bucketObjects.NextKeyMarker
-			logger.Logf(t, "Requesting next batch | %s", *(params.KeyMarker))
+			logger.Default.Logf(t, "Requesting next batch | %s", *(params.KeyMarker))
 		} else { //if all objects in the bucket have been cleaned up.
 			break
 		}
 	}
-	logger.Logf(t, "Bucket %s is now empty", name)
+	logger.Default.Logf(t, "Bucket %s is now empty", name)
 	return err
 }
 

@@ -30,7 +30,7 @@ func DeleteGCRRepoE(t testing.TestingT, repo string) error {
 		return fmt.Errorf("Failed to get repo. Got error: %v", err)
 	}
 
-	logger.Logf(t, "Retriving Image Digests %s", gcrrepo)
+	logger.Default.Logf(t, "Retriving Image Digests %s", gcrrepo)
 	tags, err := gcrgoogle.List(gcrrepo, gcrgoogle.WithAuth(auther))
 	if err != nil {
 		return fmt.Errorf("Failed to list tags for repo %s. Got error: %v", repo, err)
@@ -38,7 +38,7 @@ func DeleteGCRRepoE(t testing.TestingT, repo string) error {
 
 	// attempt to delete the latest image tag
 	latestRef := repo + ":latest"
-	logger.Logf(t, "Deleting Image Ref %s", latestRef)
+	logger.Default.Logf(t, "Deleting Image Ref %s", latestRef)
 	if err := DeleteGCRImageRefE(t, latestRef); err != nil {
 		return fmt.Errorf("Failed to delete GCR Image Reference %s. Got error: %v", latestRef, err)
 	}
@@ -46,7 +46,7 @@ func DeleteGCRRepoE(t testing.TestingT, repo string) error {
 	// delete image references sequentially
 	for k := range tags.Manifests {
 		ref := repo + "@" + k
-		logger.Logf(t, "Deleting Image Ref %s", ref)
+		logger.Default.Logf(t, "Deleting Image Ref %s", ref)
 
 		if err := DeleteGCRImageRefE(t, ref); err != nil {
 			return fmt.Errorf("Failed to delete GCR Image Reference %s. Got error: %v", ref, err)

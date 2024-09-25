@@ -177,7 +177,7 @@ func ScpDirFromE(t testing.TestingT, options ScpDownloadOptions, useSudo bool) e
 			return err
 		}
 
-		logger.Logf(t, "Copying remote file: %s to local path %s", fullRemoteFilePath, localFilePath)
+		logger.Default.Logf(t, "Copying remote file: %s to local path %s", fullRemoteFilePath, localFilePath)
 
 		err = copyFileFromRemote(t, sshSession, localFile, fullRemoteFilePath, useSudo)
 		errorsOccurred = multierror.Append(errorsOccurred, err)
@@ -389,7 +389,7 @@ func FetchContentsOfFileE(t testing.TestingT, host Host, useSudo bool, filePath 
 }
 
 func listFileInRemoteDir(t testing.TestingT, sshSession *SshSession, options ScpDownloadOptions, useSudo bool) ([]string, error) {
-	logger.Logf(t, "Running command %s on %s@%s", sshSession.Options.Command, sshSession.Options.Username, sshSession.Options.Address)
+	logger.Default.Logf(t, "Running command %s on %s@%s", sshSession.Options.Command, sshSession.Options.Username, sshSession.Options.Address)
 
 	var result []string
 	var findCommandArgs []string
@@ -454,7 +454,7 @@ func copyFileFromRemote(t testing.TestingT, sshSession *SshSession, file *os.Fil
 		command = fmt.Sprintf("sudo %s", command)
 	}
 
-	logger.Logf(t, "Running command %s on %s@%s", command, sshSession.Options.Username, sshSession.Options.Address)
+	logger.Default.Logf(t, "Running command %s on %s@%s", command, sshSession.Options.Username, sshSession.Options.Address)
 
 	r, err := sshSession.Session.Output(command)
 	if err != nil {
@@ -468,7 +468,7 @@ func copyFileFromRemote(t testing.TestingT, sshSession *SshSession, file *os.Fil
 }
 
 func runSSHCommand(t testing.TestingT, sshSession *SshSession) (string, error) {
-	logger.Logf(t, "Running command %s on %s@%s", sshSession.Options.Command, sshSession.Options.Username, sshSession.Options.Address)
+	logger.Default.Logf(t, "Running command %s on %s@%s", sshSession.Options.Command, sshSession.Options.Username, sshSession.Options.Address)
 	if err := setUpSSHClient(sshSession); err != nil {
 		return "", err
 	}

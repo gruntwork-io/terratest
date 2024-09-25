@@ -24,7 +24,7 @@ func ImportSSHKey(t testing.TestingT, user, key string) {
 // The `user` parameter should be the email address of the user.
 // The `key` parameter should be the public key of the SSH key being uploaded.
 func ImportSSHKeyE(t testing.TestingT, user, key string) error {
-	logger.Logf(t, "Importing SSH key for user %s", user)
+	logger.Default.Logf(t, "Importing SSH key for user %s", user)
 
 	ctx := context.Background()
 	service, err := NewOSLoginServiceE(t)
@@ -58,7 +58,7 @@ func DeleteSSHKey(t testing.TestingT, user, key string) {
 // The `user` parameter should be the email address of the user.
 // The `key` parameter should be the public key of the SSH key that was uploaded.
 func DeleteSSHKeyE(t testing.TestingT, user, key string) error {
-	logger.Logf(t, "Deleting SSH key for user %s", user)
+	logger.Default.Logf(t, "Deleting SSH key for user %s", user)
 
 	ctx := context.Background()
 	service, err := NewOSLoginServiceE(t)
@@ -98,7 +98,7 @@ func GetLoginProfile(t testing.TestingT, user string) *oslogin.LoginProfile {
 // accounts the user will appear as. Generally, this will only be the OS Login key + account, but `gcloud compute ssh` could create temporary keys and profiles.
 // The `user` parameter should be the email address of the user.
 func GetLoginProfileE(t testing.TestingT, user string) (*oslogin.LoginProfile, error) {
-	logger.Logf(t, "Getting login profile for user %s", user)
+	logger.Default.Logf(t, "Getting login profile for user %s", user)
 
 	ctx := context.Background()
 	service, err := NewOSLoginServiceE(t)

@@ -74,7 +74,7 @@ func GetRandomRegion(t testing.TestingT, approvedRegions []string, forbiddenRegi
 func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenRegions []string) (string, error) {
 	regionFromEnvVar := os.Getenv(regionOverrideEnvVarName)
 	if regionFromEnvVar != "" {
-		logger.Logf(t, "Using AWS region %s from environment variable %s", regionFromEnvVar, regionOverrideEnvVarName)
+		logger.Default.Logf(t, "Using AWS region %s from environment variable %s", regionFromEnvVar, regionOverrideEnvVarName)
 		return regionFromEnvVar, nil
 	}
 
@@ -91,7 +91,7 @@ func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenReg
 	regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
-	logger.Logf(t, "Using region %s", region)
+	logger.Default.Logf(t, "Using region %s", region)
 	return region, nil
 }
 
@@ -106,7 +106,7 @@ func GetAllAwsRegions(t testing.TestingT) []string {
 
 // GetAllAwsRegionsE gets the list of AWS regions available in this account.
 func GetAllAwsRegionsE(t testing.TestingT) ([]string, error) {
-	logger.Log(t, "Looking up all AWS regions available in this account")
+	logger.Default.Logf(t, "Looking up all AWS regions available in this account")
 
 	ec2Client, err := NewEc2ClientE(t, defaultRegion)
 	if err != nil {
@@ -139,7 +139,7 @@ func GetAvailabilityZones(t testing.TestingT, region string) []string {
 // GetAvailabilityZonesE gets the Availability Zones for a given AWS region. Note that for certain regions (e.g. us-east-1), different AWS
 // accounts have access to different availability zones.
 func GetAvailabilityZonesE(t testing.TestingT, region string) ([]string, error) {
-	logger.Logf(t, "Looking up all availability zones available in this account for region %s", region)
+	logger.Default.Logf(t, "Looking up all availability zones available in this account for region %s", region)
 
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {

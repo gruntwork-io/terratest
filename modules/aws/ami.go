@@ -59,7 +59,7 @@ func GetEbsSnapshotsForAmi(t testing.TestingT, region string, ami string) []stri
 
 // GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI
 func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]string, error) {
-	logger.Logf(t, "Retrieving EBS snapshots backing AMI %s", ami)
+	logger.Default.Logf(t, "Retrieving EBS snapshots backing AMI %s", ami)
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err

@@ -126,7 +126,7 @@ func PutECRRepoLifecyclePolicy(t testing.TestingT, region string, repo *ecr.Repo
 
 // PutEcrRepoLifecyclePolicy puts the given policy for the given ECR repository.
 func PutECRRepoLifecyclePolicyE(t testing.TestingT, region string, repo *ecr.Repository, policy string) error {
-	logger.Logf(t, "Applying policy for repository %s in %s", *repo.RepositoryName, region)
+	logger.Default.Logf(t, "Applying policy for repository %s in %s", *repo.RepositoryName, region)
 
 	client, err := NewECRClientE(t, region)
 	if err != nil {

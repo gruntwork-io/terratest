@@ -33,7 +33,7 @@ func GetSyslogForInstanceE(t testing.TestingT, instanceID string, region string)
 	maxRetries := 120
 	timeBetweenRetries := 5 * time.Second
 
-	logger.Log(t, description)
+	logger.Default.Logf(t, "%s", description)
 
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
@@ -89,7 +89,7 @@ func GetSyslogForInstancesInAsg(t testing.TestingT, asgName string, awsRegion st
 // minute after the Instance boots and are very useful for debugging boot-time issues, such as an error in User Data.
 // Returns a map of Instance Id -> Syslog for that Instance.
 func GetSyslogForInstancesInAsgE(t testing.TestingT, asgName string, awsRegion string) (map[string]string, error) {
-	logger.Logf(t, "Fetching syslog for each Instance in ASG %s in %s", asgName, awsRegion)
+	logger.Default.Logf(t, "Fetching syslog for each Instance in ASG %s in %s", asgName, awsRegion)
 
 	instanceIDs, err := GetEc2InstanceIdsByTagE(t, awsRegion, "aws:autoscaling:groupName", asgName)
 	if err != nil {

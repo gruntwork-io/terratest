@@ -65,12 +65,12 @@ func DNSFindNameserversE(t testing.TestingT, fqdn string, resolvers []string) ([
 				nameservers = append(nameservers, strings.TrimSuffix(ns, "."))
 			}
 
-			logger.Logf(t, "FQDN %s belongs to domain %s, found NS record: %s", fqdn, domain, nameservers)
+			logger.Default.Logf(t, "FQDN %s belongs to domain %s, found NS record: %s", fqdn, domain, nameservers)
 			return nameservers, nil
 		}
 
 		if err != nil {
-			logger.Logf(t, err.Error())
+			logger.Default.Logf(t, err.Error())
 		}
 	}
 
@@ -309,7 +309,7 @@ func dnsLookup(t testing.TestingT, query DNSQuery, resolver string) (DNSAnswers,
 
 	in, _, err := c.Exchange(m, resolver)
 	if err != nil {
-		logger.Logf(t, "Error sending DNS query %s: %s", query, err)
+		logger.Default.Logf(t, "Error sending DNS query %s: %s", query, err)
 		return nil, err
 	}
 

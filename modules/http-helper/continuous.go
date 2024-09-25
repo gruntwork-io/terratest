@@ -33,7 +33,7 @@ func ContinuouslyCheckUrl(
 		for {
 			select {
 			case <-stopChecking:
-				logger.Logf(t, "Got signal to stop downtime checks for URL %s.\n", url)
+				logger.Default.Logf(t, "Got signal to stop downtime checks for URL %s.\n", url)
 				return
 			case <-time.After(sleepBetweenChecks):
 				statusCode, body, err := HttpGetE(t, url, &tls.Config{})
@@ -42,9 +42,9 @@ func ContinuouslyCheckUrl(
 				case responses <- GetResponse{StatusCode: statusCode, Body: body}:
 					// do nothing since all we want to do is send the response
 				default:
-					logger.Logf(t, "WARNING: ContinuouslyCheckUrl responses channel buffer is full")
+					logger.Default.Logf(t, "WARNING: ContinuouslyCheckUrl responses channel buffer is full")
 				}
-				logger.Logf(t, "Got response %d and err %v from URL at %s", statusCode, err, url)
+				logger.Default.Logf(t, "Got response %d and err %v from URL at %s", statusCode, err, url)
 				if err != nil {
 					// We use Errorf instead of Fatalf here because Fatalf is not goroutine safe, while Errorf is. Refer
 					// to the docs on `T`: https://godoc.org/testing#T

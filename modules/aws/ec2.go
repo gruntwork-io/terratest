@@ -268,7 +268,7 @@ func DeleteAmi(t testing.TestingT, region string, imageID string) {
 
 // DeleteAmiE deletes the given AMI in the given region.
 func DeleteAmiE(t testing.TestingT, region string, imageID string) error {
-	logger.Logf(t, "Deregistering AMI %s", imageID)
+	logger.Default.Logf(t, "Deregistering AMI %s", imageID)
 
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
@@ -314,7 +314,7 @@ func TerminateInstance(t testing.TestingT, region string, instanceID string) {
 
 // TerminateInstanceE terminates the EC2 instance with the given ID in the given region.
 func TerminateInstanceE(t testing.TestingT, region string, instanceID string) error {
-	logger.Logf(t, "Terminating Instance %s", instanceID)
+	logger.Default.Logf(t, "Terminating Instance %s", instanceID)
 
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {

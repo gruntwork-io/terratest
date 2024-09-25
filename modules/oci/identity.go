@@ -27,7 +27,7 @@ func GetRandomAvailabilityDomain(t testing.TestingT, compartmentID string) strin
 func GetRandomAvailabilityDomainE(t testing.TestingT, compartmentID string) (string, error) {
 	adFromEnvVar := os.Getenv(availabilityDomainEnvVar)
 	if adFromEnvVar != "" {
-		logger.Logf(t, "Using availability domain %s from environment variable %s", adFromEnvVar, availabilityDomainEnvVar)
+		logger.Default.Logf(t, "Using availability domain %s from environment variable %s", adFromEnvVar, availabilityDomainEnvVar)
 		return adFromEnvVar, nil
 	}
 
@@ -38,7 +38,7 @@ func GetRandomAvailabilityDomainE(t testing.TestingT, compartmentID string) (str
 
 	ad := random.RandomString(allADs)
 
-	logger.Logf(t, "Using availability domain %s", ad)
+	logger.Default.Logf(t, "Using availability domain %s", ad)
 	return ad, nil
 }
 

@@ -23,7 +23,7 @@ func CreateRandomQueue(t testing.TestingT, awsRegion string, prefix string) stri
 
 // CreateRandomQueueE creates a new SQS queue with a random name that starts with the given prefix and return the queue URL.
 func CreateRandomQueueE(t testing.TestingT, awsRegion string, prefix string) (string, error) {
-	logger.Logf(t, "Creating randomly named SQS queue with prefix %s", prefix)
+	logger.Default.Logf(t, "Creating randomly named SQS queue with prefix %s", prefix)
 
 	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
@@ -59,7 +59,7 @@ func CreateRandomFifoQueue(t testing.TestingT, awsRegion string, prefix string) 
 
 // CreateRandomFifoQueueE creates a new FIFO SQS queue with a random name that starts with the given prefix and return the queue URL.
 func CreateRandomFifoQueueE(t testing.TestingT, awsRegion string, prefix string) (string, error) {
-	logger.Logf(t, "Creating randomly named FIFO SQS queue with prefix %s", prefix)
+	logger.Default.Logf(t, "Creating randomly named FIFO SQS queue with prefix %s", prefix)
 
 	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
@@ -98,7 +98,7 @@ func DeleteQueue(t testing.TestingT, awsRegion string, queueURL string) {
 
 // DeleteQueueE deletes the SQS queue with the given URL.
 func DeleteQueueE(t testing.TestingT, awsRegion string, queueURL string) error {
-	logger.Logf(t, "Deleting SQS Queue %s", queueURL)
+	logger.Default.Logf(t, "Deleting SQS Queue %s", queueURL)
 
 	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
@@ -122,7 +122,7 @@ func DeleteMessageFromQueue(t testing.TestingT, awsRegion string, queueURL strin
 
 // DeleteMessageFromQueueE deletes the message with the given receipt from the SQS queue with the given URL.
 func DeleteMessageFromQueueE(t testing.TestingT, awsRegion string, queueURL string, receipt string) error {
-	logger.Logf(t, "Deleting message from queue %s (%s)", queueURL, receipt)
+	logger.Default.Logf(t, "Deleting message from queue %s (%s)", queueURL, receipt)
 
 	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
@@ -147,7 +147,7 @@ func SendMessageToQueue(t testing.TestingT, awsRegion string, queueURL string, m
 
 // SendMessageToQueueE sends the given message to the SQS queue with the given URL.
 func SendMessageToQueueE(t testing.TestingT, awsRegion string, queueURL string, message string) error {
-	logger.Logf(t, "Sending message %s to queue %s", message, queueURL)
+	logger.Default.Logf(t, "Sending message %s to queue %s", message, queueURL)
 
 	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
@@ -161,13 +161,13 @@ func SendMessageToQueueE(t testing.TestingT, awsRegion string, queueURL string, 
 
 	if err != nil {
 		if strings.Contains(err.Error(), "AWS.SimpleQueueService.NonExistentQueue") {
-			logger.Logf(t, fmt.Sprintf("WARN: Client has stopped listening on queue %s", queueURL))
+			logger.Default.Logf(t, fmt.Sprintf("WARN: Client has stopped listening on queue %s", queueURL))
 			return nil
 		}
 		return err
 	}
 
-	logger.Logf(t, "Message id %s sent to queue %s", aws.StringValue(res.MessageId), queueURL)
+	logger.Default.Logf(t, "Message id %s sent to queue %s", aws.StringValue(res.MessageId), queueURL)
 
 	return nil
 }
@@ -182,7 +182,7 @@ func SendMessageFifoToQueue(t testing.TestingT, awsRegion string, queueURL strin
 
 // SendMessageToFifoQueueE sends the given message to the FIFO SQS queue with the given URL.
 func SendMessageToFifoQueueE(t testing.TestingT, awsRegion string, queueURL string, message string, messageGroupID string) error {
-	logger.Logf(t, "Sending message %s to queue %s", message, queueURL)
+	logger.Default.Logf(t, "Sending message %s to queue %s", message, queueURL)
 
 	sqsClient, err := NewSqsClientE(t, awsRegion)
 	if err != nil {
@@ -197,13 +197,13 @@ func SendMessageToFifoQueueE(t testing.TestingT, awsRegion string, queueURL stri
 
 	if err != nil {
 		if strings.Contains(err.Error(), "AWS.SimpleQueueService.NonExistentQueue") {
-			logger.Logf(t, fmt.Sprintf("WARN: Client has stopped listening on queue %s", queueURL))
+			logger.Default.Logf(t, fmt.Sprintf("WARN: Client has stopped listening on queue %s", queueURL))
 			return nil
 		}
 		return err
 	}
 
-	logger.Logf(t, "Message id %s sent to queue %s", aws.StringValue(res.MessageId), queueURL)
+	logger.Default.Logf(t, "Message id %s sent to queue %s", aws.StringValue(res.MessageId), queueURL)
 
 	return nil
 }
@@ -231,7 +231,7 @@ func WaitForQueueMessage(t testing.TestingT, awsRegion string, queueURL string, 
 	}
 
 	for i := 0; i < cycles; i++ {
-		logger.Logf(t, "Waiting for message on %s (%ss)", queueURL, strconv.Itoa(i*cycleLength))
+		logger.Default.Logf(t, "Waiting for message on %s (%ss)", queueURL, strconv.Itoa(i*cycleLength))
 		result, err := sqsClient.ReceiveMessage(&sqs.ReceiveMessageInput{
 			QueueUrl:              aws.String(queueURL),
 			AttributeNames:        aws.StringSlice([]string{"SentTimestamp"}),
@@ -245,7 +245,7 @@ func WaitForQueueMessage(t testing.TestingT, awsRegion string, queueURL string, 
 		}
 
 		if len(result.Messages) > 0 {
-			logger.Logf(t, "Message %s received on %s", *result.Messages[0].MessageId, queueURL)
+			logger.Default.Logf(t, "Message %s received on %s", *result.Messages[0].MessageId, queueURL)
 			return QueueMessageResponse{ReceiptHandle: *result.Messages[0].ReceiptHandle, MessageBody: *result.Messages[0].Body}
 		}
 	}

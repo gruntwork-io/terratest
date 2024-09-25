@@ -186,7 +186,7 @@ func CheckSsmCommandWithDocument(t testing.TestingT, awsRegion, instanceID, comm
 
 // CheckSsmCommandWithDocumentE checks that you can run the given command on the given instance through AWS SSM with specified Command Doc type. Returns the result and an error if one occurs.
 func CheckSsmCommandWithDocumentE(t testing.TestingT, awsRegion, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
-	logger.Logf(t, "Running command '%s' on EC2 instance with ID '%s'", command, instanceID)
+	logger.Default.Logf(t, "Running command '%s' on EC2 instance with ID '%s'", command, instanceID)
 
 	// Now that we know the instance in the SSM inventory, we can send the command
 	client, err := NewSsmClientE(t, awsRegion)

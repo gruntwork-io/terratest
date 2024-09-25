@@ -17,7 +17,7 @@ func CreateSecretStringWithDefaultKey(t testing.TestingT, awsRegion, description
 
 // CreateSecretStringWithDefaultKeyE creates a new secret in Secrets Manager using the default "aws/secretsmanager" KMS key and returns the secret ARN
 func CreateSecretStringWithDefaultKeyE(t testing.TestingT, awsRegion, description, name, secretString string) (string, error) {
-	logger.Logf(t, "Creating new secret in secrets manager named %s", name)
+	logger.Default.Logf(t, "Creating new secret in secrets manager named %s", name)
 
 	client := NewSecretsManagerClient(t, awsRegion)
 
@@ -43,7 +43,7 @@ func GetSecretValue(t testing.TestingT, awsRegion, id string) string {
 
 // GetSecretValueE takes the friendly name or ARN of a secret and returns the plaintext value
 func GetSecretValueE(t testing.TestingT, awsRegion, id string) (string, error) {
-	logger.Logf(t, "Getting value of secret with ID %s", id)
+	logger.Default.Logf(t, "Getting value of secret with ID %s", id)
 
 	client := NewSecretsManagerClient(t, awsRegion)
 
@@ -65,7 +65,7 @@ func DeleteSecret(t testing.TestingT, awsRegion, id string, forceDelete bool) {
 
 // DeleteSecretE deletes a secret. If forceDelete is true, the secret will be deleted after a short delay. If forceDelete is false, the secret will be deleted after a 30 day recovery window.
 func DeleteSecretE(t testing.TestingT, awsRegion, id string, forceDelete bool) error {
-	logger.Logf(t, "Deleting secret with ID %s", id)
+	logger.Default.Logf(t, "Deleting secret with ID %s", id)
 
 	client := NewSecretsManagerClient(t, awsRegion)
 

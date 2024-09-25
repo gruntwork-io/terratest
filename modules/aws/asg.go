@@ -120,7 +120,7 @@ func WaitForCapacityE(
 			return fmt.Sprintf("ASG %s is now at desired capacity %d", asgName, capacityInfo.DesiredCapacity), nil
 		},
 	)
-	logger.Log(t, msg)
+	logger.Default.Logf(t, "%s", msg)
 	return err
 }
 

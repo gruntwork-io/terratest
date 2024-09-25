@@ -45,7 +45,7 @@ func ImportEC2KeyPair(t testing.TestingT, region string, name string, keyPair *s
 
 // ImportEC2KeyPairE creates a Key Pair in EC2 by importing an existing public key.
 func ImportEC2KeyPairE(t testing.TestingT, region string, name string, keyPair *ssh.KeyPair) (*Ec2Keypair, error) {
-	logger.Logf(t, "Creating new Key Pair in EC2 region %s named %s", region, name)
+	logger.Default.Logf(t, "Creating new Key Pair in EC2 region %s named %s", region, name)
 
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
@@ -75,7 +75,7 @@ func DeleteEC2KeyPair(t testing.TestingT, keyPair *Ec2Keypair) {
 
 // DeleteEC2KeyPairE deletes an EC2 key pair.
 func DeleteEC2KeyPairE(t testing.TestingT, keyPair *Ec2Keypair) error {
-	logger.Logf(t, "Deleting Key Pair in EC2 region %s named %s", keyPair.Region, keyPair.Name)
+	logger.Default.Logf(t, "Deleting Key Pair in EC2 region %s named %s", keyPair.Region, keyPair.Name)
 
 	client, err := NewEc2ClientE(t, keyPair.Region)
 	if err != nil {
