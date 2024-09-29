@@ -1,6 +1,8 @@
 package helm
 
 import (
+	"slices"
+
 	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -66,7 +68,10 @@ func RunHelmCommandAndGetStdOutE(t testing.TestingT, options *Options, cmd strin
 func prepareHelmCommand(t testing.TestingT, options *Options, cmd string, additionalArgs ...string) shell.Command {
 	args := []string{cmd}
 	args = getCommonArgs(options, args...)
-	args = append(args, getNamespaceArgs(options)...)
+	// name space arg only append if it is not there
+	if !slices.Contains(additionalArgs, "--namespace") {
+		args = append(args, getNamespaceArgs(options)...)
+	}
 	args = append(args, additionalArgs...)
 
 	helmCmd := shell.Command{
