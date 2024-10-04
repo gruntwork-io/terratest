@@ -2,15 +2,16 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +52,7 @@ func TestAssertS3BucketExistsNoFalsePositive(t *testing.T) {
 	logger.Logf(t, "Random values selected. Region = %s, s3BucketName = %s\n", region, s3BucketName)
 
 	// We elect not to create the S3 bucket to confirm that our function correctly reports it doesn't exist.
-	//aws.CreateS3Bucket(region, s3BucketName)
+	// aws.CreateS3Bucket(region, s3BucketName)
 
 	err := AssertS3BucketExistsE(t, region, s3BucketName)
 	if err == nil {
@@ -76,8 +77,7 @@ func TestAssertS3BucketVersioningEnabled(t *testing.T) {
 func TestEmptyS3Bucket(t *testing.T) {
 	t.Parallel()
 
-	// region := GetRandomStableRegion(t, nil, nil)
-	region := "us-east-1"
+	region := GetRandomStableRegion(t, nil, nil)
 	id := random.UniqueId()
 	logger.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 
@@ -114,13 +114,13 @@ func TestEmptyS3BucketVersioned(t *testing.T) {
 
 	versionInput := &s3.PutBucketVersioningInput{
 		Bucket: aws.String(s3BucketName),
-		VersioningConfiguration: &s3.VersioningConfiguration{
-			MFADelete: aws.String("Disabled"),
-			Status:    aws.String("Enabled"),
+		VersioningConfiguration: &types.VersioningConfiguration{
+			MFADelete: types.MFADeleteDisabled,
+			Status:    types.BucketVersioningStatusEnabled,
 		},
 	}
 
-	_, err = s3Client.PutBucketVersioning(versionInput)
+	_, err = s3Client.PutBucketVersioning(context.Background(), versionInput)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,10 +163,10 @@ func TestGetS3BucketTags(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = s3Client.PutBucketTagging(&s3.PutBucketTaggingInput{
+	_, err = s3Client.PutBucketTagging(context.Background(), &s3.PutBucketTaggingInput{
 		Bucket: &s3BucketName,
-		Tagging: &s3.Tagging{
-			TagSet: []*s3.Tag{
+		Tagging: &types.Tagging{
+			TagSet: []types.Tag{
 				{
 					Key:   aws.String("Key1"),
 					Value: aws.String("Value1"),
@@ -188,7 +188,7 @@ func TestGetS3BucketTags(t *testing.T) {
 	assert.True(t, actualTags["NonExistentKey"] == "")
 }
 
-func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName string) {
+func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketName string) {
 	expectedFileCount := rand.Intn(1000)
 	logger.Logf(t, "Uploading %s files to bucket %s", strconv.Itoa(expectedFileCount), s3BucketName)
 
@@ -199,7 +199,7 @@ func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName 
 		key := fmt.Sprintf("test-%s", strconv.Itoa(i))
 		body := strings.NewReader("This is the body")
 
-		params := &s3manager.UploadInput{
+		params := &s3.PutObjectInput{
 			Bucket: aws.String(s3BucketName),
 			Key:    &key,
 			Body:   body,
@@ -207,14 +207,14 @@ func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName 
 
 		uploader := NewS3Uploader(t, region)
 
-		_, err := uploader.Upload(params)
+		_, err := uploader.Upload(context.Background(), params)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Delete the first 10 files to be able to test if all files, including delete markers are deleted
 		if i < 10 {
-			_, err := s3Client.DeleteObject(&s3.DeleteObjectInput{
+			_, err := s3Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
 				Bucket: aws.String(s3BucketName),
 				Key:    aws.String(key),
 			})
@@ -239,7 +239,7 @@ func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName 
 	logger.Logf(t, "Verifying %s files were uploaded to bucket %s", strconv.Itoa(expectedFileCount), s3BucketName)
 	actualCount := 0
 	for {
-		bucketObjects, err := s3Client.ListObjectsV2(listObjectsParams)
+		bucketObjects, err := s3Client.ListObjectsV2(context.Background(), listObjectsParams)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -256,12 +256,12 @@ func testEmptyBucket(t *testing.T, s3Client *s3.S3, region string, s3BucketName 
 
 	require.Equal(t, expectedFileCount-deleted, actualCount)
 
-	//empty bucket
+	// empty bucket
 	logger.Logf(t, "Emptying bucket %s", s3BucketName)
 	EmptyS3Bucket(t, region, s3BucketName)
 
 	// verify the bucket is empty
-	bucketObjects, err := s3Client.ListObjectsV2(listObjectsParams)
+	bucketObjects, err := s3Client.ListObjectsV2(context.Background(), listObjectsParams)
 	if err != nil {
 		t.Fatal(err)
 	}

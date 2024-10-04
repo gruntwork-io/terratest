@@ -1,11 +1,12 @@
 package aws
 
 import (
+	"context"
 	"errors"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -26,12 +27,12 @@ func GetAccountIdE(t testing.TestingT) (string, error) {
 		return "", err
 	}
 
-	identity, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	identity, err := stsClient.GetCallerIdentity(context.Background(), &sts.GetCallerIdentityInput{})
 	if err != nil {
 		return "", err
 	}
 
-	return aws.StringValue(identity.Account), nil
+	return aws.ToString(identity.Account), nil
 }
 
 // An IAM arn is of the format arn:aws:iam::123456789012:user/test. The account id is the number after arn:aws:iam::,
@@ -47,10 +48,10 @@ func extractAccountIDFromARN(arn string) (string, error) {
 }
 
 // NewStsClientE creates a new STS client.
-func NewStsClientE(t testing.TestingT, region string) (*sts.STS, error) {
+func NewStsClientE(t testing.TestingT, region string) (*sts.Client, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
-	return sts.New(sess), nil
+	return sts.NewFromConfig(*sess), nil
 }

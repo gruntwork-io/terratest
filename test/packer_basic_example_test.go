@@ -1,13 +1,15 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	terratest_aws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/packer"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -110,7 +112,7 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 		// The path to where the Packer template is located
 		Template: "../examples/packer-basic-example/build.pkr.hcl",
 
-		// Variable file to to pass to our Packer build using -var-file option
+		// Variable file to pass to our Packer build using -var-file option
 		VarFiles: []string{
 			varFile.Name(),
 		},
@@ -196,35 +198,35 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 	}
 }
 
-func ShareAmi(t *testing.T, amiID string, accountID string, ec2Client *ec2.EC2) {
+func ShareAmi(t *testing.T, amiID string, accountID string, ec2Client *ec2.Client) {
 	input := &ec2.ModifyImageAttributeInput{
 		ImageId: aws.String(amiID),
-		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Add: []*ec2.LaunchPermission{
+		LaunchPermission: &types.LaunchPermissionModifications{
+			Add: []types.LaunchPermission{
 				{
 					UserId: aws.String(accountID),
 				},
 			},
 		},
 	}
-	_, err := ec2Client.ModifyImageAttribute(input)
+	_, err := ec2Client.ModifyImageAttribute(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func MakeAmiPublic(t *testing.T, amiID string, ec2Client *ec2.EC2) {
+func MakeAmiPublic(t *testing.T, amiID string, ec2Client *ec2.Client) {
 	input := &ec2.ModifyImageAttributeInput{
 		ImageId: aws.String(amiID),
-		LaunchPermission: &ec2.LaunchPermissionModifications{
-			Add: []*ec2.LaunchPermission{
+		LaunchPermission: &types.LaunchPermissionModifications{
+			Add: []types.LaunchPermission{
 				{
-					Group: aws.String("all"),
+					Group: types.PermissionGroupAll,
 				},
 			},
 		},
 	}
-	_, err := ec2Client.ModifyImageAttribute(input)
+	_, err := ec2Client.ModifyImageAttribute(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)
 	}
