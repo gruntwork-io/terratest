@@ -10,6 +10,17 @@ import (
 	"github.com/mattn/go-zglob"
 )
 
+// DefaultPathFilter is the default filter used by CopyTerraformFolderToDest to determine which files to copy.
+func DefaultPathFilter(path string) bool {
+	if PathIsTerraformVersionFile(path) || PathIsTerraformLockFile(path) {
+		return true
+	}
+	if PathContainsHiddenFileOrFolder(path) || PathContainsTerraformStateOrVars(path) {
+		return false
+	}
+	return true
+}
+
 // FileExists returns true if the given file exists.
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
@@ -38,6 +49,20 @@ func IsExistingDir(path string) bool {
 	return err == nil && fileInfo.IsDir()
 }
 
+// CopyTerraformFolderToDestWithFilter creates a copy of the given folder and all its contents in a specified folder with a unique name and the given prefix.
+// This is useful when running multiple tests in parallel against the same set of Terraform files to ensure the
+// tests don't overwrite each other's .terraform working directory and terraform.tfstate files. This method returns
+// the path to the dest folder with the copied contents. You can configure which files you want to copy by passing in a filter function.
+// This method is useful when running through a build tool so the files are copied to a destination that is cleaned on each run of the pipeline.
+func CopyTerraformFolderToDestWithFilter(folderPath string, destRootFolder string, tempFolderPrefix string, filter func(string) bool) (string, error) {
+	destFolder, err := CopyFolderToDest(folderPath, destRootFolder, tempFolderPrefix, filter)
+	if err != nil {
+		return "", err
+	}
+
+	return destFolder, nil
+}
+
 // CopyTerraformFolderToDest creates a copy of the given folder and all its contents in a specified folder with a unique name and the given prefix.
 // This is useful when running multiple tests in parallel against the same set of Terraform files to ensure the
 // tests don't overwrite each other's .terraform working directory and terraform.tfstate files. This method returns
@@ -46,22 +71,12 @@ func IsExistingDir(path string) bool {
 // files, and terraform.tfvars files are not copied to this temp folder, as you typically don't want them interfering with your tests.
 // This method is useful when running through a build tool so the files are copied to a destination that is cleaned on each run of the pipeline.
 func CopyTerraformFolderToDest(folderPath string, destRootFolder string, tempFolderPrefix string) (string, error) {
-	filter := func(path string) bool {
-		if PathIsTerraformVersionFile(path) || PathIsTerraformLockFile(path) {
-			return true
-		}
-		if PathContainsHiddenFileOrFolder(path) || PathContainsTerraformStateOrVars(path) {
-			return false
-		}
-		return true
-	}
+	return CopyTerraformFolderToDestWithFilter(folderPath, destRootFolder, tempFolderPrefix, DefaultPathFilter)
+}
 
-	destFolder, err := CopyFolderToDest(folderPath, destRootFolder, tempFolderPrefix, filter)
-	if err != nil {
-		return "", err
-	}
-
-	return destFolder, nil
+// CopyTerraformFolderToTempWithFilter calls CopyTerraformFolderToDestWithFilter, passing os.TempDir() as the root destination folder.
+func CopyTerraformFolderToTempWithFilter(folderPath string, tempFolderPrefix string, filter func(string) bool) (string, error) {
+	return CopyTerraformFolderToDestWithFilter(folderPath, os.TempDir(), tempFolderPrefix, filter)
 }
 
 // CopyTerraformFolderToTemp calls CopyTerraformFolderToDest, passing os.TempDir() as the root destination folder.
