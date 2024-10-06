@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app
+spec:
+  selector:
+    matchLabels:
+      app: test-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+        - name: app
+          image: busybox
+          command:
+            ["/bin/sh", "-c", "touch /tmp/healthy;for i in `seq 1 3`; do echo ${i} sleeping 1 sec; sleep 1; done; rm /tmp/healthy; sleep 1000"]
+          readinessProbe:
+            exec:
+              command:
+                - cat
+                - /tmp/healthy
+            periodSeconds: 1
+            initialDelaySeconds: 1
+
