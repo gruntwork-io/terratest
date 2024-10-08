@@ -90,6 +90,27 @@ func CreateVirtualMachinesClientE(subscriptionID string) (*compute.VirtualMachin
 	return &vmClient, nil
 }
 
+// CreateVirtualMachineScaleSetsClientE returns a virtual machine scale sets client instance configured with the correct
+// BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+func CreateVirtualMachineScaleSetsClientE(subscriptionID string) (*compute.VirtualMachineScaleSetsClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create correct client based on type passed
+	vmssClient := compute.NewVirtualMachineScaleSetsClientWithBaseURI(baseURI, subscriptionID)
+
+	return &vmssClient, nil
+}
+
 // snippet-tag-end::client_factory_example.CreateClient
 
 // CreateManagedClustersClientE returns a virtual machines client instance configured with the correct BaseURI depending on
