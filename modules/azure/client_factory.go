@@ -16,6 +16,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/privatedns/mgmt/privatedns"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
@@ -168,7 +169,7 @@ func CreateKeyVaultManagementClientE(subscriptionID string) (*kvmng.VaultsClient
 		return nil, err
 	}
 
-	//create keyvault management clinet
+	// create keyvault management clinet
 	vaultClient := kvmng.NewVaultsClientWithBaseURI(baseURI, subscriptionID)
 
 	return &vaultClient, nil
@@ -212,7 +213,6 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 
 	blobContainerClient := storage.NewBlobContainersClientWithBaseURI(baseURI, subscriptionID)
 	authorizer, err := NewAuthorizer()
-
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,6 @@ func CreateStorageFileSharesClientE(subscriptionID string) (*storage.FileSharesC
 
 	fileShareClient := storage.NewFileSharesClientWithBaseURI(baseURI, subscriptionID)
 	authorizer, err := NewAuthorizer()
-
 	if err != nil {
 		return nil, err
 	}
@@ -685,7 +684,7 @@ func CreateLoadBalancerClientE(subscriptionID string) (*network.LoadBalancersCli
 		return nil, err
 	}
 
-	//create LB client
+	// create LB client
 	client := network.NewLoadBalancersClientWithBaseURI(baseURI, subscriptionID)
 	return &client, nil
 }
@@ -733,7 +732,6 @@ func CreateNewVirtualNetworkClientE(subscriptionID string) (*network.VirtualNetw
 // CreateAppServiceClientE returns an App service client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
 func CreateAppServiceClientE(subscriptionID string) (*web.AppsClient, error) {
-
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -754,7 +752,6 @@ func CreateAppServiceClientE(subscriptionID string) (*web.AppsClient, error) {
 // CreateContainerRegistryClientE returns an ACR client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
 func CreateContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
-
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -917,6 +914,35 @@ func CreateDataFactoriesClientE(subscriptionID string) (*datafactory.FactoriesCl
 	dataFactoryClient.Authorizer = *authorizer
 
 	return &dataFactoryClient, nil
+}
+
+// CreatePrivateDnsZonesClientE is a helper function that will setup a private DNS zone client.
+func CreatePrivateDnsZonesClientE(subscriptionID string) (*privatedns.PrivateZonesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a private DNS zone client
+	privateZonesClient := privatedns.NewPrivateZonesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	privateZonesClient.Authorizer = *authorizer
+
+	return &privateZonesClient, nil
 }
 
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
