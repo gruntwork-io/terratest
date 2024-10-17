@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 
-	awsSDK "github.com/aws/aws-sdk-go/aws"
+	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,18 +49,18 @@ func TestTerraformAwsEcsExample(t *testing.T) {
 	// Look up the ECS cluster by name
 	cluster := aws.GetEcsCluster(t, awsRegion, expectedClusterName)
 
-	assert.Equal(t, int64(1), awsSDK.Int64Value(cluster.ActiveServicesCount))
+	assert.Equal(t, int32(1), cluster.ActiveServicesCount)
 
 	// Look up the ECS service by name
 	service := aws.GetEcsService(t, awsRegion, expectedClusterName, expectedServiceName)
 
-	assert.Equal(t, int64(0), awsSDK.Int64Value(service.DesiredCount))
-	assert.Equal(t, "FARGATE", awsSDK.StringValue(service.LaunchType))
+	assert.Equal(t, int32(0), service.DesiredCount)
+	assert.Equal(t, types.LaunchTypeFargate, service.LaunchType)
 
 	// Look up the ECS task definition by ARN
 	task := aws.GetEcsTaskDefinition(t, awsRegion, taskDefinition)
 
-	assert.Equal(t, "256", awsSDK.StringValue(task.Cpu))
-	assert.Equal(t, "512", awsSDK.StringValue(task.Memory))
-	assert.Equal(t, "awsvpc", awsSDK.StringValue(task.NetworkMode))
+	assert.Equal(t, "256", awsSDK.ToString(task.Cpu))
+	assert.Equal(t, "512", awsSDK.ToString(task.Memory))
+	assert.Equal(t, types.NetworkModeAwsvpc, task.NetworkMode)
 }

@@ -1,13 +1,15 @@
 package aws
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
 func TestGetDefaultVpc(t *testing.T) {
@@ -42,8 +44,8 @@ func TestGetVpcsE(t *testing.T) {
 	isDefaultFilterName := "isDefault"
 	isDefaultFilterValue := "true"
 
-	defaultVpcFilter := ec2.Filter{Name: &isDefaultFilterName, Values: []*string{&isDefaultFilterValue}}
-	vpcs, _ := GetVpcsE(t, []*ec2.Filter{&defaultVpcFilter}, region)
+	defaultVpcFilter := types.Filter{Name: &isDefaultFilterName, Values: []string{isDefaultFilterValue}}
+	vpcs, _ := GetVpcsE(t, []types.Filter{defaultVpcFilter}, region)
 
 	require.Equal(t, len(vpcs), 1)
 	assert.NotEmpty(t, vpcs[0].Name)
@@ -164,7 +166,7 @@ func TestGetDefaultAzSubnets(t *testing.T) {
 	vpc := GetDefaultVpc(t, region)
 
 	// Note: cannot know exact list of default azs aheard of time, but we know that
-	//it must be greater than 0 for default vpc.
+	// it must be greater than 0 for default vpc.
 	subnets := GetAzDefaultSubnetsForVpc(t, vpc.Id, region)
 	assert.NotZero(t, len(subnets))
 }
@@ -172,16 +174,16 @@ func TestGetDefaultAzSubnets(t *testing.T) {
 func createPublicRoute(t *testing.T, vpcId string, routeTableId string, region string) {
 	ec2Client := NewEc2Client(t, region)
 
-	createIGWOut, igerr := ec2Client.CreateInternetGateway(&ec2.CreateInternetGatewayInput{})
+	createIGWOut, igerr := ec2Client.CreateInternetGateway(context.Background(), &ec2.CreateInternetGatewayInput{})
 	require.NoError(t, igerr)
 
-	_, aigerr := ec2Client.AttachInternetGateway(&ec2.AttachInternetGatewayInput{
+	_, aigerr := ec2Client.AttachInternetGateway(context.Background(), &ec2.AttachInternetGatewayInput{
 		InternetGatewayId: createIGWOut.InternetGateway.InternetGatewayId,
 		VpcId:             aws.String(vpcId),
 	})
 	require.NoError(t, aigerr)
 
-	_, err := ec2Client.CreateRoute(&ec2.CreateRouteInput{
+	_, err := ec2Client.CreateRoute(context.Background(), &ec2.CreateRouteInput{
 		RouteTableId:         aws.String(routeTableId),
 		DestinationCidrBlock: aws.String("0.0.0.0/0"),
 		GatewayId:            createIGWOut.InternetGateway.InternetGatewayId,
@@ -190,10 +192,10 @@ func createPublicRoute(t *testing.T, vpcId string, routeTableId string, region s
 	require.NoError(t, err)
 }
 
-func createRouteTable(t *testing.T, vpcId string, region string) ec2.RouteTable {
+func createRouteTable(t *testing.T, vpcId string, region string) types.RouteTable {
 	ec2Client := NewEc2Client(t, region)
 
-	createRouteTableOutput, err := ec2Client.CreateRouteTable(&ec2.CreateRouteTableInput{
+	createRouteTableOutput, err := ec2Client.CreateRouteTable(context.Background(), &ec2.CreateRouteTableInput{
 		VpcId: aws.String(vpcId),
 	})
 
@@ -201,16 +203,16 @@ func createRouteTable(t *testing.T, vpcId string, region string) ec2.RouteTable 
 	return *createRouteTableOutput.RouteTable
 }
 
-func createSubnet(t *testing.T, vpcId string, routeTableId string, region string) ec2.Subnet {
+func createSubnet(t *testing.T, vpcId string, routeTableId string, region string) types.Subnet {
 	ec2Client := NewEc2Client(t, region)
 
-	createSubnetOutput, err := ec2Client.CreateSubnet(&ec2.CreateSubnetInput{
+	createSubnetOutput, err := ec2Client.CreateSubnet(context.Background(), &ec2.CreateSubnetInput{
 		CidrBlock: aws.String("10.10.1.0/24"),
 		VpcId:     aws.String(vpcId),
 	})
 	require.NoError(t, err)
 
-	_, err = ec2Client.AssociateRouteTable(&ec2.AssociateRouteTableInput{
+	_, err = ec2Client.AssociateRouteTable(context.Background(), &ec2.AssociateRouteTableInput{
 		RouteTableId: aws.String(routeTableId),
 		SubnetId:     aws.String(*createSubnetOutput.Subnet.SubnetId),
 	})
@@ -219,10 +221,10 @@ func createSubnet(t *testing.T, vpcId string, routeTableId string, region string
 	return *createSubnetOutput.Subnet
 }
 
-func createVpc(t *testing.T, region string) ec2.Vpc {
+func createVpc(t *testing.T, region string) types.Vpc {
 	ec2Client := NewEc2Client(t, region)
 
-	createVpcOutput, err := ec2Client.CreateVpc(&ec2.CreateVpcInput{
+	createVpcOutput, err := ec2Client.CreateVpc(context.Background(), &ec2.CreateVpcInput{
 		CidrBlock: aws.String("10.10.0.0/16"),
 	})
 
@@ -234,29 +236,29 @@ func deleteRouteTables(t *testing.T, vpcId string, region string) {
 	ec2Client := NewEc2Client(t, region)
 
 	vpcIDFilterName := "vpc-id"
-	vpcIDFilter := ec2.Filter{Name: &vpcIDFilterName, Values: []*string{&vpcId}}
+	vpcIDFilter := types.Filter{Name: &vpcIDFilterName, Values: []string{vpcId}}
 
 	// "You can't delete the main route table."
 	mainRTFilterName := "association.main"
 	mainRTFilterValue := "false"
-	notMainRTFilter := ec2.Filter{Name: &mainRTFilterName, Values: []*string{&mainRTFilterValue}}
+	notMainRTFilter := types.Filter{Name: &mainRTFilterName, Values: []string{mainRTFilterValue}}
 
-	filters := []*ec2.Filter{&vpcIDFilter, &notMainRTFilter}
+	filters := []types.Filter{vpcIDFilter, notMainRTFilter}
 
-	rtOutput, err := ec2Client.DescribeRouteTables(&ec2.DescribeRouteTablesInput{Filters: filters})
+	rtOutput, err := ec2Client.DescribeRouteTables(context.Background(), &ec2.DescribeRouteTablesInput{Filters: filters})
 	require.NoError(t, err)
 
 	for _, rt := range rtOutput.RouteTables {
 
 		// "You must disassociate the route table from any subnets before you can delete it."
 		for _, assoc := range rt.Associations {
-			_, disassocErr := ec2Client.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
+			_, disassocErr := ec2Client.DisassociateRouteTable(context.Background(), &ec2.DisassociateRouteTableInput{
 				AssociationId: assoc.RouteTableAssociationId,
 			})
 			require.NoError(t, disassocErr)
 		}
 
-		_, err := ec2Client.DeleteRouteTable(&ec2.DeleteRouteTableInput{
+		_, err := ec2Client.DeleteRouteTable(context.Background(), &ec2.DeleteRouteTableInput{
 			RouteTableId: rt.RouteTableId,
 		})
 		require.NoError(t, err)
@@ -266,13 +268,13 @@ func deleteRouteTables(t *testing.T, vpcId string, region string) {
 func deleteSubnets(t *testing.T, vpcId string, region string) {
 	ec2Client := NewEc2Client(t, region)
 	vpcIDFilterName := "vpc-id"
-	vpcIDFilter := ec2.Filter{Name: &vpcIDFilterName, Values: []*string{&vpcId}}
+	vpcIDFilter := types.Filter{Name: &vpcIDFilterName, Values: []string{vpcId}}
 
-	subnetsOutput, err := ec2Client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: []*ec2.Filter{&vpcIDFilter}})
+	subnetsOutput, err := ec2Client.DescribeSubnets(context.Background(), &ec2.DescribeSubnetsInput{Filters: []types.Filter{vpcIDFilter}})
 	require.NoError(t, err)
 
 	for _, subnet := range subnetsOutput.Subnets {
-		_, err := ec2Client.DeleteSubnet(&ec2.DeleteSubnetInput{
+		_, err := ec2Client.DeleteSubnet(context.Background(), &ec2.DeleteSubnetInput{
 			SubnetId: subnet.SubnetId,
 		})
 		require.NoError(t, err)
@@ -282,20 +284,20 @@ func deleteSubnets(t *testing.T, vpcId string, region string) {
 func deleteInternetGateways(t *testing.T, vpcId string, region string) {
 	ec2Client := NewEc2Client(t, region)
 	vpcIDFilterName := "attachment.vpc-id"
-	vpcIDFilter := ec2.Filter{Name: &vpcIDFilterName, Values: []*string{&vpcId}}
+	vpcIDFilter := types.Filter{Name: &vpcIDFilterName, Values: []string{vpcId}}
 
-	igwOutput, err := ec2Client.DescribeInternetGateways(&ec2.DescribeInternetGatewaysInput{Filters: []*ec2.Filter{&vpcIDFilter}})
+	igwOutput, err := ec2Client.DescribeInternetGateways(context.Background(), &ec2.DescribeInternetGatewaysInput{Filters: []types.Filter{vpcIDFilter}})
 	require.NoError(t, err)
 
 	for _, igw := range igwOutput.InternetGateways {
 
-		_, detachErr := ec2Client.DetachInternetGateway(&ec2.DetachInternetGatewayInput{
+		_, detachErr := ec2Client.DetachInternetGateway(context.Background(), &ec2.DetachInternetGatewayInput{
 			InternetGatewayId: igw.InternetGatewayId,
 			VpcId:             aws.String(vpcId),
 		})
 		require.NoError(t, detachErr)
 
-		_, err := ec2Client.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
+		_, err := ec2Client.DeleteInternetGateway(context.Background(), &ec2.DeleteInternetGatewayInput{
 			InternetGatewayId: igw.InternetGatewayId,
 		})
 		require.NoError(t, err)
@@ -309,7 +311,7 @@ func deleteVpc(t *testing.T, vpcId string, region string) {
 	deleteSubnets(t, vpcId, region)
 	deleteInternetGateways(t, vpcId, region)
 
-	_, err := ec2Client.DeleteVpc(&ec2.DeleteVpcInput{
+	_, err := ec2Client.DeleteVpc(context.Background(), &ec2.DeleteVpcInput{
 		VpcId: aws.String(vpcId),
 	})
 	require.NoError(t, err)
