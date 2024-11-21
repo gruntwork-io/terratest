@@ -19,7 +19,7 @@ func Login(t testing.TestingT, opt LoginOptions) {
 	require.NoError(t, LoginE(t, opt))
 }
 
-// login runs the 'docker login' command to login the given registry.
+// LoginE runs the 'docker login' command to login the given registry.
 func LoginE(t testing.TestingT, opt LoginOptions) error {
 	logger.Logf(t, "Running 'docker login' for user %s", opt.Login)
 
