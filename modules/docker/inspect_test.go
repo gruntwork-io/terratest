@@ -63,7 +63,7 @@ func TestInspectWithRandomExposedPort(t *testing.T) {
 	var unexpectedPort uint16 = 1234
 	options := &RunOptions{
 		Detach:       true,
-		OtherOptions: []string{fmt.Sprintf("-P")},
+		OtherOptions: []string{"-P"},
 	}
 
 	id := RunAndGetID(t, dockerInspectTestImage, options)

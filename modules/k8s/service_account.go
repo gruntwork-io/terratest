@@ -12,7 +12,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -77,11 +76,11 @@ func GetServiceAccountAuthTokenE(t testing.TestingT, kubectlOptions *KubectlOpti
 		30,
 		10*time.Second,
 		func() (string, error) {
-			logger.Logf(t, "Checking if service account has secret")
+			kubectlOptions.Logger.Logf(t, "Checking if service account has secret")
 			serviceAccount := GetServiceAccount(t, kubectlOptions, serviceAccountName)
 			if len(serviceAccount.Secrets) == 0 {
 				msg := "No secrets on the service account yet"
-				logger.Logf(t, msg)
+				kubectlOptions.Logger.Logf(t, msg)
 				return "", fmt.Errorf(msg)
 			}
 			return "Service Account has secret", nil
@@ -90,7 +89,7 @@ func GetServiceAccountAuthTokenE(t testing.TestingT, kubectlOptions *KubectlOpti
 	if err != nil {
 		return "", err
 	}
-	logger.Logf(t, msg)
+	kubectlOptions.Logger.Logf(t, msg)
 
 	// Then get the service account token
 	serviceAccount, err := GetServiceAccountE(t, kubectlOptions, serviceAccountName)

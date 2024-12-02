@@ -8,7 +8,6 @@ import (
 	authv1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
@@ -35,7 +34,7 @@ func CanIDoE(t testing.TestingT, options *KubectlOptions, action authv1.Resource
 		return false, errors.WithStackTrace(err)
 	}
 	if !resp.Status.Allowed {
-		logger.Logf(t, "Denied action %s on resource %s with name '%s' for reason %s", action.Verb, action.Resource, action.Name, resp.Status.Reason)
+		options.Logger.Logf(t, "Denied action %s on resource %s with name '%s' for reason %s", action.Verb, action.Resource, action.Name, resp.Status.Reason)
 	}
 	return resp.Status.Allowed, nil
 }

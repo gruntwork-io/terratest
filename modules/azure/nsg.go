@@ -20,16 +20,20 @@ type NsgRuleSummaryList struct {
 // NsgRuleSummary is a string-based (non-pointer) summary of an NSG rule with several helper methods attached
 // to help with verification of rule configuratoin.
 type NsgRuleSummary struct {
-	Name                     string
-	Description              string
-	Protocol                 string
-	SourcePortRange          string
-	DestinationPortRange     string
-	SourceAddressPrefix      string
-	DestinationAddressPrefix string
-	Access                   string
-	Priority                 int32
-	Direction                string
+	Name                       string
+	Description                string
+	Protocol                   string
+	SourcePortRange            string
+	SourcePortRanges           []string
+	DestinationPortRange       string
+	DestinationPortRanges      []string
+	SourceAddressPrefix        string
+	SourceAdresssPrefixes      []string
+	DestinationAddressPrefix   string
+	DestinationAddressPrefixes []string
+	Access                     string
+	Priority                   int32
+	Direction                  string
 }
 
 // GetDefaultNsgRulesClient returns a rules client which can be used to read the list of *default* security rules
@@ -169,9 +173,13 @@ func convertToNsgRuleSummary(name *string, rule *network.SecurityRulePropertiesF
 	summary.Name = safePtrToString(name)
 	summary.Protocol = string(rule.Protocol)
 	summary.SourcePortRange = safePtrToString(rule.SourcePortRange)
+	summary.SourcePortRanges = safePtrToList(rule.SourcePortRanges)
 	summary.DestinationPortRange = safePtrToString(rule.DestinationPortRange)
+	summary.DestinationPortRanges = safePtrToList(rule.DestinationPortRanges)
 	summary.SourceAddressPrefix = safePtrToString(rule.SourceAddressPrefix)
+	summary.SourceAdresssPrefixes = safePtrToList(rule.SourceAddressPrefixes)
 	summary.DestinationAddressPrefix = safePtrToString(rule.DestinationAddressPrefix)
+	summary.DestinationAddressPrefixes = safePtrToList(rule.DestinationAddressPrefixes)
 	summary.Access = string(rule.Access)
 	summary.Priority = safePtrToInt32(rule.Priority)
 	summary.Direction = string(rule.Direction)

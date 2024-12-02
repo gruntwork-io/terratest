@@ -21,7 +21,7 @@ func CreateStorageBucket(t testing.TestingT, projectID string, name string, attr
 
 // CreateStorageBucketE creates a Google Cloud bucket with the given BucketAttrs. Note that Google Storage bucket names must be globally unique.
 func CreateStorageBucketE(t testing.TestingT, projectID string, name string, attr *storage.BucketAttrs) error {
-	logger.Logf(t, "Creating bucket %s", name)
+	logger.Default.Logf(t, "Creating bucket %s", name)
 
 	ctx := context.Background()
 
@@ -48,7 +48,7 @@ func DeleteStorageBucket(t testing.TestingT, name string) {
 
 // DeleteStorageBucketE destroys the S3 bucket in the given region with the given name.
 func DeleteStorageBucketE(t testing.TestingT, name string) error {
-	logger.Logf(t, "Deleting bucket %s", name)
+	logger.Default.Logf(t, "Deleting bucket %s", name)
 
 	ctx := context.Background()
 
@@ -71,7 +71,7 @@ func ReadBucketObject(t testing.TestingT, bucketName string, filePath string) io
 
 // ReadBucketObjectE reads an object from the given Storage Bucket and returns its contents.
 func ReadBucketObjectE(t testing.TestingT, bucketName string, filePath string) (io.Reader, error) {
-	logger.Logf(t, "Reading object from bucket %s using path %s", bucketName, filePath)
+	logger.Default.Logf(t, "Reading object from bucket %s using path %s", bucketName, filePath)
 
 	ctx := context.Background()
 
@@ -105,7 +105,7 @@ func WriteBucketObjectE(t testing.TestingT, bucketName string, filePath string, 
 		contentType = "application/octet-stream"
 	}
 
-	logger.Logf(t, "Writing object to bucket %s using path %s and content type %s", bucketName, filePath, contentType)
+	logger.Default.Logf(t, "Writing object to bucket %s using path %s and content type %s", bucketName, filePath, contentType)
 
 	ctx := context.Background()
 
@@ -143,7 +143,7 @@ func EmptyStorageBucket(t testing.TestingT, name string) {
 
 // EmptyStorageBucketE removes the contents of a storage bucket with the given name.
 func EmptyStorageBucketE(t testing.TestingT, name string) error {
-	logger.Logf(t, "Emptying storage bucket %s", name)
+	logger.Default.Logf(t, "Emptying storage bucket %s", name)
 
 	ctx := context.Background()
 
@@ -170,7 +170,7 @@ func EmptyStorageBucketE(t testing.TestingT, name string) error {
 		}
 
 		// purge the object
-		logger.Logf(t, "Deleting storage bucket object %s", objectAttrs.Name)
+		logger.Default.Logf(t, "Deleting storage bucket object %s", objectAttrs.Name)
 		bucket.Object(objectAttrs.Name).Delete(ctx)
 	}
 
@@ -187,7 +187,7 @@ func AssertStorageBucketExists(t testing.TestingT, name string) {
 
 // AssertStorageBucketExistsE checks if the given storage bucket exists and returns an error if it does not.
 func AssertStorageBucketExistsE(t testing.TestingT, name string) error {
-	logger.Logf(t, "Finding bucket %s", name)
+	logger.Default.Logf(t, "Finding bucket %s", name)
 
 	ctx := context.Background()
 

@@ -2,7 +2,6 @@ package opa
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,9 +52,9 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEqual(t, absPath, path)
 
-	localContents, err := ioutil.ReadFile(localPath)
+	localContents, err := os.ReadFile(localPath)
 	require.NoError(t, err)
-	remoteContents, err := ioutil.ReadFile(path)
+	remoteContents, err := os.ReadFile(path)
 	require.NoError(t, err)
 	assert.Equal(t, localContents, remoteContents)
 }

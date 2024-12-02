@@ -3,6 +3,7 @@ package k8s
 import (
 	"fmt"
 
+	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -59,6 +60,36 @@ type ServiceAccountTokenNotAvailable struct {
 // Error is a simple function to return a formatted error message as a string
 func (err ServiceAccountTokenNotAvailable) Error() string {
 	return fmt.Sprintf("ServiceAccount %s does not have a token yet.", err.Name)
+}
+
+// DeploymentNotAvailable is returned when a Kubernetes deployment is not yet available to accept traffic.
+type DeploymentNotAvailable struct {
+	deploy *appsv1.Deployment
+}
+
+// Error is a simple function to return a formatted error message as a string
+func (err DeploymentNotAvailable) Error() string {
+	dc := getDeploymentCondition(err.deploy, appsv1.DeploymentProgressing)
+	if dc == nil {
+		return fmt.Sprintf(
+			"Deployment %s is not available, missing '%s' condition",
+			err.deploy.Name,
+			appsv1.DeploymentProgressing,
+		)
+	}
+	return fmt.Sprintf(
+		"Deployment %s is not available as '%s' condition indicates that the Deployment is not complete, status: %v, reason: %s, message: %s",
+		err.deploy.Name,
+		appsv1.DeploymentProgressing,
+		dc.Status,
+		dc.Reason,
+		dc.Message,
+	)
+}
+
+// NewDeploymentNotAvailableError returnes a DeploymentNotAvailable struct when Kubernetes deems a deployment is not available
+func NewDeploymentNotAvailableError(deploy *appsv1.Deployment) DeploymentNotAvailable {
+	return DeploymentNotAvailable{deploy}
 }
 
 // PodNotAvailable is returned when a Kubernetes service is not yet available to accept traffic.
@@ -135,6 +166,38 @@ func (err UnknownServicePort) Error() string {
 // NewUnknownServicePortError returns an UnknownServicePort struct when it is deemed that Kuberenetes does not know of the provided Service Port
 func NewUnknownServicePortError(service *corev1.Service, port int32) UnknownServicePort {
 	return UnknownServicePort{service, port}
+}
+
+// PersistentVolumeNotInStatus is returned when a Kubernetes PersistentVolume is not in the expected status phase
+type PersistentVolumeNotInStatus struct {
+	pv            *corev1.PersistentVolume
+	pvStatusPhase *corev1.PersistentVolumePhase
+}
+
+// Error is a simple function to return a formatted error message as a string
+func (err PersistentVolumeNotInStatus) Error() string {
+	return fmt.Sprintf("Pv %s is not '%s'", err.pv.Name, *err.pvStatusPhase)
+}
+
+// NewPersistentVolumeNotInStatusError returns a PersistentVolumeNotInStatus struct when the given Persistent Volume is not in the expected status phase
+func NewPersistentVolumeNotInStatusError(pv *corev1.PersistentVolume, pvStatusPhase *corev1.PersistentVolumePhase) PersistentVolumeNotInStatus {
+	return PersistentVolumeNotInStatus{pv, pvStatusPhase}
+}
+
+// PersistentVolumeClaimNotInStatus is returned when a Kubernetes PersistentVolumeClaim is not in the expected status phase
+type PersistentVolumeClaimNotInStatus struct {
+	pvc            *corev1.PersistentVolumeClaim
+	pvcStatusPhase *corev1.PersistentVolumeClaimPhase
+}
+
+// Error is a simple function to return a formatted error message as a string
+func (err PersistentVolumeClaimNotInStatus) Error() string {
+	return fmt.Sprintf("PVC %s is not '%s'", err.pvc.Name, *err.pvcStatusPhase)
+}
+
+// NewPersistentVolumeClaimNotInStatusError returns a PersistentVolumeClaimNotInStatus struct when the given PersistentVolumeClaim is not in the expected status phase
+func NewPersistentVolumeClaimNotInStatusError(pvc *corev1.PersistentVolumeClaim, pvcStatusPhase *corev1.PersistentVolumeClaimPhase) PersistentVolumeClaimNotInStatus {
+	return PersistentVolumeClaimNotInStatus{pvc, pvcStatusPhase}
 }
 
 // NoNodesInKubernetes is returned when the Kubernetes cluster has no nodes registered.

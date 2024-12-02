@@ -61,7 +61,7 @@ func configureTerraformSshPasswordOptions(t *testing.T, exampleFolder string) *t
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro", "t3.micro"})
+	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create a random password that we can use for SSH access.
 	password := random.UniqueId()
@@ -98,7 +98,7 @@ func testSSHPasswordToPublicHost(t *testing.T, terraformOptions *terraform.Optio
 
 	// It can take a minute or so for the instance to boot up, so retry a few times.
 	maxRetries := 30
-	timeBetweenRetries := 5 * time.Second
+	timeBetweenRetries := 10 * time.Second
 	description := fmt.Sprintf("SSH to public host %s", publicInstanceIP)
 
 	// Run a simple echo command on the server.

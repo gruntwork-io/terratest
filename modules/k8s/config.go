@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -56,7 +55,7 @@ func DeleteConfigContextE(t testing.TestingT, contextName string) error {
 // DeleteConfigContextWithPathE will remove the context specified at the provided name, and remove any clusters and
 // authinfos that are orphaned as a result of it.
 func DeleteConfigContextWithPathE(t testing.TestingT, kubeConfigPath string, contextName string) error {
-	logger.Logf(t, "Removing kubectl config context %s from config at path %s", contextName, kubeConfigPath)
+	logger.Default.Logf(t, "Removing kubectl config context %s from config at path %s", contextName, kubeConfigPath)
 
 	// Load config and get data structure representing config info
 	config := LoadConfigFromPath(kubeConfigPath)
@@ -68,7 +67,7 @@ func DeleteConfigContextWithPathE(t testing.TestingT, kubeConfigPath string, con
 	// Check if the context we want to delete actually exists, and if so, delete it.
 	_, ok := rawConfig.Contexts[contextName]
 	if !ok {
-		logger.Logf(t, "WARNING: Could not find context %s from config at path %s", contextName, kubeConfigPath)
+		logger.Default.Logf(t, "WARNING: Could not find context %s from config at path %s", contextName, kubeConfigPath)
 		return nil
 	}
 	delete(rawConfig.Contexts, contextName)
@@ -86,7 +85,7 @@ func DeleteConfigContextWithPathE(t testing.TestingT, kubeConfigPath string, con
 		return err
 	}
 
-	logger.Logf(
+	logger.Default.Logf(
 		t,
 		"Removed context %s from config at path %s and any orphaned clusters and authinfos",
 		contextName,
@@ -167,7 +166,7 @@ func CopyHomeKubeConfigToTempE(t testing.TestingT) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tmpConfig, err := ioutil.TempFile("", "")
+	tmpConfig, err := os.CreateTemp("", "")
 	if err != nil {
 		return "", gwErrors.WithStackTrace(err)
 	}

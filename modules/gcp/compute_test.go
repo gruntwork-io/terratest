@@ -20,7 +20,7 @@ import (
 
 const DEFAULT_MACHINE_TYPE = "f1-micro"
 const DEFAULT_IMAGE_FAMILY_PROJECT_NAME = "ubuntu-os-cloud"
-const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-1804-lts"
+const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-2204-lts"
 
 // Zones that support running f1-micro instances
 var ZonesThatSupportF1Micro = []string{"us-central1-a", "us-east1-b", "us-west1-a", "europe-north1-a", "europe-west1-b", "europe-central2-a"}

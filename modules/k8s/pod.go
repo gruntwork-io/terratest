@@ -9,7 +9,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -95,10 +94,10 @@ func WaitUntilNumPodsCreatedE(
 		},
 	)
 	if err != nil {
-		logger.Logf(t, "Timedout waiting for the desired number of Pods to be created: %s", err)
+		options.Logger.Logf(t, "Timedout waiting for the desired number of Pods to be created: %s", err)
 		return err
 	}
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 	return nil
 }
 
@@ -129,10 +128,10 @@ func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName
 		},
 	)
 	if err != nil {
-		logger.Logf(t, "Timedout waiting for Pod to be provisioned: %s", err)
+		options.Logger.Logf(t, "Timedout waiting for Pod to be provisioned: %s", err)
 		return err
 	}
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 	return nil
 }
 

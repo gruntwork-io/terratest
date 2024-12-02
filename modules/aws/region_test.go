@@ -54,3 +54,14 @@ func TestGetAvailabilityZones(t *testing.T) {
 		assert.Regexp(t, fmt.Sprintf("^%s[a-z]$", randomRegion), az)
 	}
 }
+
+func TestGetRandomRegionForService(t *testing.T) {
+	t.Parallel()
+
+	serviceName := "apigatewayv2"
+
+	regionsForService, _ := GetRegionsForServiceE(t, serviceName)
+	randomRegionForService := GetRandomRegionForService(t, serviceName)
+
+	assert.Contains(t, regionsForService, randomRegionForService)
+}

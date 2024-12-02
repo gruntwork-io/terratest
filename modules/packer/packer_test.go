@@ -174,3 +174,35 @@ func TestFormatPackerArgs(t *testing.T) {
 		assert.Equal(t, strings.Join(args, " "), test.expected)
 	}
 }
+
+func TestTrimPackerVersion(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		versionOutput string
+		expected      string
+	}{
+		{
+			// Pre 1.10 output
+			versionOutput: "1.7.0",
+			expected:      "1.7.0",
+		},
+		{
+			// From 1.10 matches the output of packer version
+			versionOutput: "Packer v1.10.0",
+			expected:      "1.10.0",
+		},
+		{
+			// From 1.10 matches the output of packer version
+			versionOutput: "Packer v1.10.0\n\nYour version of Packer is out of date! The latest version\nis 1.10.3. You can update by downloading from www.packer.io/downloads\n",
+			expected:      "1.10.0",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.versionOutput, func(t *testing.T) {
+			out := trimPackerVersion(test.versionOutput)
+			assert.Equal(t, test.expected, out)
+		})
+	}
+}

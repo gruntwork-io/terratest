@@ -3,7 +3,7 @@
 This folder contains a simple Terraform module that deploys an instance in [AWS](https://aws.amazon.com/)
 and registers it in the AWS SSM Catalog to demonstrate how you can use Terratest to write automated tests for your AWS Terraform code.
 
-Check out [test/terraform_aws_ssm_example_test.go](/test/terraform_aws_ssm_test.go) to see how
+Check out [test/terraform_aws_ssm_example_test.go](/test/terraform_aws_ssm_example_test.go) to see how
 you can write automated tests for this module.
 
 **WARNING**: This module and the automated tests for it deploy real resources into your AWS account which can cost you

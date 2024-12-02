@@ -121,13 +121,13 @@ func TestRunCommandWithHugeLineOutput(t *testing.T) {
 	t.Parallel()
 
 	// generate a ~100KB line
-	bashCode := fmt.Sprintf(`
+	bashCode := `
 for i in {0..35000}
 do
   echo -n foo
 done
 echo
-`)
+`
 
 	cmd := Command{
 		Command: "bash",

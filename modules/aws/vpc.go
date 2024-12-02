@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -14,10 +16,13 @@ import (
 
 // Vpc is an Amazon Virtual Private Cloud.
 type Vpc struct {
-	Id      string            // The ID of the VPC
-	Name    string            // The name of the VPC
-	Subnets []Subnet          // A list of subnets in the VPC
-	Tags    map[string]string // The tags associated with the VPC
+	Id                   string            // The ID of the VPC
+	Name                 string            // The name of the VPC
+	Subnets              []Subnet          // A list of subnets in the VPC
+	Tags                 map[string]string // The tags associated with the VPC
+	CidrBlock            *string           // The primary IPv4 CIDR block for the VPC.
+	CidrAssociations     []*string         // Information about the IPv4 CIDR blocks associated with the VPC.
+	Ipv6CidrAssociations []*string         // Information about the IPv6 CIDR blocks associated with the VPC.
 }
 
 // Subnet is a subnet in an availability zone.
@@ -47,45 +52,45 @@ func GetDefaultVpc(t testing.TestingT, region string) *Vpc {
 
 // GetDefaultVpcE fetches information about the default VPC in the given region.
 func GetDefaultVpcE(t testing.TestingT, region string) (*Vpc, error) {
-	defaultVpcFilter := ec2.Filter{Name: aws.String(isDefaultFilterName), Values: []*string{aws.String(isDefaultFilterValue)}}
-	vpcs, err := GetVpcsE(t, []*ec2.Filter{&defaultVpcFilter}, region)
+	defaultVpcFilter := types.Filter{Name: aws.String(isDefaultFilterName), Values: []string{isDefaultFilterValue}}
+	vpcs, err := GetVpcsE(t, []types.Filter{defaultVpcFilter}, region)
 
 	numVpcs := len(vpcs)
 	if numVpcs != 1 {
-		return nil, fmt.Errorf("Expected to find one default VPC in region %s but found %s", region, strconv.Itoa(numVpcs))
+		return nil, fmt.Errorf("expected to find one default VPC in region %s but found %s", region, strconv.Itoa(numVpcs))
 	}
 
 	return vpcs[0], err
 }
 
-// GetVpcById fetches information about a VPC with given Id in the given region.
+// GetVpcById fetches information about a VPC with given ID in the given region.
 func GetVpcById(t testing.TestingT, vpcId string, region string) *Vpc {
 	vpc, err := GetVpcByIdE(t, vpcId, region)
 	require.NoError(t, err)
 	return vpc
 }
 
-// GetVpcByIdE fetches information about a VPC with given Id in the given region.
+// GetVpcByIdE fetches information about a VPC with given ID in the given region.
 func GetVpcByIdE(t testing.TestingT, vpcId string, region string) (*Vpc, error) {
-	vpcIdFilter := ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcId}}
-	vpcs, err := GetVpcsE(t, []*ec2.Filter{&vpcIdFilter}, region)
+	vpcIdFilter := types.Filter{Name: aws.String(vpcIDFilterName), Values: []string{vpcId}}
+	vpcs, err := GetVpcsE(t, []types.Filter{vpcIdFilter}, region)
 
 	numVpcs := len(vpcs)
 	if numVpcs != 1 {
-		return nil, fmt.Errorf("Expected to find one VPC with ID %s in region %s but found %s", vpcId, region, strconv.Itoa(numVpcs))
+		return nil, fmt.Errorf("expected to find one VPC with ID %s in region %s but found %s", vpcId, region, strconv.Itoa(numVpcs))
 	}
 
 	return vpcs[0], err
 }
 
-// GetVpcsE fetches informations about VPCs from given regions limited by filters
-func GetVpcsE(t testing.TestingT, filters []*ec2.Filter, region string) ([]*Vpc, error) {
+// GetVpcsE fetches information about VPCs from given regions limited by filters
+func GetVpcsE(t testing.TestingT, filters []types.Filter, region string) ([]*Vpc, error) {
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
 	}
 
-	vpcs, err := client.DescribeVpcs(&ec2.DescribeVpcsInput{Filters: filters})
+	vpcs, err := client.DescribeVpcs(context.Background(), &ec2.DescribeVpcsInput{Filters: filters})
 	if err != nil {
 		return nil, err
 	}
@@ -94,18 +99,42 @@ func GetVpcsE(t testing.TestingT, filters []*ec2.Filter, region string) ([]*Vpc,
 	retVal := make([]*Vpc, numVpcs)
 
 	for i, vpc := range vpcs.Vpcs {
-		vpcIdFilter := generateVpcIdFilter(aws.StringValue(vpc.VpcId))
-		subnets, err := GetSubnetsForVpcE(t, region, []*ec2.Filter{&vpcIdFilter})
+		vpcIdFilter := generateVpcIdFilter(aws.ToString(vpc.VpcId))
+		subnets, err := GetSubnetsForVpcE(t, region, []types.Filter{vpcIdFilter})
 		if err != nil {
 			return nil, err
 		}
 
-		tags, err := GetTagsForVpcE(t, aws.StringValue(vpc.VpcId), region)
+		tags, err := GetTagsForVpcE(t, aws.ToString(vpc.VpcId), region)
 		if err != nil {
 			return nil, err
 		}
 
-		retVal[i] = &Vpc{Id: aws.StringValue(vpc.VpcId), Name: FindVpcName(vpc), Subnets: subnets, Tags: tags}
+		// cidr block associations
+		var cidrBlockAssociations = func() (list []*string) {
+			for _, cidr := range vpc.CidrBlockAssociationSet {
+				list = append(list, cidr.CidrBlock)
+			}
+			return
+		}()
+
+		// ipv6 cidr block associations
+		var Ipv6CidrAssociations = func() (list []*string) {
+			for _, cidr := range vpc.Ipv6CidrBlockAssociationSet {
+				list = append(list, cidr.Ipv6CidrBlock)
+			}
+			return
+		}()
+
+		retVal[i] = &Vpc{
+			Id:                   aws.ToString(vpc.VpcId),
+			Name:                 FindVpcName(vpc),
+			Subnets:              subnets,
+			Tags:                 tags,
+			CidrBlock:            vpc.CidrBlock,
+			CidrAssociations:     cidrBlockAssociations,
+			Ipv6CidrAssociations: Ipv6CidrAssociations,
+		}
 	}
 
 	return retVal, nil
@@ -113,7 +142,7 @@ func GetVpcsE(t testing.TestingT, filters []*ec2.Filter, region string) ([]*Vpc,
 
 // FindVpcName extracts the VPC name from its tags (if any). Fall back to "Default" if it's the default VPC or empty string
 // otherwise.
-func FindVpcName(vpc *ec2.Vpc) string {
+func FindVpcName(vpc types.Vpc) string {
 	for _, tag := range vpc.Tags {
 		if *tag.Key == "Name" {
 			return *tag.Value
@@ -130,7 +159,7 @@ func FindVpcName(vpc *ec2.Vpc) string {
 // GetSubnetsForVpc gets the subnets in the specified VPC.
 func GetSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
 	vpcIDFilter := generateVpcIdFilter(vpcID)
-	subnets, err := GetSubnetsForVpcE(t, region, []*ec2.Filter{&vpcIDFilter})
+	subnets, err := GetSubnetsForVpcE(t, region, []types.Filter{vpcIDFilter})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,11 +169,11 @@ func GetSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet 
 // GetAzDefaultSubnetsForVpc gets the default az subnets in the specified VPC.
 func GetAzDefaultSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
 	vpcIDFilter := generateVpcIdFilter(vpcID)
-	defaultForAzFilter := ec2.Filter{
+	defaultForAzFilter := types.Filter{
 		Name:   aws.String(defaultForAzFilterName),
-		Values: []*string{aws.String("true")},
+		Values: []string{"true"},
 	}
-	subnets, err := GetSubnetsForVpcE(t, region, []*ec2.Filter{&vpcIDFilter, &defaultForAzFilter})
+	subnets, err := GetSubnetsForVpcE(t, region, []types.Filter{vpcIDFilter, defaultForAzFilter})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,27 +181,27 @@ func GetAzDefaultSubnetsForVpc(t testing.TestingT, vpcID string, region string) 
 }
 
 // generateVpcIdFilter is a helper method to generate vpc id filter
-func generateVpcIdFilter(vpcID string) ec2.Filter {
-	return ec2.Filter{Name: aws.String(vpcIDFilterName), Values: []*string{&vpcID}}
+func generateVpcIdFilter(vpcID string) types.Filter {
+	return types.Filter{Name: aws.String(vpcIDFilterName), Values: []string{vpcID}}
 }
 
 // GetSubnetsForVpcE gets the subnets in the specified VPC.
-func GetSubnetsForVpcE(t testing.TestingT, region string, filters []*ec2.Filter) ([]Subnet, error) {
+func GetSubnetsForVpcE(t testing.TestingT, region string, filters []types.Filter) ([]Subnet, error) {
 	client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
 	}
 
-	subnetOutput, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: filters})
+	subnetOutput, err := client.DescribeSubnets(context.Background(), &ec2.DescribeSubnetsInput{Filters: filters})
 	if err != nil {
 		return nil, err
 	}
 
-	subnets := []Subnet{}
+	var subnets []Subnet
 
 	for _, ec2Subnet := range subnetOutput.Subnets {
 		subnetTags := GetTagsForSubnet(t, *ec2Subnet.SubnetId, region)
-		subnet := Subnet{Id: aws.StringValue(ec2Subnet.SubnetId), AvailabilityZone: aws.StringValue(ec2Subnet.AvailabilityZone), DefaultForAz: aws.BoolValue(ec2Subnet.DefaultForAz), Tags: subnetTags}
+		subnet := Subnet{Id: aws.ToString(ec2Subnet.SubnetId), AvailabilityZone: aws.ToString(ec2Subnet.AvailabilityZone), DefaultForAz: aws.ToBool(ec2Subnet.DefaultForAz), Tags: subnetTags}
 		subnets = append(subnets, subnet)
 	}
 
@@ -192,14 +221,14 @@ func GetTagsForVpcE(t testing.TestingT, vpcID string, region string) (map[string
 	client, err := NewEc2ClientE(t, region)
 	require.NoError(t, err)
 
-	vpcResourceTypeFilter := ec2.Filter{Name: aws.String(resourceIdFilterName), Values: []*string{aws.String(vpcResourceTypeFilterValue)}}
-	vpcResourceIdFilter := ec2.Filter{Name: aws.String(resourceTypeFilterName), Values: []*string{&vpcID}}
-	tagsOutput, err := client.DescribeTags(&ec2.DescribeTagsInput{Filters: []*ec2.Filter{&vpcResourceTypeFilter, &vpcResourceIdFilter}})
+	vpcResourceTypeFilter := types.Filter{Name: aws.String(resourceIdFilterName), Values: []string{vpcResourceTypeFilterValue}}
+	vpcResourceIdFilter := types.Filter{Name: aws.String(resourceTypeFilterName), Values: []string{vpcID}}
+	tagsOutput, err := client.DescribeTags(context.Background(), &ec2.DescribeTagsInput{Filters: []types.Filter{vpcResourceTypeFilter, vpcResourceIdFilter}})
 	require.NoError(t, err)
 
 	tags := map[string]string{}
 	for _, tag := range tagsOutput.Tags {
-		tags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+		tags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
 	}
 
 	return tags, nil
@@ -217,12 +246,12 @@ func GetDefaultSubnetIDsForVpcE(t testing.TestingT, vpc Vpc) ([]string, error) {
 	if vpc.Name != defaultVPCName {
 		// You cannot create a default subnet in a nondefault VPC
 		// https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html
-		return nil, fmt.Errorf("Only default VPCs have default subnets but VPC with id %s is not default VPC", vpc.Id)
+		return nil, fmt.Errorf("only default VPCs have default subnets but VPC with id %s is not default VPC", vpc.Id)
 	}
-	subnetIDs := []string{}
+	var subnetIDs []string
 	numSubnets := len(vpc.Subnets)
 	if numSubnets == 0 {
-		return nil, fmt.Errorf("Expected to find at least one subnet in vpc with ID %s but found zero", vpc.Id)
+		return nil, fmt.Errorf("expected to find at least one subnet in vpc with ID %s but found zero", vpc.Id)
 	}
 
 	for _, subnet := range vpc.Subnets {
@@ -246,14 +275,14 @@ func GetTagsForSubnetE(t testing.TestingT, subnetId string, region string) (map[
 	client, err := NewEc2ClientE(t, region)
 	require.NoError(t, err)
 
-	subnetResourceTypeFilter := ec2.Filter{Name: aws.String(resourceIdFilterName), Values: []*string{aws.String(subnetResourceTypeFilterValue)}}
-	subnetResourceIdFilter := ec2.Filter{Name: aws.String(resourceTypeFilterName), Values: []*string{&subnetId}}
-	tagsOutput, err := client.DescribeTags(&ec2.DescribeTagsInput{Filters: []*ec2.Filter{&subnetResourceTypeFilter, &subnetResourceIdFilter}})
+	subnetResourceTypeFilter := types.Filter{Name: aws.String(resourceIdFilterName), Values: []string{subnetResourceTypeFilterValue}}
+	subnetResourceIdFilter := types.Filter{Name: aws.String(resourceTypeFilterName), Values: []string{subnetId}}
+	tagsOutput, err := client.DescribeTags(context.Background(), &ec2.DescribeTagsInput{Filters: []types.Filter{subnetResourceTypeFilter, subnetResourceIdFilter}})
 	require.NoError(t, err)
 
 	tags := map[string]string{}
 	for _, tag := range tagsOutput.Tags {
-		tags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+		tags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
 	}
 
 	return tags, nil
@@ -270,9 +299,9 @@ func IsPublicSubnet(t testing.TestingT, subnetId string, region string) bool {
 func IsPublicSubnetE(t testing.TestingT, subnetId string, region string) (bool, error) {
 	subnetIdFilterName := "association.subnet-id"
 
-	subnetIdFilter := ec2.Filter{
+	subnetIdFilter := types.Filter{
 		Name:   &subnetIdFilterName,
-		Values: []*string{&subnetId},
+		Values: []string{subnetId},
 	}
 
 	client, err := NewEc2ClientE(t, region)
@@ -280,7 +309,7 @@ func IsPublicSubnetE(t testing.TestingT, subnetId string, region string) (bool, 
 		return false, err
 	}
 
-	rts, err := client.DescribeRouteTables(&ec2.DescribeRouteTablesInput{Filters: []*ec2.Filter{&subnetIdFilter}})
+	rts, err := client.DescribeRouteTables(context.Background(), &ec2.DescribeRouteTablesInput{Filters: []types.Filter{subnetIdFilter}})
 	if err != nil {
 		return false, err
 	}
@@ -295,7 +324,7 @@ func IsPublicSubnetE(t testing.TestingT, subnetId string, region string) (bool, 
 
 	for _, rt := range rts.RouteTables {
 		for _, r := range rt.Routes {
-			if strings.HasPrefix(aws.StringValue(r.GatewayId), "igw-") {
+			if strings.HasPrefix(aws.ToString(r.GatewayId), "igw-") {
 				return true, nil
 			}
 		}
@@ -314,28 +343,28 @@ func getImplicitRouteTableForSubnetE(t testing.TestingT, subnetId string, region
 		return nil, err
 	}
 
-	subnetFilter := ec2.Filter{
+	subnetFilter := types.Filter{
 		Name:   &subnetFilterName,
-		Values: []*string{&subnetId},
+		Values: []string{subnetId},
 	}
-	subnetOutput, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{Filters: []*ec2.Filter{&subnetFilter}})
+	subnetOutput, err := client.DescribeSubnets(context.Background(), &ec2.DescribeSubnetsInput{Filters: []types.Filter{subnetFilter}})
 	if err != nil {
 		return nil, err
 	}
 	numSubnets := len(subnetOutput.Subnets)
 	if numSubnets != 1 {
-		return nil, fmt.Errorf("Expected to find one subnet with id %s but found %s", subnetId, strconv.Itoa(numSubnets))
+		return nil, fmt.Errorf("expected to find one subnet with id %s but found %s", subnetId, strconv.Itoa(numSubnets))
 	}
 
-	mainRouteFilter := ec2.Filter{
+	mainRouteFilter := types.Filter{
 		Name:   &mainRouteFilterName,
-		Values: []*string{&mainRouteFilterValue},
+		Values: []string{mainRouteFilterValue},
 	}
-	vpcFilter := ec2.Filter{
+	vpcFilter := types.Filter{
 		Name:   aws.String(vpcIDFilterName),
-		Values: []*string{subnetOutput.Subnets[0].VpcId},
+		Values: []string{*subnetOutput.Subnets[0].VpcId},
 	}
-	return client.DescribeRouteTables(&ec2.DescribeRouteTablesInput{Filters: []*ec2.Filter{&mainRouteFilter, &vpcFilter}})
+	return client.DescribeRouteTables(context.Background(), &ec2.DescribeRouteTablesInput{Filters: []types.Filter{mainRouteFilter, vpcFilter}})
 }
 
 // GetRandomPrivateCidrBlock gets a random CIDR block from the range of acceptable private IP addresses per RFC 1918

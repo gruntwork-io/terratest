@@ -3,7 +3,6 @@ package files
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +42,7 @@ func IsExistingDir(path string) bool {
 // This is useful when running multiple tests in parallel against the same set of Terraform files to ensure the
 // tests don't overwrite each other's .terraform working directory and terraform.tfstate files. This method returns
 // the path to the dest folder with the copied contents. Hidden files and folders (with the exception of the `.terraform-version` files used
-// by the [tfenv tool](https://github.com/tfutils/tfenv) and `.terraform.lock.hcl` used by Terraform to lock providers versions), Terraform state
+// by the [mise tool](https://github.com/jdx/mise) and `.terraform.lock.hcl` used by Terraform to lock providers versions), Terraform state
 // files, and terraform.tfvars files are not copied to this temp folder, as you typically don't want them interfering with your tests.
 // This method is useful when running through a build tool so the files are copied to a destination that is cleaned on each run of the pipeline.
 func CopyTerraformFolderToDest(folderPath string, destRootFolder string, tempFolderPrefix string) (string, error) {
@@ -110,7 +109,7 @@ func CopyFolderToDest(folderPath string, destRootFolder string, tempFolderPrefix
 		return "", DirNotFoundError{Directory: folderPath}
 	}
 
-	tmpDir, err := ioutil.TempDir(destRootFolder, tempFolderPrefix)
+	tmpDir, err := os.MkdirTemp(destRootFolder, tempFolderPrefix)
 	if err != nil {
 		return "", err
 	}
@@ -149,7 +148,7 @@ func CopyFolderContents(source string, destination string) error {
 // CopyFolderContentsWithFilter copies the files and folders within the given source folder that pass the given filter (return true) to the
 // destination folder.
 func CopyFolderContentsWithFilter(source string, destination string, filter func(path string) bool) error {
-	files, err := ioutil.ReadDir(source)
+	files, err := os.ReadDir(source)
 	if err != nil {
 		return err
 	}
@@ -157,11 +156,11 @@ func CopyFolderContentsWithFilter(source string, destination string, filter func
 	for _, file := range files {
 		src := filepath.Join(source, file.Name())
 		dest := filepath.Join(destination, file.Name())
-
+		f, _ := file.Info()
 		if !filter(src) {
 			continue
 		} else if file.IsDir() {
-			if err := os.MkdirAll(dest, file.Mode()); err != nil {
+			if err := os.MkdirAll(dest, f.Mode()); err != nil {
 				return err
 			}
 
@@ -169,7 +168,7 @@ func CopyFolderContentsWithFilter(source string, destination string, filter func
 				return err
 			}
 
-		} else if isSymLink(file) {
+		} else if isSymLink(f) {
 			if err := copySymLink(src, dest); err != nil {
 				return err
 			}
@@ -206,7 +205,7 @@ func PathContainsHiddenFileOrFolder(path string) bool {
 	return false
 }
 
-// PathIsTerraformVersionFile returns true if the given path is the special '.terraform-version' file used by the [tfenv](https://github.com/tfutils/tfenv) tool.
+// PathIsTerraformVersionFile returns true if the given path is the special '.terraform-version' file used by the [mise](https://github.com/jdx/mise) tool.
 func PathIsTerraformVersionFile(path string) bool {
 	return filepath.Base(path) == ".terraform-version"
 }
@@ -218,7 +217,7 @@ func PathIsTerraformLockFile(path string) bool {
 
 // CopyFile copies a file from source to destination.
 func CopyFile(source string, destination string) error {
-	contents, err := ioutil.ReadFile(source)
+	contents, err := os.ReadFile(source)
 	if err != nil {
 		return err
 	}
@@ -233,7 +232,7 @@ func WriteFileWithSamePermissions(source string, destination string, contents []
 		return err
 	}
 
-	return ioutil.WriteFile(destination, contents, fileInfo.Mode())
+	return os.WriteFile(destination, contents, fileInfo.Mode())
 }
 
 // isSymLink returns true if the given file is a symbolic link

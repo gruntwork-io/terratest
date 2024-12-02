@@ -47,7 +47,7 @@ func GetRandomRegion(t testing.TestingT, projectID string, approvedRegions []str
 func GetRandomRegionE(t testing.TestingT, projectID string, approvedRegions []string, forbiddenRegions []string) (string, error) {
 	regionFromEnvVar := os.Getenv(regionOverrideEnvVarName)
 	if regionFromEnvVar != "" {
-		logger.Logf(t, "Using GCP Region %s from environment variable %s", regionFromEnvVar, regionOverrideEnvVarName)
+		logger.Default.Logf(t, "Using GCP Region %s from environment variable %s", regionFromEnvVar, regionOverrideEnvVarName)
 		return regionFromEnvVar, nil
 	}
 
@@ -64,7 +64,7 @@ func GetRandomRegionE(t testing.TestingT, projectID string, approvedRegions []st
 	regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
-	logger.Logf(t, "Using Region %s", region)
+	logger.Default.Logf(t, "Using Region %s", region)
 	return region, nil
 }
 
@@ -85,7 +85,7 @@ func GetRandomZone(t testing.TestingT, projectID string, approvedZones []string,
 func GetRandomZoneE(t testing.TestingT, projectID string, approvedZones []string, forbiddenZones []string, forbiddenRegions []string) (string, error) {
 	zoneFromEnvVar := os.Getenv(zoneOverrideEnvVarName)
 	if zoneFromEnvVar != "" {
-		logger.Logf(t, "Using GCP Zone %s from environment variable %s", zoneFromEnvVar, zoneOverrideEnvVarName)
+		logger.Default.Logf(t, "Using GCP Zone %s from environment variable %s", zoneFromEnvVar, zoneOverrideEnvVarName)
 		return zoneFromEnvVar, nil
 	}
 
@@ -126,7 +126,7 @@ func GetRandomZoneForRegion(t testing.TestingT, projectID string, region string)
 func GetRandomZoneForRegionE(t testing.TestingT, projectID string, region string) (string, error) {
 	zoneFromEnvVar := os.Getenv(zoneOverrideEnvVarName)
 	if zoneFromEnvVar != "" {
-		logger.Logf(t, "Using GCP Zone %s from environment variable %s", zoneFromEnvVar, zoneOverrideEnvVarName)
+		logger.Default.Logf(t, "Using GCP Zone %s from environment variable %s", zoneFromEnvVar, zoneOverrideEnvVarName)
 		return zoneFromEnvVar, nil
 	}
 
@@ -145,7 +145,7 @@ func GetRandomZoneForRegionE(t testing.TestingT, projectID string, region string
 
 	zone := random.RandomString(zonesToPickFrom)
 
-	logger.Logf(t, "Using Zone %s", zone)
+	logger.Default.Logf(t, "Using Zone %s", zone)
 	return zone, nil
 }
 
@@ -160,7 +160,7 @@ func GetAllGcpRegions(t testing.TestingT, projectID string) []string {
 
 // GetAllGcpRegionsE gets the list of GCP regions available in this account.
 func GetAllGcpRegionsE(t testing.TestingT, projectID string) ([]string, error) {
-	logger.Log(t, "Looking up all GCP regions available in this account")
+	logger.Default.Logf(t, "Looking up all GCP regions available in this account")
 
 	// Note that NewComputeServiceE creates a context, but it appears to be empty so we keep the code simpler by
 	// creating a new one here

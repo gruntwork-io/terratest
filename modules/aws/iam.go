@@ -1,10 +1,12 @@
 package aws
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -25,7 +27,7 @@ func GetIamCurrentUserNameE(t testing.TestingT) (string, error) {
 		return "", err
 	}
 
-	resp, err := iamClient.GetUser(&iam.GetUserInput{})
+	resp, err := iamClient.GetUser(context.Background(), &iam.GetUserInput{})
 	if err != nil {
 		return "", err
 	}
@@ -49,7 +51,7 @@ func GetIamCurrentUserArnE(t testing.TestingT) (string, error) {
 		return "", err
 	}
 
-	resp, err := iamClient.GetUser(&iam.GetUserInput{})
+	resp, err := iamClient.GetUser(context.Background(), &iam.GetUserInput{})
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +60,7 @@ func GetIamCurrentUserArnE(t testing.TestingT) (string, error) {
 }
 
 // CreateMfaDevice creates an MFA device using the given IAM client.
-func CreateMfaDevice(t testing.TestingT, iamClient *iam.IAM, deviceName string) *iam.VirtualMFADevice {
+func CreateMfaDevice(t testing.TestingT, iamClient *iam.Client, deviceName string) *types.VirtualMFADevice {
 	mfaDevice, err := CreateMfaDeviceE(t, iamClient, deviceName)
 	if err != nil {
 		t.Fatal(err)
@@ -67,10 +69,10 @@ func CreateMfaDevice(t testing.TestingT, iamClient *iam.IAM, deviceName string) 
 }
 
 // CreateMfaDeviceE creates an MFA device using the given IAM client.
-func CreateMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, deviceName string) (*iam.VirtualMFADevice, error) {
-	logger.Logf(t, "Creating an MFA device called %s", deviceName)
+func CreateMfaDeviceE(t testing.TestingT, iamClient *iam.Client, deviceName string) (*types.VirtualMFADevice, error) {
+	logger.Default.Logf(t, "Creating an MFA device called %s", deviceName)
 
-	output, err := iamClient.CreateVirtualMFADevice(&iam.CreateVirtualMFADeviceInput{
+	output, err := iamClient.CreateVirtualMFADevice(context.Background(), &iam.CreateVirtualMFADeviceInput{
 		VirtualMFADeviceName: aws.String(deviceName),
 	})
 	if err != nil {
@@ -86,7 +88,7 @@ func CreateMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, deviceName string)
 
 // EnableMfaDevice enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
 // logins by the given IAM User.
-func EnableMfaDevice(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.VirtualMFADevice) {
+func EnableMfaDevice(t testing.TestingT, iamClient *iam.Client, mfaDevice *types.VirtualMFADevice) {
 	err := EnableMfaDeviceE(t, iamClient, mfaDevice)
 	if err != nil {
 		t.Fatal(err)
@@ -95,8 +97,8 @@ func EnableMfaDevice(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.Virt
 
 // EnableMfaDeviceE enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
 // logins by the given IAM User.
-func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.VirtualMFADevice) error {
-	logger.Logf(t, "Enabling MFA device %s", aws.StringValue(mfaDevice.SerialNumber))
+func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.Client, mfaDevice *types.VirtualMFADevice) error {
+	logger.Default.Logf(t, "Enabling MFA device %s", aws.ToString(mfaDevice.SerialNumber))
 
 	iamUserName, err := GetIamCurrentUserArnE(t)
 	if err != nil {
@@ -108,7 +110,7 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.Vir
 		return err
 	}
 
-	logger.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
+	logger.Default.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
 	time.Sleep(30 * time.Second)
 
 	authCode2, err := GetTimeBasedOneTimePassword(mfaDevice)
@@ -116,7 +118,7 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.Vir
 		return err
 	}
 
-	_, err = iamClient.EnableMFADevice(&iam.EnableMFADeviceInput{
+	_, err = iamClient.EnableMFADevice(context.Background(), &iam.EnableMFADeviceInput{
 		AuthenticationCode1: aws.String(authCode1),
 		AuthenticationCode2: aws.String(authCode2),
 		SerialNumber:        mfaDevice.SerialNumber,
@@ -134,7 +136,7 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.IAM, mfaDevice *iam.Vir
 }
 
 // NewIamClient creates a new IAM client.
-func NewIamClient(t testing.TestingT, region string) *iam.IAM {
+func NewIamClient(t testing.TestingT, region string) *iam.Client {
 	client, err := NewIamClientE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -143,10 +145,10 @@ func NewIamClient(t testing.TestingT, region string) *iam.IAM {
 }
 
 // NewIamClientE creates a new IAM client.
-func NewIamClientE(t testing.TestingT, region string) (*iam.IAM, error) {
+func NewIamClientE(t testing.TestingT, region string) (*iam.Client, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
-	return iam.New(sess), nil
+	return iam.NewFromConfig(*sess), nil
 }

@@ -64,3 +64,11 @@ func safePtrToInt32(raw *int32) int32 {
 	}
 	return *raw
 }
+
+// safePtrToList converts a []string pointer to a non-pointer []string value, or to initialization of an empty slice if the pointer is nil.
+func safePtrToList(raw *[]string) []string {
+	if raw == nil {
+		return []string{}
+	}
+	return *raw
+}

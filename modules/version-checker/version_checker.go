@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/gruntwork-io/terratest/modules/terraform"
+
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/hashicorp/go-version"
@@ -125,7 +127,7 @@ func getBinary(params CheckVersionParams) (string, error) {
 	case Packer:
 		return "packer", nil
 	case Terraform:
-		return "terraform", nil
+		return terraform.DefaultExecutable, nil
 	default:
 		return "", fmt.Errorf("unsupported Binary for checking versions {%d}", params.Binary)
 	}

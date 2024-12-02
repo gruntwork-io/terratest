@@ -10,7 +10,7 @@ how you can use Terratest to write automated tests for your Azure Terraform code
   - [Internal Network Interface](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-network-interface) with the name specified in the `network_interface_internal` variable.
   - [ExternalNetwork Interface](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-network-interface) with the name specified in the `network_interface_external` variable.
 
-Check out [test/azure/terraform_azure_network_test.go](/test/azure/terraform_azure_network_example_test.go) to see how you can write
+Check out [test/azure/terraform_azure_network_example_test.go](/test/azure/terraform_azure_network_example_test.go) to see how you can write
 automated tests for this module.
 
 Note that the Azure Virtual Network, Subnet, Network Interface and Public IP resources in this module don't actually do anything; it just runs the resources for

@@ -1,7 +1,6 @@
 package opa
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,12 +52,12 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	baseDir, subDir := getter.SourceDirSubdir(rulePath)
 	downloadPath, hasDownloaded := policyDirCache.Load(baseDir)
 	if hasDownloaded {
-		logger.Logf(t, "Previously downloaded %s: returning cached path", baseDir)
+		logger.Default.Logf(t, "Previously downloaded %s: returning cached path", baseDir)
 		return filepath.Join(downloadPath.(string), subDir), nil
 	}
 
 	// Not downloaded, so use go-getter to download the remote source to a temp dir.
-	tempDir, err := ioutil.TempDir("", "terratest-opa-policy-*")
+	tempDir, err := os.MkdirTemp("", "terratest-opa-policy-*")
 	if err != nil {
 		return "", err
 	}
@@ -66,7 +65,7 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	// tempDir to make sure we feed a directory that doesn't exist yet.
 	tempDir = filepath.Join(tempDir, "getter")
 
-	logger.Logf(t, "Downloading %s to temp dir %s", rulePath, tempDir)
+	logger.Default.Logf(t, "Downloading %s to temp dir %s", rulePath, tempDir)
 	if err := getter.GetAny(tempDir, baseDir); err != nil {
 		return "", err
 	}

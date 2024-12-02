@@ -3,6 +3,7 @@ package terraform
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -25,7 +26,8 @@ func TestShowWithInlinePlan(t *testing.T) {
 	}
 
 	out := InitAndPlan(t, options)
-	require.Contains(t, out, fmt.Sprintf("Saved the plan to: %s", planFilePath))
+	out = strings.ReplaceAll(out, "\n", "")
+	require.Contains(t, out, fmt.Sprintf("Saved the plan to:%s", planFilePath))
 	require.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
 
 	// show command does not accept Vars
@@ -55,7 +57,8 @@ func TestShowWithStructInlinePlan(t *testing.T) {
 	}
 
 	out := InitAndPlan(t, options)
-	require.Contains(t, out, fmt.Sprintf("Saved the plan to: %s", planFilePath))
+	out = strings.ReplaceAll(out, "\n", "")
+	require.Contains(t, out, fmt.Sprintf("Saved the plan to:%s", planFilePath))
 	require.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
 
 	// show command does not accept Vars

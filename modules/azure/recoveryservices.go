@@ -34,7 +34,7 @@ func GetRecoveryServicesVaultBackupProtectedVMList(t *testing.T, policyName, vau
 	return list
 }
 
-// RecoveryServicesVaultExists indicates whether a recovery services vault exists; otherwise false or error.
+// RecoveryServicesVaultExistsE indicates whether a recovery services vault exists; otherwise false or error.
 func RecoveryServicesVaultExistsE(vaultName, resourceGroupName, subscriptionID string) (bool, error) {
 	_, err := GetRecoveryServicesVaultE(vaultName, resourceGroupName, subscriptionID)
 	if err != nil {
@@ -118,9 +118,9 @@ func GetRecoveryServicesVaultBackupProtectedVMListE(policyName, vaultName, resou
 		return nil, err
 	}
 
-	resourceGroupName, err2 := getTargetAzureResourceGroupName(resourceGroupName)
+	resourceGroupName, err = getTargetAzureResourceGroupName(resourceGroupName)
 	if err != nil {
-		return nil, err2
+		return nil, err
 	}
 
 	client := backup.NewProtectedItemsGroupClient(subscriptionID)

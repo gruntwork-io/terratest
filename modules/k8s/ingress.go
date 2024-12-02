@@ -10,7 +10,6 @@ import (
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -80,7 +79,7 @@ func WaitUntilIngressAvailable(t testing.TestingT, options *KubectlOptions, ingr
 			return "Ingress is now available", nil
 		},
 	)
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 }
 
 // ListIngressesV1Beta1 will look for Ingress resources in the given namespace that match the given filters and return
@@ -152,5 +151,5 @@ func WaitUntilIngressAvailableV1Beta1(t testing.TestingT, options *KubectlOption
 			return "Ingress is now available", nil
 		},
 	)
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 }

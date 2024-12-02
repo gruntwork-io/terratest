@@ -132,3 +132,22 @@ func TestInitBackendMigration(t *testing.T) {
 	_, err = InitE(t, options)
 	assert.NoError(t, err, "Backend initialization with changed configuration should success with -migrate-state option")
 }
+
+func TestInitNoColorOption(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-no-error", t.Name())
+	require.NoError(t, err)
+
+	options := WithDefaultRetryableErrors(t, &Options{
+		TerraformDir: testFolder,
+		NoColor:      true,
+	})
+
+	out := InitAndApply(t, options)
+
+	require.Contains(t, out, "Hello, World")
+
+	// Check that NoColor correctly doesn't output the colour escape codes which look like [0m,[1m or [32m
+	require.NotRegexp(t, `\[\d*m`, out, "Output should not contain color escape codes")
+}

@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -139,7 +138,7 @@ func GitCloneAndBuildE(
 	path string,
 	dockerBuildOpts *BuildOptions,
 ) error {
-	workingDir, err := ioutil.TempDir("", "")
+	workingDir, err := os.MkdirTemp("", "")
 	if err != nil {
 		return err
 	}

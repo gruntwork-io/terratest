@@ -1,7 +1,6 @@
 package terraform
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +44,7 @@ func OPAEvalE(
 	}
 
 	// Create a temporary dir to store all the json files
-	tmpDir, err := ioutil.TempDir("", "terratest-opa-hcl2json-*")
+	tmpDir, err := os.MkdirTemp("", "terratest-opa-hcl2json-*")
 	if err != nil {
 		return err
 	}
@@ -78,7 +77,7 @@ func OPAEvalE(
 // HCLFileToJSONFile is a function that takes a path containing HCL code, and converts it to JSON representation and
 // writes out the contents to the given path.
 func HCLFileToJSONFile(hclPath, jsonOutPath string) error {
-	fileBytes, err := ioutil.ReadFile(hclPath)
+	fileBytes, err := os.ReadFile(hclPath)
 	if err != nil {
 		return err
 	}
@@ -86,5 +85,5 @@ func HCLFileToJSONFile(hclPath, jsonOutPath string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(jsonOutPath, converted, 0600)
+	return os.WriteFile(jsonOutPath, converted, 0600)
 }

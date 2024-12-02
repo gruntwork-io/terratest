@@ -28,7 +28,7 @@ func GenerateRSAKeyPair(t testing.TestingT, keySize int) *KeyPair {
 
 // GenerateRSAKeyPairE generates an RSA Keypair and return the public and private keys.
 func GenerateRSAKeyPairE(t testing.TestingT, keySize int) (*KeyPair, error) {
-	logger.Logf(t, "Generating new public/private key of size %d", keySize)
+	logger.Default.Logf(t, "Generating new public/private key of size %d", keySize)
 
 	rsaKeyPair, err := rsa.GenerateKey(rand.Reader, keySize)
 	if err != nil {

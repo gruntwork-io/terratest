@@ -4,7 +4,6 @@ package packer
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -106,7 +105,7 @@ func BuildArtifactE(t testing.TestingT, options *Options) (string, error) {
 		// The built-in env variable defining where plugins are downloaded
 		const packerPluginPathEnvVar = "PACKER_PLUGIN_PATH"
 		options.Logger.Logf(t, "Creating a temporary directory for Packer plugins")
-		pluginDir, err := ioutil.TempDir("", "terratest-packer-")
+		pluginDir, err := os.MkdirTemp("", "terratest-packer-")
 		require.NoError(t, err)
 		if len(options.Env) == 0 {
 			options.Env = make(map[string]string)
@@ -187,10 +186,11 @@ func hasPackerInit(t testing.TestingT, options *Options) (bool, error) {
 		Env:        options.Env,
 		WorkingDir: options.WorkingDir,
 	}
-	localVersion, err := shell.RunCommandAndGetOutputE(t, cmd)
+	versionCmdOutput, err := shell.RunCommandAndGetOutputE(t, cmd)
 	if err != nil {
 		return false, err
 	}
+	localVersion := trimPackerVersion(versionCmdOutput)
 	thisVersion, err := version.NewVersion(localVersion)
 	if err != nil {
 		return false, err
@@ -262,4 +262,14 @@ func formatPackerArgs(options *Options) []string {
 	}
 
 	return append(args, options.Template)
+}
+
+// From packer 1.10 the -version command output is prefixed with Packer v
+func trimPackerVersion(versionCmdOutput string) string {
+	re := regexp.MustCompile(`(?:Packer v?|)(\d+\.\d+\.\d+)`)
+	matches := re.FindStringSubmatch(versionCmdOutput)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return ""
 }

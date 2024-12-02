@@ -39,7 +39,7 @@ github_api_url: https://raw.githubusercontent.com/gruntwork-io/terratest/master
 # theme: minima
 assets_base_url: '/assets/'
 
-ga_tracker: UA-76462621-7
+gtm_tracker: GTM-5TTJJGTL
 
 theme: null
 

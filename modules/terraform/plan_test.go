@@ -3,6 +3,7 @@ package terraform
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -79,8 +80,10 @@ func TestInitAndPlanWithPlanFile(t *testing.T) {
 
 	out, err := InitAndPlanE(t, options)
 	require.NoError(t, err)
+	// clean output to be consistent in checks
+	out = strings.ReplaceAll(out, "\n", "")
 	assert.Contains(t, out, "1 to add, 0 to change, 0 to destroy.")
-	assert.Contains(t, out, fmt.Sprintf("Saved the plan to: %s", planFilePath))
+	assert.Contains(t, out, fmt.Sprintf("Saved the plan to:%s", planFilePath))
 	assert.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
 }
 
@@ -190,4 +193,53 @@ func TestTgPlanAllWithError(t *testing.T) {
 	require.NoError(t, errExitCode)
 
 	require.Equal(t, DefaultErrorExitCode, getExitCode)
+}
+
+func TestAssertTgPlanAllExitCodeNoError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir:    testFolder,
+		TerraformBinary: "terragrunt",
+	}
+
+	getExitCode, errExitCode := TgPlanAllExitCodeE(t, options)
+	if errExitCode != nil {
+		t.Fatal(errExitCode)
+	}
+
+	// since there is no state file we expect `2` to be the success exit code
+	assert.Equal(t, 2, getExitCode)
+	AssertTgPlanAllExitCode(t, getExitCode, true)
+
+	TgApplyAll(t, options)
+
+	getExitCode, errExitCode = TgPlanAllExitCodeE(t, options)
+	if errExitCode != nil {
+		t.Fatal(errExitCode)
+	}
+
+	// since there is a state file we expect `0` to be the success exit code
+	assert.Equal(t, 0, getExitCode)
+	AssertTgPlanAllExitCode(t, getExitCode, true)
+}
+
+func TestAssertTgPlanAllExitCodeWithError(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-with-plan-error", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir:    testFolder,
+		TerraformBinary: "terragrunt",
+	}
+
+	getExitCode, errExitCode := TgPlanAllExitCodeE(t, options)
+	require.NoError(t, errExitCode)
+
+	AssertTgPlanAllExitCode(t, getExitCode, false)
 }

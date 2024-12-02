@@ -13,7 +13,7 @@ adduser --disabled-password --gecos "" terratest
 echo "terratest:${terratest_password}" | chpasswd
 
 # Enable password auth on the SSH service
-sed -i 's/^PasswordAuthentication no$/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+echo "PasswordAuthentication yes" > /etc/ssh/sshd_config.d/01-password-auth.conf
 
 # Bounce the service to apply the config change
 service ssh restart

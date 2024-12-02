@@ -58,7 +58,7 @@ func FetchInstance(t testing.TestingT, projectID string, name string) *Instance 
 
 // FetchInstance queries GCP to return an instance of the (GCP Compute) Instance type
 func FetchInstanceE(t testing.TestingT, projectID string, name string) (*Instance, error) {
-	logger.Logf(t, "Getting Compute Instance %s", name)
+	logger.Default.Logf(t, "Getting Compute Instance %s", name)
 
 	ctx := context.Background()
 	service, err := NewComputeServiceE(t)
@@ -96,7 +96,7 @@ func FetchImage(t testing.TestingT, projectID string, name string) *Image {
 
 // FetchImage queries GCP to return a new instance of the (GCP Compute) Image type
 func FetchImageE(t testing.TestingT, projectID string, name string) (*Image, error) {
-	logger.Logf(t, "Getting Image %s", name)
+	logger.Default.Logf(t, "Getting Image %s", name)
 
 	ctx := context.Background()
 	service, err := NewComputeServiceE(t)
@@ -125,7 +125,7 @@ func FetchRegionalInstanceGroup(t testing.TestingT, projectID string, region str
 
 // FetchRegionalInstanceGroup queries GCP to return a new instance of the Regional Instance Group type
 func FetchRegionalInstanceGroupE(t testing.TestingT, projectID string, region string, name string) (*RegionalInstanceGroup, error) {
-	logger.Logf(t, "Getting Regional Instance Group %s", name)
+	logger.Default.Logf(t, "Getting Regional Instance Group %s", name)
 
 	ctx := context.Background()
 	service, err := NewComputeServiceE(t)
@@ -154,7 +154,7 @@ func FetchZonalInstanceGroup(t testing.TestingT, projectID string, zone string, 
 
 // FetchZonalInstanceGroup queries GCP to return a new instance of the Regional Instance Group type
 func FetchZonalInstanceGroupE(t testing.TestingT, projectID string, zone string, name string) (*ZonalInstanceGroup, error) {
-	logger.Logf(t, "Getting Zonal Instance Group %s", name)
+	logger.Default.Logf(t, "Getting Zonal Instance Group %s", name)
 
 	ctx := context.Background()
 	service, err := NewComputeServiceE(t)
@@ -213,7 +213,7 @@ func (i *Instance) SetLabels(t testing.TestingT, labels map[string]string) {
 
 // SetLabelsE adds the tags to the given Compute Instance.
 func (i *Instance) SetLabelsE(t testing.TestingT, labels map[string]string) error {
-	logger.Logf(t, "Adding labels to instance %s in zone %s", i.Name, i.Zone)
+	logger.Default.Logf(t, "Adding labels to instance %s in zone %s", i.Name, i.Zone)
 
 	ctx := context.Background()
 	service, err := NewComputeServiceE(t)
@@ -244,7 +244,7 @@ func (i *Instance) SetMetadata(t testing.TestingT, metadata map[string]string) {
 
 // SetLabelsE adds the given metadata map to the existing metadata of the given Compute Instance.
 func (i *Instance) SetMetadataE(t testing.TestingT, metadata map[string]string) error {
-	logger.Logf(t, "Adding metadata to instance %s in zone %s", i.Name, i.Zone)
+	logger.Default.Logf(t, "Adding metadata to instance %s in zone %s", i.Name, i.Zone)
 
 	ctx := context.Background()
 	service, err := NewInstancesServiceE(t)
@@ -293,7 +293,7 @@ func (i *Instance) AddSshKey(t testing.TestingT, username string, publicKey stri
 
 // Add the given public SSH key to the Compute Instance. Users can SSH in with the given username.
 func (i *Instance) AddSshKeyE(t testing.TestingT, username string, publicKey string) error {
-	logger.Logf(t, "Adding SSH Key to Compute Instance %s for username %s\n", i.Name, username)
+	logger.Default.Logf(t, "Adding SSH Key to Compute Instance %s for username %s\n", i.Name, username)
 
 	// We represent the key in the format required per GCP docs (https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys)
 	publicKeyFormatted := strings.TrimSpace(publicKey)
@@ -321,7 +321,7 @@ func (i *Image) DeleteImage(t testing.TestingT) {
 
 // DeleteImageE deletes the given Compute Image.
 func (i *Image) DeleteImageE(t testing.TestingT) error {
-	logger.Logf(t, "Destroying Image %s", i.Name)
+	logger.Default.Logf(t, "Destroying Image %s", i.Name)
 
 	ctx := context.Background()
 	service, err := NewComputeServiceE(t)
@@ -347,7 +347,7 @@ func (ig *ZonalInstanceGroup) GetInstanceIds(t testing.TestingT) []string {
 
 // GetInstanceIdsE gets the IDs of Instances in the given Zonal Instance Group.
 func (ig *ZonalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) {
-	logger.Logf(t, "Get instances for Zonal Instance Group %s", ig.Name)
+	logger.Default.Logf(t, "Get instances for Zonal Instance Group %s", ig.Name)
 
 	ctx := context.Background()
 	service, err := NewComputeServiceE(t)
@@ -392,7 +392,7 @@ func (ig *RegionalInstanceGroup) GetInstanceIds(t testing.TestingT) []string {
 
 // GetInstanceIdsE gets the IDs of Instances in the given Regional Instance Group.
 func (ig *RegionalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) {
-	logger.Logf(t, "Get instances for Regional Instance Group %s", ig.Name)
+	logger.Default.Logf(t, "Get instances for Regional Instance Group %s", ig.Name)
 
 	ctx := context.Background()
 
@@ -603,7 +603,7 @@ func NewComputeServiceE(t testing.TestingT) (*compute.Service, error) {
 		client = rawClient
 		return "Successfully retrieved default GCP client", nil
 	})
-	logger.Logf(t, msg)
+	logger.Default.Logf(t, msg)
 
 	if retryErr != nil {
 		return nil, retryErr

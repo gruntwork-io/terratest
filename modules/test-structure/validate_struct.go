@@ -42,6 +42,26 @@ type ValidationOptions struct {
 	ExcludeDirs []string
 }
 
+// CloneWithNewRootDir clones the given opts with a new root dir. Updates all include and exclude dirs to be relative
+// to the new root dir.
+func CloneWithNewRootDir(opts *ValidationOptions, newRootDir string) (*ValidationOptions, error) {
+	includeDirs, err := buildRelPathsFromFull(opts.RootDir, opts.IncludeDirs)
+	if err != nil {
+		return nil, err
+	}
+	excludeDirs, err := buildRelPathsFromFull(opts.RootDir, opts.ExcludeDirs)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := NewValidationOptions(newRootDir, includeDirs, excludeDirs)
+	if err != nil {
+		return nil, err
+	}
+	out.FileType = opts.FileType
+	return out, nil
+}
+
 // configureBaseValidationOptions returns a pointer to a ValidationOptions struct configured with sane, override-able defaults
 // Note that the ValidationOptions's fields IncludeDirs and ExcludeDirs must be absolute paths, but this method will accept relative paths
 // and build the absolute paths when instantiating the ValidationOptions struct,  making it the preferred means of configuring
@@ -102,6 +122,22 @@ func NewTerragruntValidationOptions(rootDir string, includeDirs, excludeDirs []s
 	}
 	opts.FileType = TG
 	return opts, nil
+}
+
+func buildRelPathsFromFull(rootDir string, fullPaths []string) ([]string, error) {
+	var relPaths []string
+	for _, maybeFullPath := range fullPaths {
+		if filepath.IsAbs(maybeFullPath) {
+			relPath, err := filepath.Rel(rootDir, maybeFullPath)
+			if err != nil {
+				return nil, err
+			}
+			relPaths = append(relPaths, relPath)
+		} else {
+			relPaths = append(relPaths, maybeFullPath)
+		}
+	}
+	return relPaths, nil
 }
 
 func buildFullPathsFromRelative(rootDir string, relativePaths []string) []string {

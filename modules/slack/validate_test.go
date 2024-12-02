@@ -42,7 +42,7 @@ func TestValidateSlackMessage(t *testing.T) {
 	retry.DoWithRetry(
 		t,
 		"wait for slack message",
-		6, 10*time.Second,
+		10, 10*time.Second,
 		func() (string, error) {
 			err := ValidateExpectedSlackMessageE(t, token, channelID, msgTxt, 10, 5*time.Minute)
 			return "", err

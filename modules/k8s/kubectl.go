@@ -1,7 +1,6 @@
 package k8s
 
 import (
-	"io/ioutil"
 	"net/url"
 	"os"
 
@@ -40,6 +39,7 @@ func RunKubectlAndGetOutputE(t testing.TestingT, options *KubectlOptions, args .
 		Command: "kubectl",
 		Args:    cmdArgs,
 		Env:     options.Env,
+		Logger:  options.Logger,
 	}
 	return shell.RunCommandAndGetOutputE(t, command)
 }
@@ -100,7 +100,7 @@ func KubectlApplyFromKustomize(t testing.TestingT, options *KubectlOptions, conf
 	require.NoError(t, KubectlApplyFromKustomizeE(t, options, configPath))
 }
 
-// KubectlApplyFromKustomizeE will take in a kustomization directory path and delete it from the cluster targeted by KubectlOptions.
+// KubectlApplyFromKustomizeE will take in a kustomization directory path and apply it to the cluster targeted by KubectlOptions.
 func KubectlApplyFromKustomizeE(t testing.TestingT, options *KubectlOptions, configPath string) error {
 	return RunKubectlE(t, options, "apply", "-k", configPath)
 }
@@ -134,7 +134,7 @@ func StoreConfigToTempFile(t testing.TestingT, configData string) string {
 // filename, or error.
 func StoreConfigToTempFileE(t testing.TestingT, configData string) (string, error) {
 	escapedTestName := url.PathEscape(t.Name())
-	tmpfile, err := ioutil.TempFile("", escapedTestName)
+	tmpfile, err := os.CreateTemp("", escapedTestName)
 	if err != nil {
 		return "", err
 	}

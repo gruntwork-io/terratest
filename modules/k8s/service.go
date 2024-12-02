@@ -12,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -83,7 +82,7 @@ func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serv
 			return "Service is now available", nil
 		},
 	)
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 }
 
 // IsServiceAvailable returns true if the service endpoint is ready to accept traffic. Note that for Minikube, this

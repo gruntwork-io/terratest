@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -153,10 +152,10 @@ func TestWriteLogWritesToCorrectLogFile(t *testing.T) {
 	err = logWriter.writeLog(logger, alternativeTestName, alternativeRandomString)
 	assert.Nil(t, err)
 
-	buf, err := ioutil.ReadFile(testFileName)
+	buf, err := os.ReadFile(testFileName)
 	assert.Nil(t, err)
 	assert.Equal(t, string(buf), randomString+"\n")
-	buf, err = ioutil.ReadFile(alternativeTestFileName)
+	buf, err = os.ReadFile(alternativeTestFileName)
 	assert.Nil(t, err)
 	assert.Equal(t, string(buf), alternativeRandomString+"\n")
 }
@@ -175,7 +174,7 @@ func TestWriteLogCreatesLogFileIfNotExists(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.True(t, files.FileExists(testFileName))
-	buf, err := ioutil.ReadFile(testFileName)
+	buf, err := os.ReadFile(testFileName)
 	assert.Nil(t, err)
 	assert.Equal(t, string(buf), randomString+"\n")
 }

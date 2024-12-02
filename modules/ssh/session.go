@@ -83,7 +83,7 @@ func Close(t testing.TestingT, closeable Closeable, ignoreErrors ...string) {
 	}
 
 	if err := closeable.Close(); err != nil && !collections.ListContains(ignoreErrors, err.Error()) {
-		logger.Logf(t, "Error closing %s: %s", closeable, err.Error())
+		logger.Default.Logf(t, "Error closing %s: %s", closeable, err.Error())
 	}
 }
 

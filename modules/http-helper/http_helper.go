@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -56,7 +55,7 @@ func HttpGetE(t testing.TestingT, url string, tlsConfig *tls.Config) (int, strin
 // HttpGetWithOptionsE performs an HTTP GET, with an optional pointer to a custom TLS configuration, on the given URL and
 // return the HTTP status code, body, and any error.
 func HttpGetWithOptionsE(t testing.TestingT, options HttpGetOptions) (int, string, error) {
-	logger.Logf(t, "Making an HTTP GET call to URL %s", options.Url)
+	logger.Default.Logf(t, "Making an HTTP GET call to URL %s", options.Url)
 
 	// Set HTTP client transport config
 	tr := http.DefaultTransport.(*http.Transport).Clone()
@@ -75,7 +74,7 @@ func HttpGetWithOptionsE(t testing.TestingT, options HttpGetOptions) (int, strin
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return -1, "", err
@@ -261,7 +260,7 @@ func HTTPDoE(
 func HTTPDoWithOptionsE(
 	t testing.TestingT, options HttpDoOptions,
 ) (int, string, error) {
-	logger.Logf(t, "Making an HTTP %s call to URL %s", options.Method, options.Url)
+	logger.Default.Logf(t, "Making an HTTP %s call to URL %s", options.Method, options.Url)
 
 	tr := &http.Transport{
 		TLSClientConfig: options.TlsConfig,
@@ -280,7 +279,7 @@ func HTTPDoWithOptionsE(
 	}
 
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		return -1, "", err
@@ -347,11 +346,15 @@ func HTTPDoWithRetryWithOptionsE(
 	t testing.TestingT, options HttpDoOptions, expectedStatus int,
 	retries int, sleepBetweenRetries time.Duration,
 ) (string, error) {
-	// The request body is closed after a request is complete.
-	// Extract the underlying data and cache it so we can reuse for retried requests
-	data, err := io.ReadAll(options.Body)
-	if err != nil {
-		return "", err
+	var data []byte
+	if options.Body != nil {
+		// The request body is closed after a request is complete.
+		// Read the underlying data and cache it, so we can reuse for retried requests.
+		b, err := io.ReadAll(options.Body)
+		if err != nil {
+			return "", err
+		}
+		data = b
 	}
 
 	options.Body = nil
@@ -364,7 +367,7 @@ func HTTPDoWithRetryWithOptionsE(
 			if err != nil {
 				return "", err
 			}
-			logger.Logf(t, "output: %v", out)
+			logger.Default.Logf(t, "output: %v", out)
 			if statusCode != expectedStatus {
 				return "", ValidationFunctionFailed{Url: options.Url, Status: statusCode}
 			}
