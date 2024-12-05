@@ -63,9 +63,9 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 func TestDownloadPolicyReusesCachedDir(t *testing.T) {
 	t.Parallel()
 
-	baseDir := "git::https://github.com/gruntwork-io/terratest.git?ref=master"
-	remotePath := "git::https://github.com/gruntwork-io/terratest.git//examples/terraform-opa-example/policy/enforce_source.rego?ref=master"
-	remotePathAltSubPath := "git::https://github.com/gruntwork-io/terratest.git//modules/opa/eval.go?ref=master"
+	baseDir := "git::https://github.com/gruntwork-io/terratest.git?ref=main"
+	remotePath := "git::https://github.com/gruntwork-io/terratest.git//examples/terraform-opa-example/policy/enforce_source.rego?ref=main"
+	remotePathAltSubPath := "git::https://github.com/gruntwork-io/terratest.git//modules/opa/eval.go?ref=main"
 
 	// Make sure we clean up the downloaded file, while simultaneously asserting that the download dir was stored in the
 	// cache.

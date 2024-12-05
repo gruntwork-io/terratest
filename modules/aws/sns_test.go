@@ -1,12 +1,13 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +30,7 @@ func snsTopicExists(t *testing.T, region string, arn string) bool {
 
 	input := sns.GetTopicAttributesInput{TopicArn: aws.String(arn)}
 
-	if _, err := snsClient.GetTopicAttributes(&input); err != nil {
+	if _, err := snsClient.GetTopicAttributes(context.Background(), &input); err != nil {
 		if strings.Contains(err.Error(), "NotFound") {
 			return false
 		}

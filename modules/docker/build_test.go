@@ -95,8 +95,8 @@ func TestGitCloneAndBuild(t *testing.T) {
 	}
 	gitBranchName := git.GetCurrentBranchName(t)
 	if gitBranchName == "" {
-		logger.Logf(t, "WARNING: git.GetCurrentBranchName returned an empty string; falling back to master")
-		gitBranchName = "master"
+		logger.Logf(t, "WARNING: git.GetCurrentBranchName returned an empty string; falling back to main")
+		gitBranchName = "main"
 	}
 	GitCloneAndBuild(t, "git@github.com:gruntwork-io/terratest.git", gitBranchName, "test/fixtures/docker", buildOpts)
 

@@ -1,12 +1,13 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -113,14 +114,14 @@ func GetAllAwsRegionsE(t testing.TestingT) ([]string, error) {
 		return nil, err
 	}
 
-	out, err := ec2Client.DescribeRegions(&ec2.DescribeRegionsInput{})
+	out, err := ec2Client.DescribeRegions(context.Background(), &ec2.DescribeRegionsInput{})
 	if err != nil {
 		return nil, err
 	}
 
-	regions := []string{}
+	var regions []string
 	for _, region := range out.Regions {
-		regions = append(regions, aws.StringValue(region.RegionName))
+		regions = append(regions, aws.ToString(region.RegionName))
 	}
 
 	return regions, nil
@@ -146,14 +147,14 @@ func GetAvailabilityZonesE(t testing.TestingT, region string) ([]string, error) 
 		return nil, err
 	}
 
-	resp, err := ec2Client.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{})
+	resp, err := ec2Client.DescribeAvailabilityZones(context.Background(), &ec2.DescribeAvailabilityZonesInput{})
 	if err != nil {
 		return nil, err
 	}
 
 	var out []string
 	for _, availabilityZone := range resp.AvailabilityZones {
-		out = append(out, aws.StringValue(availabilityZone.ZoneName))
+		out = append(out, aws.ToString(availabilityZone.ZoneName))
 	}
 
 	return out, nil
@@ -168,7 +169,7 @@ func GetRegionsForService(t testing.TestingT, serviceName string) []string {
 	return out
 }
 
-// GetRegionsForService gets all AWS regions in which a service is available and returns errors.
+// GetRegionsForServiceE gets all AWS regions in which a service is available and returns errors.
 // See https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-public-parameters-global-infrastructure.html
 func GetRegionsForServiceE(t testing.TestingT, serviceName string) ([]string, error) {
 	// These values are available in any region, defaulting to us-east-1 since it's the oldest
@@ -179,12 +180,11 @@ func GetRegionsForServiceE(t testing.TestingT, serviceName string) ([]string, er
 	}
 
 	paramPath := "/aws/service/global-infrastructure/services/%s/regions"
-	req, resp := ssmClient.GetParametersByPathRequest(&ssm.GetParametersByPathInput{
+	resp, err := ssmClient.GetParametersByPath(context.Background(), &ssm.GetParametersByPathInput{
 		Path: aws.String(fmt.Sprintf(paramPath, serviceName)),
 	})
 
-	ssmErr := req.Send()
-	if ssmErr != nil {
+	if err != nil {
 		return nil, err
 	}
 

@@ -17,7 +17,7 @@ These modules are currently using the latest version of Go and was tested with *
 
 ## Azure-sdk-for-go version
 
-Let's make sure [go.mod](https://github.com/gruntwork-io/terratest/blob/master/go.mod) includes the appropriate [azure-sdk-for-go version](https://github.com/Azure/azure-sdk-for-go/releases/tag/v46.1.0):
+Let's make sure [go.mod](https://github.com/gruntwork-io/terratest/blob/main/go.mod) includes the appropriate [azure-sdk-for-go version](https://github.com/Azure/azure-sdk-for-go/releases/tag/v46.1.0):
 
 ```go
 require (

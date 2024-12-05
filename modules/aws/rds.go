@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -28,11 +30,11 @@ func GetAddressOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion
 		return "", err
 	}
 
-	return aws.StringValue(dbInstance.Endpoint.Address), nil
+	return aws.ToString(dbInstance.Endpoint.Address), nil
 }
 
 // GetPortOfRdsInstance gets the address of the given RDS Instance in the given region.
-func GetPortOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string) int64 {
+func GetPortOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string) int32 {
 	port, err := GetPortOfRdsInstanceE(t, dbInstanceID, awsRegion)
 	if err != nil {
 		t.Fatal(err)
@@ -41,7 +43,7 @@ func GetPortOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion str
 }
 
 // GetPortOfRdsInstanceE gets the address of the given RDS Instance in the given region.
-func GetPortOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string) (int64, error) {
+func GetPortOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string) (int32, error) {
 	dbInstance, err := GetRdsInstanceDetailsE(t, dbInstanceID, awsRegion)
 	if err != nil {
 		return -1, err
@@ -51,7 +53,7 @@ func GetPortOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion st
 }
 
 // GetWhetherSchemaExistsInRdsMySqlInstance checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsMySqlInstance(t testing.TestingT, dbUrl string, dbPort int64, dbUsername string, dbPassword string, expectedSchemaName string) bool {
+func GetWhetherSchemaExistsInRdsMySqlInstance(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool {
 	output, err := GetWhetherSchemaExistsInRdsMySqlInstanceE(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +62,7 @@ func GetWhetherSchemaExistsInRdsMySqlInstance(t testing.TestingT, dbUrl string, 
 }
 
 // GetWhetherSchemaExistsInRdsMySqlInstanceE checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsMySqlInstanceE(t testing.TestingT, dbUrl string, dbPort int64, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
+func GetWhetherSchemaExistsInRdsMySqlInstanceE(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/", dbUsername, dbPassword, dbUrl, dbPort)
 	db, connErr := sql.Open("mysql", connectionString)
 	if connErr != nil {
@@ -80,7 +82,7 @@ func GetWhetherSchemaExistsInRdsMySqlInstanceE(t testing.TestingT, dbUrl string,
 }
 
 // GetWhetherSchemaExistsInRdsPostgresInstance checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsPostgresInstance(t testing.TestingT, dbUrl string, dbPort int64, dbUsername string, dbPassword string, expectedSchemaName string) bool {
+func GetWhetherSchemaExistsInRdsPostgresInstance(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool {
 	output, err := GetWhetherSchemaExistsInRdsPostgresInstanceE(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
 	if err != nil {
 		t.Fatal(err)
@@ -89,7 +91,7 @@ func GetWhetherSchemaExistsInRdsPostgresInstance(t testing.TestingT, dbUrl strin
 }
 
 // GetWhetherSchemaExistsInRdsPostgresInstanceE checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsPostgresInstanceE(t testing.TestingT, dbUrl string, dbPort int64, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
+func GetWhetherSchemaExistsInRdsPostgresInstanceE(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
 	connectionString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
 
 	db, connErr := sql.Open("pgx", connectionString)
@@ -122,8 +124,8 @@ func GetParameterValueForParameterOfRdsInstance(t testing.TestingT, parameterNam
 func GetParameterValueForParameterOfRdsInstanceE(t testing.TestingT, parameterName string, dbInstanceID string, awsRegion string) (string, error) {
 	output := GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion)
 	for _, parameter := range output {
-		if aws.StringValue(parameter.ParameterName) == parameterName {
-			return aws.StringValue(parameter.ParameterValue), nil
+		if aws.ToString(parameter.ParameterName) == parameterName {
+			return aws.ToString(parameter.ParameterValue), nil
 		}
 	}
 	return "", ParameterForDbInstanceNotFound{ParameterName: parameterName, DbInstanceID: dbInstanceID, AwsRegion: awsRegion}
@@ -143,10 +145,10 @@ func GetOptionSettingForOfRdsInstanceE(t testing.TestingT, optionName string, op
 	optionGroupName := GetOptionGroupNameOfRdsInstance(t, dbInstanceID, awsRegion)
 	options := GetOptionsOfOptionGroup(t, optionGroupName, awsRegion)
 	for _, option := range options {
-		if aws.StringValue(option.OptionName) == optionName {
+		if aws.ToString(option.OptionName) == optionName {
 			for _, optionSetting := range option.OptionSettings {
-				if aws.StringValue(optionSetting.Name) == optionSettingName {
-					return aws.StringValue(optionSetting.Value), nil
+				if aws.ToString(optionSetting.Name) == optionSettingName {
+					return aws.ToString(optionSetting.Value), nil
 				}
 			}
 		}
@@ -169,11 +171,11 @@ func GetOptionGroupNameOfRdsInstanceE(t testing.TestingT, dbInstanceID string, a
 	if err != nil {
 		return "", err
 	}
-	return aws.StringValue(dbInstance.OptionGroupMemberships[0].OptionGroupName), nil
+	return aws.ToString(dbInstance.OptionGroupMemberships[0].OptionGroupName), nil
 }
 
 // GetOptionsOfOptionGroup gets the options of the option group specified
-func GetOptionsOfOptionGroup(t testing.TestingT, optionGroupName string, awsRegion string) []*rds.Option {
+func GetOptionsOfOptionGroup(t testing.TestingT, optionGroupName string, awsRegion string) []types.Option {
 	output, err := GetOptionsOfOptionGroupE(t, optionGroupName, awsRegion)
 	if err != nil {
 		t.Fatal(err)
@@ -182,18 +184,18 @@ func GetOptionsOfOptionGroup(t testing.TestingT, optionGroupName string, awsRegi
 }
 
 // GetOptionsOfOptionGroupE gets the options of the option group specified
-func GetOptionsOfOptionGroupE(t testing.TestingT, optionGroupName string, awsRegion string) ([]*rds.Option, error) {
+func GetOptionsOfOptionGroupE(t testing.TestingT, optionGroupName string, awsRegion string) ([]types.Option, error) {
 	rdsClient := NewRdsClient(t, awsRegion)
 	input := rds.DescribeOptionGroupsInput{OptionGroupName: aws.String(optionGroupName)}
-	output, err := rdsClient.DescribeOptionGroups(&input)
+	output, err := rdsClient.DescribeOptionGroups(context.Background(), &input)
 	if err != nil {
-		return []*rds.Option{}, err
+		return []types.Option{}, err
 	}
 	return output.OptionGroupsList[0].Options, nil
 }
 
 // GetAllParametersOfRdsInstance gets all the parameters defined in the parameter group for the RDS instance in the given region.
-func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string) []*rds.Parameter {
+func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion string) []types.Parameter {
 	parameters, err := GetAllParametersOfRdsInstanceE(t, dbInstanceID, awsRegion)
 	if err != nil {
 		t.Fatal(err)
@@ -202,36 +204,36 @@ func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsR
 }
 
 // GetAllParametersOfRdsInstanceE gets all the parameters defined in the parameter group for the RDS instance in the given region.
-func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string) ([]*rds.Parameter, error) {
+func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion string) ([]types.Parameter, error) {
 	dbInstance, dbInstanceErr := GetRdsInstanceDetailsE(t, dbInstanceID, awsRegion)
 	if dbInstanceErr != nil {
-		return []*rds.Parameter{}, dbInstanceErr
+		return []types.Parameter{}, dbInstanceErr
 	}
-	parameterGroupName := aws.StringValue(dbInstance.DBParameterGroups[0].DBParameterGroupName)
+	parameterGroupName := aws.ToString(dbInstance.DBParameterGroups[0].DBParameterGroupName)
 
 	rdsClient := NewRdsClient(t, awsRegion)
 	input := rds.DescribeDBParametersInput{DBParameterGroupName: aws.String(parameterGroupName)}
-	output, err := rdsClient.DescribeDBParameters(&input)
+	output, err := rdsClient.DescribeDBParameters(context.Background(), &input)
 
 	if err != nil {
-		return []*rds.Parameter{}, err
+		return []types.Parameter{}, err
 	}
 	return output.Parameters, nil
 }
 
 // GetRdsInstanceDetailsE gets the details of a single DB instance whose identifier is passed.
-func GetRdsInstanceDetailsE(t testing.TestingT, dbInstanceID string, awsRegion string) (*rds.DBInstance, error) {
+func GetRdsInstanceDetailsE(t testing.TestingT, dbInstanceID string, awsRegion string) (*types.DBInstance, error) {
 	rdsClient := NewRdsClient(t, awsRegion)
 	input := rds.DescribeDBInstancesInput{DBInstanceIdentifier: aws.String(dbInstanceID)}
-	output, err := rdsClient.DescribeDBInstances(&input)
+	output, err := rdsClient.DescribeDBInstances(context.Background(), &input)
 	if err != nil {
 		return nil, err
 	}
-	return output.DBInstances[0], nil
+	return &output.DBInstances[0], nil
 }
 
 // NewRdsClient creates an RDS client.
-func NewRdsClient(t testing.TestingT, region string) *rds.RDS {
+func NewRdsClient(t testing.TestingT, region string) *rds.Client {
 	client, err := NewRdsClientE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -240,18 +242,18 @@ func NewRdsClient(t testing.TestingT, region string) *rds.RDS {
 }
 
 // NewRdsClientE creates an RDS client.
-func NewRdsClientE(t testing.TestingT, region string) (*rds.RDS, error) {
+func NewRdsClientE(t testing.TestingT, region string) (*rds.Client, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
 
-	return rds.New(sess), nil
+	return rds.NewFromConfig(*sess), nil
 }
 
 // GetRecommendedRdsInstanceType takes in a list of RDS instance types (e.g., "db.t2.micro", "db.t3.micro") and returns the
 // first instance type in the list that is available in the given region and for the given database engine type.
-// If none of the instances provided are avaiable for your combination of region and database engine, this function will exit with an error.
+// If none of the instances provided are available for your combination of region and database engine, this function will exit with an error.
 func GetRecommendedRdsInstanceType(t testing.TestingT, region string, engine string, engineVersion string, instanceTypeOptions []string) string {
 	out, err := GetRecommendedRdsInstanceTypeE(t, region, engine, engineVersion, instanceTypeOptions)
 	require.NoError(t, err)
@@ -260,7 +262,7 @@ func GetRecommendedRdsInstanceType(t testing.TestingT, region string, engine str
 
 // GetRecommendedRdsInstanceTypeE takes in a list of RDS instance types (e.g., "db.t2.micro", "db.t3.micro") and returns the
 // first instance type in the list that is available in the given region and for the given database engine type.
-// If none of the instances provided are avaiable for your combination of region and database engine, this function will return an error.
+// If none of the instances provided are available for your combination of region and database engine, this function will return an error.
 func GetRecommendedRdsInstanceTypeE(t testing.TestingT, region string, engine string, engineVersion string, instanceTypeOptions []string) (string, error) {
 	client, err := NewRdsClientE(t, region)
 	if err != nil {
@@ -271,9 +273,9 @@ func GetRecommendedRdsInstanceTypeE(t testing.TestingT, region string, engine st
 
 // GetRecommendedRdsInstanceTypeWithClientE takes in a list of RDS instance types (e.g., "db.t2.micro", "db.t3.micro") and returns the
 // first instance type in the list that is available in the given region and for the given database engine type.
-// If none of the instances provided are avaiable for your combination of region and database engine, this function will return an error.
+// If none of the instances provided are available for your combination of region and database engine, this function will return an error.
 // This function expects an authenticated RDS client from the AWS SDK Go library.
-func GetRecommendedRdsInstanceTypeWithClientE(t testing.TestingT, rdsClient *rds.RDS, engine string, engineVersion string, instanceTypeOptions []string) (string, error) {
+func GetRecommendedRdsInstanceTypeWithClientE(t testing.TestingT, rdsClient *rds.Client, engine string, engineVersion string, instanceTypeOptions []string) (string, error) {
 	for _, instanceTypeOption := range instanceTypeOptions {
 		instanceTypeExists, err := instanceTypeExistsForEngineAndRegionE(rdsClient, engine, engineVersion, instanceTypeOption)
 		if err != nil {
@@ -289,14 +291,14 @@ func GetRecommendedRdsInstanceTypeWithClientE(t testing.TestingT, rdsClient *rds
 
 // instanceTypeExistsForEngineAndRegionE returns a boolean that represents whether the provided instance type (e.g. db.t2.micro) exists for the given region and db engine type
 // This function will return an error if the RDS AWS SDK call fails.
-func instanceTypeExistsForEngineAndRegionE(client *rds.RDS, engine string, engineVersion string, instanceType string) (bool, error) {
+func instanceTypeExistsForEngineAndRegionE(client *rds.Client, engine string, engineVersion string, instanceType string) (bool, error) {
 	input := rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String(engine),
 		EngineVersion:   aws.String(engineVersion),
 		DBInstanceClass: aws.String(instanceType),
 	}
 
-	out, err := client.DescribeOrderableDBInstanceOptions(&input)
+	out, err := client.DescribeOrderableDBInstanceOptions(context.Background(), &input)
 	if err != nil {
 		return false, err
 	}
@@ -326,7 +328,7 @@ func GetValidEngineVersionE(t testing.TestingT, region string, engine string, ma
 		Engine:        aws.String(engine),
 		EngineVersion: aws.String(majorVersion),
 	}
-	out, err := client.DescribeDBEngineVersions(&input)
+	out, err := client.DescribeDBEngineVersions(context.Background(), &input)
 	if err != nil || len(out.DBEngineVersions) == 0 {
 		return "", err
 	}
