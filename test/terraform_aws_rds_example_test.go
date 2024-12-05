@@ -8,6 +8,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,12 +76,13 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 			engineVersion := aws.GetValidEngineVersion(t, awsRegion, tt.engineName, tt.majorEngineVersion)
 			instanceType := aws.GetRecommendedRdsInstanceType(t, awsRegion, tt.engineName, engineVersion, []string{"db.t2.micro", "db.t3.micro", "db.t3.small"})
+			moduleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-rds-example")
 
 			// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 			// terraform testing.
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 				// The path to where our Terraform code is located
-				TerraformDir: "../examples/terraform-aws-rds-example",
+				TerraformDir: moduleFolder,
 
 				// Variables to pass to our Terraform code using -var options
 				// "username" and "password" should not be passed from here in a production scenario.
