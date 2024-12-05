@@ -2,12 +2,14 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -28,13 +30,13 @@ func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, valu
 		return "", err
 	}
 
-	resp, err := s3Client.ListBuckets(&s3.ListBucketsInput{})
+	resp, err := s3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
 	if err != nil {
 		return "", err
 	}
 
 	for _, bucket := range resp.Buckets {
-		tagResponse, err := s3Client.GetBucketTagging(&s3.GetBucketTaggingInput{Bucket: bucket.Name})
+		tagResponse, err := s3Client.GetBucketTagging(context.Background(), &s3.GetBucketTaggingInput{Bucket: bucket.Name})
 
 		if err != nil {
 			if strings.Contains(err.Error(), "NoSuchBucket") {
@@ -77,7 +79,7 @@ func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[
 		return nil, err
 	}
 
-	out, err := s3Client.GetBucketTagging(&s3.GetBucketTaggingInput{
+	out, err := s3Client.GetBucketTagging(context.Background(), &s3.GetBucketTaggingInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
@@ -86,7 +88,7 @@ func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[
 
 	tags := map[string]string{}
 	for _, tag := range out.TagSet {
-		tags[aws.StringValue(tag.Key)] = aws.StringValue(tag.Value)
+		tags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
 	}
 
 	return tags, nil
@@ -107,7 +109,7 @@ func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, k
 		return "", err
 	}
 
-	res, err := s3Client.GetObject(&s3.GetObjectInput{
+	res, err := s3Client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
 	})
@@ -144,21 +146,27 @@ func CreateS3BucketE(t testing.TestingT, region string, name string) error {
 	}
 
 	params := &s3.CreateBucketInput{
-		Bucket: aws.String(name),
-		// https://github.com/aws/aws-sdk-go/blob/v1.44.122/service/s3/api.go#L41646
-		ObjectOwnership: aws.String(s3.ObjectOwnershipObjectWriter),
+		Bucket:          aws.String(name),
+		ObjectOwnership: types.ObjectOwnershipObjectWriter,
 	}
-	_, err = s3Client.CreateBucket(params)
+
+	if region != "us-east-1" {
+		params.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+			LocationConstraint: types.BucketLocationConstraint(region),
+		}
+	}
+
+	_, err = s3Client.CreateBucket(context.Background(), params)
 	return err
 }
 
-// PutS3BucketPolicy applies an IAM resource policy to a given S3 bucket to create it's bucket policy
+// PutS3BucketPolicy applies an IAM resource policy to a given S3 bucket to create its bucket policy
 func PutS3BucketPolicy(t testing.TestingT, region string, bucketName string, policyJSONString string) {
 	err := PutS3BucketPolicyE(t, region, bucketName, policyJSONString)
 	require.NoError(t, err)
 }
 
-// PutS3BucketPolicyE applies an IAM resource policy to a given S3 bucket to create it's bucket policy
+// PutS3BucketPolicyE applies an IAM resource policy to a given S3 bucket to create its bucket policy
 func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, policyJSONString string) error {
 	logger.Default.Logf(t, "Applying bucket policy for bucket %s in %s", bucketName, region)
 
@@ -172,7 +180,7 @@ func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, po
 		Policy: aws.String(policyJSONString),
 	}
 
-	_, err = s3Client.PutBucketPolicy(input)
+	_, err = s3Client.PutBucketPolicy(context.Background(), input)
 	return err
 }
 
@@ -193,13 +201,13 @@ func PutS3BucketVersioningE(t testing.TestingT, region string, bucketName string
 
 	input := &s3.PutBucketVersioningInput{
 		Bucket: aws.String(bucketName),
-		VersioningConfiguration: &s3.VersioningConfiguration{
-			MFADelete: aws.String("Disabled"),
-			Status:    aws.String("Enabled"),
+		VersioningConfiguration: &types.VersioningConfiguration{
+			MFADelete: types.MFADeleteDisabled,
+			Status:    types.BucketVersioningStatusEnabled,
 		},
 	}
 
-	_, err = s3Client.PutBucketVersioning(input)
+	_, err = s3Client.PutBucketVersioning(context.Background(), input)
 	return err
 }
 
@@ -221,7 +229,7 @@ func DeleteS3BucketE(t testing.TestingT, region string, name string) error {
 	params := &s3.DeleteBucketInput{
 		Bucket: aws.String(name),
 	}
-	_, err = s3Client.DeleteBucket(params)
+	_, err = s3Client.DeleteBucket(context.Background(), params)
 	return err
 }
 
@@ -246,53 +254,53 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 
 	for {
 		// Requesting a batch of objects from s3 bucket
-		bucketObjects, err := s3Client.ListObjectVersions(params)
+		bucketObjects, err := s3Client.ListObjectVersions(context.Background(), params)
 		if err != nil {
 			return err
 		}
 
-		//Checks if the bucket is already empty
+		// Checks if the bucket is already empty
 		if len((*bucketObjects).Versions) == 0 {
 			logger.Default.Logf(t, "Bucket %s is already empty", name)
 			return nil
 		}
 
-		//creating an array of pointers of ObjectIdentifier
-		objectsToDelete := make([]*s3.ObjectIdentifier, 0, 1000)
+		// creating an array of pointers of ObjectIdentifier
+		objectsToDelete := make([]types.ObjectIdentifier, 0, 1000)
 		for _, object := range (*bucketObjects).Versions {
-			obj := s3.ObjectIdentifier{
+			obj := types.ObjectIdentifier{
 				Key:       object.Key,
 				VersionId: object.VersionId,
 			}
-			objectsToDelete = append(objectsToDelete, &obj)
+			objectsToDelete = append(objectsToDelete, obj)
 		}
 
 		for _, object := range (*bucketObjects).DeleteMarkers {
-			obj := s3.ObjectIdentifier{
+			obj := types.ObjectIdentifier{
 				Key:       object.Key,
 				VersionId: object.VersionId,
 			}
-			objectsToDelete = append(objectsToDelete, &obj)
+			objectsToDelete = append(objectsToDelete, obj)
 		}
 
-		//Creating JSON payload for bulk delete
-		deleteArray := s3.Delete{Objects: objectsToDelete}
+		// Creating JSON payload for bulk delete
+		deleteArray := types.Delete{Objects: objectsToDelete}
 		deleteParams := &s3.DeleteObjectsInput{
 			Bucket: aws.String(name),
 			Delete: &deleteArray,
 		}
 
-		//Running the Bulk delete job (limit 1000)
-		_, err = s3Client.DeleteObjects(deleteParams)
+		// Running the Bulk delete job (limit 1000)
+		_, err = s3Client.DeleteObjects(context.Background(), deleteParams)
 		if err != nil {
 			return err
 		}
 
-		if *(*bucketObjects).IsTruncated { //if there are more objects in the bucket, IsTruncated = true
+		if *(*bucketObjects).IsTruncated { // if there are more objects in the bucket, IsTruncated = true
 			// params.Marker = (*deleteParams).Delete.Objects[len((*deleteParams).Delete.Objects)-1].Key
 			params.KeyMarker = bucketObjects.NextKeyMarker
 			logger.Default.Logf(t, "Requesting next batch | %s", *(params.KeyMarker))
-		} else { //if all objects in the bucket have been cleaned up.
+		} else { // if all objects in the bucket have been cleaned up.
 			break
 		}
 	}
@@ -316,7 +324,7 @@ func GetS3BucketLoggingTargetE(t testing.TestingT, awsRegion string, bucket stri
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketLogging(&s3.GetBucketLoggingInput{
+	res, err := s3Client.GetBucketLogging(context.Background(), &s3.GetBucketLoggingInput{
 		Bucket: &bucket,
 	})
 
@@ -328,7 +336,7 @@ func GetS3BucketLoggingTargetE(t testing.TestingT, awsRegion string, bucket stri
 		return "", S3AccessLoggingNotEnabledErr{bucket, awsRegion}
 	}
 
-	return aws.StringValue(res.LoggingEnabled.TargetBucket), nil
+	return aws.ToString(res.LoggingEnabled.TargetBucket), nil
 }
 
 // GetS3BucketLoggingTargetPrefix fetches the given bucket's logging object prefix and returns it as a string
@@ -347,7 +355,7 @@ func GetS3BucketLoggingTargetPrefixE(t testing.TestingT, awsRegion string, bucke
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketLogging(&s3.GetBucketLoggingInput{
+	res, err := s3Client.GetBucketLogging(context.Background(), &s3.GetBucketLoggingInput{
 		Bucket: &bucket,
 	})
 
@@ -359,7 +367,7 @@ func GetS3BucketLoggingTargetPrefixE(t testing.TestingT, awsRegion string, bucke
 		return "", S3AccessLoggingNotEnabledErr{bucket, awsRegion}
 	}
 
-	return aws.StringValue(res.LoggingEnabled.TargetPrefix), nil
+	return aws.ToString(res.LoggingEnabled.TargetPrefix), nil
 }
 
 // GetS3BucketVersioning fetches the given bucket's versioning configuration status and returns it as a string
@@ -377,14 +385,14 @@ func GetS3BucketVersioningE(t testing.TestingT, awsRegion string, bucket string)
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketVersioning(&s3.GetBucketVersioningInput{
+	res, err := s3Client.GetBucketVersioning(context.Background(), &s3.GetBucketVersioningInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	return aws.StringValue(res.Status), nil
+	return string(res.Status), nil
 }
 
 // GetS3BucketPolicy fetches the given bucket's resource policy and returns it as a string
@@ -402,14 +410,14 @@ func GetS3BucketPolicyE(t testing.TestingT, awsRegion string, bucket string) (st
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketPolicy(&s3.GetBucketPolicyInput{
+	res, err := s3Client.GetBucketPolicy(context.Background(), &s3.GetBucketPolicyInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	return aws.StringValue(res.Policy), nil
+	return aws.ToString(res.Policy), nil
 }
 
 // AssertS3BucketExists checks if the given S3 bucket exists in the given region and fail the test if it does not.
@@ -428,7 +436,7 @@ func AssertS3BucketExistsE(t testing.TestingT, region string, name string) error
 	params := &s3.HeadBucketInput{
 		Bucket: aws.String(name),
 	}
-	_, err = s3Client.HeadBucket(params)
+	_, err = s3Client.HeadBucket(context.Background(), params)
 	return err
 }
 
@@ -471,7 +479,7 @@ func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName s
 }
 
 // NewS3Client creates an S3 client.
-func NewS3Client(t testing.TestingT, region string) *s3.S3 {
+func NewS3Client(t testing.TestingT, region string) *s3.Client {
 	client, err := NewS3ClientE(t, region)
 	require.NoError(t, err)
 
@@ -479,30 +487,30 @@ func NewS3Client(t testing.TestingT, region string) *s3.S3 {
 }
 
 // NewS3ClientE creates an S3 client.
-func NewS3ClientE(t testing.TestingT, region string) (*s3.S3, error) {
+func NewS3ClientE(t testing.TestingT, region string) (*s3.Client, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
 
-	return s3.New(sess), nil
+	return s3.NewFromConfig(*sess), nil
 }
 
 // NewS3Uploader creates an S3 Uploader.
-func NewS3Uploader(t testing.TestingT, region string) *s3manager.Uploader {
+func NewS3Uploader(t testing.TestingT, region string) *manager.Uploader {
 	uploader, err := NewS3UploaderE(t, region)
 	require.NoError(t, err)
 	return uploader
 }
 
 // NewS3UploaderE creates an S3 Uploader.
-func NewS3UploaderE(t testing.TestingT, region string) (*s3manager.Uploader, error) {
+func NewS3UploaderE(t testing.TestingT, region string) (*manager.Uploader, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
 
-	return s3manager.NewUploader(sess), nil
+	return manager.NewUploader(s3.NewFromConfig(*sess)), nil
 }
 
 // S3AccessLoggingNotEnabledErr is a custom error that occurs when acess logging hasn't been enabled on the S3 Bucket

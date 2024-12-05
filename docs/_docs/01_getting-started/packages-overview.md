@@ -11,7 +11,7 @@ nav_title_link: /docs/
 ---
 
 Now that you've had a chance to browse the examples and their tests, here's an overview of the packages you'll find in
-Terratest's [modules folder](https://github.com/gruntwork-io/terratest/tree/master/modules) and how they can help you test different types infrastructure:
+Terratest's [modules folder](https://github.com/gruntwork-io/terratest/tree/main/modules) and how they can help you test different types infrastructure:
 
 {:.doc-styled-table}
 | Package            | Description                                                                                                                                                                                                                                                                                          |
@@ -27,7 +27,7 @@ Terratest's [modules folder](https://github.com/gruntwork-io/terratest/tree/mast
 | **http-helper**    | Functions for making HTTP requests. Examples: make an HTTP request to a URL and check the status code and body contain the expected values, run a simple HTTP server locally.                                                                                                                        |
 | **k8s**            | Functions that make it easier to work with Kubernetes. Examples: Getting the list of nodes in a cluster, waiting until all nodes in a cluster is ready.                                                                                                                                              |
 | **logger**         | A replacement for Go's `t.Log` and `t.Logf` that writes the logs to `stdout` immediately, rather than buffering them until the very end of the test. This makes debugging and iterating easier.                                                                                                      |
-| **logger/parser**  | Includes functions for parsing out interleaved go test output and piecing out the individual test logs. Used by the [terratest_log_parser](https://github.com/gruntwork-io/terratest/tree/master/cmd/terratest_log_parser) command.                                                                                                                       |
+| **logger/parser**  | Includes functions for parsing out interleaved go test output and piecing out the individual test logs. Used by the [terratest_log_parser](https://github.com/gruntwork-io/terratest/tree/main/cmd/terratest_log_parser) command.                                                                                                                       |
 | **oci**            | Functions that make it easier to work with OCI. Examples: Getting the most recent image of a compartment + OS pair, deleting a custom image, retrieving a random subnet.                                                                                                                             |
 | **packer**         | Functions for working with Packer. Examples: run a Packer build and return the ID of the artifact that was created.                                                                                                                                                                                  |
 | **random**         | Functions for generating random data. Examples: generate a unique ID that can be used to namespace resources so multiple tests running in parallel don't clash.                                                                                                                                      |

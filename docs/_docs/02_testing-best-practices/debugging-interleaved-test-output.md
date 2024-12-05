@@ -36,7 +36,7 @@ This will:
 - Create a `report.xml` file containing a Junit XML file of the test summary (so it can be integrated in your CI).
 
 The output can be integrated in your CI engine to further enhance the debugging experience. See Terratest's own
-[circleci configuration](https://github.com/gruntwork-io/terratest/blob/master/.circleci/config.yml) for an example of how to integrate the utility with CircleCI. This
+[circleci configuration](https://github.com/gruntwork-io/terratest/blob/main/.circleci/config.yml) for an example of how to integrate the utility with CircleCI. This
 provides for each build:
 
 - A test summary view showing you which tests failed:

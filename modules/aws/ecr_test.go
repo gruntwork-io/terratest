@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,11 +20,11 @@ func TestEcrRepo(t *testing.T) {
 	defer DeleteECRRepo(t, region, repo1)
 	require.NoError(t, err)
 
-	assert.Equal(t, ecrRepoName, aws.StringValue(repo1.RepositoryName))
+	assert.Equal(t, ecrRepoName, aws.ToString(repo1.RepositoryName))
 
 	repo2, err := GetECRRepoE(t, region, ecrRepoName)
 	require.NoError(t, err)
-	assert.Equal(t, ecrRepoName, aws.StringValue(repo2.RepositoryName))
+	assert.Equal(t, ecrRepoName, aws.ToString(repo2.RepositoryName))
 }
 
 func TestGetEcrRepoLifecyclePolicyError(t *testing.T) {
@@ -36,7 +36,7 @@ func TestGetEcrRepoLifecyclePolicyError(t *testing.T) {
 	defer DeleteECRRepo(t, region, repo1)
 	require.NoError(t, err)
 
-	assert.Equal(t, ecrRepoName, aws.StringValue(repo1.RepositoryName))
+	assert.Equal(t, ecrRepoName, aws.ToString(repo1.RepositoryName))
 
 	_, err = GetECRRepoLifecyclePolicyE(t, region, repo1)
 	require.Error(t, err)

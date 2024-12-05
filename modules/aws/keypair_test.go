@@ -1,12 +1,12 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -32,10 +32,10 @@ func keyPairExists(t *testing.T, keyPair *Ec2Keypair) bool {
 	client := NewEc2Client(t, keyPair.Region)
 
 	input := ec2.DescribeKeyPairsInput{
-		KeyNames: aws.StringSlice([]string{keyPair.Name}),
+		KeyNames: []string{keyPair.Name},
 	}
 
-	out, err := client.DescribeKeyPairs(&input)
+	out, err := client.DescribeKeyPairs(context.Background(), &input)
 	if err != nil {
 		if strings.Contains(err.Error(), "InvalidKeyPair.NotFound") {
 			return false

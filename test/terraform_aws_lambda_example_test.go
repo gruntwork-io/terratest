@@ -136,7 +136,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 	// With "DryRun", there's no message in the output, but there is
 	// a status code which will have a value of 204 for a successful
 	// invocation.
-	assert.Equal(t, int(*out.StatusCode), 204)
+	assert.Equal(t, int(out.StatusCode), 204)
 
 	// Invoke the function, this time causing the Lambda to error and
 	// capturing the error.

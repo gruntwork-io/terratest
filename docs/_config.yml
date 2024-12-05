@@ -33,7 +33,7 @@ repository: "github.com/gruntwork-io/terratest"
 twitter_username: https://twitter.com/gruntwork_io
 github_username:  https://github.com/gruntwork-io
 
-github_api_url: https://raw.githubusercontent.com/gruntwork-io/terratest/master
+github_api_url: https://raw.githubusercontent.com/gruntwork-io/terratest/main
 
 # Build settings
 # theme: minima

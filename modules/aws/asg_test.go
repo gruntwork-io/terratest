@@ -1,13 +1,16 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	autoscalingTypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -47,56 +50,74 @@ func TestGetInstanceIdsForAsg(t *testing.T) {
 	assert.Equal(t, len(instanceIds), 1)
 }
 
-// The following functions were adapted from the tests for cloud-nuke
-
-func createTestAutoScalingGroup(t *testing.T, name string, region string, desiredCount int64) {
-	instance := createTestEC2Instance(t, region, name)
+func createTestAutoScalingGroup(t *testing.T, name string, region string, desiredCount int32) {
+	azs := GetAvailabilityZones(t, region)
+	ec2Client := NewEc2Client(t, region)
+	imageID := GetAmazonLinuxAmi(t, region)
+	template, err := ec2Client.CreateLaunchTemplate(context.Background(), &ec2.CreateLaunchTemplateInput{
+		LaunchTemplateData: &types.RequestLaunchTemplateData{
+			ImageId:      aws.String(imageID),
+			InstanceType: types.InstanceType(GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})),
+		},
+		LaunchTemplateName: aws.String(name),
+	})
+	require.NoError(t, err)
 
 	asgClient := NewAsgClient(t, region)
 	param := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName: &name,
-		InstanceId:           instance.InstanceId,
-		DesiredCapacity:      aws.Int64(desiredCount),
-		MinSize:              aws.Int64(1),
-		MaxSize:              aws.Int64(3),
+		LaunchTemplate: &autoscalingTypes.LaunchTemplateSpecification{
+			LaunchTemplateId: template.LaunchTemplate.LaunchTemplateId,
+			Version:          aws.String("$Latest"),
+		},
+		AvailabilityZones: azs,
+		DesiredCapacity:   aws.Int32(desiredCount),
+		MinSize:           aws.Int32(1),
+		MaxSize:           aws.Int32(3),
 	}
-	_, err := asgClient.CreateAutoScalingGroup(param)
+	_, err = asgClient.CreateAutoScalingGroup(context.Background(), param)
 	require.NoError(t, err)
 
-	err = asgClient.WaitUntilGroupExists(&autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{&name},
-	})
+	waiter := autoscaling.NewGroupExistsWaiter(asgClient)
+	err = waiter.Wait(context.Background(), &autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []string{name},
+	}, 42*time.Minute)
 	require.NoError(t, err)
 }
 
-func createTestEC2Instance(t *testing.T, region string, name string) ec2.Instance {
+func createTestEC2Instance(t *testing.T, region string, name string) types.Instance {
 	ec2Client := NewEc2Client(t, region)
 	imageID := GetAmazonLinuxAmi(t, region)
 	params := &ec2.RunInstancesInput{
 		ImageId:      aws.String(imageID),
-		InstanceType: aws.String(GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})),
-		MinCount:     aws.Int64(1),
-		MaxCount:     aws.Int64(1),
+		InstanceType: types.InstanceType(GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})),
+		MinCount:     aws.Int32(1),
+		MaxCount:     aws.Int32(1),
 	}
-	runResult, err := ec2Client.RunInstances(params)
+	runResult, err := ec2Client.RunInstances(context.Background(), params)
 	require.NoError(t, err)
 
 	require.NotEqual(t, len(runResult.Instances), 0)
 
-	err = ec2Client.WaitUntilInstanceExists(&ec2.DescribeInstancesInput{
-		Filters: []*ec2.Filter{
-			&ec2.Filter{
-				Name:   aws.String("instance-id"),
-				Values: []*string{runResult.Instances[0].InstanceId},
+	waiter := ec2.NewInstanceExistsWaiter(ec2Client)
+	err = waiter.Wait(
+		context.Background(),
+		&ec2.DescribeInstancesInput{
+			Filters: []types.Filter{
+				{
+					Name:   aws.String("instance-id"),
+					Values: []string{*runResult.Instances[0].InstanceId},
+				},
 			},
 		},
-	})
+		42*time.Minute,
+	)
 	require.NoError(t, err)
 
 	// Add test tag to the created instance
-	_, err = ec2Client.CreateTags(&ec2.CreateTagsInput{
-		Resources: []*string{runResult.Instances[0].InstanceId},
-		Tags: []*ec2.Tag{
+	_, err = ec2Client.CreateTags(context.Background(), &ec2.CreateTagsInput{
+		Resources: []string{*runResult.Instances[0].InstanceId},
+		Tags: []types.Tag{
 			{
 				Key:   aws.String("Name"),
 				Value: aws.String(name),
@@ -106,17 +127,18 @@ func createTestEC2Instance(t *testing.T, region string, name string) ec2.Instanc
 	require.NoError(t, err)
 
 	// EC2 Instance must be in a running before this function returns
-	err = ec2Client.WaitUntilInstanceRunning(&ec2.DescribeInstancesInput{
-		Filters: []*ec2.Filter{
-			&ec2.Filter{
+	runningWaiter := ec2.NewInstanceRunningWaiter(ec2Client)
+	err = runningWaiter.Wait(context.Background(), &ec2.DescribeInstancesInput{
+		Filters: []types.Filter{
+			{
 				Name:   aws.String("instance-id"),
-				Values: []*string{runResult.Instances[0].InstanceId},
+				Values: []string{*runResult.Instances[0].InstanceId},
 			},
 		},
-	})
+	}, 42*time.Minute)
 	require.NoError(t, err)
 
-	return *runResult.Instances[0]
+	return runResult.Instances[0]
 }
 
 func terminateEc2InstancesByName(t *testing.T, region string, names []string) {
@@ -134,10 +156,18 @@ func deleteAutoScalingGroup(t *testing.T, name string, region string) {
 
 	asgClient := NewAsgClient(t, region)
 	input := &autoscaling.DeleteAutoScalingGroupInput{AutoScalingGroupName: aws.String(name)}
-	_, err := asgClient.DeleteAutoScalingGroup(input)
+	_, err := asgClient.DeleteAutoScalingGroup(context.Background(), input)
 	require.NoError(t, err)
-	err = asgClient.WaitUntilGroupNotExists(&autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{aws.String(name)},
+
+	waiter := autoscaling.NewGroupNotExistsWaiter(asgClient)
+	err = waiter.Wait(context.Background(), &autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []string{name},
+	}, 40*time.Minute)
+	require.NoError(t, err)
+
+	ec2Client := NewEc2Client(t, region)
+	_, err = ec2Client.DeleteLaunchTemplate(context.Background(), &ec2.DeleteLaunchTemplateInput{
+		LaunchTemplateName: aws.String(name),
 	})
 	require.NoError(t, err)
 }
@@ -146,15 +176,15 @@ func scaleAsgToZero(t *testing.T, name string, region string) {
 	asgClient := NewAsgClient(t, region)
 	input := &autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(name),
-		DesiredCapacity:      aws.Int64(0),
-		MinSize:              aws.Int64(0),
-		MaxSize:              aws.Int64(0),
+		DesiredCapacity:      aws.Int32(0),
+		MinSize:              aws.Int32(0),
+		MaxSize:              aws.Int32(0),
 	}
-	_, err := asgClient.UpdateAutoScalingGroup(input)
+	_, err := asgClient.UpdateAutoScalingGroup(context.Background(), input)
 	require.NoError(t, err)
 	WaitForCapacity(t, name, region, 40, 15*time.Second)
 
 	// There is an eventual consistency bug where even though the ASG is scaled down, AWS sometimes still views a
-	// scaling activity so we add a 5 second pause here to work around it.
+	// scaling activity so we add a 5-second pause here to work around it.
 	time.Sleep(5 * time.Second)
 }

@@ -22,11 +22,11 @@ var (
 // across calls.
 // For example, if you call DownloadPolicyE with the go-getter URL multiple times:
 //
-//	git::https://github.com/gruntwork-io/terratest.git//policies/foo.rego?ref=master
+//	git::https://github.com/gruntwork-io/terratest.git//policies/foo.rego?ref=main
 //
 // The first time the gruntwork-io/terratest repo will be downloaded to a new temp directory. All subsequent calls will
 // reuse that first temporary dir where the repo was cloned. This is preserved even if a different subdir is requested
-// later, e.g.: git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=master.
+// later, e.g.: git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=main
 // Note that the query parameters are always included in the base URL. This means that if you use a different ref (e.g.,
 // git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=v0.39.3), then that will be cloned to a new
 // temporary directory rather than the cached dir.

@@ -20,7 +20,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 		majorEngineVersion string
 		engineFamily       string
 		licenseModel       string
-		schemaCheck        func(t *testing.T, dbUrl string, dbPort int64, dbUsername string, dbPassword string, expectedSchemaName string) bool
+		schemaCheck        func(t *testing.T, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool
 		expectedOptins     map[struct {
 			opName  string
 			setName string
@@ -33,7 +33,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			majorEngineVersion: "5.7",
 			engineFamily:       "mysql5.7",
 			licenseModel:       "general-public-license",
-			schemaCheck: func(t *testing.T, dbUrl string, dbPort int64, dbUsername, dbPassword, expectedSchemaName string) bool {
+			schemaCheck: func(t *testing.T, dbUrl string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
 				return aws.GetWhetherSchemaExistsInRdsMySqlInstance(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
 			},
 			expectedOptins: map[struct {
@@ -53,7 +53,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			majorEngineVersion: "13",
 			engineFamily:       "postgres13",
 			licenseModel:       "postgresql-license",
-			schemaCheck: func(t *testing.T, dbUrl string, dbPort int64, dbUsername, dbPassword, expectedSchemaName string) bool {
+			schemaCheck: func(t *testing.T, dbUrl string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
 				return aws.GetWhetherSchemaExistsInRdsPostgresInstance(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
 			},
 		},
@@ -67,7 +67,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			// Give this RDS Instance a unique ID for a name tag so we can distinguish it from any other RDS Instance running
 			// in your AWS account
 			expectedName := fmt.Sprintf("terratest-aws-rds-example-%s", strings.ToLower(random.UniqueId()))
-			expectedPort := int64(3306)
+			expectedPort := int32(3306)
 			expectedDatabaseName := "terratest"
 			username := "username"
 			password := "password"
