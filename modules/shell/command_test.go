@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -182,4 +183,30 @@ func TestCommandOutputType(t *testing.T) {
 		assert.Len(t, o.Output.Stderr(), len(stderr))
 		assert.Len(t, o.Output.Combined(), len(stdout)+len(stderr)+1) // +1 for newline
 	}
+}
+
+func TestCommandWithStdoutAndStdErr(t *testing.T) {
+	t.Parallel()
+
+	stdout := "hello world"
+	stderr := "this command has failed"
+	command := Command{
+		Command: "sh",
+		Args:    []string{"-c", `echo "` + stdout + `" && echo "` + stderr + `" >&2`},
+		Logger:  logger.Discard,
+	}
+
+	t.Run("MustNotError", func(t *testing.T) {
+		ostdout, ostderr := RunCommandAndGetStdOutErr(t, command)
+		assert.Equal(t, stdout, ostdout)
+		assert.Equal(t, stderr, ostderr)
+	})
+
+	t.Run("ReturnError", func(t *testing.T) {
+		ostdout, ostderr, err := RunCommandAndGetStdOutErrE(t, command)
+		require.NoError(t, err)
+		assert.Equal(t, stdout, ostdout)
+		assert.Equal(t, stderr, ostderr)
+	})
+
 }
