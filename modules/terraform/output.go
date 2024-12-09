@@ -5,10 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+)
+
+const skipJsonLogLine = " msg="
+
+var (
+	// ansiLineRegex matches lines starting with ANSI escape codes for text formatting (e.g., colors, styles).
+	ansiLineRegex = regexp.MustCompile(`(?m)^\x1b\[[0-9;]*m.*`)
+	// tgLogLevel matches log lines containing fields for time, level, prefix, binary, and message, each with non-whitespace values.
+	tgLogLevel = regexp.MustCompile(`.*time=\S+ level=\S+ prefix=\S+ binary=\S+ msg=.*`)
 )
 
 // Output calls terraform output for the given variable and return its string value representation.
@@ -279,7 +290,11 @@ func OutputJsonE(t testing.TestingT, options *Options, key string) (string, erro
 		args = append(args, key)
 	}
 
-	return RunTerraformCommandAndGetStdoutE(t, options, args...)
+	rawJson, err := RunTerraformCommandAndGetStdoutE(t, options, args...)
+	if err != nil {
+		return rawJson, err
+	}
+	return cleanJson(rawJson)
 }
 
 // OutputStruct calls terraform output for the given variable and stores the
@@ -347,4 +362,34 @@ func OutputAll(t testing.TestingT, options *Options) map[string]interface{} {
 // OutputAllE calls terraform and returns all the outputs as a map
 func OutputAllE(t testing.TestingT, options *Options) (map[string]interface{}, error) {
 	return OutputForKeysE(t, options, nil)
+}
+
+// clean the ANSI characters from the JSON and update formating
+func cleanJson(input string) (string, error) {
+	// Remove ANSI escape codes
+	cleaned := ansiLineRegex.ReplaceAllString(input, "")
+	cleaned = tgLogLevel.ReplaceAllString(cleaned, "")
+
+	lines := strings.Split(cleaned, "\n")
+	var result []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" && !strings.Contains(trimmed, skipJsonLogLine) {
+			result = append(result, trimmed)
+		}
+	}
+	ansiClean := strings.Join(result, "\n")
+
+	var jsonObj interface{}
+	if err := json.Unmarshal([]byte(ansiClean), &jsonObj); err != nil {
+		return "", err
+	}
+
+	// Format JSON output with indentation
+	normalized, err := json.MarshalIndent(jsonObj, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(normalized), nil
 }
