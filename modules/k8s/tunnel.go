@@ -189,15 +189,18 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 		tunnel.logger.Logf(t, "Error creating a new Kubernetes client: %s", err)
 		return err
 	}
-	kubeConfigPath, err := tunnel.kubectlOptions.GetConfigPath(t)
-	if err != nil {
-		tunnel.logger.Logf(t, "Error getting kube config path: %s", err)
-		return err
-	}
-	config, err := LoadApiClientConfigE(kubeConfigPath, tunnel.kubectlOptions.ContextName)
-	if err != nil {
-		tunnel.logger.Logf(t, "Error loading Kubernetes config: %s", err)
-		return err
+	config := tunnel.kubectlOptions.RestConfig
+	if config == nil {
+		kubeConfigPath, err := tunnel.kubectlOptions.GetConfigPath(t)
+		if err != nil {
+			tunnel.logger.Logf(t, "Error getting kube config path: %s", err)
+			return err
+		}
+		config, err = LoadApiClientConfigE(kubeConfigPath, tunnel.kubectlOptions.ContextName)
+		if err != nil {
+			tunnel.logger.Logf(t, "Error loading Kubernetes config: %s", err)
+			return err
+		}
 	}
 
 	// Find the pod to port forward to
