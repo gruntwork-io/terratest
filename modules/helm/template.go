@@ -110,6 +110,9 @@ func RenderRemoteTemplateE(t testing.TestingT, options *Options, chartURL string
 
 	// ... and add the helm chart name, the remote repo and chart URL at the end
 	args = append(args, releaseName, "--repo", chartURL)
+	if options.Version != "" {
+		args = append(args, "--version", options.Version)
+	}
 
 	// Finally, call out to helm template command
 	return RunHelmCommandAndGetStdOutE(t, options, "template", args...)
