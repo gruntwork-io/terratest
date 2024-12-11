@@ -14,6 +14,7 @@ Read the [Gruntwork contribution guidelines](https://gruntwork.notion.site/Grunt
 - [ ] Run the relevant tests successfully, including pre-commit checks.
 - [ ] Ensure any 3rd party code adheres with our [license policy](https://www.notion.so/gruntwork/Gruntwork-licenses-and-open-source-usage-policy-f7dece1f780341c7b69c1763f22b1378) or delete this line if its not applicable.
 - [ ] Include release notes. If this PR is backward incompatible, include a migration guide.
+- [ ] Make a plan for release of the functionality in this PR. If it delivers value to an end user, you are responsible for ensuring it is released promptly, and correctly. If you are not a maintainer, you are responsible for finding a maintainer to do this for you.
 
 ## Release Notes (draft)
 
