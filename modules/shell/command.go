@@ -84,6 +84,27 @@ func RunCommandAndGetStdOutE(t testing.TestingT, command Command) (string, error
 	return output.Stdout(), nil
 }
 
+// RunCommandAndGetStdOutErr runs a shell command and returns solely its stdout and stderr as a string. The stdout and
+// stderr of that command will also be logged with Command.Log to make debugging easier. If there are any errors, fail
+// the test.
+func RunCommandAndGetStdOutErr(t testing.TestingT, command Command) (stdout string, stderr string) {
+	stdout, stderr, err := RunCommandAndGetStdOutErrE(t, command)
+	require.NoError(t, err)
+	return stdout, stderr
+}
+
+// RunCommandAndGetStdOutErrE runs a shell command and returns solely its stdout and stderr as a string. The stdout
+// and stderr of that command will also be printed to the stdout and stderr of this Go program to make debugging easier.
+// Any returned error will be of type ErrWithCmdOutput, containing the output streams and the underlying error.
+func RunCommandAndGetStdOutErrE(t testing.TestingT, command Command) (stdout string, stderr string, err error) {
+	output, err := runCommand(t, command)
+	if err != nil {
+		return output.Stdout(), output.Stderr(), &ErrWithCmdOutput{err, output}
+	}
+
+	return output.Stdout(), output.Stderr(), nil
+}
+
 type ErrWithCmdOutput struct {
 	Underlying error
 	Output     *output
