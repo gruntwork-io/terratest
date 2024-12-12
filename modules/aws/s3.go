@@ -484,7 +484,7 @@ func AssertS3BucketServerSideEncryption(t testing.TestingT, region string, bucke
 	require.NoError(t, err)
 }
 
-// AssertS3BucketServerSideEncryption checks if the given S3 bucket has a server side encryption configured using the given algorithm and returns an error if it does not
+// AssertS3BucketServerSideEncryptionE checks if the given S3 bucket has a server side encryption configured using the given algorithm and returns an error if it does not
 func AssertS3BucketServerSideEncryptionE(t testing.TestingT, region string, bucketName string, algorithm types.ServerSideEncryption) (err error) {
 	s3Client, err := NewS3ClientE(t, region)
 	if err != nil {
@@ -500,9 +500,11 @@ func AssertS3BucketServerSideEncryptionE(t testing.TestingT, region string, buck
 
 	err = fmt.Errorf("SSE is not enabled for bucket %s in region %s", bucketName, region)
 	for _, rule := range c.ServerSideEncryptionConfiguration.Rules {
-		if rule.ApplyServerSideEncryptionByDefault != nil && rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm == algorithm {
-			err = nil
-			break
+		if rule.ApplyServerSideEncryptionByDefault == nil {
+			continue
+		}
+		if rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm == algorithm {
+			return nil
 		}
 	}
 	return

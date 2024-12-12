@@ -302,8 +302,7 @@ func TestAssertS3BucketServerSideEncryptionE(t *testing.T) {
 			_, err := s3client.PutBucketEncryption(context.Background(), input)
 			require.NoError(t, err)
 
-			err = AssertS3BucketServerSideEncryptionE(t, region, s3BucketName, tt)
-			assert.NoError(t, err)
+			AssertS3BucketServerSideEncryption(t, region, s3BucketName, tt)
 		})
 	}
 }
