@@ -23,6 +23,19 @@ func TestImportSSHKeyOSLogin(t *testing.T) {
 	ImportSSHKey(t, user, key)
 }
 
+func TestImportProjectSSHKeyOSLogin(t *testing.T) {
+	t.Parallel()
+
+	keyPair := ssh.GenerateRSAKeyPair(t, 2048)
+	key := keyPair.PublicKey
+
+	user := GetGoogleIdentityEmailEnvVar(t)
+	projectID := GetGoogleProjectIDFromEnvVar(t)
+
+	defer DeleteSSHKey(t, user, key)
+	ImportProjectSSHKey(t, user, key, projectID)
+}
+
 func TestGetLoginProfile(t *testing.T) {
 	t.Parallel()
 
