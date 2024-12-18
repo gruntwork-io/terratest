@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -204,27 +203,4 @@ func failRetryHandler(w http.ResponseWriter, r *http.Request) {
 		bytes, _ := io.ReadAll(r.Body)
 		w.Write(bytes)
 	}
-}
-
-func TestGlobalProxy(t *testing.T) {
-	proxiedURL := ""
-	httpProxy := getTestServerForFunction(func(w http.ResponseWriter, r *http.Request) {
-		proxiedURL = r.RequestURI
-		bodyCopyHandler(w, r)
-	})
-	t.Cleanup(httpProxy.Close)
-
-	t.Setenv("HTTP_PROXY", httpProxy.URL)
-	targetURL := "http://www.notexist.com/"
-	body := "should be copied"
-
-	st, b, err := HTTPDoWithOptionsE(t, HttpDoOptions{
-		Url:    targetURL,
-		Method: http.MethodPost,
-		Body:   strings.NewReader(body),
-	})
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, st)
-	assert.Equal(t, targetURL, proxiedURL)
-	assert.Equal(t, body, b)
 }

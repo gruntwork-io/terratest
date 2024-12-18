@@ -1,12 +1,12 @@
 package opa
 
 import (
-	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
-	getter "github.com/hashicorp/go-getter/v2"
+	getter "github.com/hashicorp/go-getter"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -36,13 +36,13 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 		return "", err
 	}
 
+	detected, err := getter.Detect(rulePath, cwd, getter.Detectors)
+	if err != nil {
+		return "", err
+	}
+
 	// File getters are assumed to be a local path reference, so pass through the original path.
-	var fileGetter getter.FileGetter
-	if ok, _ := fileGetter.Detect(&getter.Request{
-		Src:     rulePath,
-		Pwd:     cwd,
-		GetMode: getter.ModeAny,
-	}); ok {
+	if strings.HasPrefix(detected, "file") {
 		return rulePath, nil
 	}
 
@@ -66,7 +66,7 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	tempDir = filepath.Join(tempDir, "getter")
 
 	logger.Default.Logf(t, "Downloading %s to temp dir %s", rulePath, tempDir)
-	if _, err := getter.GetAny(context.Background(), tempDir, baseDir); err != nil {
+	if err := getter.GetAny(tempDir, baseDir); err != nil {
 		return "", err
 	}
 	policyDirCache.Store(baseDir, tempDir)
