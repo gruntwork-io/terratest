@@ -44,7 +44,7 @@ func TestTerraformAzureContainerAppExample(t *testing.T) {
 	containerAppName := terraform.Output(t, terraformOptions, "container_app_name")
 	containerAppJobName := terraform.Output(t, terraformOptions, "container_app_job_name")
 
-	// website::tag::4:: Get FrontDoor details and assert them against the terraform output
+	// website::tag::4:: Get Azure Container app details and assert them against the terraform output
 	// NOTE: the value of subscriptionID can be left blank, it will be replaced by the value
 	//       of the environment variable ARM_SUBSCRIPTION_ID
 
