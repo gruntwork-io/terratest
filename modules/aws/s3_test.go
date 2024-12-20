@@ -267,3 +267,42 @@ func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketN
 	}
 	require.Equal(t, 0, len((*bucketObjects).Contents))
 }
+
+func TestAssertS3BucketServerSideEncryptionE(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	s3client := NewS3Client(t, region)
+
+	id := random.UniqueId()
+	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
+
+	table := []types.ServerSideEncryption{
+		types.ServerSideEncryptionAes256,
+		types.ServerSideEncryptionAwsKms,
+	}
+	for i, tt := range table {
+		t.Run(fmt.Sprintf("%s", tt), func(t *testing.T) {
+			s3BucketName := fmt.Sprintf("gruntwork-terratest-sse-%d-%s", i, strings.ToLower(id))
+			CreateS3Bucket(t, region, s3BucketName)
+			t.Cleanup(func() { DeleteS3Bucket(t, region, s3BucketName) })
+
+			input := &s3.PutBucketEncryptionInput{
+				Bucket: aws.String(s3BucketName),
+				ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
+					Rules: []types.ServerSideEncryptionRule{
+						{
+							ApplyServerSideEncryptionByDefault: &types.ServerSideEncryptionByDefault{
+								SSEAlgorithm: tt,
+							},
+						},
+					},
+				},
+			}
+			_, err := s3client.PutBucketEncryption(context.Background(), input)
+			require.NoError(t, err)
+
+			AssertS3BucketServerSideEncryption(t, region, s3BucketName, tt)
+		})
+	}
+}
