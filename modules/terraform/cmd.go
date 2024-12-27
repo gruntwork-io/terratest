@@ -122,7 +122,7 @@ func RunTerraformCommandAndGetStdoutE(t testing.TestingT, additionalOptions *Opt
 	cmd := generateCommand(options, args...)
 	description := fmt.Sprintf("%s %v", options.TerraformBinary, args)
 	return retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
-		s, err := shell.RunCommandAndGetOutputE(t, cmd)
+		s, err := shell.RunCommandAndGetStdOutE(t, cmd)
 		if err != nil {
 			return s, err
 		}
