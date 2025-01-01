@@ -125,10 +125,21 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			// Verify that the table/schema requested for creation is actually present in the database
 			assert.True(t, schemaExistsInRdsInstance)
 
+			// assert expected parameters
 			for k, v := range tt.expectedParameter {
 				assert.Equal(t, v, aws.GetParameterValueForParameterOfRdsInstance(t, k, dbInstanceID, awsRegion))
 			}
 
+			// assert all parameters
+			params := aws.GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion)
+			paramNames := map[string]struct{}{}
+			for _, param := range params {
+				paramNames[*param.ParameterName] = struct{}{}
+			}
+			assert.Len(t, paramNames, len(params), "should return no duplicate parameters")
+			assert.True(t, len(paramNames) > 100)
+
+			// assert expected options
 			for k, v := range tt.expectedOptins {
 				// Lookup option values. All defined values are strings in the API call response
 				assert.Equal(t, v, aws.GetOptionSettingForOfRdsInstance(t, k.opName, k.setName, dbInstanceID, awsRegion))

@@ -213,12 +213,22 @@ func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, aws
 
 	rdsClient := NewRdsClient(t, awsRegion)
 	input := rds.DescribeDBParametersInput{DBParameterGroupName: aws.String(parameterGroupName)}
-	output, err := rdsClient.DescribeDBParameters(context.Background(), &input)
 
-	if err != nil {
-		return []types.Parameter{}, err
+	var allParameters []types.Parameter
+	for {
+		output, err := rdsClient.DescribeDBParameters(context.Background(), &input)
+		if err != nil {
+			return []types.Parameter{}, err
+		}
+
+		allParameters = append(allParameters, output.Parameters...)
+		if output.Marker == nil {
+			break
+		}
+
+		input.Marker = output.Marker
 	}
-	return output.Parameters, nil
+	return allParameters, nil
 }
 
 // GetRdsInstanceDetailsE gets the details of a single DB instance whose identifier is passed.
