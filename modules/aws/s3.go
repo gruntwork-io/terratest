@@ -420,6 +420,33 @@ func GetS3BucketPolicyE(t testing.TestingT, awsRegion string, bucket string) (st
 	return aws.ToString(res.Policy), nil
 }
 
+func GetS3BucketOwnershipControls(t testing.TestingT, awsRegion, bucket string) []string {
+	rules, err := GetS3BucketOwnershipControlsE(t, awsRegion, bucket)
+	require.NoError(t, err)
+
+	return rules
+}
+
+func GetS3BucketOwnershipControlsE(t testing.TestingT, awsRegion, bucket string) ([]string, error) {
+	s3Client, err := NewS3ClientE(t, awsRegion)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := s3Client.GetBucketOwnershipControls(context.Background(), &s3.GetBucketOwnershipControlsInput{
+		Bucket: &bucket,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	rules := make([]string, 0, len(out.OwnershipControls.Rules))
+	for _, rule := range out.OwnershipControls.Rules {
+		rules = append(rules, string(rule.ObjectOwnership))
+	}
+	return rules, nil
+}
+
 // AssertS3BucketExists checks if the given S3 bucket exists in the given region and fail the test if it does not.
 func AssertS3BucketExists(t testing.TestingT, region string, name string) {
 	err := AssertS3BucketExistsE(t, region, name)
@@ -476,39 +503,6 @@ func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName s
 		return NewNoBucketPolicyError(bucketName, region, policy)
 	}
 	return nil
-}
-
-// AssertS3BucketServerSideEncryption checks if the given S3 bucket has a server side encryption configured using the given algorithm and fail the test if it does not
-func AssertS3BucketServerSideEncryption(t testing.TestingT, region string, bucketName string, algorithm types.ServerSideEncryption) {
-	err := AssertS3BucketServerSideEncryptionE(t, region, bucketName, algorithm)
-	require.NoError(t, err)
-}
-
-// AssertS3BucketServerSideEncryptionE checks if the given S3 bucket has a server side encryption configured using the given algorithm and returns an error if it does not
-func AssertS3BucketServerSideEncryptionE(t testing.TestingT, region string, bucketName string, algorithm types.ServerSideEncryption) (err error) {
-	s3Client, err := NewS3ClientE(t, region)
-	if err != nil {
-		return err
-	}
-	input := &s3.GetBucketEncryptionInput{
-		Bucket: aws.String(bucketName),
-	}
-	c, err := s3Client.GetBucketEncryption(context.Background(), input)
-	if err != nil {
-		return err
-	}
-
-	err = fmt.Errorf("SSE is not enabled for bucket %s in region %s", bucketName, region)
-	for _, rule := range c.ServerSideEncryptionConfiguration.Rules {
-		if rule.ApplyServerSideEncryptionByDefault == nil {
-			continue
-		}
-		if rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm == algorithm {
-			return nil
-		}
-	}
-	return
-
 }
 
 // NewS3Client creates an S3 client.

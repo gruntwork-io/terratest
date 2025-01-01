@@ -268,41 +268,47 @@ func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketN
 	require.Equal(t, 0, len((*bucketObjects).Contents))
 }
 
-func TestAssertS3BucketServerSideEncryptionE(t *testing.T) {
+func TestGetS3BucketOwnershipControls(t *testing.T) {
 	t.Parallel()
 
 	region := GetRandomStableRegion(t, nil, nil)
-	s3client := NewS3Client(t, region)
-
 	id := random.UniqueId()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 
-	table := []types.ServerSideEncryption{
-		types.ServerSideEncryptionAes256,
-		types.ServerSideEncryptionAwsKms,
-	}
-	for i, tt := range table {
-		t.Run(fmt.Sprintf("%s", tt), func(t *testing.T) {
-			s3BucketName := fmt.Sprintf("gruntwork-terratest-sse-%d-%s", i, strings.ToLower(id))
-			CreateS3Bucket(t, region, s3BucketName)
-			t.Cleanup(func() { DeleteS3Bucket(t, region, s3BucketName) })
+	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
+	CreateS3Bucket(t, region, s3BucketName)
+	t.Cleanup(func() {
+		DeleteS3Bucket(t, region, s3BucketName)
+	})
 
-			input := &s3.PutBucketEncryptionInput{
-				Bucket: aws.String(s3BucketName),
-				ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
-					Rules: []types.ServerSideEncryptionRule{
-						{
-							ApplyServerSideEncryptionByDefault: &types.ServerSideEncryptionByDefault{
-								SSEAlgorithm: tt,
-							},
-						},
+	t.Run("Exist", func(t *testing.T) {
+		s3Client, err := NewS3ClientE(t, region)
+		require.NoError(t, err)
+		_, err = s3Client.PutBucketOwnershipControls(context.Background(), &s3.PutBucketOwnershipControlsInput{
+			Bucket: &s3BucketName,
+			OwnershipControls: &types.OwnershipControls{
+				Rules: []types.OwnershipControlsRule{
+					{
+						ObjectOwnership: types.ObjectOwnershipBucketOwnerEnforced,
 					},
 				},
-			}
-			_, err := s3client.PutBucketEncryption(context.Background(), input)
-			require.NoError(t, err)
-
-			AssertS3BucketServerSideEncryption(t, region, s3BucketName, tt)
+			},
 		})
-	}
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_, err := s3Client.DeleteBucketOwnershipControls(context.Background(), &s3.DeleteBucketOwnershipControlsInput{
+				Bucket: &s3BucketName,
+			})
+			require.NoError(t, err)
+		})
+
+		controls := GetS3BucketOwnershipControls(t, region, s3BucketName)
+		assert.Equal(t, 1, len(controls))
+		assert.Equal(t, string(types.ObjectOwnershipBucketOwnerEnforced), controls[0])
+	})
+
+	t.Run("NotExist", func(t *testing.T) {
+		_, err := GetS3BucketOwnershipControlsE(t, region, s3BucketName)
+		assert.Error(t, err)
+	})
 }
