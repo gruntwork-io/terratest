@@ -11,12 +11,14 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.3.1 // indirect
 	github.com/aws/aws-lambda-go v1.47.0
+	github.com/aws/aws-sdk-go v1.44.122 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-errors/errors v1.0.2-0.20180813162953-d98b870cc4e0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/go-containerregistry v0.20.2
 	github.com/google/uuid v1.6.0
 	github.com/gruntwork-io/go-commons v0.8.0
+	github.com/hashicorp/go-getter v1.7.6
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/hcl/v2 v2.22.0
@@ -69,7 +71,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1
 	github.com/gonvenience/ytbx v1.4.4
-	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/homeport/dyff v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/slack-go/slack v0.15.0

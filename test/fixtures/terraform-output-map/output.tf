@@ -11,6 +11,3 @@ output "not_a_map" {
   value = "This is not a map."
 }
 
-output "not_a_map_unicode" {
-  value = "söme chäräcter"
-}

@@ -13,7 +13,3 @@ output "number" {
 output "number1" {
   value = 3
 }
-
-output "unicode_string" {
-  value = "söme chäräcter"
-}

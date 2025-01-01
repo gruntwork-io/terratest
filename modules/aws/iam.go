@@ -2,8 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
-	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -59,57 +57,6 @@ func GetIamCurrentUserArnE(t testing.TestingT) (string, error) {
 	}
 
 	return *resp.User.Arn, nil
-}
-
-// GetIamPolicyDocument gets the most recent policy (JSON) document for an IAM policy.
-func GetIamPolicyDocument(t testing.TestingT, region string, policyARN string) string {
-	out, err := GetIamPolicyDocumentE(t, region, policyARN)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return out
-}
-
-// GetIamPolicyDocumentE gets the most recent policy (JSON) document for an IAM policy.
-func GetIamPolicyDocumentE(t testing.TestingT, region string, policyARN string) (string, error) {
-	iamClient, err := NewIamClientE(t, region)
-	if err != nil {
-		return "", err
-	}
-
-	versions, err := iamClient.ListPolicyVersions(context.Background(), &iam.ListPolicyVersionsInput{
-		PolicyArn: &policyARN,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	var defaultVersion string
-	for _, version := range versions.Versions {
-		if version.IsDefaultVersion == true {
-			defaultVersion = *version.VersionId
-		}
-	}
-
-	document, err := iamClient.GetPolicyVersion(context.Background(), &iam.GetPolicyVersionInput{
-		PolicyArn: aws.String(policyARN),
-		VersionId: aws.String(defaultVersion),
-	})
-	if err != nil {
-		return "", err
-	}
-
-	unescapedDocument := document.PolicyVersion.Document
-	if unescapedDocument == nil {
-		return "", fmt.Errorf("no policy document found for policy %s", policyARN)
-	}
-
-	escapedDocument, err := url.QueryUnescape(*unescapedDocument)
-	if err != nil {
-		return "", err
-	}
-
-	return escapedDocument, nil
 }
 
 // CreateMfaDevice creates an MFA device using the given IAM client.

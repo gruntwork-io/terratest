@@ -39,9 +39,6 @@ const (
 
 	// TerraformDefaultPath to run terraform
 	TerraformDefaultPath = "terraform"
-
-	// TerragruntDefaultPath to run terragrunt
-	TerragruntDefaultPath = "terragrunt"
 )
 
 var DefaultExecutable = defaultTerraformExecutable()
@@ -52,22 +49,8 @@ func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
 		options.TerraformBinary = DefaultExecutable
 	}
 
-	if options.TerraformBinary == TerragruntDefaultPath {
+	if options.TerraformBinary == "terragrunt" {
 		args = append(args, "--terragrunt-non-interactive")
-		// for newer Terragrunt version, setting simplified log formatting
-		if options.EnvVars == nil {
-			options.EnvVars = map[string]string{}
-		}
-		_, tgLogSet := options.EnvVars["TERRAGRUNT_LOG_FORMAT"]
-		if !tgLogSet {
-			// key-value format for terragrunt logs to avoid colors and have plain form
-			// https://terragrunt.gruntwork.io/docs/reference/cli-options/#terragrunt-log-format
-			options.EnvVars["TERRAGRUNT_LOG_FORMAT"] = "key-value"
-		}
-		_, tgLogFormat := options.EnvVars["TERRAGRUNT_LOG_CUSTOM_FORMAT"]
-		if !tgLogFormat {
-			options.EnvVars["TERRAGRUNT_LOG_CUSTOM_FORMAT"] = "%msg(color=disable)"
-		}
 	}
 
 	if options.Parallelism > 0 && len(args) > 0 && collections.ListContains(commandsWithParallelism, args[0]) {

@@ -1,21 +1,13 @@
 package test_structure
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
-	"strings"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	gotesting "github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type testData struct {
@@ -279,38 +271,4 @@ func TestSaveAndLoadKubectlOptions(t *testing.T) {
 
 	actualData := LoadKubectlOptions(t, tmpFolder)
 	assert.Equal(t, expectedData, actualData)
-}
-
-type tStringLogger struct {
-	sb strings.Builder
-}
-
-func (l *tStringLogger) Logf(t gotesting.TestingT, format string, args ...interface{}) {
-	l.sb.WriteString(fmt.Sprintf(format, args...))
-	l.sb.WriteRune('\n')
-}
-
-func TestSaveAndLoadEC2KeyPair(t *testing.T) {
-	def, slogger := logger.Default, &tStringLogger{}
-	logger.Default = logger.New(slogger)
-	t.Cleanup(func() {
-		logger.Default = def
-	})
-
-	keyPair, err := ssh.GenerateRSAKeyPairE(t, 2048)
-	require.NoError(t, err)
-	ec2KeyPair := &aws.Ec2Keypair{
-		KeyPair: keyPair,
-		Name:    "test-ec2-key-pair",
-		Region:  "us-east-1",
-	}
-	storedEC2KeyPair, err := json.Marshal(ec2KeyPair)
-	require.NoError(t, err)
-
-	tmpFolder := t.TempDir()
-	SaveEc2KeyPair(t, tmpFolder, ec2KeyPair)
-	loadedEC2KeyPair := LoadEc2KeyPair(t, tmpFolder)
-	assert.Equal(t, ec2KeyPair, loadedEC2KeyPair)
-
-	assert.NotContains(t, slogger.sb.String(), string(storedEC2KeyPair), "stored ec2 key pair should not be logged")
 }

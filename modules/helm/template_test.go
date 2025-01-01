@@ -27,7 +27,6 @@ func TestRemoteChartRender(t *testing.T) {
 		remoteChartSource  = "https://charts.bitnami.com/bitnami"
 		remoteChartName    = "nginx"
 		remoteChartVersion = "13.2.24"
-		registry           = "registry-1.docker.io"
 	)
 
 	t.Parallel()
@@ -43,12 +42,11 @@ func TestRemoteChartRender(t *testing.T) {
 	options := &Options{
 		SetValues: map[string]string{
 			"image.repository": remoteChartName,
-			"image.registry":   registry,
+			"image.registry":   "",
 			"image.tag":        remoteChartVersion,
 		},
 		KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
 		Logger:         logger.Discard,
-		Version:        remoteChartVersion,
 	}
 
 	// Run RenderTemplate to render the template and capture the output. Note that we use the version without `E`, since
@@ -64,10 +62,10 @@ func TestRemoteChartRender(t *testing.T) {
 	require.Equal(t, namespaceName, deployment.Namespace)
 
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
-	expectedContainerImage := registry + "/" + remoteChartName + ":" + remoteChartVersion
+	expectedContainerImage := remoteChartName + ":" + remoteChartVersion
 	deploymentContainers := deployment.Spec.Template.Spec.Containers
 	require.Equal(t, len(deploymentContainers), 1)
-	require.Equal(t, expectedContainerImage, deploymentContainers[0].Image)
+	require.Equal(t, deploymentContainers[0].Image, expectedContainerImage)
 }
 
 // Test that we can dump all the manifest locally a remote chart (e.g bitnami/nginx)
@@ -83,15 +81,15 @@ func TestRemoteChartRenderDiff(t *testing.T) {
 
 	initialSnapshot := t.TempDir()
 	updatedSnapshot := t.TempDir()
-	renderChartDump(t, "13.2.20", initialSnapshot)
-	output := renderChartDump(t, "13.2.24", updatedSnapshot)
+	renderChartDump(t, "5.0.0", initialSnapshot)
+	output := renderChartDump(t, "5.1.0", updatedSnapshot)
 
 	options := &Options{
 		Logger:       logger.Default,
 		SnapshotPath: initialSnapshot,
 	}
 	// diff in: spec.initContainers.preserve-logs-symlinks.imag, spec.containers.nginx.image, tls certificates
-	require.Equal(t, 4, DiffAgainstSnapshot(t, options, output, "nginx"))
+	require.Equal(t, 5, DiffAgainstSnapshot(t, options, output, "nginx"))
 }
 
 // render chart dump and return the rendered output
@@ -113,7 +111,6 @@ func renderChartDump(t *testing.T, remoteChartVersion, snapshotDir string) strin
 		},
 		KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
 		Logger:         logger.Discard,
-		Version:        remoteChartVersion,
 	}
 
 	// Run RenderTemplate to render the template and capture the output. Note that we use the version without `E`, since

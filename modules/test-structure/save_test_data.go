@@ -65,7 +65,7 @@ func formatPackerOptionsPath(testFolder string) string {
 // SaveEc2KeyPair serializes and saves an Ec2KeyPair into the given folder. This allows you to create an Ec2KeyPair during setup
 // and to reuse that Ec2KeyPair later during validation and teardown.
 func SaveEc2KeyPair(t testing.TestingT, testFolder string, keyPair *aws.Ec2Keypair) {
-	saveTestData(t, formatEc2KeyPairPath(testFolder), true, keyPair, false)
+	SaveTestData(t, formatEc2KeyPairPath(testFolder), true, keyPair)
 }
 
 // LoadEc2KeyPair loads and unserializes an Ec2KeyPair from the given folder. This allows you to reuse an Ec2KeyPair that was
@@ -193,15 +193,6 @@ func FormatTestDataPath(testFolder string, filename string) string {
 // any contents that exist in the file found at `path` will be overwritten. This has the potential for causing duplicated resources
 // and should be used with caution. If `overwrite` is `false`, the save will be skipped and a warning will be logged.
 func SaveTestData(t testing.TestingT, path string, overwrite bool, value interface{}) {
-	saveTestData(t, path, overwrite, value, true)
-}
-
-// saveTestData serializes and saves a value used at test time to the given path. This allows you to create some sort of test data
-// (e.g., TerraformOptions) during setup and to reuse this data later during validation and teardown. If `overwrite` is `true`,
-// any contents that exist in the file found at `path` will be overwritten. This has the potential for causing duplicated resources
-// and should be used with caution. If `overwrite` is `false`, the save will be skipped and a warning will be logged.
-// If `loggedVal` is `true`, the value will be logged as JSON.
-func saveTestData(t testing.TestingT, path string, overwrite bool, value interface{}, loggedVal bool) {
 	logger.Default.Logf(t, "Storing test data in %s so it can be reused later", path)
 
 	if IsTestDataPresent(t, path) {
@@ -218,9 +209,7 @@ func saveTestData(t testing.TestingT, path string, overwrite bool, value interfa
 		t.Fatalf("Failed to convert value %s to JSON: %v", path, err)
 	}
 
-	if loggedVal {
-		logger.Default.Logf(t, "Marshalled JSON: %s", string(bytes))
-	}
+	logger.Default.Logf(t, "Marshalled JSON: %s", string(bytes))
 
 	parentDir := filepath.Dir(path)
 	if err := os.MkdirAll(parentDir, 0777); err != nil {
