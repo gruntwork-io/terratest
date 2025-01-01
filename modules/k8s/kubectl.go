@@ -34,6 +34,9 @@ func RunKubectlAndGetOutputE(t testing.TestingT, options *KubectlOptions, args .
 	if options.Namespace != "" {
 		cmdArgs = append(cmdArgs, "--namespace", options.Namespace)
 	}
+	if options.RequestTimeout > 0 {
+		cmdArgs = append(cmdArgs, "--request-timeout", options.RequestTimeout.String())
+	}
 	cmdArgs = append(cmdArgs, args...)
 	command := shell.Command{
 		Command: "kubectl",
