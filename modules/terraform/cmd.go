@@ -99,6 +99,9 @@ func RunTerraformCommandE(t testing.TestingT, additionalOptions *Options, additi
 	options, args := GetCommonOptions(additionalOptions, additionalArgs...)
 
 	cmd := generateCommand(options, args...)
+	if additionalOptions.WorkspaceDir != "" {
+		cmd.WorkingDir = additionalOptions.WorkspaceDir
+	}
 	description := fmt.Sprintf("%s %v", options.TerraformBinary, args)
 
 	return retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
@@ -120,6 +123,9 @@ func RunTerraformCommandAndGetStdoutE(t testing.TestingT, additionalOptions *Opt
 	options, args := GetCommonOptions(additionalOptions, additionalArgs...)
 
 	cmd := generateCommand(options, args...)
+	if additionalOptions.WorkspaceDir != "" {
+		cmd.WorkingDir = additionalOptions.WorkspaceDir
+	}
 	description := fmt.Sprintf("%s %v", options.TerraformBinary, args)
 	return retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
 		s, err := shell.RunCommandAndGetOutputE(t, cmd)
@@ -148,6 +154,9 @@ func GetExitCodeForTerraformCommandE(t testing.TestingT, additionalOptions *Opti
 
 	additionalOptions.Logger.Logf(t, "Running %s with args %v", options.TerraformBinary, args)
 	cmd := generateCommand(options, args...)
+	if additionalOptions.WorkspaceDir != "" {
+		cmd.WorkingDir = additionalOptions.WorkspaceDir
+	}
 	_, err := shell.RunCommandAndGetOutputE(t, cmd)
 	if err == nil {
 		return DefaultSuccessExitCode, nil
