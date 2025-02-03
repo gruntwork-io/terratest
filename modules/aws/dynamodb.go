@@ -19,8 +19,15 @@ func GetDynamoDbTableTags(t testing.TestingT, region string, tableName string) [
 
 // GetDynamoDbTableTagsE fetches resource tags of a specified dynamoDB table.
 func GetDynamoDbTableTagsE(t testing.TestingT, region string, tableName string) ([]types.Tag, error) {
-	table := GetDynamoDBTable(t, region, tableName)
-	out, err := NewDynamoDBClient(t, region).ListTagsOfResource(context.Background(), &dynamodb.ListTagsOfResourceInput{
+	table, err := GetDynamoDBTableE(t, region, tableName)
+	if err != nil {
+		return nil, err
+	}
+	client, err := NewDynamoDBClientE(t, region)
+	if err != nil {
+		return nil, err
+	}
+	out, err := client.ListTagsOfResource(context.Background(), &dynamodb.ListTagsOfResourceInput{
 		ResourceArn: table.TableArn,
 	})
 	if err != nil {
@@ -38,7 +45,11 @@ func GetDynamoDBTableTimeToLive(t testing.TestingT, region string, tableName str
 
 // GetDynamoDBTableTimeToLiveE fetches information about the TTL configuration of a specified dynamoDB table.
 func GetDynamoDBTableTimeToLiveE(t testing.TestingT, region string, tableName string) (*types.TimeToLiveDescription, error) {
-	out, err := NewDynamoDBClient(t, region).DescribeTimeToLive(context.Background(), &dynamodb.DescribeTimeToLiveInput{
+	client, err := NewDynamoDBClientE(t, region)
+	if err != nil {
+		return nil, err
+	}
+	out, err := client.DescribeTimeToLive(context.Background(), &dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
@@ -56,7 +67,11 @@ func GetDynamoDBTable(t testing.TestingT, region string, tableName string) *type
 
 // GetDynamoDBTableE fetches information about the specified dynamoDB table.
 func GetDynamoDBTableE(t testing.TestingT, region string, tableName string) (*types.TableDescription, error) {
-	out, err := NewDynamoDBClient(t, region).DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
+	client, err := NewDynamoDBClientE(t, region)
+	if err != nil {
+		return nil, err
+	}
+	out, err := client.DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
