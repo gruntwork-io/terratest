@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -54,20 +55,9 @@ func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
 
 	if options.TerraformBinary == TerragruntDefaultPath {
 		args = append(args, "--terragrunt-non-interactive")
+
 		// for newer Terragrunt version, setting simplified log formatting
-		if options.EnvVars == nil {
-			options.EnvVars = map[string]string{}
-		}
-		_, tgLogSet := options.EnvVars["TERRAGRUNT_LOG_FORMAT"]
-		if !tgLogSet {
-			// key-value format for terragrunt logs to avoid colors and have plain form
-			// https://terragrunt.gruntwork.io/docs/reference/cli-options/#terragrunt-log-format
-			options.EnvVars["TERRAGRUNT_LOG_FORMAT"] = "key-value"
-		}
-		_, tgLogFormat := options.EnvVars["TERRAGRUNT_LOG_CUSTOM_FORMAT"]
-		if !tgLogFormat {
-			options.EnvVars["TERRAGRUNT_LOG_CUSTOM_FORMAT"] = "%msg(color=disable)"
-		}
+		setTerragruntLogFormatting(options)
 	}
 
 	if options.Parallelism > 0 && len(args) > 0 && collections.ListContains(commandsWithParallelism, args[0]) {
@@ -187,4 +177,35 @@ func hasWarning(opts *Options, out string) error {
 		return fmt.Errorf("warning(s) were found: %s:\n%s", v, strings.Join(m, ""))
 	}
 	return nil
+}
+
+// setTerragruntLogFormatting sets a default log formatting for terragrunt
+// if it is not already set in options.envVars or os environment vars
+func setTerragruntLogFormatting(options *Options) {
+	const (
+		tgLogFormatKey       = "TERRAGRUNT_LOG_FORMAT"
+		tgLogCustomFormatKey = "TERRAGRUNT_LOG_CUSTOM_FORMAT"
+	)
+
+	if options.EnvVars == nil {
+		options.EnvVars = map[string]string{}
+	}
+
+	_, inOpts := options.EnvVars[tgLogFormatKey]
+	if !inOpts {
+		_, inEnv := os.LookupEnv(tgLogFormatKey)
+		if !inEnv {
+			// key-value format for terragrunt logs to avoid colors and have plain form
+			// https://terragrunt.gruntwork.io/docs/reference/cli-options/#terragrunt-log-format
+			options.EnvVars[tgLogFormatKey] = "key-value"
+		}
+	}
+
+	_, inOpts = options.EnvVars[tgLogCustomFormatKey]
+	if !inOpts {
+		_, inEnv := os.LookupEnv(tgLogCustomFormatKey)
+		if !inEnv {
+			options.EnvVars[tgLogCustomFormatKey] = "%msg(color=disable)"
+		}
+	}
 }
