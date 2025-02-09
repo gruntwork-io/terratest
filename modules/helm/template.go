@@ -5,7 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"sigs.k8s.io/yaml"
+
 	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/stretchr/testify/require"
 
