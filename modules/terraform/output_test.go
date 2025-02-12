@@ -499,3 +499,23 @@ func TestTgOutputJsonParsing(t *testing.T) {
 	assert.Contains(t, output, "mogwai")
 	assert.Equal(t, "söme chäräcter", output["not_a_map_unicode"])
 }
+
+func TestTgOutputWithDebugLogLevel(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-mapofobjects", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerraformDir: testFolder,
+	}
+
+	InitAndApply(t, options)
+
+	_, err = OutputMapOfObjectsE(t, &Options{
+		TerraformDir: options.TerraformDir,
+		EnvVars:      map[string]string{"TF_LOG": "DEBUG"},
+	}, "map_of_objects")
+
+	require.NoError(t, err)
+}
