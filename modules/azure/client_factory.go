@@ -29,6 +29,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
@@ -962,6 +963,14 @@ func CreateManagedEnvironmentsClientE(subscriptionID string) (*armappcontainers.
 	return client, nil
 }
 
+func CreateResourceGroupClientV2E(subscriptionID string) (*armresources.ResourceGroupsClient, error) {
+	clientFactory, err := getArmResourcesClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	return clientFactory.NewResourceGroupsClient(), nil
+}
+
 func CreateContainerAppsClientE(subscriptionID string) (*armappcontainers.ContainerAppsClient, error) {
 	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
 	if err != nil {
@@ -1027,6 +1036,31 @@ func getBaseURI() (string, error) {
 		return "", err
 	}
 	return baseURI, nil
+}
+
+// getArmResourcesClientFactory gets an arm resources client factory
+func getArmResourcesClientFactory(subscriptionID string) (*armresources.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armresources.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
 }
 
 // getArmAppContainersClientFactory gets an arm app containers client factory
