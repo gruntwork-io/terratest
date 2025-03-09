@@ -75,3 +75,34 @@ func TestCanSetECRRepoLifecyclePolicyWithSingleRule(t *testing.T) {
 	policy := GetECRRepoLifecyclePolicy(t, region, repo1)
 	assert.JSONEq(t, lifecyclePolicy, policy)
 }
+
+func TestCanSetRepositoryPolicyWithSimplePolicy(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	ecrRepoName := fmt.Sprintf("terratest%s", strings.ToLower(random.UniqueId()))
+	repo, err := CreateECRRepoE(t, region, ecrRepoName)
+	defer DeleteECRRepo(t, region, repo)
+	require.NoError(t, err)
+
+	repositoryPolicy := `
+		{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Sid": "AllowPushPull",
+				"Effect": "Allow",
+				"Principal": {
+					"AWS": "*"
+				},
+				"Action": "ecr:*"
+			}
+		]
+	}`
+
+	err = PutECRRepoPolicyE(t, region, repo, repositoryPolicy)
+	require.NoError(t, err)
+
+	policy := GetECRRepoPolicy(t, region, repo)
+	assert.JSONEq(t, repositoryPolicy, policy)
+}
