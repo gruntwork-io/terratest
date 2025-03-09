@@ -143,3 +143,21 @@ func PutECRRepoLifecyclePolicyE(t testing.TestingT, region string, repo *types.R
 	_, err = client.PutLifecyclePolicy(context.Background(), input)
 	return err
 }
+
+// GetECRRepoPolicy gets the polipermissionscies for the given ECR repository.
+// This will fail the test and stop execution if there is an error.
+func GetECRRepoPolicy(t testing.TestingT, region string, repo *types.Repository) string {
+	policy, err := GetECRRepoPolicyE(t, region, repo)
+	require.NoError(t, err)
+	return policy
+}
+
+// GetECRRepoPolicyE gets the policies for the given ECR repository.
+func GetECRRepoPolicyE(t testing.TestingT, region string, repo *types.Repository) (string, error) {
+	client := NewECRClient(t, region)
+	resp, err := client.GetRepositoryPolicy(context.Background(), &ecr.GetRepositoryPolicyInput{RepositoryName: repo.RepositoryName})
+	if err != nil {
+		return "", err
+	}
+	return *resp.PolicyText, nil
+}
