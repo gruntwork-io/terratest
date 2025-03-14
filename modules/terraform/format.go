@@ -27,6 +27,15 @@ var TerraformCommandsWithLockSupport = []string{
 	"import",
 }
 
+// SignalValue indicates to the argument formater of some special handling
+type SignalValue int
+
+const (
+	// KeyOnly tells the formatter to omit the value and handle the option as a top-level assignment.
+	// For example: you can set terraform.Options.BackendConfig["key"] to KeyOnly to receive -backend-config=key
+	KeyOnly SignalValue = iota
+)
+
 // TerraformCommandsWithPlanFileSupport is a list of all the Terraform commands that support interacting with plan
 // files.
 var TerraformCommandsWithPlanFileSupport = []string{
@@ -152,7 +161,15 @@ func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsS
 
 	for key, value := range vars {
 		hclString := toHclString(value, false)
-		argValue := fmt.Sprintf("%s=%s", key, hclString)
+		// we use a custom signal value to indicate if we want to set solely the key and no value
+		// e.g. -backend-config=PATH vs -backend-config=key=value
+		// we cannot use 'nil' because 'null' is a valid input
+		var argValue string
+		if value == KeyOnly {
+			argValue = key
+		} else {
+			argValue = fmt.Sprintf("%s=%s", key, hclString)
+		}
 		if useSpaceAsSeparator {
 			args = append(args, prefix, argValue)
 		} else {
