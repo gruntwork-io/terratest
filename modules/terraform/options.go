@@ -51,7 +51,6 @@ type Options struct {
 	Vars map[string]interface{}
 
 	VarFiles                 []string               // The var file paths to pass to Terraform commands using -var-file option.
-	MixedVars                []Var                  // Mix of `-var` and `-var-file` in arbritrary order, use `VarInline()` `VarFile()` to set the value.
 	Targets                  []string               // The target resources to pass to the terraform command with -target
 	Lock                     bool                   // The lock option to pass to the terraform command with -lock
 	LockTimeout              string                 // The lock timeout option to pass to the terraform command with -lock-timeout
@@ -73,6 +72,26 @@ type Options struct {
 	PluginDir                string                 // The path of downloaded plugins to pass to the terraform init command (-plugin-dir)
 	SetVarsAfterVarFiles     bool                   // Pass -var options after -var-file options to Terraform commands
 	WarningsAsErrors         map[string]string      // Terraform warning messages that should be treated as errors. The keys are a regexp to match against the warning and the value is what to display to a user if that warning is matched.
+	ExtraArgs                ExtraArgs              // Extra arguments passed to Terraform commands
+}
+
+type ExtraArgs struct {
+	Apply           []string
+	Destroy         []string
+	Get             []string
+	Init            []string
+	Plan            []string
+	Validate        []string
+	ValidateInputs  []string
+	WorkspaceDelete []string
+	WorkspaceSelect []string
+	WorkspaceNew    []string
+	Output          []string
+	Show            []string
+}
+
+func prepend(args []string, arg ...string) []string {
+	return append(arg, args...)
 }
 
 // Clone makes a deep copy of most fields on the Options object and returns it.
@@ -105,8 +124,6 @@ func (options *Options) Clone() (*Options, error) {
 	for key, val := range options.WarningsAsErrors {
 		newOptions.WarningsAsErrors[key] = val
 	}
-
-	newOptions.MixedVars = append(newOptions.MixedVars, options.MixedVars...)
 
 	return newOptions, nil
 }

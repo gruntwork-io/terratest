@@ -28,9 +28,9 @@ func WorkspaceSelectOrNewE(t testing.TestingT, options *Options, name string) (s
 	}
 
 	if isExistingWorkspace(out, name) {
-		_, err = RunTerraformCommandE(t, options, "workspace", "select", name)
+		_, err = RunTerraformCommandE(t, options, prepend(options.ExtraArgs.WorkspaceSelect, "workspace", "select", name)...)
 	} else {
-		_, err = RunTerraformCommandE(t, options, "workspace", "new", name)
+		_, err = RunTerraformCommandE(t, options, prepend(options.ExtraArgs.WorkspaceNew, "workspace", "new", name)...)
 	}
 	if err != nil {
 		return "", err
@@ -80,7 +80,7 @@ func WorkspaceDeleteE(t testing.TestingT, options *Options, name string) (string
 	}
 
 	// delete workspace
-	_, err = RunTerraformCommandE(t, options, "workspace", "delete", name)
+	_, err = RunTerraformCommandE(t, options, prepend(options.ExtraArgs.WorkspaceDelete, "workspace", "delete", name)...)
 
 	return currentWorkspace, err
 }

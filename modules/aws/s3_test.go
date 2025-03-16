@@ -2,6 +2,7 @@
 package aws
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math/rand"
@@ -311,4 +312,26 @@ func TestGetS3BucketOwnershipControls(t *testing.T) {
 		_, err := GetS3BucketOwnershipControlsE(t, region, s3BucketName)
 		assert.Error(t, err)
 	})
+}
+
+func TestS3ObjectContents(t *testing.T) {
+	t.Parallel()
+
+	region := GetRandomStableRegion(t, nil, nil)
+	id := random.UniqueId()
+	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
+	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
+
+	CreateS3Bucket(t, region, s3BucketName)
+	defer DeleteS3Bucket(t, region, s3BucketName)
+	defer EmptyS3BucketE(t, region, s3BucketName)
+
+	key := fmt.Sprintf("content-%s", id)
+	body := make([]byte, 1024)
+	rand.Read(body)
+
+	PutS3ObjectContentsE(t, region, s3BucketName, key, bytes.NewReader(body))
+	storedBody := GetS3ObjectContents(t, region, s3BucketName, key)
+
+	assert.Equal(t, body, []byte(storedBody))
 }

@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -42,16 +43,44 @@ func TestOptionsCloneDeepClonesVars(t *testing.T) {
 	assert.Equal(t, unique, copied.Vars["original"])
 }
 
-func TestOptionsCloneDeepClonesMixedVars(t *testing.T) {
+func TestExtraArgsHelp(t *testing.T) {
 	t.Parallel()
 
-	unique := random.UniqueId()
-	original := Options{
-		MixedVars: []Var{VarFile(unique), VarInline("unique", unique)},
+	testtable := []struct {
+		name string
+		fn   func() (string, error)
+	}{
+		{
+			name: "apply",
+			fn:   func() (string, error) { return ApplyE(t, &Options{ExtraArgs: ExtraArgs{Apply: []string{"-help"}}}) },
+		},
+		{
+			name: "destroy",
+			fn:   func() (string, error) { return DestroyE(t, &Options{ExtraArgs: ExtraArgs{Destroy: []string{"-help"}}}) },
+		},
+		{
+			name: "get",
+			fn:   func() (string, error) { return GetE(t, &Options{ExtraArgs: ExtraArgs{Get: []string{"-help"}}}) },
+		},
+		{
+			name: "init",
+			fn:   func() (string, error) { return InitE(t, &Options{ExtraArgs: ExtraArgs{Init: []string{"-help"}}}) },
+		},
+		{
+			name: "plan",
+			fn:   func() (string, error) { return PlanE(t, &Options{ExtraArgs: ExtraArgs{Plan: []string{"-help"}}}) },
+		},
+		{
+			name: "validate",
+			fn: func() (string, error) {
+				return ValidateE(t, &Options{ExtraArgs: ExtraArgs{Validate: []string{"-help"}}})
+			},
+		},
 	}
-	copied, err := original.Clone()
-	require.NoError(t, err)
-	copied.MixedVars[1] = VarInline("unique", "nullified")
-	assert.Equal(t, VarFile(unique), copied.MixedVars[0])
-	assert.Equal(t, VarInline("unique", unique), original.MixedVars[1])
+
+	for _, tt := range testtable {
+		out, err := tt.fn()
+		require.NoError(t, err)
+		assert.Contains(t, out, fmt.Sprintf("Usage: terraform [global options] %s", tt.name))
+	}
 }
