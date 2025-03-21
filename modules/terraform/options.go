@@ -51,7 +51,6 @@ type Options struct {
 	Vars map[string]interface{}
 
 	VarFiles                 []string               // The var file paths to pass to Terraform commands using -var-file option.
-	MixedVars                []Var                  // Mix of `-var` and `-var-file` in arbritrary order, use `VarInline()` `VarFile()` to set the value.
 	Targets                  []string               // The target resources to pass to the terraform command with -target
 	Lock                     bool                   // The lock option to pass to the terraform command with -lock
 	LockTimeout              string                 // The lock timeout option to pass to the terraform command with -lock-timeout
@@ -105,8 +104,6 @@ func (options *Options) Clone() (*Options, error) {
 	for key, val := range options.WarningsAsErrors {
 		newOptions.WarningsAsErrors[key] = val
 	}
-
-	newOptions.MixedVars = append(newOptions.MixedVars, options.MixedVars...)
 
 	return newOptions, nil
 }

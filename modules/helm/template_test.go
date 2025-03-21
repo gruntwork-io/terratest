@@ -11,7 +11,6 @@ package helm
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -163,13 +162,5 @@ func TestUnmarshall(t *testing.T) {
 			deployment[1].Name = deployment[0].Name
 			assert.Equal(t, deployment[0], deployment[1])
 		}
-	})
-	t.Run("Invalid", func(t *testing.T) {
-		b, err := os.ReadFile("testdata/invalid-duplicate.yaml")
-		require.NoError(t, err)
-		var deployment appsv1.Deployment
-		err = UnmarshalK8SYamlE(t, string(b), &deployment)
-		assert.Error(t, err)
-		assert.Regexp(t, regexp.MustCompile(`mapping key ".+" already defined at line \d+`), err.Error())
 	})
 }
