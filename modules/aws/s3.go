@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -128,6 +129,29 @@ func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, k
 	logger.Default.Logf(t, "Read contents from s3://%s/%s", bucket, key)
 
 	return contents, nil
+}
+
+// PutS3ObjectContents puts the contents of the object in the given bucket with the given key.
+func PutS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, key string, body io.Reader) {
+	err := PutS3ObjectContentsE(t, awsRegion, bucket, key, body)
+	require.NoError(t, err)
+}
+
+// PutS3ObjectContents puts the contents of the object in the given bucket with the given key.
+func PutS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, key string, body io.Reader) error {
+	s3Client, err := NewS3ClientE(t, awsRegion)
+	if err != nil {
+		return fmt.Errorf("failed to instantiate s3 client: %w", err)
+	}
+
+	params := &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   body,
+	}
+
+	_, err = s3Client.PutObject(context.Background(), params)
+	return err
 }
 
 // CreateS3Bucket creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
