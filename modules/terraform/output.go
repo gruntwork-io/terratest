@@ -290,7 +290,7 @@ func OutputJsonE(t testing.TestingT, options *Options, key string) (string, erro
 		args = append(args, key)
 	}
 
-	rawJson, err := RunTerraformCommandAndGetStdoutE(t, options, args...)
+	rawJson, err := RunTerraformCommandAndGetStdoutE(t, options, prepend(options.ExtraArgs.Output, args...)...)
 	if err != nil {
 		return rawJson, err
 	}

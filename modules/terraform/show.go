@@ -26,7 +26,7 @@ func ShowE(t testing.TestingT, options *Options) (string, error) {
 	if options.PlanFilePath != "" {
 		args = append(args, options.PlanFilePath)
 	}
-	return RunTerraformCommandAndGetStdoutE(t, options, args...)
+	return RunTerraformCommandAndGetStdoutE(t, options, prepend(options.ExtraArgs.Show, args...)...)
 }
 
 func ShowWithStruct(t testing.TestingT, options *Options) *PlanStruct {
