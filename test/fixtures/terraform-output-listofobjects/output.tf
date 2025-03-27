@@ -17,6 +17,12 @@ output "list_of_maps" {
         four = 4
         five = "five"
       }]
+    },
+    {
+      one   = "one"
+      two   = 2
+      three = 3
+      more  = ["one", 2.0, 3.4, ["one", 2.0, 3.4], { "one" : 2.0, "three" : 3.4 }]
     }
   ]
 }

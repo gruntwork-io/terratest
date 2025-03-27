@@ -172,7 +172,7 @@ func TestOutputMapOfObjects(t *testing.T) {
 		"five": "five",
 	}
 
-	nestedList1 := []map[string]interface{}{
+	nestedList1 := []interface{}{
 		map[string]interface{}{
 			"six":   6,
 			"seven": "seven",
@@ -221,12 +221,12 @@ func TestOutputListOfObjects(t *testing.T) {
 	InitAndApply(t, options)
 	out := OutputListOfObjects(t, options, "list_of_maps")
 
-	expectedLen := 2
+	expectedLen := 3
 	nestedMap1 := map[string]interface{}{
 		"four": 4,
 		"five": "five",
 	}
-	nestedList1 := []map[string]interface{}{
+	nestedList1 := []interface{}{
 		map[string]interface{}{
 			"four": 4,
 			"five": "five",
@@ -246,9 +246,23 @@ func TestOutputListOfObjects(t *testing.T) {
 		"more":  nestedList1,
 	}
 
+	expectedMap3 := map[string]interface{}{
+		"one":   "one",
+		"two":   2,
+		"three": 3,
+		"more": []interface{}{
+			"one",
+			2,
+			3.4,
+			[]interface{}{"one", 2, 3.4},
+			map[string]interface{}{"one": 2, "three": 3.4},
+		},
+	}
+
 	require.Len(t, out, expectedLen, "Output should contain %d items", expectedLen)
-	require.Equal(t, out[0], expectedMap1, "First map should be %q, got %q", expectedMap1, out[0])
-	require.Equal(t, out[1], expectedMap2, "First map should be %q, got %q", expectedMap2, out[1])
+	assert.Equal(t, out[0], expectedMap1, "First map should be %q, got %q", expectedMap1, out[0])
+	assert.Equal(t, out[1], expectedMap2, "Second map should be %q, got %q", expectedMap2, out[1])
+	assert.Equal(t, out[2], expectedMap3, "Third map should be %q, got %q", expectedMap3, out[1])
 }
 
 func TestOutputNotListOfObjectsError(t *testing.T) {
