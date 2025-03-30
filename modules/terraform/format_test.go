@@ -69,9 +69,30 @@ func TestFormatTerraformVarsAsArgs(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		checkResultWithRetry(t, 100, testCase.expected, fmt.Sprintf("FormatTerraformVarsAsArgs(%v)", testCase.vars), func() interface{} {
-			return FormatTerraformVarsAsArgs(testCase.vars)
-		})
+		result := FormatTerraformVarsAsArgs(testCase.vars)
+		if !assert.ObjectsAreEqual(testCase.expected, result) {
+			t.Errorf("FormatTerraformVarsAsArgs(%v) != %v got %v", testCase.vars, testCase.expected, result)
+		}
+	}
+}
+
+func TestFormatTerraformBackendConfigAsArgs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		vars     map[string]interface{}
+		expected []string
+	}{
+		{map[string]interface{}{"foo": KeyOnly}, []string{"-backend-config=foo"}},
+		{map[string]interface{}{"bar": "baz"}, []string{"-backend-config=bar=baz"}},
+		{map[string]interface{}{"foo": "bar", "baz": "bop"}, []string{"-backend-config=foo=bar", "-backend-config=baz=bop"}},
+	}
+
+	for _, testCase := range testCases {
+		result := FormatTerraformBackendConfigAsArgs(testCase.vars)
+		if !assert.ObjectsAreEqual(testCase.expected, result) {
+			t.Errorf("FormatTerraformBackendConfigAsArgs(%v) != %v got %v", testCase.vars, testCase.expected, result)
+		}
 	}
 }
 
