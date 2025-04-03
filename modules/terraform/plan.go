@@ -37,7 +37,7 @@ func Plan(t testing.TestingT, options *Options) string {
 
 // PlanE runs terraform plan with the given options and returns stdout/stderr.
 func PlanE(t testing.TestingT, options *Options) (string, error) {
-	return RunTerraformCommandE(t, options, FormatArgs(options, "plan", "-input=false", "-lock=false")...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Plan, "plan", "-input=false", "-lock=false")...)...)
 }
 
 // InitAndPlanAndShow runs terraform init, then terraform plan, and then terraform show with the given options, and
@@ -123,7 +123,7 @@ func PlanExitCode(t testing.TestingT, options *Options) int {
 
 // PlanExitCodeE runs terraform plan with the given options and returns the detailed exitcode.
 func PlanExitCodeE(t testing.TestingT, options *Options) (int, error) {
-	return GetExitCodeForTerraformCommandE(t, options, FormatArgs(options, "plan", "-input=false", "-detailed-exitcode")...)
+	return GetExitCodeForTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Plan, "plan", "-input=false", "-detailed-exitcode")...)...)
 }
 
 // TgPlanAllExitCode runs terragrunt plan-all with the given options and returns the detailed exitcode.
@@ -140,8 +140,8 @@ func TgPlanAllExitCodeE(t testing.TestingT, options *Options) (int, error) {
 		return 1, fmt.Errorf("terragrunt must be set as TerraformBinary to use this method")
 	}
 
-	return GetExitCodeForTerraformCommandE(t, options, FormatArgs(options, "run-all", "plan", "--input=false",
-		"--lock=true", "--detailed-exitcode")...)
+	return GetExitCodeForTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Plan, "run-all", "plan", "--input=false",
+		"--lock=true", "--detailed-exitcode")...)...)
 }
 
 // AssertTgPlanAllExitCode asserts the succuess (or failure) of a terragrunt run-all plan.

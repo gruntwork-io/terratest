@@ -73,6 +73,26 @@ type Options struct {
 	PluginDir                string                 // The path of downloaded plugins to pass to the terraform init command (-plugin-dir)
 	SetVarsAfterVarFiles     bool                   // Pass -var options after -var-file options to Terraform commands
 	WarningsAsErrors         map[string]string      // Terraform warning messages that should be treated as errors. The keys are a regexp to match against the warning and the value is what to display to a user if that warning is matched.
+	ExtraArgs                ExtraArgs              // Extra arguments passed to Terraform commands
+}
+
+type ExtraArgs struct {
+	Apply           []string
+	Destroy         []string
+	Get             []string
+	Init            []string
+	Plan            []string
+	Validate        []string
+	ValidateInputs  []string
+	WorkspaceDelete []string
+	WorkspaceSelect []string
+	WorkspaceNew    []string
+	Output          []string
+	Show            []string
+}
+
+func prepend(args []string, arg ...string) []string {
+	return append(arg, args...)
 }
 
 // Clone makes a deep copy of most fields on the Options object and returns it.

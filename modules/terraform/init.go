@@ -34,5 +34,5 @@ func InitE(t testing.TestingT, options *Options) (string, error) {
 
 	args = append(args, FormatTerraformBackendConfigAsArgs(options.BackendConfig)...)
 	args = append(args, FormatTerraformPluginDirAsArgs(options.PluginDir)...)
-	return RunTerraformCommandE(t, options, args...)
+	return RunTerraformCommandE(t, options, prepend(options.ExtraArgs.Init, args...)...)
 }
