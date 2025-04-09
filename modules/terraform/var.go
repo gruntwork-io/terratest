@@ -16,7 +16,7 @@ type varInline struct {
 
 func (vi varInline) Args() []string {
 	m := map[string]interface{}{vi.name: vi.value}
-	return formatTerraformArgs(m, "-var", true)
+	return formatTerraformArgs(m, "-var", true, false)
 }
 func (vi varInline) internal() {}
 

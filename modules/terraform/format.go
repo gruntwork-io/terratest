@@ -104,7 +104,7 @@ func FormatTerraformPlanFileAsArg(commandType string, outPath string) []string {
 // FormatTerraformVarsAsArgs formats the given variables as command-line args for Terraform (e.g. of the format
 // -var key=value).
 func FormatTerraformVarsAsArgs(vars map[string]interface{}) []string {
-	return formatTerraformArgs(vars, "-var", true)
+	return formatTerraformArgs(vars, "-var", true, false)
 }
 
 // FormatTerraformLockAsArgs formats the lock and lock-timeout variables
@@ -141,18 +141,25 @@ func FormatTerraformArgs(argName string, args []string) []string {
 // FormatTerraformBackendConfigAsArgs formats the given variables as backend config args for Terraform (e.g. of the
 // format -backend-config=key=value).
 func FormatTerraformBackendConfigAsArgs(vars map[string]interface{}) []string {
-	return formatTerraformArgs(vars, "-backend-config", false)
+	return formatTerraformArgs(vars, "-backend-config", false, true)
 }
 
 // Format the given vars into 'Terraform' format, with each var being prefixed with the given prefix. If
 // useSpaceAsSeparator is true, a space will separate the prefix and each var (e.g., -var foo=bar). If
-// useSpaceAsSeparator is false, an equals will separate the prefix and each var (e.g., -backend-config=foo=bar).
-func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsSeparator bool) []string {
+// useSpaceAsSeparator is false, an equals will separate the prefix and each var (e.g., -backend-config=foo=bar). If
+// omitNil is false, then nil values will be included, (e.g. -backend-config=foo=null). If
+// omitNil is true, then nil values will not be included, (e.g. -backend-config=foo). If
+func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsSeparator bool, omitNil bool) []string {
 	var args []string
 
 	for key, value := range vars {
-		hclString := toHclString(value, false)
-		argValue := fmt.Sprintf("%s=%s", key, hclString)
+		var argValue string
+		if omitNil && value == nil {
+			argValue = key
+		} else {
+			hclString := toHclString(value, false)
+			argValue = fmt.Sprintf("%s=%s", key, hclString)
+		}
 		if useSpaceAsSeparator {
 			args = append(args, prefix, argValue)
 		} else {

@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -60,6 +61,31 @@ func OutputRequiredE(t testing.TestingT, options *Options, key string) (string, 
 	return out, nil
 }
 
+// parseListOfMaps takes a list of maps and parses the types.
+// It is mainly a wrapper for parseMap to support lists.
+func parseListOfMaps(l []interface{}) ([]map[string]interface{}, error) {
+	var result []map[string]interface{}
+
+	for _, v := range l {
+
+		asMap, isMap := v.(map[string]interface{})
+		if !isMap {
+			err := errors.New("Type switching to map[string]interface{} failed.")
+			return nil, err
+		}
+
+		m, err := parseMap(asMap)
+
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, m)
+	}
+
+	return result, nil
+
+}
+
 // parseMap takes a map of interfaces and parses the types.
 // It is recursive which allows it to support complex nested structures.
 // At this time, this function uses https://golang.org/pkg/strconv/#ParseInt
@@ -84,13 +110,18 @@ func parseMap(m map[string]interface{}) (map[string]interface{}, error) {
 			}
 			result[k] = nestedMap
 		case []interface{}:
-			nestedList, err := parseList(vt)
+			nestedList, err := parseListOfMaps(vt)
 			if err != nil {
 				return nil, err
 			}
 			result[k] = nestedList
 		case float64:
-			result[k] = parseFloat(vt)
+			testInt, err := strconv.ParseInt((fmt.Sprintf("%v", vt)), 10, 0)
+			if err == nil {
+				result[k] = int(testInt)
+			} else {
+				result[k] = vt
+			}
 		default:
 			result[k] = vt
 		}
@@ -98,32 +129,6 @@ func parseMap(m map[string]interface{}) (map[string]interface{}, error) {
 	}
 
 	return result, nil
-}
-
-func parseList(items []interface{}) (_ []interface{}, err error) {
-	for i, v := range items {
-		rv := reflect.ValueOf(v)
-		switch rv.Kind() {
-		case reflect.Map:
-			items[i], err = parseMap(rv.Interface().(map[string]interface{}))
-		case reflect.Slice, reflect.Array:
-			items[i], err = parseList(rv.Interface().([]interface{}))
-		case reflect.Float64:
-			items[i] = parseFloat(v)
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	return items, nil
-}
-
-func parseFloat(v interface{}) interface{} {
-	testInt, err := strconv.ParseInt((fmt.Sprintf("%v", v)), 10, 0)
-	if err == nil {
-		return int(testInt)
-	}
-	return v
 }
 
 // OutputMapOfObjects calls terraform output for the given variable and returns its value as a map of lists/maps.
@@ -285,7 +290,7 @@ func OutputJsonE(t testing.TestingT, options *Options, key string) (string, erro
 		args = append(args, key)
 	}
 
-	rawJson, err := RunTerraformCommandAndGetStdoutE(t, options, prepend(options.ExtraArgs.Output, args...)...)
+	rawJson, err := RunTerraformCommandAndGetStdoutE(t, options, args...)
 	if err != nil {
 		return rawJson, err
 	}

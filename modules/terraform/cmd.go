@@ -11,7 +11,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/testing"
-	"github.com/stretchr/testify/require"
 )
 
 func generateCommand(options *Options, args ...string) shell.Command {
@@ -105,55 +104,23 @@ func RunTerraformCommandE(t testing.TestingT, additionalOptions *Options, additi
 
 }
 
-// RunTerraformCommandAndGetStdout runs terraform with the given arguments and options and returns solely its stdout
-// (but not stderr).
-func RunTerraformCommandAndGetStdout(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) string {
-	out, err := RunTerraformCommandAndGetStdoutE(t, additionalOptions, additionalArgs...)
-	require.NoError(t, err)
-	return out
-}
-
 // RunTerraformCommandAndGetStdoutE runs terraform with the given arguments and options and returns solely its stdout
 // (but not stderr).
 func RunTerraformCommandAndGetStdoutE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (string, error) {
-	out, _, _, err := RunTerraformCommandAndGetStdOutErrCodeE(t, additionalOptions, additionalArgs...)
-	return out, err
-}
-
-// RunTerraformCommandAndGetStdOutErrCode runs terraform with the given arguments and options and returns its stdout, stderr, and exitcode
-func RunTerraformCommandAndGetStdOutErrCode(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (stdout string, stderr string, exit int) {
-	stdout, stderr, exit, err := RunTerraformCommandAndGetStdOutErrCodeE(t, additionalOptions, additionalArgs...)
-	require.NoError(t, err)
-	return stdout, stderr, exit
-}
-
-// RunTerraformCommandAndGetStdOutErrCodeE runs terraform with the given arguments and options and returns its stdout, stderr, and exitcode
-func RunTerraformCommandAndGetStdOutErrCodeE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (stdout string, stderr string, exit int, err error) {
 	options, args := GetCommonOptions(additionalOptions, additionalArgs...)
 
 	cmd := generateCommand(options, args...)
 	description := fmt.Sprintf("%s %v", options.TerraformBinary, args)
-
-	exit = DefaultErrorExitCode
-	_, err = retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
-		stdout, stderr, err = shell.RunCommandAndGetStdOutErrE(t, cmd)
+	return retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
+		s, err := shell.RunCommandAndGetStdOutE(t, cmd)
 		if err != nil {
-			exitCode, getExitCodeErr := shell.GetExitCodeForRunCommandError(err)
-			if getExitCodeErr == nil {
-				exit = exitCode
-			}
-			return "", err
+			return s, err
 		}
-
-		if err = hasWarning(additionalOptions, stdout); err != nil {
-			return "", err
+		if err := hasWarning(additionalOptions, s); err != nil {
+			return s, err
 		}
-
-		exit = DefaultSuccessExitCode
-		return "", nil
+		return s, err
 	})
-
-	return
 }
 
 // GetExitCodeForTerraformCommand runs terraform with the given arguments and options and returns exit code
