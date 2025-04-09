@@ -5,14 +5,14 @@ package k8s
 
 import (
 	"fmt"
+	batchv1 "k8s.io/api/batch/v1"
 	"strings"
 	"testing"
 	"time"
 
-	"k8s.io/api/batch/v1beta1"
-
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/require"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -69,13 +69,13 @@ func TestIsCronJobSucceeded(t *testing.T) {
 
 	cases := []struct {
 		title          string
-		cronJob        *v1beta1.CronJob
+		cronJob        *batchv1.CronJob
 		expectedResult bool
 	}{
 		{
 			title: "CronJobScheduledContainer",
-			cronJob: &v1beta1.CronJob{
-				Status: v1beta1.CronJobStatus{
+			cronJob: &batchv1.CronJob{
+				Status: batchv1.CronJobStatus{
 					LastScheduleTime: &metav1.Time{},
 				},
 			},
@@ -83,8 +83,8 @@ func TestIsCronJobSucceeded(t *testing.T) {
 		},
 		{
 			title: "CronJobNotScheduledContainer",
-			cronJob: &v1beta1.CronJob{
-				Status: v1beta1.CronJobStatus{
+			cronJob: &batchv1.CronJob{
+				Status: batchv1.CronJobStatus{
 					LastScheduleTime: nil,
 				},
 			},
@@ -108,7 +108,7 @@ kind: Namespace
 metadata:
   name: %s
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: cron-job
