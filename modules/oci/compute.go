@@ -21,7 +21,7 @@ func DeleteImage(t testing.TestingT, ocid string) {
 
 // DeleteImageE deletes a custom image with given OCID.
 func DeleteImageE(t testing.TestingT, ocid string) error {
-	logger.Logf(t, "Deleting image with OCID %s", ocid)
+	logger.Default.Logf(t, "Deleting image with OCID %s", ocid)
 
 	configProvider := common.DefaultConfigProvider()
 	client, err := core.NewComputeClientWithConfigurationProvider(configProvider)

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -49,5 +48,5 @@ func WaitUntilSecretAvailable(t testing.TestingT, options *KubectlOptions, secre
 			return "Secret is now available", nil
 		},
 	)
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 }

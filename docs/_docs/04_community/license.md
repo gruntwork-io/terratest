@@ -12,4 +12,4 @@ nav_title_link: /docs/
 
 ## License
 
-This code is released under the Apache 2.0 License. See [LICENSE](https://github.com/gruntwork-io/terratest/blob/master/LICENSE){:target="_blank"} and [NOTICE](https://github.com/gruntwork-io/terratest/blob/master/NOTICE){:target="_blank"} for more details.
+This code is released under the Apache 2.0 License. See [LICENSE](https://github.com/gruntwork-io/terratest/blob/main/LICENSE){:target="_blank"} and [NOTICE](https://github.com/gruntwork-io/terratest/blob/main/NOTICE){:target="_blank"} for more details.

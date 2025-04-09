@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -63,6 +64,73 @@ func TestApplyWithErrorWithRetry(t *testing.T) {
 
 	require.Contains(t, out, "This is the first run, exiting with an error")
 }
+
+func TestApplyWithWarning(t *testing.T) {
+	scenarios := []struct {
+		name     string
+		folder   string
+		isError  bool
+		warnings map[string]string
+	}{
+		{
+			name:    "Warning",
+			folder:  "../../test/fixtures/terraform-with-warning",
+			isError: true,
+			warnings: map[string]string{
+				"lorem ipsum": "lorem ipsum warning",
+			},
+		},
+		{
+			name:    "WarningNotMatch",
+			folder:  "../../test/fixtures/terraform-with-warning",
+			isError: false,
+			warnings: map[string]string{
+				"lorem ipsum dolor sit amet": "some warning",
+			},
+		},
+		{
+			name:    "Error",
+			folder:  "../../test/fixtures/terraform-with-error",
+			isError: true,
+			warnings: map[string]string{
+				"lorem ipsum": "lorem ipsum warning",
+			},
+		},
+		{
+			name:    "NoError",
+			folder:  "../../test/fixtures/terraform-no-error",
+			isError: false,
+			warnings: map[string]string{
+				"lorem ipsum": "lorem ipsum warning",
+			},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario := scenario
+		t.Run(scenario.name, func(t *testing.T) {
+			t.Parallel()
+
+			testFolder, err := files.CopyTerraformFolderToTemp(scenario.folder, strings.Replace(t.Name(), "/", "-", -1))
+			require.NoError(t, err)
+
+			options := WithDefaultRetryableErrors(t, &Options{
+				TerraformDir:     testFolder,
+				NoColor:          true,
+				WarningsAsErrors: scenario.warnings,
+			})
+
+			out, err := InitAndApplyE(t, options)
+			if scenario.isError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.NotEmpty(t, out)
+		})
+	}
+}
+
 func TestTgApplyAllTgError(t *testing.T) {
 	t.Parallel()
 

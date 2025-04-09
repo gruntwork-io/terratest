@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helm-dependency-example.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    # These labels are required by helm. You can read more about required labels in the chart best pracices guide:
+    # https://docs.helm.sh/chart_best_practices/#standard-labels
+    helm.sh/chart: {{ include "helm-dependency-example.chart" . }}
+    app.kubernetes.io/name: {{ include "helm-dependency-example.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "helm-dependency-example.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "helm-dependency-example.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: app
+          {{- $repo := required "containerImageRepo is required" .Values.containerImageRepo }}
+          {{- $tag := required "containerImageTag is required" .Values.containerImageTag }}
+          image: "{{ $repo }}:{{ $tag }}"
+          ports:
+          - containerPort: 80

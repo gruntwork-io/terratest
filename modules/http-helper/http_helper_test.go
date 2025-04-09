@@ -3,7 +3,7 @@ package http_helper
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -139,9 +140,24 @@ func TestErrorWithRetry(t *testing.T) {
 	}
 }
 
+func TestEmptyRequestBodyWithRetryWithOptions(t *testing.T) {
+	t.Parallel()
+	ts := getTestServerForFunction(bodyCopyHandler)
+	defer ts.Close()
+
+	options := HttpDoOptions{
+		Method: "GET",
+		Url:    ts.URL,
+		Body:   nil,
+	}
+
+	response := HTTPDoWithRetryWithOptions(t, options, 200, 0, time.Second)
+	require.Equal(t, "", response)
+}
+
 func bodyCopyHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	body, _ := ioutil.ReadAll(r.Body)
+	body, _ := io.ReadAll(r.Body)
 	w.Write(body)
 }
 
@@ -168,10 +184,10 @@ func retryHandler(w http.ResponseWriter, r *http.Request) {
 	if counter > 0 {
 		counter--
 		w.WriteHeader(http.StatusServiceUnavailable)
-		ioutil.ReadAll(r.Body)
+		io.ReadAll(r.Body)
 	} else {
 		w.WriteHeader(http.StatusOK)
-		bytes, _ := ioutil.ReadAll(r.Body)
+		bytes, _ := io.ReadAll(r.Body)
 		w.Write(bytes)
 	}
 }
@@ -182,10 +198,33 @@ func failRetryHandler(w http.ResponseWriter, r *http.Request) {
 	if failCounter > 0 {
 		failCounter--
 		w.WriteHeader(http.StatusServiceUnavailable)
-		ioutil.ReadAll(r.Body)
+		io.ReadAll(r.Body)
 	} else {
 		w.WriteHeader(http.StatusOK)
-		bytes, _ := ioutil.ReadAll(r.Body)
+		bytes, _ := io.ReadAll(r.Body)
 		w.Write(bytes)
 	}
+}
+
+func TestGlobalProxy(t *testing.T) {
+	proxiedURL := ""
+	httpProxy := getTestServerForFunction(func(w http.ResponseWriter, r *http.Request) {
+		proxiedURL = r.RequestURI
+		bodyCopyHandler(w, r)
+	})
+	t.Cleanup(httpProxy.Close)
+
+	t.Setenv("HTTP_PROXY", httpProxy.URL)
+	targetURL := "http://www.notexist.com/"
+	body := "should be copied"
+
+	st, b, err := HTTPDoWithOptionsE(t, HttpDoOptions{
+		Url:    targetURL,
+		Method: http.MethodPost,
+		Body:   strings.NewReader(body),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, st)
+	assert.Equal(t, targetURL, proxiedURL)
+	assert.Equal(t, body, b)
 }

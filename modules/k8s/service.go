@@ -12,7 +12,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -83,7 +82,7 @@ func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serv
 			return "Service is now available", nil
 		},
 	)
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 }
 
 // IsServiceAvailable returns true if the service endpoint is ready to accept traffic. Note that for Minikube, this
@@ -109,12 +108,12 @@ func GetServiceEndpoint(t testing.TestingT, options *KubectlOptions, service *co
 }
 
 // GetServiceEndpointE will return the service access point using the following logic:
-// - For ClusterIP service type, return the URL that maps to ClusterIP and Service Port
-// - For NodePort service type, identify the public IP of the node (if it exists, otherwise return the bound hostname),
-//   and the assigned node port for the provided service port, and return the URL that maps to node ip and node port.
-// - For LoadBalancer service type, return the publicly accessible hostname of the load balancer.
-//   If the hostname is empty, it will return the public IP of the LoadBalancer.
-// - All other service types are not supported.
+//   - For ClusterIP service type, return the URL that maps to ClusterIP and Service Port
+//   - For NodePort service type, identify the public IP of the node (if it exists, otherwise return the bound hostname),
+//     and the assigned node port for the provided service port, and return the URL that maps to node ip and node port.
+//   - For LoadBalancer service type, return the publicly accessible hostname of the load balancer.
+//     If the hostname is empty, it will return the public IP of the LoadBalancer.
+//   - All other service types are not supported.
 func GetServiceEndpointE(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) (string, error) {
 	switch service.Spec.Type {
 	case corev1.ServiceTypeClusterIP:

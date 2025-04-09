@@ -115,19 +115,20 @@ func TestDoWithTimeout(t *testing.T) {
 func TestDoInBackgroundUntilStopped(t *testing.T) {
 	t.Parallel()
 
-	sleepBetweenRetries := 5 * time.Second
+	sleepBetweenRetries := 2 * time.Second
+	waitStop := sleepBetweenRetries*2 + sleepBetweenRetries/2
 	counter := 0
 
 	stop := DoInBackgroundUntilStopped(t, t.Name(), sleepBetweenRetries, func() {
 		counter++
+		t.Log(time.Now(), counter)
 	})
 
-	time.Sleep(sleepBetweenRetries * 3)
+	time.Sleep(waitStop)
 	stop.Done()
-
 	assert.Equal(t, 3, counter)
 
-	time.Sleep(sleepBetweenRetries * 3)
+	time.Sleep(waitStop)
 	assert.Equal(t, 3, counter)
 }
 

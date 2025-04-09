@@ -1,6 +1,8 @@
 package helm
 
 import (
+	"slices"
+
 	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -35,6 +37,7 @@ func getNamespaceArgs(options *Options) []string {
 func getValuesArgsE(t testing.TestingT, options *Options, args ...string) ([]string, error) {
 	args = append(args, formatSetValuesAsArgs(options.SetValues, "--set")...)
 	args = append(args, formatSetValuesAsArgs(options.SetStrValues, "--set-string")...)
+	args = append(args, formatSetValuesAsArgs(options.SetJsonValues, "--set-json")...)
 
 	valuesFilesArgs, err := formatValuesFilesAsArgsE(t, options.ValuesFiles)
 	if err != nil {
@@ -62,10 +65,19 @@ func RunHelmCommandAndGetStdOutE(t testing.TestingT, options *Options, cmd strin
 	return shell.RunCommandAndGetStdOutE(t, helmCmd)
 }
 
+// RunHelmCommandAndGetStdOutErrE runs helm with the given arguments and options and returns stdout and stderr separately.
+func RunHelmCommandAndGetStdOutErrE(t testing.TestingT, options *Options, cmd string, additionalArgs ...string) (string, string, error) {
+	helmCmd := prepareHelmCommand(t, options, cmd, additionalArgs...)
+	return shell.RunCommandAndGetStdOutErrE(t, helmCmd)
+}
+
 func prepareHelmCommand(t testing.TestingT, options *Options, cmd string, additionalArgs ...string) shell.Command {
 	args := []string{cmd}
 	args = getCommonArgs(options, args...)
-	args = append(args, getNamespaceArgs(options)...)
+	// name space arg only append if it is not there
+	if !slices.Contains(additionalArgs, "--namespace") {
+		args = append(args, getNamespaceArgs(options)...)
+	}
 	args = append(args, additionalArgs...)
 
 	helmCmd := shell.Command{

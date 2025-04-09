@@ -4,7 +4,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -58,7 +57,7 @@ func (s *SshAgent) run(t testing.TestingT) {
 					return
 					// When s.ln.Accept() returns a legit error, we print it and continue accepting further requests
 				default:
-					logger.Logf(t, "could not accept connection to agent %v", err)
+					logger.Default.Logf(t, "could not accept connection to agent %v", err)
 					continue
 				}
 			} else {
@@ -66,7 +65,7 @@ func (s *SshAgent) run(t testing.TestingT) {
 				go func(c io.ReadWriter) {
 					err := agent.ServeAgent(s.agent, c)
 					if err != nil {
-						logger.Logf(t, "could not serve ssh agent %v", err)
+						logger.Default.Logf(t, "could not serve ssh agent %v", err)
 					}
 				}(c)
 			}
@@ -112,10 +111,10 @@ func SshAgentWithKeyPairs(t testing.TestingT, keyPairs []*KeyPair) *SshAgent {
 // Instantiates and returns an in-memory ssh agent with the given KeyPair(s) already added
 // You should stop the agent to cleanup files afterwards by calling `defer sshAgent.Stop()`
 func SshAgentWithKeyPairsE(t testing.TestingT, keyPairs []*KeyPair) (*SshAgent, error) {
-	logger.Logf(t, "Generating SSH Agent with given KeyPair(s)")
+	logger.Default.Logf(t, "Generating SSH Agent with given KeyPair(s)")
 
 	// Instantiate a temporary SSH agent
-	socketDir, err := ioutil.TempDir("", "ssh-agent-")
+	socketDir, err := os.MkdirTemp("", "ssh-agent-")
 	if err != nil {
 		return nil, err
 	}

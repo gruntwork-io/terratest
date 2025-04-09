@@ -15,10 +15,10 @@ resource "google_compute_instance" "example" {
   machine_type = "f1-micro"
   zone         = "us-east1-b"
 
-  # website::tag::2:: Run Ubuntu 18.04 on the instace
+  # website::tag::2:: Run Ubuntu 22.04 on the instance
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-1804-lts"
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
     }
   }
 

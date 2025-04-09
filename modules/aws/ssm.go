@@ -1,11 +1,14 @@
 package aws
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -29,9 +32,9 @@ func GetParameterE(t testing.TestingT, awsRegion string, keyName string) (string
 	return GetParameterWithClientE(t, ssmClient, keyName)
 }
 
-// GetParameterE retrieves the latest version of SSM Parameter at keyName with decryption with the ability to provide the SSM client.
-func GetParameterWithClientE(t testing.TestingT, client *ssm.SSM, keyName string) (string, error) {
-	resp, err := client.GetParameter(&ssm.GetParameterInput{Name: aws.String(keyName), WithDecryption: aws.Bool(true)})
+// GetParameterWithClientE retrieves the latest version of SSM Parameter at keyName with decryption with the ability to provide the SSM client.
+func GetParameterWithClientE(t testing.TestingT, client *ssm.Client, keyName string) (string, error) {
+	resp, err := client.GetParameter(context.Background(), &ssm.GetParameterInput{Name: aws.String(keyName), WithDecryption: aws.Bool(true)})
 	if err != nil {
 		return "", err
 	}
@@ -56,14 +59,19 @@ func PutParameterE(t testing.TestingT, awsRegion string, keyName string, keyDesc
 	return PutParameterWithClientE(t, ssmClient, keyName, keyDescription, keyValue)
 }
 
-// PutParameterE creates new version of SSM Parameter at keyName with keyValue as SecureString with the ability to provide the SSM client.
-func PutParameterWithClientE(t testing.TestingT, client *ssm.SSM, keyName string, keyDescription string, keyValue string) (int64, error) {
-	resp, err := client.PutParameter(&ssm.PutParameterInput{Name: aws.String(keyName), Description: aws.String(keyDescription), Value: aws.String(keyValue), Type: aws.String("SecureString")})
+// PutParameterWithClientE creates new version of SSM Parameter at keyName with keyValue as SecureString with the ability to provide the SSM client.
+func PutParameterWithClientE(t testing.TestingT, client *ssm.Client, keyName string, keyDescription string, keyValue string) (int64, error) {
+	resp, err := client.PutParameter(context.Background(), &ssm.PutParameterInput{
+		Name:        aws.String(keyName),
+		Description: aws.String(keyDescription),
+		Value:       aws.String(keyValue),
+		Type:        types.ParameterTypeSecureString,
+	})
 	if err != nil {
 		return 0, err
 	}
 
-	return *resp.Version, nil
+	return resp.Version, nil
 }
 
 // DeleteParameter deletes all versions of SSM Parameter at keyName.
@@ -81,9 +89,9 @@ func DeleteParameterE(t testing.TestingT, awsRegion string, keyName string) erro
 	return DeleteParameterWithClientE(t, ssmClient, keyName)
 }
 
-// DeleteParameterE deletes all versions of SSM Parameter at keyName with the ability to provide the SSM client.
-func DeleteParameterWithClientE(t testing.TestingT, client *ssm.SSM, keyName string) error {
-	_, err := client.DeleteParameter(&ssm.DeleteParameterInput{Name: aws.String(keyName)})
+// DeleteParameterWithClientE deletes all versions of SSM Parameter at keyName with the ability to provide the SSM client.
+func DeleteParameterWithClientE(t testing.TestingT, client *ssm.Client, keyName string) error {
+	_, err := client.DeleteParameter(context.Background(), &ssm.DeleteParameterInput{Name: aws.String(keyName)})
 	if err != nil {
 		return err
 	}
@@ -91,21 +99,21 @@ func DeleteParameterWithClientE(t testing.TestingT, client *ssm.SSM, keyName str
 	return nil
 }
 
-// NewSsmClient creates a SSM client.
-func NewSsmClient(t testing.TestingT, region string) *ssm.SSM {
+// NewSsmClient creates an SSM client.
+func NewSsmClient(t testing.TestingT, region string) *ssm.Client {
 	client, err := NewSsmClientE(t, region)
 	require.NoError(t, err)
 	return client
 }
 
 // NewSsmClientE creates an SSM client.
-func NewSsmClientE(t testing.TestingT, region string) (*ssm.SSM, error) {
+func NewSsmClientE(t testing.TestingT, region string) (*ssm.Client, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
 
-	return ssm.New(sess), nil
+	return ssm.NewFromConfig(*sess), nil
 }
 
 // WaitForSsmInstanceE waits until the instance get registered to the SSM inventory.
@@ -117,23 +125,23 @@ func WaitForSsmInstanceE(t testing.TestingT, awsRegion, instanceID string, timeo
 	return WaitForSsmInstanceWithClientE(t, client, instanceID, timeout)
 }
 
-// WaitForSsmInstanceE waits until the instance get registered to the SSM inventory with the ability to provide the SSM client.
-func WaitForSsmInstanceWithClientE(t testing.TestingT, client *ssm.SSM, instanceID string, timeout time.Duration) error {
+// WaitForSsmInstanceWithClientE waits until the instance get registered to the SSM inventory with the ability to provide the SSM client.
+func WaitForSsmInstanceWithClientE(t testing.TestingT, client *ssm.Client, instanceID string, timeout time.Duration) error {
 	timeBetweenRetries := 2 * time.Second
 	maxRetries := int(timeout.Seconds() / timeBetweenRetries.Seconds())
 	description := fmt.Sprintf("Waiting for %s to appear in the SSM inventory", instanceID)
 
 	input := &ssm.GetInventoryInput{
-		Filters: []*ssm.InventoryFilter{
+		Filters: []types.InventoryFilter{
 			{
 				Key:    aws.String("AWS:InstanceInformation.InstanceId"),
-				Type:   aws.String("Equal"),
-				Values: aws.StringSlice([]string{instanceID}),
+				Type:   types.InventoryQueryOperatorTypeEqual,
+				Values: []string{instanceID},
 			},
 		},
 	}
 	_, err := retry.DoWithRetryE(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
-		resp, err := client.GetInventory(input)
+		resp, err := client.GetInventory(context.Background(), input)
 
 		if err != nil {
 			return "", err
@@ -173,7 +181,7 @@ func CheckSsmCommandE(t testing.TestingT, awsRegion, instanceID, command string,
 }
 
 // CheckSSMCommandWithClientE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client. Returns the result and an error if one occurs.
-func CheckSSMCommandWithClientE(t testing.TestingT, client *ssm.SSM, instanceID, command string, timeout time.Duration) (*CommandOutput, error) {
+func CheckSSMCommandWithClientE(t testing.TestingT, client *ssm.Client, instanceID, command string, timeout time.Duration) (*CommandOutput, error) {
 	return CheckSSMCommandWithClientWithDocumentE(t, client, instanceID, command, "AWS-RunShellScript", timeout)
 }
 
@@ -186,7 +194,7 @@ func CheckSsmCommandWithDocument(t testing.TestingT, awsRegion, instanceID, comm
 
 // CheckSsmCommandWithDocumentE checks that you can run the given command on the given instance through AWS SSM with specified Command Doc type. Returns the result and an error if one occurs.
 func CheckSsmCommandWithDocumentE(t testing.TestingT, awsRegion, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
-	logger.Logf(t, "Running command '%s' on EC2 instance with ID '%s'", command, instanceID)
+	logger.Default.Logf(t, "Running command '%s' on EC2 instance with ID '%s'", command, instanceID)
 
 	// Now that we know the instance in the SSM inventory, we can send the command
 	client, err := NewSsmClientE(t, awsRegion)
@@ -197,19 +205,22 @@ func CheckSsmCommandWithDocumentE(t testing.TestingT, awsRegion, instanceID, com
 }
 
 // CheckSSMCommandWithClientWithDocumentE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client with specified Command Doc type. Returns the result and an error if one occurs.
-func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.SSM, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
+func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.Client, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
 
 	timeBetweenRetries := 2 * time.Second
 	maxRetries := int(timeout.Seconds() / timeBetweenRetries.Seconds())
 
-	resp, err := client.SendCommand(&ssm.SendCommandInput{
-		Comment:      aws.String("Terratest SSM"),
-		DocumentName: aws.String(commandDocName),
-		InstanceIds:  aws.StringSlice([]string{instanceID}),
-		Parameters: map[string][]*string{
-			"commands": aws.StringSlice([]string{command}),
+	resp, err := client.SendCommand(
+		context.Background(),
+		&ssm.SendCommandInput{
+			Comment:      aws.String("Terratest SSM"),
+			DocumentName: aws.String(commandDocName),
+			InstanceIds:  []string{instanceID},
+			Parameters: map[string][]string{
+				"commands": {command},
+			},
 		},
-	})
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +236,7 @@ func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.SSM,
 
 	result := &CommandOutput{}
 	_, err = retry.DoWithRetryableErrorsE(t, description, retryableErrors, maxRetries, timeBetweenRetries, func() (string, error) {
-		resp, err := client.GetCommandInvocation(&ssm.GetCommandInvocationInput{
+		resp, err := client.GetCommandInvocation(context.Background(), &ssm.GetCommandInvocationInput{
 			CommandId:  resp.Command.CommandId,
 			InstanceId: &instanceID,
 		})
@@ -234,25 +245,26 @@ func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.SSM,
 			return "", err
 		}
 
-		result.Stderr = aws.StringValue(resp.StandardErrorContent)
-		result.Stdout = aws.StringValue(resp.StandardOutputContent)
-		result.ExitCode = aws.Int64Value(resp.ResponseCode)
+		result.Stderr = aws.ToString(resp.StandardErrorContent)
+		result.Stdout = aws.ToString(resp.StandardOutputContent)
+		result.ExitCode = int64(resp.ResponseCode)
 
-		status := aws.StringValue(resp.Status)
+		status := resp.Status
 
-		if status == ssm.CommandInvocationStatusSuccess {
+		if status == types.CommandInvocationStatusSuccess {
 			return "", nil
 		}
 
-		if status == ssm.CommandInvocationStatusFailed {
-			return "", fmt.Errorf(aws.StringValue(resp.StatusDetails))
+		if status == types.CommandInvocationStatusFailed {
+			return "", fmt.Errorf(aws.ToString(resp.StatusDetails))
 		}
 
 		return "", fmt.Errorf("bad status: %s", status)
 	})
 
 	if err != nil {
-		if actualErr, ok := err.(retry.FatalError); ok {
+		var actualErr retry.FatalError
+		if errors.As(err, &actualErr) {
 			return result, actualErr.Underlying
 		}
 		return result, fmt.Errorf("unexpected error: %v", err)

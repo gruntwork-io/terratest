@@ -14,7 +14,7 @@ func TestTerraformAwsSsmExample(t *testing.T) {
 	region := aws.GetRandomStableRegion(t, nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceType(t, region, []string{"t2.micro", "t3.micro"})
+	instanceType := aws.GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: "../examples/terraform-aws-ssm-example",

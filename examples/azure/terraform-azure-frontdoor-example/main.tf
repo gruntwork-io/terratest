@@ -27,9 +27,12 @@ resource "azurerm_resource_group" "rg" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_frontdoor" "frontdoor" {
-  name                                         = "terratest-afd-${var.postfix}"
-  resource_group_name                          = azurerm_resource_group.rg.name
-  enforce_backend_pools_certificate_name_check = false
+  name                = "terratest-afd-${var.postfix}"
+  resource_group_name = azurerm_resource_group.rg.name
+
+  backend_pool_settings {
+    enforce_backend_pools_certificate_name_check = false
+  }
 
   routing_rule {
     name               = "terratestRoutingRule1"

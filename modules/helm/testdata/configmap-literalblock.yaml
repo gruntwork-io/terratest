@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: release-name
+  name: release-name
+data:
+  thisIsSomeDataKey: |
+    configmap-data-value-1;      
+    configmap-data-value-2;

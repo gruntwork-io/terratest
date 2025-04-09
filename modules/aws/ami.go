@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -57,17 +59,17 @@ func GetEbsSnapshotsForAmi(t testing.TestingT, region string, ami string) []stri
 	return snapshots
 }
 
-// GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI
+// GetEbsSnapshotsForAmiE retrieves the EBS snapshots which back the given AMI
 func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]string, error) {
-	logger.Logf(t, "Retrieving EBS snapshots backing AMI %s", ami)
+	logger.Default.Logf(t, "Retrieving EBS snapshots backing AMI %s", ami)
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
 	}
 
-	images, err := ec2Client.DescribeImages(&ec2.DescribeImagesInput{
-		ImageIds: []*string{
-			aws.String(ami),
+	images, err := ec2Client.DescribeImages(context.Background(), &ec2.DescribeImagesInput{
+		ImageIds: []string{
+			ami,
 		},
 	})
 	if err != nil {
@@ -78,7 +80,7 @@ func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]st
 	for _, image := range images.Images {
 		for _, mapping := range image.BlockDeviceMappings {
 			if mapping.Ebs != nil && mapping.Ebs.SnapshotId != nil {
-				snapshots = append(snapshots, aws.StringValue(mapping.Ebs.SnapshotId))
+				snapshots = append(snapshots, aws.ToString(mapping.Ebs.SnapshotId))
 			}
 		}
 	}
@@ -106,17 +108,18 @@ func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filt
 		return "", err
 	}
 
-	ec2Filters := []*ec2.Filter{}
+	var ec2Filters []types.Filter
 	for name, values := range filters {
-		ec2Filters = append(ec2Filters, &ec2.Filter{Name: aws.String(name), Values: aws.StringSlice(values)})
+		ec2Filters = append(ec2Filters, types.Filter{Name: aws.String(name), Values: values})
 	}
 
 	input := ec2.DescribeImagesInput{
-		Filters: ec2Filters,
-		Owners:  []*string{aws.String(ownerId)},
+		Filters:           ec2Filters,
+		IncludeDeprecated: aws.Bool(true),
+		Owners:            []string{ownerId},
 	}
 
-	out, err := ec2Client.DescribeImages(&input)
+	out, err := ec2Client.DescribeImages(context.Background(), &input)
 	if err != nil {
 		return "", err
 	}
@@ -126,11 +129,11 @@ func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filt
 	}
 
 	mostRecentImage := mostRecentAMI(out.Images)
-	return aws.StringValue(mostRecentImage.ImageId), nil
+	return aws.ToString(mostRecentImage.ImageId), nil
 }
 
 // Image sorting code borrowed from: https://github.com/hashicorp/packer/blob/7f4112ba229309cfc0ebaa10ded2abdfaf1b22c8/builder/amazon/common/step_source_ami_info.go
-type imageSort []*ec2.Image
+type imageSort []types.Image
 
 func (a imageSort) Len() int      { return len(a) }
 func (a imageSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
@@ -141,7 +144,7 @@ func (a imageSort) Less(i, j int) bool {
 }
 
 // mostRecentAMI returns the most recent AMI out of a slice of images.
-func mostRecentAMI(images []*ec2.Image) *ec2.Image {
+func mostRecentAMI(images []types.Image) types.Image {
 	sortedImages := images
 	sort.Sort(imageSort(sortedImages))
 	return sortedImages[len(sortedImages)-1]
@@ -191,6 +194,50 @@ func GetUbuntu1604AmiE(t testing.TestingT, region string) (string, error) {
 	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
 }
 
+// GetUbuntu2004Ami gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2004Ami(t testing.TestingT, region string) string {
+	amiID, err := GetUbuntu2004AmiE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return amiID
+}
+
+// GetUbuntu2004AmiE gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2004AmiE(t testing.TestingT, region string) (string, error) {
+	filters := map[string][]string{
+		"name":                             {"*ubuntu-focal-20.04-amd64-server-*"},
+		"virtualization-type":              {"hvm"},
+		"architecture":                     {"x86_64"},
+		"root-device-type":                 {"ebs"},
+		"block-device-mapping.volume-type": {"gp2"},
+	}
+
+	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+}
+
+// GetUbuntu2204Ami gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2204Ami(t testing.TestingT, region string) string {
+	amiID, err := GetUbuntu2204AmiE(t, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return amiID
+}
+
+// GetUbuntu2204AmiE gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+func GetUbuntu2204AmiE(t testing.TestingT, region string) (string, error) {
+	filters := map[string][]string{
+		"name":                             {"*ubuntu-jammy-22.04-amd64-server-*"},
+		"virtualization-type":              {"hvm"},
+		"architecture":                     {"x86_64"},
+		"root-device-type":                 {"ebs"},
+		"block-device-mapping.volume-type": {"gp2"},
+	}
+
+	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+}
+
 // GetCentos7Ami returns a CentOS 7 public AMI from the given region.
 // WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
 // you can successfully launch the AMI.
@@ -229,7 +276,7 @@ func GetAmazonLinuxAmi(t testing.TestingT, region string) string {
 // GetAmazonLinuxAmiE returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
 func GetAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
 	filters := map[string][]string{
-		"name":                             {"*amzn-ami-hvm-*-x86_64*"},
+		"name":                             {"*amzn2-ami-hvm-*-x86_64*"},
 		"virtualization-type":              {"hvm"},
 		"architecture":                     {"x86_64"},
 		"root-device-type":                 {"ebs"},

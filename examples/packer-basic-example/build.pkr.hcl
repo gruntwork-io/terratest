@@ -51,11 +51,11 @@ variable "oci_subnet_ocid" {
   default = ""
 }
 
-data "amazon-ami" "ubuntu-xenial" {
+data "amazon-ami" "ubuntu-jammy" {
   filters = {
     architecture                       = "x86_64"
     "block-device-mapping.volume-type" = "gp2"
-    name                               = "*ubuntu-xenial-16.04-amd64-server-*"
+    name                               = "*ubuntu-jammy-22.04-amd64-server-*"
     root-device-type                   = "ebs"
     virtualization-type                = "hvm"
   }
@@ -70,7 +70,7 @@ source "amazon-ebs" "ubuntu-example" {
   encrypt_boot    = false
   instance_type   = var.instance_type
   region          = var.aws_region
-  source_ami      = data.amazon-ami.ubuntu-xenial.id
+  source_ami      = data.amazon-ami.ubuntu-jammy.id
   ssh_username    = "ubuntu"
 }
 

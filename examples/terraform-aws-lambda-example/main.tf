@@ -28,8 +28,8 @@ resource "aws_lambda_function" "lambda" {
   source_code_hash = data.archive_file.zip.output_base64sha256
   function_name    = var.function_name
   role             = aws_iam_role.lambda.arn
-  handler          = "lambda"
-  runtime          = "go1.x"
+  handler          = "bootstrap"
+  runtime          = "provided.al2023"
 }
 
 resource "aws_iam_role" "lambda" {

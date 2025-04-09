@@ -1,0 +1,30 @@
+metricsServer:
+  replicaCount: 3
+operator:
+  name: keda-operator
+  replicaCount: 3
+podAnnotations:
+  keda:
+    sidecar.istio.io/inject: "false"
+  metricsAdapter:
+    sidecar.istio.io/inject: "false"
+podDisruptionBudget:
+  metricServer:
+    minAvailable: 1
+  operator:
+    minAvailable: 1
+resources:
+  metricServer:
+    limits:
+      cpu: 100m
+      memory: 1234Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  operator:
+    limits:
+      cpu: 100m
+      memory: 1111Mi
+    requests:
+      cpu: 50m
+      memory: 888Mi

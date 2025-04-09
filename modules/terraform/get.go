@@ -15,5 +15,5 @@ func Get(t testing.TestingT, options *Options) string {
 
 // GetE calls terraform get and return stdout/stderr.
 func GetE(t testing.TestingT, options *Options) (string, error) {
-	return RunTerraformCommandE(t, options, "get", "-update")
+	return RunTerraformCommandE(t, options, prepend(options.ExtraArgs.Get, "get", "-update")...)
 }

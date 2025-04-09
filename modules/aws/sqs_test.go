@@ -1,12 +1,13 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -71,7 +72,7 @@ func queueExists(t *testing.T, region string, url string) bool {
 
 	input := sqs.GetQueueAttributesInput{QueueUrl: aws.String(url)}
 
-	if _, err := sqsClient.GetQueueAttributes(&input); err != nil {
+	if _, err := sqsClient.GetQueueAttributes(context.Background(), &input); err != nil {
 		if strings.Contains(err.Error(), "NonExistentQueue") {
 			return false
 		}

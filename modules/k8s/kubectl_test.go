@@ -11,10 +11,14 @@ package k8s
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,4 +29,63 @@ func TestRunKubectlAndGetOutputReturnsOutput(t *testing.T) {
 	output, err := RunKubectlAndGetOutputE(t, options, "auth", "can-i", "get", "pods")
 	require.NoError(t, err)
 	require.Equal(t, output, "yes")
+}
+
+func TestKubectlRequestTimeout(t *testing.T) {
+	t.Parallel()
+
+	var parsedTimeout time.Duration
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		parsedTimeout, _ = time.ParseDuration(r.URL.Query().Get("timeout"))
+		select {
+		case <-time.After(3 * time.Second):
+		case <-r.Context().Done():
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("dummy-error"))
+	}))
+
+	config := fmt.Sprintf(`
+apiVersion: v1
+kind: Config
+clusters:
+- name: dummy-cluster
+  cluster:
+    server: %s
+users:
+- name: dummy-user
+  user:
+    token: dummy-token
+contexts:
+- name: dummy-context
+  context:
+    cluster: dummy-cluster
+    user: dummy-user
+current-context: dummy-context
+`, server.URL)
+
+	t.Run("WithoutTimeout", func(t *testing.T) {
+		options := &KubectlOptions{
+			ContextName: "dummy-context",
+			ConfigPath:  StoreConfigToTempFile(t, config),
+		}
+		_, err := RunKubectlAndGetOutputE(t, options, "get", "pods")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "dummy-error")
+		assert.NotContains(t, err.Error(), "Client.Timeout exceeded while awaiting headers")
+	})
+
+	t.Run("WithTimeout", func(t *testing.T) {
+		options := &KubectlOptions{
+			ContextName:    "dummy-context",
+			ConfigPath:     StoreConfigToTempFile(t, config),
+			RequestTimeout: time.Second,
+		}
+		_, err := RunKubectlAndGetOutputE(t, options, "get", "pods")
+		require.Error(t, err)
+		assert.Equal(t, options.RequestTimeout, parsedTimeout)
+		assert.NotContains(t, err.Error(), "dummy-error")
+		assert.Contains(t, err.Error(), "Client.Timeout exceeded while awaiting headers")
+	})
+
 }

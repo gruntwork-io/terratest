@@ -28,6 +28,12 @@ func InstallE(t testing.TestingT, options *Options, chart string, releaseName st
 		chart = absChartDir
 	}
 
+	// build chart dependencies
+	if options.BuildDependencies {
+		if _, err := RunHelmCommandAndGetOutputE(t, options, "dependency", "build", chart); err != nil {
+			return errors.WithStackTrace(err)
+		}
+	}
 	// Now call out to helm install to install the charts with the provided options
 	// Declare err here so that we can update args later
 	var err error

@@ -10,7 +10,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -81,10 +80,10 @@ func WaitUntilJobSucceedE(t testing.TestingT, options *KubectlOptions, jobName s
 		},
 	)
 	if err != nil {
-		logger.Logf(t, "Timed out waiting for Job to be provisioned: %s", err)
+		options.Logger.Logf(t, "Timed out waiting for Job to be provisioned: %s", err)
 		return err
 	}
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 	return nil
 }
 

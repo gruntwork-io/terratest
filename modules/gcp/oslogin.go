@@ -24,7 +24,28 @@ func ImportSSHKey(t testing.TestingT, user, key string) {
 // The `user` parameter should be the email address of the user.
 // The `key` parameter should be the public key of the SSH key being uploaded.
 func ImportSSHKeyE(t testing.TestingT, user, key string) error {
-	logger.Logf(t, "Importing SSH key for user %s", user)
+	return importProjectSSHKeyE(t, user, key, nil)
+}
+
+// ImportProjectSSHKey will import an SSH key to GCP under the provided user identity.
+// The `user` parameter should be the email address of the user.
+// The `key` parameter should be the public key of the SSH key being uploaded.
+// The `projectID` parameter should be the chosen project ID.
+// This will fail the test if there is an error.
+func ImportProjectSSHKey(t testing.TestingT, user, key, projectID string) {
+	require.NoErrorf(t, ImportProjectSSHKeyE(t, user, key, projectID), "Could not add SSH Key to user %s", user)
+}
+
+// ImportProjectSSHKeyE will import an SSH key to GCP under the provided user identity.
+// The `user` parameter should be the email address of the user.
+// The `key` parameter should be the public key of the SSH key being uploaded.
+// The `projectID` parameter should be the chosen project ID.
+func ImportProjectSSHKeyE(t testing.TestingT, user, key, projectID string) error {
+	return importProjectSSHKeyE(t, user, key, &projectID)
+}
+
+func importProjectSSHKeyE(t testing.TestingT, user, key string, projectID *string) error {
+	logger.Default.Logf(t, "Importing SSH key for user %s", user)
 
 	ctx := context.Background()
 	service, err := NewOSLoginServiceE(t)
@@ -38,7 +59,11 @@ func ImportSSHKeyE(t testing.TestingT, user, key string) error {
 		Key: key,
 	}
 
-	_, err = service.Users.ImportSshPublicKey(parent, sshPublicKey).Context(ctx).Do()
+	req := service.Users.ImportSshPublicKey(parent, sshPublicKey)
+	if projectID != nil {
+		req = req.ProjectId(*projectID)
+	}
+	_, err = req.Context(ctx).Do()
 	if err != nil {
 		return err
 	}
@@ -58,7 +83,7 @@ func DeleteSSHKey(t testing.TestingT, user, key string) {
 // The `user` parameter should be the email address of the user.
 // The `key` parameter should be the public key of the SSH key that was uploaded.
 func DeleteSSHKeyE(t testing.TestingT, user, key string) error {
-	logger.Logf(t, "Deleting SSH key for user %s", user)
+	logger.Default.Logf(t, "Deleting SSH key for user %s", user)
 
 	ctx := context.Background()
 	service, err := NewOSLoginServiceE(t)
@@ -98,7 +123,7 @@ func GetLoginProfile(t testing.TestingT, user string) *oslogin.LoginProfile {
 // accounts the user will appear as. Generally, this will only be the OS Login key + account, but `gcloud compute ssh` could create temporary keys and profiles.
 // The `user` parameter should be the email address of the user.
 func GetLoginProfileE(t testing.TestingT, user string) (*oslogin.LoginProfile, error) {
-	logger.Logf(t, "Getting login profile for user %s", user)
+	logger.Default.Logf(t, "Getting login profile for user %s", user)
 
 	ctx := context.Background()
 	service, err := NewOSLoginServiceE(t)

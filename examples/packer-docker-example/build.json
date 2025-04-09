@@ -15,7 +15,7 @@
       "filters": {
         "virtualization-type": "hvm",
         "architecture": "x86_64",
-        "name": "*ubuntu-xenial-16.04-amd64-server-*",
+        "name": "*ubuntu-jammy-22.04-amd64-server-*",
         "block-device-mapping.volume-type": "gp2",
         "root-device-type": "ebs"
       },
@@ -27,7 +27,7 @@
   },{
     "name": "ubuntu-docker",
     "type": "docker",
-    "image": "gruntwork/ubuntu-test:16.04",
+    "image": "gruntwork/ubuntu-test:22.04",
     "commit": true,
     "changes": ["ENTRYPOINT [\"\"]"]
   }],

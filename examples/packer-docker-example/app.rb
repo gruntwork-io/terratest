@@ -12,6 +12,7 @@ server_text = ARGV[1]
 
 set :port, server_port
 set :bind, '0.0.0.0'
+set :server, 'puma'
 
 get '/' do
   server_text

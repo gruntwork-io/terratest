@@ -1,0 +1,11 @@
+services:
+  test-docker-image:
+    build:
+      context: .
+      secrets:
+        - github-token
+    entrypoint: bash_script.sh
+
+secrets:
+  github-token:
+    environment: GITHUB_OAUTH_TOKEN

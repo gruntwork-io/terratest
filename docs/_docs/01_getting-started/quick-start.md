@@ -16,7 +16,7 @@ custom_js:
 
 Terratest uses the Go testing framework. To use Terratest, you need to install:
 
-- [Go](https://golang.org/) (requires version >=1.13)
+- [Go](https://golang.org/) (requires version >=1.21.1)
 
 ## Setting up your project
 
@@ -26,15 +26,16 @@ types of infrastructure code you can test (e.g., Packer, Kubernetes, etc).
 
 1. Create an `examples` and `test` folder.
 
-1. Copy all the files from the [basic terraform example](https://github.com/gruntwork-io/terratest/tree/master/examples/terraform-basic-example/) into the `examples` folder.
+1. Copy the folder including all the files from the [basic terraform example](https://github.com/gruntwork-io/terratest/tree/main/examples/terraform-basic-example/) into the `examples` folder.
 
-1. Copy the [basic terraform example test](https://github.com/gruntwork-io/terratest/blob/master/test/terraform_basic_example_test.go) into the `test` folder.
+1. Copy the [basic terraform example test](https://github.com/gruntwork-io/terratest/blob/main/test/terraform_basic_example_test.go) into the `test` folder.
 
 1. To configure dependencies, run:
 
     ```bash
     cd test
     go mod init "<MODULE_NAME>"
+    go mod tidy
     ```
 
     Where `<MODULE_NAME>` is the name of your module, typically in the format

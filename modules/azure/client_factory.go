@@ -11,23 +11,36 @@ package azure
 // snippet-tag-start::client_factory_example.imports
 
 import (
+	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/privatedns/mgmt/privatedns"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/datafactory/mgmt/2018-06-01/datafactory"
 	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
+	sqlmi "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/v3.0/sql"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
+	"github.com/Azure/azure-sdk-for-go/services/synapse/mgmt/2020-12-01/synapse"
 	"github.com/Azure/azure-sdk-for-go/services/web/mgmt/2019-08-01/web"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
@@ -165,7 +178,7 @@ func CreateKeyVaultManagementClientE(subscriptionID string) (*kvmng.VaultsClient
 		return nil, err
 	}
 
-	//create keyvault management clinet
+	// create keyvault management clinet
 	vaultClient := kvmng.NewVaultsClientWithBaseURI(baseURI, subscriptionID)
 
 	return &vaultClient, nil
@@ -209,7 +222,6 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 
 	blobContainerClient := storage.NewBlobContainersClientWithBaseURI(baseURI, subscriptionID)
 	authorizer, err := NewAuthorizer()
-
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +244,6 @@ func CreateStorageFileSharesClientE(subscriptionID string) (*storage.FileSharesC
 
 	fileShareClient := storage.NewFileSharesClientWithBaseURI(baseURI, subscriptionID)
 	authorizer, err := NewAuthorizer()
-
 	if err != nil {
 		return nil, err
 	}
@@ -317,6 +328,64 @@ func CreateSQLServerClient(subscriptionID string) (*sql.ServersClient, error) {
 	sqlClient.Authorizer = *authorizer
 
 	return &sqlClient, nil
+}
+
+// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql server client
+func CreateSQLMangedInstanceClient(subscriptionID string) (*sqlmi.ManagedInstancesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a sql server client
+	sqlmiClient := sqlmi.NewManagedInstancesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	sqlmiClient.Authorizer = *authorizer
+
+	return &sqlmiClient, nil
+}
+
+// CreateSQLMangedDatabasesClient is a helper function that will create and setup a sql server client
+func CreateSQLMangedDatabasesClient(subscriptionID string) (*sqlmi.ManagedDatabasesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a sql server client
+	sqlmidbClient := sqlmi.NewManagedDatabasesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	sqlmidbClient.Authorizer = *authorizer
+
+	return &sqlmidbClient, nil
 }
 
 // CreateDatabaseClient is a helper function that will create and setup a SQL DB client
@@ -624,7 +693,7 @@ func CreateLoadBalancerClientE(subscriptionID string) (*network.LoadBalancersCli
 		return nil, err
 	}
 
-	//create LB client
+	// create LB client
 	client := network.NewLoadBalancersClientWithBaseURI(baseURI, subscriptionID)
 	return &client, nil
 }
@@ -672,7 +741,6 @@ func CreateNewVirtualNetworkClientE(subscriptionID string) (*network.VirtualNetw
 // CreateAppServiceClientE returns an App service client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
 func CreateAppServiceClientE(subscriptionID string) (*web.AppsClient, error) {
-
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -693,7 +761,6 @@ func CreateAppServiceClientE(subscriptionID string) (*web.AppsClient, error) {
 // CreateContainerRegistryClientE returns an ACR client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
 func CreateContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
-
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -771,6 +838,157 @@ func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.F
 	return &client, nil
 }
 
+// CreateSynapseWorkspaceClientE is a helper function that will setup a synapse client.
+func CreateSynapseWorkspaceClientE(subscriptionID string) (*synapse.WorkspacesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a synapse client
+	synapseWorkspaceClient := synapse.NewWorkspacesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	synapseWorkspaceClient.Authorizer = *authorizer
+
+	return &synapseWorkspaceClient, nil
+}
+
+// CreateSynapseSqlPoolClientE is a helper function that will setup a synapse client.
+func CreateSynapseSqlPoolClientE(subscriptionID string) (*synapse.SQLPoolsClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a synapse client
+	synapseSqlPoolClient := synapse.NewSQLPoolsClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	synapseSqlPoolClient.Authorizer = *authorizer
+
+	return &synapseSqlPoolClient, nil
+}
+
+// CreateDataFactoriesClientE is a helper function that will setup a synapse client.
+func CreateDataFactoriesClientE(subscriptionID string) (*datafactory.FactoriesClient, error) {
+	// Validate Azure subscription ID
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a synapse client
+	dataFactoryClient := datafactory.NewFactoriesClientWithBaseURI(baseURI, subscriptionID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	dataFactoryClient.Authorizer = *authorizer
+
+	return &dataFactoryClient, nil
+}
+
+// CreatePrivateDnsZonesClientE is a helper function that will setup a private DNS zone client.
+func CreatePrivateDnsZonesClientE(subscriptionID string) (*privatedns.PrivateZonesClient, error) {
+	// Validate Azure subscription ID
+	subID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Lookup environment URI
+	baseURI, err := getBaseURI()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a private DNS zone client
+	privateZonesClient := privatedns.NewPrivateZonesClientWithBaseURI(baseURI, subID)
+
+	// Create an authorizer
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Attach authorizer to the client
+	privateZonesClient.Authorizer = *authorizer
+
+	return &privateZonesClient, nil
+}
+
+func CreateManagedEnvironmentsClientE(subscriptionID string) (*armappcontainers.ManagedEnvironmentsClient, error) {
+	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	client := clientFactory.NewManagedEnvironmentsClient()
+	return client, nil
+}
+
+func CreateResourceGroupClientV2E(subscriptionID string) (*armresources.ResourceGroupsClient, error) {
+	clientFactory, err := getArmResourcesClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	return clientFactory.NewResourceGroupsClient(), nil
+}
+
+func CreateContainerAppsClientE(subscriptionID string) (*armappcontainers.ContainerAppsClient, error) {
+	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	client := clientFactory.NewContainerAppsClient()
+	return client, nil
+}
+
+func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.JobsClient, error) {
+	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	client := clientFactory.NewJobsClient()
+	return client, nil
+}
+
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
 // This function would fail the test if there is an error.
 func GetKeyVaultURISuffixE() (string, error) {
@@ -818,4 +1036,90 @@ func getBaseURI() (string, error) {
 		return "", err
 	}
 	return baseURI, nil
+}
+
+// getArmResourcesClientFactory gets an arm resources client factory
+func getArmResourcesClientFactory(subscriptionID string) (*armresources.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armresources.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+}
+
+// getArmAppContainersClientFactory gets an arm app containers client factory
+func getArmAppContainersClientFactory(subscriptionID string) (*armappcontainers.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armappcontainers.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+}
+
+func getClientCloudConfig() (cloud.Configuration, error) {
+	envName := getDefaultEnvironmentName()
+	switch strings.ToUpper(envName) {
+	case "AZURECHINACLOUD":
+		return cloud.AzureChina, nil
+	case "AZUREUSGOVERNMENTCLOUD":
+		return cloud.AzureGovernment, nil
+	case "AZUREPUBLICCLOUD":
+		return cloud.AzurePublic, nil
+	case "AZURESTACKCLOUD":
+		env, err := autorestAzure.EnvironmentFromName(envName)
+		if err != nil {
+			return cloud.Configuration{}, err
+		}
+		c := cloud.Configuration{
+			ActiveDirectoryAuthorityHost: env.ActiveDirectoryEndpoint,
+			Services: map[cloud.ServiceName]cloud.ServiceConfiguration{
+				cloud.ResourceManager: {
+					Audience: env.TokenAudience,
+					Endpoint: env.ResourceManagerEndpoint,
+				},
+			},
+		}
+		return c, nil
+	default:
+		return cloud.Configuration{},
+			fmt.Errorf("no cloud environment matching the name: %s. "+
+				"Available values are: "+
+				"AzurePublicCloud (default), "+
+				"AzureUSGovernmentCloud, "+
+				"AzureChinaCloud or "+
+				"AzureStackCloud",
+				envName)
+	}
 }

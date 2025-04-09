@@ -88,7 +88,7 @@ func DoWithRetryInterfaceE(t testing.TestingT, actionDescription string, maxRetr
 	var err error
 
 	for i := 0; i <= maxRetries; i++ {
-		logger.Log(t, actionDescription)
+		logger.Default.Logf(t, "%s", actionDescription)
 
 		output, err = action()
 		if err == nil {
@@ -96,11 +96,11 @@ func DoWithRetryInterfaceE(t testing.TestingT, actionDescription string, maxRetr
 		}
 
 		if _, isFatalErr := err.(FatalError); isFatalErr {
-			logger.Logf(t, "Returning due to fatal error: %v", err)
+			logger.Default.Logf(t, "Returning due to fatal error: %v", err)
 			return output, err
 		}
 
-		logger.Logf(t, "%s returned an error: %s. Sleeping for %s and will try again.", actionDescription, err.Error(), sleepBetweenRetries)
+		logger.Default.Logf(t, "%s returned an error: %s. Sleeping for %s and will try again.", actionDescription, err.Error(), sleepBetweenRetries)
 		time.Sleep(sleepBetweenRetries)
 	}
 
@@ -141,7 +141,7 @@ func DoWithRetryableErrorsE(t testing.TestingT, actionDescription string, retrya
 
 		for errorRegexp, errorMessage := range retryableErrorsRegexp {
 			if errorRegexp.MatchString(output) || errorRegexp.MatchString(err.Error()) {
-				logger.Logf(t, "'%s' failed with the error '%s' but this error was expected and warrants a retry. Further details: %s\n", actionDescription, err.Error(), errorMessage)
+				logger.Default.Logf(t, "'%s' failed with the error '%s' but this error was expected and warrants a retry. Further details: %s\n", actionDescription, err.Error(), errorMessage)
 				return output, err
 			}
 		}
@@ -167,17 +167,17 @@ func DoInBackgroundUntilStopped(t testing.TestingT, actionDescription string, sl
 
 	go func() {
 		for {
-			logger.Logf(t, "Executing action '%s'", actionDescription)
+			logger.Default.Logf(t, "Executing action '%s'", actionDescription)
 
 			action()
 
-			logger.Logf(t, "Sleeping for %s before repeating action '%s'", sleepBetweenRepeats, actionDescription)
+			logger.Default.Logf(t, "Sleeping for %s before repeating action '%s'", sleepBetweenRepeats, actionDescription)
 
 			select {
 			case <-time.After(sleepBetweenRepeats):
 				// Nothing to do, just allow the loop to continue
 			case <-stop:
-				logger.Logf(t, "Received stop signal for action '%s'.", actionDescription)
+				logger.Default.Logf(t, "Received stop signal for action '%s'.", actionDescription)
 				return
 			}
 		}

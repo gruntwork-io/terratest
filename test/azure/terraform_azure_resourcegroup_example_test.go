@@ -43,4 +43,8 @@ func TestTerraformAzureResourceGroupExample(t *testing.T) {
 	// website::tag::4:: Verify the resource group exists
 	exists := azure.ResourceGroupExists(t, resourceGroupName, subscriptionID)
 	assert.True(t, exists, "Resource group does not exist")
+
+	// website::tag::4:: Verify the resource group exists
+	existsv2 := azure.ResourceGroupExistsV2(t, resourceGroupName, subscriptionID)
+	assert.True(t, existsv2, "Resource group does not exist")
 }

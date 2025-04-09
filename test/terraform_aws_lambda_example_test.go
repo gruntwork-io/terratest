@@ -6,6 +6,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,9 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 	// Make a copy of the terraform module to a temporary directory. This allows running multiple tests in parallel
 	// against the same terraform module.
 	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-lambda-example")
+
+	err := buildLambdaBinary(t, exampleFolder)
+	require.NoError(t, err)
 
 	// Give this lambda function a unique ID for a name so we can distinguish it from any other lambdas
 	// in your AWS account
@@ -53,17 +57,37 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 	assert.Equal(t, `"hi!"`, string(response))
 
 	// Invoke the function, this time causing it to error and capturing the error
-	_, err := aws.InvokeFunctionE(t, awsRegion, functionName, ExampleFunctionPayload{ShouldFail: true, Echo: "hi!"})
+	_, err = aws.InvokeFunctionE(t, awsRegion, functionName, ExampleFunctionPayload{ShouldFail: true, Echo: "hi!"})
 
 	// Function-specific errors have their own special return
 	functionError, ok := err.(*aws.FunctionError)
 	require.True(t, ok)
 
 	// Make sure the function-specific error comes back
-	assert.Contains(t, string(functionError.Payload), "Failed to handle")
+	assert.Contains(t, string(functionError.Payload), "failed to handle")
 }
 
-// Annother example of how to test the Terraform module in
+func buildLambdaBinary(t *testing.T, tempDir string) error {
+	cmd := shell.Command{
+		Command: "go",
+		Args: []string{
+			"build",
+			"-o",
+			tempDir + "/src/bootstrap",
+			tempDir + "/src/bootstrap.go",
+		},
+		Env: map[string]string{
+			"GOOS":        "linux",
+			"GOARCH":      "amd64",
+			"CGO_ENABLED": "0",
+		},
+	}
+
+	_, err := shell.RunCommandAndGetOutputE(t, cmd)
+	return err
+}
+
+// Another example of how to test the Terraform module in
 // examples/terraform-aws-lambda-example using Terratest, this time with
 // the aws.InvokeFunctionWithParams.
 func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
@@ -72,6 +96,9 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 	// Make a copy of the terraform module to a temporary directory. This allows running multiple tests in parallel
 	// against the same terraform module.
 	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-lambda-example")
+
+	err := buildLambdaBinary(t, exampleFolder)
+	require.NoError(t, err)
 
 	// Give this lambda function a unique ID for a name so we can distinguish it from any other lambdas
 	// in your AWS account
@@ -109,7 +136,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 	// With "DryRun", there's no message in the output, but there is
 	// a status code which will have a value of 204 for a successful
 	// invocation.
-	assert.Equal(t, int(*out.StatusCode), 204)
+	assert.Equal(t, int(out.StatusCode), 204)
 
 	// Invoke the function, this time causing the Lambda to error and
 	// capturing the error.
@@ -118,13 +145,13 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 		InvocationType: &invocationType,
 		Payload:        ExampleFunctionPayload{ShouldFail: true, Echo: "hi!"},
 	}
-	out, err := aws.InvokeFunctionWithParamsE(t, awsRegion, functionName, input)
+	out, err = aws.InvokeFunctionWithParamsE(t, awsRegion, functionName, input)
 
 	// The Lambda executed, but should have failed.
 	assert.Error(t, err, "Unhandled")
 
 	// Make sure the function-specific error comes back
-	assert.Contains(t, string(out.Payload), "Failed to handle")
+	assert.Contains(t, string(out.Payload), "failed to handle")
 
 	// Call InvokeFunctionWithParamsE with a LambdaOptions struct that has
 	// an unsupported InvocationType.  The function should fail.

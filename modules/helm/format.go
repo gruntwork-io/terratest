@@ -13,7 +13,7 @@ import (
 )
 
 // formatSetValuesAsArgs formats the given values as command line args for helm using the given flag (e.g flags of
-// the format "--set"/"--set-string" resulting in args like --set/set-string key=value...)
+// the format "--set"/"--set-string"/"--set-json" resulting in args like --set/set-string/set-json key=value...)
 func formatSetValuesAsArgs(setValues map[string]string, flag string) []string {
 	args := []string{}
 

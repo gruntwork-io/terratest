@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/gruntwork-io/terratest/modules/terraform"
+
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/hashicorp/go-version"
@@ -125,7 +127,7 @@ func getBinary(params CheckVersionParams) (string, error) {
 	case Packer:
 		return "packer", nil
 	case Terraform:
-		return "terraform", nil
+		return terraform.DefaultExecutable, nil
 	default:
 		return "", fmt.Errorf("unsupported Binary for checking versions {%d}", params.Binary)
 	}
@@ -148,8 +150,8 @@ func extractVersionFromShellCommandOutput(output string) (string, error) {
 // It returns Error for ill-formatted version string and VersionMismatchErr for
 // minimum version check failure.
 //
-//    checkVersionConstraint(t, "1.2.31",  ">= 1.2.0, < 2.0.0") - no error
-//    checkVersionConstraint(t, "1.0.31",  ">= 1.2.0, < 2.0.0") - error
+//	checkVersionConstraint(t, "1.2.31",  ">= 1.2.0, < 2.0.0") - no error
+//	checkVersionConstraint(t, "1.0.31",  ">= 1.2.0, < 2.0.0") - error
 func checkVersionConstraint(actualVersionStr string, versionConstraintStr string) error {
 	actualVersion, err := version.NewVersion(actualVersionStr)
 	if err != nil {

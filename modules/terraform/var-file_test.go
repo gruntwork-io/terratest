@@ -2,7 +2,6 @@ package terraform
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -470,7 +469,7 @@ func TestGetAllVariablesFromVarFileStructOutJSON(t *testing.T) {
 // Helper function to write a file to the filesystem
 // Will immediately fail the test if it could not write the file
 func WriteFile(t *testing.T, fileName string, bytes []byte) {
-	err := ioutil.WriteFile(fileName, bytes, 0644)
+	err := os.WriteFile(fileName, bytes, 0644)
 
 	require.NoError(t, err)
 }

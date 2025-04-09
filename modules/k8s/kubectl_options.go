@@ -1,16 +1,23 @@
 package k8s
 
 import (
+	"time"
+
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"k8s.io/client-go/rest"
 )
 
 // KubectlOptions represents common options necessary to specify for all Kubectl calls
 type KubectlOptions struct {
-	ContextName   string
-	ConfigPath    string
-	Namespace     string
-	Env           map[string]string
-	InClusterAuth bool
+	ContextName    string
+	ConfigPath     string
+	Namespace      string
+	Env            map[string]string
+	InClusterAuth  bool
+	RestConfig     *rest.Config
+	Logger         *logger.Logger
+	RequestTimeout time.Duration
 }
 
 // NewKubectlOptions will return a pointer to new instance of KubectlOptions with the configured options
@@ -27,6 +34,14 @@ func NewKubectlOptions(contextName string, configPath string, namespace string) 
 func NewKubectlOptionsWithInClusterAuth() *KubectlOptions {
 	return &KubectlOptions{
 		InClusterAuth: true,
+	}
+}
+
+// NewKubectlOptionsWithRestConfig will return a pointer to a new instance of KubectlOptions with pre-built config object
+func NewKubectlOptionsWithRestConfig(config *rest.Config, namespace string) *KubectlOptions {
+	return &KubectlOptions{
+		Namespace:  namespace,
+		RestConfig: config,
 	}
 }
 

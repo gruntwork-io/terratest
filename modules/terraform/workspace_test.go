@@ -108,31 +108,6 @@ func TestIsExistingWorkspace(t *testing.T) {
 	}
 }
 
-func TestNameMatchesWorkspace(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name      string
-		workspace string
-		expected  bool
-	}{
-		{"default", "  default", true},
-		{"default", "* default", true},
-		{"default", "", false},
-		{"foo", "  foobar", false},
-		{"foo", "* foobar", false},
-		{"foobar", "  foo", false},
-		{"foobar", "* foo", false},
-		{"foo", "  foo", true},
-		{"foo", "* foo", true},
-	}
-
-	for _, testCase := range testCases {
-		actual := nameMatchesWorkspace(testCase.name, testCase.workspace)
-		assert.Equal(t, testCase.expected, actual, "Name: %q, Workspace: %q", testCase.name, testCase.workspace)
-	}
-}
-
 func TestWorkspaceDeleteE(t *testing.T) {
 	t.Parallel()
 
@@ -219,7 +194,9 @@ func TestWorkspaceDeleteE(t *testing.T) {
 
 			// Check for errors
 			if testCase.expectedError != nil {
-				assert.True(t, errors.As(gotErr, &testCase.expectedError))
+				if !errors.Is(gotErr, testCase.expectedError) {
+					t.Errorf("expected error: %v, got error: %v", testCase.expectedError, gotErr)
+				}
 			} else {
 				assert.NoError(t, gotErr)
 				// Check for results

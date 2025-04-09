@@ -1,13 +1,21 @@
 package test_structure
 
 import (
-	"io/ioutil"
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	gotesting "github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testData struct {
@@ -22,7 +30,7 @@ func TestSaveAndLoadTestData(t *testing.T) {
 	isTestDataPresent := IsTestDataPresent(t, "/file/that/does/not/exist")
 	assert.False(t, isTestDataPresent, "Expected no test data would be present because no test data file exists.")
 
-	tmpFile, err := ioutil.TempFile("", "save-and-load-test-data")
+	tmpFile, err := os.CreateTemp("", "save-and-load-test-data")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
@@ -36,12 +44,22 @@ func TestSaveAndLoadTestData(t *testing.T) {
 	isTestDataPresent = IsTestDataPresent(t, tmpFile.Name())
 	assert.False(t, isTestDataPresent, "Expected no test data would be present because file exists but no data has been written yet.")
 
-	SaveTestData(t, tmpFile.Name(), expectedData)
+	overwrite := true
+	SaveTestData(t, tmpFile.Name(), overwrite, expectedData)
 
 	isTestDataPresent = IsTestDataPresent(t, tmpFile.Name())
 	assert.True(t, isTestDataPresent, "Expected test data would be present because file exists and data has been written to file.")
 
 	actualData := testData{}
+	LoadTestData(t, tmpFile.Name(), &actualData)
+	assert.Equal(t, expectedData, actualData)
+
+	overwritingData := testData{
+		Foo: "foo",
+		Bar: false,
+		Baz: map[string]interface{}{"123": "456", "789": 1.0, "0": false},
+	}
+	SaveTestData(t, tmpFile.Name(), !overwrite, overwritingData)
 	LoadTestData(t, tmpFile.Name(), &actualData)
 	assert.Equal(t, expectedData, actualData)
 
@@ -105,6 +123,48 @@ func TestSaveAndLoadTerraformOptions(t *testing.T) {
 
 	actualData := LoadTerraformOptions(t, tmpFolder)
 	assert.Equal(t, expectedData, actualData)
+}
+
+func TestSaveTerraformOptionsIfNotPresent(t *testing.T) {
+	t.Parallel()
+
+	tmpFolder := t.TempDir()
+
+	expectedData := &terraform.Options{
+		TerraformDir: "/abc/def/ghi",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptionsIfNotPresent(t, tmpFolder, expectedData)
+
+	overwritingData := &terraform.Options{
+		TerraformDir: "/123/456/789",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptionsIfNotPresent(t, tmpFolder, overwritingData)
+
+	actualData := LoadTerraformOptions(t, tmpFolder)
+	assert.Equal(t, expectedData, actualData)
+}
+
+func TestSaveTerraformOptionsOverwrite(t *testing.T) {
+	t.Parallel()
+
+	tmpFolder := t.TempDir()
+
+	originaData := &terraform.Options{
+		TerraformDir: "/abc/def/ghi",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptions(t, tmpFolder, originaData)
+
+	overwritingData := &terraform.Options{
+		TerraformDir: "/123/456/789",
+		Vars:         map[string]interface{}{},
+	}
+	SaveTerraformOptions(t, tmpFolder, overwritingData)
+
+	actualData := LoadTerraformOptions(t, tmpFolder)
+	assert.Equal(t, overwritingData, actualData)
 }
 
 func TestSaveAndLoadAmiId(t *testing.T) {
@@ -219,4 +279,38 @@ func TestSaveAndLoadKubectlOptions(t *testing.T) {
 
 	actualData := LoadKubectlOptions(t, tmpFolder)
 	assert.Equal(t, expectedData, actualData)
+}
+
+type tStringLogger struct {
+	sb strings.Builder
+}
+
+func (l *tStringLogger) Logf(t gotesting.TestingT, format string, args ...interface{}) {
+	l.sb.WriteString(fmt.Sprintf(format, args...))
+	l.sb.WriteRune('\n')
+}
+
+func TestSaveAndLoadEC2KeyPair(t *testing.T) {
+	def, slogger := logger.Default, &tStringLogger{}
+	logger.Default = logger.New(slogger)
+	t.Cleanup(func() {
+		logger.Default = def
+	})
+
+	keyPair, err := ssh.GenerateRSAKeyPairE(t, 2048)
+	require.NoError(t, err)
+	ec2KeyPair := &aws.Ec2Keypair{
+		KeyPair: keyPair,
+		Name:    "test-ec2-key-pair",
+		Region:  "us-east-1",
+	}
+	storedEC2KeyPair, err := json.Marshal(ec2KeyPair)
+	require.NoError(t, err)
+
+	tmpFolder := t.TempDir()
+	SaveEc2KeyPair(t, tmpFolder, ec2KeyPair)
+	loadedEC2KeyPair := LoadEc2KeyPair(t, tmpFolder)
+	assert.Equal(t, ec2KeyPair, loadedEC2KeyPair)
+
+	assert.NotContains(t, slogger.sb.String(), string(storedEC2KeyPair), "stored ec2 key pair should not be logged")
 }

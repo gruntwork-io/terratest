@@ -27,8 +27,12 @@ func InitE(t testing.TestingT, options *Options) (string, error) {
 	if options.MigrateState {
 		args = append(args, "-migrate-state", "-force-copy")
 	}
+	// Append no-color option if needed
+	if options.NoColor {
+		args = append(args, "-no-color")
+	}
 
 	args = append(args, FormatTerraformBackendConfigAsArgs(options.BackendConfig)...)
 	args = append(args, FormatTerraformPluginDirAsArgs(options.PluginDir)...)
-	return RunTerraformCommandE(t, options, args...)
+	return RunTerraformCommandE(t, options, prepend(options.ExtraArgs.Init, args...)...)
 }

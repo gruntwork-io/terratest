@@ -20,6 +20,20 @@ func TestGetUbuntu1604AmiReturnsSomeAmi(t *testing.T) {
 	assert.Regexp(t, "^ami-[[:alnum:]]+$", amiID)
 }
 
+func TestGetUbuntu2004AmiReturnsSomeAmi(t *testing.T) {
+	t.Parallel()
+
+	amiID := GetUbuntu2004Ami(t, "us-west-1")
+	assert.Regexp(t, "^ami-[[:alnum:]]+$", amiID)
+}
+
+func TestGetUbuntu2204AmiReturnsSomeAmi(t *testing.T) {
+	t.Parallel()
+
+	amiID := GetUbuntu2204Ami(t, "us-west-1")
+	assert.Regexp(t, "^ami-[[:alnum:]]+$", amiID)
+}
+
 func TestGetCentos7AmiReturnsSomeAmi(t *testing.T) {
 	t.Parallel()
 

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "helm-dependency-example.fullname" . }}
+  labels:
+    # These labels are required by helm. You can read more about required labels in the chart best practices guide:
+    # https://docs.helm.sh/chart_best_practices/#standard-labels
+    helm.sh/chart: {{ include "helm-dependency-example.chart" . }}
+    app.kubernetes.io/name: {{ include "helm-dependency-example.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "helm-dependency-example.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  type: NodePort
+  ports:
+  - protocol: TCP
+    targetPort: 80
+    port: 80

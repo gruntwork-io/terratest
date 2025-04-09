@@ -1,13 +1,12 @@
 package opa
 
 import (
-	"io/ioutil"
+	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
-	getter "github.com/hashicorp/go-getter"
+	getter "github.com/hashicorp/go-getter/v2"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -18,30 +17,32 @@ var (
 	policyDirCache sync.Map
 )
 
-// downloadPolicyE takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
+// DownloadPolicyE takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
 // can be passed to opa. The temporary directory that is used is cached based on the go-getter base path, and reused
 // across calls.
-// For example, if you call downloadPolicyE with the go-getter URL multiple times:
-//   git::https://github.com/gruntwork-io/terratest.git//policies/foo.rego?ref=master
+// For example, if you call DownloadPolicyE with the go-getter URL multiple times:
+//
+//	git::https://github.com/gruntwork-io/terratest.git//policies/foo.rego?ref=main
+//
 // The first time the gruntwork-io/terratest repo will be downloaded to a new temp directory. All subsequent calls will
 // reuse that first temporary dir where the repo was cloned. This is preserved even if a different subdir is requested
-// later, e.g.: git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=master.
+// later, e.g.: git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=main
 // Note that the query parameters are always included in the base URL. This means that if you use a different ref (e.g.,
 // git::https://github.com/gruntwork-io/terratest.git//examples/bar.rego?ref=v0.39.3), then that will be cloned to a new
 // temporary directory rather than the cached dir.
-func downloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
+func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
-	detected, err := getter.Detect(rulePath, cwd, getter.Detectors)
-	if err != nil {
-		return "", err
-	}
-
 	// File getters are assumed to be a local path reference, so pass through the original path.
-	if strings.HasPrefix(detected, "file") {
+	var fileGetter getter.FileGetter
+	if ok, _ := fileGetter.Detect(&getter.Request{
+		Src:     rulePath,
+		Pwd:     cwd,
+		GetMode: getter.ModeAny,
+	}); ok {
 		return rulePath, nil
 	}
 
@@ -51,12 +52,12 @@ func downloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	baseDir, subDir := getter.SourceDirSubdir(rulePath)
 	downloadPath, hasDownloaded := policyDirCache.Load(baseDir)
 	if hasDownloaded {
-		logger.Logf(t, "Previously downloaded %s: returning cached path", baseDir)
+		logger.Default.Logf(t, "Previously downloaded %s: returning cached path", baseDir)
 		return filepath.Join(downloadPath.(string), subDir), nil
 	}
 
 	// Not downloaded, so use go-getter to download the remote source to a temp dir.
-	tempDir, err := ioutil.TempDir("", "terratest-opa-policy-*")
+	tempDir, err := os.MkdirTemp("", "terratest-opa-policy-*")
 	if err != nil {
 		return "", err
 	}
@@ -64,8 +65,8 @@ func downloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	// tempDir to make sure we feed a directory that doesn't exist yet.
 	tempDir = filepath.Join(tempDir, "getter")
 
-	logger.Logf(t, "Downloading %s to temp dir %s", rulePath, tempDir)
-	if err := getter.GetAny(tempDir, baseDir); err != nil {
+	logger.Default.Logf(t, "Downloading %s to temp dir %s", rulePath, tempDir)
+	if _, err := getter.GetAny(context.Background(), tempDir, baseDir); err != nil {
 		return "", err
 	}
 	policyDirCache.Store(baseDir, tempDir)

@@ -29,7 +29,7 @@ The Docker-based tests in this folder are in some sense "unit tests" for the Pac
 
 
 ## Run the container
-1. Run `docker-compose up`.
+1. Run `docker compose up`.
 1. You should now be able to access the sample web app at http://localhost:8080
 
 

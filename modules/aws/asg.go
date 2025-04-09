@@ -1,11 +1,12 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -34,8 +35,8 @@ func GetCapacityInfoForAsgE(t testing.TestingT, asgName string, awsRegion string
 		return AsgCapacityInfo{}, err
 	}
 
-	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []*string{aws.String(asgName)}}
-	output, err := asgClient.DescribeAutoScalingGroups(&input)
+	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []string{asgName}}
+	output, err := asgClient.DescribeAutoScalingGroups(context.Background(), &input)
 	if err != nil {
 		return AsgCapacityInfo{}, err
 	}
@@ -44,9 +45,9 @@ func GetCapacityInfoForAsgE(t testing.TestingT, asgName string, awsRegion string
 		return AsgCapacityInfo{}, NewNotFoundError("ASG", asgName, awsRegion)
 	}
 	capacityInfo := AsgCapacityInfo{
-		MinCapacity:     *groups[0].MinSize,
-		MaxCapacity:     *groups[0].MaxSize,
-		DesiredCapacity: *groups[0].DesiredCapacity,
+		MinCapacity:     int64(*groups[0].MinSize),
+		MaxCapacity:     int64(*groups[0].MaxSize),
+		DesiredCapacity: int64(*groups[0].DesiredCapacity),
 		CurrentCapacity: int64(len(groups[0].Instances)),
 	}
 	return capacityInfo, nil
@@ -68,16 +69,16 @@ func GetInstanceIdsForAsgE(t testing.TestingT, asgName string, awsRegion string)
 		return nil, err
 	}
 
-	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []*string{aws.String(asgName)}}
-	output, err := asgClient.DescribeAutoScalingGroups(&input)
+	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []string{asgName}}
+	output, err := asgClient.DescribeAutoScalingGroups(context.Background(), &input)
 	if err != nil {
 		return nil, err
 	}
 
-	instanceIDs := []string{}
+	var instanceIDs []string
 	for _, asg := range output.AutoScalingGroups {
 		for _, instance := range asg.Instances {
-			instanceIDs = append(instanceIDs, aws.StringValue(instance.InstanceId))
+			instanceIDs = append(instanceIDs, aws.ToString(instance.InstanceId))
 		}
 	}
 
@@ -120,12 +121,12 @@ func WaitForCapacityE(
 			return fmt.Sprintf("ASG %s is now at desired capacity %d", asgName, capacityInfo.DesiredCapacity), nil
 		},
 	)
-	logger.Log(t, msg)
+	logger.Default.Logf(t, "%s", msg)
 	return err
 }
 
 // NewAsgClient creates an Auto Scaling Group client.
-func NewAsgClient(t testing.TestingT, region string) *autoscaling.AutoScaling {
+func NewAsgClient(t testing.TestingT, region string) *autoscaling.Client {
 	client, err := NewAsgClientE(t, region)
 	if err != nil {
 		t.Fatal(err)
@@ -134,11 +135,11 @@ func NewAsgClient(t testing.TestingT, region string) *autoscaling.AutoScaling {
 }
 
 // NewAsgClientE creates an Auto Scaling Group client.
-func NewAsgClientE(t testing.TestingT, region string) (*autoscaling.AutoScaling, error) {
+func NewAsgClientE(t testing.TestingT, region string) (*autoscaling.Client, error) {
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err
 	}
 
-	return autoscaling.New(sess), nil
+	return autoscaling.NewFromConfig(*sess), nil
 }

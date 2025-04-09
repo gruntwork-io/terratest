@@ -1,6 +1,5 @@
 # This file can be used with Docker and Docker Compose to run the web app in the Packer template 100% locally, without
 # having to deploy anything to AWS.
-
 version: '3'
 services:
   web_app:

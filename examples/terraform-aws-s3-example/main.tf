@@ -11,6 +11,13 @@ terraform {
   # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
   # forwards compatible with 0.13.x code.
   required_version = ">= 0.12.26"
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      # https://github.com/hashicorp/terraform-provider-aws/issues/33478
+      version = "5.16.0"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -41,9 +48,18 @@ resource "aws_s3_bucket_versioning" "test_bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "test_bucket" {
+resource "aws_s3_bucket_ownership_controls" "test_bucket" {
   bucket = aws_s3_bucket.test_bucket.id
-  acl    = "private"
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+  depends_on = [aws_s3_bucket.test_bucket]
+}
+
+resource "aws_s3_bucket_acl" "test_bucket" {
+  bucket     = aws_s3_bucket.test_bucket.id
+  acl        = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.test_bucket]
 }
 
 
@@ -59,9 +75,18 @@ resource "aws_s3_bucket" "test_bucket_logs" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test_bucket_logs" {
+resource "aws_s3_bucket_ownership_controls" "test_bucket_logs" {
   bucket = aws_s3_bucket.test_bucket_logs.id
-  acl    = "log-delivery-write"
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+  depends_on = [aws_s3_bucket.test_bucket_logs]
+}
+
+resource "aws_s3_bucket_acl" "test_bucket_logs" {
+  bucket     = aws_s3_bucket.test_bucket_logs.id
+  acl        = "log-delivery-write"
+  depends_on = [aws_s3_bucket_ownership_controls.test_bucket_logs]
 }
 
 # Configure bucket access policies

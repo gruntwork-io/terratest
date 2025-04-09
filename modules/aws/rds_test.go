@@ -9,46 +9,46 @@ import (
 
 func TestGetRecommendedRdsInstanceTypeHappyPath(t *testing.T) {
 	type TestingScenerios struct {
-		name                  string
-		region                string
-		databaseEngine        string
-		databaseEngineVersion string
-		instanceTypes         []string
-		expected              string
+		name               string
+		region             string
+		databaseEngine     string
+		engineMajorVersion string
+		instanceTypes      []string
+		expected           string
 	}
 
 	testingScenerios := []TestingScenerios{
 		{
-			name:                  "US region, mysql, first offering available",
-			region:                "us-east-2",
-			databaseEngine:        "mysql",
-			databaseEngineVersion: "8.0.21",
-			instanceTypes:         []string{"db.t2.micro", "db.t3.micro"},
-			expected:              "db.t2.micro",
+			name:               "US region, mysql, first offering available",
+			region:             "us-east-2",
+			databaseEngine:     "mysql",
+			engineMajorVersion: "8.0",
+			instanceTypes:      []string{"db.t4g.micro", "db.t4g.small"},
+			expected:           "db.t4g.micro",
 		},
 		{
-			name:                  "EU region, postgres, 2nd offering available based on region",
-			region:                "eu-north-1",
-			databaseEngine:        "postgres",
-			databaseEngineVersion: "13.5",
-			instanceTypes:         []string{"db.t2.micro", "db.m5.large"},
-			expected:              "db.m5.large",
+			name:               "EU region, postgres, 2nd offering available based on region",
+			region:             "eu-north-1",
+			databaseEngine:     "postgres",
+			engineMajorVersion: "13",
+			instanceTypes:      []string{"db.t2.micro", "db.m5.large"},
+			expected:           "db.m5.large",
 		},
 		{
-			name:                  "US region, oracle-ee, 2nd offering available based on db type",
-			region:                "us-west-2",
-			databaseEngine:        "oracle-ee",
-			databaseEngineVersion: "19.0.0.0.ru-2021-01.rur-2021-01.r1",
-			instanceTypes:         []string{"db.m5d.xlarge", "db.m5.large"},
-			expected:              "db.m5.large",
+			name:               "US region, oracle-ee, 2nd offering available based on db type",
+			region:             "us-west-2",
+			databaseEngine:     "oracle-ee",
+			engineMajorVersion: "19",
+			instanceTypes:      []string{"db.m5d.xlarge", "db.m5.large"},
+			expected:           "db.m5d.xlarge",
 		},
 		{
-			name:                  "US region, oracle-ee, 2nd offering available based on db engine version",
-			region:                "us-west-2",
-			databaseEngine:        "oracle-ee",
-			databaseEngineVersion: "19.0.0.0.ru-2021-01.rur-2021-01.r1",
-			instanceTypes:         []string{"db.t3.micro", "db.t3.small"},
-			expected:              "db.t3.small",
+			name:               "US region, oracle-ee, 2nd offering available based on db engine version",
+			region:             "us-west-2",
+			databaseEngine:     "oracle-ee",
+			engineMajorVersion: "19",
+			instanceTypes:      []string{"db.t3.micro", "db.t3.small"},
+			expected:           "db.t3.small",
 		},
 	}
 
@@ -57,8 +57,8 @@ func TestGetRecommendedRdsInstanceTypeHappyPath(t *testing.T) {
 
 		t.Run(scenerio.name, func(t *testing.T) {
 			t.Parallel()
-
-			actual, err := GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, scenerio.databaseEngineVersion, scenerio.instanceTypes)
+			engineVersion := GetValidEngineVersion(t, scenerio.region, scenerio.databaseEngine, scenerio.engineMajorVersion)
+			actual, err := GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, engineVersion, scenerio.instanceTypes)
 			assert.NoError(t, err)
 			assert.Equal(t, scenerio.expected, actual)
 		})
@@ -107,22 +107,22 @@ func TestGetRecommendedRdsInstanceTypeErrors(t *testing.T) {
 			name:                  "Invalid instance types",
 			region:                "us-east-2",
 			databaseEngine:        "mysql",
-			databaseEngineVersion: "8.0.21",
+			databaseEngineVersion: "8.0.32",
 			instanceTypes:         []string{"garbage"},
 		},
 		{
 			name:                  "Region has no instance type available",
 			region:                "eu-north-1",
 			databaseEngine:        "mysql",
-			databaseEngineVersion: "8.0.21",
+			databaseEngineVersion: "8.0.32",
 			instanceTypes:         []string{"db.t2.micro"},
 		},
 		{
 			name:                  "No instance type available for engine",
 			region:                "us-east-1",
 			databaseEngine:        "oracle-ee",
-			databaseEngineVersion: "19.0.0.0.ru-2021-01.rur-2021-01.r1",
-			instanceTypes:         []string{"db.r5d.large"},
+			databaseEngineVersion: "19.0.0.0.ru-2024-04.rur-2024-04.r1",
+			instanceTypes:         []string{"db.r5a.large"},
 		},
 		{
 			name:                  "No instance type available for engine version",

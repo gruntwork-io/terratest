@@ -6,7 +6,7 @@ import "fmt"
 type NoResolversError struct{}
 
 func (err NoResolversError) Error() string {
-	return fmt.Sprintf("No resolvers set for DNSLookupE call")
+	return "No resolvers set for DNSLookupE call"
 }
 
 // QueryTypeError is an error that occurs if the DNS query type is not supported

@@ -5,29 +5,28 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/batch/v1beta1"
-
-	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ListCronJobs list cron jobs in namespace that match provided filters. This will fail the test if there is an error.
-func ListCronJobs(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []v1beta1.CronJob {
+func ListCronJobs(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []batchv1.CronJob {
 	cronJobs, err := ListCronJobsE(t, options, filters)
 	require.NoError(t, err)
 	return cronJobs
 }
 
 // ListCronJobsE list cron jobs in namespace that match provided filters. This will return list or error.
-func ListCronJobsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]v1beta1.CronJob, error) {
+func ListCronJobsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]batchv1.CronJob, error) {
 	clientset, err := GetKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := clientset.BatchV1beta1().CronJobs(options.Namespace).List(context.Background(), filters)
+	resp, err := clientset.BatchV1().CronJobs(options.Namespace).List(context.Background(), filters)
 	if err != nil {
 		return nil, err
 	}
@@ -35,19 +34,19 @@ func ListCronJobsE(t testing.TestingT, options *KubectlOptions, filters metav1.L
 }
 
 // GetCronJob return cron job resource from namespace by name. This will fail the test if there is an error.
-func GetCronJob(t testing.TestingT, options *KubectlOptions, cronJobName string) *v1beta1.CronJob {
+func GetCronJob(t testing.TestingT, options *KubectlOptions, cronJobName string) *batchv1.CronJob {
 	job, err := GetCronJobE(t, options, cronJobName)
 	require.NoError(t, err)
 	return job
 }
 
 // GetCronJobE return cron job resource from namespace by name. This will return cron job or error.
-func GetCronJobE(t testing.TestingT, options *KubectlOptions, cronJobName string) (*v1beta1.CronJob, error) {
+func GetCronJobE(t testing.TestingT, options *KubectlOptions, cronJobName string) (*batchv1.CronJob, error) {
 	clientset, err := GetKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return nil, err
 	}
-	return clientset.BatchV1beta1().CronJobs(options.Namespace).Get(context.Background(), cronJobName, metav1.GetOptions{})
+	return clientset.BatchV1().CronJobs(options.Namespace).Get(context.Background(), cronJobName, metav1.GetOptions{})
 }
 
 // WaitUntilCronJobSucceed waits until cron job will successfully complete a job. This will fail the test if there is an
@@ -77,15 +76,15 @@ func WaitUntilCronJobSucceedE(t testing.TestingT, options *KubectlOptions, cronJ
 		},
 	)
 	if err != nil {
-		logger.Logf(t, "Timed out waiting for CronJob to schedule job: %s", err)
+		options.Logger.Logf(t, "Timed out waiting for CronJob to schedule job: %s", err)
 		return err
 	}
-	logger.Logf(t, message)
+	options.Logger.Logf(t, message)
 	return nil
 }
 
 // IsCronJobSucceeded returns true if cron job successfully scheduled and completed job.
 // https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/cron-job-v1/#CronJobStatus
-func IsCronJobSucceeded(cronJob *v1beta1.CronJob) bool {
+func IsCronJobSucceeded(cronJob *batchv1.CronJob) bool {
 	return cronJob.Status.LastScheduleTime != nil
 }

@@ -3,11 +3,14 @@ package logger
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 	"testing"
 
 	tftesting "github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDoLog(t *testing.T) {
@@ -51,4 +54,55 @@ func TestCustomLogger(t *testing.T) {
 	assert.Equal(t, "log output 1", c.logs[0])
 	assert.Equal(t, "log output 2", c.logs[1])
 	assert.Equal(t, "subtest log", c.logs[2])
+}
+
+// TestLockedLog make sure that Log and Logf which use stdout are thread-safe
+func TestLockedLog(t *testing.T) {
+	// should not call t.Parallel() since we are modifying os.Stdout
+	stdout := os.Stdout
+	t.Cleanup(func() {
+		os.Stdout = stdout
+	})
+
+	data := []struct {
+		name string
+		fn   func(*testing.T, string)
+	}{
+		{
+			name: "Log",
+			fn: func(t *testing.T, s string) {
+				Log(t, s)
+			}},
+		{
+			name: "Logf",
+			fn: func(t *testing.T, s string) {
+				Logf(t, "%s", s)
+			}},
+	}
+
+	for _, d := range data {
+		mutexStdout.Lock()
+		str := "Logging something" + t.Name()
+
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		ch := make(chan struct{})
+		go func() {
+			d.fn(t, str)
+			w.Close()
+			close(ch)
+		}()
+
+		select {
+		case <-ch:
+			t.Error("Log should be locked")
+		default:
+		}
+
+		mutexStdout.Unlock()
+		b, err := io.ReadAll(r)
+		require.NoError(t, err, "log should be unlocked")
+		assert.Contains(t, string(b), str, "should contains logged string")
+	}
+
 }

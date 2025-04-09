@@ -26,5 +26,23 @@ func ShowE(t testing.TestingT, options *Options) (string, error) {
 	if options.PlanFilePath != "" {
 		args = append(args, options.PlanFilePath)
 	}
-	return RunTerraformCommandAndGetStdoutE(t, options, args...)
+	return RunTerraformCommandAndGetStdoutE(t, options, prepend(options.ExtraArgs.Show, args...)...)
+}
+
+func ShowWithStruct(t testing.TestingT, options *Options) *PlanStruct {
+	out, err := ShowWithStructE(t, options)
+	require.NoError(t, err)
+	return out
+}
+
+func ShowWithStructE(t testing.TestingT, options *Options) (*PlanStruct, error) {
+	json, err := ShowE(t, options)
+	if err != nil {
+		return nil, err
+	}
+	planStruct, err := ParsePlanJSON(json)
+	if err != nil {
+		return nil, err
+	}
+	return planStruct, nil
 }

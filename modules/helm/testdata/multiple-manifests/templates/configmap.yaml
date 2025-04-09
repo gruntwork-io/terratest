@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: test
+  name: test-configmap
+data:
+  hello: world
+  foo: bar

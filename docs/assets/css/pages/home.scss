@@ -208,7 +208,6 @@ body.index-page {
             margin-left: 15px;
           }
         }
-
         @media all and (max-width: 450px) {
           flex-direction: column;
           min-width: auto;
@@ -281,7 +280,9 @@ body.index-page {
     }
 
     @media all and (max-width: 450px) {
-      .hide-on-cxs { display: none; }
+      .hide-on-cxs {
+        display: none;
+      }
     }
 
   }
@@ -318,7 +319,7 @@ body.index-page {
     @media all and (max-width: 991px) {
       .row.flex {
         flex-direction: column;
-        & > .col-xs-12:first-child {
+        &>.col-xs-12:first-child {
           margin-bottom: 50px;
           max-width: 800px;
           margin-left: auto;

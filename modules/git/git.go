@@ -2,6 +2,7 @@
 package git
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 
@@ -106,7 +107,24 @@ func GetRepoRoot(t testing.TestingT) string {
 
 // GetRepoRootE retrieves the path to the root directory of the repo.
 func GetRepoRootE(t testing.TestingT) (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	return GetRepoRootForDirE(t, dir)
+}
+
+// GetRepoRootForDir retrieves the path to the root directory of the repo in which dir resides
+func GetRepoRootForDir(t testing.TestingT, dir string) string {
+	out, err := GetRepoRootForDirE(t, dir)
+	require.NoError(t, err)
+	return out
+}
+
+// GetRepoRootForDirE retrieves the path to the root directory of the repo in which dir resides
+func GetRepoRootForDirE(t testing.TestingT, dir string) (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	cmd.Dir = dir
 	bytes, err := cmd.Output()
 	if err != nil {
 		return "", err
