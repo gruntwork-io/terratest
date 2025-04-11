@@ -13,25 +13,47 @@ import (
 func TestInitBackendConfig(t *testing.T) {
 	t.Parallel()
 
-	stateDirectory := t.TempDir()
-
-	remoteStateFile := filepath.Join(stateDirectory, "backend.tfstate")
-
-	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-backend", t.Name())
+	testFolderPath := "../../test/fixtures/terraform-backend"
+	testFolder, err := files.CopyTerraformFolderToTemp(testFolderPath, t.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	options := &Options{
-		TerraformDir: testFolder,
-		BackendConfig: map[string]interface{}{
-			"path": remoteStateFile,
+	tmpStateFile := filepath.Join(t.TempDir(), "backend.tfstate")
+	ttable := []struct {
+		name    string
+		path    string
+		options *Options
+	}{
+		{
+			name: "KeyValue",
+			path: tmpStateFile,
+			options: &Options{
+				TerraformDir: testFolder,
+				BackendConfig: map[string]interface{}{
+					"path": tmpStateFile,
+				},
+			},
+		},
+		{
+			name: "File",
+			path: filepath.Join(testFolder, "backend.tfstate"),
+			options: &Options{
+				TerraformDir: testFolder,
+				Reconfigure:  true,
+				BackendConfig: map[string]interface{}{
+					"backend.hcl": nil,
+				},
+			},
 		},
 	}
 
-	InitAndApply(t, options)
-
-	assert.FileExists(t, remoteStateFile)
+	for _, tt := range ttable {
+		t.Run(tt.name, func(t *testing.T) {
+			InitAndApply(t, tt.options)
+			assert.FileExists(t, tt.path)
+		})
+	}
 }
 
 func TestInitPluginDir(t *testing.T) {
