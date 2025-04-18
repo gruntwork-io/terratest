@@ -59,3 +59,29 @@ func TestNamespaceWithMetadata(t *testing.T) {
 	require.Equal(t, namespace.Name, namespaceName)
 	require.Equal(t, namespace.Labels, namespaceLabels)
 }
+
+func TestListNamespaces(t *testing.T) {
+	t.Parallel()
+
+	uniqueId := random.UniqueId()
+	namespaceName := strings.ToLower(uniqueId)
+	options := NewKubectlOptions("", "", namespaceName)
+
+	CreateNamespace(t, options, namespaceName)
+	defer DeleteNamespace(t, options, namespaceName)
+
+	t.Run("List all namespaces and find the created one", func(t *testing.T) {
+		t.Parallel()
+		namespaces := ListNamespaces(t, options, metav1.ListOptions{})
+		require.NotEmpty(t, namespaces, "Should find at least some namespaces")
+
+		found := false
+		for _, ns := range namespaces {
+			if ns.Name == namespaceName {
+				found = true
+				break
+			}
+		}
+		require.True(t, found, "Should find the created namespace in the list")
+	})
+}

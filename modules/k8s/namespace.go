@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -78,4 +79,38 @@ func DeleteNamespaceE(t testing.TestingT, options *KubectlOptions, namespaceName
 	}
 
 	return clientset.CoreV1().Namespaces().Delete(context.Background(), namespaceName, metav1.DeleteOptions{})
+}
+
+// ListNamespaces will list all namespaces in the Kubernetes cluster targeted by the provided options.
+// This will fail the test if there is an error in listing the namespaces.
+func ListNamespaces(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []corev1.Namespace {
+	namespaces, err := ListNamespacesE(t, options, filters)
+	require.NoError(t, err)
+
+	if len(namespaces) > 0 {
+		var namespaceNames []string
+		for _, ns := range namespaces {
+			namespaceNames = append(namespaceNames, ns.Name)
+		}
+		options.Logger.Logf(t, "Found namespaces: %s", strings.Join(namespaceNames, ", "))
+	} else {
+		options.Logger.Logf(t, "No namespaces found matching the provided filters.")
+	}
+
+	return namespaces
+}
+
+// ListNamespacesE lists all namespaces in the Kubernetes cluster and returns them or an error.
+func ListNamespacesE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Namespace, error) {
+	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return nil, err
+	}
+
+	namespaceList, err := clientset.CoreV1().Namespaces().List(context.Background(), filters)
+	if err != nil {
+		return nil, err
+	}
+
+	return namespaceList.Items, nil
 }
