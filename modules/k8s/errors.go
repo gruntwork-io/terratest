@@ -281,3 +281,18 @@ type JSONPathMalformedJSONPathResultErr struct {
 func (err JSONPathMalformedJSONPathResultErr) Error() string {
 	return fmt.Sprintf("Error unmarshaling json path output: %s", err.underlyingErr)
 }
+
+// CronJobNotSucceeded is returned when a Kubernetes cron job didn't successfully schedule a job.
+type CronJobNotSucceeded struct {
+	cronJob *batchv1.CronJob
+}
+
+// Error format message for cron job error.
+func (err CronJobNotSucceeded) Error() string {
+	return fmt.Sprintf("CronJob %s failed to be scheduled.", err.cronJob.Name)
+}
+
+// NewCronJobNotSucceeded create error for case when CronJob didn't schedule a job.
+func NewCronJobNotSucceeded(cronJob *batchv1.CronJob) CronJobNotSucceeded {
+	return CronJobNotSucceeded{cronJob}
+}
