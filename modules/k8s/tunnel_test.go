@@ -81,16 +81,26 @@ func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
 func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 	t.Parallel()
 
+	verifyServiceReachability(t, 80)
+}
+
+func TestTunnelOpensAPortForwardTunnelToServiceDifferentPodPort(t *testing.T) {
+	t.Parallel()
+
+	verifyServiceReachability(t, 9090)
+}
+
+func verifyServiceReachability(t *testing.T, podPort int) {
 	uniqueID := strings.ToLower(random.UniqueId())
 	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(ExamplePodWithServiceYAMLTemplate, uniqueID, uniqueID, uniqueID)
+	configData := fmt.Sprintf(ExamplePodWithServiceYAMLTemplate, uniqueID, uniqueID, uniqueID, podPort)
 	defer KubectlDeleteFromString(t, options, configData)
 	KubectlApplyFromString(t, options, configData)
 	WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
 	WaitUntilServiceAvailable(t, options, "nginx-service", 60, 1*time.Second)
 
 	// Open a tunnel from any available port locally
-	tunnel := NewTunnel(options, ResourceTypeService, "nginx-service", 0, 80)
+	tunnel := NewTunnel(options, ResourceTypeService, "nginx-service", 0, podPort)
 	defer tunnel.Close()
 	tunnel.ForwardPort(t)
 
@@ -150,5 +160,5 @@ spec:
   ports:
   - protocol: TCP
     targetPort: 80
-    port: 80
+    port: %d
 `
