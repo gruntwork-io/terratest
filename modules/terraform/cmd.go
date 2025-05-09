@@ -198,7 +198,7 @@ func defaultTerraformExecutable() string {
 
 func hasWarning(opts *Options, out string) error {
 	for k, v := range opts.WarningsAsErrors {
-		str := fmt.Sprintf("\nWarning: %s[^\n]*\n", k)
+		str := fmt.Sprintf("\n.*(?i:Warning): %s[^\n]*\n", k)
 		re, err := regexp.Compile(str)
 		if err != nil {
 			return fmt.Errorf("cannot compile regex for warning detection: %w", err)
