@@ -16,7 +16,9 @@ import (
 	"sync"
 
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 
@@ -220,6 +222,19 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 		var portFound = false
 		for _, portSpec := range service.Spec.Ports {
 			if portSpec.Port == int32(targetPort) {
+				if portSpec.TargetPort.Type == intstr.String {
+					pod, err := GetPodE(t, tunnel.kubectlOptions, podName)
+					if err != nil {
+						return err
+					}
+					targetPort, err = getPodPortByName(pod, portSpec.TargetPort.String())
+					if err != nil {
+						tunnel.logger.Logf(t, "Error selecting port by name: %s", err)
+						return err
+					}
+					portFound = true
+					break
+				}
 				targetPort = portSpec.TargetPort.IntValue()
 				portFound = true
 				break
@@ -322,4 +337,18 @@ func GetAvailablePortE(t testing.TestingT) (int, error) {
 		return 0, err
 	}
 	return port, err
+}
+
+func getPodPortByName(pod *corev1.Pod, portName string) (int, error) {
+	if pod == nil {
+		return 0, errors.New("cannot get port for pod which is nil")
+	}
+	for _, container := range pod.Spec.Containers {
+		for _, port := range container.Ports {
+			if port.Name == portName {
+				return int(port.ContainerPort), nil
+			}
+		}
+	}
+	return 0, fmt.Errorf("could not find port %s in pod %s", portName, pod.Name)
 }

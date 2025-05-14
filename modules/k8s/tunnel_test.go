@@ -83,29 +83,55 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 
 	uniqueID := strings.ToLower(random.UniqueId())
 	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(ExamplePodWithServiceYAMLTemplate, uniqueID, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
+	configData := fmt.Sprintf(ExamplePodWithServiceYAMLTemplate, uniqueID, uniqueID, uniqueID, uniqueID)
+	t.Cleanup(func() {
+		KubectlDeleteFromString(t, options, configData)
+	})
 	KubectlApplyFromString(t, options, configData)
+	// t.FailNow()
 	WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
-	WaitUntilServiceAvailable(t, options, "nginx-service", 60, 1*time.Second)
 
-	// Open a tunnel from any available port locally
-	tunnel := NewTunnel(options, ResourceTypeService, "nginx-service", 0, 8080)
-	defer tunnel.Close()
-	tunnel.ForwardPort(t)
+	testCases := []struct {
+		name        string
+		serviceName string
+	}{
+		{
+			"Pod target port by number",
+			"nginx-service-number",
+		},
+		{
+			"Pod target port by name",
+			"nginx-service-name",
+		},
+	}
 
-	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
-	tlsConfig := tls.Config{}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
 
-	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-	http_helper.HttpGetWithRetryWithCustomValidation(
-		t,
-		fmt.Sprintf("http://%s", tunnel.Endpoint()),
-		&tlsConfig,
-		60,
-		5*time.Second,
-		verifyNginxWelcomePage,
-	)
+			WaitUntilServiceAvailable(t, options, testCase.serviceName, 60, 1*time.Second)
+
+			// Open a tunnel from any available port locally
+			tunnel := NewTunnel(options, ResourceTypeService, testCase.serviceName, 0, 8080)
+			t.Cleanup(func() {
+				tunnel.Close()
+			})
+			tunnel.ForwardPort(t)
+
+			// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
+			tlsConfig := tls.Config{}
+
+			// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
+			http_helper.HttpGetWithRetryWithCustomValidation(
+				t,
+				fmt.Sprintf("http://%s", tunnel.Endpoint()),
+				&tlsConfig,
+				60,
+				5*time.Second,
+				verifyNginxWelcomePage,
+			)
+		})
+	}
 }
 
 func verifyNginxWelcomePage(statusCode int, body string) bool {
@@ -134,6 +160,7 @@ spec:
     image: nginx:1.15.7
     ports:
     - containerPort: 80
+      name: http
     readinessProbe:
       httpGet:
         path: /
@@ -142,7 +169,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-service
+  name: nginx-service-number
   namespace: %s
 spec:
   selector:
@@ -150,5 +177,18 @@ spec:
   ports:
   - protocol: TCP
     targetPort: 80
+    port: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-name
+  namespace: %s
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    targetPort: http
     port: 8080
 `
