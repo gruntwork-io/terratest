@@ -31,6 +31,7 @@ type Subnet struct {
 	AvailabilityZone string            // The Availability Zone the subnet is in
 	DefaultForAz     bool              // If the subnet is default for the Availability Zone
 	Tags             map[string]string // The tags associated with the subnet
+	CidrBlock        string            // The CIDR block associated with the subnet
 }
 
 const vpcIDFilterName = "vpc-id"
@@ -201,7 +202,7 @@ func GetSubnetsForVpcE(t testing.TestingT, region string, filters []types.Filter
 
 	for _, ec2Subnet := range subnetOutput.Subnets {
 		subnetTags := GetTagsForSubnet(t, *ec2Subnet.SubnetId, region)
-		subnet := Subnet{Id: aws.ToString(ec2Subnet.SubnetId), AvailabilityZone: aws.ToString(ec2Subnet.AvailabilityZone), DefaultForAz: aws.ToBool(ec2Subnet.DefaultForAz), Tags: subnetTags}
+		subnet := Subnet{Id: aws.ToString(ec2Subnet.SubnetId), AvailabilityZone: aws.ToString(ec2Subnet.AvailabilityZone), DefaultForAz: aws.ToBool(ec2Subnet.DefaultForAz), Tags: subnetTags, CidrBlock: aws.ToString(ec2Subnet.CidrBlock)}
 		subnets = append(subnets, subnet)
 	}
 
