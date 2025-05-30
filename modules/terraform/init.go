@@ -17,6 +17,27 @@ func Init(t testing.TestingT, options *Options) string {
 
 // InitE calls terraform init and return stdout/stderr.
 func InitE(t testing.TestingT, options *Options) (string, error) {
+	return RunTerraformCommandE(t, options, initArgs(options)...)
+}
+
+// TgStackInit calls terragrunt init and return stdout/stderr
+func TgStackInit(t testing.TestingT, options *Options) string {
+	out, err := TgStackInitE(t, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// TgStackInitE calls terragrunt init and return stdout/stderr
+func TgStackInitE(t testing.TestingT, options *Options) (string, error) {
+	if options.TerraformBinary != "terragrunt" {
+		return "", TgInvalidBinary(options.TerraformBinary)
+	}
+	return runTerragruntStackCommandE(t, options, initArgs(options)...)
+}
+
+func initArgs(options *Options) []string {
 	args := []string{"init", fmt.Sprintf("-upgrade=%t", options.Upgrade)}
 
 	// Append reconfigure option if specified
@@ -34,5 +55,6 @@ func InitE(t testing.TestingT, options *Options) (string, error) {
 
 	args = append(args, FormatTerraformBackendConfigAsArgs(options.BackendConfig)...)
 	args = append(args, FormatTerraformPluginDirAsArgs(options.PluginDir)...)
-	return RunTerraformCommandE(t, options, prepend(options.ExtraArgs.Init, args...)...)
+	args = append(args, options.ExtraArgs.Init...)
+	return args
 }

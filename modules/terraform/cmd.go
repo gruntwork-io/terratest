@@ -105,6 +105,34 @@ func RunTerraformCommandE(t testing.TestingT, additionalOptions *Options, additi
 
 }
 
+func runTerragruntStackCommandE(t testing.TestingT, opts *Options, additionalArgs ...string) (string, error) {
+	args := []string{"stack", "run"}
+	{
+		// check if we are using older version of terragrunt
+		cmd := shell.Command{Command: opts.TerraformBinary, Args: []string{"-experiment", "stack"}}
+		if err := shell.RunCommandE(t, cmd); err == nil {
+			args = prepend(args, "-experiment", "stack")
+		}
+	}
+
+	options, args := GetCommonOptions(opts, args...)
+	args = append(args, prepend(additionalArgs, "--")...)
+
+	cmd := generateCommand(options, args...)
+	description := fmt.Sprintf("%s %v", options.TerraformBinary, args)
+
+	return retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
+		s, err := shell.RunCommandAndGetOutputE(t, cmd)
+		if err != nil {
+			return s, err
+		}
+		if err := hasWarning(opts, s); err != nil {
+			return s, err
+		}
+		return s, err
+	})
+}
+
 // RunTerraformCommandAndGetStdout runs terraform with the given arguments and options and returns solely its stdout
 // (but not stderr).
 func RunTerraformCommandAndGetStdout(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) string {
@@ -198,7 +226,7 @@ func defaultTerraformExecutable() string {
 
 func hasWarning(opts *Options, out string) error {
 	for k, v := range opts.WarningsAsErrors {
-		str := fmt.Sprintf("\n.*(?i:Warning): %s[^\n]*\n", k)
+		str := fmt.Sprintf("\nWarning: %s[^\n]*\n", k)
 		re, err := regexp.Compile(str)
 		if err != nil {
 			return fmt.Errorf("cannot compile regex for warning detection: %w", err)
