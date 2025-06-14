@@ -7,10 +7,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-type Options struct {
-	terraform.Options
-}
-
 // TgStackInit calls terragrunt init and return stdout/stderr
 func TgStackInit(t testing.TestingT, options *Options) string {
 	out, err := TgStackInitE(t, options)
@@ -22,9 +18,6 @@ func TgStackInit(t testing.TestingT, options *Options) string {
 
 // TgStackInitE calls terragrunt init and return stdout/stderr
 func TgStackInitE(t testing.TestingT, options *Options) (string, error) {
-	if options.TerraformBinary != "terragrunt" {
-		return "", terraform.TgInvalidBinary(options.TerraformBinary)
-	}
 	return runTerragruntStackCommandE(t, options, initArgs(options)...)
 }
 
