@@ -1,6 +1,7 @@
 package terragrunt
 
 import (
+	"encoding/json"
 	"path"
 	"runtime"
 	"testing"
@@ -38,6 +39,7 @@ func TestTerragruntStackOutput(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, out, ".terragrunt-stack")
 	require.Contains(t, out, "has been successfully initialized!")
+
 }
 
 func TestTerragruntStackOutputError(t *testing.T) {
@@ -60,28 +62,116 @@ func TestTerragruntStackOutputWithExtraArgs(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	// First initialize the stack
-	_, err = TgStackInitE(t, &Options{
+	baseOptions := &Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
-	})
+		NoColor:          true,
+	}
+
+	_, err = TgStackGenerateE(t, baseOptions)
 	require.NoError(t, err)
 
-	// Generate with extra args
-	out, err := TgStackGenerateE(t, &Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
+	_, err = TgStackRunE(t, &Options{
+		TerragruntDir:    baseOptions.TerragruntDir,
+		TerragruntBinary: baseOptions.TerragruntBinary,
+		NoColor:          true,
 		ExtraArgs: ExtraArgs{
-			Apply: []string{"--terragrunt-log-level", "info"},
+			Apply: []string{"apply"},
 		},
 	})
 	require.NoError(t, err)
 
-	// Validate that generate command produced output
-	require.Contains(t, out, "Generating stack from")
-	require.Contains(t, out, "Processing unit")
+	tests := []struct {
+		name       string
+		opts       *Options
+		assertions func(t *testing.T, out string)
+		expectErr  bool
+	}{
 
-	// Verify that the .terragrunt-stack directory was created
-	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
-	require.DirExists(t, stackDir)
+		// Test : raw terragrunt output
+		{
+			name: "should apply stack without error",
+			opts: &Options{
+				TerragruntDir:    baseOptions.TerragruntDir,
+				TerragruntBinary: baseOptions.TerragruntBinary,
+			},
+			assertions: func(t *testing.T, out string) {
+				require.Contains(t, out, `output = "./test.txt"`)
+			},
+		},
+
+		// Test: json output
+		{
+			name: "should return output in json format",
+			opts: &Options{
+				TerragruntDir:    baseOptions.TerragruntDir,
+				TerragruntBinary: baseOptions.TerragruntBinary,
+				OutputFormat:     "json",
+			},
+			assertions: func(t *testing.T, out string) {
+
+				var parsed map[string]struct {
+					Output string `json:"output"`
+				}
+				err := json.Unmarshal([]byte(out), &parsed)
+				require.NoError(t, err, "Output should be valid JSON")
+
+				require.Contains(t, parsed, "father", "JSON output should contain 'father' key")
+				require.Equal(t, "./test.txt", parsed["father"].Output)
+			},
+		},
+
+		// Test: skip generation
+		{
+			name: "should allow no stack generation",
+			opts: &Options{
+				TerragruntDir:    baseOptions.TerragruntDir,
+				TerragruntBinary: baseOptions.TerragruntBinary,
+				NoStackGenerate:  true,
+			},
+			assertions: func(t *testing.T, out string) {
+				require.NotEmpty(t, out)
+			},
+		},
+
+		// Test: raw output for specific key
+		{
+			name: "should return raw output for given key",
+			opts: &Options{
+				TerragruntDir:    baseOptions.TerragruntDir,
+				TerragruntBinary: baseOptions.TerragruntBinary,
+				OutputFormat:     "raw",
+				OutputKey:        "father",
+			},
+			assertions: func(t *testing.T, out string) {
+				require.Equal(t, "./test.txt", out)
+			},
+		},
+
+		// Test: output for one unit
+		{
+			name: "should return output containing key and value",
+			opts: &Options{
+				TerragruntDir:    baseOptions.TerragruntDir,
+				TerragruntBinary: baseOptions.TerragruntBinary,
+				OutputKey:        "father",
+			},
+			assertions: func(t *testing.T, out string) {
+				require.Contains(t, out, "father")
+				require.Contains(t, out, "./test.txt")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := TgStackOutputE(t, tc.opts)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				tc.assertions(t, out)
+			}
+		})
+	}
 }

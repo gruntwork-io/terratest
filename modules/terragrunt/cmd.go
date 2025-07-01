@@ -11,10 +11,14 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
+const (
+	StackCommandRun = "run"
+)
+
 // runTerragruntStackCommandE executes a terragrunt stack command with "run" subcommand
 // This is used for commands that need to run terragrunt stack run <command>
 func runTerragruntStackCommandE(t testing.TestingT, opts *Options, additionalArgs ...string) (string, error) {
-	return runTerragruntStackSubCommandE(t, opts, "run", additionalArgs...)
+	return runTerragruntStackSubCommandE(t, opts, StackCommandRun, additionalArgs...)
 }
 
 // terragruntStackCommandE executes a terragrunt stack command without any subcommand
@@ -46,8 +50,16 @@ func runTerragruntStackSubCommandE(t testing.TestingT, opts *Options, subCommand
 	// Apply common terragrunt options and get the final command arguments
 	terragruntOptions, finalArgs := GetCommonOptions(opts, commandArgs...)
 
-	// Append additional arguments with "--" separator
-	finalArgs = append(finalArgs, slices.Insert(additionalArgs, 0, "--")...)
+	// Handle argument separation based on subcommand type:
+	// Incorrect usage of "--" with non-run subcommands may lead to empty output, ignored flags, or CLI parsing errors.
+	//
+	//   Example (Success):     terragrunt stack output --format json
+	//   Example (Error):       terragrunt stack -- output --format json
+	if subCommand == StackCommandRun {
+		finalArgs = append(finalArgs, slices.Insert(additionalArgs, 0, "--")...)
+	} else {
+		finalArgs = append(finalArgs, additionalArgs...)
+	}
 
 	// Generate the final shell command
 	execCommand := generateCommand(terragruntOptions, finalArgs...)

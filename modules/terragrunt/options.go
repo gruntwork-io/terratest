@@ -14,10 +14,13 @@ type Options struct {
 	TerragruntDir    string // The directory containing the terragrunt configuration
 
 	// Command-specific options
-	NoColor      bool // Whether to disable colored output
-	Upgrade      bool // Whether to upgrade modules and plugins (init command)
-	Reconfigure  bool // Whether to reconfigure the backend (init command)
-	MigrateState bool // Whether to migrate state (init command)
+	NoColor         bool   // Whether to disable colored output
+	Upgrade         bool   // Whether to upgrade modules and plugins (init command)
+	Reconfigure     bool   // Whether to reconfigure the backend (init command)
+	MigrateState    bool   // Whether to migrate state (init command)
+	OutputFormat    string // Output format for output command (json, raw)
+	NoStackGenerate bool   // Whether to skip stack generation for output command
+	OutputKey       string // Specific output key to retrieve
 
 	// Configuration options
 	BackendConfig map[string]interface{} // Backend configuration (init command)

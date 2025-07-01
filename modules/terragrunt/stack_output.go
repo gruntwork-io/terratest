@@ -26,6 +26,21 @@ func outputArgs(options *Options) []string {
 		args = append(args, "-no-color")
 	}
 
+	// Append format option if specified
+	if options.OutputFormat != "" {
+		args = append(args, "--format", options.OutputFormat)
+	}
+
+	// Append no-stack-generate option if needed
+	if options.NoStackGenerate {
+		args = append(args, "--no-stack-generate")
+	}
+
+	// Append specific key if specified
+	if options.OutputKey != "" {
+		args = append(args, options.OutputKey)
+	}
+
 	// Use Apply extra args for output command as it's a similar operation
 	if len(options.ExtraArgs.Apply) > 0 {
 		args = append(args, options.ExtraArgs.Apply...)
