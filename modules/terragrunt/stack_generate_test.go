@@ -11,7 +11,8 @@ import (
 func TestTerragruntStackGenerate(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+	terragruntStackFixture := "../../test/fixtures/terragrunt/terragrunt-stack-simple"
+	testFolder, err := files.CopyTerraformFolderToTemp(terragruntStackFixture, t.Name())
 	require.NoError(t, err)
 
 	// First initialize the stack
@@ -47,7 +48,8 @@ func TestTerragruntStackGenerate(t *testing.T) {
 func TestTerragruntStackGenerateWithNoColor(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+	terragruntStackFixture := "../../test/fixtures/terragrunt/terragrunt-stack-simple"
+	testFolder, err := files.CopyTerraformFolderToTemp(terragruntStackFixture, t.Name())
 	require.NoError(t, err)
 
 	// First initialize the stack
@@ -77,7 +79,8 @@ func TestTerragruntStackGenerateWithNoColor(t *testing.T) {
 func TestTerragruntStackGenerateWithExtraArgs(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+	terragruntStackFixture := "../../test/fixtures/terragrunt/terragrunt-stack-simple"
+	testFolder, err := files.CopyTerraformFolderToTemp(terragruntStackFixture, t.Name())
 	require.NoError(t, err)
 
 	// First initialize the stack
