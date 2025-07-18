@@ -37,7 +37,7 @@ require (
 	github.com/zclconf/go-cty v1.15.0
 	golang.org/x/crypto v0.36.0
 	golang.org/x/net v0.38.0
-	golang.org/x/oauth2 v0.24.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.206.0
 	google.golang.org/genproto v0.0.0-20241113202542-65e8d215514f
 	k8s.io/api v0.28.4
