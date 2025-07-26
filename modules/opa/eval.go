@@ -25,6 +25,10 @@ type EvalOptions struct {
 	// Set a logger that should be used. See the logger package for more info.
 	Logger *logger.Logger
 
+	// Extra command line arguments to pass to opa eval. These are added after the standard arguments.
+	// Example: []string{"--v0-compatible"} to enable OPA v0 compatibility mode.
+	ExtraArgs []string
+
 	// The following options can be used to change the behavior of the related functions for debuggability.
 
 	// When true, keep any temp files and folders that are created for the purpose of running opa eval.
@@ -164,6 +168,11 @@ func formatOPAEvalArgs(options *EvalOptions, rulePath, jsonFilePath, resultQuery
 		args = append(args, "--fail")
 	case FailDefined:
 		args = append(args, "--fail-defined")
+	}
+
+	// Add any extra arguments provided by the user
+	if len(options.ExtraArgs) > 0 {
+		args = append(args, options.ExtraArgs...)
 	}
 
 	args = append(
