@@ -32,3 +32,15 @@ tests for this module.
 1. Install [Golang](https://golang.org/).
 1. `cd test`
 1. `go test -v -run TestOPAEvalTerraformModule`
+
+## Using extra command line arguments
+
+If you need to pass additional command line arguments to OPA (e.g., `--v0-compatible` for OPA v0.x compatibility), you can use the `ExtraArgs` field in `EvalOptions`:
+
+```go
+opaOpts := &opa.EvalOptions{
+    RulePath: "../examples/terraform-opa-example/policy/enforce_source.rego",
+    FailMode: opa.FailUndefined,
+    ExtraArgs: []string{"--v0-compatible"},
+}
+```
