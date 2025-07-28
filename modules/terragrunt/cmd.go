@@ -35,8 +35,15 @@ func runTerragruntStackCommandE(t testing.TestingT, opts *Options, subCommand st
 	terragruntOptions, finalArgs := GetCommonOptions(opts, commandArgs...)
 
 	// Append additional arguments with "--" separator for stack commands
+	// Exception: "output" subcommand doesn't use the separator
 	if len(additionalArgs) > 0 {
-		finalArgs = append(finalArgs, slices.Insert(additionalArgs, 0, ArgSeparator)...)
+		if subCommand == "output" {
+			// For output commands, append arguments directly without separator
+			finalArgs = append(finalArgs, additionalArgs...)
+		} else {
+			// For other stack commands, use the separator
+			finalArgs = append(finalArgs, slices.Insert(additionalArgs, 0, ArgSeparator)...)
+		}
 	}
 
 	// Generate the final shell command
