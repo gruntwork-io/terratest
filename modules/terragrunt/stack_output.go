@@ -19,10 +19,19 @@ func TgOutput(t testing.TestingT, options *Options, key string) string {
 
 // TgOutputE calls terragrunt stack output for the given variable and returns its value as a string
 func TgOutputE(t testing.TestingT, options *Options, key string) (string, error) {
-	rawOutput, err := runTerragruntStackCommandE(t, options, "output", outputArgs(options, key)...)
+	args := []string{"-no-color"} // Disable color for parsing
+	args = append(args, options.ExtraArgs...)
+	if key != "" {
+		args = append(args, key)
+	}
+
+	// Output command doesn't use -- separator
+	rawOutput, err := runTerragruntStackCommandWithSeparatorE(t, options, "output", false, args...)
 	if err != nil {
 		return "", err
 	}
+
+	// Extract the actual value from output
 	cleaned, err := cleanTerragruntOutput(rawOutput)
 	if err != nil {
 		return "", err
@@ -45,33 +54,21 @@ func TgOutputJson(t testing.TestingT, options *Options, key string) string {
 // result as the json string.
 // If key is an empty string, it will return all the output variables.
 func TgOutputJsonE(t testing.TestingT, options *Options, key string) (string, error) {
-	args := outputArgs(options, key)
-	// Add -json flag for JSON output
-	jsonArgs := append([]string{"-json"}, args...)
-
-	rawOutput, err := runTerragruntStackCommandE(t, options, "output", jsonArgs...)
-	if err != nil {
-		return "", err
-	}
-	return cleanTerragruntJson(rawOutput)
-}
-
-// outputArgs builds the argument list for terragrunt stack output command
-func outputArgs(options *Options, key string) []string {
-	args := []string{"-no-color"}
-
-	// Add all user-specified terragrunt command-line arguments first
+	args := []string{"-no-color", "-json"} // JSON format without color
 	args = append(args, options.ExtraArgs...)
-
-	// Add the key last, if provided
 	if key != "" {
 		args = append(args, key)
 	}
 
-	return args
-}
+	// Output command doesn't use -- separator
+	rawOutput, err := runTerragruntStackCommandWithSeparatorE(t, options, "output", false, args...)
+	if err != nil {
+		return "", err
+	}
 
-const skipJsonLogLine = " msg="
+	// Parse and format JSON output
+	return cleanTerragruntJson(rawOutput)
+}
 
 var (
 	// tgLogLevel matches log lines containing fields for time, level, prefix, binary, and message
@@ -107,7 +104,8 @@ func cleanTerragruntOutput(rawOutput string) (string, error) {
 	var result []string
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		if trimmed != "" && !strings.Contains(trimmed, skipJsonLogLine) {
+		// Skip empty lines and lines that are clearly log lines (containing msg= with log context)
+		if trimmed != "" && !strings.Contains(line, " msg=") {
 			result = append(result, trimmed)
 		}
 	}
@@ -164,7 +162,8 @@ func cleanTerragruntJson(input string) (string, error) {
 	var result []string
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		if trimmed != "" && !strings.Contains(trimmed, skipJsonLogLine) {
+		// Skip empty lines and lines that are clearly log lines (containing msg= with log context)
+		if trimmed != "" && !strings.Contains(line, " msg=") {
 			result = append(result, trimmed)
 		}
 	}

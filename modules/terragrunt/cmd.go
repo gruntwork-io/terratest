@@ -20,6 +20,13 @@ func terragruntStackCommandE(t testing.TestingT, opts *Options, additionalArgs .
 // runTerragruntStackCommandE is the unified function that executes terragrunt stack commands
 // It handles argument construction, retry logic, and error handling for all stack commands
 func runTerragruntStackCommandE(t testing.TestingT, opts *Options, subCommand string, additionalArgs ...string) (string, error) {
+	// Default behavior: use arg separator (for backward compatibility)
+	return runTerragruntStackCommandWithSeparatorE(t, opts, subCommand, true, additionalArgs...)
+}
+
+// runTerragruntStackCommandWithSeparatorE executes terragrunt stack commands with control over the -- separator
+// useArgSeparator controls whether the "--" separator is added before additional arguments
+func runTerragruntStackCommandWithSeparatorE(t testing.TestingT, opts *Options, subCommand string, useArgSeparator bool, additionalArgs ...string) (string, error) {
 	// Validate required options
 	if err := validateOptions(opts); err != nil {
 		return "", err
@@ -34,9 +41,13 @@ func runTerragruntStackCommandE(t testing.TestingT, opts *Options, subCommand st
 	// Apply common terragrunt options and get the final command arguments
 	terragruntOptions, finalArgs := GetCommonOptions(opts, commandArgs...)
 
-	// Append additional arguments with "--" separator for stack commands
+	// Append additional arguments with or without "--" separator based on useArgSeparator
 	if len(additionalArgs) > 0 {
-		finalArgs = append(finalArgs, slices.Insert(additionalArgs, 0, ArgSeparator)...)
+		if useArgSeparator {
+			finalArgs = append(finalArgs, slices.Insert(additionalArgs, 0, ArgSeparator)...)
+		} else {
+			finalArgs = append(finalArgs, additionalArgs...)
+		}
 	}
 
 	// Generate the final shell command
