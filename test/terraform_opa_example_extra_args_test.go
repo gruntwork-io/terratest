@@ -19,10 +19,10 @@ func TestOPAEvalTerraformModuleWithExtraArgs(t *testing.T) {
 	opaOpts := &opa.EvalOptions{
 		RulePath: "../examples/terraform-opa-example/policy/enforce_source.rego",
 		FailMode: opa.FailUndefined,
-		// Pass extra command line arguments to OPA
-		ExtraArgs: []string{"--v0-compatible"},
+		// Pass global command line arguments to OPA (before the eval subcommand)
+		GlobalArgs: []string{"--v0-compatible"},
 	}
 
-	// This will run: opa eval --fail --v0-compatible -i <jsonfile> -d <rulepath> data.enforce_source.allow
+	// This will run: opa --v0-compatible eval --fail -i <jsonfile> -d <rulepath> data.enforce_source.allow
 	terraform.OPAEval(t, tfOpts, opaOpts, "data.enforce_source.allow")
 }

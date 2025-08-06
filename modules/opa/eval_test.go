@@ -43,12 +43,35 @@ func TestFormatOPAEvalArgs(t *testing.T) {
 			name: "With extra args",
 			options: &EvalOptions{
 				FailMode:  FailUndefined,
-				ExtraArgs: []string{"--v0-compatible", "--format", "json"},
+				ExtraArgs: []string{"--format", "json"},
 			},
 			rulePath: "/path/to/policy.rego",
 			jsonFile: "/path/to/input.json",
 			query:    "data.test.allow",
-			expected: []string{"eval", "--fail", "--v0-compatible", "--format", "json", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+			expected: []string{"eval", "--fail", "--format", "json", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+		},
+		{
+			name: "With global args",
+			options: &EvalOptions{
+				FailMode:   FailUndefined,
+				GlobalArgs: []string{"--v0-compatible"},
+			},
+			rulePath: "/path/to/policy.rego",
+			jsonFile: "/path/to/input.json",
+			query:    "data.test.allow",
+			expected: []string{"--v0-compatible", "eval", "--fail", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+		},
+		{
+			name: "With both global and extra args",
+			options: &EvalOptions{
+				FailMode:   FailUndefined,
+				GlobalArgs: []string{"--v0-compatible"},
+				ExtraArgs:  []string{"--format", "json"},
+			},
+			rulePath: "/path/to/policy.rego",
+			jsonFile: "/path/to/input.json",
+			query:    "data.test.allow",
+			expected: []string{"--v0-compatible", "eval", "--fail", "--format", "json", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
 		},
 	}
 

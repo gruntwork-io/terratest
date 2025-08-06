@@ -35,12 +35,20 @@ tests for this module.
 
 ## Using extra command line arguments
 
-If you need to pass additional command line arguments to OPA (e.g., `--v0-compatible` for OPA v0.x compatibility), you can use the `ExtraArgs` field in `EvalOptions`:
+If you need to pass additional command line arguments to OPA, you can use either `GlobalArgs` for global OPA flags (that come before the eval subcommand) or `ExtraArgs` for eval-specific flags:
 
 ```go
+// For global OPA flags (e.g., --v0-compatible for OPA v0.x compatibility)
 opaOpts := &opa.EvalOptions{
     RulePath: "../examples/terraform-opa-example/policy/enforce_source.rego",
     FailMode: opa.FailUndefined,
-    ExtraArgs: []string{"--v0-compatible"},
+    GlobalArgs: []string{"--v0-compatible"},
+}
+
+// For eval subcommand flags (e.g., --format json)
+opaOpts := &opa.EvalOptions{
+    RulePath: "../examples/terraform-opa-example/policy/enforce_source.rego",
+    FailMode: opa.FailUndefined,
+    ExtraArgs: []string{"--format", "json"},
 }
 ```
