@@ -166,12 +166,12 @@ func asyncEval(
 // formatOPAEvalArgs formats the arguments for the `opa eval` command.
 func formatOPAEvalArgs(options *EvalOptions, rulePath, jsonFilePath, resultQuery string) []string {
 	var args []string
-	
+
 	// Add global args that need to come before the eval subcommand
 	if len(options.GlobalArgs) > 0 {
 		args = append(args, options.GlobalArgs...)
 	}
-	
+
 	// Add the eval subcommand
 	args = append(args, "eval")
 
