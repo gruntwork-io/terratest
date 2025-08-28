@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -140,8 +141,7 @@ func TgPlanAllExitCodeE(t testing.TestingT, options *Options) (int, error) {
 		return 1, fmt.Errorf("terragrunt must be set as TerraformBinary to use this method")
 	}
 
-	return GetExitCodeForTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Plan, "run-all", "plan", "--input=false",
-		"--lock=true", "--detailed-exitcode")...)...)
+	return terragrunt.PlanAllExitCodeE(t, toTerragruntOptions(*options))
 }
 
 // AssertTgPlanAllExitCode asserts the succuess (or failure) of a terragrunt run-all plan.

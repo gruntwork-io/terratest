@@ -83,6 +83,34 @@ type Options struct {
 
 	// Optional stdin to pass to Terraform commands
 	Stdin io.Reader
+
+	// The vars to pass to Terraform commands using the -var option. Note that terraform does not support passing `null`
+	// as a variable value through the command line. That is, if you use `map[string]interface{}{"foo": nil}` as `Vars`,
+	// this will translate to the string literal `"null"` being assigned to the variable `foo`. However, nulls in
+	// lists and maps/objects are supported. E.g., the following var will be set as expected (`{ bar = null }`:
+	// map[string]interface{}{
+	//     "foo": map[string]interface{}{"bar": nil},
+	// }
+	Vars                 map[string]interface{}
+	VarFiles             []string  // The var file paths to pass to Terraform commands using -var-file option.
+	SetVarsAfterVarFiles bool      // Pass -var options after -var-file options to Terraform commands
+	MixedVars            []Var     // Mix of `-var` and `-var-file` in arbritrary order, use `VarInline()` `VarFile()` to set the value.
+	PlanFilePath         string    // The path to output a plan file to (for the plan command) or read one from (for the apply command)
+	Targets              []string  // The target resources to pass to the terraform command with -target
+	Lock                 bool      // The lock option to pass to the terraform command with -lock
+	LockTimeout          string    // The lock timeout option to pass to the terraform command with -lock-timeout
+	NoColor              bool      // Whether the -no-color flag will be set for any Terraform command or not
+	ExtraArgs            ExtraArgs // Extra arguments passed to Terraform commands
+}
+
+type ExtraArgs struct {
+	Apply   []string
+	Destroy []string
+	Plan    []string
+}
+
+func prepend(args []string, arg ...string) []string {
+	return append(arg, args...)
 }
 
 // GetCommonOptions extracts common tg options and prepares arguments

@@ -10,7 +10,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-
 // runTerragruntStackCommandE is the unified function that executes tg stack commands
 // It handles argument construction, retry logic, and error handling for all stack commands
 func runTerragruntStackCommandE(
@@ -123,6 +122,29 @@ func validateOptions(opts *Options) error {
 		return fmt.Errorf("TerragruntDir is required")
 	}
 	return nil
+}
+
+// defaultSuccessExitCode is the exit code returned when terraform command succeeds
+const defaultSuccessExitCode = 0
+
+// defaultErrorExitCode is the exit code returned when terraform command fails
+const defaultErrorExitCode = 1
+
+// getExitCodeForTerraformCommandE runs terraform with the given arguments and options and returns exit code
+func getExitCodeForTerraformCommandE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (int, error) {
+	options, args := GetCommonOptions(additionalOptions, additionalArgs...)
+
+	additionalOptions.Logger.Logf(t, "Running terragrunt with args %v", args)
+	cmd := generateCommand(options, args...)
+	_, err := shell.RunCommandAndGetOutputE(t, cmd)
+	if err == nil {
+		return defaultSuccessExitCode, nil
+	}
+	exitCode, getExitCodeErr := shell.GetExitCodeForRunCommandError(err)
+	if getExitCodeErr == nil {
+		return exitCode, nil
+	}
+	return defaultErrorExitCode, getExitCodeErr
 }
 
 // generateCommand creates a shell.Command with the specified tg options and arguments

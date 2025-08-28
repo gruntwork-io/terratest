@@ -3,6 +3,7 @@ package terraform
 import (
 	"errors"
 
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -56,7 +57,7 @@ func TgApplyAllE(t testing.TestingT, options *Options) (string, error) {
 		return "", TgInvalidBinary(options.TerraformBinary)
 	}
 
-	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Apply, "run-all", "apply", "-input=false", "-auto-approve")...)...)
+	return terragrunt.ApplyAllE(t, toTerragruntOptions(*options))
 }
 
 // ApplyAndIdempotent runs terraform apply with the given options and return stdout/stderr from the apply command. It then runs

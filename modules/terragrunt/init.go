@@ -1,7 +1,6 @@
 package terragrunt
 
 import (
-	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
@@ -27,7 +26,7 @@ func initArgs(options *Options) []string {
 
 	// Add complex configuration that requires special formatting
 	// These are terraform-specific arguments that need special formatting
-	args = append(args, terraform.FormatTerraformBackendConfigAsArgs(options.BackendConfig)...)
-	args = append(args, terraform.FormatTerraformPluginDirAsArgs(options.PluginDir)...)
+	args = append(args, formatTerraformBackendConfigAsArgs(options.BackendConfig)...)
+	args = append(args, formatTerraformPluginDirAsArgs(options.PluginDir)...)
 	return args
 }

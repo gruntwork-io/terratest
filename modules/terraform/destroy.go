@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -30,5 +31,5 @@ func TgDestroyAllE(t testing.TestingT, options *Options) (string, error) {
 		return "", TgInvalidBinary(options.TerraformBinary)
 	}
 
-	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Destroy, "run-all", "destroy", "-auto-approve", "-input=false")...)...)
+	return terragrunt.DestroyAllE(t, toTerragruntOptions(*options))
 }
