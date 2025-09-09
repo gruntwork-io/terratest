@@ -56,7 +56,7 @@ func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
 	}
 
 	if options.TerraformBinary == TerragruntDefaultPath {
-		args = append(args, "--terragrunt-non-interactive")
+		args = append(args, "--non-interactive")
 
 		// for newer Terragrunt version, setting simplified log formatting
 		setTerragruntLogFormatting(options)
