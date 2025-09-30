@@ -17,6 +17,10 @@ custom_js:
 Terratest uses the Go testing framework. To use Terratest, you need to install:
 
 - [Go](https://golang.org/) (requires version >=1.21.1)
+- Terraform or OpenTofu
+- **Terragrunt v0.73.0+** (if testing Terragrunt configurations)
+
+> **Note:** Terragrunt v0.73.0+ is required due to CLI flag compatibility. See [Terragrunt CLI Redesign](https://terragrunt.gruntwork.io/docs/migrate/cli-redesign/) for details.
 
 ## Setting up your project
 
