@@ -2,18 +2,17 @@ package terragrunt
 
 import (
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
-// TgStackGenerate calls tg stack generate and returns stdout/stderr
+// TgStackGenerate calls terragrunt stack generate and returns stdout/stderr.
 func TgStackGenerate(t testing.TestingT, options *Options) string {
 	out, err := TgStackGenerateE(t, options)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return out
 }
 
-// TgStackGenerateE calls tg stack generate and returns stdout/stderr
+// TgStackGenerateE calls terragrunt stack generate and returns stdout/stderr.
 func TgStackGenerateE(t testing.TestingT, options *Options) (string, error) {
 	return runTerragruntStackCommandE(t, options, "generate")
 }

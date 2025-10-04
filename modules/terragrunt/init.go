@@ -2,18 +2,17 @@ package terragrunt
 
 import (
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
-// TgInit calls tg init and return stdout/stderr
+// TgInit calls terragrunt init and returns stdout/stderr.
 func TgInit(t testing.TestingT, options *Options) string {
 	out, err := TgInitE(t, options)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return out
 }
 
-// TgInitE calls tg init and return stdout/stderr
+// TgInitE calls terragrunt init and returns stdout/stderr.
 func TgInitE(t testing.TestingT, options *Options) (string, error) {
 	// Use regular tg init command (not tg stack init)
 	return runTerragruntCommandE(t, options, "init", initArgs(options)...)

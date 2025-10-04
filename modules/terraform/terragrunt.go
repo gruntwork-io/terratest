@@ -4,6 +4,8 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terragrunt"
 )
 
+// toTerragruntOptions converts terraform.Options to terragrunt.Options.
+// This enables backwards compatibility for existing TgApplyAll/TgDestroyAll functions.
 func toTerragruntOptions(options Options) *terragrunt.Options {
 	opt := terragrunt.Options{
 		TerragruntBinary:         options.TerraformBinary,

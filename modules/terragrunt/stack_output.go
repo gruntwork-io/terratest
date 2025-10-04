@@ -6,18 +6,17 @@ import (
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
-// TgOutput calls tg stack output for the given variable and returns its value as a string
+// TgOutput calls terragrunt stack output for the given variable and returns its value as a string.
 func TgOutput(t testing.TestingT, options *Options, key string) string {
 	out, err := TgOutputE(t, options, key)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return out
 }
 
-// TgOutputE calls tg stack output for the given variable and returns its value as a string
+// TgOutputE calls terragrunt stack output for the given variable and returns its value as a string.
 func TgOutputE(t testing.TestingT, options *Options, key string) (string, error) {
 	// Prepare options with no-color flag for parsing
 	optsCopy := *options
@@ -43,18 +42,15 @@ func TgOutputE(t testing.TestingT, options *Options, key string) (string, error)
 	return cleaned, nil
 }
 
-// TgOutputJson calls tg stack output for the given variable and returns the result as the json string.
+// TgOutputJson calls terragrunt stack output for the given variable and returns the result as a JSON string.
 // If key is an empty string, it will return all the output variables.
 func TgOutputJson(t testing.TestingT, options *Options, key string) string {
 	str, err := TgOutputJsonE(t, options, key)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return str
 }
 
-// TgOutputJsonE calls tg stack output for the given variable and returns the
-// result as the json string.
+// TgOutputJsonE calls terragrunt stack output for the given variable and returns the result as a JSON string.
 // If key is an empty string, it will return all the output variables.
 func TgOutputJsonE(t testing.TestingT, options *Options, key string) (string, error) {
 	// Prepare options with no-color and json flags

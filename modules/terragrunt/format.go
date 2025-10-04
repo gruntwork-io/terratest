@@ -76,12 +76,11 @@ func formatArgs(options *Options, args ...string) []string {
 	}
 
 	if lockSupported {
-		// If command supports locking, handle lock arguments
 		terraformArgs = append(terraformArgs, formatTerraformLockAsArgs(options.Lock, options.LockTimeout)...)
 	}
 
 	if planFileSupported {
-		// The plan file arg should be last in the terraformArgs slice. Some commands use it as an input (e.g. show, apply)
+		// Plan file must be last (used as input by show/apply, output by plan)
 		terraformArgs = append(terraformArgs, formatTerraformPlanFileAsArg(commandType, options.PlanFilePath)...)
 	}
 
@@ -144,11 +143,9 @@ func formatTerraformBackendConfigAsArgs(vars map[string]interface{}) []string {
 	return formatTerraformArgsPrefixed(vars, "-backend-config", false, true)
 }
 
-// Format the given vars into 'Terraform' format, with each var being prefixed with the given prefix. If
-// useSpaceAsSeparator is true, a space will separate the prefix and each var (e.g., -var foo=bar). If
-// useSpaceAsSeparator is false, an equals will separate the prefix and each var (e.g., -backend-config=foo=bar). If
-// omitNil is false, then nil values will be included, (e.g. -backend-config=foo=null). If
-// omitNil is true, then nil values will not be included, (e.g. -backend-config=foo). If
+// formatTerraformArgsPrefixed formats vars with the given prefix.
+// - useSpaceAsSeparator: true for "-var foo=bar", false for "-backend-config=foo=bar"
+// - omitNil: true omits value for nil (e.g. "-backend-config=foo"), false includes "null"
 func formatTerraformArgsPrefixed(vars map[string]interface{}, prefix string, useSpaceAsSeparator bool, omitNil bool) []string {
 	var args []string
 
@@ -191,8 +188,8 @@ func toHclString(value interface{}, isNested bool) string {
 }
 
 // Try to convert the given value to a generic slice. Return the slice and true if the underlying value itself was a
-// slice and an empty slice and false if it wasn't. This is necessary because Go is a shitty language that doesn't
-// have generics, nor useful utility methods built-in. For more info, see: http://stackoverflow.com/a/12754757/483528
+// slice and an empty slice and false if it wasn't. This is necessary because Go lacks generics and built-in type
+// conversion utilities. For more info, see: http://stackoverflow.com/a/12754757/483528
 func tryToConvertToGenericSlice(value interface{}) ([]interface{}, bool) {
 	reflectValue := reflect.ValueOf(value)
 	if reflectValue.Kind() != reflect.Slice {
@@ -209,8 +206,8 @@ func tryToConvertToGenericSlice(value interface{}) ([]interface{}, bool) {
 }
 
 // Try to convert the given value to a generic map. Return the map and true if the underlying value itself was a
-// map and an empty map and false if it wasn't. This is necessary because Go is a shitty language that doesn't
-// have generics, nor useful utility methods built-in. For more info, see: http://stackoverflow.com/a/12754757/483528
+// map and an empty map and false if it wasn't. This is necessary because Go lacks generics and built-in type
+// conversion utilities. For more info, see: http://stackoverflow.com/a/12754757/483528
 func tryToConvertToGenericMap(value interface{}) (map[string]interface{}, bool) {
 	reflectValue := reflect.ValueOf(value)
 	if reflectValue.Kind() != reflect.Map {
