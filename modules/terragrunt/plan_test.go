@@ -50,7 +50,7 @@ func TestPlanAllExitCodeWithError(t *testing.T) {
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
-	require.NoError(t, err) // No error determining exit code
+	require.NoError(t, err)       // No error determining exit code
 	require.Equal(t, 1, exitCode) // Exit code 1 indicates terraform error
 }
 
