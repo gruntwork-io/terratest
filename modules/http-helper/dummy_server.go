@@ -31,7 +31,7 @@ func RunDummyServerE(t testing.TestingT, text string) (net.Listener, int, error)
 	// Create new serve mux so that multiple handlers can be created
 	server := http.NewServeMux()
 	server.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, text)
+		fmt.Fprintf(w, "%s", text)
 	})
 
 	logger.Default.Logf(t, "Starting dummy HTTP server in port %d that will return the text '%s'", port, text)

@@ -256,7 +256,7 @@ func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.Clie
 		}
 
 		if status == types.CommandInvocationStatusFailed {
-			return "", fmt.Errorf(aws.ToString(resp.StatusDetails))
+			return "", fmt.Errorf("%s", aws.ToString(resp.StatusDetails))
 		}
 
 		return "", fmt.Errorf("bad status: %s", status)

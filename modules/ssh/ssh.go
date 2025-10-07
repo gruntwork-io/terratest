@@ -604,6 +604,18 @@ func createAuthMethodsForHost(host Host) ([]ssh.AuthMethod, error) {
 		if err != nil {
 			return methods, err
 		}
+
+		publicKey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(host.SshKeyPair.PublicKey))
+		if err != nil {
+			return methods, err
+		}
+		if cert, ok := publicKey.(*ssh.Certificate); ok {
+			signer, err = ssh.NewCertSigner(cert, signer)
+			if err != nil {
+				return methods, err
+			}
+		}
+
 		methods = append(methods, []ssh.AuthMethod{ssh.PublicKeys(signer)}...)
 	}
 

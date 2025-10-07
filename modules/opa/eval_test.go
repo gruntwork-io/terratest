@@ -8,6 +8,82 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestFormatOPAEvalArgs(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		options  *EvalOptions
+		rulePath string
+		jsonFile string
+		query    string
+		expected []string
+	}{
+		{
+			name: "Basic args without extras",
+			options: &EvalOptions{
+				FailMode: NoFail,
+			},
+			rulePath: "/path/to/policy.rego",
+			jsonFile: "/path/to/input.json",
+			query:    "data.test.allow",
+			expected: []string{"eval", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+		},
+		{
+			name: "With fail mode",
+			options: &EvalOptions{
+				FailMode: FailUndefined,
+			},
+			rulePath: "/path/to/policy.rego",
+			jsonFile: "/path/to/input.json",
+			query:    "data.test.allow",
+			expected: []string{"eval", "--fail", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+		},
+		{
+			name: "With extra args",
+			options: &EvalOptions{
+				FailMode:  FailUndefined,
+				ExtraArgs: []string{"--format", "json"},
+			},
+			rulePath: "/path/to/policy.rego",
+			jsonFile: "/path/to/input.json",
+			query:    "data.test.allow",
+			expected: []string{"eval", "--format", "json", "--fail", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+		},
+		{
+			name: "With v0-compatible flag",
+			options: &EvalOptions{
+				FailMode:  FailUndefined,
+				ExtraArgs: []string{"--v0-compatible"},
+			},
+			rulePath: "/path/to/policy.rego",
+			jsonFile: "/path/to/input.json",
+			query:    "data.test.allow",
+			expected: []string{"eval", "--v0-compatible", "--fail", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+		},
+		{
+			name: "With multiple extra args",
+			options: &EvalOptions{
+				FailMode:  FailUndefined,
+				ExtraArgs: []string{"--v0-compatible", "--format", "json"},
+			},
+			rulePath: "/path/to/policy.rego",
+			jsonFile: "/path/to/input.json",
+			query:    "data.test.allow",
+			expected: []string{"eval", "--v0-compatible", "--format", "json", "--fail", "-i", "/path/to/input.json", "-d", "/path/to/policy.rego", "data.test.allow"},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := formatOPAEvalArgs(test.options, test.rulePath, test.jsonFile, test.query)
+			assert.Equal(t, test.expected, actual)
+		})
+	}
+}
+
 func TestEvalWithOutput(t *testing.T) {
 	t.Parallel()
 
@@ -24,7 +100,7 @@ func TestEvalWithOutput(t *testing.T) {
 			name: "Success",
 			policy: `
 				package test
-				allow {
+				allow := true if {
 					startswith(input.user, "admin")
 				}
 			`,
@@ -77,7 +153,7 @@ func TestEvalWithOutput(t *testing.T) {
 			name: "ContainsError",
 			policy: `
 				package test
-				allow {
+				allow := true if {
 					input.user == "admin"
 				}
 			`,

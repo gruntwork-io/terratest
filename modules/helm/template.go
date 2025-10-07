@@ -199,6 +199,10 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj inter
 		if err := decoder.Decode(&rawYaml); err != nil {
 			return errors.WithStackTrace(err)
 		}
+		// If rawYaml is nil (empty document), return without error
+		if rawYaml == nil {
+			return nil
+		}
 		// If the root is an array but destinationObj is a single object, return an error
 		if reflect.TypeOf(rawYaml).Kind() == reflect.Slice {
 			return fmt.Errorf("YAML root is an array, but destinationObj is a single object")
@@ -226,6 +230,11 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj inter
 				break // No more documents
 			}
 			return errors.WithStackTrace(err)
+		}
+
+		// Skip nil documents (empty YAML documents)
+		if rawYaml == nil {
+			continue
 		}
 
 		jsonData, err := json.Marshal(rawYaml)

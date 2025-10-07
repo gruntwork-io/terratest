@@ -25,6 +25,12 @@ type EvalOptions struct {
 	// Set a logger that should be used. See the logger package for more info.
 	Logger *logger.Logger
 
+	// Extra command line arguments to pass to opa eval. These are added after the eval subcommand
+	// and before the standard arguments (-i, -d, query).
+	// Example: []string{"--v0-compatible"} to enable OPA v0 compatibility mode.
+	// Example: []string{"--strict"} to enable strict mode for the eval subcommand.
+	ExtraArgs []string
+
 	// The following options can be used to change the behavior of the related functions for debuggability.
 
 	// When true, keep any temp files and folders that are created for the purpose of running opa eval.
@@ -157,7 +163,16 @@ func asyncEval(
 
 // formatOPAEvalArgs formats the arguments for the `opa eval` command.
 func formatOPAEvalArgs(options *EvalOptions, rulePath, jsonFilePath, resultQuery string) []string {
-	args := []string{"eval"}
+	var args []string
+
+	// Add the eval subcommand
+	args = append(args, "eval")
+
+	// Add any extra arguments provided by the user (for the eval subcommand)
+	// These come before the fail mode flags to allow overriding behavior
+	if len(options.ExtraArgs) > 0 {
+		args = append(args, options.ExtraArgs...)
+	}
 
 	switch options.FailMode {
 	case FailUndefined:

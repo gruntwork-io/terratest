@@ -185,6 +185,23 @@ configmap-data-value-2;
 `
 		assert.Equal(t, data, configmap.Data["thisIsSomeDataKey"])
 	})
+	t.Run("EmptyDocument", func(t *testing.T) {
+		var deployment appsv1.Deployment
+
+		// Should not panic with empty document separator
+		err := UnmarshalK8SYamlE(t, "---", &deployment)
+		assert.NoError(t, err)
+
+		// Should not panic with multiple empty document separators
+		err = UnmarshalK8SYamlE(t, "---\n---\n---", &deployment)
+		assert.NoError(t, err)
+
+		// Test with slice destination
+		var deployments []appsv1.Deployment
+		err = UnmarshalK8SYamlE(t, "---", &deployments)
+		assert.NoError(t, err)
+		assert.Len(t, deployments, 0) // Should be empty
+	})
 }
 
 func TestRenderWarning(t *testing.T) {
