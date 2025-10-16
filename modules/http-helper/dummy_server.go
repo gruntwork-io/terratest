@@ -63,8 +63,9 @@ func RunDummyServerWithHandlers(t testing.TestingT, handlers map[string]func(htt
 func RunDummyServerWithHandlersE(t testing.TestingT, handlers map[string]func(http.ResponseWriter, *http.Request)) (net.Listener, int, error) {
 	port := getNextPort()
 
+	server := http.NewServeMux()
 	for path, handler := range handlers {
-		http.HandleFunc(path, handler)
+		server.HandleFunc(path, handler)
 	}
 
 	logger.Default.Logf(t, "Starting dummy HTTP server in port %d", port)
@@ -74,7 +75,7 @@ func RunDummyServerWithHandlersE(t testing.TestingT, handlers map[string]func(ht
 		return nil, 0, fmt.Errorf("error listening: %s", err)
 	}
 
-	go http.Serve(listener, nil)
+	go http.Serve(listener, server)
 
 	return listener, port, err
 }
