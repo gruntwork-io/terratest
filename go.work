@@ -1,0 +1,13 @@
+go 1.25.0
+
+use (
+	.
+	./modules/files
+	./modules/formatting
+	./modules/logger
+	./modules/retry
+	./modules/shell
+	./modules/terraform
+	./modules/terragrunt
+	./modules/testing
+)
