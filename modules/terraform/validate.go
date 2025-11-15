@@ -24,12 +24,12 @@ func ValidateE(t testing.TestingT, options *Options) (string, error) {
 	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Validate, "validate")...)...)
 }
 
-// ValidateInputsE calls terragrunt validate-inputs and returns stdout/stderr
+// ValidateInputsE calls terragrunt hcl validate --inputs and returns stdout/stderr
 func ValidateInputsE(t testing.TestingT, options *Options) (string, error) {
 	if options.TerraformBinary != "terragrunt" {
 		return "", TgInvalidBinary(options.TerraformBinary)
 	}
-	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.ValidateInputs, "validate-inputs")...)...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.ValidateInputs, "hcl", "validate", "--inputs")...)...)
 }
 
 // InitAndValidate runs terraform init and validate with the given options and returns stdout/stderr from the validate command.

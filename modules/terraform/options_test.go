@@ -89,7 +89,13 @@ func TestExtraArgsHelp(t *testing.T) {
 	for _, tt := range testtable {
 		out, err := tt.fn()
 		require.NoError(t, err)
-		assert.Regexp(t, regexp.MustCompile(fmt.Sprintf(`(Usage|USAGE):\s+\S+\s+(\[global options\]\s+)?%s`, tt.name)), out)
+		// The validate-inputs command now maps to "hcl validate" in newer Terragrunt versions
+		// so we check for that pattern instead
+		if tt.name == "validate-inputs" {
+			assert.Regexp(t, regexp.MustCompile(`(Usage|USAGE):\s+\S+\s+hcl\s+validate`), out)
+		} else {
+			assert.Regexp(t, regexp.MustCompile(fmt.Sprintf(`(Usage|USAGE):\s+\S+\s+(\[global options\]\s+)?%s`, tt.name)), out)
+		}
 	}
 }
 

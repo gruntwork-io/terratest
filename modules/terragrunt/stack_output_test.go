@@ -34,7 +34,7 @@ func TestTgOutputIntegration(t *testing.T) {
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
 		Logger:           logger.Discard,
-		TerraformArgs:    []string{"apply", "-auto-approve"},
+		TerraformArgs:    []string{"apply"}, // stack run auto-approves by default
 	}
 	_, err = TgStackRunE(t, applyOptions)
 	require.NoError(t, err)
@@ -45,7 +45,7 @@ func TestTgOutputIntegration(t *testing.T) {
 			TerragruntDir:    testFolder + "/live",
 			TerragruntBinary: "terragrunt",
 			Logger:           logger.Discard,
-			TerraformArgs:    []string{"destroy", "-auto-approve"},
+			TerraformArgs:    []string{"destroy"}, // stack run auto-approves by default
 		}
 		_, _ = TgStackRunE(t, destroyOptions)
 	}()
@@ -54,20 +54,19 @@ func TestTgOutputIntegration(t *testing.T) {
 	strOutput := TgOutput(t, options, "mother")
 	assert.Contains(t, strOutput, "./test.txt")
 
-	// Test getting stack output as JSON - note that our cleaning function will still extract just the value
+	// Test getting stack output as JSON using the TgOutputJson function
 	jsonOptions := &Options{
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
 		Logger:           logger.Discard,
-		TerragruntArgs:   []string{"-json"},
 	}
 
-	strOutputJson := TgOutput(t, jsonOptions, "mother")
+	strOutputJson := TgOutputJson(t, jsonOptions, "mother")
 	// The JSON output for a single value should still be cleaned to just show the value
 	assert.Contains(t, strOutputJson, "./test.txt")
 
 	// Test getting all stack outputs as JSON
-	allOutputsJson := TgOutput(t, jsonOptions, "")
+	allOutputsJson := TgOutputJson(t, jsonOptions, "")
 	require.NotEmpty(t, allOutputsJson)
 
 	// For JSON output of all outputs, we should get valid JSON
@@ -120,7 +119,7 @@ func TestTgOutputErrorHandling(t *testing.T) {
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
 		Logger:           logger.Discard,
-		TerraformArgs:    []string{"apply", "-auto-approve"},
+		TerraformArgs:    []string{"apply"}, // stack run auto-approves by default
 	}
 	_, err = TgStackRunE(t, applyOptions)
 	require.NoError(t, err)
@@ -131,7 +130,7 @@ func TestTgOutputErrorHandling(t *testing.T) {
 			TerragruntDir:    testFolder + "/live",
 			TerragruntBinary: "terragrunt",
 			Logger:           logger.Discard,
-			TerraformArgs:    []string{"destroy", "-auto-approve"},
+			TerraformArgs:    []string{"destroy"}, // stack run auto-approves by default
 		}
 		_, _ = TgStackRunE(t, destroyOptions)
 	}()

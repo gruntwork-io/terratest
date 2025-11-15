@@ -5,7 +5,6 @@ import (
 )
 
 // TgStackRun calls tg stack run and returns stdout/stderr
-// DEPRECATED: The 'stack' commands are deprecated in Terragrunt. Use terragrunt.ApplyAll() instead.
 func TgStackRun(t testing.TestingT, options *Options) string {
 	out, err := TgStackRunE(t, options)
 	if err != nil {
@@ -15,7 +14,6 @@ func TgStackRun(t testing.TestingT, options *Options) string {
 }
 
 // TgStackRunE calls tg stack run and returns stdout/stderr
-// DEPRECATED: The 'stack' commands are deprecated in Terragrunt. Use terragrunt.ApplyAllE() instead.
 func TgStackRunE(t testing.TestingT, options *Options) (string, error) {
 	return runTerragruntStackCommandE(t, options, "run")
 }

@@ -42,7 +42,7 @@ func TestTerragruntConsole(t *testing.T) {
 	// website::tag::6:: Clean up resources with "terragrunt destroy" at the end of the test.
 	defer terraform.Destroy(t, terraformOptions)
 
-	// website::tag::4:: Run "terragrunt console".
-	out := terraform.RunTerraformCommand(t, terraformOptions, "console")
+	// website::tag::4:: Run "terragrunt run -- console" (Terragrunt v0.93.5+ requires 'run --' for non-builtin commands).
+	out := terraform.RunTerraformCommand(t, terraformOptions, "run", "--", "console")
 	assert.Contains(t, out, `"local variable named mylocal"`)
 }

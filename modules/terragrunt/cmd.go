@@ -10,25 +10,17 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-// runTerragruntStackCommandE is the unified function that executes tg stack commands
+// runTerragruntStackCommandE executes tg stack commands
 // It handles argument construction, retry logic, and error handling for all stack commands
 func runTerragruntStackCommandE(
 	t testing.TestingT, opts *Options, subCommand string, additionalArgs ...string) (string, error) {
-	// Default behavior: use arg separator (for backward compatibility)
-	return runTerragruntStackCommandWithSeparatorE(t, opts, subCommand, true, additionalArgs...)
-}
-
-// runTerragruntStackCommandWithSeparatorE executes tg stack commands with control over the -- separator
-// useArgSeparator controls whether the "--" separator is added before additional arguments
-func runTerragruntStackCommandWithSeparatorE(t testing.TestingT, opts *Options,
-	subCommand string, useArgSeparator bool, additionalArgs ...string) (string, error) {
 	// Build the base command arguments starting with "stack"
 	commandArgs := []string{"stack"}
 	if subCommand != "" {
 		commandArgs = append(commandArgs, subCommand)
 	}
 
-	return executeTerragruntCommand(t, opts, commandArgs, useArgSeparator, additionalArgs...)
+	return executeTerragruntCommand(t, opts, commandArgs, additionalArgs...)
 }
 
 // runTerragruntCommandE is the core function that executes regular tg commands
@@ -38,42 +30,30 @@ func runTerragruntCommandE(t testing.TestingT, opts *Options, command string,
 	// Build the base command arguments starting with the command
 	commandArgs := []string{command}
 
-	// For non-stack commands, we typically don't use the separator
-	return executeTerragruntCommand(t, opts, commandArgs, false, additionalArgs...)
+	return executeTerragruntCommand(t, opts, commandArgs, additionalArgs...)
 }
 
 // executeTerragruntCommand is the common execution function for all tg commands
 // It handles validation, argument construction, retry logic, and error handling
 func executeTerragruntCommand(t testing.TestingT, opts *Options, baseCommandArgs []string,
-	useArgSeparator bool, additionalArgs ...string) (string, error) {
-	// Validate required options
-	if err := validateOptions(opts); err != nil {
+	additionalArgs ...string) (string, error) {
+	// Validate and prepare options
+	if err := prepareOptions(opts); err != nil {
 		return "", err
 	}
 
-	// Apply common tg options and get the final command arguments
-	terragruntOptions, finalArgs := GetCommonOptions(opts, baseCommandArgs...)
-
-	// Append arguments from options using the new separation logic
-	argsFromOptions := GetArgsForCommand(terragruntOptions, useArgSeparator)
-	finalArgs = append(finalArgs, argsFromOptions...)
-
-	// Append any additional arguments passed directly to this function
-	if len(additionalArgs) > 0 {
-		finalArgs = append(finalArgs, additionalArgs...)
-	}
-
-	// Generate the final shell command
-	execCommand := generateCommand(terragruntOptions, finalArgs...)
-	commandDescription := fmt.Sprintf("%s %v", terragruntOptions.TerragruntBinary, finalArgs)
+	// Build args and generate command
+	finalArgs := buildTerragruntArgs(opts, append(baseCommandArgs, additionalArgs...)...)
+	execCommand := generateCommand(opts, finalArgs...)
+	commandDescription := fmt.Sprintf("%s %v", opts.TerragruntBinary, finalArgs)
 
 	// Execute the command with retry logic and error handling
 	return retry.DoWithRetryableErrorsE(
 		t,
 		commandDescription,
-		terragruntOptions.RetryableTerraformErrors,
-		terragruntOptions.MaxRetries,
-		terragruntOptions.TimeBetweenRetries,
+		opts.RetryableTerraformErrors,
+		opts.MaxRetries,
+		opts.TimeBetweenRetries,
 		func() (string, error) {
 			output, err := shell.RunCommandAndGetOutputE(t, execCommand)
 			if err != nil {
@@ -113,6 +93,33 @@ func hasWarning(opts *Options, commandOutput string) error {
 	return nil
 }
 
+// prepareOptions validates options and sets defaults
+func prepareOptions(opts *Options) error {
+	if err := validateOptions(opts); err != nil {
+		return err
+	}
+	if opts.TerragruntBinary == "" {
+		opts.TerragruntBinary = DefaultTerragruntBinary
+	}
+	setTerragruntLogFormatting(opts)
+	return nil
+}
+
+// buildTerragruntArgs constructs the final argument list for a terragrunt command
+// Arguments are ordered as: TerragruntArgs → --non-interactive → commandArgs → TerraformArgs
+func buildTerragruntArgs(opts *Options, commandArgs ...string) []string {
+	var args []string
+	args = append(args, opts.TerragruntArgs...)
+	args = append(args, NonInteractiveFlag)
+	args = append(args, commandArgs...)
+
+	if len(opts.TerraformArgs) > 0 {
+		args = append(args, opts.TerraformArgs...)
+	}
+
+	return args
+}
+
 // validateOptions validates that required options are provided
 func validateOptions(opts *Options) error {
 	if opts == nil {
@@ -132,10 +139,15 @@ const defaultErrorExitCode = 1
 
 // getExitCodeForTerragruntCommandE runs terragrunt with the given arguments and options and returns exit code
 func getExitCodeForTerragruntCommandE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (int, error) {
-	options, args := GetCommonOptions(additionalOptions, additionalArgs...)
+	// Validate and prepare options
+	if err := prepareOptions(additionalOptions); err != nil {
+		return defaultErrorExitCode, err
+	}
 
+	// Build args and generate command
+	args := buildTerragruntArgs(additionalOptions, additionalArgs...)
 	additionalOptions.Logger.Logf(t, "Running terragrunt with args %v", args)
-	cmd := generateCommand(options, args...)
+	cmd := generateCommand(additionalOptions, args...)
 	_, err := shell.RunCommandAndGetOutputE(t, cmd)
 	if err == nil {
 		return defaultSuccessExitCode, nil

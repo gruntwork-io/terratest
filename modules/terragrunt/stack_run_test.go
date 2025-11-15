@@ -32,8 +32,8 @@ func TestTgStackRunPlan(t *testing.T) {
 	require.NoError(t, err)
 
 	// Validate that generate command produced output
-	require.Contains(t, out, "Generating stack from")
-	require.Contains(t, out, "Processing unit")
+	// Terragrunt v0.80.4+ outputs "Processing unit", older versions output "Generating unit"
+	require.True(t, containsEitherString(out, "Processing unit", "Generating unit"), "Output should contain either 'Processing unit' or 'Generating unit'")
 
 	// Verify that the .terragrunt-stack directory was created
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
@@ -72,8 +72,8 @@ func TestTgStackRunPlanWithNoColor(t *testing.T) {
 	require.NoError(t, err)
 
 	// Validate that generate command produced output
-	require.Contains(t, out, "Generating stack from")
-	require.Contains(t, out, "Processing unit")
+	// Terragrunt v0.80.4+ outputs "Processing unit", older versions output "Generating unit"
+	require.True(t, containsEitherString(out, "Processing unit", "Generating unit"), "Output should contain either 'Processing unit' or 'Generating unit'")
 
 	// Verify that the .terragrunt-stack directory was created
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")

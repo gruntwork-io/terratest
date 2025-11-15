@@ -10,6 +10,7 @@ import (
 )
 
 const runAllCmd = "run-all"
+const allFlag = "--all"
 
 // TerraformCommandsWithLockSupport is a list of all the Terraform commands that
 // can obtain locks on Terraform state
@@ -41,10 +42,21 @@ var TerraformCommandsWithPlanFileSupport = []string{
 func FormatArgs(options *Options, args ...string) []string {
 	var terraformArgs []string
 	commandType := args[0]
+	isRunAllCmd := commandType == runAllCmd
+
+	// Check if --all flag is present (new Terragrunt v0.93.5+ syntax)
+	hasAllFlag := false
+	for _, arg := range args {
+		if arg == allFlag {
+			hasAllFlag = true
+			break
+		}
+	}
+
 	// If the user is trying to run with run-all, then we need to make sure the command based args are based on the
 	// actual terraform command. E.g., we want to base the logic on `plan` when `run-all plan` is passed in, not
 	// `run-all`.
-	if commandType == runAllCmd {
+	if isRunAllCmd {
 		commandType = args[1]
 	}
 	lockSupported := collections.ListContains(TerraformCommandsWithLockSupport, commandType)
@@ -75,7 +87,8 @@ func FormatArgs(options *Options, args ...string) []string {
 		terraformArgs = append(terraformArgs, "-no-color")
 	}
 
-	if lockSupported {
+	// Don't add -lock flag for run-all commands or --all flag commands as they don't support it
+	if lockSupported && !isRunAllCmd && !hasAllFlag {
 		// If command supports locking, handle lock arguments
 		terraformArgs = append(terraformArgs, FormatTerraformLockAsArgs(options.Lock, options.LockTimeout)...)
 	}

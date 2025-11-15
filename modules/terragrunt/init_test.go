@@ -1,6 +1,7 @@
 package terragrunt
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -39,4 +40,27 @@ func TestTgInitWithInvalidConfig(t *testing.T) {
 	require.Error(t, err)
 	// The error should contain information about the HCL parsing error
 	require.Contains(t, err.Error(), "Missing expression")
+}
+
+// TestTgInitWithBothArgTypes verifies init works with both TerragruntArgs and TerraformArgs
+func TestTgInitWithBothArgTypes(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp(
+		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerragruntDir:    filepath.Join(testFolder, "live"),
+		TerragruntBinary: "terragrunt",
+		TerragruntArgs:   []string{"--log-level", "error"},
+		TerraformArgs:    []string{"-upgrade"},
+	}
+
+	output, err := TgInitE(t, options)
+	require.NoError(t, err)
+	// Verify TerragruntArgs: no info logs
+	require.NotContains(t, output, "level=info")
+	// Verify TerraformArgs: -upgrade was passed (shows in terraform output)
+	require.Contains(t, output, "Initializing")
 }

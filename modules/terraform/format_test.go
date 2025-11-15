@@ -271,7 +271,9 @@ func TestFormatArgsAppliesLockCorrectly(t *testing.T) {
 		{[]string{"validate"}, []string{"validate"}},
 		{[]string{"plan-all"}, []string{"plan-all", "-lock=false"}},
 		{[]string{"run-all", "validate"}, []string{"run-all", "validate"}},
-		{[]string{"run-all", "plan"}, []string{"run-all", "plan", "-lock=false"}},
+		{[]string{"run-all", "plan"}, []string{"run-all", "plan"}}, // run-all commands don't support -lock
+		{[]string{"plan", "--all"}, []string{"plan", "--all"}},     // --all commands don't support -lock
+		{[]string{"apply", "--all"}, []string{"apply", "--all"}},   // --all commands don't support -lock
 	}
 
 	for _, testCase := range testCases {

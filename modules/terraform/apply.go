@@ -49,14 +49,14 @@ func ApplyE(t testing.TestingT, options *Options) (string, error) {
 	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Apply, "apply", "-input=false", "-auto-approve")...)...)
 }
 
-// TgApplyAllE runs terragrunt apply-all with the given options and return stdout/stderr. Note that this method does NOT call destroy and
+// TgApplyAllE runs terragrunt apply --all with the given options and return stdout/stderr. Note that this method does NOT call destroy and
 // assumes the caller is responsible for cleaning up any resources created by running apply.
 func TgApplyAllE(t testing.TestingT, options *Options) (string, error) {
 	if options.TerraformBinary != "terragrunt" {
 		return "", TgInvalidBinary(options.TerraformBinary)
 	}
 
-	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Apply, "run-all", "apply", "-input=false", "-auto-approve")...)...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Apply, "apply", "--all")...)...)
 }
 
 // ApplyAndIdempotent runs terraform apply with the given options and return stdout/stderr from the apply command. It then runs

@@ -9,7 +9,6 @@ import (
 )
 
 // TgOutput calls tg stack output for the given variable and returns its value as a string
-// DEPRECATED: The 'stack' commands are deprecated in Terragrunt. Consider using terraform.Output() on individual modules instead.
 func TgOutput(t testing.TestingT, options *Options, key string) string {
 	out, err := TgOutputE(t, options, key)
 	if err != nil {
@@ -19,20 +18,23 @@ func TgOutput(t testing.TestingT, options *Options, key string) string {
 }
 
 // TgOutputE calls tg stack output for the given variable and returns its value as a string
-// DEPRECATED: The 'stack' commands are deprecated in Terragrunt. Consider using terraform.OutputE() on individual modules instead.
 func TgOutputE(t testing.TestingT, options *Options, key string) (string, error) {
 	// Prepare options with no-color flag for parsing
 	optsCopy := *options
-	optsCopy.TerragruntArgs = append([]string{"-no-color"}, options.TerragruntArgs...)
+	optsCopy.TerragruntArgs = append([]string{"--no-color"}, options.TerragruntArgs...)
 
 	var args []string
 	if key != "" {
 		args = append(args, key)
 	}
+	// Append any user-provided TerraformArgs
+	if len(options.TerraformArgs) > 0 {
+		args = append(args, options.TerraformArgs...)
+	}
 
-	// Output command doesn't use -- separator
-	rawOutput, err := runTerragruntStackCommandWithSeparatorE(
-		t, &optsCopy, "output", false, args...)
+	// Output command for stack
+	rawOutput, err := runTerragruntStackCommandE(
+		t, &optsCopy, "output", args...)
 	if err != nil {
 		return "", err
 	}
@@ -47,7 +49,6 @@ func TgOutputE(t testing.TestingT, options *Options, key string) (string, error)
 
 // TgOutputJson calls tg stack output for the given variable and returns the result as the json string.
 // If key is an empty string, it will return all the output variables.
-// DEPRECATED: The 'stack' commands are deprecated in Terragrunt. Consider using terraform.OutputJson() on individual modules instead.
 func TgOutputJson(t testing.TestingT, options *Options, key string) string {
 	str, err := TgOutputJsonE(t, options, key)
 	if err != nil {
@@ -59,20 +60,24 @@ func TgOutputJson(t testing.TestingT, options *Options, key string) string {
 // TgOutputJsonE calls tg stack output for the given variable and returns the
 // result as the json string.
 // If key is an empty string, it will return all the output variables.
-// DEPRECATED: The 'stack' commands are deprecated in Terragrunt. Consider using terraform.OutputJsonE() on individual modules instead.
 func TgOutputJsonE(t testing.TestingT, options *Options, key string) (string, error) {
-	// Prepare options with no-color and json flags
+	// Prepare options with no-color flag
 	optsCopy := *options
-	optsCopy.TerragruntArgs = append([]string{"-no-color", "-json"}, options.TerragruntArgs...)
+	optsCopy.TerragruntArgs = append([]string{"--no-color"}, options.TerragruntArgs...)
 
-	var args []string
+	// -json is a terraform flag that should go after the output command
+	args := []string{"-json"}
 	if key != "" {
 		args = append(args, key)
 	}
+	// Append any user-provided TerraformArgs
+	if len(options.TerraformArgs) > 0 {
+		args = append(args, options.TerraformArgs...)
+	}
 
-	// Output command doesn't use -- separator
-	rawOutput, err := runTerragruntStackCommandWithSeparatorE(
-		t, &optsCopy, "output", false, args...)
+	// Output command for stack
+	rawOutput, err := runTerragruntStackCommandE(
+		t, &optsCopy, "output", args...)
 	if err != nil {
 		return "", err
 	}
@@ -85,6 +90,25 @@ var (
 	// tgLogLevel matches log lines containing fields for time, level, prefix, binary, and message
 	tgLogLevel = regexp.MustCompile(`.*time=\S+ level=\S+ prefix=\S+ binary=\S+ msg=.*`)
 )
+
+// removeLogLines removes terragrunt log lines from output
+func removeLogLines(rawOutput string) string {
+	// Remove lines matching the log pattern
+	cleaned := tgLogLevel.ReplaceAllString(rawOutput, "")
+
+	// Split into lines and filter
+	lines := strings.Split(cleaned, "\n")
+	var result []string
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		// Skip empty lines and lines that are clearly log lines (containing msg= with log context)
+		if trimmed != "" && !strings.Contains(line, " msg=") {
+			result = append(result, trimmed)
+		}
+	}
+
+	return strings.Join(result, "\n")
+}
 
 // cleanTerragruntOutput extracts the actual output value from tg stack's verbose output
 //
@@ -108,28 +132,13 @@ var (
 //
 //	{"vpc_id": "vpc-12345", "subnet_ids": ["subnet-1", "subnet-2"]}
 func cleanTerragruntOutput(rawOutput string) (string, error) {
-	// Remove tg log lines
-	cleaned := tgLogLevel.ReplaceAllString(rawOutput, "")
-
-	lines := strings.Split(cleaned, "\n")
-	var result []string
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		// Skip empty lines and lines that are clearly log lines (containing msg= with log context)
-		if trimmed != "" && !strings.Contains(line, " msg=") {
-			result = append(result, trimmed)
-		}
-	}
-
-	if len(result) == 0 {
+	// Remove terragrunt log lines
+	finalOutput := removeLogLines(rawOutput)
+	if finalOutput == "" {
 		return "", nil
 	}
 
-	// Join all result lines
-	finalOutput := strings.Join(result, "\n")
-
 	// Check if it's JSON (starts with { or [)
-	finalOutput = strings.TrimSpace(finalOutput)
 	if strings.HasPrefix(finalOutput, "{") || strings.HasPrefix(finalOutput, "[") {
 		// For JSON output, return as-is
 		return finalOutput, nil
@@ -166,22 +175,12 @@ func cleanTerragruntOutput(rawOutput string) (string, error) {
 //	  }
 //	}
 func cleanTerragruntJson(input string) (string, error) {
-	// Remove tg log lines
-	cleaned := tgLogLevel.ReplaceAllString(input, "")
+	// Remove terragrunt log lines
+	cleaned := removeLogLines(input)
 
-	lines := strings.Split(cleaned, "\n")
-	var result []string
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		// Skip empty lines and lines that are clearly log lines (containing msg= with log context)
-		if trimmed != "" && !strings.Contains(line, " msg=") {
-			result = append(result, trimmed)
-		}
-	}
-	ansiClean := strings.Join(result, "\n")
-
+	// Parse JSON
 	var jsonObj interface{}
-	if err := json.Unmarshal([]byte(ansiClean), &jsonObj); err != nil {
+	if err := json.Unmarshal([]byte(cleaned), &jsonObj); err != nil {
 		return "", err
 	}
 

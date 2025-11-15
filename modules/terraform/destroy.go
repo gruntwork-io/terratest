@@ -24,11 +24,11 @@ func DestroyE(t testing.TestingT, options *Options) (string, error) {
 	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Destroy, "destroy", "-auto-approve", "-input=false")...)...)
 }
 
-// TgDestroyAllE runs terragrunt destroy with the given options and return stdout.
+// TgDestroyAllE runs terragrunt destroy --all with the given options and return stdout.
 func TgDestroyAllE(t testing.TestingT, options *Options) (string, error) {
 	if options.TerraformBinary != "terragrunt" {
 		return "", TgInvalidBinary(options.TerraformBinary)
 	}
 
-	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Destroy, "run-all", "destroy", "-auto-approve", "-input=false")...)...)
+	return RunTerraformCommandE(t, options, FormatArgs(options, prepend(options.ExtraArgs.Destroy, "destroy", "--all")...)...)
 }

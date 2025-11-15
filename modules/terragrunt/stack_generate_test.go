@@ -2,6 +2,7 @@ package terragrunt
 
 import (
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -31,8 +32,8 @@ func TestTgStackGenerate(t *testing.T) {
 	require.NoError(t, err)
 
 	// Validate that generate command produced output
-	require.Contains(t, out, "Generating stack from")
-	require.Contains(t, out, "Processing unit")
+	// Terragrunt v0.80.4+ outputs "Processing unit", older versions output "Generating unit"
+	require.True(t, containsEitherString(out, "Processing unit", "Generating unit"), "Output should contain either 'Processing unit' or 'Generating unit'")
 
 	// Verify that the .terragrunt-stack directory was created
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
@@ -70,8 +71,8 @@ func TestTgStackGenerateWithNoColor(t *testing.T) {
 	require.NoError(t, err)
 
 	// Validate that generate command produced output
-	require.Contains(t, out, "Generating stack from")
-	require.Contains(t, out, "Processing unit")
+	// Terragrunt v0.80.4+ outputs "Processing unit", older versions output "Generating unit"
+	require.True(t, containsEitherString(out, "Processing unit", "Generating unit"), "Output should contain either 'Processing unit' or 'Generating unit'")
 
 	// Verify that the .terragrunt-stack directory was created
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
@@ -97,13 +98,13 @@ func TestTgStackGenerateWithExtraArgs(t *testing.T) {
 	out, err := TgStackGenerateE(t, &Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
-		TerragruntArgs:   []string{"--terragrunt-log-level", "info"},
+		TerragruntArgs:   []string{"--log-level", "info"},
 	})
 	require.NoError(t, err)
 
 	// Validate that generate command produced output
-	require.Contains(t, out, "Generating stack from")
-	require.Contains(t, out, "Processing unit")
+	// Terragrunt v0.80.4+ outputs "Processing unit", older versions output "Generating unit"
+	require.True(t, containsEitherString(out, "Processing unit", "Generating unit"), "Output should contain either 'Processing unit' or 'Generating unit'")
 
 	// Verify that the .terragrunt-stack directory was created
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
@@ -119,4 +120,35 @@ func TestTgStackGenerateNonExistentDir(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	})
 	require.Error(t, err)
+}
+
+// containsEitherString checks if the output contains at least one of the provided strings
+func containsEitherString(output, str1, str2 string) bool {
+	return strings.Contains(output, str1) || strings.Contains(output, str2)
+}
+
+// TestStackGenerateWithArgs verifies stack commands respect TerragruntArgs
+func TestStackGenerateWithArgs(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp(
+		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+	require.NoError(t, err)
+
+	// Initialize first
+	_, err = TgInitE(t, &Options{
+		TerragruntDir:    path.Join(testFolder, "live"),
+		TerragruntBinary: "terragrunt",
+	})
+	require.NoError(t, err)
+
+	// Generate with TerragruntArgs
+	out, err := TgStackGenerateE(t, &Options{
+		TerragruntDir:    path.Join(testFolder, "live"),
+		TerragruntBinary: "terragrunt",
+		TerragruntArgs:   []string{"--log-level", "error"},
+	})
+	require.NoError(t, err)
+	// Verify args were respected
+	require.NotContains(t, out, "level=info")
 }
