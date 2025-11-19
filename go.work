@@ -1,0 +1,14 @@
+go 1.24.0
+
+use (
+	.
+	./internal/lib
+	./modules/files
+	./modules/logger
+	./modules/random
+	./modules/retry
+	./modules/shell
+	./modules/terragrunt
+	./modules/testing
+	./test-external
+)

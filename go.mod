@@ -23,7 +23,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.22.0
 	github.com/hashicorp/terraform-json v0.23.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
-	github.com/jstemmer/go-junit-report v1.0.0
+	github.com/jstemmer/go-junit-report v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
 	github.com/miekg/dns v1.1.62
@@ -36,7 +36,7 @@ require (
 	github.com/urfave/cli v1.22.16
 	github.com/zclconf/go-cty v1.15.0
 	golang.org/x/crypto v0.41.0
-	golang.org/x/net v0.43.0
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.27.0
 	google.golang.org/api v0.206.0
 	google.golang.org/genproto v0.0.0-20241113202542-65e8d215514f
@@ -232,4 +232,25 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
+)
+
+require (
+	github.com/gruntwork-io/terratest/internal/lib v0.0.0
+	github.com/gruntwork-io/terratest/modules/files v0.0.0
+	github.com/gruntwork-io/terratest/modules/logger v0.0.0
+	github.com/gruntwork-io/terratest/modules/random v0.0.0
+	github.com/gruntwork-io/terratest/modules/retry v0.0.0
+	github.com/gruntwork-io/terratest/modules/shell v0.0.0
+	github.com/gruntwork-io/terratest/modules/testing v0.0.0
+)
+
+replace (
+	github.com/gruntwork-io/terratest/internal/lib => ./internal/lib
+	github.com/gruntwork-io/terratest/modules/files => ./modules/files
+	github.com/gruntwork-io/terratest/modules/logger => ./modules/logger
+	github.com/gruntwork-io/terratest/modules/random => ./modules/random
+	github.com/gruntwork-io/terratest/modules/retry => ./modules/retry
+	github.com/gruntwork-io/terratest/modules/shell => ./modules/shell
+	github.com/gruntwork-io/terratest/modules/terragrunt => ./modules/terragrunt
+	github.com/gruntwork-io/terratest/modules/testing => ./modules/testing
 )
