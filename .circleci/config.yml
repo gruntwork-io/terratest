@@ -80,6 +80,28 @@ install_tofu: &install_tofu
     rm -rf tofu.zip
     tofu --version
 
+# Helper script for swapping terraform with tofu binary
+# This creates a bash function that can be sourced and called in test jobs
+define_tofu_swap_helper: &define_tofu_swap_helper
+  name: Define tofu binary swap helper function
+  command: |
+    cat > /tmp/tofu_swap_helper.sh << 'EOF'
+    swap_terraform_with_tofu() {
+      # Setup trap to ensure terraform binary is always restored
+      cleanup() {
+        echo "Restoring original terraform binary..."
+        sudo rm -f /usr/local/bin/terraform
+        sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform 2>/dev/null || true
+      }
+      trap cleanup EXIT
+
+      # Create symlink so tofu is used as terraform
+      sudo mv /usr/local/bin/terraform /usr/local/bin/terraform.bak
+      sudo ln -s /usr/local/bin/tofu /usr/local/bin/terraform
+    }
+    EOF
+    chmod +x /tmp/tofu_swap_helper.sh
+
 install_docker_buildx: &install_docker_buildx
   name: install docker buildx
   command: |
@@ -190,6 +212,8 @@ jobs:
           <<: *install_docker_buildx
       - run:
           <<: *install_tofu
+      - run:
+          <<: *define_tofu_swap_helper
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -221,17 +245,8 @@ jobs:
           name: Run tests with OpenTofu
           no_output_timeout: 30m
           command: |
-            # Setup trap to ensure terraform binary is always restored
-            cleanup() {
-              echo "Restoring original terraform binary..."
-              sudo rm -f /usr/local/bin/terraform
-              sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform 2>/dev/null || true
-            }
-            trap cleanup EXIT
-
-            # Create symlink so tofu is used as terraform
-            sudo mv /usr/local/bin/terraform /usr/local/bin/terraform.bak
-            sudo ln -s /usr/local/bin/tofu /usr/local/bin/terraform
+            source /tmp/tofu_swap_helper.sh
+            swap_terraform_with_tofu
 
             echo "========================================"
             echo "Running tests with OpenTofu (as terraform): $(terraform --version | head -1)"
@@ -406,6 +421,8 @@ jobs:
           <<: *install_docker_buildx
       - run:
           <<: *install_tofu
+      - run:
+          <<: *define_tofu_swap_helper
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -444,17 +461,8 @@ jobs:
           name: Run terragrunt tests with OpenTofu
           no_output_timeout: 30m
           command: |
-            # Setup trap to ensure terraform binary is always restored
-            cleanup() {
-              echo "Restoring original terraform binary..."
-              sudo rm -f /usr/local/bin/terraform
-              sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform 2>/dev/null || true
-            }
-            trap cleanup EXIT
-
-            # Create symlink so tofu is used as terraform
-            sudo mv /usr/local/bin/terraform /usr/local/bin/terraform.bak
-            sudo ln -s /usr/local/bin/tofu /usr/local/bin/terraform
+            source /tmp/tofu_swap_helper.sh
+            swap_terraform_with_tofu
 
             echo "========================================"
             echo "Running terragrunt tests with OpenTofu (as terraform): $(terraform --version | head -1)"
