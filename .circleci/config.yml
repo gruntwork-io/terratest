@@ -82,8 +82,8 @@ install_tofu: &install_tofu
 
 # Helper script for swapping terraform with tofu binary
 # This creates a bash function that can be sourced and called in test jobs
-setup_tofu_swap_helper: &setup_tofu_swap_helper
-  name: Setup tofu binary swap helper
+setup_tofu_swap: &setup_tofu_swap
+  name: Setup tofu binary swap
   command: |
     cat > /tmp/tofu_swap_helper.sh << 'EOF'
     swap_terraform_with_tofu() {
@@ -212,7 +212,7 @@ jobs:
       - run:
           <<: *install_tofu
       - run:
-          <<: *setup_tofu_swap_helper
+          <<: *setup_tofu_swap
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -422,7 +422,7 @@ jobs:
       - run:
           <<: *install_tofu
       - run:
-          <<: *setup_tofu_swap_helper
+          <<: *setup_tofu_swap
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
