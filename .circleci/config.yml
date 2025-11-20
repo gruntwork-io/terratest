@@ -138,6 +138,8 @@ jobs:
 
     steps:
       - checkout
+      # Restore Go module cache. v2 prefix invalidates old cache that used wrong path.
+      # Fallback key (gomod-v2-) allows partial cache hits when go.sum changes.
       - restore_cache:
           keys:
             - gomod-v2-{{ checksum "go.sum" }}
@@ -147,6 +149,7 @@ jobs:
       - run:
           <<: *install_gruntwork_utils
 
+      # Save Go module cache using modern Go modules path
       - save_cache:
           key: gomod-v2-{{ checksum "go.sum" }}
           paths:
