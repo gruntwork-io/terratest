@@ -82,8 +82,8 @@ install_tofu: &install_tofu
 
 # Helper script for swapping terraform with tofu binary
 # This creates a bash function that can be sourced and called in test jobs
-define_tofu_swap_helper: &define_tofu_swap_helper
-  name: Define tofu binary swap helper function
+setup_tofu_swap_helper: &setup_tofu_swap_helper
+  name: Setup tofu binary swap helper
   command: |
     cat > /tmp/tofu_swap_helper.sh << 'EOF'
     swap_terraform_with_tofu() {
@@ -140,16 +140,17 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - gomod-{{ checksum "go.sum" }}
+            - gomod-v2-{{ checksum "go.sum" }}
+            - gomod-v2-
 
       # Install gruntwork utilities
       - run:
           <<: *install_gruntwork_utils
 
       - save_cache:
-          key: gomod-{{ checksum "go.sum" }}
+          key: gomod-v2-{{ checksum "go.sum" }}
           paths:
-            - $HOME/go/src/
+            - $HOME/go/pkg/mod
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -209,11 +210,9 @@ jobs:
       - run:
           <<: *install_gruntwork_utils
       - run:
-          <<: *install_docker_buildx
-      - run:
           <<: *install_tofu
       - run:
-          <<: *define_tofu_swap_helper
+          <<: *setup_tofu_swap_helper
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -306,12 +305,13 @@ jobs:
       # Run the GCP tests. These tests are run because the gcp build tag is included, and we explicitly
       # select the GCP tests
       - run:
+          no_output_timeout: 30m
           command: |
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-tags gcp ./modules/gcp" | tee /tmp/logs/test_output.log
-            run-go-tests --packages "-tags=gcp ./test/gcp" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 -tags gcp ./modules/gcp" 2>&1 | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 -tags=gcp ./test/gcp" 2>&1 | tee -a /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -343,12 +343,13 @@ jobs:
       # Run the Kubernetes tests. These tests are run because the kubernetes build tag is included, and we explicitly
       # select the kubernetes tests
       - run:
+          no_output_timeout: 30m
           command: |
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-tags kubernetes ./modules/k8s" | tee /tmp/logs/test_output.log
-            run-go-tests --packages "-tags kubernetes -run TestKubernetes ./test" | tee -a /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 -tags kubernetes ./modules/k8s" 2>&1 | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 -tags kubernetes -run TestKubernetes ./test" 2>&1 | tee -a /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -385,12 +386,13 @@ jobs:
       # Run the Helm tests. These tests are run because the helm build tag is included, and we explicitly
       # select the helm tests
       - run:
+          no_output_timeout: 30m
           command: |
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-tags helm ./modules/helm" | tee /tmp/logs/test_output.log
-            run-go-tests --packages "-tags helm -run TestHelm ./test" | tee -a /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 -tags helm ./modules/helm" 2>&1 | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 -tags helm -run TestHelm ./test" 2>&1 | tee -a /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -418,11 +420,9 @@ jobs:
       - run:
           <<: *install_gruntwork_utils
       - run:
-          <<: *install_docker_buildx
-      - run:
           <<: *install_tofu
       - run:
-          <<: *define_tofu_swap_helper
+          <<: *setup_tofu_swap_helper
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
