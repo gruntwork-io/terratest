@@ -63,7 +63,7 @@ install_gruntwork_utils: &install_gruntwork_utils
     sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
 
     # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
-    echo "Installing Go version $version"
+    echo "Installing Go version ${GO_VERSION}"
     curl -O --silent --location --fail --show-error "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
     sudo rm -rf /usr/local/go
     sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
@@ -208,34 +208,63 @@ jobs:
       # Run tests with terraform binary
       - run:
           name: Run tests with Terraform
+          no_output_timeout: 30m
           command: |
+            echo "========================================"
             echo "Running tests with Terraform $(terraform --version | head -1)"
-            run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output_terraform.log
+            echo "========================================"
+            run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" 2>&1 | tee /tmp/logs/test_output_terraform.log
+            echo "Terraform tests completed"
 
       # Run tests with tofu binary
       - run:
           name: Run tests with OpenTofu
+          no_output_timeout: 30m
           command: |
+            # Setup trap to ensure terraform binary is always restored
+            cleanup() {
+              echo "Restoring original terraform binary..."
+              sudo rm -f /usr/local/bin/terraform
+              sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform 2>/dev/null || true
+            }
+            trap cleanup EXIT
+
             # Create symlink so tofu is used as terraform
             sudo mv /usr/local/bin/terraform /usr/local/bin/terraform.bak
             sudo ln -s /usr/local/bin/tofu /usr/local/bin/terraform
+
+            echo "========================================"
             echo "Running tests with OpenTofu (as terraform): $(terraform --version | head -1)"
-            run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output_tofu.log
-            # Restore original terraform binary
-            sudo rm /usr/local/bin/terraform
-            sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform
+            echo "========================================"
+            run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" 2>&1 | tee /tmp/logs/test_output_tofu.log
+            echo "OpenTofu tests completed"
 
       - run:
+          name: Parse test results
           command: |
-            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_terraform.log --outputdir /tmp/logs/terraform
-            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_tofu.log --outputdir /tmp/logs/tofu
+            echo "Parsing Terraform test results..."
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_terraform.log --outputdir /tmp/logs/terraform || true
+            echo "Parsing OpenTofu test results..."
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_tofu.log --outputdir /tmp/logs/tofu || true
           when: always
 
       # Store test result and log artifacts for browsing purposes
       - store_artifacts:
-          path: /tmp/logs
+          path: /tmp/logs/terraform
+          destination: test-results-terraform
+      - store_artifacts:
+          path: /tmp/logs/tofu
+          destination: test-results-tofu
+      - store_artifacts:
+          path: /tmp/logs/test_output_terraform.log
+          destination: raw-logs/terraform.log
+      - store_artifacts:
+          path: /tmp/logs/test_output_tofu.log
+          destination: raw-logs/tofu.log
       - store_test_results:
-          path: /tmp/logs
+          path: /tmp/logs/terraform
+      - store_test_results:
+          path: /tmp/logs/tofu
 
   # We run the GCP tests in a separate build step using the Docker executor for better isolation and resiliency. Using
   # The Docker executor ensures GCP tests do not erroneously make metadata network calls within CircleCI's private
@@ -387,42 +416,79 @@ jobs:
           name: Verify Terragrunt version
           command: |
             echo "Verifying Terragrunt version..."
-            terragrunt --version
+            ACTUAL_VERSION=$(terragrunt --version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
             echo "Expected version: ${TERRAGRUNT_VERSION}"
+            echo "Actual version: ${ACTUAL_VERSION}"
+            if [ "$ACTUAL_VERSION" != "${TERRAGRUNT_VERSION}" ]; then
+              echo "ERROR: Terragrunt version mismatch!"
+              exit 1
+            fi
+            echo "✓ Terragrunt version verified successfully"
 
       - run: mkdir -p /tmp/logs
 
       # Run terragrunt tests with terraform binary
       - run:
           name: Run terragrunt tests with Terraform
+          no_output_timeout: 30m
           command: |
+            echo "========================================"
             echo "Running terragrunt tests with Terraform $(terraform --version | head -1)"
-            run-go-tests --packages "-p 1 ./modules/terragrunt" | tee /tmp/logs/test_output_terraform.log
+            echo "Terragrunt version: $(terragrunt --version)"
+            echo "========================================"
+            run-go-tests --packages "-p 1 ./modules/terragrunt" 2>&1 | tee /tmp/logs/test_output_terraform.log
+            echo "Terragrunt tests with Terraform completed"
 
       # Run terragrunt tests with tofu binary
       - run:
           name: Run terragrunt tests with OpenTofu
+          no_output_timeout: 30m
           command: |
+            # Setup trap to ensure terraform binary is always restored
+            cleanup() {
+              echo "Restoring original terraform binary..."
+              sudo rm -f /usr/local/bin/terraform
+              sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform 2>/dev/null || true
+            }
+            trap cleanup EXIT
+
             # Create symlink so tofu is used as terraform
             sudo mv /usr/local/bin/terraform /usr/local/bin/terraform.bak
             sudo ln -s /usr/local/bin/tofu /usr/local/bin/terraform
+
+            echo "========================================"
             echo "Running terragrunt tests with OpenTofu (as terraform): $(terraform --version | head -1)"
-            run-go-tests --packages "-p 1 ./modules/terragrunt" | tee /tmp/logs/test_output_tofu.log
-            # Restore original terraform binary
-            sudo rm /usr/local/bin/terraform
-            sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform
+            echo "Terragrunt version: $(terragrunt --version)"
+            echo "========================================"
+            run-go-tests --packages "-p 1 ./modules/terragrunt" 2>&1 | tee /tmp/logs/test_output_tofu.log
+            echo "Terragrunt tests with OpenTofu completed"
 
       - run:
+          name: Parse terragrunt test results
           command: |
-            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_terraform.log --outputdir /tmp/logs/terraform
-            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_tofu.log --outputdir /tmp/logs/tofu
+            echo "Parsing Terraform test results..."
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_terraform.log --outputdir /tmp/logs/terraform || true
+            echo "Parsing OpenTofu test results..."
+            ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output_tofu.log --outputdir /tmp/logs/tofu || true
           when: always
 
       # Store test result and log artifacts for browsing purposes
       - store_artifacts:
-          path: /tmp/logs
+          path: /tmp/logs/terraform
+          destination: terragrunt-test-results-terraform
+      - store_artifacts:
+          path: /tmp/logs/tofu
+          destination: terragrunt-test-results-tofu
+      - store_artifacts:
+          path: /tmp/logs/test_output_terraform.log
+          destination: terragrunt-raw-logs/terraform.log
+      - store_artifacts:
+          path: /tmp/logs/test_output_tofu.log
+          destination: terragrunt-raw-logs/tofu.log
       - store_test_results:
-          path: /tmp/logs
+          path: /tmp/logs/terraform
+      - store_test_results:
+          path: /tmp/logs/tofu
 
   deploy:
     <<: *defaults
