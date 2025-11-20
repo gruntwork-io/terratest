@@ -7,7 +7,7 @@ env: &env
     TERRAFORM_VERSION: 1.5.7
     TOFU_VERSION: 1.8.0
     PACKER_VERSION: 1.10.0
-    TERRAGRUNT_VERSION: v0.80.4
+    TERRAGRUNT_VERSION: v0.80.4  # Default version; terragrunt_test job overrides with v0.93.10
     OPA_VERSION: v1.1.0
     GO_VERSION: 1.21.1
     GO111MODULE: auto
@@ -243,10 +243,13 @@ jobs:
       # to kill the build after more than 10 minutes without log output.
       # NOTE: because this doesn't build with the kubernetes tag, it will not run the kubernetes tests. See
       # kubernetes_test build steps.
+      # NOTE: terragrunt tests are excluded here and run in a separate terragrunt_test job.
       - run: mkdir -p /tmp/logs
       # check we can compile the azure code, but don't actually run the tests
       - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure"
-      - run: run-go-tests --packages "-p 1 ./..." | tee /tmp/logs/test_output.log
+      - run: |
+          # Run all tests except terragrunt module (which has its own dedicated job)
+          run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -382,13 +385,17 @@ jobs:
           path: /tmp/logs
 
   # Dedicated terragrunt tests that require terragrunt binary to be available
+  # This job uses a newer terragrunt version (v0.93.10) than other jobs to test compatibility
   terragrunt_test:
     <<: *defaults
     resource_class: large
+    environment:
+      TERRAGRUNT_VERSION: v0.93.10  # Dedicated version for terragrunt module tests
     steps:
       - attach_workspace:
           at: /home/circleci
 
+      # Install gruntwork utils, which will use the TERRAGRUNT_VERSION from this job's environment
       - run:
           <<: *install_gruntwork_utils
       - run:
@@ -397,6 +404,14 @@ jobs:
       # The weird way you have to set PATH in Circle 2.0
       - run: |
           echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+
+      # Verify the correct terragrunt version is installed
+      - run:
+          name: Verify Terragrunt version
+          command: |
+            echo "Verifying Terragrunt version..."
+            terragrunt --version
+            echo "Expected version: ${TERRAGRUNT_VERSION}"
 
       # Run the terragrunt-specific tests. These tests specifically target the terragrunt module
       # and require terragrunt binary to be available (which is installed via install_gruntwork_utils)
