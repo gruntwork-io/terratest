@@ -390,7 +390,8 @@ jobs:
     <<: *defaults
     resource_class: large
     environment:
-      TERRAGRUNT_VERSION: v0.93.10  # Dedicated version for terragrunt module tests
+      <<: *env
+      TERRAGRUNT_VERSION: v0.93.10  # Override default version for terragrunt module tests
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -436,7 +437,8 @@ jobs:
     <<: *defaults
     resource_class: large
     environment:
-      TERRAGRUNT_VERSION: v0.93.10  # Dedicated version for terragrunt module tests
+      <<: *env
+      TERRAGRUNT_VERSION: v0.93.10  # Override default version for terragrunt module tests
     steps:
       - attach_workspace:
           at: /home/circleci
