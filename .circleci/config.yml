@@ -145,6 +145,20 @@ jobs:
             - gomod-v2-{{ checksum "go.sum" }}
             - gomod-v2-
 
+      # Ensure environment variables are available
+      - run:
+          name: Verify environment variables
+          command: |
+            echo "GRUNTWORK_INSTALLER_VERSION=${GRUNTWORK_INSTALLER_VERSION}"
+            echo "export GRUNTWORK_INSTALLER_VERSION=${GRUNTWORK_INSTALLER_VERSION}" >> $BASH_ENV
+            echo "export MODULE_CI_CIRCLECI_HELPER_VERSION=${MODULE_CI_CIRCLECI_HELPER_VERSION}" >> $BASH_ENV
+            echo "export MODULE_CI_VERSION=${MODULE_CI_VERSION}" >> $BASH_ENV
+            echo "export MODULE_GCP_CI_VERSION=${MODULE_GCP_CI_VERSION}" >> $BASH_ENV
+            echo "export GO_VERSION=${GO_VERSION}" >> $BASH_ENV
+            echo "export MISE_VERSION=${MISE_VERSION}" >> $BASH_ENV
+            echo "export TERRAFORM_VERSION=${TERRAFORM_VERSION}" >> $BASH_ENV
+            source $BASH_ENV
+
       # Install gruntwork utilities
       - run:
           <<: *install_gruntwork_utils
