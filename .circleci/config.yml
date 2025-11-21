@@ -63,7 +63,7 @@ install_gruntwork_utils: &install_gruntwork_utils
     sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
 
     # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
-    echo "Installing Go version ${GO_VERSION}"
+    echo "Installing Go version $version"
     curl -O --silent --location --fail --show-error "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
     sudo rm -rf /usr/local/go
     sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
@@ -79,28 +79,6 @@ install_tofu: &install_tofu
     rm -rf tofu
     rm -rf tofu.zip
     tofu --version
-
-# Helper script for swapping terraform with tofu binary
-# This creates a bash function that can be sourced and called in test jobs
-setup_tofu_swap: &setup_tofu_swap
-  name: Setup tofu binary swap
-  command: |
-    cat > /tmp/tofu_swap_helper.sh << 'EOF'
-    swap_terraform_with_tofu() {
-      # Setup trap to ensure terraform binary is always restored
-      cleanup() {
-        echo "Restoring original terraform binary..."
-        sudo rm -f /usr/local/bin/terraform
-        sudo mv /usr/local/bin/terraform.bak /usr/local/bin/terraform 2>/dev/null || true
-      }
-      trap cleanup EXIT
-
-      # Create symlink so tofu is used as terraform
-      sudo mv /usr/local/bin/terraform /usr/local/bin/terraform.bak
-      sudo ln -s /usr/local/bin/tofu /usr/local/bin/terraform
-    }
-    EOF
-    chmod +x /tmp/tofu_swap_helper.sh
 
 install_docker_buildx: &install_docker_buildx
   name: install docker buildx
@@ -138,22 +116,18 @@ jobs:
 
     steps:
       - checkout
-      # Restore Go module cache. v2 prefix invalidates old cache that used wrong path.
-      # Fallback key (gomod-v2-) allows partial cache hits when go.sum changes.
       - restore_cache:
           keys:
-            - gomod-v2-{{ checksum "go.sum" }}
-            - gomod-v2-
+            - gomod-{{ checksum "go.sum" }}
 
       # Install gruntwork utilities
       - run:
           <<: *install_gruntwork_utils
 
-      # Save Go module cache using modern Go modules path
       - save_cache:
-          key: gomod-v2-{{ checksum "go.sum" }}
+          key: gomod-{{ checksum "go.sum" }}
           paths:
-            - $HOME/go/pkg/mod
+            - $HOME/go/src/
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -212,6 +186,8 @@ jobs:
 
       - run:
           <<: *install_gruntwork_utils
+      - run:
+          <<: *install_docker_buildx
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -226,20 +202,11 @@ jobs:
       - run: mkdir -p /tmp/logs
       # check we can compile the azure code, but don't actually run the tests
       - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure"
-
-      # Run tests with terraform binary
-      - run:
-          name: Run tests with Terraform
-          no_output_timeout: 30m
-          command: |
-            echo "========================================"
-            echo "Running tests with Terraform $(terraform --version | head -1)"
-            echo "========================================"
-            run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" 2>&1 | tee /tmp/logs/test_output.log
-            echo "Terraform tests completed"
+      - run: |
+          # Run all tests except terragrunt module (which has its own dedicated job)
+          run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output.log
 
       - run:
-          name: Parse test results
           command: |
             ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
@@ -251,9 +218,9 @@ jobs:
           path: /tmp/logs
 
   # run tests with tofu binary
-  test_terraform_tofu:
+  test_tofu:
     <<: *defaults
-    resource_class: xlarge
+    resource_class: large
     steps:
       - attach_workspace:
           at: /home/circleci
@@ -261,22 +228,15 @@ jobs:
       - run:
           <<: *install_gruntwork_utils
       - run:
-          <<: *install_tofu
+          <<: *install_docker_buildx
       - run:
-          <<: *setup_tofu_swap
+          <<: *install_tofu
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
           echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
-
-      # Swap terraform with tofu
-      - run:
-          name: Swap terraform binary with tofu
-          command: |
-            source /tmp/tofu_swap_helper.sh
-            swap_terraform_with_tofu
-            echo "Binary swap complete - terraform now points to tofu"
-            terraform --version
+          # remove terraform binary so tofu will be used
+          sudo rm -f $(which terraform)
 
       # Run the tests. Note that we set the "-p 1" flag to tell Go to run tests in each package sequentially. Without
       # this, Go buffers all log output until all packages are done, which with slower running tests can cause CircleCI
@@ -287,20 +247,11 @@ jobs:
       - run: mkdir -p /tmp/logs
       # check we can compile the azure code, but don't actually run the tests
       - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure"
-
-      # Run tests with tofu binary (as terraform)
-      - run:
-          name: Run tests with OpenTofu
-          no_output_timeout: 30m
-          command: |
-            echo "========================================"
-            echo "Running tests with OpenTofu (as terraform): $(terraform --version | head -1)"
-            echo "========================================"
-            run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" 2>&1 | tee /tmp/logs/test_output.log
-            echo "OpenTofu tests completed"
+      - run: |
+          # Run all tests except terragrunt module (which has its own dedicated job)
+          run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output.log
 
       - run:
-          name: Parse test results
           command: |
             ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
@@ -336,13 +287,12 @@ jobs:
       # Run the GCP tests. These tests are run because the gcp build tag is included, and we explicitly
       # select the GCP tests
       - run:
-          no_output_timeout: 30m
           command: |
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-p 1 -tags gcp ./modules/gcp" 2>&1 | tee /tmp/logs/test_output.log
-            run-go-tests --packages "-p 1 -tags=gcp ./test/gcp" 2>&1 | tee -a /tmp/logs/test_output.log
+            run-go-tests --packages "-tags gcp ./modules/gcp" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-tags=gcp ./test/gcp" | tee /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -374,13 +324,12 @@ jobs:
       # Run the Kubernetes tests. These tests are run because the kubernetes build tag is included, and we explicitly
       # select the kubernetes tests
       - run:
-          no_output_timeout: 30m
           command: |
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-p 1 -tags kubernetes ./modules/k8s" 2>&1 | tee /tmp/logs/test_output.log
-            run-go-tests --packages "-p 1 -tags kubernetes -run TestKubernetes ./test" 2>&1 | tee -a /tmp/logs/test_output.log
+            run-go-tests --packages "-tags kubernetes ./modules/k8s" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-tags kubernetes -run TestKubernetes ./test" | tee -a /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -417,13 +366,12 @@ jobs:
       # Run the Helm tests. These tests are run because the helm build tag is included, and we explicitly
       # select the helm tests
       - run:
-          no_output_timeout: 30m
           command: |
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-p 1 -tags helm ./modules/helm" 2>&1 | tee /tmp/logs/test_output.log
-            run-go-tests --packages "-p 1 -tags helm -run TestHelm ./test" 2>&1 | tee -a /tmp/logs/test_output.log
+            run-go-tests --packages "-tags helm ./modules/helm" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-tags helm -run TestHelm ./test" | tee -a /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -436,9 +384,9 @@ jobs:
       - store_test_results:
           path: /tmp/logs
 
-  # Dedicated terragrunt tests with terraform binary
-  # This job uses a newer terragrunt version (v0.93.10) to test forward compatibility
-  test_terragrunt:
+  # Dedicated terragrunt tests that require terragrunt binary to be available
+  # This job uses a newer terragrunt version (v0.93.10) than other jobs to test compatibility
+  terragrunt_test:
     <<: *defaults
     resource_class: large
     environment:
@@ -450,6 +398,8 @@ jobs:
       # Install gruntwork utils, which will use the TERRAGRUNT_VERSION from this job's environment
       - run:
           <<: *install_gruntwork_utils
+      - run:
+          <<: *install_docker_buildx
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -460,31 +410,18 @@ jobs:
           name: Verify Terragrunt version
           command: |
             echo "Verifying Terragrunt version..."
-            ACTUAL_VERSION=$(terragrunt --version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            terragrunt --version
             echo "Expected version: ${TERRAGRUNT_VERSION}"
-            echo "Actual version: ${ACTUAL_VERSION}"
-            if [ "$ACTUAL_VERSION" != "${TERRAGRUNT_VERSION}" ]; then
-              echo "ERROR: Terragrunt version mismatch!"
-              exit 1
-            fi
-            echo "✓ Terragrunt version verified successfully"
 
-      - run: mkdir -p /tmp/logs
-
-      # Run terragrunt tests with terraform binary
+      # Run the terragrunt-specific tests. These tests specifically target the terragrunt module
+      # and require terragrunt binary to be available (which is installed via install_gruntwork_utils)
       - run:
-          name: Run terragrunt tests with Terraform
-          no_output_timeout: 30m
           command: |
-            echo "========================================"
-            echo "Running terragrunt tests with Terraform $(terraform --version | head -1)"
-            echo "Terragrunt version: $(terragrunt --version)"
-            echo "========================================"
-            run-go-tests --packages "-p 1 ./modules/terragrunt" 2>&1 | tee /tmp/logs/test_output.log
-            echo "Terragrunt tests with Terraform completed"
+            mkdir -p /tmp/logs
+            # Run only the terragrunt module tests
+            run-go-tests --packages "-p 1 ./modules/terragrunt" | tee /tmp/logs/test_output.log
 
       - run:
-          name: Parse terragrunt test results
           command: |
             ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
@@ -495,9 +432,7 @@ jobs:
       - store_test_results:
           path: /tmp/logs
 
-  # Dedicated terragrunt tests with tofu binary
-  # This job uses a newer terragrunt version (v0.93.10) to test forward compatibility
-  test_terragrunt_tofu:
+  terragrunt_test_tofu:
     <<: *defaults
     resource_class: large
     environment:
@@ -512,7 +447,7 @@ jobs:
       - run:
           <<: *install_tofu
       - run:
-          <<: *setup_tofu_swap
+          <<: *install_docker_buildx
 
       # The weird way you have to set PATH in Circle 2.0
       - run: |
@@ -522,40 +457,26 @@ jobs:
       - run:
           name: Swap terraform binary with tofu
           command: |
-            source /tmp/tofu_swap_helper.sh
-            swap_terraform_with_tofu
-            echo "Binary swap complete - terraform now points to tofu"
+            sudo mv /usr/local/bin/terraform /usr/local/bin/terraform.bak
+            sudo ln -s /usr/local/bin/tofu /usr/local/bin/terraform
+            terraform --version
 
       # Verify the correct terragrunt version is installed
       - run:
           name: Verify Terragrunt version
           command: |
             echo "Verifying Terragrunt version..."
-            ACTUAL_VERSION=$(terragrunt --version 2>&1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            terragrunt --version
             echo "Expected version: ${TERRAGRUNT_VERSION}"
-            echo "Actual version: ${ACTUAL_VERSION}"
-            if [ "$ACTUAL_VERSION" != "${TERRAGRUNT_VERSION}" ]; then
-              echo "ERROR: Terragrunt version mismatch!"
-              exit 1
-            fi
-            echo "✓ Terragrunt version verified successfully"
 
-      - run: mkdir -p /tmp/logs
-
-      # Run terragrunt tests with tofu binary (as terraform)
+      # Run the terragrunt-specific tests with OpenTofu
       - run:
-          name: Run terragrunt tests with OpenTofu
-          no_output_timeout: 30m
           command: |
-            echo "========================================"
-            echo "Running terragrunt tests with OpenTofu (as terraform): $(terraform --version | head -1)"
-            echo "Terragrunt version: $(terragrunt --version)"
-            echo "========================================"
-            run-go-tests --packages "-p 1 ./modules/terragrunt" 2>&1 | tee /tmp/logs/test_output.log
-            echo "Terragrunt tests with OpenTofu completed"
+            mkdir -p /tmp/logs
+            # Run only the terragrunt module tests
+            run-go-tests --packages "-p 1 ./modules/terragrunt" | tee /tmp/logs/test_output.log
 
       - run:
-          name: Parse terragrunt test results
           command: |
             ./cmd/bin/terratest_log_parser_linux_amd64 --testlog /tmp/logs/test_output.log --outputdir /tmp/logs
           when: always
@@ -612,7 +533,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - test_terragrunt:
+      - terragrunt_test:
           context:
             - AWS__PHXDEVOPS__circle-ci-test
             - GITHUB__PAT__gruntwork-ci
@@ -622,7 +543,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - test_terragrunt_tofu:
+      - terragrunt_test_tofu:
           context:
             - AWS__PHXDEVOPS__circle-ci-test
             - GITHUB__PAT__gruntwork-ci
@@ -645,7 +566,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - test_terraform_tofu:
+      - test_tofu:
           context:
             - AWS__PHXDEVOPS__circle-ci-test
             - GITHUB__PAT__gruntwork-ci
