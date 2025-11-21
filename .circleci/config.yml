@@ -146,36 +146,8 @@ jobs:
             - gomod-v2-
 
       # Install gruntwork utilities
-      # Note: Using inline commands instead of anchor because Docker executor doesn't properly
-      # propagate environment variables to piped bash commands
       - run:
-          name: install gruntwork utils
-          command: |
-            curl -Ls https://raw.githubusercontent.com/gruntwork-io/gruntwork-installer/master/bootstrap-gruntwork-installer.sh | bash /dev/stdin --version v0.0.36
-            gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_CIRCLECI_HELPER_VERSION}"
-            gruntwork-install --module-name "kubernetes-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_VERSION}"
-            gruntwork-install --module-name "gcp-helpers" --repo "https://github.com/gruntwork-io/terraform-google-ci" --tag "${MODULE_GCP_CI_VERSION}"
-            configure-environment-for-gruntwork-module \
-              --mise-version ${MISE_VERSION} \
-              --terraform-version ${TERRAFORM_VERSION} \
-              --terragrunt-version NONE \
-              --packer-version NONE \
-              --use-go-dep false \
-              --go-version ${GO_VERSION} \
-              --go-src-path .
-
-            # Install OPA for policy testing
-            sudo curl -L -o ./opa_linux_amd64_static https://github.com/open-policy-agent/opa/releases/download/${OPA_VERSION}/opa_linux_amd64_static
-            sudo chmod +x ./opa_linux_amd64_static
-            sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
-
-            # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
-            echo "Installing Go version ${GO_VERSION}"
-            curl -O --silent --location --fail --show-error "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
-            sudo rm -rf /usr/local/go
-            sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
-            rm -rf "go${GO_VERSION}.linux-amd64.tar.gz"
-            echo 'export PATH=$PATH:/usr/local/go/bin' >> $BASH_ENV
+          <<: *install_gruntwork_utils
 
       # Save Go module cache using modern Go modules path
       - save_cache:
