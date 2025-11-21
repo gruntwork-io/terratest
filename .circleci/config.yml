@@ -251,7 +251,7 @@ jobs:
           path: /tmp/logs
 
   # run tests with tofu binary
-  test_tofu:
+  test_terraform_tofu:
     <<: *defaults
     resource_class: xlarge
     steps:
@@ -438,7 +438,7 @@ jobs:
 
   # Dedicated terragrunt tests with terraform binary
   # This job uses a newer terragrunt version (v0.93.10) to test forward compatibility
-  terragrunt_test:
+  test_terragrunt:
     <<: *defaults
     resource_class: large
     environment:
@@ -497,7 +497,7 @@ jobs:
 
   # Dedicated terragrunt tests with tofu binary
   # This job uses a newer terragrunt version (v0.93.10) to test forward compatibility
-  terragrunt_test_tofu:
+  test_terragrunt_tofu:
     <<: *defaults
     resource_class: large
     environment:
@@ -612,7 +612,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - terragrunt_test:
+      - test_terragrunt:
           context:
             - AWS__PHXDEVOPS__circle-ci-test
             - GITHUB__PAT__gruntwork-ci
@@ -622,7 +622,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - terragrunt_test_tofu:
+      - test_terragrunt_tofu:
           context:
             - AWS__PHXDEVOPS__circle-ci-test
             - GITHUB__PAT__gruntwork-ci
@@ -645,7 +645,7 @@ workflows:
             tags:
               only: /^v.*/
 
-      - test_tofu:
+      - test_terraform_tofu:
           context:
             - AWS__PHXDEVOPS__circle-ci-test
             - GITHUB__PAT__gruntwork-ci
