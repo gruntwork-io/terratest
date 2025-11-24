@@ -1,0 +1,33 @@
+go 1.24.0
+
+use (
+	./internal/lib
+	./modules/aws
+	./modules/azure
+	./modules/collections
+	./modules/database
+	./modules/dns-helper
+	./modules/docker
+	./modules/environment
+	./modules/files
+	./modules/gcp
+	./modules/git
+	./modules/helm
+	./modules/http-helper
+	./modules/k8s
+	./modules/logger
+	./modules/oci
+	./modules/opa
+	./modules/packer
+	./modules/random
+	./modules/retry
+	./modules/shell
+	./modules/slack
+	./modules/ssh
+	./modules/terraform
+	./modules/terragrunt
+	./modules/test-structure
+	./modules/testing
+	./modules/version-checker
+	./test/modularization
+)
