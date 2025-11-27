@@ -22,6 +22,16 @@ might want to repeatedly run the validation step while you work out the kinks. H
 each time you change a single line of code can be very slow.
 
 This is where Terratest's `test_structure` package comes in handy: it allows you to explicitly break up your tests into
-stages and to be able to disable any one of those stages simply by setting an environment variable. Check out the
-[terraform_packer_example_test.go](https://github.com/gruntwork-io/terratest/blob/main/test/terraform_packer_example_test.go) 
+stages and to be able to disable any one of those stages by setting an environment variable. Check out the
+[terraform_packer_example_test.go](https://github.com/gruntwork-io/terratest/blob/main/test/terraform_packer_example_test.go)
 for working sample code.
+
+## How to skip stages
+
+To skip a stage, set `SKIP_<stage_name>` to any non-empty value. For example, to re-run deploy and validation without rebuilding the AMI:
+
+```bash
+SKIP_build_ami=true go test -v -run TestTerraformPackerExample
+```
+
+This works because each stage saves its outputs (AMI IDs, Terraform options, etc.) to the working directory using functions like `SaveString` and `SaveAmiId`. Subsequent stages load this cached data using `LoadString`, `LoadAmiId`, etc. When any `SKIP_*` variable is set, Terratest also skips copying to a temp folder, preserving cached state between runs.
