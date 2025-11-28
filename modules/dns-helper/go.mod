@@ -3,9 +3,9 @@ module github.com/gruntwork-io/terratest/modules/dns-helper
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/logger v0.1.0
-	github.com/gruntwork-io/terratest/modules/retry v0.1.0
-	github.com/gruntwork-io/terratest/modules/testing v0.1.0
+	github.com/gruntwork-io/terratest/modules/logger v0.55.0
+	github.com/gruntwork-io/terratest/modules/retry v0.55.0
+	github.com/gruntwork-io/terratest/modules/testing v0.55.0
 	github.com/miekg/dns v1.1.68
 	github.com/stretchr/testify v1.10.0
 )

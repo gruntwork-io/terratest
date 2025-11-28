@@ -3,26 +3,26 @@ module github.com/gruntwork-io/terratest/test/modularization
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/collections v0.1.0
-	github.com/gruntwork-io/terratest/modules/dns-helper v0.1.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/environment v0.1.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/git v0.1.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/http-helper v0.1.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/logger v0.1.0
-	github.com/gruntwork-io/terratest/modules/oci v0.1.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/ssh v0.1.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/terragrunt v0.1.0
-	github.com/gruntwork-io/terratest/modules/testing v0.1.0
+	github.com/gruntwork-io/terratest/modules/collections v0.55.0
+	github.com/gruntwork-io/terratest/modules/dns-helper v0.55.0
+	github.com/gruntwork-io/terratest/modules/environment v0.55.0
+	github.com/gruntwork-io/terratest/modules/git v0.55.0
+	github.com/gruntwork-io/terratest/modules/http-helper v0.55.0
+	github.com/gruntwork-io/terratest/modules/logger v0.55.0
+	github.com/gruntwork-io/terratest/modules/oci v0.55.0
+	github.com/gruntwork-io/terratest/modules/ssh v0.55.0
+	github.com/gruntwork-io/terratest/modules/terragrunt v0.55.0
+	github.com/gruntwork-io/terratest/modules/testing v0.55.0
 	github.com/stretchr/testify v1.11.1
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/gruntwork-io/terratest/internal/lib v0.1.0 // indirect
-	github.com/gruntwork-io/terratest/modules/files v0.1.0 // indirect
-	github.com/gruntwork-io/terratest/modules/random v0.1.0 // indirect
-	github.com/gruntwork-io/terratest/modules/retry v0.1.0 // indirect
-	github.com/gruntwork-io/terratest/modules/shell v0.1.0 // indirect
+	github.com/gruntwork-io/terratest/internal/lib v0.55.0 // indirect
+	github.com/gruntwork-io/terratest/modules/files v0.55.0 // indirect
+	github.com/gruntwork-io/terratest/modules/random v0.55.0 // indirect
+	github.com/gruntwork-io/terratest/modules/retry v0.55.0 // indirect
+	github.com/gruntwork-io/terratest/modules/shell v0.55.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326 // indirect
