@@ -5,11 +5,11 @@ go 1.24.0
 require (
 	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/gruntwork-io/terratest/modules/files v0.1.0
-	github.com/gruntwork-io/terratest/modules/git v0.1.0
-	github.com/gruntwork-io/terratest/modules/logger v0.1.0
-	github.com/gruntwork-io/terratest/modules/shell v0.1.0
-	github.com/gruntwork-io/terratest/modules/testing v0.1.0
+	github.com/gruntwork-io/terratest/modules/files v0.55.0
+	github.com/gruntwork-io/terratest/modules/git v0.55.0
+	github.com/gruntwork-io/terratest/modules/logger v0.55.0
+	github.com/gruntwork-io/terratest/modules/shell v0.55.0
+	github.com/gruntwork-io/terratest/modules/testing v0.55.0
 	github.com/stretchr/testify v1.11.1
 )
 

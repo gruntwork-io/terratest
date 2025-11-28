@@ -3,7 +3,7 @@ module github.com/gruntwork-io/terratest/modules/git
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/testing v0.1.0
+	github.com/gruntwork-io/terratest/modules/testing v0.55.0
 	github.com/stretchr/testify v1.11.1
 )
 

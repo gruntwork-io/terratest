@@ -3,15 +3,15 @@ module github.com/gruntwork-io/terratest/modules/k8s
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/aws v0.1.0
-	github.com/gruntwork-io/terratest/modules/environment v0.1.0
-	github.com/gruntwork-io/terratest/modules/files v0.1.0
-	github.com/gruntwork-io/terratest/modules/http-helper v0.1.0
-	github.com/gruntwork-io/terratest/modules/logger v0.1.0
-	github.com/gruntwork-io/terratest/modules/random v0.1.0
-	github.com/gruntwork-io/terratest/modules/retry v0.1.0
-	github.com/gruntwork-io/terratest/modules/shell v0.1.0
-	github.com/gruntwork-io/terratest/modules/testing v0.1.0
+	github.com/gruntwork-io/terratest/modules/aws v0.55.0
+	github.com/gruntwork-io/terratest/modules/environment v0.55.0
+	github.com/gruntwork-io/terratest/modules/files v0.55.0
+	github.com/gruntwork-io/terratest/modules/http-helper v0.55.0
+	github.com/gruntwork-io/terratest/modules/logger v0.55.0
+	github.com/gruntwork-io/terratest/modules/random v0.55.0
+	github.com/gruntwork-io/terratest/modules/retry v0.55.0
+	github.com/gruntwork-io/terratest/modules/shell v0.55.0
+	github.com/gruntwork-io/terratest/modules/testing v0.55.0
 )
 
 replace (
