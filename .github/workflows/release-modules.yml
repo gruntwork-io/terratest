@@ -50,47 +50,23 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Using version: $VERSION"
 
-      - name: Create module tags
+      - name: Discover and tag modules
+        id: tag
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
-          MODULES=(
-            "internal/lib"
-            "modules/aws"
-            "modules/azure"
-            "modules/collections"
-            "modules/docker"
-            "modules/environment"
-            "modules/files"
-            "modules/gcp"
-            "modules/git"
-            "modules/helm"
-            "modules/http-helper"
-            "modules/k8s"
-            "modules/logger"
-            "modules/opa"
-            "modules/packer"
-            "modules/random"
-            "modules/retry"
-            "modules/shell"
-            "modules/ssh"
-            "modules/structure"
-            "modules/terraform"
-            "modules/terragrunt"
-            "modules/test-structure"
-            "modules/testing"
-            "modules/tls"
-            "modules/url"
-            "modules/version-checker"
-          )
-
-          echo "Creating submodule tags for version v${VERSION}..."
+          echo "Discovering Go modules..."
           echo ""
+
+          # Find all go.mod files except root and test directories, extract directory paths
+          MODULES=$(find . -name "go.mod" -not -path "./go.mod" -not -path "./test/*" -exec dirname {} \; | sed 's|^\./||' | sort)
 
           CREATED_TAGS=()
           SKIPPED_TAGS=()
+          MODULE_COUNT=0
 
-          for module in "${MODULES[@]}"; do
+          for module in $MODULES; do
+            MODULE_COUNT=$((MODULE_COUNT + 1))
             TAG="${module}/v${VERSION}"
 
             # Check if tag already exists
@@ -107,9 +83,15 @@ jobs:
           echo ""
           echo "================================"
           echo "Summary:"
+          echo "  Modules found: ${MODULE_COUNT}"
           echo "  Created: ${#CREATED_TAGS[@]} tags"
           echo "  Skipped: ${#SKIPPED_TAGS[@]} tags (already exist)"
           echo "================================"
+
+          # Save counts for summary step
+          echo "module_count=${MODULE_COUNT}" >> $GITHUB_OUTPUT
+          echo "created_count=${#CREATED_TAGS[@]}" >> $GITHUB_OUTPUT
+          echo "skipped_count=${#SKIPPED_TAGS[@]}" >> $GITHUB_OUTPUT
 
       - name: Push tags
         run: |
@@ -120,13 +102,17 @@ jobs:
       - name: Summary
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          MODULE_COUNT="${{ steps.tag.outputs.module_count }}"
+          CREATED_COUNT="${{ steps.tag.outputs.created_count }}"
+
           echo "## Module Tags Released" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Version: **v${VERSION}**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Tagged Modules" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All 27 submodules + internal/lib have been tagged with \`v${VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **${MODULE_COUNT}** modules discovered" >> $GITHUB_STEP_SUMMARY
+          echo "- **${CREATED_COUNT}** tags created" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Users can now import specific modules:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
