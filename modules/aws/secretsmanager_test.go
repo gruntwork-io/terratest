@@ -1,3 +1,6 @@
+//go:build aws
+// +build aws
+
 package aws
 
 import (
