@@ -1,3 +1,6 @@
+//go:build aws
+// +build aws
+
 // Integration tests that validate S3-related code in AWS.
 package aws
 
