@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/v3.0/sql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -28,56 +28,54 @@ func SQLManagedInstanceExistsE(managedInstanceName string, resourceGroupName str
 	return true, nil
 }
 
-// GetManagedInstance is a helper function that gets the sql server object.
+// GetManagedInstance is a helper function that gets the sql managed instance object.
 // This function would fail the test if there is an error.
-func GetManagedInstance(t testing.TestingT, resGroupName string, managedInstanceName string, subscriptionID string) *sql.ManagedInstance {
+func GetManagedInstance(t testing.TestingT, resGroupName string, managedInstanceName string, subscriptionID string) *armsql.ManagedInstance {
 	managedInstance, err := GetManagedInstanceE(subscriptionID, resGroupName, managedInstanceName)
 	require.NoError(t, err)
 
 	return managedInstance
 }
 
-// GetManagedInstanceDatabase is a helper function that gets the sql server object.
+// GetManagedInstanceDatabase is a helper function that gets the sql managed database object.
 // This function would fail the test if there is an error.
-func GetManagedInstanceDatabase(t testing.TestingT, resGroupName string, managedInstanceName string, databaseName string, subscriptionID string) *sql.ManagedDatabase {
+func GetManagedInstanceDatabase(t testing.TestingT, resGroupName string, managedInstanceName string, databaseName string, subscriptionID string) *armsql.ManagedDatabase {
 	managedDatabase, err := GetManagedInstanceDatabaseE(t, subscriptionID, resGroupName, managedInstanceName, databaseName)
 	require.NoError(t, err)
 
 	return managedDatabase
 }
 
-// GetManagedInstanceE is a helper function that gets the sql server object.
-func GetManagedInstanceE(subscriptionID string, resGroupName string, managedInstanceName string) (*sql.ManagedInstance, error) {
-	// Create a SQl Server client
+// GetManagedInstanceE is a helper function that gets the sql managed instance object.
+func GetManagedInstanceE(subscriptionID string, resGroupName string, managedInstanceName string) (*armsql.ManagedInstance, error) {
+	// Create a SQL Managed Instance client
 	sqlmiClient, err := CreateSQLMangedInstanceClient(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	//Get the corresponding server client
-	sqlmi, err := sqlmiClient.Get(context.Background(), resGroupName, managedInstanceName)
+	// Get the corresponding managed instance
+	resp, err := sqlmiClient.Get(context.Background(), resGroupName, managedInstanceName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return sql mi
-	return &sqlmi, nil
+	return &resp.ManagedInstance, nil
 }
 
-// GetManagedInstanceDatabaseE is a helper function that gets the sql server object.
-func GetManagedInstanceDatabaseE(t testing.TestingT, subscriptionID string, resGroupName string, managedInstanceName string, databaseName string) (*sql.ManagedDatabase, error) {
-	// Create a SQlMI db client
+// GetManagedInstanceDatabaseE is a helper function that gets the sql managed database object.
+func GetManagedInstanceDatabaseE(t testing.TestingT, subscriptionID string, resGroupName string, managedInstanceName string, databaseName string) (*armsql.ManagedDatabase, error) {
+	// Create a SQL MI db client
 	sqlmiDbClient, err := CreateSQLMangedDatabasesClient(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	//Get the corresponding  client
-	sqlmidb, err := sqlmiDbClient.Get(context.Background(), resGroupName, managedInstanceName, databaseName)
+	// Get the corresponding database
+	resp, err := sqlmiDbClient.Get(context.Background(), resGroupName, managedInstanceName, databaseName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return sql mi db
-	return &sqlmidb, nil
+	return &resp.ManagedDatabase, nil
 }

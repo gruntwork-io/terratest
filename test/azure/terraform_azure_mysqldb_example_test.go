@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -54,14 +54,14 @@ func TestTerraformAzureMySQLDBExample(t *testing.T) {
 	// website::tag::4:: Get mySQL server details and assert them against the terraform output
 	actualMYSQLServer := azure.GetMYSQLServer(t, expectedResourceGroupName, expectedMYSQLServerName, "")
 
-	assert.Equal(t, expectedServerSkuName, *actualMYSQLServer.Sku.Name)
-	assert.Equal(t, expectedServerStoragemMb, fmt.Sprint(*actualMYSQLServer.ServerProperties.StorageProfile.StorageMB))
+	assert.Equal(t, expectedServerSkuName, *actualMYSQLServer.SKU.Name)
+	assert.Equal(t, expectedServerStoragemMb, fmt.Sprint(*actualMYSQLServer.Properties.StorageProfile.StorageMB))
 
-	assert.Equal(t, mysql.ServerStateReady, actualMYSQLServer.ServerProperties.UserVisibleState)
+	assert.Equal(t, armmysql.ServerStateReady, *actualMYSQLServer.Properties.UserVisibleState)
 
 	// website::tag::5:: Get  mySQL server DB details and assert them against the terraform output
 	actualDatabase := azure.GetMYSQLDB(t, expectedResourceGroupName, expectedMYSQLServerName, expectedMYSQLDBName, "")
 
-	assert.Equal(t, expectedDatabaseCharSet, *actualDatabase.DatabaseProperties.Charset)
-	assert.Equal(t, expectedDatabaseCollation, *actualDatabase.DatabaseProperties.Collation)
+	assert.Equal(t, expectedDatabaseCharSet, *actualDatabase.Properties.Charset)
+	assert.Equal(t, expectedDatabaseCollation, *actualDatabase.Properties.Collation)
 }

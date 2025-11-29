@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/datafactory/mgmt/2018-06-01/datafactory"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v9"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -28,29 +28,29 @@ func DataFactoryExistsE(dataFactoryName string, resourceGroupName string, subscr
 	return true, nil
 }
 
-// GetDataFactory is a helper function that gets the synapse workspace.
+// GetDataFactory is a helper function that gets the data factory.
 // This function would fail the test if there is an error.
-func GetDataFactory(t testing.TestingT, resGroupName string, factoryName string, subscriptionID string) *datafactory.Factory {
-	Workspace, err := GetDataFactoryE(subscriptionID, resGroupName, factoryName)
+func GetDataFactory(t testing.TestingT, resGroupName string, factoryName string, subscriptionID string) *armdatafactory.Factory {
+	factory, err := GetDataFactoryE(subscriptionID, resGroupName, factoryName)
 	require.NoError(t, err)
 
-	return Workspace
+	return factory
 }
 
-// GetDataFactoryE is a helper function that gets the workspace.
-func GetDataFactoryE(subscriptionID string, resGroupName string, factoryName string) (*datafactory.Factory, error) {
+// GetDataFactoryE is a helper function that gets the data factory.
+func GetDataFactoryE(subscriptionID string, resGroupName string, factoryName string) (*armdatafactory.Factory, error) {
 	// Create a datafactory client
 	datafactoryClient, err := CreateDataFactoriesClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the corresponding synapse workspace
-	dataFactory, err := datafactoryClient.Get(context.Background(), resGroupName, factoryName, "")
+	// Get the corresponding data factory
+	resp, err := datafactoryClient.Get(context.Background(), resGroupName, factoryName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return synapse workspace
-	return &dataFactory, nil
+	// Return data factory
+	return &resp.Factory, nil
 }

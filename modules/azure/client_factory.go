@@ -17,10 +17,8 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/privatedns/mgmt/privatedns"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/sql/mgmt/sql"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -29,19 +27,21 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v9"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
-	"github.com/Azure/azure-sdk-for-go/services/datafactory/mgmt/2018-06-01/datafactory"
-	kvmng "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
-	sqlmi "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/v3.0/sql"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
-	"github.com/Azure/azure-sdk-for-go/services/synapse/mgmt/2020-12-01/synapse"
-	"github.com/Azure/azure-sdk-for-go/services/web/mgmt/2019-08-01/web"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -163,25 +163,54 @@ func CreateCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesCl
 	return &cosmosClient, nil
 }
 
-// CreateKeyVaultManagementClientE is a helper function that will setup a key vault management client with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateKeyVaultManagementClientE(subscriptionID string) (*kvmng.VaultsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// getArmKeyVaultClientFactory gets an arm keyvault client factory
+func getArmKeyVaultClientFactory(subscriptionID string) (*armkeyvault.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armkeyvault.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+}
 
-	// create keyvault management clinet
-	vaultClient := kvmng.NewVaultsClientWithBaseURI(baseURI, subscriptionID)
-
-	return &vaultClient, nil
+// getArmPostgreSQLClientFactory gets an arm postgresql client factory
+func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresql.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armpostgresql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
 }
 
 // CreateStorageAccountClientE creates a storage account client.
@@ -302,148 +331,98 @@ func CreateResourceGroupClientE(subscriptionID string) (*resources.GroupsClient,
 }
 
 // CreateSQLServerClient is a helper function that will create and setup a sql server client
-func CreateSQLServerClient(subscriptionID string) (*sql.ServersClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error) {
+	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a sql server client
-	sqlClient := sql.NewServersClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	sqlClient.Authorizer = *authorizer
-
-	return &sqlClient, nil
+	return clientFactory.NewServersClient(), nil
 }
 
-// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql server client
-func CreateSQLMangedInstanceClient(subscriptionID string) (*sqlmi.ManagedInstancesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql managed instance client
+func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) {
+	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a sql server client
-	sqlmiClient := sqlmi.NewManagedInstancesClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	sqlmiClient.Authorizer = *authorizer
-
-	return &sqlmiClient, nil
+	return clientFactory.NewManagedInstancesClient(), nil
 }
 
-// CreateSQLMangedDatabasesClient is a helper function that will create and setup a sql server client
-func CreateSQLMangedDatabasesClient(subscriptionID string) (*sqlmi.ManagedDatabasesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateSQLMangedDatabasesClient is a helper function that will create and setup a sql managed databases client
+func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
+	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+	return clientFactory.NewManagedDatabasesClient(), nil
+}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+// getArmSQLClientFactory gets an arm sql client factory
+func getArmSQLClientFactory(subscriptionID string) (*armsql.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Create a sql server client
-	sqlmidbClient := sqlmi.NewManagedDatabasesClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
+	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
-
-	// Attach authorizer to the client
-	sqlmidbClient.Authorizer = *authorizer
-
-	return &sqlmidbClient, nil
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armsql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
 }
 
 // CreateDatabaseClient is a helper function that will create and setup a SQL DB client
-func CreateDatabaseClient(subscriptionID string) (*sql.DatabasesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+func CreateDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error) {
+	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a sql DB client
-	sqlDBClient := sql.NewDatabasesClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	sqlDBClient.Authorizer = *authorizer
-
-	return &sqlDBClient, nil
+	return clientFactory.NewDatabasesClient(), nil
 }
 
 // CreateMySQLServerClientE is a helper function that will setup a mysql server client.
-func CreateMySQLServerClientE(subscriptionID string) (*mysql.ServersClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+func CreateMySQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
+	clientFactory, err := getArmMySQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+	return clientFactory.NewServersClient(), nil
+}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+// getArmMySQLClientFactory gets an arm mysql client factory
+func getArmMySQLClientFactory(subscriptionID string) (*armmysql.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Create a mysql server client
-	mysqlClient := mysql.NewServersClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
+	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
-
-	// Attach authorizer to the client
-	mysqlClient.Authorizer = *authorizer
-
-	return &mysqlClient, nil
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armmysql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
 }
 
 // CreateDisksClientE returns a new Disks client in the specified Azure Subscription
@@ -740,22 +719,37 @@ func CreateNewVirtualNetworkClientE(subscriptionID string) (*network.VirtualNetw
 
 // CreateAppServiceClientE returns an App service client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateAppServiceClientE(subscriptionID string) (*web.AppsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+func CreateAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
+	clientFactory, err := getArmAppServiceClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+	return clientFactory.NewWebAppsClient(), nil
+}
 
-	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+// getArmAppServiceClientFactory gets an arm app service client factory
+func getArmAppServiceClientFactory(subscriptionID string) (*armappservice.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// create client
-	appsClient := web.NewAppsClientWithBaseURI(baseURI, subscriptionID)
-	return &appsClient, nil
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armappservice.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
 }
 
 // CreateContainerRegistryClientE returns an ACR client instance configured with the
@@ -838,91 +832,56 @@ func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.F
 	return &client, nil
 }
 
-// CreateSynapseWorkspaceClientE is a helper function that will setup a synapse client.
-func CreateSynapseWorkspaceClientE(subscriptionID string) (*synapse.WorkspacesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateSynapseWorkspaceClientE is a helper function that will setup a synapse workspace client.
+func CreateSynapseWorkspaceClientE(subscriptionID string) (*armsynapse.WorkspacesClient, error) {
+	clientFactory, err := getArmSynapseClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a synapse client
-	synapseWorkspaceClient := synapse.NewWorkspacesClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	synapseWorkspaceClient.Authorizer = *authorizer
-
-	return &synapseWorkspaceClient, nil
+	return clientFactory.NewWorkspacesClient(), nil
 }
 
-// CreateSynapseSqlPoolClientE is a helper function that will setup a synapse client.
-func CreateSynapseSqlPoolClientE(subscriptionID string) (*synapse.SQLPoolsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateSynapseSqlPoolClientE is a helper function that will setup a synapse sql pool client.
+func CreateSynapseSqlPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
+	clientFactory, err := getArmSynapseClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a synapse client
-	synapseSqlPoolClient := synapse.NewSQLPoolsClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	synapseSqlPoolClient.Authorizer = *authorizer
-
-	return &synapseSqlPoolClient, nil
+	return clientFactory.NewSQLPoolsClient(), nil
 }
 
-// CreateDataFactoriesClientE is a helper function that will setup a synapse client.
-func CreateDataFactoriesClientE(subscriptionID string) (*datafactory.FactoriesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// getArmSynapseClientFactory gets an arm synapse client factory
+func getArmSynapseClientFactory(subscriptionID string) (*armsynapse.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
-
-	// Create a synapse client
-	dataFactoryClient := datafactory.NewFactoriesClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
+	return armsynapse.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+}
 
-	// Attach authorizer to the client
-	dataFactoryClient.Authorizer = *authorizer
-
-	return &dataFactoryClient, nil
+// CreateDataFactoriesClientE is a helper function that will setup a data factory client.
+func CreateDataFactoriesClientE(subscriptionID string) (*armdatafactory.FactoriesClient, error) {
+	clientFactory, err := getArmDataFactoryClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	return clientFactory.NewFactoriesClient(), nil
 }
 
 // CreatePrivateDnsZonesClientE is a helper function that will setup a private DNS zone client.
@@ -1082,6 +1041,31 @@ func getArmAppContainersClientFactory(subscriptionID string) (*armappcontainers.
 		return nil, err
 	}
 	return armappcontainers.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+}
+
+// getArmDataFactoryClientFactory gets an arm data factory client factory
+func getArmDataFactoryClientFactory(subscriptionID string) (*armdatafactory.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return armdatafactory.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
 		},
