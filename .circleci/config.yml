@@ -147,7 +147,7 @@ jobs:
       - run:
           name: run precommit
           command: |
-            go install golang.org/x/tools/cmd/goimports@latest
+            go install golang.org/x/tools/cmd/goimports@v0.21.0
             # Install the latest minor version for v2
             pip install pre-commit~=2.9
             pre-commit install
@@ -159,10 +159,8 @@ jobs:
       # binaries to GitHub as release assets.
       - run:
           command: |
-            # For some reason, the circleci environment requires additional module dependencies that are not captured by
-            # our Linux or Mac OSX dev environments. We workaround this by running `go mod tidy` in the CircleCI
-            # environment so it pulls in what it needs.
-            go mod tidy
+            # Sync workspace dependencies
+            go work sync
 
             go install github.com/mitchellh/gox@latest
 

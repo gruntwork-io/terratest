@@ -14,6 +14,12 @@ require (
 	github.com/gruntwork-io/terratest/modules/testing v0.55.0
 )
 
+require (
+	k8s.io/api v0.28.4 // indirect
+	k8s.io/apimachinery v0.28.4 // indirect
+	k8s.io/client-go v0.28.4 // indirect
+)
+
 replace (
 	github.com/gruntwork-io/terratest/modules/aws => ../aws
 	github.com/gruntwork-io/terratest/modules/environment => ../environment

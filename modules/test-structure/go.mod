@@ -16,6 +16,13 @@ require (
 	github.com/gruntwork-io/terratest/modules/testing v0.55.0
 )
 
+require (
+	github.com/gruntwork-io/go-commons v0.17.2 // indirect
+	golang.org/x/exp v0.0.0-20221106115401-f9659909a136 // indirect
+	k8s.io/api v0.28.4 // indirect
+	k8s.io/apimachinery v0.28.4 // indirect
+)
+
 replace (
 	github.com/gruntwork-io/terratest/modules/aws => ../aws
 	github.com/gruntwork-io/terratest/modules/collections => ../collections
