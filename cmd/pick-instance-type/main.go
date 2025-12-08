@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/gruntwork-io/go-commons/entrypoint"
 	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 const CustomUsageText = `Usage: pick-instance-type [OPTIONS] <REGION> <INSTANCE_TYPE> <INSTANCE_TYPE...> 
@@ -53,16 +53,19 @@ func run(cliContext *cli.Context) error {
 }
 
 func main() {
-	app := entrypoint.NewApp()
-	cli.AppHelpTemplate = CustomUsageText
-	entrypoint.HelpTextLineWidth = 120
+	app := &cli.App{
+		Name:                  "pick-instance-type",
+		Usage:                 `This tool takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the first instance type in the list that is available in all Availability Zones (AZs) in the given AWS region, or exits with an error if no instance type is available in all AZs.`,
+		CustomAppHelpTemplate: CustomUsageText,
+		Action: func(cliContext *cli.Context) error {
+			return run(cliContext)
+		},
+	}
 
-	app.Name = "pick-instance-type"
-	app.Author = "Gruntwork <www.gruntwork.io>"
-	app.Description = `This tool takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the first instance type in the list that is available in all Availability Zones (AZs) in the given AWS region, or exits with an error if no instance type is available in all AZs.`
-	app.Action = run
-
-	entrypoint.RunApp(app)
+	if err := app.Run(os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 // MockTestingT is a mock implementation of testing.TestingT. All the functions are essentially no-ops. This allows us

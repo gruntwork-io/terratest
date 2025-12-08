@@ -1,0 +1,121 @@
+name: Release Module Tags
+
+on:
+  release:
+    types: [published]
+
+  # Also allow manual trigger for testing or re-running
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.54.0) - leave empty to use latest release'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  create-module-tags:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            # Extract version from release tag (remove 'v' prefix if present)
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
+          else
+            # Use manual input or fail
+            VERSION="${{ inputs.version }}"
+            if [[ -z "$VERSION" ]]; then
+              echo "Error: Version is required for manual trigger"
+              exit 1
+            fi
+          fi
+
+          # Validate version format
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "Error: Version must be in format X.Y.Z or X.Y.Z-suffix (e.g., 0.54.0 or 0.54.0-beta1)"
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
+      - name: Discover and tag modules
+        id: tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          echo "Discovering Go modules..."
+          echo ""
+
+          # Find all go.mod files except root and test directories, extract directory paths
+          MODULES=$(find . -name "go.mod" -not -path "./go.mod" -not -path "./test/*" -exec dirname {} \; | sed 's|^\./||' | sort)
+
+          CREATED_TAGS=()
+          SKIPPED_TAGS=()
+          MODULE_COUNT=0
+
+          for module in $MODULES; do
+            MODULE_COUNT=$((MODULE_COUNT + 1))
+            TAG="${module}/v${VERSION}"
+
+            # Check if tag already exists
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "Skipping (exists): ${TAG}"
+              SKIPPED_TAGS+=("$TAG")
+            else
+              echo "Creating: ${TAG}"
+              git tag "${TAG}"
+              CREATED_TAGS+=("$TAG")
+            fi
+          done
+
+          echo ""
+          echo "================================"
+          echo "Summary:"
+          echo "  Modules found: ${MODULE_COUNT}"
+          echo "  Created: ${#CREATED_TAGS[@]} tags"
+          echo "  Skipped: ${#SKIPPED_TAGS[@]} tags (already exist)"
+          echo "================================"
+
+          # Save counts for summary step
+          echo "module_count=${MODULE_COUNT}" >> $GITHUB_OUTPUT
+          echo "created_count=${#CREATED_TAGS[@]}" >> $GITHUB_OUTPUT
+          echo "skipped_count=${#SKIPPED_TAGS[@]}" >> $GITHUB_OUTPUT
+
+      - name: Push tags
+        run: |
+          git push origin --tags
+          echo ""
+          echo "All module tags pushed successfully!"
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MODULE_COUNT="${{ steps.tag.outputs.module_count }}"
+          CREATED_COUNT="${{ steps.tag.outputs.created_count }}"
+
+          echo "## Module Tags Released" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version: **v${VERSION}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tagged Modules" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **${MODULE_COUNT}** modules discovered" >> $GITHUB_STEP_SUMMARY
+          echo "- **${CREATED_COUNT}** tags created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Users can now import specific modules:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "go get github.com/gruntwork-io/terratest/modules/terraform@v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "go get github.com/gruntwork-io/terratest/modules/aws@v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
