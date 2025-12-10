@@ -1,5 +1,15 @@
 name: Release Module Tags
 
+# This workflow creates Git tags for all modularized Go packages when a release is published.
+# For example, releasing v1.0.0 creates tags like modules/terraform/v1.0.0, modules/aws/v1.0.0, etc.
+#
+# REQUIRED SETUP:
+#   This workflow requires a GitHub Personal Access Token (PAT) stored as a repository secret named GH_TOKEN.
+#   The token needs the 'repo' scope to push tags. To create one:
+#   1. Go to https://github.com/settings/tokens
+#   2. Generate a new token (classic) with 'repo' scope
+#   3. Add it as a repository secret named GH_TOKEN in Settings > Secrets and variables > Actions
+
 on:
   release:
     types: [published]
@@ -23,6 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # GH_TOKEN is required to push tags. See workflow header for setup instructions.
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Determine version

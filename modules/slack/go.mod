@@ -3,10 +3,10 @@ module github.com/gruntwork-io/terratest/modules/slack
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/environment v0.55.0
-	github.com/gruntwork-io/terratest/modules/random v0.55.0
-	github.com/gruntwork-io/terratest/modules/retry v0.55.0
-	github.com/gruntwork-io/terratest/modules/testing v0.55.0
+	github.com/gruntwork-io/terratest/modules/environment v1.0.0
+	github.com/gruntwork-io/terratest/modules/random v1.0.0
+	github.com/gruntwork-io/terratest/modules/retry v1.0.0
+	github.com/gruntwork-io/terratest/modules/testing v1.0.0
 	github.com/slack-go/slack v0.17.3
 	github.com/stretchr/testify v1.11.1
 )

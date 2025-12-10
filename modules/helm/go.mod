@@ -3,13 +3,13 @@ module github.com/gruntwork-io/terratest/modules/helm
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/files v0.55.0
-	github.com/gruntwork-io/terratest/modules/http-helper v0.55.0
-	github.com/gruntwork-io/terratest/modules/k8s v0.55.0
-	github.com/gruntwork-io/terratest/modules/logger v0.55.0
-	github.com/gruntwork-io/terratest/modules/random v0.55.0
-	github.com/gruntwork-io/terratest/modules/shell v0.55.0
-	github.com/gruntwork-io/terratest/modules/testing v0.55.0
+	github.com/gruntwork-io/terratest/modules/files v1.0.0
+	github.com/gruntwork-io/terratest/modules/http-helper v1.0.0
+	github.com/gruntwork-io/terratest/modules/k8s v1.0.0
+	github.com/gruntwork-io/terratest/modules/logger v1.0.0
+	github.com/gruntwork-io/terratest/modules/random v1.0.0
+	github.com/gruntwork-io/terratest/modules/shell v1.0.0
+	github.com/gruntwork-io/terratest/modules/testing v1.0.0
 )
 
 require (

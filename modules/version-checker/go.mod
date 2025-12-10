@@ -3,9 +3,9 @@ module github.com/gruntwork-io/terratest/modules/version-checker
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/shell v0.55.0
-	github.com/gruntwork-io/terratest/modules/terraform v0.55.0
-	github.com/gruntwork-io/terratest/modules/testing v0.55.0
+	github.com/gruntwork-io/terratest/modules/shell v1.0.0
+	github.com/gruntwork-io/terratest/modules/terraform v1.0.0
+	github.com/gruntwork-io/terratest/modules/testing v1.0.0
 	github.com/hashicorp/go-version v1.7.0
 	github.com/stretchr/testify v1.11.1
 )

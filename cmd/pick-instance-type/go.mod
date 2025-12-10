@@ -17,7 +17,7 @@ replace (
 exclude github.com/gruntwork-io/terratest v0.46.16
 
 require (
-	github.com/gruntwork-io/terratest/modules/aws v0.0.0
+	github.com/gruntwork-io/terratest/modules/aws v1.0.0
 	github.com/urfave/cli/v2 v2.10.3
 )
 
@@ -67,13 +67,13 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gruntwork-io/go-commons v0.17.2 // indirect
-	github.com/gruntwork-io/terratest/modules/collections v0.55.0 // indirect
-	github.com/gruntwork-io/terratest/modules/files v0.55.0 // indirect
-	github.com/gruntwork-io/terratest/modules/logger v0.55.0 // indirect
-	github.com/gruntwork-io/terratest/modules/random v0.55.0 // indirect
-	github.com/gruntwork-io/terratest/modules/retry v0.55.0 // indirect
-	github.com/gruntwork-io/terratest/modules/ssh v0.55.0 // indirect
-	github.com/gruntwork-io/terratest/modules/testing v0.55.0 // indirect
+	github.com/gruntwork-io/terratest/modules/collections v1.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/files v1.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/logger v1.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/random v1.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/retry v1.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/ssh v1.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/testing v1.0.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

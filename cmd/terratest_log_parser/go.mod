@@ -15,7 +15,7 @@ exclude github.com/gruntwork-io/terratest v0.46.16
 
 require (
 	github.com/gruntwork-io/go-commons v0.17.2
-	github.com/gruntwork-io/terratest/modules/logger v0.0.0
+	github.com/gruntwork-io/terratest/modules/logger v1.0.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.10.3
 )
