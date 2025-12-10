@@ -3,17 +3,17 @@ module github.com/gruntwork-io/terratest/modules/test-structure
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/aws v0.55.0
-	github.com/gruntwork-io/terratest/modules/collections v0.55.0
-	github.com/gruntwork-io/terratest/modules/files v0.55.0
-	github.com/gruntwork-io/terratest/modules/git v0.55.0
-	github.com/gruntwork-io/terratest/modules/k8s v0.55.0
-	github.com/gruntwork-io/terratest/modules/logger v0.55.0
-	github.com/gruntwork-io/terratest/modules/opa v0.55.0
-	github.com/gruntwork-io/terratest/modules/packer v0.55.0
-	github.com/gruntwork-io/terratest/modules/ssh v0.55.0
-	github.com/gruntwork-io/terratest/modules/terraform v0.55.0
-	github.com/gruntwork-io/terratest/modules/testing v0.55.0
+	github.com/gruntwork-io/terratest/modules/aws v1.0.0
+	github.com/gruntwork-io/terratest/modules/collections v1.0.0
+	github.com/gruntwork-io/terratest/modules/files v1.0.0
+	github.com/gruntwork-io/terratest/modules/git v1.0.0
+	github.com/gruntwork-io/terratest/modules/k8s v1.0.0
+	github.com/gruntwork-io/terratest/modules/logger v1.0.0
+	github.com/gruntwork-io/terratest/modules/opa v1.0.0
+	github.com/gruntwork-io/terratest/modules/packer v1.0.0
+	github.com/gruntwork-io/terratest/modules/ssh v1.0.0
+	github.com/gruntwork-io/terratest/modules/terraform v1.0.0
+	github.com/gruntwork-io/terratest/modules/testing v1.0.0
 )
 
 require (

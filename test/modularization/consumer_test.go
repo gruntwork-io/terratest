@@ -3,14 +3,20 @@ package modularization_test
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/collections"
 	dns_helper "github.com/gruntwork-io/terratest/modules/dns-helper"
 	"github.com/gruntwork-io/terratest/modules/environment"
+	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/git"
+	"github.com/gruntwork-io/terratest/modules/helm"
 	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/oci"
 	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	test_structure "github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
@@ -33,8 +39,11 @@ func TestConsumerSimulation(t *testing.T) {
 	_ = environment.GetFirstNonEmptyEnvVarOrEmptyString(t, []string{"PATH"})
 	_ = git.GetCurrentBranchName
 
-	// Test tier 2: modules/oci
+	// Test tier 2: modules/oci, modules/aws, modules/azure, modules/gcp
 	_ = oci.GetRootCompartmentID
+	_ = aws.GetRandomRegion                 // AWS module
+	_ = azure.GetSubscriptionClientE        // Azure module
+	_ = gcp.GetGoogleProjectIDFromEnvVar    // GCP module
 
 	// Test tier 3: modules/terragrunt, modules/http-helper, modules/dns-helper, modules/ssh
 	options := &terragrunt.Options{
@@ -44,4 +53,12 @@ func TestConsumerSimulation(t *testing.T) {
 	_ = http_helper.HttpGet
 	_ = dns_helper.DNSLookupAuthoritative
 	_ = ssh.CheckSshCommand
+
+	// Test tier 4: modules/terraform, modules/k8s, modules/helm (high-level modules)
+	tfOptions := &terraform.Options{
+		TerraformDir: "/path/to/terraform",
+	}
+	assert.NotNil(t, tfOptions)
+	_ = k8s.GetKubeConfigPathE              // K8s module
+	_ = helm.Install                        // Helm module
 }

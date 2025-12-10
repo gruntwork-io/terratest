@@ -6,13 +6,13 @@ require (
 	cloud.google.com/go/cloudbuild v1.9.0
 	cloud.google.com/go/storage v1.28.1
 	github.com/google/go-containerregistry v0.20.7
-	github.com/gruntwork-io/terratest/modules/collections v0.55.0
-	github.com/gruntwork-io/terratest/modules/environment v0.55.0
-	github.com/gruntwork-io/terratest/modules/logger v0.55.0
-	github.com/gruntwork-io/terratest/modules/random v0.55.0
-	github.com/gruntwork-io/terratest/modules/retry v0.55.0
-	github.com/gruntwork-io/terratest/modules/ssh v0.55.0
-	github.com/gruntwork-io/terratest/modules/testing v0.55.0
+	github.com/gruntwork-io/terratest/modules/collections v1.0.0
+	github.com/gruntwork-io/terratest/modules/environment v1.0.0
+	github.com/gruntwork-io/terratest/modules/logger v1.0.0
+	github.com/gruntwork-io/terratest/modules/random v1.0.0
+	github.com/gruntwork-io/terratest/modules/retry v1.0.0
+	github.com/gruntwork-io/terratest/modules/ssh v1.0.0
+	github.com/gruntwork-io/terratest/modules/testing v1.0.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.33.0
 	google.golang.org/api v0.114.0

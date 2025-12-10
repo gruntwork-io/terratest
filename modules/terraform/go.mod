@@ -3,17 +3,17 @@ module github.com/gruntwork-io/terratest/modules/terraform
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/internal/lib v0.55.0
-	github.com/gruntwork-io/terratest/modules/collections v0.55.0
-	github.com/gruntwork-io/terratest/modules/files v0.55.0
-	github.com/gruntwork-io/terratest/modules/http-helper v0.55.0
-	github.com/gruntwork-io/terratest/modules/logger v0.55.0
-	github.com/gruntwork-io/terratest/modules/opa v0.55.0
-	github.com/gruntwork-io/terratest/modules/random v0.55.0
-	github.com/gruntwork-io/terratest/modules/retry v0.55.0
-	github.com/gruntwork-io/terratest/modules/shell v0.55.0
-	github.com/gruntwork-io/terratest/modules/ssh v0.55.0
-	github.com/gruntwork-io/terratest/modules/testing v0.55.0
+	github.com/gruntwork-io/terratest/internal/lib v1.0.0
+	github.com/gruntwork-io/terratest/modules/collections v1.0.0
+	github.com/gruntwork-io/terratest/modules/files v1.0.0
+	github.com/gruntwork-io/terratest/modules/http-helper v1.0.0
+	github.com/gruntwork-io/terratest/modules/logger v1.0.0
+	github.com/gruntwork-io/terratest/modules/opa v1.0.0
+	github.com/gruntwork-io/terratest/modules/random v1.0.0
+	github.com/gruntwork-io/terratest/modules/retry v1.0.0
+	github.com/gruntwork-io/terratest/modules/shell v1.0.0
+	github.com/gruntwork-io/terratest/modules/ssh v1.0.0
+	github.com/gruntwork-io/terratest/modules/testing v1.0.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-json v0.27.2
