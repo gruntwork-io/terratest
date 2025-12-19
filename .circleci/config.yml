@@ -4,23 +4,13 @@ env: &env
     MODULE_CI_VERSION: v0.46.0
     MODULE_GCP_CI_VERSION: v0.1.1
     MODULE_CI_CIRCLECI_HELPER_VERSION: v0.56.0
-    TERRAFORM_VERSION: 1.5.7
-    TOFU_VERSION: 1.8.0
-    PACKER_VERSION: 1.10.0
-    TERRAGRUNT_VERSION: v0.80.4
-    TERRAGRUNT_TEST_VERSION: v0.93.10  # Version used for terragrunt module tests
-    OPA_VERSION: v1.1.0
-    GO_VERSION: 1.24.0
+    # Tool versions are managed in mise.toml - only exceptions listed here
+    TERRAGRUNT_TEST_VERSION: v0.93.10  # Version used for terragrunt module tests (overrides mise.toml)
     GO111MODULE: auto
-    K8S_VERSION: v1.20.0  # Same as EKS
-    MINIKUBE_VERSION: v1.22.0
-    HELM_VERSION: v3.13.1
     KUBECONFIG: /home/circleci/.kube/config
     BIN_BUILD_PARALLELISM: 3
-    MISE_VERSION: v2024.4.0
-    # Mise ASDF defaults to using main.tf to determine the terraform version to use, so we need to
-    # override this to use the .terraform-version file instead.
-    ASDF_HASHICORP_TERRAFORM_VERSION_FILE: .terraform-version
+    MISE_VERSION: 2024.12.0
+    MISE_YES: 1
 
 defaults: &defaults
   machine:
@@ -32,16 +22,10 @@ setup_minikube: &setup_minikube
   command: |
     sudo apt update -y
     sudo apt install -y conntrack
-    setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "$MINIKUBE_VERSION"
-
-install_helm: &install_helm
-  name: install helm
-  command: |
-    # install helm
-    curl -Lo helm.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
-    tar -xvf helm.tar.gz
-    chmod +x linux-amd64/helm
-    sudo mv linux-amd64/helm /usr/local/bin/
+    # Get minikube version from mise
+    MINIKUBE_VERSION=$(mise current asdf:alvarobp/asdf-minikube)
+    K8S_VERSION=v$(mise current kubectl)
+    setup-minikube --k8s-version "$K8S_VERSION" --minikube-version "v$MINIKUBE_VERSION"
 
 install_gruntwork_utils: &install_gruntwork_utils
   name: install gruntwork utils
@@ -50,36 +34,21 @@ install_gruntwork_utils: &install_gruntwork_utils
     gruntwork-install --module-name "gruntwork-module-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_CIRCLECI_HELPER_VERSION}"
     gruntwork-install --module-name "kubernetes-circleci-helpers" --repo "https://github.com/gruntwork-io/terraform-aws-ci" --tag "${MODULE_CI_VERSION}"
     gruntwork-install --module-name "gcp-helpers" --repo "https://github.com/gruntwork-io/terraform-google-ci" --tag "${MODULE_GCP_CI_VERSION}"
-    configure-environment-for-gruntwork-module \
-      --mise-version ${MISE_VERSION} \
-      --terraform-version ${TERRAFORM_VERSION} \
-      --terragrunt-version ${TERRAGRUNT_VERSION} \
-      --packer-version ${PACKER_VERSION} \
-      --go-version NONE
 
-    # Install OPA
-    echo "Installing OPA version ${OPA_VERSION}"
-    curl -sLO "https://github.com/open-policy-agent/opa/releases/download/${OPA_VERSION}/opa_linux_amd64_static"
-    chmod +x ./opa_linux_amd64_static
-    sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
+    # Install mise and all tools from mise.toml
+    curl https://mise.run | sh
+    export PATH="$HOME/.local/bin:$PATH"
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> $BASH_ENV
+    echo 'eval "$($HOME/.local/bin/mise activate bash)"' >> $BASH_ENV
+    mise trust
+    mise install
 
-    # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
-    echo "Installing Go version $version"
-    curl -O --silent --location --fail --show-error "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
-    sudo rm -rf /usr/local/go
-    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
-    sudo ln -s /usr/local/go/bin/go /usr/bin/go
-    echo "The installed version of Go is now $(go version)"
+    # Symlink tools to /usr/local/bin for pre-commit hooks
+    sudo ln -sf $(mise which go) /usr/local/bin/go
+    sudo ln -sf $(mise which terraform) /usr/local/bin/terraform
 
-install_tofu: &install_tofu
-  name: Install OpenTofu
-  command: |
-    curl -L "https://github.com/opentofu/opentofu/releases/download/v${TOFU_VERSION}/tofu_${TOFU_VERSION}_linux_amd64.zip" -o tofu.zip
-    unzip -o tofu.zip
-    sudo install -m 0755 tofu /usr/local/bin/tofu
-    rm -rf tofu
-    rm -rf tofu.zip
-    tofu --version
+    echo "Installed tools:"
+    mise ls
 
 install_terragrunt_latest: &install_terragrunt_latest
   name: Install Terragrunt (latest test version)
@@ -139,9 +108,8 @@ jobs:
           paths:
             - $HOME/go/src/
 
-      # The weird way you have to set PATH in Circle 2.0
-      - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/go/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
+      # Add Go bin to PATH for go install tools
+      - run: echo 'export PATH=$HOME/go/bin:$PATH' >> $BASH_ENV
 
       # Run pre-commit hooks and fail the build if any hook finds required changes.
       - run:
@@ -199,10 +167,6 @@ jobs:
       - run:
           <<: *install_docker_buildx
 
-      # The weird way you have to set PATH in Circle 2.0
-      - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
-
       # Run the tests. Note that we set the "-p 1" flag to tell Go to run tests in each package sequentially. Without
       # this, Go buffers all log output until all packages are done, which with slower running tests can cause CircleCI
       # to kill the build after more than 10 minutes without log output.
@@ -239,14 +203,11 @@ jobs:
           <<: *install_gruntwork_utils
       - run:
           <<: *install_docker_buildx
-      - run:
-          <<: *install_tofu
 
-      # The weird way you have to set PATH in Circle 2.0
+      # Use tofu instead of terraform for this test
       - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
-          # remove terraform binary so tofu will be used
           sudo rm -f $(which terraform)
+          sudo ln -s $(mise which tofu) /usr/local/bin/terraform
 
       # Run the tests. Note that we set the "-p 1" flag to tell Go to run tests in each package sequentially. Without
       # this, Go buffers all log output until all packages are done, which with slower running tests can cause CircleCI
@@ -287,10 +248,6 @@ jobs:
       - run:
           <<: *install_gruntwork_utils
 
-      # The weird way you have to set PATH in Circle 2.0
-      - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
-
       - run:
           <<: *configure_environment_for_gcp
 
@@ -323,10 +280,6 @@ jobs:
 
       - run:
           <<: *install_gruntwork_utils
-
-      # The weird way you have to set PATH in Circle 2.0
-      - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
 
       - run:
           <<: *setup_minikube
@@ -363,15 +316,8 @@ jobs:
       - run:
           <<: *install_gruntwork_utils
 
-      # The weird way you have to set PATH in Circle 2.0
-      - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
-
       - run:
           <<: *setup_minikube
-
-      - run:
-          <<: *install_helm
 
       # Run the Helm tests. These tests are run because the helm build tag is included, and we explicitly
       # select the helm tests
@@ -409,10 +355,6 @@ jobs:
       - run:
           <<: *install_docker_buildx
 
-      # The weird way you have to set PATH in Circle 2.0
-      - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
-
       # Run the terragrunt-specific tests. These tests specifically target the terragrunt module
       # and require terragrunt binary to be available (which is installed via install_gruntwork_utils)
       - run:
@@ -443,19 +385,14 @@ jobs:
       - run:
           <<: *install_gruntwork_utils
       - run:
-          <<: *install_tofu
-      - run:
           <<: *install_terragrunt_latest
       - run:
           <<: *install_docker_buildx
 
-      # The weird way you have to set PATH in Circle 2.0
+      # Use tofu instead of terraform for this test
       - run: |
-          echo 'export PATH=$HOME/.local/bin:$HOME/terraform:$HOME/packer:$PATH' >> $BASH_ENV
-          # Remove terraform binary so tofu will be used by terragrunt
           sudo rm -f $(which terraform)
-          # Verify tofu is available
-          which tofu
+          sudo ln -s $(mise which tofu) /usr/local/bin/terraform
           tofu --version
 
       # Run the terragrunt-specific tests with tofu as the backend
