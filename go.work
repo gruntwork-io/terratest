@@ -32,5 +32,4 @@ use (
 	./modules/test-structure
 	./modules/testing
 	./modules/version-checker
-	./test/modularization
 )
