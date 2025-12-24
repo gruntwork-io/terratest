@@ -19,8 +19,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/k8s/v2"
+	"github.com/gruntwork-io/terratest/modules/random/v2"
 )
 
 func TestKubernetesRestConfigBasicExampleConfig(t *testing.T) {

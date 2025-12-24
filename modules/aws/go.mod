@@ -1,4 +1,4 @@
-module github.com/gruntwork-io/terratest/modules/aws
+module github.com/gruntwork-io/terratest/modules/aws/v2
 
 go 1.24.0
 
@@ -28,13 +28,13 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/google/uuid v1.6.0
 	github.com/gruntwork-io/go-commons v0.17.2
-	github.com/gruntwork-io/terratest/modules/collections v1.0.0
-	github.com/gruntwork-io/terratest/modules/files v1.0.0
-	github.com/gruntwork-io/terratest/modules/logger v1.0.0
-	github.com/gruntwork-io/terratest/modules/random v1.0.0
-	github.com/gruntwork-io/terratest/modules/retry v1.0.0
-	github.com/gruntwork-io/terratest/modules/ssh v1.0.0
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0
+	github.com/gruntwork-io/terratest/modules/collections/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/files/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/logger/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/random/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/retry/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/pquerna/otp v1.5.0
@@ -71,7 +71,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/urfave/cli/v2 v2.10.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
@@ -80,11 +80,11 @@ require (
 )
 
 replace (
-	github.com/gruntwork-io/terratest/modules/collections => ../collections
-	github.com/gruntwork-io/terratest/modules/files => ../files
-	github.com/gruntwork-io/terratest/modules/logger => ../logger
-	github.com/gruntwork-io/terratest/modules/random => ../random
-	github.com/gruntwork-io/terratest/modules/retry => ../retry
-	github.com/gruntwork-io/terratest/modules/ssh => ../ssh
-	github.com/gruntwork-io/terratest/modules/testing => ../testing
+	github.com/gruntwork-io/terratest/modules/collections/v2 => ../collections
+	github.com/gruntwork-io/terratest/modules/files/v2 => ../files
+	github.com/gruntwork-io/terratest/modules/logger/v2 => ../logger
+	github.com/gruntwork-io/terratest/modules/random/v2 => ../random
+	github.com/gruntwork-io/terratest/modules/retry/v2 => ../retry
+	github.com/gruntwork-io/terratest/modules/ssh/v2 => ../ssh
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../testing
 )

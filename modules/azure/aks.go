@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 )
 
 // GetManagedClustersClientE is a helper function that will setup an Azure ManagedClusters client on your behalf

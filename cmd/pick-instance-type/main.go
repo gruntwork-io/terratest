@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/aws/v2"
 	"github.com/urfave/cli/v2"
 )
 

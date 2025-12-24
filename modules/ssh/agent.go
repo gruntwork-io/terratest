@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/logger/v2"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 	"golang.org/x/crypto/ssh/agent"
 )
 

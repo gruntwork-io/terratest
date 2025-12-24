@@ -1,12 +1,12 @@
-module github.com/gruntwork-io/terratest/modules/packer
+module github.com/gruntwork-io/terratest/modules/packer/v2
 
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/logger v1.0.0
-	github.com/gruntwork-io/terratest/modules/retry v1.0.0
-	github.com/gruntwork-io/terratest/modules/shell v1.0.0
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0
+	github.com/gruntwork-io/terratest/modules/logger/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/retry/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/shell/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.7.0
 	github.com/stretchr/testify v1.11.1
@@ -21,8 +21,8 @@ require (
 )
 
 replace (
-	github.com/gruntwork-io/terratest/modules/logger => ../logger
-	github.com/gruntwork-io/terratest/modules/retry => ../retry
-	github.com/gruntwork-io/terratest/modules/shell => ../shell
-	github.com/gruntwork-io/terratest/modules/testing => ../testing
+	github.com/gruntwork-io/terratest/modules/logger/v2 => ../logger
+	github.com/gruntwork-io/terratest/modules/retry/v2 => ../retry
+	github.com/gruntwork-io/terratest/modules/shell/v2 => ../shell
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../testing
 )

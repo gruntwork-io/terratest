@@ -1,7 +1,7 @@
 package terragrunt
 
 import (
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 )
 
 // StackGenerate calls terragrunt stack generate and returns stdout/stderr

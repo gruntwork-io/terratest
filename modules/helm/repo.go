@@ -3,7 +3,7 @@ package helm
 import (
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 )
 
 // AddRepo will setup the provided helm repository to the local helm client configuration. This will fail the test if

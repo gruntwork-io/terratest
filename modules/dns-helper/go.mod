@@ -1,11 +1,11 @@
-module github.com/gruntwork-io/terratest/modules/dns-helper
+module github.com/gruntwork-io/terratest/modules/dns-helper/v2
 
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/logger v1.0.0
-	github.com/gruntwork-io/terratest/modules/retry v1.0.0
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0
+	github.com/gruntwork-io/terratest/modules/logger/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/retry/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0
 	github.com/miekg/dns v1.1.68
 	github.com/stretchr/testify v1.11.1
 )
@@ -23,7 +23,7 @@ require (
 )
 
 replace (
-	github.com/gruntwork-io/terratest/modules/logger => ../logger
-	github.com/gruntwork-io/terratest/modules/retry => ../retry
-	github.com/gruntwork-io/terratest/modules/testing => ../testing
+	github.com/gruntwork-io/terratest/modules/logger/v2 => ../logger
+	github.com/gruntwork-io/terratest/modules/retry/v2 => ../retry
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../testing
 )

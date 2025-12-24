@@ -1,4 +1,4 @@
-module github.com/gruntwork-io/terratest/modules/azure
+module github.com/gruntwork-io/terratest/modules/azure/v2
 
 go 1.24.0
 
@@ -20,9 +20,9 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets v1.4.0
 	github.com/Azure/go-autorest/autorest v0.11.30
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.13
-	github.com/gruntwork-io/terratest/modules/collections v1.0.0
-	github.com/gruntwork-io/terratest/modules/random v1.0.0
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0
+	github.com/gruntwork-io/terratest/modules/collections/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/random/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0
 	github.com/stretchr/testify v1.11.1
 )
 
@@ -47,7 +47,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
@@ -55,7 +55,7 @@ require (
 )
 
 replace (
-	github.com/gruntwork-io/terratest/modules/collections => ../collections
-	github.com/gruntwork-io/terratest/modules/random => ../random
-	github.com/gruntwork-io/terratest/modules/testing => ../testing
+	github.com/gruntwork-io/terratest/modules/collections/v2 => ../collections
+	github.com/gruntwork-io/terratest/modules/random/v2 => ../random
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../testing
 )

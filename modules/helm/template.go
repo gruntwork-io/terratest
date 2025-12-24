@@ -11,8 +11,8 @@ import (
 
 	"github.com/gonvenience/ytbx"
 	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/terratest/modules/files"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/files/v2"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 	"github.com/homeport/dyff/pkg/dyff"
 	"github.com/stretchr/testify/require"
 	goyaml "gopkg.in/yaml.v3"

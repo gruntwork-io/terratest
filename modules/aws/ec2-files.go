@@ -4,9 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gruntwork-io/terratest/modules/files"
-	"github.com/gruntwork-io/terratest/modules/ssh"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/files/v2"
+	"github.com/gruntwork-io/terratest/modules/ssh/v2"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 	"github.com/hashicorp/go-multierror"
 )
 

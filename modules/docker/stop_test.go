@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
-	"github.com/gruntwork-io/terratest/modules/shell"
+	http_helper "github.com/gruntwork-io/terratest/modules/http-helper/v2"
+	"github.com/gruntwork-io/terratest/modules/shell/v2"
 	"github.com/stretchr/testify/require"
 )
 

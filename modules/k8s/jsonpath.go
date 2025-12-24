@@ -6,7 +6,7 @@ import (
 
 	"k8s.io/client-go/util/jsonpath"
 
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 	"github.com/stretchr/testify/require"
 )
 

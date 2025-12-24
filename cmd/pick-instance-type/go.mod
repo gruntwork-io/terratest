@@ -1,23 +1,23 @@
-module github.com/gruntwork-io/terratest/cmd/pick-instance-type
+module github.com/gruntwork-io/terratest/cmd/pick-instance-type/v2
 
 go 1.24.0
 
 replace (
-	github.com/gruntwork-io/terratest/modules/aws => ../../modules/aws
-	github.com/gruntwork-io/terratest/modules/collections => ../../modules/collections
-	github.com/gruntwork-io/terratest/modules/files => ../../modules/files
-	github.com/gruntwork-io/terratest/modules/logger => ../../modules/logger
-	github.com/gruntwork-io/terratest/modules/random => ../../modules/random
-	github.com/gruntwork-io/terratest/modules/retry => ../../modules/retry
-	github.com/gruntwork-io/terratest/modules/shell => ../../modules/shell
-	github.com/gruntwork-io/terratest/modules/ssh => ../../modules/ssh
-	github.com/gruntwork-io/terratest/modules/testing => ../../modules/testing
+	github.com/gruntwork-io/terratest/modules/aws/v2 => ../../modules/aws
+	github.com/gruntwork-io/terratest/modules/collections/v2 => ../../modules/collections
+	github.com/gruntwork-io/terratest/modules/files/v2 => ../../modules/files
+	github.com/gruntwork-io/terratest/modules/logger/v2 => ../../modules/logger
+	github.com/gruntwork-io/terratest/modules/random/v2 => ../../modules/random
+	github.com/gruntwork-io/terratest/modules/retry/v2 => ../../modules/retry
+	github.com/gruntwork-io/terratest/modules/shell/v2 => ../../modules/shell
+	github.com/gruntwork-io/terratest/modules/ssh/v2 => ../../modules/ssh
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../../modules/testing
 )
 
 exclude github.com/gruntwork-io/terratest v0.46.16
 
 require (
-	github.com/gruntwork-io/terratest/modules/aws v1.0.0
+	github.com/gruntwork-io/terratest/modules/aws/v2 v2.0.0
 	github.com/urfave/cli/v2 v2.10.3
 )
 
@@ -67,13 +67,13 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gruntwork-io/go-commons v0.17.2 // indirect
-	github.com/gruntwork-io/terratest/modules/collections v1.0.0 // indirect
-	github.com/gruntwork-io/terratest/modules/files v1.0.0 // indirect
-	github.com/gruntwork-io/terratest/modules/logger v1.0.0 // indirect
-	github.com/gruntwork-io/terratest/modules/random v1.0.0 // indirect
-	github.com/gruntwork-io/terratest/modules/retry v1.0.0 // indirect
-	github.com/gruntwork-io/terratest/modules/ssh v1.0.0 // indirect
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/collections/v2 v2.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/files/v2 v2.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/logger/v2 v2.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/random/v2 v2.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/retry/v2 v2.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0 // indirect
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -86,7 +86,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect

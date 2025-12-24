@@ -8,8 +8,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gruntwork-io/terratest/modules/retry"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/retry/v2"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 	"github.com/stretchr/testify/require"
 )
 

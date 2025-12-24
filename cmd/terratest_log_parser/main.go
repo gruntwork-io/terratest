@@ -40,7 +40,7 @@ import (
 	"path/filepath"
 
 	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/terratest/modules/logger/parser"
+	"github.com/gruntwork-io/terratest/modules/logger/parser/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

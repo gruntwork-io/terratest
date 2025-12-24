@@ -1,19 +1,18 @@
-module github.com/gruntwork-io/terratest/modules/terraform
+module github.com/gruntwork-io/terratest/modules/terraform/v2
 
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/internal/lib v1.0.0
-	github.com/gruntwork-io/terratest/modules/collections v1.0.0
-	github.com/gruntwork-io/terratest/modules/files v1.0.0
-	github.com/gruntwork-io/terratest/modules/http-helper v1.0.0
-	github.com/gruntwork-io/terratest/modules/logger v1.0.0
-	github.com/gruntwork-io/terratest/modules/opa v1.0.0
-	github.com/gruntwork-io/terratest/modules/random v1.0.0
-	github.com/gruntwork-io/terratest/modules/retry v1.0.0
-	github.com/gruntwork-io/terratest/modules/shell v1.0.0
-	github.com/gruntwork-io/terratest/modules/ssh v1.0.0
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0
+	github.com/gruntwork-io/terratest/modules/collections/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/files/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/http-helper/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/logger/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/random/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/retry/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/shell/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-json v0.27.2
@@ -41,7 +40,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
@@ -52,15 +51,15 @@ require (
 )
 
 replace (
-	github.com/gruntwork-io/terratest/internal/lib => ../../internal/lib
-	github.com/gruntwork-io/terratest/modules/collections => ../collections
-	github.com/gruntwork-io/terratest/modules/files => ../files
-	github.com/gruntwork-io/terratest/modules/http-helper => ../http-helper
-	github.com/gruntwork-io/terratest/modules/logger => ../logger
-	github.com/gruntwork-io/terratest/modules/opa => ../opa
-	github.com/gruntwork-io/terratest/modules/random => ../random
-	github.com/gruntwork-io/terratest/modules/retry => ../retry
-	github.com/gruntwork-io/terratest/modules/shell => ../shell
-	github.com/gruntwork-io/terratest/modules/ssh => ../ssh
-	github.com/gruntwork-io/terratest/modules/testing => ../testing
+	github.com/gruntwork-io/terratest/internal/lib/v2 => ../../internal/lib
+	github.com/gruntwork-io/terratest/modules/collections/v2 => ../collections
+	github.com/gruntwork-io/terratest/modules/files/v2 => ../files
+	github.com/gruntwork-io/terratest/modules/http-helper/v2 => ../http-helper
+	github.com/gruntwork-io/terratest/modules/logger/v2 => ../logger
+	github.com/gruntwork-io/terratest/modules/opa/v2 => ../opa
+	github.com/gruntwork-io/terratest/modules/random/v2 => ../random
+	github.com/gruntwork-io/terratest/modules/retry/v2 => ../retry
+	github.com/gruntwork-io/terratest/modules/shell/v2 => ../shell
+	github.com/gruntwork-io/terratest/modules/ssh/v2 => ../ssh
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../testing
 )

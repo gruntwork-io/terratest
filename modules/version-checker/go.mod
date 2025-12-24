@@ -1,11 +1,11 @@
-module github.com/gruntwork-io/terratest/modules/version-checker
+module github.com/gruntwork-io/terratest/modules/version-checker/v2
 
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/shell v1.0.0
-	github.com/gruntwork-io/terratest/modules/terraform v1.0.0
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0
+	github.com/gruntwork-io/terratest/modules/shell/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0
 	github.com/hashicorp/go-version v1.7.0
 	github.com/stretchr/testify v1.11.1
 )
@@ -19,7 +19,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/hashicorp/terraform-json v0.27.2 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
@@ -34,7 +34,7 @@ require (
 )
 
 replace (
-	github.com/gruntwork-io/terratest/modules/shell => ../shell
-	github.com/gruntwork-io/terratest/modules/terraform => ../terraform
-	github.com/gruntwork-io/terratest/modules/testing => ../testing
+	github.com/gruntwork-io/terratest/modules/shell/v2 => ../shell
+	github.com/gruntwork-io/terratest/modules/terraform/v2 => ../terraform
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../testing
 )

@@ -1,16 +1,16 @@
-module github.com/gruntwork-io/terratest/modules/ssh
+module github.com/gruntwork-io/terratest/modules/ssh/v2
 
 go 1.24.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/collections v1.0.0
-	github.com/gruntwork-io/terratest/modules/files v1.0.0
-	github.com/gruntwork-io/terratest/modules/logger v1.0.0
-	github.com/gruntwork-io/terratest/modules/retry v1.0.0
-	github.com/gruntwork-io/terratest/modules/testing v1.0.0
+	github.com/gruntwork-io/terratest/modules/collections/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/files/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/logger/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/retry/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/testing/v2 v2.0.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.44.0
+	golang.org/x/crypto v0.45.0
 )
 
 require (
@@ -24,9 +24,9 @@ require (
 )
 
 replace (
-	github.com/gruntwork-io/terratest/modules/collections => ../collections
-	github.com/gruntwork-io/terratest/modules/files => ../files
-	github.com/gruntwork-io/terratest/modules/logger => ../logger
-	github.com/gruntwork-io/terratest/modules/retry => ../retry
-	github.com/gruntwork-io/terratest/modules/testing => ../testing
+	github.com/gruntwork-io/terratest/modules/collections/v2 => ../collections
+	github.com/gruntwork-io/terratest/modules/files/v2 => ../files
+	github.com/gruntwork-io/terratest/modules/logger/v2 => ../logger
+	github.com/gruntwork-io/terratest/modules/retry/v2 => ../retry
+	github.com/gruntwork-io/terratest/modules/testing/v2 => ../testing
 )

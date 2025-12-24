@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	go_commons_collections "github.com/gruntwork-io/go-commons/collections"
-	"github.com/gruntwork-io/terratest/modules/collections"
-	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/collections/v2"
+	"github.com/gruntwork-io/terratest/modules/files/v2"
 	"github.com/mattn/go-zglob"
 )
 

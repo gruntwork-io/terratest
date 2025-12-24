@@ -1,4 +1,4 @@
-module github.com/gruntwork-io/terratest/internal/lib
+module github.com/gruntwork-io/terratest/internal/lib/v2
 
 go 1.24.0
 

@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
-	"github.com/gruntwork-io/terratest/modules/random"
+	http_helper "github.com/gruntwork-io/terratest/modules/http-helper/v2"
+	"github.com/gruntwork-io/terratest/modules/random/v2"
 )
 
 func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {

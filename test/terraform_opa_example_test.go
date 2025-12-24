@@ -3,8 +3,8 @@ package test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/opa"
-	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/opa/v2"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
 	"github.com/stretchr/testify/require"
 )
 

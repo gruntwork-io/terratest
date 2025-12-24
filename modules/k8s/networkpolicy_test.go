@@ -17,7 +17,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/random/v2"
 )
 
 func TestGetNetworkPolicyEReturnsErrorForNonExistantNetworkPolicy(t *testing.T) {
