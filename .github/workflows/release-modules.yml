@@ -127,6 +127,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Users can now import specific modules:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "go get github.com/gruntwork-io/terratest/modules/terraform@v${VERSION}" >> $GITHUB_STEP_SUMMARY
-          echo "go get github.com/gruntwork-io/terratest/modules/aws@v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "go get github.com/gruntwork-io/terratest/modules/terraform/v2@v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "go get github.com/gruntwork-io/terratest/modules/aws/v2@v${VERSION}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

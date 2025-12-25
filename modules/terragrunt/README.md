@@ -29,7 +29,7 @@ options := &terragrunt.Options{
 ```go
 import (
     "testing"
-    "github.com/gruntwork-io/terratest/modules/terragrunt"
+    "github.com/gruntwork-io/terratest/modules/terragrunt/v2"
 )
 
 func TestTerragruntApply(t *testing.T) {
