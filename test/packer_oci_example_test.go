@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/oci"
-	"github.com/gruntwork-io/terratest/modules/packer"
+	"github.com/gruntwork-io/terratest/modules/oci/v2"
+	"github.com/gruntwork-io/terratest/modules/packer/v2"
 )
 
 // An example of how to test the Packer template in examples/packer-basic-example using Terratest.

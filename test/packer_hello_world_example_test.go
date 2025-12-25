@@ -3,8 +3,8 @@ package test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/docker"
-	"github.com/gruntwork-io/terratest/modules/packer"
+	"github.com/gruntwork-io/terratest/modules/docker/v2"
+	"github.com/gruntwork-io/terratest/modules/packer/v2"
 	"github.com/stretchr/testify/assert"
 )
 

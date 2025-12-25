@@ -35,19 +35,19 @@ it should be free, but you are completely responsible for all Azure charges.
 1. [Review environment variables](#review-environment-variables).
 1. Install [Golang](https://golang.org/) and make sure this code is checked out into your `GOPATH`.
 1. `cd test`
-1. Make sure [the azure-sdk-for-go versions match](#check-go-dependencies) in [/test/go.mod](/test/go.mod) and in [test/azure/terraform_azure_example_test.go](/test/azure/terraform_azure_example_test.go).
+1. Make sure [the azure-sdk-for-go versions match](#check-go-dependencies) in [/modules/azure/go.mod](/modules/azure/go.mod) and in [test/azure/terraform_azure_example_test.go](/test/azure/terraform_azure_example_test.go).
 1. `go build terraform_azure_example_test.go`
 1. `go test -v -run TestTerraformAzureExample`
 
 ## Check Go Dependencies
 
-Check that the `github.com/Azure/azure-sdk-for-go` version in your generated `go.mod` for this test matches the version in the terratest [go.mod](https://github.com/gruntwork-io/terratest/blob/main/go.mod) file.
+Check that the `github.com/Azure/azure-sdk-for-go` version in your generated `go.mod` for this test matches the version in the terratest [modules/azure/go.mod](/modules/azure/go.mod) file.
 
 > This was tested with **go1.14.1**.
 
 ### Check Azure-sdk-for-go version
 
-Let's make sure [go.mod](https://github.com/gruntwork-io/terratest/blob/main/go.mod) includes the appropriate [azure-sdk-for-go version](https://github.com/Azure/azure-sdk-for-go/releases/tag/v38.1.0):
+Let's make sure [modules/azure/go.mod](/modules/azure/go.mod) includes the appropriate [azure-sdk-for-go version](https://github.com/Azure/azure-sdk-for-go/releases/tag/v38.1.0):
 
 ```go
 require (

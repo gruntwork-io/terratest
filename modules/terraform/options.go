@@ -4,9 +4,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/ssh"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/logger/v2"
+	"github.com/gruntwork-io/terratest/modules/ssh/v2"
+	"github.com/gruntwork-io/terratest/modules/testing/v2"
 	"github.com/jinzhu/copier"
 	"github.com/stretchr/testify/require"
 )

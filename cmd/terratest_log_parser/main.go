@@ -39,15 +39,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gruntwork-io/go-commons/entrypoint"
 	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/go-commons/logging"
-	"github.com/gruntwork-io/terratest/modules/logger/parser"
+	"github.com/gruntwork-io/terratest/modules/logger/parser/v2"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-var logger = logging.GetLogger("terratest_log_parser")
+var logger = logrus.New()
 
 const CUSTOM_USAGE_TEXT = `Usage: terratest_log_parser [--help] [--log-level=info] [--testlog=LOG_INPUT] [--outputdir=OUTPUT_DIR]
 
@@ -94,41 +92,41 @@ func run(cliContext *cli.Context) error {
 }
 
 func main() {
-	app := entrypoint.NewApp()
-	cli.AppHelpTemplate = CUSTOM_USAGE_TEXT
-	entrypoint.HelpTextLineWidth = 120
-
-	app.Name = "terratest_log_parser"
-	app.Author = "Gruntwork <www.gruntwork.io>"
-	app.Description = `A tool for parsing parallel terratest output to produce a test summary and to break out the interleaved logs by test for better debuggability.`
-	app.Action = run
-
 	currentDir, err := os.Getwd()
 	if err != nil {
 		logger.Fatalf("Error finding current directory: %s", err)
 	}
 	defaultOutputDir := filepath.Join(currentDir, "out")
 
-	logInputFlag := cli.StringFlag{
-		Name:  "testlog, l",
-		Value: "",
-		Usage: "Path to file containing test log. If unset will use stdin.",
-	}
-	outputDirFlag := cli.StringFlag{
-		Name:  "outputdir, o",
-		Value: defaultOutputDir,
-		Usage: "Path to directory to output test output to. If unset will use the current directory.",
-	}
-	logLevelFlag := cli.StringFlag{
-		Name:  "log-level",
-		Value: logrus.InfoLevel.String(),
-		Usage: fmt.Sprintf("Set the log level to `LEVEL`. Must be one of: %v", logrus.AllLevels),
-	}
-	app.Flags = []cli.Flag{
-		logLevelFlag,
-		logInputFlag,
-		outputDirFlag,
+	app := &cli.App{
+		Name:                  "terratest_log_parser",
+		Usage:                 "A tool for parsing parallel terratest output to produce a test summary and to break out the interleaved logs by test for better debuggability.",
+		CustomAppHelpTemplate: CUSTOM_USAGE_TEXT,
+		Action: func(cliContext *cli.Context) error {
+			return run(cliContext)
+		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "log-level",
+				Value: logrus.InfoLevel.String(),
+				Usage: fmt.Sprintf("Set the log level to `LEVEL`. Must be one of: %v", logrus.AllLevels),
+			},
+			&cli.StringFlag{
+				Name:    "testlog",
+				Aliases: []string{"l"},
+				Value:   "",
+				Usage:   "Path to file containing test log. If unset will use stdin.",
+			},
+			&cli.StringFlag{
+				Name:    "outputdir",
+				Aliases: []string{"o"},
+				Value:   defaultOutputDir,
+				Usage:   "Path to directory to output test output to. If unset will use the current directory.",
+			},
+		},
 	}
 
-	entrypoint.RunApp(app)
+	if err := app.Run(os.Args); err != nil {
+		logger.Fatal(err)
+	}
 }

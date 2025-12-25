@@ -3,7 +3,7 @@
 This folder contains a single Terragrunt module demonstrating how to test it using Terratest's `terraform` package
 with `TerraformBinary: "terragrunt"`.
 
-Check out [test/terragrunt_example_test.go](/test/terragrunt_example_test.go) to see how you can write automated tests
+Check out [modules/terragrunt/terragrunt_example_test.go](/modules/terragrunt/terragrunt_example_test.go) to see how you can write automated tests
 for this module.
 
 For testing multiple Terragrunt modules with dependencies (using `--all` commands), see

@@ -128,14 +128,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - gomod-{{ checksum "go.sum" }}
+            - gomod-{{ checksum "go.work.sum" }}
 
       # Install gruntwork utilities
       - run:
           <<: *install_gruntwork_utils
 
       - save_cache:
-          key: gomod-{{ checksum "go.sum" }}
+          key: gomod-{{ checksum "go.work.sum" }}
           paths:
             - $HOME/go/src/
 
@@ -147,7 +147,7 @@ jobs:
       - run:
           name: run precommit
           command: |
-            go install golang.org/x/tools/cmd/goimports@latest
+            go install golang.org/x/tools/cmd/goimports@v0.21.0
             # Install the latest minor version for v2
             pip install pre-commit~=2.9
             pre-commit install
@@ -159,26 +159,39 @@ jobs:
       # binaries to GitHub as release assets.
       - run:
           command: |
-            # For some reason, the circleci environment requires additional module dependencies that are not captured by
-            # our Linux or Mac OSX dev environments. We workaround this by running `go mod tidy` in the CircleCI
-            # environment so it pulls in what it needs.
-            go mod tidy
+            # Sync workspace dependencies
+            go work sync
 
-            go install github.com/mitchellh/gox@latest
+            mkdir -p ./cmd/bin
 
-            GO_ENABLED=0 build-go-binaries \
-              --parallel "$BIN_BUILD_PARALLELISM" \
-              --app-name terratest_log_parser \
-              --src-path ./cmd/terratest_log_parser \
-              --dest-path ./cmd/bin \
-              --ld-flags "-X main.VERSION=$CIRCLE_TAG -extldflags '-static'"
+            # Build binaries for each OS/arch combination
+            # terratest_log_parser
+            for os in linux windows; do
+              for arch in 386 amd64; do
+                echo "Building terratest_log_parser for ${os}/${arch}..."
+                suffix=""
+                if [ "$os" = "windows" ]; then suffix=".exe"; fi
+                CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build \
+                  -ldflags "-X main.VERSION=$CIRCLE_TAG -extldflags '-static'" \
+                  -o "./cmd/bin/terratest_log_parser_${os}_${arch}${suffix}" \
+                  ./cmd/terratest_log_parser
+              done
+            done
 
-            GO_ENABLED=0 build-go-binaries \
-              --parallel "$BIN_BUILD_PARALLELISM" \
-              --app-name pick-instance-type \
-              --src-path ./cmd/pick-instance-type \
-              --dest-path ./cmd/bin \
-              --ld-flags "-X main.VERSION=$CIRCLE_TAG -extldflags '-static'"
+            # pick-instance-type
+            for os in linux windows; do
+              for arch in 386 amd64; do
+                echo "Building pick-instance-type for ${os}/${arch}..."
+                suffix=""
+                if [ "$os" = "windows" ]; then suffix=".exe"; fi
+                CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build \
+                  -ldflags "-X main.VERSION=$CIRCLE_TAG -extldflags '-static'" \
+                  -o "./cmd/bin/pick-instance-type_${os}_${arch}${suffix}" \
+                  ./cmd/pick-instance-type
+              done
+            done
+
+            ls -la ./cmd/bin/
           when: always
 
       - persist_to_workspace:
@@ -211,10 +224,12 @@ jobs:
       # NOTE: terragrunt tests are excluded here and run in a separate terragrunt_test job.
       - run: mkdir -p /tmp/logs
       # check we can compile the azure code, but don't actually run the tests
-      - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure"
+      - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure/..."
       - run: |
           # Run all tests except terragrunt module (which has its own dedicated job)
-          run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output.log
+          # With Go workspaces, we explicitly list module paths instead of using go list ./...
+          MODULES=$(find ./modules -name 'go.mod' -exec dirname {} \; | grep -v terragrunt | sed 's|$|/...|' | tr '\n' ' ')
+          run-go-tests --packages "-p 1 $MODULES ./cmd/pick-instance-type/... ./cmd/terratest_log_parser/... ./internal/lib/... ./test/modularization/..." | tee /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -256,10 +271,12 @@ jobs:
       # NOTE: terragrunt tests are excluded here and run in a separate terragrunt_test job.
       - run: mkdir -p /tmp/logs
       # check we can compile the azure code, but don't actually run the tests
-      - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure"
+      - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure/..."
       - run: |
           # Run all tests except terragrunt module (which has its own dedicated job)
-          run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output.log
+          # With Go workspaces, we explicitly list module paths instead of using go list ./...
+          MODULES=$(find ./modules -name 'go.mod' -exec dirname {} \; | grep -v terragrunt | sed 's|$|/...|' | tr '\n' ' ')
+          run-go-tests --packages "-p 1 $MODULES ./cmd/pick-instance-type/... ./cmd/terratest_log_parser/... ./internal/lib/... ./test/modularization/..." | tee /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -301,8 +318,8 @@ jobs:
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-tags gcp ./modules/gcp" | tee /tmp/logs/test_output.log
-            run-go-tests --packages "-tags=gcp ./test/gcp" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-tags gcp ./modules/gcp/..." | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-tags=gcp ./test/gcp" | tee -a /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -338,7 +355,7 @@ jobs:
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-tags kubernetes ./modules/k8s" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-tags kubernetes ./modules/k8s/..." | tee /tmp/logs/test_output.log
             run-go-tests --packages "-tags kubernetes -run TestKubernetes ./test" | tee -a /tmp/logs/test_output.log
 
       - run:
@@ -380,7 +397,7 @@ jobs:
             mkdir -p /tmp/logs
             # Run the unit tests first, then the integration tests. They are separate because the integration tests
             # require additional filtering.
-            run-go-tests --packages "-tags helm ./modules/helm" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-tags helm ./modules/helm/..." | tee /tmp/logs/test_output.log
             run-go-tests --packages "-tags helm -run TestHelm ./test" | tee -a /tmp/logs/test_output.log
 
       - run:
@@ -419,7 +436,7 @@ jobs:
           command: |
             mkdir -p /tmp/logs
             # Run only the terragrunt module tests
-            run-go-tests --packages "-p 1 ./modules/terragrunt" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 ./modules/terragrunt/..." | tee /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -463,7 +480,7 @@ jobs:
           command: |
             mkdir -p /tmp/logs
             # Run only the terragrunt module tests
-            run-go-tests --packages "-p 1 ./modules/terragrunt" | tee /tmp/logs/test_output.log
+            run-go-tests --packages "-p 1 ./modules/terragrunt/..." | tee /tmp/logs/test_output.log
 
       - run:
           command: |

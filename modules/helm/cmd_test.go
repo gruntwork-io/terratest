@@ -3,8 +3,8 @@ package helm
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/k8s/v2"
+	"github.com/gruntwork-io/terratest/modules/logger/v2"
 	"github.com/stretchr/testify/assert"
 )
 
