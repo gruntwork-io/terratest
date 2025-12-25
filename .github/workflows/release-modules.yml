@@ -40,9 +40,13 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.event_name }}" == "release" ]]; then
-            # Extract version from release tag (remove 'v' prefix if present)
             VERSION="${{ github.event.release.tag_name }}"
-            VERSION="${VERSION#v}"
+            # Validate: release tag should not have 'v' prefix
+            if [[ "$VERSION" =~ ^v ]]; then
+              echo "Error: Release tag should not have 'v' prefix. Got: $VERSION"
+              echo "Create releases with tags like '2.0.0', not 'v2.0.0'"
+              exit 1
+            fi
           else
             # Use manual input or fail
             VERSION="${{ inputs.version }}"
