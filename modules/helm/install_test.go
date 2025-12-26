@@ -29,7 +29,7 @@ import (
 const (
 	remoteChartSource  = "https://charts.bitnami.com/bitnami"
 	remoteChartName    = "nginx"
-	remoteChartVersion = "13.2.23"
+	remoteChartVersion = "22.4.0"
 )
 
 // Test that we can install a remote chart (e.g bitnami/nginx)
@@ -48,11 +48,13 @@ func TestRemoteChartInstall(t *testing.T) {
 	defer k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
 	k8s.CreateNamespace(t, kubectlOptions, namespaceName)
 
-	// Override service type to node port
+	// Override service type to node port and disable PDB (requires policy/v1 API
+	// which may not be available on older k8s clusters)
 	options := &Options{
 		KubectlOptions: kubectlOptions,
 		SetValues: map[string]string{
 			"service.type": "NodePort",
+			"pdb.create":   "false",
 		},
 		Version: remoteChartVersion,
 	}
@@ -160,9 +162,11 @@ func waitForRemoteChartPods(t *testing.T, kubectlOptions *k8s.KubectlOptions, re
 			remoteChartName, releaseName,
 		),
 	}
-	k8s.WaitUntilNumPodsCreated(t, kubectlOptions, filters, podCount, 30, 10*time.Second)
+	// Use longer timeout (60 retries * 10s = 10 min) to handle slower CI environments
+	// and potential resource contention when multiple helm tests run in parallel
+	k8s.WaitUntilNumPodsCreated(t, kubectlOptions, filters, podCount, 60, 10*time.Second)
 	pods := k8s.ListPods(t, kubectlOptions, filters)
 	for _, pod := range pods {
-		k8s.WaitUntilPodAvailable(t, kubectlOptions, pod.Name, 30, 10*time.Second)
+		k8s.WaitUntilPodAvailable(t, kubectlOptions, pod.Name, 60, 10*time.Second)
 	}
 }
