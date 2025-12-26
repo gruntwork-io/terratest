@@ -27,7 +27,7 @@ func TestCreateBuild(t *testing.T) {
 	// 2. Creates a GCS bucket
 	// 3. Uploads the tarball to the GCS Bucket
 	// 4. Triggers a build using the Cloud Build API
-	// 5. Untags and deletes all pushed Build images
+	// 5. Attempts to untag and delete all pushed Build images (best-effort cleanup)
 	// 6. Deletes the GCS bucket
 
 	// Create and add some files to the archive.
@@ -69,12 +69,17 @@ func TestCreateBuild(t *testing.T) {
 	// CreateBuild blocks until the build is complete
 	b := CreateBuild(t, projectID, build)
 
-	// Delete the pushed build images
+	// Attempt to delete the pushed build images (best-effort cleanup).
+	// Note: GCR (gcr.io) has been deprecated in favor of Artifact Registry.
+	// The cleanup may fail due to permission changes, but this doesn't affect
+	// the validity of the Cloud Build test itself.
 	// We could just use the `b` struct above, but we want to explicitly test
 	// the `GetBuild` method.
 	b2 := GetBuild(t, projectID, b.GetId())
 	for _, image := range b2.GetImages() {
-		DeleteGCRRepo(t, image)
+		if err := DeleteGCRRepoE(t, image); err != nil {
+			logger.Logf(t, "Warning: Failed to delete image %s (this may be expected due to GCR deprecation): %v", image, err)
+		}
 	}
 
 	// Empty the storage bucket so we can delete it
