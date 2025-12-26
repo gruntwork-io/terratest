@@ -213,8 +213,8 @@ jobs:
       # check we can compile the azure code, but don't actually run the tests
       - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure"
       - run: |
-          # Run all tests except terragrunt module (which has its own dedicated job)
-          run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output.log
+          # Run only terraform module tests
+          run-go-tests --packages "-p 1 ./modules/terraform" | tee /tmp/logs/test_output.log
 
       - run:
           command: |
@@ -258,8 +258,8 @@ jobs:
       # check we can compile the azure code, but don't actually run the tests
       - run: run-go-tests --packages "-p 1 -tags=azure -run IDontExist ./modules/azure"
       - run: |
-          # Run all tests except terragrunt module (which has its own dedicated job)
-          run-go-tests --packages "-p 1 $(go list ./... | grep -v './modules/terragrunt' | tr '\n' ' ')" | tee /tmp/logs/test_output.log
+          # Run only terraform module tests
+          run-go-tests --packages "-p 1 ./modules/terraform" | tee /tmp/logs/test_output.log
 
       - run:
           command: |
