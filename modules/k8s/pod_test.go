@@ -143,7 +143,26 @@ spec:
     - containerPort: 80
 `
 
-const EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE = EXAMPLE_POD_YAML_TEMPLATE + `
+const EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE = `---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: %s
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  namespace: %s
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.15.7
+    env:
+        - name: NAME
+          value: "nginx"
+    ports:
+    - containerPort: 80
   - name: nginx-two
     image: nginx:1.15.7
     env:

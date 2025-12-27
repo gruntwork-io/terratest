@@ -34,6 +34,6 @@ func TestKubernetesHelloWorldExample(t *testing.T) {
 	service := k8s.GetService(t, options, "hello-world-service")
 	url := fmt.Sprintf("http://%s", k8s.GetServiceEndpoint(t, options, service, 5000))
 
-	// website::tag::5:: Make an HTTP request to the URL and make sure it returns a 200 OK with the body "Hello, World".
-	http_helper.HttpGetWithRetry(t, url, nil, 200, "Hello world!", 30, 3*time.Second)
+	// website::tag::5:: Make an HTTP request to the URL and make sure it returns a 200 OK with the body "Hello, World!".
+	http_helper.HttpGetWithRetry(t, url, nil, 200, "Hello, World!", 30, 3*time.Second)
 }

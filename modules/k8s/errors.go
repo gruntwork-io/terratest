@@ -5,6 +5,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
@@ -284,7 +285,7 @@ func (err JSONPathMalformedJSONPathResultErr) Error() string {
 
 // CronJobNotSucceeded is returned when a Kubernetes cron job didn't successfully schedule a job.
 type CronJobNotSucceeded struct {
-	cronJob *batchv1.CronJob
+	cronJob *batchv1beta1.CronJob
 }
 
 // Error format message for cron job error.
@@ -293,6 +294,6 @@ func (err CronJobNotSucceeded) Error() string {
 }
 
 // NewCronJobNotSucceeded create error for case when CronJob didn't schedule a job.
-func NewCronJobNotSucceeded(cronJob *batchv1.CronJob) CronJobNotSucceeded {
+func NewCronJobNotSucceeded(cronJob *batchv1beta1.CronJob) CronJobNotSucceeded {
 	return CronJobNotSucceeded{cronJob}
 }

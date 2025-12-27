@@ -109,7 +109,6 @@ contexts:
   name: minikube
 current-context: minikube
 kind: Config
-preferences: {}
 users:
 - name: minikube
   user:
@@ -259,7 +258,6 @@ contexts:
   name: other_minikube
 current-context: minikube
 kind: Config
-preferences: {}
 users:
 - name: minikube
   user:
