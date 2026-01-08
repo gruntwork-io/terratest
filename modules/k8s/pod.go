@@ -137,6 +137,10 @@ func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName
 
 // IsPodAvailable returns true if the all of the containers within the pod are ready and started
 func IsPodAvailable(pod *corev1.Pod) bool {
+	// Ensure all containers have reported their status
+	if len(pod.Status.ContainerStatuses) != len(pod.Spec.Containers) {
+		return false
+	}
 	for _, containerStatus := range pod.Status.ContainerStatuses {
 		isContainerStarted := containerStatus.Started
 		isContainerReady := containerStatus.Ready

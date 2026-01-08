@@ -64,11 +64,13 @@ install_gruntwork_utils: &install_gruntwork_utils
     sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
 
     # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
-    echo "Installing Go version $version"
-    curl -O --silent --location --fail --show-error "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
+    GO_VERSION="${GO_VERSION:-1.24.0}"
+    echo "Installing Go version ${GO_VERSION}"
+    curl -O --silent --location --fail --show-error --retry 3 "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
     sudo rm -rf /usr/local/go
     sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
-    sudo ln -s /usr/local/go/bin/go /usr/bin/go
+    sudo rm -f /usr/bin/go
+    sudo ln -sf /usr/local/go/bin/go /usr/bin/go
     echo "The installed version of Go is now $(go version)"
 
 install_tofu: &install_tofu

@@ -198,6 +198,9 @@ func TestIsPodAvailable(t *testing.T) {
 		{
 			title: "TestIsPodAvailableStartedButNotReady",
 			pod: &corev1.Pod{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "container1"}},
+				},
 				Status: corev1.PodStatus{
 					ContainerStatuses: []corev1.ContainerStatus{
 						{
@@ -214,6 +217,9 @@ func TestIsPodAvailable(t *testing.T) {
 		{
 			title: "TestIsPodAvailableStartedAndReady",
 			pod: &corev1.Pod{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "container1"}},
+				},
 				Status: corev1.PodStatus{
 					ContainerStatuses: []corev1.ContainerStatus{
 						{
@@ -226,6 +232,25 @@ func TestIsPodAvailable(t *testing.T) {
 				},
 			},
 			expectedResult: true,
+		},
+		{
+			title: "TestIsPodAvailableMissingContainerStatus",
+			pod: &corev1.Pod{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "container1"}, {Name: "container2"}},
+				},
+				Status: corev1.PodStatus{
+					ContainerStatuses: []corev1.ContainerStatus{
+						{
+							Name:    "container1",
+							Ready:   true,
+							Started: &[]bool{true}[0],
+						},
+					},
+					Phase: corev1.PodRunning,
+				},
+			},
+			expectedResult: false,
 		},
 	}
 	for _, tc := range cases {
