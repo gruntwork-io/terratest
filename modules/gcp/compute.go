@@ -263,16 +263,29 @@ func (i *Instance) SetMetadataE(t testing.TestingT, metadata map[string]string) 
 }
 
 // newMetadata takes in a Compute Instance's existing metadata plus a new set of key-value pairs and returns an updated
-// metadata object.
+// metadata object. Existing metadata items are preserved, with new key-value pairs overwriting existing keys.
 func newMetadata(t testing.TestingT, oldMetadata *compute.Metadata, kvs map[string]string) *compute.Metadata {
-	items := []*compute.MetadataItems{}
+	// Build a map from existing metadata items
+	mergedKvs := make(map[string]string)
+	for _, item := range oldMetadata.Items {
+		if item.Value != nil {
+			mergedKvs[item.Key] = *item.Value
+		}
+	}
 
+	// Overwrite with new key-value pairs
 	for key, val := range kvs {
+		mergedKvs[key] = val
+	}
+
+	// Convert the merged map back to MetadataItems
+	items := []*compute.MetadataItems{}
+	for key, val := range mergedKvs {
+		v := val // create new variable to avoid pointer issues
 		item := &compute.MetadataItems{
 			Key:   key,
-			Value: &val,
+			Value: &v,
 		}
-
 		items = append(items, item)
 	}
 
