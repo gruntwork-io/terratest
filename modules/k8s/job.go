@@ -97,3 +97,43 @@ func IsJobSucceeded(job *batchv1.Job) bool {
 	}
 	return false
 }
+
+// CreateJobFromCronJob creates a Job from the specified CronJob in the given namespace and returns the created Job.
+func CreateJobFromCronJob(t testing.TestingT, options *KubectlOptions, cronJobName, newJobName string) *batchv1.Job {
+	job, err := CreateJobFromCronJobE(t, options, cronJobName, newJobName)
+	require.NoError(t, err)
+	return job
+}
+
+// CreateJobFromCronJobE creates a Job from the specified CronJob in the given namespace and returns the created Job.
+// This function is similar to running `kubectl create job --from=cronjob/<cron-job-name> <new-job-name>`.
+func CreateJobFromCronJobE(t testing.TestingT, options *KubectlOptions, cronJobName, newJobName string) (*batchv1.Job, error) {
+	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		return nil, err
+	}
+
+	cronJob, err := clientset.BatchV1().CronJobs(options.Namespace).Get(context.Background(), cronJobName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	annotations := make(map[string]string)
+	for k, v := range cronJob.Spec.JobTemplate.Annotations {
+		annotations[k] = v
+	}
+
+	job := &batchv1.Job{
+		TypeMeta: metav1.TypeMeta{APIVersion: batchv1.SchemeGroupVersion.String(), Kind: "Job"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        newJobName,
+			Namespace:   options.Namespace,
+			Labels:      cronJob.Spec.JobTemplate.Labels,
+			Annotations: annotations,
+		},
+		Spec: cronJob.Spec.JobTemplate.Spec,
+	}
+
+	createdJob, err := clientset.BatchV1().Jobs(options.Namespace).Create(context.Background(), job, metav1.CreateOptions{})
+	return createdJob, err
+}
