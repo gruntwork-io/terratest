@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -129,6 +130,32 @@ func TestIsJobSucceeded(t *testing.T) {
 	}
 }
 
+func TestCreateJobFromCronJobReturnsCreatedJob(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueId())
+	options := NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(EXAMPLE_CRON_JOB_YAML_TEMPLATE, uniqueID, uniqueID)
+	defer KubectlDeleteFromString(t, options, configData)
+	KubectlApplyFromString(t, options, configData)
+
+	newJobName := "pi-copied-job"
+	job := CreateJobFromCronJob(t, options, "pi-cronjob", newJobName)
+	require.NotNil(t, job)
+	t.Log(job.Name)
+	assert.Equal(t, job.Namespace, uniqueID)
+	assert.Equal(t, job.Name, newJobName)
+}
+
+func TestCreateJobFromCronJobEReturnsErrorForNonExistentCronJob(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueId())
+	options := NewKubectlOptions("", "", uniqueID)
+	_, err := CreateJobFromCronJobE(t, options, "non-existent-cronjob", "new-job-name")
+	require.Error(t, err)
+}
+
 const EXAMPLE_JOB_YAML_TEMPLATE = `---
 apiVersion: v1
 kind: Namespace
@@ -149,4 +176,31 @@ spec:
         command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
       restartPolicy: Never
   backoffLimit: 4
+`
+
+const EXAMPLE_CRON_JOB_YAML_TEMPLATE = `---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: %s
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pi-cronjob
+  namespace: %s
+spec:
+  schedule: "* 1 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 4
+      template:
+        spec:
+          containers:
+          - name: pi
+            image: "perl:5.34.1"
+            command: ["perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+          restartPolicy: Never
 `
