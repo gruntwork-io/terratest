@@ -35,7 +35,7 @@ on:
         description: 'PR number on the official terratest repo'
         required: false
       skip_provider_registration:
-        description: 'When set to true, terraform will skip provider registration (see: https://www.terraform.io/docs/providers/azurerm/index.html#skip_provider_registration for more information)'
+        description: 'When set to true, opentofu will skip provider registration (see: https://www.terraform.io/docs/providers/azurerm/index.html#skip_provider_registration for more information)'
         required: true
         default: 'false'
 
@@ -46,18 +46,18 @@ jobs:
   ci-job:
     runs-on: [ubuntu-latest]
     steps:
-      - uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 0.15.1
-          terraform_wrapper: false  
       - name: checkout to repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: ${{ github.event.inputs.repo }}
           ref: ${{ github.event.inputs.branch }}
+
+      - uses: jdx/mise-action@v2
+
       - name: install golangci-lint binary
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.53.2
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.62.0
+
       - name: lint modules/azure folder
         id: azure_module_lint
         run: |
@@ -66,6 +66,7 @@ jobs:
 
           # run the linter
           ./bin/golangci-lint run ./modules/azure/ --build-tags=azure --timeout 5m0s
+
       - name: lint test/azure folder
         id: azure_test_lint
         run: |
@@ -74,64 +75,72 @@ jobs:
 
           # run the linter
           ./bin/golangci-lint run ./test/azure/ --build-tags=azure --timeout 5m0s
-      - name: run terraform format
-        id: azure_terraform_format
-        run: terraform fmt -check -recursive ./examples/azure
+
+      - name: run tofu format
+        id: azure_tofu_format
+        run: tofu fmt -check -recursive ./examples/azure
+
       - name: login to azure cli
-        uses: azure/login@v1.1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: run go unit test for azure
         id: azure_unit_test
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          SKIP_PROVIDER_REGISTRATION: ${{ github.event.inputs.skip_provider_registration }}
         run: |
           cd modules
 
-          APP_ID=`echo $AZURE_CREDENTIALS | jq -r -c ".clientId"`
-          APP_PASSWORD=`echo $AZURE_CREDENTIALS | jq -r -c ".clientSecret"`
-          TENANT_ID=`echo $AZURE_CREDENTIALS | jq -r -c ".tenantId"`
+          APP_ID="$(jq -r -c ".clientId" <<<"$AZURE_CREDENTIALS")"
+          APP_PASSWORD="$(jq -r -c ".clientSecret" <<<"$AZURE_CREDENTIALS")"
+          TENANT_ID="$(jq -r -c ".tenantId" <<<"$AZURE_CREDENTIALS")"
 
           # if clientId, subscriptionId, tenantId doesn't provide to the go tests
-          # by default, terratest reads them from below environment variables
+          # by default, terratest reads them from the environment variables below
           export ARM_CLIENT_ID="$APP_ID"
           export ARM_CLIENT_SECRET="$APP_PASSWORD"
-          export ARM_SUBSCRIPTION_ID=`az account show --query "id" --output tsv`
+          export ARM_SUBSCRIPTION_ID="$(az account show --query "id" --output tsv)"
           export ARM_TENANT_ID="$TENANT_ID"
-          export ARM_SKIP_PROVIDER_REGISTRATION=${{ github.event.inputs.skip_provider_registration }}
+          export ARM_SKIP_PROVIDER_REGISTRATION="$SKIP_PROVIDER_REGISTRATION"
 
           # run the unit tests under the `azure` subfolder
           go test ./azure/* -v -timeout 90m
+
       - name: run go test for azure
         id: azure_test
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          SKIP_PROVIDER_REGISTRATION: ${{ github.event.inputs.skip_provider_registration }}
         run: |
           cd test/azure
 
-          APP_ID=`echo $AZURE_CREDENTIALS | jq -r -c ".clientId"`
-          APP_PASSWORD=`echo $AZURE_CREDENTIALS | jq -r -c ".clientSecret"`
-          TENANT_ID=`echo $AZURE_CREDENTIALS | jq -r -c ".tenantId"`
+          APP_ID="$(jq -r -c ".clientId" <<<"$AZURE_CREDENTIALS")"
+          APP_PASSWORD="$(jq -r -c ".clientSecret" <<<"$AZURE_CREDENTIALS")"
+          TENANT_ID="$(jq -r -c ".tenantId" <<<"$AZURE_CREDENTIALS")"
 
           # if clientId, subscriptionId, tenantId doesn't provide to the go tests
           # by default, terratest reads them from below environment variables
           export ARM_CLIENT_ID="$APP_ID"
           export ARM_CLIENT_SECRET="$APP_PASSWORD"
-          export ARM_SUBSCRIPTION_ID=`az account show --query "id" --output tsv`
+          export ARM_SUBSCRIPTION_ID="$(az account show --query "id" --output tsv)"
           export ARM_TENANT_ID="$TENANT_ID"
-          export ARM_SKIP_PROVIDER_REGISTRATION=${{ github.event.inputs.skip_provider_registration }}
+          export ARM_SKIP_PROVIDER_REGISTRATION="$SKIP_PROVIDER_REGISTRATION"
 
           # some resources may require ssh keys (e.g. Kubernetes, VMs, etc.)
-          # terraform will read below environment variables
-          # if those values didn't provide to the terraform explicitly
+          # tofu will read below environment variables
+          # if those values didn't provide to tofu explicitly
           rm -rf ssh_key*
           ssh-keygen -m PEM -t rsa -b 4096 -f ./ssh_key -q -N ""
+
           export TF_VAR_ssh_public_key="$PWD/ssh_key.pub"
           export TF_VAR_client_id="$APP_ID"
           export TF_VAR_client_secret="$APP_PASSWORD"
 
           # run the actual tests under the `azure` subfolder
           go test --tags=azure -v -timeout 90m
+
       - name: report back the result
         if: always()
         env:
