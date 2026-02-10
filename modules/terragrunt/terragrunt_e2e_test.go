@@ -126,14 +126,12 @@ func TestOutputAllJsonEndToEnd(t *testing.T) {
 	require.NotContains(t, output, "Group 1")
 	require.NotContains(t, output, "- Unit ")
 
-	// Each non-empty line should be valid JSON
+	// Validate output contains at least 2 valid JSON objects (foo and bar modules)
+	dec := json.NewDecoder(strings.NewReader(output))
 	var jsonCount int
-	for _, line := range strings.Split(output, "\n") {
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-		var parsed interface{}
-		require.NoError(t, json.Unmarshal([]byte(strings.TrimSpace(line)), &parsed))
+	for dec.More() {
+		var obj json.RawMessage
+		require.NoError(t, dec.Decode(&obj))
 		jsonCount++
 	}
 	require.GreaterOrEqual(t, jsonCount, 2)
