@@ -275,6 +275,8 @@ Tested with Terragrunt v0.80.4+, v0.93.5+, and v0.99.x. Earlier versions may wor
 | `TgPlanAllExitCode` / `TgPlanAllExitCodeE` | `PlanAllExitCode` / `PlanAllExitCodeE` |
 | `ValidateInputs` / `ValidateInputsE` | `HclValidate` / `HclValidateE` |
 
+> **Note:** `ValidateInputs` specifically checked input alignment. For equivalent behavior, pass `TerraformArgs: []string{"--inputs"}` to `HclValidate`.
+
 ## More Info
 
 - [Terragrunt Documentation](https://terragrunt.gruntwork.io/)

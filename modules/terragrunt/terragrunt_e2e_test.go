@@ -126,25 +126,15 @@ func TestOutputAllJsonEndToEnd(t *testing.T) {
 	require.NotContains(t, output, "Group 1")
 	require.NotContains(t, output, "- Unit ")
 
-	// Validate output is valid JSON (terragrunt returns multiple JSON objects)
-	// Each line should be valid JSON
-	lines := []string{}
-	for _, line := range splitNonEmpty(output) {
-		lines = append(lines, line)
-		var parsed interface{}
-		err := json.Unmarshal([]byte(line), &parsed)
-		require.NoError(t, err, "Each JSON object in output should be valid JSON: %s", line)
-	}
-	require.GreaterOrEqual(t, len(lines), 2, "Should have at least 2 JSON objects (foo and bar modules)")
-}
-
-// splitNonEmpty splits a string by newlines and returns non-empty lines
-func splitNonEmpty(s string) []string {
-	var result []string
-	for _, line := range strings.Split(s, "\n") {
-		if strings.TrimSpace(line) != "" {
-			result = append(result, strings.TrimSpace(line))
+	// Each non-empty line should be valid JSON
+	var jsonCount int
+	for _, line := range strings.Split(output, "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
 		}
+		var parsed interface{}
+		require.NoError(t, json.Unmarshal([]byte(strings.TrimSpace(line)), &parsed))
+		jsonCount++
 	}
-	return result
+	require.GreaterOrEqual(t, jsonCount, 2)
 }

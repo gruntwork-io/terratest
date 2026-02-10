@@ -48,36 +48,34 @@ func isLogLine(line string) bool {
 }
 
 // extractJsonContent extracts only JSON objects from terragrunt output,
-// filtering out log lines and other non-JSON content like "Group 1" or "- Unit ./foo"
+// filtering out log lines and other non-JSON content like "Group 1" or "- Unit ./foo".
+// Uses json.Decoder to correctly handle braces inside JSON string values.
 func extractJsonContent(rawOutput string) string {
 	lines := strings.Split(rawOutput, "\n")
-	var result []string
-	braceDepth := 0
-
+	var filtered []string
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-
-		// Skip empty lines, log lines, and metadata lines
 		if trimmed == "" || isLogLine(trimmed) || isMetadataLine(trimmed) {
 			continue
 		}
-
-		// Count braces to track JSON depth
-		openBraces := strings.Count(trimmed, "{")
-		closeBraces := strings.Count(trimmed, "}")
-
-		// If we're starting a new JSON object or inside one, include the line
-		if openBraces > 0 || braceDepth > 0 {
-			result = append(result, line)
-		}
-
-		braceDepth += openBraces - closeBraces
-		if braceDepth < 0 {
-			braceDepth = 0
-		}
+		filtered = append(filtered, trimmed)
 	}
 
-	return strings.Join(result, "\n")
+	remaining := strings.Join(filtered, "\n")
+	if remaining == "" {
+		return ""
+	}
+
+	dec := json.NewDecoder(strings.NewReader(remaining))
+	var results []string
+	for {
+		var raw json.RawMessage
+		if err := dec.Decode(&raw); err != nil {
+			break
+		}
+		results = append(results, string(raw))
+	}
+	return strings.Join(results, "\n")
 }
 
 // cleanTerragruntOutput extracts the actual output value from terragrunt stack's verbose output
@@ -124,7 +122,9 @@ func cleanTerragruntOutput(rawOutput string) (string, error) {
 	return finalOutput, nil
 }
 
-// cleanTerragruntJson cleans the JSON output from terragrunt stack command
+// cleanTerragruntJson cleans the JSON output from a terragrunt stack command that
+// returns a single combined JSON object. Returns an error if the output contains
+// multiple JSON objects (use extractJsonContent directly for multi-object output).
 //
 // Example input (raw tg JSON output):
 //

@@ -1,6 +1,8 @@
 package terragrunt
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -19,18 +21,12 @@ func TestHclValidate(t *testing.T) {
 	})
 }
 
-func TestHclValidateE(t *testing.T) {
+func TestHclValidateE_InvalidConfig(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
-	require.NoError(t, err)
+	tmpDir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "terragrunt.hcl"), []byte("not_valid!!!"), 0644))
 
-	options := &Options{
-		TerragruntDir:    testFolder,
-		TerragruntBinary: "terragrunt",
-	}
-
-	// HclValidate should succeed on valid terragrunt.hcl files
-	_, err = HclValidateE(t, options)
-	require.NoError(t, err)
+	_, err := HclValidateE(t, &Options{TerragruntDir: tmpDir})
+	require.Error(t, err)
 }
