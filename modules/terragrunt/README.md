@@ -258,7 +258,7 @@ This module does **NOT** support:
 - `validate`, `graph`, `import`, `refresh`, `show`, `state`, `test` commands
 - `backend`, `exec`, `catalog`, `scaffold` commands
 - Discovery commands (`find`, `list`)
-- Configuration commands (`dag`, `hcl`, `info`, `render`)
+- Configuration commands (`dag`, `info`, `render`)
 
 For single-unit testing, consider using the `terraform` module instead, or run terragrunt commands directly via the `shell` module.
 
