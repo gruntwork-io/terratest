@@ -92,7 +92,9 @@ Work with [implicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks
 - `PlanAllExitCode(t, options)` - Plan all and return exit code (0=no changes, 2=changes, other=error)
 - `ValidateAll(t, options)` - Validate all modules
 - `RunAll(t, options, command)` - Run any terraform command with --all flag
+- `OutputAllJson(t, options)` - Get all outputs as raw JSON string (note: returns separate JSON objects per module)
 - `FormatAll(t, options)` - Format all terragrunt.hcl files
+- `HclValidate(t, options)` - Validate terragrunt.hcl syntax and configuration
 
 ### Stack Commands
 
@@ -101,10 +103,10 @@ Work with [explicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks
 - `StackGenerate(t, options)` - Generate stack from stack.hcl
 - `StackRun(t, options)` - Run command on generated stack
 - `StackClean(t, options)` - Remove .terragrunt-stack directory
-- `Output(t, options, key)` - Get stack output value
-- `OutputJson(t, options, key)` - Get stack output as JSON
-- `OutputAll(t, options)` - Get all stack outputs as map
-- `OutputListAll(t, options)` - Get list of all output variable names
+- `StackOutput(t, options, key)` - Get stack output value
+- `StackOutputJson(t, options, key)` - Get stack output as JSON
+- `StackOutputAll(t, options)` - Get all stack outputs as map
+- `StackOutputListAll(t, options)` - Get list of all output variable names
 
 ## Examples
 
@@ -153,15 +155,21 @@ func TestStackOutput(t *testing.T) {
         TerragruntDir: "../stack",
     }
 
-    terragrunt.ApplyAll(t, options)
-    defer terragrunt.DestroyAll(t, options)
+    terragrunt.StackRun(t, &terragrunt.Options{
+        TerragruntDir: "../stack",
+        TerraformArgs: []string{"apply"},
+    })
+    defer terragrunt.StackRun(t, &terragrunt.Options{
+        TerragruntDir: "../stack",
+        TerraformArgs: []string{"destroy"},
+    })
 
     // Get specific output
-    vpcID := terragrunt.Output(t, options, "vpc_id")
+    vpcID := terragrunt.StackOutput(t, options, "vpc_id")
     assert.NotEmpty(t, vpcID)
 
     // Get all outputs
-    outputs := terragrunt.OutputAll(t, options)
+    outputs := terragrunt.StackOutputAll(t, options)
     assert.Contains(t, outputs, "vpc_id")
 }
 ```
@@ -205,26 +213,42 @@ func TestCustomCommand(t *testing.T) {
 }
 ```
 
-### Validating Output Keys
+### Validating Stack Output Keys
 
 ```go
-func TestOutputKeys(t *testing.T) {
+func TestStackOutputKeys(t *testing.T) {
     t.Parallel()
 
     options := &terragrunt.Options{
         TerragruntDir: "../stack",
     }
 
-    terragrunt.ApplyAll(t, options)
-    defer terragrunt.DestroyAll(t, options)
+    terragrunt.StackRun(t, &terragrunt.Options{
+        TerragruntDir: "../stack",
+        TerraformArgs: []string{"apply"},
+    })
+    defer terragrunt.StackRun(t, &terragrunt.Options{
+        TerragruntDir: "../stack",
+        TerraformArgs: []string{"destroy"},
+    })
 
     // Get list of all output keys
-    keys := terragrunt.OutputListAll(t, options)
+    keys := terragrunt.StackOutputListAll(t, options)
 
     // Verify required outputs exist
     assert.Contains(t, keys, "vpc_id")
     assert.Contains(t, keys, "subnet_ids")
 }
+```
+
+### Using Filters (v0.97.0+)
+
+```go
+options := &terragrunt.Options{
+    TerragruntDir:  "../live/prod",
+    TerragruntArgs: []string{"--filter", "{./vpc}"},  // Only apply vpc
+}
+terragrunt.ApplyAll(t, options)
 ```
 
 ## Not Supported
@@ -240,7 +264,16 @@ For single-unit testing, consider using the `terraform` module instead, or run t
 
 ## Compatibility
 
-Tested with Terragrunt v0.80.4+ and v0.93.5+. Earlier versions may work but are not guaranteed.
+Tested with Terragrunt v0.80.4+, v0.93.5+, and v0.99.x. Earlier versions may work but are not guaranteed.
+
+### Migration from terraform Module
+
+| Deprecated (terraform module) | Replacement (terragrunt module) |
+|-------------------------------|----------------------------------|
+| `TgApplyAll` / `TgApplyAllE` | `ApplyAll` / `ApplyAllE` |
+| `TgDestroyAll` / `TgDestroyAllE` | `DestroyAll` / `DestroyAllE` |
+| `TgPlanAllExitCode` / `TgPlanAllExitCodeE` | `PlanAllExitCode` / `PlanAllExitCodeE` |
+| `ValidateInputs` / `ValidateInputsE` | `HclValidate` / `HclValidateE` |
 
 ## More Info
 

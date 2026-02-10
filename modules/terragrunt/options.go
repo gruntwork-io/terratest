@@ -35,6 +35,7 @@ const (
 	NonInteractiveFlag      = "--non-interactive"
 	TerragruntLogFormatKey  = "TG_LOG_FORMAT"
 	TerragruntLogCustomKey  = "TG_LOG_CUSTOM_FORMAT"
+	TerragruntNoTipsKey     = "TG_NO_TIPS"
 	DefaultLogFormat        = "key-value"
 	DefaultLogCustomFormat  = "%msg(color=disable)"
 )
@@ -84,8 +85,8 @@ type Options struct {
 	Stdin io.Reader
 }
 
-// setTerragruntLogFormatting sets default log formatting for tg
-// if it is not already set in options.EnvVars or OS environment vars
+// setTerragruntLogFormatting sets default log formatting and other env vars for tg
+// if they are not already set in options.EnvVars or OS environment vars
 func setTerragruntLogFormatting(options *Options) {
 	if options.EnvVars == nil {
 		options.EnvVars = make(map[string]string)
@@ -106,6 +107,15 @@ func setTerragruntLogFormatting(options *Options) {
 		_, inEnv := os.LookupEnv(TerragruntLogCustomKey)
 		if !inEnv {
 			options.EnvVars[TerragruntLogCustomKey] = DefaultLogCustomFormat
+		}
+	}
+
+	// Suppress tips for cleaner test output (v1.0.0+, ignored by older versions)
+	_, inOpts = options.EnvVars[TerragruntNoTipsKey]
+	if !inOpts {
+		_, inEnv := os.LookupEnv(TerragruntNoTipsKey)
+		if !inEnv {
+			options.EnvVars[TerragruntNoTipsKey] = "true"
 		}
 	}
 }

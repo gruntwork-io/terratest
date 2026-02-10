@@ -1,7 +1,9 @@
 package terragrunt
 
 import (
+	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -97,4 +99,52 @@ func TestStackEndToEndIntegration(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Stack integration test completed successfully")
+}
+
+// TestOutputAllJsonEndToEnd tests OutputAllJson extracts clean JSON from terragrunt output
+func TestOutputAllJsonEndToEnd(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp(
+		"../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{TerragruntDir: testFolder}
+
+	ApplyAll(t, options)
+	defer DestroyAll(t, options)
+
+	output := OutputAllJson(t, options)
+
+	// Contains module outputs, no log noise
+	require.Contains(t, output, `"value": "foo"`)
+	require.Contains(t, output, `"value": "bar"`)
+	// Check for both old and new log format markers
+	require.NotContains(t, output, "time=")
+	require.NotContains(t, output, " INFO ")
+	require.NotContains(t, output, " STDOUT ")
+	require.NotContains(t, output, "Group 1")
+	require.NotContains(t, output, "- Unit ")
+
+	// Validate output is valid JSON (terragrunt returns multiple JSON objects)
+	// Each line should be valid JSON
+	lines := []string{}
+	for _, line := range splitNonEmpty(output) {
+		lines = append(lines, line)
+		var parsed interface{}
+		err := json.Unmarshal([]byte(line), &parsed)
+		require.NoError(t, err, "Each JSON object in output should be valid JSON: %s", line)
+	}
+	require.GreaterOrEqual(t, len(lines), 2, "Should have at least 2 JSON objects (foo and bar modules)")
+}
+
+// splitNonEmpty splits a string by newlines and returns non-empty lines
+func splitNonEmpty(s string) []string {
+	var result []string
+	for _, line := range strings.Split(s, "\n") {
+		if strings.TrimSpace(line) != "" {
+			result = append(result, strings.TrimSpace(line))
+		}
+	}
+	return result
 }
