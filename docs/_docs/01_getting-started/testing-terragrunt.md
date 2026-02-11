@@ -16,12 +16,12 @@ Terratest provides two approaches for testing Terragrunt configurations:
 
 | Approach | Use Case | Package |
 |----------|----------|---------|
-| **Single-module** | Testing individual modules | `modules/terraform` with `TerraformBinary: "terragrunt"` |
-| **Multi-module** | Testing multiple modules with `--all` commands | `modules/terragrunt` |
+| **Unit** | Testing individual units | `modules/terraform` with `TerraformBinary: "terragrunt"` |
+| **Stack** | Testing a stack of units with `--all` commands | `modules/terragrunt` |
 
-## Single-Module Testing
+## Unit Testing
 
-For testing a single Terragrunt module, use the `terraform` package with `TerraformBinary` set to `"terragrunt"`:
+For testing a single Terragrunt unit, use the `terraform` package with `TerraformBinary` set to `"terragrunt"`:
 
 ```go
 func TestTerragruntModule(t *testing.T) {
@@ -40,12 +40,12 @@ func TestTerragruntModule(t *testing.T) {
 }
 ```
 
-## Multi-Module Testing
+## Stack Testing
 
-For testing multiple modules with dependencies, use the dedicated `terragrunt` package:
+For testing a stack of units with dependencies, use the dedicated `terragrunt` package:
 
 ```go
-func TestMultiModule(t *testing.T) {
+func TestStack(t *testing.T) {
     t.Parallel()
 
     testFolder, err := files.CopyTerragruntFolderToTemp("../live/prod", t.Name())
@@ -90,5 +90,5 @@ For Terragrunt [stacks](https://terragrunt.gruntwork.io/docs/features/stacks/):
 ## Further Reading
 
 - [Terragrunt Documentation](https://terragrunt.gruntwork.io/)
-- [Multi-module example](https://github.com/gruntwork-io/terratest/tree/main/examples/terragrunt-multi-module-example)
+- [Stack example](https://github.com/gruntwork-io/terratest/tree/main/examples/terragrunt-multi-module-example)
 - [terragrunt package reference](https://pkg.go.dev/github.com/gruntwork-io/terratest/modules/terragrunt)

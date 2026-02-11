@@ -82,19 +82,21 @@ options := &terragrunt.Options{
 
 ## Functions
 
-### Non-Stack Commands
-Work with standard terragrunt configurations (dependencies via `dependency` blocks):
+### Run --all Commands
+
+Work with [implicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks/#implicit-stacks) (multiple units in a directory):
 
 - `Init(t, options)` - Initialize configuration
 - `ApplyAll(t, options)` - Apply all modules with dependencies
 - `DestroyAll(t, options)` - Destroy all modules with dependencies
-- `PlanAllExitCode(t, options)` - Plan all and return exit code (0=no changes, 2=changes)
+- `PlanAllExitCode(t, options)` - Plan all and return exit code (0=no changes, 2=changes, other=error)
 - `ValidateAll(t, options)` - Validate all modules
 - `RunAll(t, options, command)` - Run any terraform command with --all flag
 - `FormatAll(t, options)` - Format all terragrunt.hcl files
 
 ### Stack Commands
-Work with `terragrunt.stack.hcl` configurations:
+
+Work with [explicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks/#explicit-stacks) (a directory with a `terragrunt.stack.hcl` file):
 
 - `StackGenerate(t, options)` - Generate stack from stack.hcl
 - `StackRun(t, options)` - Run command on generated stack
@@ -109,7 +111,7 @@ Work with `terragrunt.stack.hcl` configurations:
 ### Testing with Dependencies
 
 ```go
-func TestMultiModuleStack(t *testing.T) {
+func TestStack(t *testing.T) {
     t.Parallel()
 
     options := &terragrunt.Options{
@@ -228,13 +230,13 @@ func TestOutputKeys(t *testing.T) {
 ## Not Supported
 
 This module does **NOT** support:
-- Single-module commands (non-`--all` operations)
+- Single-unit commands (non-`--all` operations)
 - `validate`, `graph`, `import`, `refresh`, `show`, `state`, `test` commands
 - `backend`, `exec`, `catalog`, `scaffold` commands
 - Discovery commands (`find`, `list`)
 - Configuration commands (`dag`, `hcl`, `info`, `render`)
 
-For single-module testing, consider using the `terraform` module instead, or run terragrunt commands directly via the `shell` module.
+For single-unit testing, consider using the `terraform` module instead, or run terragrunt commands directly via the `shell` module.
 
 ## Compatibility
 

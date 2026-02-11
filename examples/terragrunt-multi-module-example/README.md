@@ -1,9 +1,9 @@
 # Terragrunt Multi-Module Example
 
 This folder contains a Terragrunt configuration with multiple modules that have dependencies (VPC → Database → App),
-demonstrating how to use Terratest's `terragrunt` package to test multi-module setups.
+demonstrating how to use Terratest's `terragrunt` package to test stack configurations.
 
-Check out [test/terragrunt_example_test.go](/test/terragrunt_example_test.go) to see how you can write automated tests
+Check out [modules/terragrunt/terragrunt_example_test.go](/modules/terragrunt/terragrunt_example_test.go) to see how you can write automated tests
 for this configuration using `ApplyAll` and `DestroyAll`.
 
 ## Structure
