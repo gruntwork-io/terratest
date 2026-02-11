@@ -13,16 +13,16 @@ import (
 
 // This file demonstrates two approaches for testing Terragrunt configurations:
 //
-// 1. SINGLE-MODULE TESTING: Use the terraform module with TerraformBinary set to "terragrunt".
-//    This works because terragrunt is a thin wrapper around terraform for single modules.
+// 1. UNIT TESTING: Use the terraform module with TerraformBinary set to "terragrunt".
+//    This works because terragrunt is a thin wrapper around terraform for single units.
 //    See: TestTerragruntExample, TestTerragruntConsole
 //
-// 2. MULTI-MODULE TESTING: Use the dedicated terragrunt module with ApplyAll/DestroyAll.
-//    This is for testing multiple Terragrunt modules with dependencies using --all commands.
+// 2. STACK TESTING: Use the dedicated terragrunt module with ApplyAll/DestroyAll.
+//    This is for testing a stack of Terragrunt units with dependencies using --all commands.
 //    See: TestTerragruntMultiModuleExample
 
-// TestTerragruntExample demonstrates testing a single Terragrunt module using the terraform package.
-// For single-module testing, use terraform.Options with TerraformBinary set to "terragrunt".
+// TestTerragruntExample demonstrates testing a single Terragrunt unit using the terraform package.
+// For unit testing, use terraform.Options with TerraformBinary set to "terragrunt".
 func TestTerragruntExample(t *testing.T) {
 	t.Parallel()
 
@@ -31,7 +31,7 @@ func TestTerragruntExample(t *testing.T) {
 	require.NoError(t, err)
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		// Set the path to the Terragrunt module that will be tested.
+		// Set the path to the Terragrunt unit that will be tested.
 		TerraformDir: testFolder,
 		// Set the terraform binary path to terragrunt so that terratest uses terragrunt
 		// instead of terraform. You must ensure that you have terragrunt downloaded and
@@ -75,9 +75,9 @@ func TestTerragruntConsole(t *testing.T) {
 	assert.Contains(t, out, `"local variable named mylocal"`)
 }
 
-// TestTerragruntMultiModuleExample demonstrates testing multiple Terragrunt modules
-// using the dedicated terragrunt package. Use this approach when you have multiple
-// modules with dependencies that need to be applied/destroyed together using --all.
+// TestTerragruntMultiModuleExample demonstrates testing a stack of Terragrunt units
+// using the dedicated terragrunt package. Use this approach when you have a stack of
+// units with dependencies that need to be applied/destroyed together using --all.
 func TestTerragruntMultiModuleExample(t *testing.T) {
 	t.Parallel()
 

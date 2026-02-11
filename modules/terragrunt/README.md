@@ -82,7 +82,7 @@ options := &terragrunt.Options{
 
 ## Functions
 
-### Non-Stack Commands
+### Run-All Commands
 Work with standard terragrunt configurations (dependencies via `dependency` blocks):
 
 - `Init(t, options)` - Initialize configuration
@@ -109,7 +109,7 @@ Work with `terragrunt.stack.hcl` configurations:
 ### Testing with Dependencies
 
 ```go
-func TestMultiModuleStack(t *testing.T) {
+func TestStack(t *testing.T) {
     t.Parallel()
 
     options := &terragrunt.Options{
@@ -228,13 +228,13 @@ func TestOutputKeys(t *testing.T) {
 ## Not Supported
 
 This module does **NOT** support:
-- Single-module commands (non-`--all` operations)
+- Single-unit commands (non-`--all` operations)
 - `validate`, `graph`, `import`, `refresh`, `show`, `state`, `test` commands
 - `backend`, `exec`, `catalog`, `scaffold` commands
 - Discovery commands (`find`, `list`)
 - Configuration commands (`dag`, `hcl`, `info`, `render`)
 
-For single-module testing, consider using the `terraform` module instead, or run terragrunt commands directly via the `shell` module.
+For single-unit testing, consider using the `terraform` module instead, or run terragrunt commands directly via the `shell` module.
 
 ## Compatibility
 
