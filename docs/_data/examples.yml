@@ -59,7 +59,7 @@
       id: terragrunt_code
     - url: /examples/terragrunt-example/main.tf
       id: terraform_code
-    - url: /test/terragrunt_example_test.go
+    - url: /modules/terragrunt/terragrunt_example_test.go
       id: test_code
       default: true
   learn_more:
@@ -76,7 +76,7 @@
       id: database_terragrunt_code
     - url: /examples/terragrunt-multi-module-example/live/vpc/terragrunt.hcl
       id: vpc_terragrunt_code
-    - url: /test/terragrunt_example_test.go
+    - url: /modules/terragrunt/terragrunt_example_test.go
       id: test_code
       default: true
   learn_more:
