@@ -80,7 +80,7 @@ func GetServiceAccountAuthTokenE(t testing.TestingT, kubectlOptions *KubectlOpti
 			serviceAccount := GetServiceAccount(t, kubectlOptions, serviceAccountName)
 			if len(serviceAccount.Secrets) == 0 {
 				msg := "No secrets on the service account yet"
-				kubectlOptions.Logger.Logf(t, msg)
+				kubectlOptions.Logger.Logf(t, "%s", msg)
 				return "", fmt.Errorf("%s", msg)
 			}
 			return "Service Account has secret", nil
@@ -89,7 +89,7 @@ func GetServiceAccountAuthTokenE(t testing.TestingT, kubectlOptions *KubectlOpti
 	if err != nil {
 		return "", err
 	}
-	kubectlOptions.Logger.Logf(t, msg)
+	kubectlOptions.Logger.Logf(t, "%s", msg)
 
 	// Then get the service account token
 	serviceAccount, err := GetServiceAccountE(t, kubectlOptions, serviceAccountName)

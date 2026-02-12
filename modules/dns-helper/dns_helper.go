@@ -70,7 +70,7 @@ func DNSFindNameserversE(t testing.TestingT, fqdn string, resolvers []string) ([
 		}
 
 		if err != nil {
-			logger.Default.Logf(t, err.Error())
+			logger.Default.Logf(t, "%s", err.Error())
 		}
 	}
 

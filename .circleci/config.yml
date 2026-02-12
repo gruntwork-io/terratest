@@ -10,7 +10,7 @@ env: &env
     TERRAGRUNT_VERSION: v0.80.4
     TERRAGRUNT_TEST_VERSION: v0.93.10  # Version used for terragrunt module tests
     OPA_VERSION: v1.1.0
-    GO_VERSION: 1.24.0
+    GO_VERSION: 1.26.0
     GO111MODULE: auto
     K8S_VERSION: v1.20.0  # Same as EKS
     MINIKUBE_VERSION: v1.22.0
@@ -64,7 +64,7 @@ install_gruntwork_utils: &install_gruntwork_utils
     sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
 
     # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
-    GO_VERSION="${GO_VERSION:-1.24.0}"
+    GO_VERSION="${GO_VERSION:-1.26.0}"
     echo "Installing Go version ${GO_VERSION}"
     curl -O --silent --location --fail --show-error --retry 3 "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
     sudo rm -rf /usr/local/go

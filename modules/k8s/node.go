@@ -101,7 +101,7 @@ func WaitUntilAllNodesReadyE(t testing.TestingT, options *KubectlOptions, retrie
 			return "All nodes ready", nil
 		},
 	)
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 	return err
 }
 

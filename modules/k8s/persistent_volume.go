@@ -92,7 +92,7 @@ func WaitUntilPersistentVolumeInStatusE(
 		options.Logger.Logf(t, "Timeout waiting for PersistentVolume to be '%s': %s", *pvStatusPhase, err)
 		return err
 	}
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 	return nil
 }
 

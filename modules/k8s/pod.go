@@ -97,7 +97,7 @@ func WaitUntilNumPodsCreatedE(
 		options.Logger.Logf(t, "Timedout waiting for the desired number of Pods to be created: %s", err)
 		return err
 	}
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 	return nil
 }
 
@@ -131,7 +131,7 @@ func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName
 		options.Logger.Logf(t, "Timedout waiting for Pod to be provisioned: %s", err)
 		return err
 	}
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 	return nil
 }
 

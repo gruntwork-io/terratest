@@ -83,7 +83,7 @@ func WaitUntilJobSucceedE(t testing.TestingT, options *KubectlOptions, jobName s
 		options.Logger.Logf(t, "Timed out waiting for Job to be provisioned: %s", err)
 		return err
 	}
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 	return nil
 }
 

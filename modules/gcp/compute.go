@@ -617,7 +617,7 @@ func NewComputeServiceE(t testing.TestingT) (*compute.Service, error) {
 		client = rawClient
 		return "Successfully retrieved default GCP client", nil
 	})
-	logger.Default.Logf(t, msg)
+	logger.Default.Logf(t, "%s", msg)
 
 	if retryErr != nil {
 		return nil, retryErr
