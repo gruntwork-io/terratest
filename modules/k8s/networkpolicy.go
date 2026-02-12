@@ -48,5 +48,5 @@ func WaitUntilNetworkPolicyAvailable(t testing.TestingT, options *KubectlOptions
 			return "networkpolicy is now available", nil
 		},
 	)
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 }

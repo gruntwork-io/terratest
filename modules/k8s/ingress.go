@@ -79,7 +79,7 @@ func WaitUntilIngressAvailable(t testing.TestingT, options *KubectlOptions, ingr
 			return "Ingress is now available", nil
 		},
 	)
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 }
 
 // ListIngressesV1Beta1 will look for Ingress resources in the given namespace that match the given filters and return
@@ -151,5 +151,5 @@ func WaitUntilIngressAvailableV1Beta1(t testing.TestingT, options *KubectlOption
 			return "Ingress is now available", nil
 		},
 	)
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 }

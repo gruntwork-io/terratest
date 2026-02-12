@@ -91,7 +91,7 @@ func WaitUntilDeploymentAvailableE(
 		options.Logger.Logf(t, "Timedout waiting for Deployment to be provisioned: %s", err)
 		return err
 	}
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 	return nil
 }
 

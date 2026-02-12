@@ -49,5 +49,5 @@ func WaitUntilConfigMapAvailable(t testing.TestingT, options *KubectlOptions, co
 			return "configmap is now available", nil
 		},
 	)
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 }

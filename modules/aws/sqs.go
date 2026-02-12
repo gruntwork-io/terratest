@@ -163,7 +163,7 @@ func SendMessageToQueueE(t testing.TestingT, awsRegion string, queueURL string, 
 
 	if err != nil {
 		if strings.Contains(err.Error(), "AWS.SimpleQueueService.NonExistentQueue") {
-			logger.Default.Logf(t, fmt.Sprintf("WARN: Client has stopped listening on queue %s", queueURL))
+			logger.Default.Logf(t, "WARN: Client has stopped listening on queue %s", queueURL)
 			return nil
 		}
 		return err
@@ -199,7 +199,7 @@ func SendMessageToFifoQueueE(t testing.TestingT, awsRegion string, queueURL stri
 
 	if err != nil {
 		if strings.Contains(err.Error(), "AWS.SimpleQueueService.NonExistentQueue") {
-			logger.Default.Logf(t, fmt.Sprintf("WARN: Client has stopped listening on queue %s", queueURL))
+			logger.Default.Logf(t, "WARN: Client has stopped listening on queue %s", queueURL)
 			return nil
 		}
 		return err

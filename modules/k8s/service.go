@@ -82,7 +82,7 @@ func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serv
 			return "Service is now available", nil
 		},
 	)
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 }
 
 // IsServiceAvailable returns true if the service endpoint is ready to accept traffic. Note that for Minikube, this

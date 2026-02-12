@@ -88,7 +88,7 @@ func WaitUntilPersistentVolumeClaimInStatusE(t testing.TestingT, options *Kubect
 		logger.Default.Logf(t, "Timeout waiting for PersistentVolumeClaim to be '%s': %s", *pvcStatusPhase, err)
 		return err
 	}
-	logger.Default.Logf(t, message)
+	logger.Default.Logf(t, "%s", message)
 	return nil
 }
 

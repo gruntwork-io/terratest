@@ -48,5 +48,5 @@ func WaitUntilSecretAvailable(t testing.TestingT, options *KubectlOptions, secre
 			return "Secret is now available", nil
 		},
 	)
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 }

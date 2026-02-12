@@ -79,7 +79,7 @@ func WaitUntilCronJobSucceedE(t testing.TestingT, options *KubectlOptions, cronJ
 		options.Logger.Logf(t, "Timed out waiting for CronJob to schedule job: %s", err)
 		return err
 	}
-	options.Logger.Logf(t, message)
+	options.Logger.Logf(t, "%s", message)
 	return nil
 }
 
