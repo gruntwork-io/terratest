@@ -85,7 +85,6 @@ type ExtraArgs struct {
 	Init            []string
 	Plan            []string
 	Validate        []string
-	ValidateInputs  []string
 	WorkspaceDelete []string
 	WorkspaceSelect []string
 	WorkspaceNew    []string

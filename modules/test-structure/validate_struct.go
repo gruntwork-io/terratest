@@ -11,15 +11,12 @@ import (
 	"github.com/mattn/go-zglob"
 )
 
-// ValidateFileType is the underlying module type to search for when performing validation. Either Terraform or Terragrunt
-// files are targeted during a given validation sweep
+// ValidateFileType is the underlying module type to search for when performing validation.
 type ValidateFileType string
 
 const (
 	// TF represents repositories that contain Terraform code
 	TF = "*.tf"
-	// TG represents repositories that contain Terragrunt code
-	TG = "terragrunt.hcl"
 )
 
 // ValidationOptions represent the configuration for a given validation sweep of a target repo
@@ -113,17 +110,6 @@ func NewValidationOptions(rootDir string, includeDirs, excludeDirs []string) (*V
 	return opts, nil
 }
 
-// NewTerragruntValidationOptions returns a ValidationOptions struct, with override-able sane defaults, configured to find
-// and process all directories containing .hcl files.
-func NewTerragruntValidationOptions(rootDir string, includeDirs, excludeDirs []string) (*ValidationOptions, error) {
-	opts, err := configureBaseValidationOptions(rootDir, includeDirs, excludeDirs)
-	if err != nil {
-		return opts, err
-	}
-	opts.FileType = TG
-	return opts, nil
-}
-
 func buildRelPathsFromFull(rootDir string, fullPaths []string) ([]string, error) {
 	var relPaths []string
 	for _, maybeFullPath := range fullPaths {
@@ -153,20 +139,20 @@ func buildFullPathsFromRelative(rootDir string, relativePaths []string) []string
 	return fullPaths
 }
 
-// FindTerraformModulePathsInRootE returns a slice strings representing the filepaths for all valid Terraform / Terragrunt
+// FindTerraformModulePathsInRootE returns a slice strings representing the filepaths for all valid Terraform
 // modules in the given RootDir, subject to the include / exclude filters.
 func FindTerraformModulePathsInRootE(opts *ValidationOptions) ([]string, error) {
-	// Find all Terraform / Terragrunt files (as specified by opts.FileType) from the configured RootDir
+	// Find all Terraform files (as specified by opts.FileType) from the configured RootDir
 	pattern := fmt.Sprintf("%s/**/%s", opts.RootDir, opts.FileType)
 	matches, err := zglob.Glob(pattern)
 	if err != nil {
 		return matches, err
 	}
-	// Keep a unique set of the base dirs that contain Terraform / Terragrunt files
+	// Keep a unique set of the base dirs that contain Terraform files
 	terraformDirSet := make(map[string]string)
 	for _, match := range matches {
 		// The glob match returns all full paths to every target file, whereas we're only interested in their root
-		// directories for the purposes of running Terraform validate / terragrunt hcl validate
+		// directories for the purposes of running Terraform validate
 		rootDir := path.Dir(match)
 		// Don't include hidden .terraform directories when finding paths to validate
 		if !files.PathContainsHiddenFileOrFolder(rootDir) {

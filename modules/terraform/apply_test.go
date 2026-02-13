@@ -131,65 +131,6 @@ func TestApplyWithWarning(t *testing.T) {
 	}
 }
 
-func TestTgApplyAllTgError(t *testing.T) {
-	t.Parallel()
-
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
-	require.NoError(t, err)
-
-	options := WithDefaultRetryableErrors(t, &Options{
-		TerraformDir:    testFolder,
-		TerraformBinary: "terragrunt",
-	})
-
-	out := TgApplyAll(t, options)
-
-	require.Contains(t, out, "Hello, World")
-}
-
-func TestTgApplyAllError(t *testing.T) {
-	t.Parallel()
-
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-with-error", t.Name())
-	require.NoError(t, err)
-
-	options := WithDefaultRetryableErrors(t, &Options{
-		TerraformDir:    testFolder,
-		TerraformBinary: "terragrunt",
-		MaxRetries:      1,
-		RetryableTerraformErrors: map[string]string{
-			"This is the first run, exiting with an error": "Intentional failure in test fixture",
-		},
-	})
-
-	out := TgApplyAll(t, options)
-
-	require.Contains(t, out, "This is the first run, exiting with an error")
-}
-
-func TestTgApplyOutput(t *testing.T) {
-	t.Parallel()
-
-	options := WithDefaultRetryableErrors(t, &Options{
-		TerraformDir:    "../../test/fixtures/terragrunt/terragrunt-output",
-		TerraformBinary: "terragrunt",
-	})
-
-	Apply(t, options)
-
-	strOutput := OutputRequired(t, options, "str")
-	assert.Equal(t, strOutput, "str")
-
-	listOutput := OutputList(t, options, "list")
-	assert.Equal(t, listOutput, []string{"a", "b", "c"})
-
-	mapOutput := OutputMap(t, options, "map")
-	assert.Equal(t, mapOutput, map[string]string{"foo": "bar"})
-
-	allOutputs := OutputForKeys(t, options, []string{"str", "list", "map"})
-	assert.Equal(t, allOutputs, map[string]interface{}{"str": "str", "list": []interface{}{"a", "b", "c"}, "map": map[string]interface{}{"foo": "bar"}})
-}
-
 func TestIdempotentNoChanges(t *testing.T) {
 	t.Parallel()
 
@@ -251,25 +192,6 @@ func TestParallelism(t *testing.T) {
 	end = time.Now()
 	duration := end.Sub(start)
 	require.GreaterOrEqual(t, int64(duration.Seconds()), int64(25))
-}
-func TestTgApplyUseLockNoError(t *testing.T) {
-	t.Parallel()
-
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
-	require.NoError(t, err)
-
-	options := WithDefaultRetryableErrors(t, &Options{
-		TerraformDir:    testFolder,
-		TerraformBinary: "terragrunt",
-		Lock:            true,
-		EnvVars:         map[string]string{"TF_LOG": "DEBUG"}, // debug level to get -lock CLI option passed down
-	})
-
-	out := TgApplyAll(t, options)
-
-	require.Contains(t, out, "Hello, World")
-	// make sure -lock CLI option is passed down correctly
-	require.Contains(t, out, "-lock=true")
 }
 
 func TestApplyWithPlanFile(t *testing.T) {

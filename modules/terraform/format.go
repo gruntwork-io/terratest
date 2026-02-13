@@ -14,11 +14,8 @@ import (
 // can obtain locks on Terraform state
 var TerraformCommandsWithLockSupport = []string{
 	"plan",
-	"plan-all",
 	"apply",
-	"apply-all",
 	"destroy",
-	"destroy-all",
 	"init",
 	"refresh",
 	"taint",
