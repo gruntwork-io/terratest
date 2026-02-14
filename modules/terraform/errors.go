@@ -5,16 +5,6 @@ import (
 	"reflect"
 )
 
-// TgInvalidBinary occurs when a terragrunt function is called and the TerraformBinary is
-// set to a value other than terragrunt.
-//
-// Deprecated: Use github.com/gruntwork-io/terratest/modules/terragrunt package instead.
-type TgInvalidBinary string
-
-func (err TgInvalidBinary) Error() string {
-	return fmt.Sprintf("terragrunt must be set as TerraformBinary to use this function. [ TerraformBinary : %s ]", string(err))
-}
-
 // OutputKeyNotFound occurs when terraform output does not contain a value for the key
 // specified in the function call
 type OutputKeyNotFound string
