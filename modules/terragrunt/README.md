@@ -133,6 +133,12 @@ Work with [implicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks
 - `FormatAll(t, options)` - Format all terragrunt.hcl files
 - `HclValidate(t, options)` - Validate terragrunt.hcl syntax and configuration
 
+### Configuration Commands
+
+- `Render(t, options)` - Render resolved terragrunt configuration as HCL
+- `RenderJson(t, options)` - Render resolved terragrunt configuration as JSON
+- `Graph(t, options)` - Output dependency graph in DOT format
+
 ### Stack Commands
 
 Work with [explicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks/#explicit-stacks) (a directory with a `terragrunt.stack.hcl` file):
@@ -291,10 +297,10 @@ terragrunt.ApplyAll(t, options)
 ## Not Supported
 
 This module does **NOT** support:
-- `graph`, `import`, `refresh`, `show`, `state`, `test` commands
+- `import`, `refresh`, `show`, `state`, `test` commands
 - `backend`, `exec`, `catalog`, `scaffold` commands
 - Discovery commands (`find`, `list`)
-- Configuration commands (`dag`, `info`, `render`)
+- Configuration commands (`info`)
 
 For unsupported commands, run terragrunt directly via the `shell` module.
 
