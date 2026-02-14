@@ -1,7 +1,9 @@
 package terragrunt
 
 import (
+	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
@@ -97,4 +99,40 @@ func TestStackEndToEndIntegration(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Stack integration test completed successfully")
+}
+
+// TestOutputAllJsonEndToEnd tests OutputAllJson extracts clean JSON from terragrunt output
+func TestOutputAllJsonEndToEnd(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp(
+		"../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{TerragruntDir: testFolder}
+
+	ApplyAll(t, options)
+	defer DestroyAll(t, options)
+
+	output := OutputAllJson(t, options)
+
+	// Contains module outputs, no log noise
+	require.Contains(t, output, `"value": "foo"`)
+	require.Contains(t, output, `"value": "bar"`)
+	// Check for both old and new log format markers
+	require.NotContains(t, output, "time=")
+	require.NotContains(t, output, " INFO ")
+	require.NotContains(t, output, " STDOUT ")
+	require.NotContains(t, output, "Group 1")
+	require.NotContains(t, output, "- Unit ")
+
+	// Validate output contains at least 2 valid JSON objects (foo and bar modules)
+	dec := json.NewDecoder(strings.NewReader(output))
+	var jsonCount int
+	for dec.More() {
+		var obj json.RawMessage
+		require.NoError(t, dec.Decode(&obj))
+		jsonCount++
+	}
+	require.GreaterOrEqual(t, jsonCount, 2)
 }
