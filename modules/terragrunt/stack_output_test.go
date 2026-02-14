@@ -12,7 +12,7 @@ import (
 )
 
 // Integration test using actual terragrunt stack fixture
-func TestOutputIntegration(t *testing.T) {
+func TestStackOutputIntegration(t *testing.T) {
 	t.Parallel()
 
 	// Create a temporary copy of the stack fixture
@@ -51,22 +51,22 @@ func TestOutputIntegration(t *testing.T) {
 	}()
 
 	// Test string stack output - get output from mother unit
-	strOutput := Output(t, options, "mother")
+	strOutput := StackOutput(t, options, "mother")
 	assert.Contains(t, strOutput, "./test.txt")
 
-	// Test getting stack output as JSON using the OutputJson function
+	// Test getting stack output as JSON using the StackOutputJson function
 	jsonOptions := &Options{
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
 		Logger:           logger.Discard,
 	}
 
-	strOutputJson := OutputJson(t, jsonOptions, "mother")
+	strOutputJson := StackOutputJson(t, jsonOptions, "mother")
 	// The JSON output for a single value should still be cleaned to just show the value
 	assert.Contains(t, strOutputJson, "./test.txt")
 
 	// Test getting all stack outputs as JSON
-	allOutputsJson := OutputJson(t, jsonOptions, "")
+	allOutputsJson := StackOutputJson(t, jsonOptions, "")
 	require.NotEmpty(t, allOutputsJson)
 
 	// For JSON output of all outputs, we should get valid JSON
@@ -97,7 +97,7 @@ func TestOutputIntegration(t *testing.T) {
 }
 
 // Test error handling with non-existent stack output
-func TestOutputErrorHandling(t *testing.T) {
+func TestStackOutputErrorHandling(t *testing.T) {
 	t.Parallel()
 
 	// Create a temporary copy of the stack fixture
@@ -136,7 +136,7 @@ func TestOutputErrorHandling(t *testing.T) {
 	}()
 
 	// Test that non-existent stack output returns error or empty string
-	output, err := OutputE(t, options, "non_existent_output")
+	output, err := StackOutputE(t, options, "non_existent_output")
 	// Tg stack output might return empty string for non-existent outputs
 	// rather than an error, so we need to handle both cases
 	if err != nil {
@@ -146,8 +146,8 @@ func TestOutputErrorHandling(t *testing.T) {
 	}
 }
 
-// Test OutputAll to get all stack outputs as a map
-func TestOutputAll(t *testing.T) {
+// Test StackOutputAll to get all stack outputs as a map
+func TestStackOutputAll(t *testing.T) {
 	t.Parallel()
 
 	// Create a temporary copy of the stack fixture
@@ -185,8 +185,8 @@ func TestOutputAll(t *testing.T) {
 		_, _ = StackRunE(t, destroyOptions)
 	}()
 
-	// Test OutputAll - get all outputs as a map
-	allOutputs := OutputAll(t, options)
+	// Test StackOutputAll - get all outputs as a map
+	allOutputs := StackOutputAll(t, options)
 	require.NotEmpty(t, allOutputs)
 
 	// Verify expected outputs are present
@@ -200,8 +200,8 @@ func TestOutputAll(t *testing.T) {
 	assert.Equal(t, "./test.txt", motherOutput["output"])
 }
 
-// Test OutputListAll to get all stack output keys
-func TestOutputListAll(t *testing.T) {
+// Test StackOutputListAll to get all stack output keys
+func TestStackOutputListAll(t *testing.T) {
 	t.Parallel()
 
 	// Create a temporary copy of the stack fixture
@@ -239,8 +239,8 @@ func TestOutputListAll(t *testing.T) {
 		_, _ = StackRunE(t, destroyOptions)
 	}()
 
-	// Test OutputListAll - get all output keys
-	keys := OutputListAll(t, options)
+	// Test StackOutputListAll - get all output keys
+	keys := StackOutputListAll(t, options)
 	require.NotEmpty(t, keys)
 
 	// Verify expected keys are present
@@ -253,8 +253,8 @@ func TestOutputListAll(t *testing.T) {
 	require.Len(t, keys, 4)
 }
 
-// Test OutputListAllE
-func TestOutputListAllE(t *testing.T) {
+// Test StackOutputListAllE
+func TestStackOutputListAllE(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerragruntFolderToTemp(
@@ -289,7 +289,7 @@ func TestOutputListAllE(t *testing.T) {
 		_, _ = StackRunE(t, destroyOptions)
 	}()
 
-	keys, err := OutputListAllE(t, options)
+	keys, err := StackOutputListAllE(t, options)
 	require.NoError(t, err)
 	require.NotEmpty(t, keys)
 	require.Contains(t, keys, "mother")

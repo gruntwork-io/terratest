@@ -3,14 +3,13 @@ package terragrunt
 import (
 	"github.com/gruntwork-io/terratest/internal/lib/formatting"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // Init calls terragrunt init and return stdout/stderr
 func Init(t testing.TestingT, options *Options) string {
 	out, err := InitE(t, options)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return out
 }
 

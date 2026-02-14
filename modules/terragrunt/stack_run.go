@@ -2,14 +2,13 @@ package terragrunt
 
 import (
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // StackRun calls terragrunt stack run and returns stdout/stderr
 func StackRun(t testing.TestingT, options *Options) string {
 	out, err := StackRunE(t, options)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return out
 }
 
