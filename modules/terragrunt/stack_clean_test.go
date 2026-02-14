@@ -12,7 +12,7 @@ func TestStackClean(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
@@ -37,7 +37,7 @@ func TestStackCleanE(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
@@ -70,7 +70,7 @@ func TestStackCleanNonExistentStack(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
@@ -90,7 +90,7 @@ func TestStackCleanAfterRun(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")

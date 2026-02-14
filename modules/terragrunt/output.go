@@ -31,3 +31,32 @@ func OutputAllJsonE(t testing.TestingT, options *Options) (string, error) {
 	// Extract only JSON content from output, filtering log lines and other terragrunt messages
 	return extractJsonContent(rawOutput)
 }
+
+// OutputJson runs terragrunt output -json for a single unit and returns clean JSON.
+// If key is non-empty, returns the JSON value for that specific output.
+// If key is empty, returns all outputs as JSON.
+func OutputJson(t testing.TestingT, options *Options, key string) string {
+	out, err := OutputJsonE(t, options, key)
+	require.NoError(t, err)
+	return out
+}
+
+// OutputJsonE runs terragrunt output -json for a single unit and returns clean JSON.
+// If key is non-empty, returns the JSON value for that specific output.
+// If key is empty, returns all outputs as JSON.
+func OutputJsonE(t testing.TestingT, options *Options, key string) (string, error) {
+	optsCopy := *options
+	optsCopy.TerragruntArgs = append([]string{"--no-color"}, options.TerragruntArgs...)
+
+	args := []string{"-json"}
+	if key != "" {
+		args = append(args, key)
+	}
+
+	rawOutput, err := runTerragruntCommandE(t, &optsCopy, "output", args...)
+	if err != nil {
+		return "", err
+	}
+
+	return cleanTerragruntJson(rawOutput)
+}

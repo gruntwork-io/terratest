@@ -10,7 +10,7 @@ import (
 func TestApplyAll(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	out := ApplyAll(t, &Options{
@@ -21,10 +21,10 @@ func TestApplyAll(t *testing.T) {
 	require.Contains(t, out, "Hello, World")
 }
 
-func TestApplyAllE(t *testing.T) {
+func TestApply(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -32,7 +32,44 @@ func TestApplyAllE(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	out, err := ApplyAllE(t, options)
-	require.NoError(t, err)
+	defer Destroy(t, options)
+	out := Apply(t, options)
 	require.Contains(t, out, "Hello, World")
+}
+
+func TestInitAndApply(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerragruntDir:    testFolder,
+		TerragruntBinary: "terragrunt",
+	}
+
+	defer Destroy(t, options)
+	out := InitAndApply(t, options)
+	require.Contains(t, out, "Hello, World")
+}
+
+// TestInitAndApplyE_InitFailure verifies that when init fails, apply is skipped
+// and the init error is propagated.
+func TestInitAndApplyE_InitFailure(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerraformFolderToTemp(
+		"testdata/terragrunt-stack-init-error", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerragruntDir:    testFolder,
+		TerragruntBinary: "terragrunt",
+	}
+
+	out, err := InitAndApplyE(t, options)
+	require.Error(t, err, "InitAndApplyE should propagate init failure")
+	require.Empty(t, out, "Output should be empty when init fails")
+	require.Contains(t, err.Error(), "Missing expression",
+		"Error should be from init, not apply")
 }

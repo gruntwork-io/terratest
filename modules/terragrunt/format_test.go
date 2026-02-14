@@ -12,7 +12,7 @@ import (
 func TestFormatAll(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	// Create an unformatted terragrunt.hcl file in foo directory
@@ -50,7 +50,7 @@ foo="bar"
 func TestFormatAllE(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	// Create an unformatted file to ensure the command actually does something

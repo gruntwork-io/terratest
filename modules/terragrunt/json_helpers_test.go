@@ -167,4 +167,55 @@ func TestCleanTerragruntOutputEdgeCases(t *testing.T) {
 	result, err = cleanTerragruntOutput(input)
 	require.NoError(t, err)
 	assert.Equal(t, "line1\nline2", result)
+
+	// Mismatched quotes: opening quote without closing quote should be left as-is
+	input = "20:41:53.564 INFO   Running\n\"no-closing-quote"
+	result, err = cleanTerragruntOutput(input)
+	require.NoError(t, err)
+	assert.Equal(t, "\"no-closing-quote", result, "Mismatched quotes should be preserved verbatim")
+
+	// Closing quote without opening quote should be left as-is
+	input = "20:41:53.564 INFO   Running\nno-opening-quote\""
+	result, err = cleanTerragruntOutput(input)
+	require.NoError(t, err)
+	assert.Equal(t, "no-opening-quote\"", result, "Mismatched quotes should be preserved verbatim")
+
+	// Array JSON output preserved
+	input = "20:41:53.564 INFO   Running\n[\"a\", \"b\"]"
+	result, err = cleanTerragruntOutput(input)
+	require.NoError(t, err)
+	assert.Equal(t, `["a", "b"]`, result, "JSON array should be preserved")
+}
+
+func TestExtractJsonContentMalformedJson(t *testing.T) {
+	t.Parallel()
+
+	// Valid JSON followed by malformed JSON: only the valid object is extracted
+	input := "{\"valid\": true}\n{broken json"
+	result := extractJsonContent(input)
+	assert.Contains(t, result, `"valid"`)
+	assert.NotContains(t, result, "broken")
+
+	// Malformed JSON only: nothing extracted
+	input = "{not valid json at all"
+	result = extractJsonContent(input)
+	assert.Equal(t, "", result)
+
+	// Valid JSON with log lines before and after (realistic scenario)
+	input = "time=2026 level=info msg=Before\n{\"key\": 1}\ntime=2026 level=info msg=After"
+	result = extractJsonContent(input)
+	assert.Contains(t, result, `"key"`)
+	assert.NotContains(t, result, "Before")
+	assert.NotContains(t, result, "After")
+
+	// Whitespace-only after filtering logs
+	input = "20:41:53.564 INFO   Running\n   \n  "
+	result = extractJsonContent(input)
+	assert.Equal(t, "", result)
+
+	// Two valid JSON objects separated by log lines
+	input = "20:41:53.564 INFO   Start\n{\"a\": 1}\n20:41:53.564 INFO   Middle\n{\"b\": 2}\n20:41:53.564 INFO   End"
+	result = extractJsonContent(input)
+	assert.Contains(t, result, `"a"`)
+	assert.Contains(t, result, `"b"`)
 }

@@ -10,7 +10,7 @@ import (
 func TestRunAll(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -26,7 +26,7 @@ func TestRunAll(t *testing.T) {
 func TestRunAllE(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -43,7 +43,7 @@ func TestRunAllE(t *testing.T) {
 func TestRunAllWithPlan(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{

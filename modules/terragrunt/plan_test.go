@@ -11,7 +11,7 @@ import (
 func TestPlanAllExitCode(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -24,10 +24,10 @@ func TestPlanAllExitCode(t *testing.T) {
 	require.Equal(t, 0, exitCode)
 }
 
-func TestPlanAllExitCodeE(t *testing.T) {
+func TestPlan(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -35,25 +35,48 @@ func TestPlanAllExitCodeE(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	// In Terraform 0.12 and below, if there were no resources to create, update, or destroy, the -detailed-exitcode
-	// would return a code of 0. However, with 0.13 and above, if the Terraform configuration has never been applied
-	// at all, -detailed-exitcode always returns an exit code of 2. So we have to run 'apply' first, and can then
-	// check that 'plan' returns the exit code we expect.
-	ApplyAll(t, options)
-	getExitCode, errExitCode := PlanAllExitCodeE(t, options)
-	// GetExitCodeForRunCommandError was unable to determine the exit code correctly
-	if errExitCode != nil {
-		t.Fatal(errExitCode)
+	out := Plan(t, options)
+	require.NotEmpty(t, out)
+}
+
+func TestPlanExitCode(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerragruntDir:    testFolder,
+		TerragruntBinary: "terragrunt",
 	}
 
-	// Since PlanAllExitCodeE returns error codes, we want to compare against 1
-	require.Equal(t, 0, getExitCode)
+	// Apply first so plan shows no changes (exit code 0)
+	Apply(t, options)
+	defer Destroy(t, options)
+
+	exitCode := PlanExitCode(t, options)
+	assert.Equal(t, 0, exitCode)
+}
+
+func TestInitAndPlan(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
+	require.NoError(t, err)
+
+	options := &Options{
+		TerragruntDir:    testFolder,
+		TerragruntBinary: "terragrunt",
+	}
+
+	out := InitAndPlan(t, options)
+	require.NotEmpty(t, out)
 }
 
 func TestPlanAllWithError(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-with-plan-error", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-with-plan-error", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -71,7 +94,7 @@ func TestPlanAllWithError(t *testing.T) {
 func TestAssertPlanAllExitCodeNoError(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -103,7 +126,7 @@ func TestAssertPlanAllExitCodeNoError(t *testing.T) {
 func TestAssertPlanAllExitCodeWithError(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-with-plan-error", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-with-plan-error", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{

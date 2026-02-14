@@ -15,7 +15,7 @@ func TestTerragruntArgsIncluded(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -40,7 +40,7 @@ func TestTerraformArgsIncluded(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -66,7 +66,7 @@ func TestTerraformArgsIncluded(t *testing.T) {
 func TestPlanExitCodeIncludesArgs(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	// First apply so we have state
@@ -101,7 +101,7 @@ func TestCombinedArgsOrdering(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -242,12 +242,85 @@ func TestPrepareOptions(t *testing.T) {
 	require.Contains(t, err.Error(), "TerragruntDir is required")
 }
 
+// TestHasWarning verifies warning detection in command output
+func TestHasWarning(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		warningsAsErrors map[string]string
+		output           string
+		expectError      bool
+		errorContains    string
+	}{
+		{
+			name:             "nil map returns no error",
+			warningsAsErrors: nil,
+			output:           "\nWarning: something bad\n",
+			expectError:      false,
+		},
+		{
+			name:             "empty map returns no error",
+			warningsAsErrors: map[string]string{},
+			output:           "\nWarning: something bad\n",
+			expectError:      false,
+		},
+		{
+			name:             "matching warning returns error",
+			warningsAsErrors: map[string]string{"something bad": "found a bad warning"},
+			output:           "some output\nWarning: something bad happened\nmore output",
+			expectError:      true,
+			errorContains:    "found a bad warning",
+		},
+		{
+			name:             "no match returns no error",
+			warningsAsErrors: map[string]string{"something bad": "found a bad warning"},
+			output:           "some output\nno warnings here\nmore output",
+			expectError:      false,
+		},
+		{
+			name:             "invalid regex returns error",
+			warningsAsErrors: map[string]string{"(?P<": "bad regex"},
+			output:           "\nWarning: anything\n",
+			expectError:      true,
+			errorContains:    "cannot compile regex",
+		},
+		{
+			name: "first matching pattern wins",
+			warningsAsErrors: map[string]string{
+				"alpha": "alpha error",
+				"beta":  "beta error",
+			},
+			output:      "\nWarning: alpha problem\n\nWarning: beta problem\n",
+			expectError: true,
+			// We can't predict map iteration order, but one of these should match
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			opts := &Options{WarningsAsErrors: tt.warningsAsErrors}
+			err := hasWarning(opts, tt.output)
+			if tt.expectError {
+				require.Error(t, err)
+				if tt.errorContains != "" {
+					require.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 // TestEnvVarsPropagation verifies environment variables are passed through
 func TestEnvVarsPropagation(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	// Detect which IaC binary is available (terraform or tofu)
