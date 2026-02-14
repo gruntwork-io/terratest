@@ -2,6 +2,7 @@ package terragrunt
 
 import (
 	"encoding/json"
+	"io"
 	"regexp"
 	"strings"
 )
@@ -50,7 +51,7 @@ func isLogLine(line string) bool {
 // extractJsonContent extracts only JSON objects from terragrunt output,
 // filtering out log lines and other non-JSON content like "Group 1" or "- Unit ./foo".
 // Uses json.Decoder to correctly handle braces inside JSON string values.
-func extractJsonContent(rawOutput string) string {
+func extractJsonContent(rawOutput string) (string, error) {
 	lines := strings.Split(rawOutput, "\n")
 	var filtered []string
 	for _, line := range lines {
@@ -63,7 +64,7 @@ func extractJsonContent(rawOutput string) string {
 
 	remaining := strings.Join(filtered, "\n")
 	if remaining == "" {
-		return ""
+		return "", nil
 	}
 
 	dec := json.NewDecoder(strings.NewReader(remaining))
@@ -71,11 +72,14 @@ func extractJsonContent(rawOutput string) string {
 	for {
 		var raw json.RawMessage
 		if err := dec.Decode(&raw); err != nil {
-			break
+			if err == io.EOF {
+				break
+			}
+			return "", err
 		}
 		results = append(results, string(raw))
 	}
-	return strings.Join(results, "\n")
+	return strings.Join(results, "\n"), nil
 }
 
 // cleanTerragruntOutput extracts the actual output value from terragrunt stack's verbose output
@@ -144,7 +148,10 @@ func cleanTerragruntOutput(rawOutput string) (string, error) {
 //	}
 func cleanTerragruntJson(input string) (string, error) {
 	// Extract only JSON content, filtering out log lines and other non-JSON content
-	cleaned := extractJsonContent(input)
+	cleaned, err := extractJsonContent(input)
+	if err != nil {
+		return "", err
+	}
 
 	// Parse JSON
 	var jsonObj interface{}

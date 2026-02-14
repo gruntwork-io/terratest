@@ -29,5 +29,5 @@ func OutputAllJsonE(t testing.TestingT, options *Options) (string, error) {
 	}
 
 	// Extract only JSON content from output, filtering log lines and other terragrunt messages
-	return extractJsonContent(rawOutput), nil
+	return extractJsonContent(rawOutput)
 }

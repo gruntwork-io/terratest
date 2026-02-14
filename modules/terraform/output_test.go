@@ -462,7 +462,7 @@ func TestOutputsForKeysError(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestTgOutputWithDebugLogLevel(t *testing.T) {
+func TestOutputWithDebugLogLevel(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-output-mapofobjects", t.Name())
