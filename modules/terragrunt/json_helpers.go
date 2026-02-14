@@ -2,7 +2,6 @@ package terragrunt
 
 import (
 	"encoding/json"
-	"io"
 	"regexp"
 	"strings"
 )
@@ -69,12 +68,9 @@ func extractJsonContent(rawOutput string) (string, error) {
 
 	dec := json.NewDecoder(strings.NewReader(remaining))
 	var results []string
-	for {
+	for dec.More() {
 		var raw json.RawMessage
 		if err := dec.Decode(&raw); err != nil {
-			if err == io.EOF {
-				break
-			}
 			return "", err
 		}
 		results = append(results, string(raw))
