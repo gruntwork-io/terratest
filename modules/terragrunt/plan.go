@@ -27,6 +27,7 @@ func Plan(t testing.TestingT, options *Options) string {
 }
 
 // PlanE runs terragrunt plan for a single unit and returns stdout/stderr.
+// Uses -lock=false since plan is a read-only operation that does not need state locking.
 func PlanE(t testing.TestingT, options *Options) (string, error) {
 	return runTerragruntCommandE(t, options, "plan", "-input=false", "-lock=false")
 }

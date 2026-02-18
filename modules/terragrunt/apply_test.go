@@ -13,11 +13,13 @@ func TestApplyAll(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	out := ApplyAll(t, &Options{
+	options := &Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
-	})
+	}
 
+	defer DestroyAll(t, options)
+	out := ApplyAll(t, options)
 	require.Contains(t, out, "Hello, World")
 }
 

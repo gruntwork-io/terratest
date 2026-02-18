@@ -19,6 +19,7 @@ func TestPlanAllExitCode(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
+	defer DestroyAll(t, options)
 	ApplyAll(t, options)
 	exitCode := PlanAllExitCode(t, options)
 	require.Equal(t, 0, exitCode)
@@ -101,6 +102,8 @@ func TestAssertPlanAllExitCodeNoError(t *testing.T) {
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
+
+	defer DestroyAll(t, options)
 
 	getExitCode, errExitCode := PlanAllExitCodeE(t, options)
 	if errExitCode != nil {

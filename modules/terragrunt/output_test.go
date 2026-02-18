@@ -45,3 +45,15 @@ func TestOutputJsonAllKeys(t *testing.T) {
 	assert.Contains(t, json, "list")
 	assert.Contains(t, json, "map")
 }
+
+func TestOutputJsonE_Error(t *testing.T) {
+	t.Parallel()
+
+	options := &Options{
+		TerragruntDir:    t.TempDir(),
+		TerragruntBinary: "terragrunt",
+	}
+
+	_, err := OutputJsonE(t, options, "")
+	require.Error(t, err)
+}

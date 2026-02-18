@@ -70,10 +70,12 @@ func TestPlanExitCodeIncludesArgs(t *testing.T) {
 	require.NoError(t, err)
 
 	// First apply so we have state
-	ApplyAll(t, &Options{
+	baseOptions := &Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
-	})
+	}
+	defer DestroyAll(t, baseOptions)
+	ApplyAll(t, baseOptions)
 
 	// Now run plan with exit code AND TerragruntArgs
 	options := &Options{
