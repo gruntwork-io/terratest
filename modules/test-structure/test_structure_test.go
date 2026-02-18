@@ -112,4 +112,3 @@ func TestFindTerraformModulePathsInRootEWithResultsExclusion(t *testing.T) {
 		assert.True(t, collections.ListContains(subDirsWithoutExclusions, filepath.Join(projectRootDir, exclusion)))
 	}
 }
-

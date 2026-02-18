@@ -197,4 +197,3 @@ func hasWarning(opts *Options, out string) error {
 	}
 	return nil
 }
-

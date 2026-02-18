@@ -69,7 +69,8 @@ func TestExtractJsonContent(t *testing.T) {
 
 	// Extracts JSON with old format, filters non-JSON
 	input := "time=2026 level=info msg=Running\nGroup 1\n- Unit ./foo\n{\"a\": 1}\n{\"b\": 2}"
-	result := extractJsonContent(input)
+	result, err := extractJsonContent(input)
+	require.NoError(t, err)
 	assert.Contains(t, result, `"a": 1`)
 	assert.Contains(t, result, `"b": 2`)
 	assert.NotContains(t, result, "Group")
@@ -77,17 +78,20 @@ func TestExtractJsonContent(t *testing.T) {
 
 	// Extracts JSON with new format logs
 	input = "20:41:53.564 INFO   Running\n20:41:53.564 STDOUT terraform: done\n{\"key\": \"value\"}"
-	result = extractJsonContent(input)
+	result, err = extractJsonContent(input)
+	require.NoError(t, err)
 	assert.Equal(t, `{"key": "value"}`, result)
 
 	// Handles nested JSON
 	input = "time=2026 level=info msg=Running\n{\n  \"outer\": {\n    \"inner\": true\n  }\n}"
-	result = extractJsonContent(input)
+	result, err = extractJsonContent(input)
+	require.NoError(t, err)
 	assert.Contains(t, result, `"inner": true`)
 
 	// Empty when only logs/metadata
 	input = "20:41:53.564 INFO   Running\nGroup 1\n- Unit ./foo"
-	result = extractJsonContent(input)
+	result, err = extractJsonContent(input)
+	require.NoError(t, err)
 	assert.Equal(t, "", result)
 }
 

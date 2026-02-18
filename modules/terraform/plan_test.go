@@ -150,4 +150,3 @@ func TestPlanWithExitCodeWithFailure(t *testing.T) {
 	require.NoError(t, getExitCodeErr)
 	require.Equal(t, exitCode, 1)
 }
-
