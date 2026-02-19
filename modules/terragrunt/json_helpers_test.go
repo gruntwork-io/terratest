@@ -190,32 +190,34 @@ func TestCleanTerragruntOutputEdgeCases(t *testing.T) {
 func TestExtractJsonContentMalformedJson(t *testing.T) {
 	t.Parallel()
 
-	// Valid JSON followed by malformed JSON: only the valid object is extracted
+	// Valid JSON followed by malformed JSON: returns error
 	input := "{\"valid\": true}\n{broken json"
-	result := extractJsonContent(input)
-	assert.Contains(t, result, `"valid"`)
-	assert.NotContains(t, result, "broken")
+	_, err := extractJsonContent(input)
+	assert.Error(t, err)
 
-	// Malformed JSON only: nothing extracted
+	// Malformed JSON only: returns error
 	input = "{not valid json at all"
-	result = extractJsonContent(input)
-	assert.Equal(t, "", result)
+	_, err = extractJsonContent(input)
+	assert.Error(t, err)
 
 	// Valid JSON with log lines before and after (realistic scenario)
 	input = "time=2026 level=info msg=Before\n{\"key\": 1}\ntime=2026 level=info msg=After"
-	result = extractJsonContent(input)
+	result, err := extractJsonContent(input)
+	require.NoError(t, err)
 	assert.Contains(t, result, `"key"`)
 	assert.NotContains(t, result, "Before")
 	assert.NotContains(t, result, "After")
 
 	// Whitespace-only after filtering logs
 	input = "20:41:53.564 INFO   Running\n   \n  "
-	result = extractJsonContent(input)
+	result, err = extractJsonContent(input)
+	require.NoError(t, err)
 	assert.Equal(t, "", result)
 
 	// Two valid JSON objects separated by log lines
 	input = "20:41:53.564 INFO   Start\n{\"a\": 1}\n20:41:53.564 INFO   Middle\n{\"b\": 2}\n20:41:53.564 INFO   End"
-	result = extractJsonContent(input)
+	result, err = extractJsonContent(input)
+	require.NoError(t, err)
 	assert.Contains(t, result, `"a"`)
 	assert.Contains(t, result, `"b"`)
 }
