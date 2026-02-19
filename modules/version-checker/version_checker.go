@@ -23,8 +23,8 @@ const (
 )
 
 const (
-	// versionRegexMatcher is a regex used to extract version string from shell command output.
-	versionRegexMatcher = `\d+(\.\d+)+`
+	// defaultVersionRegexMatcher is a regex used to extract version string from shell command output.
+	defaultVersionRegexMatcher = `\d+(\.\d+)+`
 	// defaultVersionArg is a default arg to pass in to get version output from shell command.
 	defaultVersionArg = "--version"
 )
@@ -34,9 +34,13 @@ type CheckVersionParams struct {
 	BinaryPath string
 	// Binary is the name of the binary you want to check the version for.
 	Binary VersionCheckerBinary
+	// VersionArg is a string literal to pass in to get version output from shell command.
+	VersionArg string
 	// VersionConstraint is a string literal containing one or more conditions, which are separated by commas.
 	// More information here:https://www.terraform.io/language/expressions/version-constraints
 	VersionConstraint string
+	// VersionRegexMatcher is a regex used to extract version string from shell command output.
+	VersionRegexMatcher string
 	// WorkingDir is a directory you want to run the shell command.
 	WorkingDir string
 }
@@ -82,12 +86,24 @@ func validateParams(params CheckVersionParams) error {
 			"invalid version constraint format found {%s}", params.VersionConstraint)
 	}
 
+	// Check the format of the version regex matcher if present.
+	if _, err := regexp.Compile(params.VersionRegexMatcher); params.VersionRegexMatcher != "" && err != nil {
+		return fmt.Errorf(
+			"invalid version regex matcher format found {%s}", params.VersionRegexMatcher)
+	}
+
 	return nil
 }
 
 // getVersionWithShellCommand get version by running a shell command.
 func getVersionWithShellCommand(t testing.TestingT, params CheckVersionParams) (string, error) {
-	var versionArg = defaultVersionArg
+	var versionArg string
+	if params.VersionArg != "" {
+		versionArg = params.VersionArg
+	} else {
+		versionArg = defaultVersionArg
+	}
+
 	binary, err := getBinary(params)
 	if err != nil {
 		return "", err
@@ -105,7 +121,7 @@ func getVersionWithShellCommand(t testing.TestingT, params CheckVersionParams) (
 			"w/ version args {%s}: %w", binary, versionArg, err)
 	}
 
-	versionStr, err := extractVersionFromShellCommandOutput(output)
+	versionStr, err := extractVersionFromShellCommandOutput(params, output)
 	if err != nil {
 		return "", fmt.Errorf("failed to extract version from shell "+
 			"command output {%s}: %w", output, err)
@@ -135,8 +151,14 @@ func getBinary(params CheckVersionParams) (string, error) {
 
 // extractVersionFromShellCommandOutput extracts version with regex string matching
 // from the given shell command output string.
-func extractVersionFromShellCommandOutput(output string) (string, error) {
-	regexMatcher := regexp.MustCompile(versionRegexMatcher)
+func extractVersionFromShellCommandOutput(params CheckVersionParams, output string) (string, error) {
+	var regexMatcher *regexp.Regexp
+	if params.VersionRegexMatcher != "" {
+		regexMatcher = regexp.MustCompile(params.VersionRegexMatcher)
+	} else {
+		regexMatcher = regexp.MustCompile(defaultVersionRegexMatcher)
+	}
+
 	versionStr := regexMatcher.FindString(output)
 	if versionStr == "" {
 		return "", fmt.Errorf("failed to find version using regex matcher")

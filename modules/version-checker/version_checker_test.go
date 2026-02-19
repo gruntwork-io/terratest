@@ -42,6 +42,17 @@ func TestParamValidation(t *testing.T) {
 			expectedErrorMessage: "invalid version constraint format found {abc}",
 		},
 		{
+			name: "Invalid Version Regex Matcher Format",
+			param: CheckVersionParams{
+				Binary:              Docker,
+				VersionConstraint:   "1.2.3",
+				VersionRegexMatcher: "[notregex",
+				WorkingDir:          ".",
+			},
+			containError:         true,
+			expectedErrorMessage: "invalid version regex matcher format found {[notregex}",
+		},
+		{
 			name: "Success",
 			param: CheckVersionParams{
 				Binary:            Docker,
@@ -72,6 +83,7 @@ func TestExtractVersionFromShellCommandOutput(t *testing.T) {
 		expectedVersionStr   string
 		containError         bool
 		expectedErrorMessage string
+		param                CheckVersionParams
 	}{
 		{
 			name:                 "Stand-alone version string",
@@ -79,6 +91,7 @@ func TestExtractVersionFromShellCommandOutput(t *testing.T) {
 			expectedVersionStr:   "1.2.3",
 			containError:         false,
 			expectedErrorMessage: "",
+			param:                CheckVersionParams{},
 		},
 		{
 			name:                 "version string with v prefix",
@@ -86,6 +99,7 @@ func TestExtractVersionFromShellCommandOutput(t *testing.T) {
 			expectedVersionStr:   "1.0.0",
 			containError:         false,
 			expectedErrorMessage: "",
+			param:                CheckVersionParams{},
 		},
 		{
 			name:                 "2 digit version string",
@@ -93,6 +107,7 @@ func TestExtractVersionFromShellCommandOutput(t *testing.T) {
 			expectedVersionStr:   "1.0",
 			containError:         false,
 			expectedErrorMessage: "",
+			param:                CheckVersionParams{},
 		},
 		{
 			name:                 "invalid output string",
@@ -100,6 +115,7 @@ func TestExtractVersionFromShellCommandOutput(t *testing.T) {
 			expectedVersionStr:   "",
 			containError:         true,
 			expectedErrorMessage: "failed to find version using regex matcher",
+			param:                CheckVersionParams{},
 		},
 		{
 			name:                 "empty output string",
@@ -107,11 +123,12 @@ func TestExtractVersionFromShellCommandOutput(t *testing.T) {
 			expectedVersionStr:   "",
 			containError:         true,
 			expectedErrorMessage: "failed to find version using regex matcher",
+			param:                CheckVersionParams{},
 		},
 	}
 
 	for _, tc := range tests {
-		versionStr, err := extractVersionFromShellCommandOutput(tc.outputStr)
+		versionStr, err := extractVersionFromShellCommandOutput(tc.param, tc.outputStr)
 		if tc.containError {
 			require.EqualError(t, err, tc.expectedErrorMessage, tc.name)
 		} else {
@@ -208,6 +225,12 @@ func TestCheckVersionEndToEnd(t *testing.T) {
 			BinaryPath:        "/usr/local/bin/packer",
 			Binary:            Packer,
 			VersionConstraint: ">= 0.0.1",
+			WorkingDir:        ".",
+		}},
+		{name: "Go", param: CheckVersionParams{
+			BinaryPath:        "go",
+			VersionArg:        "version",
+			VersionConstraint: ">= 1.17.0",
 			WorkingDir:        ".",
 		}},
 	}
