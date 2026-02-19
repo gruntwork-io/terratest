@@ -25,6 +25,9 @@ type PlanStruct struct {
 	// A map that maps full resource addresses (e.g., module.foo.null_resource.test) to the planned actions terraform
 	// will take on that resource.
 	ResourceChangesMap map[string]*tfjson.ResourceChange
+
+	// A map that maps the output name to the planned values of that output
+	OutputChangesMap map[string]*tfjson.Change
 }
 
 // ParsePlanJSON takes in the json string representation of the terraform plan and returns a go struct representation
@@ -36,9 +39,20 @@ func ParsePlanJSON(jsonStr string) (*PlanStruct, error) {
 		return nil, err
 	}
 
+	plan.OutputChangesMap = parseOutputChanges(plan)
 	plan.ResourcePlannedValuesMap = parsePlannedValues(plan)
 	plan.ResourceChangesMap = parseResourceChanges(plan)
 	return plan, nil
+}
+
+// parseOutputChanges takes a plan and returns a maps that maps output names to the planned changes for that output.
+// If there are no changes, this returns an empty map instead of erroring
+func parseOutputChanges(plan *PlanStruct) map[string]*tfjson.Change {
+	out := map[string]*tfjson.Change{}
+	for outputName, change := range plan.RawPlan.OutputChanges {
+		out[outputName] = change
+	}
+	return out
 }
 
 // parseResourceChanges takes a plan and returns a map that maps resource addresses to the planned changes for that
@@ -89,6 +103,18 @@ func parseModulePlannedValues(module *tfjson.StateModule) map[string]*tfjson.Sta
 		}
 	}
 	return out
+}
+
+// AssertOutputChangesMapKeyExists checks if the given key exists in the map, failing the test if it does not.
+func AssertOutputChangesMapKeyExists(t testing.TestingT, plan *PlanStruct, keyQuery string) {
+	_, hasKey := plan.OutputChangesMap[keyQuery]
+	assert.Truef(t, hasKey, "Given output changes map does not have key %s", keyQuery)
+}
+
+// RequireOutputChangesMapKeyExists checks if the given key exists in the map, failing and halting the test if it does not.
+func RequireOutputChangesMapKeyExists(t testing.TestingT, plan *PlanStruct, keyQuery string) {
+	_, hasKey := plan.OutputChangesMap[keyQuery]
+	require.Truef(t, hasKey, "Given output changes map does not have key %s", keyQuery)
 }
 
 // AssertPlannedValuesMapKeyExists checks if the given key exists in the map, failing the test if it does not.
