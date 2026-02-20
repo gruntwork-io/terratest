@@ -169,7 +169,8 @@ spec:
         - name: NAME
           value: "nginx-two"
     ports:
-    - containerPort: 80
+    - containerPort: 8080
+    command: ["sh", "-c", "sed -i 's/80/8080/' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
 `
 
 const EXAMPLE_POD_WITH_READINESS_PROBE = EXAMPLE_POD_YAML_TEMPLATE + `
