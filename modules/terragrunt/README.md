@@ -1,6 +1,6 @@
 # Terragrunt Module
 
-Testing library for Terragrunt configurations in Go. Provides helpers for running Terragrunt commands across multiple modules (run-all) and stack-based workflows.
+Testing library for Terragrunt configurations in Go. Provides helpers for running Terragrunt commands for single units, across multiple modules (run-all), and stack-based workflows.
 
 ## Requirements
 
@@ -26,12 +26,33 @@ options := &terragrunt.Options{
 
 ## Quick Start
 
+### Single Unit
+
 ```go
 import (
     "testing"
     "github.com/gruntwork-io/terratest/modules/terragrunt"
 )
 
+func TestSingleUnit(t *testing.T) {
+    t.Parallel()
+
+    options := &terragrunt.Options{
+        TerragruntDir: "../path/to/terragrunt/unit",
+    }
+
+    defer terragrunt.Destroy(t, options)
+    terragrunt.InitAndApply(t, options)
+
+    // Get a specific output as JSON
+    json := terragrunt.OutputJson(t, options, "vpc_id")
+    assert.Contains(t, json, "vpc-")
+}
+```
+
+### Multiple Modules (--all)
+
+```go
 func TestTerragruntApply(t *testing.T) {
     t.Parallel()
 
@@ -39,11 +60,8 @@ func TestTerragruntApply(t *testing.T) {
         TerragruntDir: "../path/to/terragrunt/config",
     }
 
-    // Apply all modules
-    terragrunt.ApplyAll(t, options)
-
-    // Clean up
     defer terragrunt.DestroyAll(t, options)
+    terragrunt.ApplyAll(t, options)
 }
 ```
 
@@ -81,6 +99,25 @@ options := &terragrunt.Options{
 ```
 
 ## Functions
+
+### Single-Unit Commands
+
+Run terragrunt commands against a single unit (one `terragrunt.hcl` directory):
+
+- `Apply(t, options)` - Apply changes
+- `Destroy(t, options)` - Destroy resources
+- `Plan(t, options)` - Generate and show execution plan
+- `PlanExitCode(t, options)` - Plan and return exit code (0=no changes, 2=changes, other=error)
+- `Validate(t, options)` - Validate configuration
+- `OutputJson(t, options, key)` - Get output as JSON (specific key or all outputs)
+
+### Convenience Wrappers
+
+Run init + command in a single call:
+
+- `InitAndApply(t, options)` - Init then apply
+- `InitAndPlan(t, options)` - Init then plan
+- `InitAndValidate(t, options)` - Init then validate
 
 ### Run --all Commands
 
@@ -254,13 +291,12 @@ terragrunt.ApplyAll(t, options)
 ## Not Supported
 
 This module does **NOT** support:
-- Single-unit commands (non-`--all` operations)
-- `validate`, `graph`, `import`, `refresh`, `show`, `state`, `test` commands
+- `graph`, `import`, `refresh`, `show`, `state`, `test` commands
 - `backend`, `exec`, `catalog`, `scaffold` commands
 - Discovery commands (`find`, `list`)
 - Configuration commands (`dag`, `info`, `render`)
 
-For single-unit testing, consider using the `terraform` module instead, or run terragrunt commands directly via the `shell` module.
+For unsupported commands, run terragrunt directly via the `shell` module.
 
 ## Compatibility
 

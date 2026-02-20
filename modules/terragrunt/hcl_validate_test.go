@@ -12,7 +12,7 @@ import (
 func TestHclValidate(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	HclValidate(t, &Options{

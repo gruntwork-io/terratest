@@ -17,7 +17,7 @@ func TestTerragruntEndToEndIntegration(t *testing.T) {
 	t.Parallel()
 
 	// Setup: Copy test fixture to temp directory
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	// Configure options with TerragruntArgs
@@ -64,7 +64,7 @@ func TestStackEndToEndIntegration(t *testing.T) {
 
 	// Setup: Copy stack test fixture
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -106,7 +106,7 @@ func TestOutputAllJsonEndToEnd(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerragruntFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+		"testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{TerragruntDir: testFolder}

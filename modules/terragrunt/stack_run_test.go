@@ -12,7 +12,7 @@ func TestStackRun(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	Init(t, &Options{
@@ -35,7 +35,7 @@ func TestStackRunE(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	// First initialize the stack
@@ -74,7 +74,7 @@ func TestStackRunPlanWithNoColor(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	// First initialize the stack

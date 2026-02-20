@@ -64,7 +64,7 @@ func TestValidateAllTerraformModulesOnTerratest(t *testing.T) {
 
 	opts, optsErr := NewValidationOptions(projectRootDir, []string{}, []string{
 		"test/fixtures/terraform-with-plan-error",
-		"test/fixtures/terragrunt/terragrunt-with-plan-error",
+		"modules/terragrunt/testdata/terragrunt-with-plan-error",
 		"examples/terraform-backend-example",
 	})
 	require.NoError(t, optsErr)

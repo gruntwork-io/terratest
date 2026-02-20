@@ -10,7 +10,7 @@ import (
 func TestValidateAll(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	ValidateAll(t, &Options{
@@ -19,19 +19,27 @@ func TestValidateAll(t *testing.T) {
 	})
 }
 
-func TestValidateAllE(t *testing.T) {
+func TestValidate(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	Validate(t, &Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
-	}
+	})
+}
 
-	// Validate should work without any prior setup
-	out, err := ValidateAllE(t, options)
+func TestInitAndValidate(t *testing.T) {
+	t.Parallel()
+
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
+
+	out := InitAndValidate(t, &Options{
+		TerragruntDir:    testFolder,
+		TerragruntBinary: "terragrunt",
+	})
 	require.NotEmpty(t, out)
 }

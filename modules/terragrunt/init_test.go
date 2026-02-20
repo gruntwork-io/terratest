@@ -12,7 +12,7 @@ func TestInit(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	out := Init(t, &Options{
@@ -28,7 +28,7 @@ func TestInitE(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	out, err := InitE(t, &Options{
@@ -45,7 +45,7 @@ func TestInitWithInvalidConfig(t *testing.T) {
 	t.Parallel()
 	// Test error handling when tg.hcl has invalid HCL syntax
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init-error", t.Name())
+		"testdata/terragrunt-stack-init-error", t.Name())
 	require.NoError(t, err)
 
 	// This should fail due to invalid HCL syntax in tg.hcl
@@ -64,7 +64,7 @@ func TestInitWithBothArgTypes(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
