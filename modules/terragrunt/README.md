@@ -32,6 +32,7 @@ options := &terragrunt.Options{
 import (
     "testing"
     "github.com/gruntwork-io/terratest/modules/terragrunt"
+    "github.com/stretchr/testify/assert"
 )
 
 func TestSingleUnit(t *testing.T) {
@@ -45,8 +46,8 @@ func TestSingleUnit(t *testing.T) {
     terragrunt.InitAndApply(t, options)
 
     // Get a specific output as JSON
-    json := terragrunt.OutputJson(t, options, "vpc_id")
-    assert.Contains(t, json, "vpc-")
+    vpcOutput := terragrunt.OutputJson(t, options, "vpc_id")
+    assert.Contains(t, vpcOutput, "vpc-")
 }
 ```
 
@@ -72,14 +73,33 @@ func TestTerragruntApply(t *testing.T) {
 The `Options` struct has two distinct parts:
 
 1. **Test Framework Configuration** (NOT passed to terragrunt CLI):
-   - `TerragruntDir` - where to run terragrunt
+   - `TerragruntDir` - where to run terragrunt (required)
    - `TerragruntBinary` - binary name (default: "terragrunt")
    - `EnvVars` - environment variables
-   - `Logger`, `MaxRetries`, `TimeBetweenRetries` - test framework settings
+   - `Logger` - custom logger for output
+   - `MaxRetries`, `TimeBetweenRetries` - retry settings
+   - `RetryableTerraformErrors` - map of error patterns to retry messages
+   - `WarningsAsErrors` - map of warning patterns to treat as errors
+   - `BackendConfig` - backend configuration passed to `init`
+   - `PluginDir` - plugin directory passed to `init`
+   - `Stdin` - stdin reader for commands
 
 2. **Command-Line Arguments** (passed to terragrunt):
    - `TerragruntArgs` - global terragrunt flags (e.g., `--log-level`, `--no-color`)
    - `TerraformArgs` - command-specific terraform flags (e.g., `-upgrade`)
+
+### Error-Returning Variants (E-suffix)
+
+Every function has an `E`-suffix variant that returns an error instead of calling `t.Fatal` on failure. For example:
+
+- `Apply(t, options)` calls `t.Fatal` on error
+- `ApplyE(t, options)` returns `(string, error)` for custom error handling
+
+Use `E` variants when you need to test error cases or handle failures gracefully:
+```go
+_, err := terragrunt.ApplyE(t, options)
+require.Error(t, err)
+```
 
 ### TerragruntArgs vs TerraformArgs
 
@@ -104,6 +124,7 @@ options := &terragrunt.Options{
 
 Run terragrunt commands against a single unit (one `terragrunt.hcl` directory):
 
+- `Init(t, options)` - Initialize configuration
 - `Apply(t, options)` - Apply changes
 - `Destroy(t, options)` - Destroy resources
 - `Plan(t, options)` - Generate and show execution plan
@@ -123,15 +144,19 @@ Run init + command in a single call:
 
 Work with [implicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks/#implicit-stacks) (multiple units in a directory):
 
-- `Init(t, options)` - Initialize configuration
 - `ApplyAll(t, options)` - Apply all modules with dependencies
 - `DestroyAll(t, options)` - Destroy all modules with dependencies
 - `PlanAllExitCode(t, options)` - Plan all and return exit code (0=no changes, 2=changes, other=error)
 - `ValidateAll(t, options)` - Validate all modules
 - `RunAll(t, options, command)` - Run any terraform command with --all flag
 - `OutputAllJson(t, options)` - Get all outputs as raw JSON string (note: returns separate JSON objects per module)
-- `FormatAll(t, options)` - Format all terragrunt.hcl files
-- `HclValidate(t, options)` - Validate terragrunt.hcl syntax and configuration
+
+### HCL Commands
+
+Terragrunt HCL tooling commands:
+
+- `FormatAll(t, options)` - Format all terragrunt.hcl files (`terragrunt hcl format`)
+- `HclValidate(t, options)` - Validate terragrunt.hcl syntax and configuration (`terragrunt hcl validate`)
 
 ### Stack Commands
 
@@ -146,6 +171,11 @@ Work with [explicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks
 - `StackOutputListAll(t, options)` - Get list of all output variable names
 
 ## Examples
+
+See the [examples directory](../../examples/) for complete working examples:
+- [terragrunt-example](../../examples/terragrunt-example/) - Single unit testing
+- [terragrunt-multi-module-example](../../examples/terragrunt-multi-module-example/) - Multi-module testing
+- [terragrunt-second-example](../../examples/terragrunt-second-example/) - Additional patterns
 
 ### Testing with Dependencies
 
@@ -192,14 +222,17 @@ func TestStackOutput(t *testing.T) {
         TerragruntDir: "../stack",
     }
 
-    terragrunt.StackRun(t, &terragrunt.Options{
+    applyOpts := &terragrunt.Options{
         TerragruntDir: "../stack",
         TerraformArgs: []string{"apply"},
-    })
-    defer terragrunt.StackRun(t, &terragrunt.Options{
+    }
+    destroyOpts := &terragrunt.Options{
         TerragruntDir: "../stack",
         TerraformArgs: []string{"destroy"},
-    })
+    }
+
+    terragrunt.StackRun(t, applyOpts)
+    defer terragrunt.StackRun(t, destroyOpts)
 
     // Get specific output
     vpcID := terragrunt.StackOutput(t, options, "vpc_id")
@@ -260,14 +293,17 @@ func TestStackOutputKeys(t *testing.T) {
         TerragruntDir: "../stack",
     }
 
-    terragrunt.StackRun(t, &terragrunt.Options{
+    applyOpts := &terragrunt.Options{
         TerragruntDir: "../stack",
         TerraformArgs: []string{"apply"},
-    })
-    defer terragrunt.StackRun(t, &terragrunt.Options{
+    }
+    destroyOpts := &terragrunt.Options{
         TerragruntDir: "../stack",
         TerraformArgs: []string{"destroy"},
-    })
+    }
+
+    terragrunt.StackRun(t, applyOpts)
+    defer terragrunt.StackRun(t, destroyOpts)
 
     // Get list of all output keys
     keys := terragrunt.StackOutputListAll(t, options)
@@ -304,8 +340,10 @@ Tested with Terragrunt v0.80.4+, v0.93.5+, and v0.99.x. Earlier versions may wor
 
 ### Migration from terraform Module
 
-| Deprecated (terraform module) | Replacement (terragrunt module) |
-|-------------------------------|----------------------------------|
+The following functions were previously in the `terraform` module and have been moved here. The deprecated versions have been removed from the `terraform` module.
+
+| Removed (terraform module) | Replacement (terragrunt module) |
+|----------------------------|----------------------------------|
 | `TgApplyAll` / `TgApplyAllE` | `ApplyAll` / `ApplyAllE` |
 | `TgDestroyAll` / `TgDestroyAllE` | `DestroyAll` / `DestroyAllE` |
 | `TgPlanAllExitCode` / `TgPlanAllExitCodeE` | `PlanAllExitCode` / `PlanAllExitCodeE` |
