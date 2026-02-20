@@ -116,7 +116,7 @@ spec:
   type: NodePort
 ---
 kind: Ingress
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: nginx-service-ingress
   namespace: %s
@@ -125,7 +125,10 @@ spec:
   - http:
       paths:
       - path: /app-%s
+        pathType: Prefix
         backend:
-          serviceName: nginx-service
-          servicePort: 80
+          service:
+            name: nginx-service
+            port:
+              number: 80
 `
