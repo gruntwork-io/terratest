@@ -18,3 +18,30 @@ func ApplyAll(t testing.TestingT, options *Options) string {
 func ApplyAllE(t testing.TestingT, options *Options) (string, error) {
 	return runTerragruntCommandE(t, options, "apply", "--all", "-input=false", "-auto-approve")
 }
+
+// Apply runs terragrunt apply for a single unit and returns stdout/stderr.
+func Apply(t testing.TestingT, options *Options) string {
+	out, err := ApplyE(t, options)
+	require.NoError(t, err)
+	return out
+}
+
+// ApplyE runs terragrunt apply for a single unit and returns stdout/stderr.
+func ApplyE(t testing.TestingT, options *Options) (string, error) {
+	return runTerragruntCommandE(t, options, "apply", "-input=false", "-auto-approve")
+}
+
+// InitAndApply runs terragrunt init followed by apply for a single unit and returns the apply stdout/stderr.
+func InitAndApply(t testing.TestingT, options *Options) string {
+	out, err := InitAndApplyE(t, options)
+	require.NoError(t, err)
+	return out
+}
+
+// InitAndApplyE runs terragrunt init followed by apply for a single unit and returns the apply stdout/stderr.
+func InitAndApplyE(t testing.TestingT, options *Options) (string, error) {
+	if _, err := InitE(t, options); err != nil {
+		return "", err
+	}
+	return ApplyE(t, options)
+}

@@ -10,7 +10,7 @@ import (
 func TestDestroyAll(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -23,10 +23,10 @@ func TestDestroyAll(t *testing.T) {
 	require.NotEmpty(t, destroyOut)
 }
 
-func TestDestroyAllE(t *testing.T) {
+func TestDestroy(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-no-error", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &Options{
@@ -34,21 +34,16 @@ func TestDestroyAllE(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	out, err := ApplyAllE(t, options)
-	require.NoError(t, err)
-	require.Contains(t, out, "Hello, World")
-
-	// Test that destroy completes successfully
-	destroyOut, err := DestroyAllE(t, options)
-	require.NoError(t, err)
-	require.NotEmpty(t, destroyOut, "Destroy output should not be empty")
+	Apply(t, options)
+	destroyOut := Destroy(t, options)
+	require.NotEmpty(t, destroyOut)
 }
 
 // TestDestroyAllWithArgs verifies DestroyAll respects TerragruntArgs
 func TestDestroyAllWithArgs(t *testing.T) {
 	t.Parallel()
 
-	testFolder, err := files.CopyTerragruntFolderToTemp("../../test/fixtures/terragrunt/terragrunt-multi-plan", t.Name())
+	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
 	// Apply first

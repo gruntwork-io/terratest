@@ -17,7 +17,7 @@ func TestStackOutputIntegration(t *testing.T) {
 
 	// Create a temporary copy of the stack fixture
 	testFolder, err := files.CopyTerragruntFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", "tg-stack-output-test")
+		"testdata/terragrunt-stack-init", "tg-stack-output-test")
 	require.NoError(t, err)
 
 	options := &Options{
@@ -102,7 +102,7 @@ func TestStackOutputErrorHandling(t *testing.T) {
 
 	// Create a temporary copy of the stack fixture
 	testFolder, err := files.CopyTerragruntFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", "tg-stack-output-error-test")
+		"testdata/terragrunt-stack-init", "tg-stack-output-error-test")
 	require.NoError(t, err)
 
 	options := &Options{
@@ -152,7 +152,7 @@ func TestStackOutputAll(t *testing.T) {
 
 	// Create a temporary copy of the stack fixture
 	testFolder, err := files.CopyTerragruntFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", "tg-stack-output-all-test")
+		"testdata/terragrunt-stack-init", "tg-stack-output-all-test")
 	require.NoError(t, err)
 
 	options := &Options{
@@ -206,7 +206,7 @@ func TestStackOutputListAll(t *testing.T) {
 
 	// Create a temporary copy of the stack fixture
 	testFolder, err := files.CopyTerragruntFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", "tg-stack-output-list-test")
+		"testdata/terragrunt-stack-init", "tg-stack-output-list-test")
 	require.NoError(t, err)
 
 	options := &Options{
@@ -258,7 +258,7 @@ func TestStackOutputListAllE(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerragruntFolderToTemp(
-		"../../test/fixtures/terragrunt/terragrunt-stack-init", "tg-stack-output-list-e-test")
+		"testdata/terragrunt-stack-init", "tg-stack-output-list-e-test")
 	require.NoError(t, err)
 
 	options := &Options{
