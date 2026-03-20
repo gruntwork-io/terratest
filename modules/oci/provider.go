@@ -20,22 +20,25 @@ const subnetIDEnvVar = "TF_VAR_subnet_ocid"
 // You can set this environment variable to force Terratest to use a pass phrase.
 const passPhraseEnvVar = "TF_VAR_pass_phrase"
 
-// GetRootComparmentID gets an OCID of the root compartment (a.k.a. tenancy OCID).
+// GetRootCompartmentID gets an OCID of the root compartment (a.k.a. tenancy OCID).
 func GetRootCompartmentID(t testing.TestingT) string {
 	tenancyID, err := GetRootCompartmentIDE(t)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return tenancyID
 }
 
-// GetRootComparmentIDE gets an OCID of the root compartment (a.k.a. tenancy OCID).
+// GetRootCompartmentIDE gets an OCID of the root compartment (a.k.a. tenancy OCID).
 func GetRootCompartmentIDE(t testing.TestingT) (string, error) {
 	configProvider := common.DefaultConfigProvider()
+
 	tenancyID, err := configProvider.TenancyOCID()
 	if err != nil {
 		return "", err
 	}
+
 	return tenancyID, nil
 }
 

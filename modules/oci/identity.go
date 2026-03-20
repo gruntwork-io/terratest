@@ -2,7 +2,6 @@ package oci
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -19,6 +18,7 @@ func GetRandomAvailabilityDomain(t testing.TestingT, compartmentID string) strin
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return ad
 }
 
@@ -39,6 +39,7 @@ func GetRandomAvailabilityDomainE(t testing.TestingT, compartmentID string) (str
 	ad := random.RandomString(allADs)
 
 	logger.Default.Logf(t, "Using availability domain %s", ad)
+
 	return ad, nil
 }
 
@@ -48,34 +49,38 @@ func GetAllAvailabilityDomains(t testing.TestingT, compartmentID string) []strin
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return ads
 }
 
 // GetAllAvailabilityDomainsE gets the list of availability domains available in the given compartment.
 func GetAllAvailabilityDomainsE(t testing.TestingT, compartmentID string) ([]string, error) {
 	configProvider := common.DefaultConfigProvider()
+
 	client, err := identity.NewIdentityClientWithConfigurationProvider(configProvider)
 	if err != nil {
 		return nil, err
 	}
 
 	request := identity.ListAvailabilityDomainsRequest{CompartmentId: &compartmentID}
+
 	response, err := client.ListAvailabilityDomains(context.Background(), request)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(response.Items) == 0 {
-		return nil, fmt.Errorf("No availability domains found in the %s compartment", compartmentID)
+		return nil, NoAvailabilityDomainsFoundError{CompartmentID: compartmentID}
 	}
 
 	return availabilityDomainsNames(response.Items), nil
 }
 
 func availabilityDomainsNames(ads []identity.AvailabilityDomain) []string {
-	names := []string{}
+	names := make([]string, 0, len(ads))
 	for _, ad := range ads {
 		names = append(names, *ad.Name)
 	}
+
 	return names
 }

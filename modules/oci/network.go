@@ -2,7 +2,6 @@ package oci
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -18,6 +17,7 @@ func GetRandomSubnetID(t testing.TestingT, compartmentID string, availabilityDom
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return ocid
 }
 
@@ -25,6 +25,7 @@ func GetRandomSubnetID(t testing.TestingT, compartmentID string, availabilityDom
 // The returned value can be overridden by of the environment variable TF_VAR_subnet_ocid.
 func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDomain string) (string, error) {
 	configProvider := common.DefaultConfigProvider()
+
 	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider)
 	if err != nil {
 		return "", err
@@ -36,11 +37,13 @@ func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDo
 	}
 
 	allSubnetIDs := map[string][]string{}
+
 	for _, vcnID := range vcnIDs {
 		request := core.ListSubnetsRequest{
 			CompartmentId: &compartmentID,
 			VcnId:         &vcnID,
 		}
+
 		response, err := client.ListSubnets(context.Background(), request)
 		if err != nil {
 			return "", err
@@ -52,6 +55,7 @@ func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDo
 	subnetID := random.RandomString(allSubnetIDs[availabilityDomain])
 
 	logger.Default.Logf(t, "Using subnet with OCID %s", subnetID)
+
 	return subnetID, nil
 }
 
@@ -61,41 +65,47 @@ func GetAllVcnIDs(t testing.TestingT, compartmentID string) []string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return vcnIDS
 }
 
 // GetAllVcnIDsE gets the list of VCNs available in the given compartment.
 func GetAllVcnIDsE(t testing.TestingT, compartmentID string) ([]string, error) {
 	configProvider := common.DefaultConfigProvider()
+
 	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider)
 	if err != nil {
 		return nil, err
 	}
 
 	request := core.ListVcnsRequest{CompartmentId: &compartmentID}
+
 	response, err := client.ListVcns(context.Background(), request)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(response.Items) == 0 {
-		return nil, fmt.Errorf("No VCNs found in the %s compartment", compartmentID)
+		return nil, NoVCNsFoundError{CompartmentID: compartmentID}
 	}
 
 	return vcnsIDs(response.Items), nil
 }
 
 func mapSubnetsByAvailabilityDomain(allSubnets map[string][]string, subnets []core.Subnet) map[string][]string {
-	for _, subnet := range subnets {
-		allSubnets[*subnet.AvailabilityDomain] = append(allSubnets[*subnet.AvailabilityDomain], *subnet.Id)
+	for i := range subnets {
+		allSubnets[*subnets[i].AvailabilityDomain] = append(allSubnets[*subnets[i].AvailabilityDomain], *subnets[i].Id)
 	}
+
 	return allSubnets
 }
 
 func vcnsIDs(vcns []core.Vcn) []string {
-	ids := []string{}
-	for _, vcn := range vcns {
-		ids = append(ids, *vcn.Id)
+	ids := make([]string, 0, len(vcns))
+
+	for i := range vcns {
+		ids = append(ids, *vcns[i].Id)
 	}
+
 	return ids
 }
