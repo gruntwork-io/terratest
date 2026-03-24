@@ -1,4 +1,4 @@
-package http_helper
+package http_helper_test //nolint:staticcheck // package name determined by directory
 
 import (
 	"crypto/tls"
@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	httphelper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,40 +16,46 @@ import (
 func TestRunDummyServer(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := random.UniqueId()
-	text := fmt.Sprintf("dummy-server-%s", uniqueID)
+	uniqueID := random.UniqueID()
+	text := "dummy-server-" + uniqueID
 
-	listener, port := RunDummyServer(t, text)
+	listener, port := httphelper.RunDummyServer(t, text)
 	defer shutDownServer(t, listener)
 
 	url := fmt.Sprintf("http://localhost:%d", port)
-	HttpGetWithValidation(t, url, &tls.Config{}, 200, text)
+	httphelper.HttpGetWithValidation(t, url, &tls.Config{}, 200, text)
 }
 
 func TestContinuouslyCheck(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := random.UniqueId()
-	text := fmt.Sprintf("dummy-server-%s", uniqueID)
+	uniqueID := random.UniqueID()
+	text := "dummy-server-" + uniqueID
 	stopChecking := make(chan bool, 1)
 
-	listener, port := RunDummyServer(t, text)
+	listener, port := httphelper.RunDummyServer(t, text)
 
 	url := fmt.Sprintf("http://localhost:%d", port)
-	wg, responses := ContinuouslyCheckUrl(t, url, stopChecking, 1*time.Second)
+	wg, responses := httphelper.ContinuouslyCheckUrl(t, url, stopChecking, 1*time.Second)
+
 	defer func() {
 		stopChecking <- true
+
 		counts := 0
+
 		for response := range responses {
 			counts++
-			assert.Equal(t, response.StatusCode, 200)
-			assert.Equal(t, response.Body, text)
+
+			assert.Equal(t, 200, response.StatusCode)
+			assert.Equal(t, text, response.Body)
 		}
+
 		wg.Wait()
 		// Make sure we made at least one call
-		assert.NotEqual(t, counts, 0)
+		assert.NotEqual(t, 0, counts)
 		shutDownServer(t, listener)
 	}()
+
 	time.Sleep(5 * time.Second)
 }
 
@@ -67,14 +74,15 @@ func TestRunDummyServersWithHandlers(t *testing.T) {
 		text string
 		port int
 	}
+
 	data := make([]testData, numServers)
 
 	for idx := 0; idx < numServers; idx++ {
-		uniqueID := random.UniqueId()
-		text := fmt.Sprintf("dummy-server-%s", uniqueID)
+		uniqueID := random.UniqueID()
+		text := "dummy-server-" + uniqueID
 
 		handler := func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, "%s", text)
+			_, _ = io.WriteString(w, text)
 		}
 
 		handlerMap := map[string]func(http.ResponseWriter, *http.Request){
@@ -82,7 +90,7 @@ func TestRunDummyServersWithHandlers(t *testing.T) {
 			"/v1/endpoint": handler,
 		}
 
-		listener, port := RunDummyServerWithHandlers(t, handlerMap)
+		listener, port := httphelper.RunDummyServerWithHandlers(t, handlerMap)
 		defer shutDownServer(t, listener)
 
 		data[idx] = testData{text: text, port: port}
@@ -90,11 +98,13 @@ func TestRunDummyServersWithHandlers(t *testing.T) {
 
 	for _, testInstance := range data {
 		url := fmt.Sprintf("http://localhost:%d/v1/endpoint", testInstance.port)
-		HttpGetWithValidation(t, url, &tls.Config{}, 200, testInstance.text)
+		httphelper.HttpGetWithValidation(t, url, &tls.Config{}, 200, testInstance.text)
 	}
 }
 
 func shutDownServer(t *testing.T, listener io.Closer) {
+	t.Helper()
+
 	err := listener.Close()
 	assert.NoError(t, err)
 }
