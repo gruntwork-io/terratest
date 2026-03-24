@@ -1,4 +1,4 @@
-package dns_helper
+package dns_helper //nolint:staticcheck // package name determined by directory
 
 import "fmt"
 
@@ -15,7 +15,7 @@ type QueryTypeError struct {
 }
 
 func (err QueryTypeError) Error() string {
-	return fmt.Sprintf("Wrong DNS query type: %s", err.Type)
+	return "Wrong DNS query type: " + err.Type
 }
 
 // NotFoundError is an error that occurs if no answer found
@@ -36,7 +36,7 @@ type InconsistentAuthoritativeError struct {
 	PreviousAnswers DNSAnswers
 }
 
-func (err InconsistentAuthoritativeError) Error() string {
+func (err *InconsistentAuthoritativeError) Error() string {
 	return fmt.Sprintf("Inconsistent authoritative answer from %s to DNS query %s. Got: %s Previous: %s", err.Nameserver, err.Query, err.Answers, err.PreviousAnswers)
 }
 
@@ -67,6 +67,6 @@ type ValidationError struct {
 	ExpectedAnswers DNSAnswers
 }
 
-func (err ValidationError) Error() string {
+func (err *ValidationError) Error() string {
 	return fmt.Sprintf("Unexpected answer to DNS query %s. Got: %s Expected: %s", err.Query, err.Answers, err.ExpectedAnswers)
 }
