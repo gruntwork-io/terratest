@@ -1,9 +1,11 @@
-package azure
+package azure_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	azure "github.com/gruntwork-io/terratest/modules/azure"
 )
 
 /*
@@ -16,7 +18,7 @@ func TestKeyVaultSecretExists(t *testing.T) {
 
 	testKeyVaultName := "fakeKeyVault"
 	testKeyVaultSecretName := "fakeSecretName"
-	_, err := KeyVaultSecretExistsE(testKeyVaultName, testKeyVaultSecretName)
+	_, err := azure.KeyVaultSecretExistsE(testKeyVaultName, testKeyVaultSecretName)
 	require.Error(t, err)
 }
 
@@ -25,7 +27,7 @@ func TestKeyVaultKeyExists(t *testing.T) {
 
 	testKeyVaultName := "fakeKeyVault"
 	testKeyVaultKeyName := "fakeKeyName"
-	_, err := KeyVaultKeyExistsE(testKeyVaultName, testKeyVaultKeyName)
+	_, err := azure.KeyVaultKeyExistsE(testKeyVaultName, testKeyVaultKeyName)
 	require.Error(t, err)
 }
 
@@ -34,7 +36,7 @@ func TestKeyVaultCertificateExists(t *testing.T) {
 
 	testKeyVaultName := "fakeKeyVault"
 	testKeyVaultCertName := "fakeCertName"
-	_, err := KeyVaultCertificateExistsE(testKeyVaultName, testKeyVaultCertName)
+	_, err := azure.KeyVaultCertificateExistsE(testKeyVaultName, testKeyVaultCertName)
 	require.Error(t, err)
 }
 
@@ -45,6 +47,6 @@ func TestGetKeyVault(t *testing.T) {
 	keyVaultName := ""
 	subscriptionID := ""
 
-	_, err := GetKeyVaultE(t, resGroupName, keyVaultName, subscriptionID)
+	_, err := azure.GetKeyVaultE(t, resGroupName, keyVaultName, subscriptionID)
 	require.Error(t, err)
 }

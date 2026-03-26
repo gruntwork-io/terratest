@@ -36,6 +36,8 @@ func (t *MockT) Fatalf(format string, args ...any) {
 	t.Failed = true
 }
 
+func (t *MockT) Helper() {}
+
 func (t *MockT) Name() string {
 	return "mockT"
 }

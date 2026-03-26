@@ -77,6 +77,7 @@ func (t MockTestingT) Fatal(args ...interface{})                 {}
 func (t MockTestingT) Fatalf(format string, args ...interface{}) {}
 func (t MockTestingT) Error(args ...interface{})                 {}
 func (t MockTestingT) Errorf(format string, args ...interface{}) {}
+func (t MockTestingT) Helper()                                   {}
 func (t MockTestingT) Name() string {
 	return t.MockName
 }

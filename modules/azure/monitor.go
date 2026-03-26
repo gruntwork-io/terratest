@@ -8,38 +8,75 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// DiagnosticSettingsResourceExists indicates whether the diagnostic settings resource exists
+// DiagnosticSettingsResourceExistsContext indicates whether the diagnostic settings resource exists.
 // This function would fail the test if there is an error.
-func DiagnosticSettingsResourceExists(t testing.TestingT, diagnosticSettingsResourceName string, resourceURI string, subscriptionID string) bool {
-	exists, err := DiagnosticSettingsResourceExistsE(diagnosticSettingsResourceName, resourceURI, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func DiagnosticSettingsResourceExistsContext(t testing.TestingT, ctx context.Context, diagnosticSettingsResourceName string, resourceURI string, subscriptionID string) bool {
+	t.Helper()
+
+	exists, err := DiagnosticSettingsResourceExistsContextE(ctx, diagnosticSettingsResourceName, resourceURI, subscriptionID)
 	require.NoError(t, err)
 
 	return exists
 }
 
-// DiagnosticSettingsResourceExistsE indicates whether the diagnostic settings resource exists
-func DiagnosticSettingsResourceExistsE(diagnosticSettingsResourceName string, resourceURI string, subscriptionID string) (bool, error) {
-	_, err := GetDiagnosticsSettingsResourceE(diagnosticSettingsResourceName, resourceURI, subscriptionID)
+// DiagnosticSettingsResourceExists indicates whether the diagnostic settings resource exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [DiagnosticSettingsResourceExistsContext] instead.
+func DiagnosticSettingsResourceExists(t testing.TestingT, diagnosticSettingsResourceName string, resourceURI string, subscriptionID string) bool {
+	t.Helper()
+
+	return DiagnosticSettingsResourceExistsContext(t, context.Background(), diagnosticSettingsResourceName, resourceURI, subscriptionID) //nolint:staticcheck
+}
+
+// DiagnosticSettingsResourceExistsContextE indicates whether the diagnostic settings resource exists.
+// The ctx parameter supports cancellation and timeouts.
+func DiagnosticSettingsResourceExistsContextE(ctx context.Context, diagnosticSettingsResourceName string, resourceURI string, subscriptionID string) (bool, error) {
+	_, err := GetDiagnosticsSettingsResourceContextE(ctx, diagnosticSettingsResourceName, resourceURI, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
 
 	return true, nil
 }
 
-// GetDiagnosticsSettingsResource gets the diagnostics settings for a specified resource
+// DiagnosticSettingsResourceExistsE indicates whether the diagnostic settings resource exists.
+//
+// Deprecated: Use [DiagnosticSettingsResourceExistsContextE] instead.
+func DiagnosticSettingsResourceExistsE(diagnosticSettingsResourceName string, resourceURI string, subscriptionID string) (bool, error) {
+	return DiagnosticSettingsResourceExistsContextE(context.Background(), diagnosticSettingsResourceName, resourceURI, subscriptionID)
+}
+
+// GetDiagnosticsSettingsResourceContext gets the diagnostics settings for a specified resource.
 // This function would fail the test if there is an error.
-func GetDiagnosticsSettingsResource(t testing.TestingT, name string, resourceURI string, subscriptionID string) *insights.DiagnosticSettingsResource {
-	resource, err := GetDiagnosticsSettingsResourceE(name, resourceURI, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetDiagnosticsSettingsResourceContext(t testing.TestingT, ctx context.Context, name string, resourceURI string, subscriptionID string) *insights.DiagnosticSettingsResource {
+	t.Helper()
+
+	resource, err := GetDiagnosticsSettingsResourceContextE(ctx, name, resourceURI, subscriptionID)
 	require.NoError(t, err)
+
 	return resource
 }
 
-// GetDiagnosticsSettingsResourceE gets the diagnostics settings for a specified resource
-func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscriptionID string) (*insights.DiagnosticSettingsResource, error) {
+// GetDiagnosticsSettingsResource gets the diagnostics settings for a specified resource.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetDiagnosticsSettingsResourceContext] instead.
+func GetDiagnosticsSettingsResource(t testing.TestingT, name string, resourceURI string, subscriptionID string) *insights.DiagnosticSettingsResource {
+	t.Helper()
+
+	return GetDiagnosticsSettingsResourceContext(t, context.Background(), name, resourceURI, subscriptionID) //nolint:staticcheck
+}
+
+// GetDiagnosticsSettingsResourceContextE gets the diagnostics settings for a specified resource.
+// The ctx parameter supports cancellation and timeouts.
+func GetDiagnosticsSettingsResourceContextE(ctx context.Context, name string, resourceURI string, subscriptionID string) (*insights.DiagnosticSettingsResource, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -51,7 +88,7 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 		return nil, err
 	}
 
-	settings, err := client.Get(context.Background(), resourceURI, name)
+	settings, err := client.Get(ctx, resourceURI, name)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +96,14 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 	return &settings, nil
 }
 
-// GetDiagnosticsSettingsClientE returns a diagnostics settings client
+// GetDiagnosticsSettingsResourceE gets the diagnostics settings for a specified resource.
+//
+// Deprecated: Use [GetDiagnosticsSettingsResourceContextE] instead.
+func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscriptionID string) (*insights.DiagnosticSettingsResource, error) {
+	return GetDiagnosticsSettingsResourceContextE(context.Background(), name, resourceURI, subscriptionID)
+}
+
+// GetDiagnosticsSettingsClientE returns a diagnostics settings client.
 // TODO: delete in next version
 func GetDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
 	// Validate Azure subscription ID
@@ -69,6 +113,7 @@ func GetDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticS
 	}
 
 	client := insights.NewDiagnosticSettingsClient(subscriptionID)
+
 	authorizer, err := NewAuthorizer()
 	if err != nil {
 		return nil, err
@@ -79,23 +124,37 @@ func GetDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticS
 	return &client, nil
 }
 
-// GetVMInsightsOnboardingStatus get diagnostics VM onboarding status
+// GetVMInsightsOnboardingStatusContext gets diagnostics VM onboarding status.
 // This function would fail the test if there is an error.
-func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subscriptionID string) *insights.VMInsightsOnboardingStatus {
-	status, err := GetVMInsightsOnboardingStatusE(t, resourceURI, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVMInsightsOnboardingStatusContext(t testing.TestingT, ctx context.Context, resourceURI string, subscriptionID string) *insights.VMInsightsOnboardingStatus {
+	t.Helper()
+
+	status, err := GetVMInsightsOnboardingStatusContextE(t, ctx, resourceURI, subscriptionID)
 	require.NoError(t, err)
 
 	return status
 }
 
-// GetVMInsightsOnboardingStatusE get diagnostics VM onboarding status
-func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
+// GetVMInsightsOnboardingStatus gets diagnostics VM onboarding status.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVMInsightsOnboardingStatusContext] instead.
+func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subscriptionID string) *insights.VMInsightsOnboardingStatus {
+	t.Helper()
+
+	return GetVMInsightsOnboardingStatusContext(t, context.Background(), resourceURI, subscriptionID) //nolint:staticcheck
+}
+
+// GetVMInsightsOnboardingStatusContextE gets diagnostics VM onboarding status.
+// The ctx parameter supports cancellation and timeouts.
+func GetVMInsightsOnboardingStatusContextE(t testing.TestingT, ctx context.Context, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
 	client, err := CreateVMInsightsClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	status, err := client.GetOnboardingStatus(context.Background(), resourceURI)
+	status, err := client.GetOnboardingStatus(ctx, resourceURI)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +162,14 @@ func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subs
 	return &status, nil
 }
 
-// GetVMInsightsClientE gets a VM Insights client
+// GetVMInsightsOnboardingStatusE gets diagnostics VM onboarding status.
+//
+// Deprecated: Use [GetVMInsightsOnboardingStatusContextE] instead.
+func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
+	return GetVMInsightsOnboardingStatusContextE(t, context.Background(), resourceURI, subscriptionID)
+}
+
+// GetVMInsightsClientE gets a VM Insights client.
 // TODO: delete in next version
 func GetVMInsightsClientE(t testing.TestingT, subscriptionID string) (*insights.VMInsightsClient, error) {
 	// Validate Azure subscription ID
@@ -124,17 +190,31 @@ func GetVMInsightsClientE(t testing.TestingT, subscriptionID string) (*insights.
 	return &client, nil
 }
 
-// GetActivityLogAlertResource gets a Action Group in the specified Azure Resource Group
+// GetActivityLogAlertResourceContext gets an Activity Log Alert Resource in the specified Azure Resource Group.
 // This function would fail the test if there is an error.
-func GetActivityLogAlertResource(t testing.TestingT, activityLogAlertName string, resGroupName string, subscriptionID string) *insights.ActivityLogAlertResource {
-	activityLogAlertResource, err := GetActivityLogAlertResourceE(activityLogAlertName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetActivityLogAlertResourceContext(t testing.TestingT, ctx context.Context, activityLogAlertName string, resGroupName string, subscriptionID string) *insights.ActivityLogAlertResource {
+	t.Helper()
+
+	activityLogAlertResource, err := GetActivityLogAlertResourceContextE(ctx, activityLogAlertName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return activityLogAlertResource
 }
 
-// GetActivityLogAlertResourceE gets a Action Group in the specified Azure Resource Group
-func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName string, subscriptionID string) (*insights.ActivityLogAlertResource, error) {
+// GetActivityLogAlertResource gets an Activity Log Alert Resource in the specified Azure Resource Group.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetActivityLogAlertResourceContext] instead.
+func GetActivityLogAlertResource(t testing.TestingT, activityLogAlertName string, resGroupName string, subscriptionID string) *insights.ActivityLogAlertResource {
+	t.Helper()
+
+	return GetActivityLogAlertResourceContext(t, context.Background(), activityLogAlertName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetActivityLogAlertResourceContextE gets an Activity Log Alert Resource in the specified Azure Resource Group.
+// The ctx parameter supports cancellation and timeouts.
+func GetActivityLogAlertResourceContextE(ctx context.Context, activityLogAlertName string, resGroupName string, subscriptionID string) (*insights.ActivityLogAlertResource, error) {
 	// Validate resource group name and subscription ID
 	_, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
@@ -147,8 +227,8 @@ func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName stri
 		return nil, err
 	}
 
-	// Get the Action Group
-	activityLogAlertResource, err := client.Get(context.Background(), resGroupName, activityLogAlertName)
+	// Get the Activity Log Alert Resource
+	activityLogAlertResource, err := client.Get(ctx, resGroupName, activityLogAlertName)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +236,14 @@ func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName stri
 	return &activityLogAlertResource, nil
 }
 
-// GetActivityLogAlertsClientE gets an Action Groups client in the specified Azure Subscription
+// GetActivityLogAlertResourceE gets an Activity Log Alert Resource in the specified Azure Resource Group.
+//
+// Deprecated: Use [GetActivityLogAlertResourceContextE] instead.
+func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName string, subscriptionID string) (*insights.ActivityLogAlertResource, error) {
+	return GetActivityLogAlertResourceContextE(context.Background(), activityLogAlertName, resGroupName, subscriptionID)
+}
+
+// GetActivityLogAlertsClientE gets an Action Groups client in the specified Azure Subscription.
 // TODO: delete in next version
 func GetActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
 	// Validate Azure subscription ID

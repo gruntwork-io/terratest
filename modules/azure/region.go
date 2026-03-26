@@ -6,6 +6,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // Reference for region list: https://azure.microsoft.com/en-us/global-infrastructure/locations/
@@ -59,42 +60,74 @@ var stableRegions = []string{
 	"uaenorth",
 }
 
+// GetRandomStableRegionContext gets a randomly chosen Azure region that is considered stable.
+// Like GetRandomRegionContext, you can further restrict the stable region list using approvedRegions
+// and forbiddenRegions. We consider stable regions to be those that have been around for at least 1 year.
+// Note that regions in the approvedRegions list that are not considered stable are ignored.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetRandomStableRegionContext(t testing.TestingT, ctx context.Context, approvedRegions []string, forbiddenRegions []string, subscriptionID string) string {
+	t.Helper()
+
+	regionsToPickFrom := stableRegions
+
+	if len(approvedRegions) > 0 {
+		regionsToPickFrom = collections.ListIntersection(regionsToPickFrom, approvedRegions)
+	}
+
+	if len(forbiddenRegions) > 0 {
+		regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+	}
+
+	return GetRandomRegionContext(t, ctx, regionsToPickFrom, nil, subscriptionID) //nolint:staticcheck
+}
+
 // GetRandomStableRegion gets a randomly chosen Azure region that is considered stable. Like GetRandomRegion, you can
 // further restrict the stable region list using approvedRegions and forbiddenRegions. We consider stable regions to be
 // those that have been around for at least 1 year.
 // Note that regions in the approvedRegions list that are not considered stable are ignored.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetRandomStableRegionContext] instead.
 func GetRandomStableRegion(t testing.TestingT, approvedRegions []string, forbiddenRegions []string, subscriptionID string) string {
-	regionsToPickFrom := stableRegions
-	if len(approvedRegions) > 0 {
-		regionsToPickFrom = collections.ListIntersection(regionsToPickFrom, approvedRegions)
-	}
-	if len(forbiddenRegions) > 0 {
-		regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
-	}
-	return GetRandomRegion(t, regionsToPickFrom, nil, subscriptionID)
+	t.Helper()
+
+	return GetRandomStableRegionContext(t, context.Background(), approvedRegions, forbiddenRegions, subscriptionID)
+}
+
+// GetRandomRegionContext gets a randomly chosen Azure region.
+// If approvedRegions is not empty, this will be a region from the approvedRegions list; otherwise,
+// this method will fetch the latest list of regions from the Azure APIs and pick one of those.
+// If forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetRandomRegionContext(t testing.TestingT, ctx context.Context, approvedRegions []string, forbiddenRegions []string, subscriptionID string) string {
+	t.Helper()
+
+	region, err := GetRandomRegionContextE(t, ctx, approvedRegions, forbiddenRegions, subscriptionID)
+	require.NoError(t, err)
+
+	return region
 }
 
 // GetRandomRegion gets a randomly chosen Azure region. If approvedRegions is not empty, this will be a region from the approvedRegions
 // list; otherwise, this method will fetch the latest list of regions from the Azure APIs and pick one of those. If
 // forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetRandomRegionContext] instead.
 func GetRandomRegion(t testing.TestingT, approvedRegions []string, forbiddenRegions []string, subscriptionID string) string {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.Helper()
 
-	region, err := GetRandomRegionE(t, approvedRegions, forbiddenRegions, subscriptionID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return region
+	return GetRandomRegionContext(t, context.Background(), approvedRegions, forbiddenRegions, subscriptionID) //nolint:staticcheck
 }
 
-// GetRandomRegionE gets a randomly chosen Azure region. If approvedRegions is not empty, this will be a region from the approvedRegions
-// list; otherwise, this method will fetch the latest list of regions from the Azure APIs and pick one of those. If
-// forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list
-func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenRegions []string, subscriptionID string) (string, error) {
+// GetRandomRegionContextE gets a randomly chosen Azure region.
+// If approvedRegions is not empty, this will be a region from the approvedRegions list; otherwise,
+// this method will fetch the latest list of regions from the Azure APIs and pick one of those.
+// If forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
+// The ctx parameter supports cancellation and timeouts.
+func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRegions []string, forbiddenRegions []string, subscriptionID string) (string, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -104,10 +137,11 @@ func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenReg
 	regionsToPickFrom := approvedRegions
 
 	if len(regionsToPickFrom) == 0 {
-		allRegions, err := GetAllAzureRegionsE(t, subscriptionID)
+		allRegions, err := GetAllAzureRegionsContextE(t, ctx, subscriptionID)
 		if err != nil {
 			return "", err
 		}
+
 		regionsToPickFrom = allRegions
 	}
 
@@ -117,26 +151,40 @@ func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenReg
 	return region, nil
 }
 
-// GetAllAzureRegions gets the list of Azure regions available in this subscription.
-func GetAllAzureRegions(t testing.TestingT, subscriptionID string) []string {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		t.Fatal(err)
-	}
+// GetRandomRegionE gets a randomly chosen Azure region. If approvedRegions is not empty, this will be a region from the approvedRegions
+// list; otherwise, this method will fetch the latest list of regions from the Azure APIs and pick one of those. If
+// forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
+//
+// Deprecated: Use [GetRandomRegionContextE] instead.
+func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenRegions []string, subscriptionID string) (string, error) {
+	return GetRandomRegionContextE(t, context.Background(), approvedRegions, forbiddenRegions, subscriptionID)
+}
 
-	// Get list of Azure locations
-	out, err := GetAllAzureRegionsE(t, subscriptionID)
-	if err != nil {
-		t.Fatal(err)
-	}
+// GetAllAzureRegionsContext gets the list of Azure regions available in this subscription.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetAllAzureRegionsContext(t testing.TestingT, ctx context.Context, subscriptionID string) []string {
+	t.Helper()
+
+	out, err := GetAllAzureRegionsContextE(t, ctx, subscriptionID)
+	require.NoError(t, err)
 
 	return out
 }
 
-// GetAllAzureRegionsE gets the list of Azure regions available in this subscription
-func GetAllAzureRegionsE(t testing.TestingT, subscriptionID string) ([]string, error) {
+// GetAllAzureRegions gets the list of Azure regions available in this subscription.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetAllAzureRegionsContext] instead.
+func GetAllAzureRegions(t testing.TestingT, subscriptionID string) []string {
+	t.Helper()
 
+	return GetAllAzureRegionsContext(t, context.Background(), subscriptionID)
+}
+
+// GetAllAzureRegionsContextE gets the list of Azure regions available in this subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscriptionID string) ([]string, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -150,16 +198,24 @@ func GetAllAzureRegionsE(t testing.TestingT, subscriptionID string) ([]string, e
 	}
 
 	// Get list of Azure locations
-	out, err := subscriptionClient.ListLocations(context.Background(), subscriptionID)
+	out, err := subscriptionClient.ListLocations(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Populate a return slice
-	regions := []string{}
+	regions := make([]string, 0, len(*out.Value))
+
 	for _, region := range *out.Value {
 		regions = append(regions, *region.Name)
 	}
 
 	return regions, nil
+}
+
+// GetAllAzureRegionsE gets the list of Azure regions available in this subscription.
+//
+// Deprecated: Use [GetAllAzureRegionsContextE] instead.
+func GetAllAzureRegionsE(t testing.TestingT, subscriptionID string) ([]string, error) {
+	return GetAllAzureRegionsContextE(t, context.Background(), subscriptionID)
 }

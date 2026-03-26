@@ -1,10 +1,12 @@
-package azure
+package azure_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	azure "github.com/gruntwork-io/terratest/modules/azure"
 )
 
 /*
@@ -15,16 +17,17 @@ If/when methods to create and delete log analytics resources are added, these te
 func TestLogAnalyticsWorkspace(t *testing.T) {
 	t.Parallel()
 
-	_, err := LogAnalyticsWorkspaceExistsE("fake", "", "")
+	_, err := azure.LogAnalyticsWorkspaceExistsE("fake", "", "")
 	assert.Error(t, err, "Workspace")
 }
 
 func TestGetLogAnalyticsWorkspaceE(t *testing.T) {
 	t.Parallel()
+
 	workspaceName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetLogAnalyticsWorkspaceE(workspaceName, resourceGroupName, subscriptionID)
+	_, err := azure.GetLogAnalyticsWorkspaceE(workspaceName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }

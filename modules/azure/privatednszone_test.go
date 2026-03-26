@@ -1,9 +1,11 @@
-package azure
+package azure_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	azure "github.com/gruntwork-io/terratest/modules/azure"
 )
 
 /*
@@ -17,7 +19,7 @@ func TestPrivateDNSZoneExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	exists, err := PrivateDNSZoneExistsE(zoneName, resourceGroupName, subscriptionID)
+	exists, err := azure.PrivateDNSZoneExistsE(zoneName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -30,6 +32,6 @@ func TestPrivateDNSZoneExistsE(t *testing.T) {
 	subscriptionID := ""
 	zoneName := ""
 
-	_, err := GetPrivateDNSZoneE(subscriptionID, resGroupName, zoneName)
+	_, err := azure.GetPrivateDNSZoneE(subscriptionID, resGroupName, zoneName)
 	require.Error(t, err)
 }

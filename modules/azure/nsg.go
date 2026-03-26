@@ -2,7 +2,7 @@ package azure
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strconv"
 	"strings"
 	"testing"
@@ -12,7 +12,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// NsgRuleSummaryList holds a collection of NsgRuleSummary rules
+const (
+	// allPortsMax is the maximum port number, representing "all ports" when paired with 0.
+	allPortsMax = 65535
+
+	// portRangeParts is the expected number of parts when splitting a port range string on "-".
+	portRangeParts = 2
+)
+
+// NsgRuleSummaryList holds a collection of NsgRuleSummary rules.
 type NsgRuleSummaryList struct {
 	SummarizedRules []NsgRuleSummary
 }
@@ -20,34 +28,37 @@ type NsgRuleSummaryList struct {
 // NsgRuleSummary is a string-based (non-pointer) summary of an NSG rule with several helper methods attached
 // to help with verification of rule configuration.
 type NsgRuleSummary struct {
+	SourceAddressPrefix        string
+	Direction                  string
+	SourcePortRange            string
+	Access                     string
 	Name                       string
 	Description                string
-	Protocol                   string
-	SourcePortRange            string
-	SourcePortRanges           []string
 	DestinationPortRange       string
-	DestinationPortRanges      []string
-	SourceAddressPrefix        string
-	SourceAdresssPrefixes      []string
+	Protocol                   string
 	DestinationAddressPrefix   string
+	SourcePortRanges           []string
+	DestinationPortRanges      []string
 	DestinationAddressPrefixes []string
-	Access                     string
+	SourceAdresssPrefixes      []string
 	Priority                   int32
-	Direction                  string
 }
 
 // GetDefaultNsgRulesClient returns a rules client which can be used to read the list of *default* security rules
-// defined on an network security group. Note that the "default" rules are those provided implicitly
+// defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
 // This function would fail the test if there is an error.
 func GetDefaultNsgRulesClient(t *testing.T, subscriptionID string) network.DefaultSecurityRulesClient {
+	t.Helper()
+
 	client, err := GetDefaultNsgRulesClientE(subscriptionID)
 	require.NoError(t, err)
+
 	return client
 }
 
 // GetDefaultNsgRulesClientE returns a rules client which can be used to read the list of *default* security rules
-// defined on an network security group. Note that the "default" rules are those provided implicitly
+// defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
 func GetDefaultNsgRulesClientE(subscriptionID string) (network.DefaultSecurityRulesClient, error) {
 	// Get new default client from client factory
@@ -63,21 +74,25 @@ func GetDefaultNsgRulesClientE(subscriptionID string) (network.DefaultSecurityRu
 	}
 
 	nsgClient.Authorizer = *auth
+
 	return *nsgClient, nil
 }
 
 // GetCustomNsgRulesClient returns a rules client which can be used to read the list of *custom* security rules
-// defined on an network security group. Note that the "custom" rules are those defined by
+// defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
 // This function would fail the test if there is an error.
 func GetCustomNsgRulesClient(t *testing.T, subscriptionID string) network.SecurityRulesClient {
+	t.Helper()
+
 	client, err := GetCustomNsgRulesClientE(subscriptionID)
 	require.NoError(t, err)
+
 	return client
 }
 
 // GetCustomNsgRulesClientE returns a rules client which can be used to read the list of *custom* security rules
-// defined on an network security group. Note that the "custom" rules are those defined by
+// defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
 func GetCustomNsgRulesClientE(subscriptionID string) (network.SecurityRulesClient, error) {
 	// Get new custom rules client from client factory
@@ -93,21 +108,25 @@ func GetCustomNsgRulesClientE(subscriptionID string) (network.SecurityRulesClien
 	}
 
 	nsgClient.Authorizer = *auth
+
 	return *nsgClient, nil
 }
 
-// GetAllNSGRules returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules from a network
-// security group.
+// GetAllNSGRulesContext returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
+// from a network security group. The ctx parameter supports cancellation and timeouts.
 // This function would fail the test if there is an error.
-func GetAllNSGRules(t *testing.T, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
-	results, err := GetAllNSGRulesE(resourceGroupName, nsgName, subscriptionID)
+func GetAllNSGRulesContext(t *testing.T, ctx context.Context, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
+	t.Helper()
+
+	results, err := GetAllNSGRulesContextE(ctx, resourceGroupName, nsgName, subscriptionID)
 	require.NoError(t, err)
+
 	return results
 }
 
-// GetAllNSGRulesE returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules from a network
-// security group.
-func GetAllNSGRulesE(resourceGroupName, nsgName, subscriptionID string) (NsgRuleSummaryList, error) {
+// GetAllNSGRulesContextE returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
+// from a network security group. The ctx parameter supports cancellation and timeouts.
+func GetAllNSGRulesContextE(ctx context.Context, resourceGroupName, nsgName, subscriptionID string) (NsgRuleSummaryList, error) {
 	defaultRulesClient, err := GetDefaultNsgRulesClientE(subscriptionID)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
@@ -120,48 +139,71 @@ func GetAllNSGRulesE(resourceGroupName, nsgName, subscriptionID string) (NsgRule
 	}
 
 	// Read all default (platform) rules.
-	defaultRuleList, err := defaultRulesClient.ListComplete(context.Background(), resourceGroupName, nsgName)
+	defaultRuleList, err := defaultRulesClient.ListComplete(ctx, resourceGroupName, nsgName)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
 	// Read any custom (user provided) rules
-	customRuleList, err := customRulesClient.ListComplete(context.Background(), resourceGroupName, nsgName)
+	customRuleList, err := customRulesClient.ListComplete(ctx, resourceGroupName, nsgName)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
 	// Convert the default list to our summary type
-	boundDefaultRules, err := bindRuleList(defaultRuleList)
+	boundDefaultRules, err := bindRuleList(ctx, defaultRuleList)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
 	// Convert the custom list to our summary type
-	boundCustomRules, err := bindRuleList(customRuleList)
+	boundCustomRules, err := bindRuleList(ctx, customRuleList)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
 	// Join the summarized lists and wrap in NsgRuleSummaryList struct
-	allRules := append(boundDefaultRules, boundCustomRules...)
-	ruleList := NsgRuleSummaryList{}
-	ruleList.SummarizedRules = allRules
-	return ruleList, nil
+	allRules := make([]NsgRuleSummary, 0, len(boundDefaultRules)+len(boundCustomRules))
+	allRules = append(allRules, boundDefaultRules...)
+	allRules = append(allRules, boundCustomRules...)
+
+	return NsgRuleSummaryList{SummarizedRules: allRules}, nil
+}
+
+// GetAllNSGRules returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules from a network
+// security group.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetAllNSGRulesContext] instead.
+func GetAllNSGRules(t *testing.T, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
+	t.Helper()
+
+	return GetAllNSGRulesContext(t, context.Background(), resourceGroupName, nsgName, subscriptionID) //nolint:staticcheck
+}
+
+// GetAllNSGRulesE returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules from a network
+// security group.
+//
+// Deprecated: Use [GetAllNSGRulesContextE] instead.
+func GetAllNSGRulesE(resourceGroupName, nsgName, subscriptionID string) (NsgRuleSummaryList, error) {
+	return GetAllNSGRulesContextE(context.Background(), resourceGroupName, nsgName, subscriptionID)
 }
 
 // bindRuleList takes a raw list of security rules from the SDK and converts them into a string-based
 // summary struct.
-func bindRuleList(source network.SecurityRuleListResultIterator) ([]NsgRuleSummary, error) {
+func bindRuleList(ctx context.Context, source network.SecurityRuleListResultIterator) ([]NsgRuleSummary, error) {
 	rules := make([]NsgRuleSummary, 0)
+
 	for source.NotDone() {
 		v := source.Value()
 		rules = append(rules, convertToNsgRuleSummary(v.Name, v.SecurityRulePropertiesFormat))
-		err := source.NextWithContext(context.Background())
+
+		err := source.NextWithContext(ctx)
 		if err != nil {
 			return []NsgRuleSummary{}, err
 		}
 	}
+
 	return rules, nil
 }
 
@@ -183,14 +225,15 @@ func convertToNsgRuleSummary(name *string, rule *network.SecurityRulePropertiesF
 	summary.Access = string(rule.Access)
 	summary.Priority = safePtrToInt32(rule.Priority)
 	summary.Direction = string(rule.Direction)
+
 	return summary
 }
 
 // FindRuleByName looks for a matching rule by name within the current collection of rules.
 func (summarizedRules *NsgRuleSummaryList) FindRuleByName(name string) NsgRuleSummary {
-	for _, r := range summarizedRules.SummarizedRules {
-		if r.Name == name {
-			return r
+	for i := range summarizedRules.SummarizedRules {
+		if summarizedRules.SummarizedRules[i].Name == name {
+			return summarizedRules.SummarizedRules[i]
 		}
 	}
 
@@ -200,16 +243,22 @@ func (summarizedRules *NsgRuleSummaryList) FindRuleByName(name string) NsgRuleSu
 // AllowsDestinationPort checks to see if the rule allows a specific destination port. This is helpful when verifying
 // that a given rule is configured properly for a given port.
 func (summarizedRule *NsgRuleSummary) AllowsDestinationPort(t *testing.T, port string) bool {
+	t.Helper()
+
 	allowed, err := portRangeAllowsPort(summarizedRule.DestinationPortRange, port)
 	assert.NoError(t, err)
+
 	return allowed && (summarizedRule.Access == "Allow")
 }
 
 // AllowsSourcePort checks to see if the rule allows a specific source port. This is helpful when verifying
 // that a given rule is configured properly for a given port.
 func (summarizedRule *NsgRuleSummary) AllowsSourcePort(t *testing.T, port string) bool {
+	t.Helper()
+
 	allowed, err := portRangeAllowsPort(summarizedRule.SourcePortRange, port)
 	assert.NoError(t, err)
+
 	return allowed && (summarizedRule.Access == "Allow")
 }
 
@@ -232,7 +281,7 @@ func portRangeAllowsPort(portRange string, port string) (bool, error) {
 	}
 
 	// If the user wants to check "all", make sure we parsed input range to include all ports.
-	if (port == "*") && (low == 0) && (high == 65535) {
+	if (port == "*") && (low == 0) && (high == allPortsMax) {
 		return true, nil
 	}
 
@@ -246,7 +295,7 @@ func portRangeAllowsPort(portRange string, port string) (bool, error) {
 func parsePortRangeString(rangeString string) (uint16, uint16, error) {
 	// An asterisk means all ports
 	if rangeString == "*" {
-		return uint16(0), uint16(65535), nil
+		return uint16(0), uint16(allPortsMax), nil
 	}
 
 	// Check for range string that contains hyphen separator
@@ -255,13 +304,15 @@ func parsePortRangeString(rangeString string) (uint16, uint16, error) {
 		if parseErr != nil {
 			return 0, 0, parseErr
 		}
+
 		return uint16(val), uint16(val), nil
 	}
 
 	// Split the range into parts and validate
 	parts := strings.Split(rangeString, "-")
-	if len(parts) != 2 {
-		return 0, 0, fmt.Errorf("Invalid port range specified; must be of the format '{low port}-{high port}'")
+
+	if len(parts) != portRangeParts {
+		return 0, 0, errors.New("invalid port range specified; must be of the format '{low port}-{high port}'")
 	}
 
 	// Assume the low port is listed first; parse it
@@ -280,9 +331,7 @@ func parsePortRangeString(rangeString string) (uint16, uint16, error) {
 	// This should _never_ happen, as the Azure API's won't allow it, but
 	// we shouldn't fail if it's the case.
 	if lowVal > highVal {
-		temp := lowVal
-		lowVal = highVal
-		highVal = temp
+		lowVal, highVal = highVal, lowVal
 	}
 
 	// Return values

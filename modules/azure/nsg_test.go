@@ -36,9 +36,11 @@ func TestPortRangeParsing(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.portRange, func(t *testing.T) {
 			lo, hi, err := parsePortRangeString(tt.portRange)
+
 			if !tt.expectsError {
 				require.NoError(t, err)
 			}
+
 			assert.Equal(t, tt.expectedLo, int(lo))
 			assert.Equal(t, tt.expectedHi, int(hi))
 		})
@@ -52,11 +54,11 @@ func TestNsgRuleSummaryConversion(t *testing.T) {
 
 	// Verify the nil values were correctly defaulted to "" without a panic
 	result := convertToNsgRuleSummary(&name, &sdkStruct)
-	assert.Equal(t, "", result.Description)
-	assert.Equal(t, "", result.SourcePortRange)
-	assert.Equal(t, "", result.DestinationPortRange)
-	assert.Equal(t, "", result.SourceAddressPrefix)
-	assert.Equal(t, "", result.DestinationAddressPrefix)
+	assert.Empty(t, result.Description)
+	assert.Empty(t, result.SourcePortRange)
+	assert.Empty(t, result.DestinationPortRange)
+	assert.Empty(t, result.SourceAddressPrefix)
+	assert.Empty(t, result.DestinationAddressPrefix)
 	assert.Equal(t, int32(0), result.Priority)
 }
 
@@ -146,15 +148,17 @@ func TestFindSummarizedRule(t *testing.T) {
 		rule.Name = fmt.Sprintf("rule_%d", i)
 		rules = append(rules, rule)
 	}
+
 	ruleList.SummarizedRules = rules
 
 	for _, tt := range cases {
 		t.Run(tt.SearchString, func(t *testing.T) {
 			match := ruleList.FindRuleByName(tt.SearchString)
+
 			if tt.Result {
 				assert.Equal(t, tt.SearchString, match.Name)
 			} else {
-				assert.Equal(t, match, NsgRuleSummary{})
+				assert.Equal(t, NsgRuleSummary{}, match)
 			}
 		})
 	}
