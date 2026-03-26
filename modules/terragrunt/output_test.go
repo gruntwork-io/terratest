@@ -1,9 +1,10 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,15 +15,15 @@ func TestOutputJson(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-output", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	Apply(t, options)
-	defer Destroy(t, options)
+	terragrunt.Apply(t, options)
+	defer terragrunt.Destroy(t, options)
 
-	json := OutputJson(t, options, "str")
+	json := terragrunt.OutputJson(t, options, "str")
 	assert.Contains(t, json, "str")
 }
 
@@ -32,15 +33,15 @@ func TestOutputJsonAllKeys(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-output", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	Apply(t, options)
-	defer Destroy(t, options)
+	terragrunt.Apply(t, options)
+	defer terragrunt.Destroy(t, options)
 
-	json := OutputJson(t, options, "")
+	json := terragrunt.OutputJson(t, options, "")
 	assert.Contains(t, json, "str")
 	assert.Contains(t, json, "list")
 	assert.Contains(t, json, "map")
@@ -49,11 +50,11 @@ func TestOutputJsonAllKeys(t *testing.T) {
 func TestOutputJsonE_Error(t *testing.T) {
 	t.Parallel()
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    t.TempDir(),
 		TerragruntBinary: "terragrunt",
 	}
 
-	_, err := OutputJsonE(t, options, "")
+	_, err := terragrunt.OutputJsonE(t, options, "")
 	require.Error(t, err)
 }

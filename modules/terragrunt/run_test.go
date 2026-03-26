@@ -1,9 +1,10 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -46,7 +47,8 @@ func TestBuildRunArgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			actual := buildRunArgs(tt.tgArgs, tt.tfArgs)
+
+			actual := terragrunt.BuildRunArgs(tt.tgArgs, tt.tfArgs)
 			require.Equal(t, tt.expected, actual)
 		})
 	}
@@ -56,15 +58,15 @@ func TestBuildRunArgs(t *testing.T) {
 func TestRunE_EmptyTfArgs(t *testing.T) {
 	t.Parallel()
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir: "/some/path",
 	}
 
-	_, err := RunE(t, options, []string{}, []string{})
+	_, err := terragrunt.RunE(t, options, []string{}, []string{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tfArgs cannot be empty")
 
-	_, err = RunE(t, options, []string{"--all"}, nil)
+	_, err = terragrunt.RunE(t, options, []string{"--all"}, nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tfArgs cannot be empty")
 }
@@ -76,13 +78,14 @@ func TestRun(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer Run(t, options, []string{}, []string{"destroy", "-auto-approve"})
-	out := Run(t, options, []string{}, []string{"apply", "-input=false", "-auto-approve"})
+	defer terragrunt.Run(t, options, []string{}, []string{"destroy", "-auto-approve"})
+
+	out := terragrunt.Run(t, options, []string{}, []string{"apply", "-input=false", "-auto-approve"})
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -93,13 +96,13 @@ func TestRunE(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
 	// Run an invalid tf command to trigger an error
-	_, err = RunE(t, options, []string{}, []string{"not-a-real-command"})
+	_, err = terragrunt.RunE(t, options, []string{}, []string{"not-a-real-command"})
 	require.Error(t, err)
 }
 
@@ -110,15 +113,15 @@ func TestRunWithTgArgs(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer Run(t, options, []string{}, []string{"destroy", "-auto-approve"})
+	defer terragrunt.Run(t, options, []string{}, []string{"destroy", "-auto-approve"})
 
 	// Use --log-level error as a tg arg to verify it's respected
-	out := Run(t, options, []string{"--log-level", "error"}, []string{"apply", "-input=false", "-auto-approve"})
+	out := terragrunt.Run(t, options, []string{"--log-level", "error"}, []string{"apply", "-input=false", "-auto-approve"})
 	require.Contains(t, out, "Hello, World")
 	require.NotContains(t, out, "level=info",
 		"With --log-level error, info logs should not appear")
@@ -129,8 +132,8 @@ func TestRunE_ValidationError(t *testing.T) {
 	t.Parallel()
 
 	// Missing TerragruntDir
-	options := &Options{}
-	_, err := RunE(t, options, []string{}, []string{"apply"})
+	options := &terragrunt.Options{}
+	_, err := terragrunt.RunE(t, options, []string{}, []string{"apply"})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "TerragruntDir is required")
 }

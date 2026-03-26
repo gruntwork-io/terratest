@@ -6,27 +6,31 @@ import (
 	"strings"
 )
 
-// removeLogLines removes terragrunt log lines and metadata from output
-func removeLogLines(rawOutput string) string {
+// RemoveLogLines removes terragrunt log lines and metadata from output.
+func RemoveLogLines(rawOutput string) string {
 	lines := strings.Split(rawOutput, "\n")
+
 	var result []string
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		// Skip empty lines, terragrunt log lines, and metadata lines
 		if trimmed == "" {
 			continue
 		}
-		if isLogLine(trimmed) || isMetadataLine(trimmed) {
+
+		if IsLogLine(trimmed) || IsMetadataLine(trimmed) {
 			continue
 		}
+
 		result = append(result, trimmed)
 	}
 
 	return strings.Join(result, "\n")
 }
 
-// isMetadataLine checks if a line is terragrunt metadata (e.g., "Group 1", "- Unit ./foo")
-func isMetadataLine(line string) bool {
+// IsMetadataLine checks if a line is terragrunt metadata (e.g., "Group 1", "- Unit ./foo").
+func IsMetadataLine(line string) bool {
 	return tgMetadataPattern.MatchString(line)
 }
 
@@ -37,8 +41,8 @@ var newLogLinePattern = regexp.MustCompile(`^\d{2}:\d{2}:\d{2}\.\d{3}\s+(INFO|WA
 // tgMetadataPattern matches terragrunt metadata lines like "Group 1" or "- Unit ./foo"
 var tgMetadataPattern = regexp.MustCompile(`^(Group \d+|- Unit )`)
 
-// isLogLine checks if a line is a terragrunt log line
-func isLogLine(line string) bool {
+// IsLogLine checks if a line is a terragrunt log line.
+func IsLogLine(line string) bool {
 	// Old format: time=... level=... msg=...
 	if strings.HasPrefix(line, "time=") && strings.Contains(line, "level=") && strings.Contains(line, "msg=") {
 		return true
@@ -47,17 +51,20 @@ func isLogLine(line string) bool {
 	return newLogLinePattern.MatchString(line)
 }
 
-// extractJsonContent extracts only JSON objects from terragrunt output,
+// ExtractJSONContent extracts only JSON objects from terragrunt output,
 // filtering out log lines and other non-JSON content like "Group 1" or "- Unit ./foo".
 // Uses json.Decoder to correctly handle braces inside JSON string values.
-func extractJsonContent(rawOutput string) (string, error) {
+func ExtractJSONContent(rawOutput string) (string, error) {
 	lines := strings.Split(rawOutput, "\n")
+
 	var filtered []string
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		if trimmed == "" || isLogLine(trimmed) || isMetadataLine(trimmed) {
+		if trimmed == "" || IsLogLine(trimmed) || IsMetadataLine(trimmed) {
 			continue
 		}
+
 		filtered = append(filtered, trimmed)
 	}
 
@@ -67,18 +74,22 @@ func extractJsonContent(rawOutput string) (string, error) {
 	}
 
 	dec := json.NewDecoder(strings.NewReader(remaining))
+
 	var results []string
+
 	for dec.More() {
 		var raw json.RawMessage
 		if err := dec.Decode(&raw); err != nil {
 			return "", err
 		}
+
 		results = append(results, string(raw))
 	}
+
 	return strings.Join(results, "\n"), nil
 }
 
-// cleanTerragruntOutput extracts the actual output value from terragrunt stack's verbose output
+// CleanTerragruntOutput extracts the actual output value from terragrunt stack's verbose output.
 //
 // Example input (raw tg output):
 //
@@ -99,17 +110,17 @@ func extractJsonContent(rawOutput string) (string, error) {
 // Output:
 //
 //	{"vpc_id": "vpc-12345", "subnet_ids": ["subnet-1", "subnet-2"]}
-func cleanTerragruntOutput(rawOutput string) (string, error) {
+func CleanTerragruntOutput(rawOutput string) string {
 	// Remove terragrunt log lines and metadata
-	finalOutput := removeLogLines(rawOutput)
+	finalOutput := RemoveLogLines(rawOutput)
 	if finalOutput == "" {
-		return "", nil
+		return ""
 	}
 
 	// Check if it's JSON (starts with { or [)
 	if strings.HasPrefix(finalOutput, "{") || strings.HasPrefix(finalOutput, "[") {
 		// For JSON output, return as-is
-		return finalOutput, nil
+		return finalOutput
 	}
 
 	// For simple values, remove surrounding quotes if present
@@ -119,12 +130,12 @@ func cleanTerragruntOutput(rawOutput string) (string, error) {
 		finalOutput = strings.TrimSuffix(finalOutput, "\"")
 	}
 
-	return finalOutput, nil
+	return finalOutput
 }
 
-// cleanTerragruntJson cleans the JSON output from a terragrunt stack command that
+// CleanTerragruntJSON cleans the JSON output from a terragrunt stack command that
 // returns a single combined JSON object. Returns an error if the output contains
-// multiple JSON objects (use extractJsonContent directly for multi-object output).
+// multiple JSON objects (use [ExtractJSONContent] directly for multi-object output).
 //
 // Example input (raw tg JSON output):
 //
@@ -142,9 +153,9 @@ func cleanTerragruntOutput(rawOutput string) (string, error) {
 //	    "output": "./test.txt"
 //	  }
 //	}
-func cleanTerragruntJson(input string) (string, error) {
+func CleanTerragruntJSON(input string) (string, error) {
 	// Extract only JSON content, filtering out log lines and other non-JSON content
-	cleaned, err := extractJsonContent(input)
+	cleaned, err := ExtractJSONContent(input)
 	if err != nil {
 		return "", err
 	}

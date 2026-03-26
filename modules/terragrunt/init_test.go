@@ -1,10 +1,11 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"path/filepath"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +16,7 @@ func TestInit(t *testing.T) {
 		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	out := Init(t, &Options{
+	out := terragrunt.Init(t, &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
@@ -31,7 +32,7 @@ func TestInitE(t *testing.T) {
 		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	out, err := InitE(t, &Options{
+	out, err := terragrunt.InitE(t, &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"}, // Common terraform init flag
@@ -49,7 +50,7 @@ func TestInitWithInvalidConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	// This should fail due to invalid HCL syntax in tg.hcl
-	_, err = InitE(t, &Options{
+	_, err = terragrunt.InitE(t, &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"}, // Common terraform init flag
@@ -67,14 +68,14 @@ func TestInitWithBothArgTypes(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    filepath.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerragruntArgs:   []string{"--log-level", "error"},
 		TerraformArgs:    []string{"-upgrade"},
 	}
 
-	output, err := InitE(t, options)
+	output, err := terragrunt.InitE(t, options)
 	require.NoError(t, err)
 	// Verify TerragruntArgs: no info logs
 	require.NotContains(t, output, "level=info")

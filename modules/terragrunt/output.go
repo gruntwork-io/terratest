@@ -1,6 +1,8 @@
 package terragrunt
 
 import (
+	"context"
+
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -9,43 +11,84 @@ import (
 // Currently, `output --all -json` returns separate JSON objects per module without module prefixes,
 // making it impossible to reliably map outputs to their source modules.
 
-// OutputAllJson runs terragrunt run --all output -json and returns the raw JSON string.
-// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
-func OutputAllJson(t testing.TestingT, options *Options) string {
-	out, err := OutputAllJsonE(t, options)
+// OutputAllJSONContext runs terragrunt run --all output -json and returns the raw JSON string.
+// The provided context is passed through to the underlying command execution, allowing for timeout
+// and cancellation control. Note: Current terragrunt versions return separate JSON objects per module,
+// not a combined object.
+func OutputAllJSONContext(t testing.TestingT, ctx context.Context, options *Options) string {
+	out, err := OutputAllJSONContextE(t, ctx, options)
 	require.NoError(t, err)
+
 	return out
 }
 
-// OutputAllJsonE runs terragrunt run --all output -json and returns the raw JSON string.
-// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
-func OutputAllJsonE(t testing.TestingT, options *Options) (string, error) {
+// OutputAllJSONContextE runs terragrunt run --all output -json and returns the raw JSON string.
+// The provided context is passed through to the underlying command execution, allowing for timeout
+// and cancellation control. Note: Current terragrunt versions return separate JSON objects per module,
+// not a combined object.
+func OutputAllJSONContextE(t testing.TestingT, ctx context.Context, options *Options) (string, error) {
 	optsCopy := *options
 	optsCopy.TerragruntArgs = append([]string{"--no-color"}, options.TerragruntArgs...)
 
-	args := buildRunArgs([]string{"--all"}, []string{"output", "-json"})
-	rawOutput, err := runTerragruntCommandE(t, &optsCopy, "run", args...)
+	args := BuildRunArgs([]string{"--all"}, []string{"output", "-json"})
+
+	rawOutput, err := runTerragruntCommandE(t, ctx, &optsCopy, "run", args...)
 	if err != nil {
 		return "", err
 	}
 
 	// Extract only JSON content from output, filtering log lines and other terragrunt messages
-	return extractJsonContent(rawOutput)
+	return ExtractJSONContent(rawOutput)
 }
 
-// OutputJson runs terragrunt run output -json for a single unit and returns clean JSON.
-// If key is non-empty, returns the JSON value for that specific output.
+// OutputAllJSON runs terragrunt run --all output -json and returns the raw JSON string.
+// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
+//
+// Deprecated: Use [OutputAllJSONContext] instead.
+func OutputAllJSON(t testing.TestingT, options *Options) string {
+	return OutputAllJSONContext(t, context.Background(), options)
+}
+
+// OutputAllJSONE runs terragrunt run --all output -json and returns the raw JSON string.
+// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
+//
+// Deprecated: Use [OutputAllJSONContextE] instead.
+func OutputAllJSONE(t testing.TestingT, options *Options) (string, error) {
+	return OutputAllJSONContextE(t, context.Background(), options)
+}
+
+// OutputAllJson runs terragrunt run --all output -json and returns the raw JSON string.
+// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
+//
+// Deprecated: Use [OutputAllJSONContext] instead.
+func OutputAllJson(t testing.TestingT, options *Options) string { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
+	return OutputAllJSONContext(t, context.Background(), options)
+}
+
+// OutputAllJsonE runs terragrunt run --all output -json and returns the raw JSON string.
+// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
+//
+// Deprecated: Use [OutputAllJSONContextE] instead.
+func OutputAllJsonE(t testing.TestingT, options *Options) (string, error) { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
+	return OutputAllJSONContextE(t, context.Background(), options)
+}
+
+// OutputJSONContext runs terragrunt run output -json for a single unit and returns clean JSON.
+// The provided context is passed through to the underlying command execution, allowing for timeout
+// and cancellation control. If key is non-empty, returns the JSON value for that specific output.
 // If key is empty, returns all outputs as JSON.
-func OutputJson(t testing.TestingT, options *Options, key string) string {
-	out, err := OutputJsonE(t, options, key)
+func OutputJSONContext(t testing.TestingT, ctx context.Context, options *Options, key string) string {
+	out, err := OutputJSONContextE(t, ctx, options, key)
 	require.NoError(t, err)
+
 	return out
 }
 
-// OutputJsonE runs terragrunt run output -json for a single unit and returns clean JSON.
-// If key is non-empty, returns the JSON value for that specific output.
+// OutputJSONContextE runs terragrunt run output -json for a single unit and returns clean JSON.
+// The provided context is passed through to the underlying command execution, allowing for timeout
+// and cancellation control. If key is non-empty, returns the JSON value for that specific output.
 // If key is empty, returns all outputs as JSON.
-func OutputJsonE(t testing.TestingT, options *Options, key string) (string, error) {
+func OutputJSONContextE(t testing.TestingT, ctx context.Context, options *Options, key string) (string, error) {
 	optsCopy := *options
 	optsCopy.TerragruntArgs = append([]string{"--no-color"}, options.TerragruntArgs...)
 
@@ -54,11 +97,48 @@ func OutputJsonE(t testing.TestingT, options *Options, key string) (string, erro
 		tfArgs = append(tfArgs, key)
 	}
 
-	args := buildRunArgs([]string{}, append([]string{"output"}, tfArgs...))
-	rawOutput, err := runTerragruntCommandE(t, &optsCopy, "run", args...)
+	args := BuildRunArgs([]string{}, append([]string{"output"}, tfArgs...))
+
+	rawOutput, err := runTerragruntCommandE(t, ctx, &optsCopy, "run", args...)
 	if err != nil {
 		return "", err
 	}
 
-	return cleanTerragruntJson(rawOutput)
+	return CleanTerragruntJSON(rawOutput)
+}
+
+// OutputJSON runs terragrunt run output -json for a single unit and returns clean JSON.
+// If key is non-empty, returns the JSON value for that specific output.
+// If key is empty, returns all outputs as JSON.
+//
+// Deprecated: Use [OutputJSONContext] instead.
+func OutputJSON(t testing.TestingT, options *Options, key string) string {
+	return OutputJSONContext(t, context.Background(), options, key)
+}
+
+// OutputJSONE runs terragrunt run output -json for a single unit and returns clean JSON.
+// If key is non-empty, returns the JSON value for that specific output.
+// If key is empty, returns all outputs as JSON.
+//
+// Deprecated: Use [OutputJSONContextE] instead.
+func OutputJSONE(t testing.TestingT, options *Options, key string) (string, error) {
+	return OutputJSONContextE(t, context.Background(), options, key)
+}
+
+// OutputJson runs terragrunt run output -json for a single unit and returns clean JSON.
+// If key is non-empty, returns the JSON value for that specific output.
+// If key is empty, returns all outputs as JSON.
+//
+// Deprecated: Use [OutputJSONContext] instead.
+func OutputJson(t testing.TestingT, options *Options, key string) string { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
+	return OutputJSONContext(t, context.Background(), options, key)
+}
+
+// OutputJsonE runs terragrunt run output -json for a single unit and returns clean JSON.
+// If key is non-empty, returns the JSON value for that specific output.
+// If key is empty, returns all outputs as JSON.
+//
+// Deprecated: Use [OutputJSONContextE] instead.
+func OutputJsonE(t testing.TestingT, options *Options, key string) (string, error) { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
+	return OutputJSONContextE(t, context.Background(), options, key)
 }

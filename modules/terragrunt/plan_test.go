@@ -1,9 +1,10 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,14 +15,15 @@ func TestPlanAllExitCode(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer DestroyAll(t, options)
-	ApplyAll(t, options)
-	exitCode := PlanAllExitCode(t, options)
+	defer terragrunt.DestroyAll(t, options)
+
+	terragrunt.ApplyAll(t, options)
+	exitCode := terragrunt.PlanAllExitCode(t, options)
 	require.Equal(t, 0, exitCode)
 }
 
@@ -31,12 +33,12 @@ func TestPlan(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	out := Plan(t, options)
+	out := terragrunt.Plan(t, options)
 	require.NotEmpty(t, out)
 }
 
@@ -46,16 +48,16 @@ func TestPlanExitCode(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
 	// Apply first so plan shows no changes (exit code 0)
-	Apply(t, options)
-	defer Destroy(t, options)
+	terragrunt.Apply(t, options)
+	defer terragrunt.Destroy(t, options)
 
-	exitCode := PlanExitCode(t, options)
+	exitCode := terragrunt.PlanExitCode(t, options)
 	assert.Equal(t, 0, exitCode)
 }
 
@@ -65,12 +67,12 @@ func TestInitAndPlan(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	out := InitAndPlan(t, options)
+	out := terragrunt.InitAndPlan(t, options)
 	require.NotEmpty(t, out)
 }
 
@@ -80,12 +82,12 @@ func TestPlanAllWithError(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-with-plan-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	getExitCode, errExitCode := PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode := terragrunt.PlanAllExitCodeE(t, options)
 	// GetExitCodeForRunCommandError was unable to determine the exit code correctly
 	require.NoError(t, errExitCode)
 
@@ -98,14 +100,14 @@ func TestAssertPlanAllExitCodeNoError(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer DestroyAll(t, options)
+	defer terragrunt.DestroyAll(t, options)
 
-	getExitCode, errExitCode := PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode := terragrunt.PlanAllExitCodeE(t, options)
 	if errExitCode != nil {
 		t.Fatal(errExitCode)
 	}
@@ -114,9 +116,9 @@ func TestAssertPlanAllExitCodeNoError(t *testing.T) {
 	assert.Equal(t, 2, getExitCode)
 	assertPlanAllExitCode(t, getExitCode, true)
 
-	ApplyAll(t, options)
+	terragrunt.ApplyAll(t, options)
 
-	getExitCode, errExitCode = PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode = terragrunt.PlanAllExitCodeE(t, options)
 	if errExitCode != nil {
 		t.Fatal(errExitCode)
 	}
@@ -132,18 +134,19 @@ func TestAssertPlanAllExitCodeWithError(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-with-plan-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	getExitCode, errExitCode := PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode := terragrunt.PlanAllExitCodeE(t, options)
 	require.NoError(t, errExitCode)
 
 	assertPlanAllExitCode(t, getExitCode, false)
 }
 
 func assertPlanAllExitCode(t *testing.T, exitCode int, assertTrue bool) {
+	t.Helper()
 
 	validExitCodes := map[int]bool{
 		0: true,

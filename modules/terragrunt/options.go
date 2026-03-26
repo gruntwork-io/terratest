@@ -57,21 +57,24 @@ const (
 // This separation eliminates confusion about which settings control the test
 // framework vs which become tg command-line arguments.
 type Options struct {
-	// Test framework configuration (NOT passed to tg command line)
-	TerragruntBinary string            // The tg binary to use (should be "terragrunt")
-	TerragruntDir    string            // The directory containing the tg configuration
-	EnvVars          map[string]string // Environment variables for command execution
-	Logger           *logger.Logger    // Logger for command output
+	// Optional stdin to pass to OpenTofu/Terraform commands
+	Stdin io.Reader
 
 	// Test framework retry and error handling (NOT passed to tg command line)
-	MaxRetries               int               // Maximum number of retries
-	TimeBetweenRetries       time.Duration     // Time between retries
 	RetryableTerraformErrors map[string]string // Retryable error patterns
+	EnvVars                  map[string]string // Environment variables for command execution
 	WarningsAsErrors         map[string]string // Warnings to treat as errors
+
+	// Test framework configuration (NOT passed to tg command line)
+	Logger *logger.Logger // Logger for command output
 
 	// Complex configuration that requires special formatting (NOT raw command-line args)
 	BackendConfig map[string]interface{} // Backend configuration (formatted specially)
-	PluginDir     string                 // Plugin directory (formatted specially)
+
+	// Test framework configuration (NOT passed to tg command line)
+	TerragruntBinary string // The tg binary to use (should be "terragrunt")
+	PluginDir        string // Plugin directory (formatted specially)
+	TerragruntDir    string // The directory containing the tg configuration
 
 	// Global terragrunt command-line flags (placed BEFORE the command)
 	// Example: []string{"--log-level", "info", "--no-color"}
@@ -81,8 +84,8 @@ type Options struct {
 	// Example: []string{"-upgrade=true"} for init, or []string{"plan"} for stack run
 	TerraformArgs []string
 
-	// Optional stdin to pass to OpenTofu/Terraform commands
-	Stdin io.Reader
+	MaxRetries         int           // Maximum number of retries
+	TimeBetweenRetries time.Duration // Time between retries
 }
 
 // setTerragruntLogFormatting sets default log formatting and other env vars for tg

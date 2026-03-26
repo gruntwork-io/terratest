@@ -1,9 +1,10 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,13 +14,14 @@ func TestApplyAll(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer DestroyAll(t, options)
-	out := ApplyAll(t, options)
+	defer terragrunt.DestroyAll(t, options)
+
+	out := terragrunt.ApplyAll(t, options)
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -29,13 +31,14 @@ func TestApply(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer Destroy(t, options)
-	out := Apply(t, options)
+	defer terragrunt.Destroy(t, options)
+
+	out := terragrunt.Apply(t, options)
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -45,13 +48,14 @@ func TestInitAndApply(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer Destroy(t, options)
-	out := InitAndApply(t, options)
+	defer terragrunt.Destroy(t, options)
+
+	out := terragrunt.InitAndApply(t, options)
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -64,12 +68,12 @@ func TestInitAndApplyE_InitFailure(t *testing.T) {
 		"testdata/terragrunt-stack-init-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
-	out, err := InitAndApplyE(t, options)
+	out, err := terragrunt.InitAndApplyE(t, options)
 	require.Error(t, err, "InitAndApplyE should propagate init failure")
 	require.Empty(t, out, "Output should be empty when init fails")
 	require.Contains(t, err.Error(), "Missing expression",

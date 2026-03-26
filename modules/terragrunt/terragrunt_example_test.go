@@ -1,4 +1,4 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"path/filepath"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -40,17 +41,17 @@ func TestTerragruntExample(t *testing.T) {
 	})
 
 	// Clean up resources with "terragrunt destroy" at the end of the test.
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// Run "terragrunt apply". Under the hood, terragrunt will run "terraform init" and
 	// "terraform apply". Fail the test if there are any errors.
-	terraform.Apply(t, terraformOptions)
+	terraform.ApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the values of output variables and check they have
 	// the expected values.
 	// Note: When using terragrunt, OutputAll is recommended because terragrunt returns
 	// all outputs in the full JSON format even when a specific key is requested.
-	outputs := terraform.OutputAll(t, terraformOptions)
+	outputs := terraform.OutputAllContext(t, t.Context(), terraformOptions)
 	assert.Equal(t, "one input another input", outputs["output"])
 }
 
@@ -68,10 +69,10 @@ func TestTerragruntConsole(t *testing.T) {
 		Stdin:           strings.NewReader("local.mylocal"),
 	})
 
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// Run "terragrunt run -- console".
-	out := terraform.RunTerraformCommand(t, terraformOptions, "run", "--", "console")
+	out := terraform.RunTerraformCommandContext(t, t.Context(), terraformOptions, "run", "--", "console")
 	assert.Contains(t, out, `"local variable named mylocal"`)
 }
 
@@ -87,7 +88,7 @@ func TestTerragruntMultiModuleExample(t *testing.T) {
 		"../../examples/terragrunt-multi-module-example", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		// Run from the live subfolder where the terragrunt configs are
 		TerragruntDir: filepath.Join(testFolder, "live"),
 		// Optional: Set log level for cleaner output
@@ -96,12 +97,12 @@ func TestTerragruntMultiModuleExample(t *testing.T) {
 
 	// Clean up all modules with "terragrunt destroy --all" at the end of the test.
 	// DestroyAll respects the reverse dependency order.
-	defer DestroyAll(t, options)
+	defer terragrunt.DestroyAll(t, options)
 
 	// Run "terragrunt apply --all". This applies all modules in dependency order.
-	ApplyAll(t, options)
+	terragrunt.ApplyAll(t, options)
 
 	// Verify the plan shows no changes (infrastructure is up-to-date)
-	exitCode := PlanAllExitCode(t, options)
+	exitCode := terragrunt.PlanAllExitCode(t, options)
 	assert.Equal(t, 0, exitCode, "Plan should show no changes after apply")
 }
