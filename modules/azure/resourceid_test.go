@@ -24,7 +24,7 @@ func TestGetNameFromResourceID(t *testing.T) {
 	resultSuccess := GetNameFromResourceID(sliceSource)
 	assert.Equal(t, sliceResult, resultSuccess)
 
-	// verify error when seperator not found
-	resultBadSeperator := GetNameFromResourceID(sliceNotFound)
-	assert.Equal(t, "", resultBadSeperator)
+	// verify error when separator not found
+	resultBadSeparator := GetNameFromResourceID(sliceNotFound)
+	assert.Empty(t, resultBadSeparator)
 }

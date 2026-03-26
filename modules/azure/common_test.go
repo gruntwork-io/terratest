@@ -17,7 +17,7 @@ import (
 func TestGetTargetAzureSubscription(t *testing.T) {
 	t.Parallel()
 
-	//Check that ARM_SUBSCRIPTION_ID env variable is set, CI requires this value to run all test.
+	// Check that ARM_SUBSCRIPTION_ID env variable is set, CI requires this value to run all test.
 	require.NotEmpty(t, os.Getenv(AzureSubscriptionID), "ARM_SUBSCRIPTION_ID environment variable not set.")
 
 	type args struct {
@@ -80,8 +80,9 @@ func TestGetTargetAzureResourceGroupName(t *testing.T) {
 func TestSafePtrToString(t *testing.T) {
 	// When given a nil, should always return an empty string
 	var nilPtr *string = nil
+
 	nilResult := safePtrToString(nilPtr)
-	assert.Equal(t, "", nilResult)
+	assert.Empty(t, nilResult)
 
 	// When given a string, should just de-ref and return
 	stringPtr := "Test"
@@ -92,6 +93,7 @@ func TestSafePtrToString(t *testing.T) {
 func TestSafePtrToInt32(t *testing.T) {
 	// When given a nil, should always return an zero value int32
 	var nilPtr *int32 = nil
+
 	nilResult := safePtrToInt32(nilPtr)
 	assert.Equal(t, int32(0), nilResult)
 

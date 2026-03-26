@@ -8,38 +8,75 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// AppExists indicates whether the specified application exists.
+// AppExistsContext indicates whether the specified application exists.
 // This function would fail the test if there is an error.
-func AppExists(t *testing.T, appName string, resourceGroupName string, subscriptionID string) bool {
-	exists, err := AppExistsE(appName, resourceGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func AppExistsContext(t *testing.T, ctx context.Context, appName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	exists, err := AppExistsContextE(ctx, appName, resourceGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return exists
 }
 
-// AppExistsE indicates whether the specified application exists.
-func AppExistsE(appName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	_, err := GetAppServiceE(appName, resourceGroupName, subscriptionID)
+// AppExists indicates whether the specified application exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [AppExistsContext] instead.
+func AppExists(t *testing.T, appName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return AppExistsContext(t, context.Background(), appName, resourceGroupName, subscriptionID)
+}
+
+// AppExistsContextE indicates whether the specified application exists.
+// The ctx parameter supports cancellation and timeouts.
+func AppExistsContextE(ctx context.Context, appName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	_, err := GetAppServiceContextE(ctx, appName, resourceGroupName, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
+
 	return true, nil
 }
 
-// GetAppService gets the App service object
+// AppExistsE indicates whether the specified application exists.
+//
+// Deprecated: Use [AppExistsContextE] instead.
+func AppExistsE(appName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	return AppExistsContextE(context.Background(), appName, resourceGroupName, subscriptionID)
+}
+
+// GetAppServiceContext gets the App service object for the specified application.
 // This function would fail the test if there is an error.
-func GetAppService(t *testing.T, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
-	site, err := GetAppServiceE(appName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetAppServiceContext(t *testing.T, ctx context.Context, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
+	t.Helper()
+
+	site, err := GetAppServiceContextE(ctx, appName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return site
 }
 
-// GetAppServiceE gets the App service object
-func GetAppServiceE(appName string, resGroupName string, subscriptionID string) (*armappservice.Site, error) {
+// GetAppService gets the App service object for the specified application.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetAppServiceContext] instead.
+func GetAppService(t *testing.T, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
+	t.Helper()
+
+	return GetAppServiceContext(t, context.Background(), appName, resGroupName, subscriptionID)
+}
+
+// GetAppServiceContextE gets the App service object for the specified application.
+// The ctx parameter supports cancellation and timeouts.
+func GetAppServiceContextE(ctx context.Context, appName string, resGroupName string, subscriptionID string) (*armappservice.Site, error) {
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
@@ -50,7 +87,7 @@ func GetAppServiceE(appName string, resGroupName string, subscriptionID string) 
 		return nil, err
 	}
 
-	resp, err := client.Get(context.Background(), rgName, appName, nil)
+	resp, err := client.Get(ctx, rgName, appName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +95,19 @@ func GetAppServiceE(appName string, resGroupName string, subscriptionID string) 
 	return &resp.Site, nil
 }
 
-// GetAppServiceClientE creates and returns an App Service web apps client
+// GetAppServiceE gets the App service object for the specified application.
+//
+// Deprecated: Use [GetAppServiceContextE] instead.
+func GetAppServiceE(appName string, resGroupName string, subscriptionID string) (*armappservice.Site, error) {
+	return GetAppServiceContextE(context.Background(), appName, resGroupName, subscriptionID)
+}
+
+// GetAppServiceClientE creates and returns an App Service web apps client.
 func GetAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
 	clientFactory, err := getArmAppServiceClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewWebAppsClient(), nil
 }

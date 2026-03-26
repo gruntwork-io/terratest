@@ -20,5 +20,6 @@ func GetSubscriptionClientE() (*subscriptions.Client, error) {
 
 	// Attach authorizer to the client
 	client.Authorizer = *authorizer
+
 	return &client, nil
 }

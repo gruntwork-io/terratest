@@ -26,4 +26,7 @@ type TestingT interface {
 	Errorf(format string, args ...interface{})
 	// Name returns the name of the running test or benchmark.
 	Name() string
+	// Helper marks the calling function as a test helper function.
+	// When printing file and line information, that function will be skipped.
+	Helper()
 }

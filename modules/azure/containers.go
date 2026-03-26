@@ -10,39 +10,75 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// ContainerRegistryExists indicates whether the specified container registry exists.
+// ContainerRegistryExistsContext indicates whether the specified container registry exists.
 // This function would fail the test if there is an error.
-func ContainerRegistryExists(t *testing.T, registryName string, resourceGroupName string, subscriptionID string) bool {
-	exists, err := ContainerRegistryExistsE(registryName, resourceGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func ContainerRegistryExistsContext(t *testing.T, ctx context.Context, registryName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	exists, err := ContainerRegistryExistsContextE(ctx, registryName, resourceGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return exists
 }
 
-// ContainerRegistryExistsE indicates whether the specified container registry exists.
-func ContainerRegistryExistsE(registryName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	_, err := GetContainerRegistryE(registryName, resourceGroupName, subscriptionID)
+// ContainerRegistryExists indicates whether the specified container registry exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [ContainerRegistryExistsContext] instead.
+func ContainerRegistryExists(t *testing.T, registryName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return ContainerRegistryExistsContext(t, context.Background(), registryName, resourceGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// ContainerRegistryExistsContextE indicates whether the specified container registry exists.
+// The ctx parameter supports cancellation and timeouts.
+func ContainerRegistryExistsContextE(ctx context.Context, registryName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	_, err := GetContainerRegistryContextE(ctx, registryName, resourceGroupName, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
+
 	return true, nil
 }
 
-// GetContainerRegistry gets the container registry object
-// This function would fail the test if there is an error.
-func GetContainerRegistry(t *testing.T, registryName string, resGroupName string, subscriptionID string) *containerregistry.Registry {
-	resource, err := GetContainerRegistryE(registryName, resGroupName, subscriptionID)
+// ContainerRegistryExistsE indicates whether the specified container registry exists.
+//
+// Deprecated: Use [ContainerRegistryExistsContextE] instead.
+func ContainerRegistryExistsE(registryName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	return ContainerRegistryExistsContextE(context.Background(), registryName, resourceGroupName, subscriptionID)
+}
 
+// GetContainerRegistryContext gets the container registry object.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetContainerRegistryContext(t *testing.T, ctx context.Context, registryName string, resGroupName string, subscriptionID string) *containerregistry.Registry {
+	t.Helper()
+
+	resource, err := GetContainerRegistryContextE(ctx, registryName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return resource
 }
 
-// GetContainerRegistryE gets the container registry object
-func GetContainerRegistryE(registryName string, resGroupName string, subscriptionID string) (*containerregistry.Registry, error) {
+// GetContainerRegistry gets the container registry object.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetContainerRegistryContext] instead.
+func GetContainerRegistry(t *testing.T, registryName string, resGroupName string, subscriptionID string) *containerregistry.Registry {
+	t.Helper()
+
+	return GetContainerRegistryContext(t, context.Background(), registryName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetContainerRegistryContextE gets the container registry object.
+// The ctx parameter supports cancellation and timeouts.
+func GetContainerRegistryContextE(ctx context.Context, registryName string, resGroupName string, subscriptionID string) (*containerregistry.Registry, error) {
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
@@ -53,7 +89,7 @@ func GetContainerRegistryE(registryName string, resGroupName string, subscriptio
 		return nil, err
 	}
 
-	resource, err := client.Get(context.Background(), rgName, registryName)
+	resource, err := client.Get(ctx, rgName, registryName)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +97,14 @@ func GetContainerRegistryE(registryName string, resGroupName string, subscriptio
 	return &resource, nil
 }
 
-// GetContainerRegistryClientE is a helper function that will setup an Azure Container Registry client on your behalf
+// GetContainerRegistryE gets the container registry object.
+//
+// Deprecated: Use [GetContainerRegistryContextE] instead.
+func GetContainerRegistryE(registryName string, resGroupName string, subscriptionID string) (*containerregistry.Registry, error) {
+	return GetContainerRegistryContextE(context.Background(), registryName, resGroupName, subscriptionID)
+}
+
+// GetContainerRegistryClientE is a helper function that will setup an Azure Container Registry client on your behalf.
 func GetContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
 	// Create an ACR client
 	registryClient, err := CreateContainerRegistryClientE(subscriptionID)
@@ -77,42 +120,79 @@ func GetContainerRegistryClientE(subscriptionID string) (*containerregistry.Regi
 
 	// Attach authorizer to the client
 	registryClient.Authorizer = *authorizer
+
 	return registryClient, nil
 }
 
-// ContainerInstanceExists indicates whether the specified container instance exists.
+// ContainerInstanceExistsContext indicates whether the specified container instance exists.
 // This function would fail the test if there is an error.
-func ContainerInstanceExists(t *testing.T, instanceName string, resourceGroupName string, subscriptionID string) bool {
-	exists, err := ContainerInstanceExistsE(instanceName, resourceGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func ContainerInstanceExistsContext(t *testing.T, ctx context.Context, instanceName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	exists, err := ContainerInstanceExistsContextE(ctx, instanceName, resourceGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return exists
 }
 
-// ContainerInstanceExistsE indicates whether the specified container instance exists.
-func ContainerInstanceExistsE(instanceName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	_, err := GetContainerInstanceE(instanceName, resourceGroupName, subscriptionID)
+// ContainerInstanceExists indicates whether the specified container instance exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [ContainerInstanceExistsContext] instead.
+func ContainerInstanceExists(t *testing.T, instanceName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return ContainerInstanceExistsContext(t, context.Background(), instanceName, resourceGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// ContainerInstanceExistsContextE indicates whether the specified container instance exists.
+// The ctx parameter supports cancellation and timeouts.
+func ContainerInstanceExistsContextE(ctx context.Context, instanceName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	_, err := GetContainerInstanceContextE(ctx, instanceName, resourceGroupName, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
+
 	return true, nil
 }
 
-// GetContainerInstance gets the container instance object
-// This function would fail the test if there is an error.
-func GetContainerInstance(t *testing.T, instanceName string, resGroupName string, subscriptionID string) *containerinstance.ContainerGroup {
-	instance, err := GetContainerInstanceE(instanceName, resGroupName, subscriptionID)
+// ContainerInstanceExistsE indicates whether the specified container instance exists.
+//
+// Deprecated: Use [ContainerInstanceExistsContextE] instead.
+func ContainerInstanceExistsE(instanceName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	return ContainerInstanceExistsContextE(context.Background(), instanceName, resourceGroupName, subscriptionID)
+}
 
+// GetContainerInstanceContext gets the container instance object.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetContainerInstanceContext(t *testing.T, ctx context.Context, instanceName string, resGroupName string, subscriptionID string) *containerinstance.ContainerGroup {
+	t.Helper()
+
+	instance, err := GetContainerInstanceContextE(ctx, instanceName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return instance
 }
 
-// GetContainerInstanceE gets the container instance object
-func GetContainerInstanceE(instanceName string, resGroupName string, subscriptionID string) (*containerinstance.ContainerGroup, error) {
+// GetContainerInstance gets the container instance object.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetContainerInstanceContext] instead.
+func GetContainerInstance(t *testing.T, instanceName string, resGroupName string, subscriptionID string) *containerinstance.ContainerGroup {
+	t.Helper()
+
+	return GetContainerInstanceContext(t, context.Background(), instanceName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetContainerInstanceContextE gets the container instance object.
+// The ctx parameter supports cancellation and timeouts.
+func GetContainerInstanceContextE(ctx context.Context, instanceName string, resGroupName string, subscriptionID string) (*containerinstance.ContainerGroup, error) {
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
@@ -123,7 +203,7 @@ func GetContainerInstanceE(instanceName string, resGroupName string, subscriptio
 		return nil, err
 	}
 
-	instance, err := client.Get(context.Background(), rgName, instanceName)
+	instance, err := client.Get(ctx, rgName, instanceName)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +211,14 @@ func GetContainerInstanceE(instanceName string, resGroupName string, subscriptio
 	return &instance, nil
 }
 
-// GetContainerInstanceClientE is a helper function that will setup an Azure Container Instance client on your behalf
+// GetContainerInstanceE gets the container instance object.
+//
+// Deprecated: Use [GetContainerInstanceContextE] instead.
+func GetContainerInstanceE(instanceName string, resGroupName string, subscriptionID string) (*containerinstance.ContainerGroup, error) {
+	return GetContainerInstanceContextE(context.Background(), instanceName, resGroupName, subscriptionID)
+}
+
+// GetContainerInstanceClientE is a helper function that will setup an Azure Container Instance client on your behalf.
 func GetContainerInstanceClientE(subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
 	// Create an ACI client
 	instanceClient, err := CreateContainerInstanceClientE(subscriptionID)
@@ -147,5 +234,6 @@ func GetContainerInstanceClientE(subscriptionID string) (*containerinstance.Cont
 
 	// Attach authorizer to the client
 	instanceClient.Authorizer = *authorizer
+
 	return instanceClient, nil
 }

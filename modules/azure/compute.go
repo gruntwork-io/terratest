@@ -9,15 +9,18 @@ import (
 )
 
 // GetVirtualMachineClient is a helper function that will setup an Azure Virtual Machine client on your behalf.
+// This function would fail the test if there is an error.
 func GetVirtualMachineClient(t testing.TestingT, subscriptionID string) *compute.VirtualMachinesClient {
+	t.Helper()
+
 	vmClient, err := GetVirtualMachineClientE(subscriptionID)
 	require.NoError(t, err)
+
 	return vmClient
 }
 
 // GetVirtualMachineClientE is a helper function that will setup an Azure Virtual Machine client on your behalf.
 func GetVirtualMachineClientE(subscriptionID string) (*compute.VirtualMachinesClient, error) {
-
 	// snippet-tag-start::client_factory_example.helper
 	// Create a VM client
 	vmClient, err := CreateVirtualMachinesClientE(subscriptionID)
@@ -34,44 +37,82 @@ func GetVirtualMachineClientE(subscriptionID string) (*compute.VirtualMachinesCl
 
 	// Attach authorizer to the client
 	vmClient.Authorizer = *authorizer
+
 	return vmClient, nil
+}
+
+// VirtualMachineExistsContext indicates whether the specified Azure Virtual Machine exists.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func VirtualMachineExistsContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	exists, err := VirtualMachineExistsContextE(ctx, vmName, resGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return exists
 }
 
 // VirtualMachineExists indicates whether the specified Azure Virtual Machine exists.
 // This function would fail the test if there is an error.
+//
+// Deprecated: Use [VirtualMachineExistsContext] instead.
 func VirtualMachineExists(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) bool {
-	exists, err := VirtualMachineExistsE(vmName, resGroupName, subscriptionID)
-	require.NoError(t, err)
-	return exists
+	t.Helper()
+
+	return VirtualMachineExistsContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
 }
 
-// VirtualMachineExistsE indicates whether the specified Azure Virtual Machine exists.
-func VirtualMachineExistsE(vmName string, resGroupName string, subscriptionID string) (bool, error) {
+// VirtualMachineExistsContextE indicates whether the specified Azure Virtual Machine exists.
+// The ctx parameter supports cancellation and timeouts.
+func VirtualMachineExistsContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (bool, error) {
 	// Get VM Object
-	_, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	_, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
 			return false, nil
 		}
+
 		return false, err
 	}
+
 	return true, nil
 }
 
-// GetVirtualMachineNics gets a list of Network Interface names for a specified Azure Virtual Machine.
+// VirtualMachineExistsE indicates whether the specified Azure Virtual Machine exists.
+//
+// Deprecated: Use [VirtualMachineExistsContextE] instead.
+func VirtualMachineExistsE(vmName string, resGroupName string, subscriptionID string) (bool, error) {
+	return VirtualMachineExistsContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
+// GetVirtualMachineNicsContext gets a list of Network Interface names for a specified Azure Virtual Machine.
 // This function would fail the test if there is an error.
-func GetVirtualMachineNics(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) []string {
-	nicList, err := GetVirtualMachineNicsE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineNicsContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) []string {
+	t.Helper()
+
+	nicList, err := GetVirtualMachineNicsContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return nicList
 }
 
-// GetVirtualMachineNicsE gets a list of Network Interface names for a specified Azure Virtual Machine.
-func GetVirtualMachineNicsE(vmName string, resGroupName string, subscriptionID string) ([]string, error) {
+// GetVirtualMachineNics gets a list of Network Interface names for a specified Azure Virtual Machine.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineNicsContext] instead.
+func GetVirtualMachineNics(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) []string {
+	t.Helper()
 
+	return GetVirtualMachineNicsContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineNicsContextE gets a list of Network Interface names for a specified Azure Virtual Machine.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineNicsContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) ([]string, error) {
 	// Get VM Object
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +121,7 @@ func GetVirtualMachineNicsE(vmName string, resGroupName string, subscriptionID s
 	vmNICs := *vm.NetworkProfile.NetworkInterfaces
 
 	nics := make([]string, len(vmNICs))
+
 	for i, nic := range vmNICs {
 		// Get ID from resource string.
 		nicName, err := GetNameFromResourceIDE(*nic.ID)
@@ -87,23 +129,44 @@ func GetVirtualMachineNicsE(vmName string, resGroupName string, subscriptionID s
 			nics[i] = nicName
 		}
 	}
+
 	return nics, nil
 }
 
-// GetVirtualMachineManagedDisks gets the list of Managed Disk names of the specified Azure Virtual Machine.
+// GetVirtualMachineNicsE gets a list of Network Interface names for a specified Azure Virtual Machine.
+//
+// Deprecated: Use [GetVirtualMachineNicsContextE] instead.
+func GetVirtualMachineNicsE(vmName string, resGroupName string, subscriptionID string) ([]string, error) {
+	return GetVirtualMachineNicsContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
+// GetVirtualMachineManagedDisksContext gets the list of Managed Disk names of the specified Azure Virtual Machine.
 // This function would fail the test if there is an error.
-func GetVirtualMachineManagedDisks(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) []string {
-	diskNames, err := GetVirtualMachineManagedDisksE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineManagedDisksContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) []string {
+	t.Helper()
+
+	diskNames, err := GetVirtualMachineManagedDisksContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return diskNames
 }
 
-// GetVirtualMachineManagedDisksE gets the list of Managed Disk names of the specified Azure Virtual Machine.
-func GetVirtualMachineManagedDisksE(vmName string, resGroupName string, subscriptionID string) ([]string, error) {
+// GetVirtualMachineManagedDisks gets the list of Managed Disk names of the specified Azure Virtual Machine.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineManagedDisksContext] instead.
+func GetVirtualMachineManagedDisks(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) []string {
+	t.Helper()
 
+	return GetVirtualMachineManagedDisksContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineManagedDisksContextE gets the list of Managed Disk names of the specified Azure Virtual Machine.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineManagedDisksContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) ([]string, error) {
 	// Get VM Object
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +176,7 @@ func GetVirtualMachineManagedDisksE(vmName string, resGroupName string, subscrip
 
 	// Get the Names of the attached Managed Disks
 	diskNames := make([]string, len(vmDisks))
+
 	for i, v := range vmDisks {
 		// Disk names are required, no nil check needed.
 		diskNames[i] = *v.Name
@@ -121,19 +185,40 @@ func GetVirtualMachineManagedDisksE(vmName string, resGroupName string, subscrip
 	return diskNames, nil
 }
 
-// GetVirtualMachineOSDiskName gets the OS Disk name of the specified Azure Virtual Machine.
+// GetVirtualMachineManagedDisksE gets the list of Managed Disk names of the specified Azure Virtual Machine.
+//
+// Deprecated: Use [GetVirtualMachineManagedDisksContextE] instead.
+func GetVirtualMachineManagedDisksE(vmName string, resGroupName string, subscriptionID string) ([]string, error) {
+	return GetVirtualMachineManagedDisksContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
+// GetVirtualMachineOSDiskNameContext gets the OS Disk name of the specified Azure Virtual Machine.
 // This function would fail the test if there is an error.
-func GetVirtualMachineOSDiskName(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) string {
-	osDiskName, err := GetVirtualMachineOSDiskNameE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineOSDiskNameContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) string {
+	t.Helper()
+
+	osDiskName, err := GetVirtualMachineOSDiskNameContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return osDiskName
 }
 
-// GetVirtualMachineOSDiskNameE gets the OS Disk name of the specified Azure Virtual Machine.
-func GetVirtualMachineOSDiskNameE(vmName string, resGroupName string, subscriptionID string) (string, error) {
+// GetVirtualMachineOSDiskName gets the OS Disk name of the specified Azure Virtual Machine.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineOSDiskNameContext] instead.
+func GetVirtualMachineOSDiskName(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) string {
+	t.Helper()
+
+	return GetVirtualMachineOSDiskNameContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineOSDiskNameContextE gets the OS Disk name of the specified Azure Virtual Machine.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineOSDiskNameContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (string, error) {
 	// Get VM Object
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		return "", err
 	}
@@ -141,19 +226,40 @@ func GetVirtualMachineOSDiskNameE(vmName string, resGroupName string, subscripti
 	return *vm.StorageProfile.OsDisk.Name, nil
 }
 
-// GetVirtualMachineAvailabilitySetID gets the Availability Set ID of the specified Azure Virtual Machine.
+// GetVirtualMachineOSDiskNameE gets the OS Disk name of the specified Azure Virtual Machine.
+//
+// Deprecated: Use [GetVirtualMachineOSDiskNameContextE] instead.
+func GetVirtualMachineOSDiskNameE(vmName string, resGroupName string, subscriptionID string) (string, error) {
+	return GetVirtualMachineOSDiskNameContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
+// GetVirtualMachineAvailabilitySetIDContext gets the Availability Set ID of the specified Azure Virtual Machine.
 // This function would fail the test if there is an error.
-func GetVirtualMachineAvailabilitySetID(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) string {
-	avsID, err := GetVirtualMachineAvailabilitySetIDE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineAvailabilitySetIDContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) string {
+	t.Helper()
+
+	avsID, err := GetVirtualMachineAvailabilitySetIDContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return avsID
 }
 
-// GetVirtualMachineAvailabilitySetIDE gets the Availability Set ID of the specified Azure Virtual Machine.
-func GetVirtualMachineAvailabilitySetIDE(vmName string, resGroupName string, subscriptionID string) (string, error) {
+// GetVirtualMachineAvailabilitySetID gets the Availability Set ID of the specified Azure Virtual Machine.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineAvailabilitySetIDContext] instead.
+func GetVirtualMachineAvailabilitySetID(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) string {
+	t.Helper()
+
+	return GetVirtualMachineAvailabilitySetIDContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineAvailabilitySetIDContextE gets the Availability Set ID of the specified Azure Virtual Machine.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineAvailabilitySetIDContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (string, error) {
 	// Get VM Object
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		return "", err
 	}
@@ -172,6 +278,13 @@ func GetVirtualMachineAvailabilitySetIDE(vmName string, resGroupName string, sub
 	return avs, nil
 }
 
+// GetVirtualMachineAvailabilitySetIDE gets the Availability Set ID of the specified Azure Virtual Machine.
+//
+// Deprecated: Use [GetVirtualMachineAvailabilitySetIDContextE] instead.
+func GetVirtualMachineAvailabilitySetIDE(vmName string, resGroupName string, subscriptionID string) (string, error) {
+	return GetVirtualMachineAvailabilitySetIDContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
 // VMImage represents the storage image for the specified Azure Virtual Machine.
 type VMImage struct {
 	Publisher string
@@ -180,21 +293,35 @@ type VMImage struct {
 	Version   string
 }
 
-// GetVirtualMachineImage gets the Image of the specified Azure Virtual Machine.
+// GetVirtualMachineImageContext gets the Image of the specified Azure Virtual Machine.
 // This function would fail the test if there is an error.
-func GetVirtualMachineImage(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) VMImage {
-	vmImage, err := GetVirtualMachineImageE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineImageContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) VMImage {
+	t.Helper()
+
+	vmImage, err := GetVirtualMachineImageContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return vmImage
 }
 
-// GetVirtualMachineImageE gets the Image of the specified Azure Virtual Machine.
-func GetVirtualMachineImageE(vmName string, resGroupName string, subscriptionID string) (VMImage, error) {
+// GetVirtualMachineImage gets the Image of the specified Azure Virtual Machine.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineImageContext] instead.
+func GetVirtualMachineImage(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) VMImage {
+	t.Helper()
+
+	return GetVirtualMachineImageContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineImageContextE gets the Image of the specified Azure Virtual Machine.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineImageContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (VMImage, error) {
 	var vmImage VMImage
 
 	// Get VM Object
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		return vmImage, err
 	}
@@ -208,19 +335,40 @@ func GetVirtualMachineImageE(vmName string, resGroupName string, subscriptionID 
 	return vmImage, nil
 }
 
-// GetSizeOfVirtualMachine gets the Size Type of the specified Azure Virtual Machine.
+// GetVirtualMachineImageE gets the Image of the specified Azure Virtual Machine.
+//
+// Deprecated: Use [GetVirtualMachineImageContextE] instead.
+func GetVirtualMachineImageE(vmName string, resGroupName string, subscriptionID string) (VMImage, error) {
+	return GetVirtualMachineImageContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
+// GetSizeOfVirtualMachineContext gets the Size Type of the specified Azure Virtual Machine.
 // This function would fail the test if there is an error.
-func GetSizeOfVirtualMachine(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) compute.VirtualMachineSizeTypes {
-	size, err := GetSizeOfVirtualMachineE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetSizeOfVirtualMachineContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) compute.VirtualMachineSizeTypes {
+	t.Helper()
+
+	size, err := GetSizeOfVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return size
 }
 
-// GetSizeOfVirtualMachineE gets the Size Type of the specified Azure Virtual Machine.
-func GetSizeOfVirtualMachineE(vmName string, resGroupName string, subscriptionID string) (compute.VirtualMachineSizeTypes, error) {
+// GetSizeOfVirtualMachine gets the Size Type of the specified Azure Virtual Machine.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetSizeOfVirtualMachineContext] instead.
+func GetSizeOfVirtualMachine(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) compute.VirtualMachineSizeTypes {
+	t.Helper()
+
+	return GetSizeOfVirtualMachineContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetSizeOfVirtualMachineContextE gets the Size Type of the specified Azure Virtual Machine.
+// The ctx parameter supports cancellation and timeouts.
+func GetSizeOfVirtualMachineContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (compute.VirtualMachineSizeTypes, error) {
 	// Get VM Object
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		return "", err
 	}
@@ -228,22 +376,43 @@ func GetSizeOfVirtualMachineE(vmName string, resGroupName string, subscriptionID
 	return vm.VirtualMachineProperties.HardwareProfile.VMSize, nil
 }
 
-// GetVirtualMachineTags gets the Tags of the specified Virtual Machine as a map.
+// GetSizeOfVirtualMachineE gets the Size Type of the specified Azure Virtual Machine.
+//
+// Deprecated: Use [GetSizeOfVirtualMachineContextE] instead.
+func GetSizeOfVirtualMachineE(vmName string, resGroupName string, subscriptionID string) (compute.VirtualMachineSizeTypes, error) {
+	return GetSizeOfVirtualMachineContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
+// GetVirtualMachineTagsContext gets the Tags of the specified Virtual Machine as a map.
 // This function would fail the test if there is an error.
-func GetVirtualMachineTags(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) map[string]string {
-	tags, err := GetVirtualMachineTagsE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineTagsContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) map[string]string {
+	t.Helper()
+
+	tags, err := GetVirtualMachineTagsContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
 	return tags
 }
 
-// GetVirtualMachineTagsE gets the Tags of the specified Virtual Machine as a map.
-func GetVirtualMachineTagsE(vmName string, resGroupName string, subscriptionID string) (map[string]string, error) {
+// GetVirtualMachineTags gets the Tags of the specified Virtual Machine as a map.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineTagsContext] instead.
+func GetVirtualMachineTags(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) map[string]string {
+	t.Helper()
+
+	return GetVirtualMachineTagsContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineTagsContextE gets the Tags of the specified Virtual Machine as a map.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineTagsContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (map[string]string, error) {
 	// Setup a blank map to populate and return
 	tags := make(map[string]string)
 
 	// Get VM Object
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
 		return tags, err
 	}
@@ -256,20 +425,42 @@ func GetVirtualMachineTagsE(vmName string, resGroupName string, subscriptionID s
 	return tags, nil
 }
 
+// GetVirtualMachineTagsE gets the Tags of the specified Virtual Machine as a map.
+//
+// Deprecated: Use [GetVirtualMachineTagsContextE] instead.
+func GetVirtualMachineTagsE(vmName string, resGroupName string, subscriptionID string) (map[string]string, error) {
+	return GetVirtualMachineTagsContextE(context.Background(), vmName, resGroupName, subscriptionID)
+}
+
 // ***************************************************** //
 // Get multiple Virtual Machines from a Resource Group
 // ***************************************************** //
 
-// ListVirtualMachinesForResourceGroup gets a list of all Virtual Machine names in the specified Resource Group.
+// ListVirtualMachinesForResourceGroupContext gets a list of all Virtual Machine names in the specified Resource Group.
 // This function would fail the test if there is an error.
-func ListVirtualMachinesForResourceGroup(t testing.TestingT, resGroupName string, subscriptionID string) []string {
-	vms, err := ListVirtualMachinesForResourceGroupE(resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func ListVirtualMachinesForResourceGroupContext(t testing.TestingT, ctx context.Context, resGroupName string, subscriptionID string) []string {
+	t.Helper()
+
+	vms, err := ListVirtualMachinesForResourceGroupContextE(ctx, resGroupName, subscriptionID)
 	require.NoError(t, err)
+
 	return vms
 }
 
-// ListVirtualMachinesForResourceGroupE gets a list of all Virtual Machine names in the specified Resource Group.
-func ListVirtualMachinesForResourceGroupE(resourceGroupName string, subscriptionID string) ([]string, error) {
+// ListVirtualMachinesForResourceGroup gets a list of all Virtual Machine names in the specified Resource Group.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [ListVirtualMachinesForResourceGroupContext] instead.
+func ListVirtualMachinesForResourceGroup(t testing.TestingT, resGroupName string, subscriptionID string) []string {
+	t.Helper()
+
+	return ListVirtualMachinesForResourceGroupContext(t, context.Background(), resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// ListVirtualMachinesForResourceGroupContextE gets a list of all Virtual Machine names in the specified Resource Group.
+// The ctx parameter supports cancellation and timeouts.
+func ListVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGroupName string, subscriptionID string) ([]string, error) {
 	var vmDetails []string
 
 	vmClient, err := GetVirtualMachineClientE(subscriptionID)
@@ -277,7 +468,7 @@ func ListVirtualMachinesForResourceGroupE(resourceGroupName string, subscription
 		return nil, err
 	}
 
-	vms, err := vmClient.List(context.Background(), resourceGroupName)
+	vms, err := vmClient.List(ctx, resourceGroupName)
 	if err != nil {
 		return nil, err
 	}
@@ -285,21 +476,45 @@ func ListVirtualMachinesForResourceGroupE(resourceGroupName string, subscription
 	for _, v := range vms.Values() {
 		vmDetails = append(vmDetails, *v.Name)
 	}
+
 	return vmDetails, nil
+}
+
+// ListVirtualMachinesForResourceGroupE gets a list of all Virtual Machine names in the specified Resource Group.
+//
+// Deprecated: Use [ListVirtualMachinesForResourceGroupContextE] instead.
+func ListVirtualMachinesForResourceGroupE(resourceGroupName string, subscriptionID string) ([]string, error) {
+	return ListVirtualMachinesForResourceGroupContextE(context.Background(), resourceGroupName, subscriptionID)
+}
+
+// GetVirtualMachinesForResourceGroupContext gets all Virtual Machine objects in the specified Resource Group. Each
+// VM Object represents the entire set of VM compute properties accessible by using the VM name as the map key.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachinesForResourceGroupContext(t testing.TestingT, ctx context.Context, resGroupName string, subscriptionID string) map[string]compute.VirtualMachineProperties {
+	t.Helper()
+
+	vms, err := GetVirtualMachinesForResourceGroupContextE(ctx, resGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return vms
 }
 
 // GetVirtualMachinesForResourceGroup gets all Virtual Machine objects in the specified Resource Group. Each
 // VM Object represents the entire set of VM compute properties accessible by using the VM name as the map key.
 // This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachinesForResourceGroupContext] instead.
 func GetVirtualMachinesForResourceGroup(t testing.TestingT, resGroupName string, subscriptionID string) map[string]compute.VirtualMachineProperties {
-	vms, err := GetVirtualMachinesForResourceGroupE(resGroupName, subscriptionID)
-	require.NoError(t, err)
-	return vms
+	t.Helper()
+
+	return GetVirtualMachinesForResourceGroupContext(t, context.Background(), resGroupName, subscriptionID) //nolint:staticcheck
 }
 
-// GetVirtualMachinesForResourceGroupE gets all Virtual Machine objects in the specified Resource Group. Each
+// GetVirtualMachinesForResourceGroupContextE gets all Virtual Machine objects in the specified Resource Group. Each
 // VM Object represents the entire set of VM compute properties accessible by using the VM name as the map key.
-func GetVirtualMachinesForResourceGroupE(resourceGroupName string, subscriptionID string) (map[string]compute.VirtualMachineProperties, error) {
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGroupName string, subscriptionID string) (map[string]compute.VirtualMachineProperties, error) {
 	// Create VM Client
 	vmClient, err := GetVirtualMachineClientE(subscriptionID)
 	if err != nil {
@@ -307,18 +522,28 @@ func GetVirtualMachinesForResourceGroupE(resourceGroupName string, subscriptionI
 	}
 
 	// Get the list of VMs in the Resource Group
-	vms, err := vmClient.List(context.Background(), resourceGroupName)
+	vms, err := vmClient.List(ctx, resourceGroupName)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the VMs in the Resource Group.
 	vmDetails := make(map[string]compute.VirtualMachineProperties, len(vms.Values()))
+
 	for _, v := range vms.Values() {
 		// VM name and machine properties are required for each VM, no nil check required.
 		vmDetails[*v.Name] = *v.VirtualMachineProperties
 	}
+
 	return vmDetails, nil
+}
+
+// GetVirtualMachinesForResourceGroupE gets all Virtual Machine objects in the specified Resource Group. Each
+// VM Object represents the entire set of VM compute properties accessible by using the VM name as the map key.
+//
+// Deprecated: Use [GetVirtualMachinesForResourceGroupContextE] instead.
+func GetVirtualMachinesForResourceGroupE(resourceGroupName string, subscriptionID string) (map[string]compute.VirtualMachineProperties, error) {
+	return GetVirtualMachinesForResourceGroupContextE(context.Background(), resourceGroupName, subscriptionID)
 }
 
 // ******************************************************************** //
@@ -339,16 +564,31 @@ func (vm *Instance) GetVirtualMachineInstanceSize() compute.VirtualMachineSizeTy
 // Get the base VM Object
 // *********************** //
 
-// GetVirtualMachine gets a Virtual Machine in the specified Azure Resource Group.
+// GetVirtualMachineContext gets a Virtual Machine in the specified Azure Resource Group.
 // This function would fail the test if there is an error.
-func GetVirtualMachine(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) *compute.VirtualMachine {
-	vm, err := GetVirtualMachineE(vmName, resGroupName, subscriptionID)
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) *compute.VirtualMachine {
+	t.Helper()
+
+	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	require.NoError(t, err)
+
 	return vm
 }
 
-// GetVirtualMachineE gets a Virtual Machine in the specified Azure Resource Group.
-func GetVirtualMachineE(vmName string, resGroupName string, subscriptionID string) (*compute.VirtualMachine, error) {
+// GetVirtualMachine gets a Virtual Machine in the specified Azure Resource Group.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineContext] instead.
+func GetVirtualMachine(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) *compute.VirtualMachine {
+	t.Helper()
+
+	return GetVirtualMachineContext(t, context.Background(), vmName, resGroupName, subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineContextE gets a Virtual Machine in the specified Azure Resource Group.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (*compute.VirtualMachine, error) {
 	// Validate resource group name and subscription ID
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
@@ -361,10 +601,17 @@ func GetVirtualMachineE(vmName string, resGroupName string, subscriptionID strin
 		return nil, err
 	}
 
-	vm, err := client.Get(context.Background(), resGroupName, vmName, compute.InstanceView)
+	vm, err := client.Get(ctx, resGroupName, vmName, compute.InstanceView)
 	if err != nil {
 		return nil, err
 	}
 
 	return &vm, nil
+}
+
+// GetVirtualMachineE gets a Virtual Machine in the specified Azure Resource Group.
+//
+// Deprecated: Use [GetVirtualMachineContextE] instead.
+func GetVirtualMachineE(vmName string, resGroupName string, subscriptionID string) (*compute.VirtualMachine, error) {
+	return GetVirtualMachineContextE(context.Background(), vmName, resGroupName, subscriptionID)
 }

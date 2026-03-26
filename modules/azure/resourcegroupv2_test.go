@@ -23,7 +23,7 @@ func TestResourceGroupExistsV2(t *testing.T) {
 
 	resourceGroupName := "fakeResourceGroupName"
 	exists, err := ResourceGroupExistsV2E(resourceGroupName, "")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, exists)
 }
 
@@ -35,5 +35,5 @@ func TestGetAResourceGroupV2(t *testing.T) {
 	_, err := GetAResourceGroupV2E(resourceGroupName, "")
 	errAzure := &azcore.ResponseError{}
 	require.ErrorAs(t, err, &errAzure)
-	assert.Equal(t, errAzure.StatusCode, 404)
+	assert.Equal(t, 404, errAzure.StatusCode)
 }

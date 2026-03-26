@@ -169,10 +169,12 @@ func getArmKeyVaultClientFactory(subscriptionID string) (*armkeyvault.ClientFact
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -181,6 +183,7 @@ func getArmKeyVaultClientFactory(subscriptionID string) (*armkeyvault.ClientFact
 	if err != nil {
 		return nil, err
 	}
+
 	return armkeyvault.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -194,10 +197,12 @@ func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresql.Client
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -206,6 +211,7 @@ func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresql.Client
 	if err != nil {
 		return nil, err
 	}
+
 	return armpostgresql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -228,11 +234,14 @@ func CreateStorageAccountClientE(subscriptionID string) (*storage.AccountsClient
 	}
 
 	storageAccountClient := storage.NewAccountsClientWithBaseURI(baseURI, subscriptionID)
+
 	authorizer, err := NewAuthorizer()
 	if err != nil {
 		return nil, err
 	}
+
 	storageAccountClient.Authorizer = *authorizer
+
 	return &storageAccountClient, nil
 }
 
@@ -250,11 +259,14 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobCont
 	}
 
 	blobContainerClient := storage.NewBlobContainersClientWithBaseURI(baseURI, subscriptionID)
+
 	authorizer, err := NewAuthorizer()
 	if err != nil {
 		return nil, err
 	}
+
 	blobContainerClient.Authorizer = *authorizer
+
 	return &blobContainerClient, nil
 }
 
@@ -272,11 +284,14 @@ func CreateStorageFileSharesClientE(subscriptionID string) (*storage.FileSharesC
 	}
 
 	fileShareClient := storage.NewFileSharesClientWithBaseURI(baseURI, subscriptionID)
+
 	authorizer, err := NewAuthorizer()
 	if err != nil {
 		return nil, err
 	}
+
 	fileShareClient.Authorizer = *authorizer
+
 	return &fileShareClient, nil
 }
 
@@ -302,6 +317,7 @@ func CreateAvailabilitySetClientE(subscriptionID string) (*compute.AvailabilityS
 	if err != nil {
 		return nil, err
 	}
+
 	client.Authorizer = *authorizer
 
 	return &client, nil
@@ -326,7 +342,9 @@ func CreateResourceGroupClientE(subscriptionID string) (*resources.GroupsClient,
 	if err != nil {
 		return nil, err
 	}
+
 	resourceGroupClient.Authorizer = *authorizer
+
 	return &resourceGroupClient, nil
 }
 
@@ -336,6 +354,7 @@ func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error)
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewServersClient(), nil
 }
 
@@ -345,6 +364,7 @@ func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstan
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewManagedInstancesClient(), nil
 }
 
@@ -354,6 +374,7 @@ func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatab
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewManagedDatabasesClient(), nil
 }
 
@@ -363,10 +384,12 @@ func getArmSQLClientFactory(subscriptionID string) (*armsql.ClientFactory, error
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -375,6 +398,7 @@ func getArmSQLClientFactory(subscriptionID string) (*armsql.ClientFactory, error
 	if err != nil {
 		return nil, err
 	}
+
 	return armsql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -388,6 +412,7 @@ func CreateDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewDatabasesClient(), nil
 }
 
@@ -397,6 +422,7 @@ func CreateMySQLServerClientE(subscriptionID string) (*armmysql.ServersClient, e
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewServersClient(), nil
 }
 
@@ -406,10 +432,12 @@ func getArmMySQLClientFactory(subscriptionID string) (*armmysql.ClientFactory, e
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -418,6 +446,7 @@ func getArmMySQLClientFactory(subscriptionID string) (*armmysql.ClientFactory, e
 	if err != nil {
 		return nil, err
 	}
+
 	return armmysql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -453,6 +482,7 @@ func CreateDisksClientE(subscriptionID string) (*compute.DisksClient, error) {
 	return &client, nil
 }
 
+// CreateActionGroupClient creates an Action Groups client for Azure Monitor.
 func CreateActionGroupClient(subscriptionID string) (*insights.ActionGroupsClient, error) {
 	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -574,6 +604,7 @@ func CreateNsgDefaultRulesClientE(subscriptionID string) (*network.DefaultSecuri
 
 	// Create new client
 	nsgClient := network.NewDefaultSecurityRulesClientWithBaseURI(baseURI, subscriptionID)
+
 	return &nsgClient, nil
 }
 
@@ -594,6 +625,7 @@ func CreateNsgCustomRulesClientE(subscriptionID string) (*network.SecurityRulesC
 
 	// Create new client
 	nsgClient := network.NewSecurityRulesClientWithBaseURI(baseURI, subscriptionID)
+
 	return &nsgClient, nil
 }
 
@@ -614,6 +646,7 @@ func CreateNewNetworkInterfacesClientE(subscriptionID string) (*network.Interfac
 
 	// create client
 	nicClient := network.NewInterfacesClientWithBaseURI(baseURI, subscriptionID)
+
 	return &nicClient, nil
 }
 
@@ -634,6 +667,7 @@ func CreateNewNetworkInterfaceIPConfigurationClientE(subscriptionID string) (*ne
 
 	// create client
 	ipConfigClient := network.NewInterfaceIPConfigurationsClientWithBaseURI(baseURI, subscriptionID)
+
 	return &ipConfigClient, nil
 }
 
@@ -654,6 +688,7 @@ func CreatePublicIPAddressesClientE(subscriptionID string) (*network.PublicIPAdd
 
 	// Create client
 	client := network.NewPublicIPAddressesClientWithBaseURI(baseURI, subscriptionID)
+
 	return &client, nil
 }
 
@@ -674,6 +709,7 @@ func CreateLoadBalancerClientE(subscriptionID string) (*network.LoadBalancersCli
 
 	// create LB client
 	client := network.NewLoadBalancersClientWithBaseURI(baseURI, subscriptionID)
+
 	return &client, nil
 }
 
@@ -694,6 +730,7 @@ func CreateNewSubnetClientE(subscriptionID string) (*network.SubnetsClient, erro
 
 	// create client
 	subnetClient := network.NewSubnetsClientWithBaseURI(baseURI, subscriptionID)
+
 	return &subnetClient, nil
 }
 
@@ -714,6 +751,7 @@ func CreateNewVirtualNetworkClientE(subscriptionID string) (*network.VirtualNetw
 
 	// create client
 	vnetClient := network.NewVirtualNetworksClientWithBaseURI(baseURI, subscriptionID)
+
 	return &vnetClient, nil
 }
 
@@ -724,6 +762,7 @@ func CreateAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClien
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewWebAppsClient(), nil
 }
 
@@ -733,10 +772,12 @@ func getArmAppServiceClientFactory(subscriptionID string) (*armappservice.Client
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -745,6 +786,7 @@ func getArmAppServiceClientFactory(subscriptionID string) (*armappservice.Client
 	if err != nil {
 		return nil, err
 	}
+
 	return armappservice.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -769,6 +811,7 @@ func CreateContainerRegistryClientE(subscriptionID string) (*containerregistry.R
 
 	// create client
 	registryClient := containerregistry.NewRegistriesClientWithBaseURI(baseURI, subscriptionID)
+
 	return &registryClient, nil
 }
 
@@ -789,6 +832,7 @@ func CreateContainerInstanceClientE(subscriptionID string) (*containerinstance.C
 
 	// create client
 	instanceClient := containerinstance.NewContainerGroupsClientWithBaseURI(baseURI, subscriptionID)
+
 	return &instanceClient, nil
 }
 
@@ -809,6 +853,7 @@ func CreateFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient,
 
 	// create client
 	client := frontdoor.NewFrontDoorsClientWithBaseURI(baseURI, subscriptionID)
+
 	return &client, nil
 }
 
@@ -829,6 +874,7 @@ func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.F
 
 	// create client
 	client := frontdoor.NewFrontendEndpointsClientWithBaseURI(baseURI, subscriptionID)
+
 	return &client, nil
 }
 
@@ -838,16 +884,27 @@ func CreateSynapseWorkspaceClientE(subscriptionID string) (*armsynapse.Workspace
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewWorkspacesClient(), nil
 }
 
-// CreateSynapseSqlPoolClientE is a helper function that will setup a synapse sql pool client.
-func CreateSynapseSqlPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
+// CreateSynapseSQLPoolClientE is a helper function that will setup a Synapse SQL pool client.
+func CreateSynapseSQLPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
 	clientFactory, err := getArmSynapseClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewSQLPoolsClient(), nil
+}
+
+// CreateSynapseSqlPoolClientE is a helper function that will setup a Synapse SQL pool client.
+//
+// Deprecated: Use [CreateSynapseSQLPoolClientE] instead.
+//
+//nolint:staticcheck,revive // preserving existing function name
+func CreateSynapseSqlPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
+	return CreateSynapseSQLPoolClientE(subscriptionID)
 }
 
 // getArmSynapseClientFactory gets an arm synapse client factory
@@ -856,10 +913,12 @@ func getArmSynapseClientFactory(subscriptionID string) (*armsynapse.ClientFactor
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -868,6 +927,7 @@ func getArmSynapseClientFactory(subscriptionID string) (*armsynapse.ClientFactor
 	if err != nil {
 		return nil, err
 	}
+
 	return armsynapse.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -881,11 +941,12 @@ func CreateDataFactoriesClientE(subscriptionID string) (*armdatafactory.Factorie
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewFactoriesClient(), nil
 }
 
-// CreatePrivateDnsZonesClientE is a helper function that will setup a private DNS zone client.
-func CreatePrivateDnsZonesClientE(subscriptionID string) (*privatedns.PrivateZonesClient, error) {
+// CreatePrivateDNSZonesClientE is a helper function that will setup a private DNS zone client.
+func CreatePrivateDNSZonesClientE(subscriptionID string) (*privatedns.PrivateZonesClient, error) {
 	// Validate Azure subscription ID
 	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -913,38 +974,58 @@ func CreatePrivateDnsZonesClientE(subscriptionID string) (*privatedns.PrivateZon
 	return &privateZonesClient, nil
 }
 
+// CreatePrivateDnsZonesClientE is a helper function that will setup a private DNS zone client.
+//
+// Deprecated: Use [CreatePrivateDNSZonesClientE] instead.
+//
+//nolint:staticcheck,revive // preserving existing function name
+func CreatePrivateDnsZonesClientE(subscriptionID string) (*privatedns.PrivateZonesClient, error) {
+	return CreatePrivateDNSZonesClientE(subscriptionID)
+}
+
+// CreateManagedEnvironmentsClientE creates a managed environments client for Azure Container Apps.
 func CreateManagedEnvironmentsClientE(subscriptionID string) (*armappcontainers.ManagedEnvironmentsClient, error) {
 	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+
 	client := clientFactory.NewManagedEnvironmentsClient()
+
 	return client, nil
 }
 
+// CreateResourceGroupClientV2E creates a v2 resource group client using the ARM SDK.
 func CreateResourceGroupClientV2E(subscriptionID string) (*armresources.ResourceGroupsClient, error) {
 	clientFactory, err := getArmResourcesClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+
 	return clientFactory.NewResourceGroupsClient(), nil
 }
 
+// CreateContainerAppsClientE creates a Container Apps client for Azure Container Apps.
 func CreateContainerAppsClientE(subscriptionID string) (*armappcontainers.ContainerAppsClient, error) {
 	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+
 	client := clientFactory.NewContainerAppsClient()
+
 	return client, nil
 }
 
+// CreateContainerAppJobsClientE creates a Container App Jobs client for Azure Container Apps.
 func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.JobsClient, error) {
 	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
+
 	client := clientFactory.NewJobsClient()
+
 	return client, nil
 }
 
@@ -952,10 +1033,12 @@ func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.Job
 // This function would fail the test if there is an error.
 func GetKeyVaultURISuffixE() (string, error) {
 	envName := getDefaultEnvironmentName()
+
 	env, err := autorestAzure.EnvironmentFromName(envName)
 	if err != nil {
 		return "", err
 	}
+
 	return env.KeyVaultDNSSuffix, nil
 }
 
@@ -971,12 +1054,16 @@ func getDefaultEnvironmentName() string {
 }
 
 // getEnvironmentEndpointE returns the endpoint identified by the endpoint name parameter.
+//
+//nolint:unparam // endpointName kept as parameter for flexibility
 func getEnvironmentEndpointE(endpointName string) (string, error) {
 	envName := getDefaultEnvironmentName()
+
 	env, err := autorestAzure.EnvironmentFromName(envName)
 	if err != nil {
 		return "", err
 	}
+
 	return getFieldValue(&env, endpointName), nil
 }
 
@@ -984,6 +1071,7 @@ func getEnvironmentEndpointE(endpointName string) (string, error) {
 func getFieldValue(env *autorestAzure.Environment, field string) string {
 	structValue := reflect.ValueOf(env)
 	fieldVal := reflect.Indirect(structValue).FieldByName(field)
+
 	return fieldVal.String()
 }
 
@@ -994,6 +1082,7 @@ func getBaseURI() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return baseURI, nil
 }
 
@@ -1003,10 +1092,12 @@ func getArmResourcesClientFactory(subscriptionID string) (*armresources.ClientFa
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -1015,6 +1106,7 @@ func getArmResourcesClientFactory(subscriptionID string) (*armresources.ClientFa
 	if err != nil {
 		return nil, err
 	}
+
 	return armresources.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -1028,10 +1120,12 @@ func getArmAppContainersClientFactory(subscriptionID string) (*armappcontainers.
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -1040,6 +1134,7 @@ func getArmAppContainersClientFactory(subscriptionID string) (*armappcontainers.
 	if err != nil {
 		return nil, err
 	}
+
 	return armappcontainers.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -1053,10 +1148,12 @@ func getArmDataFactoryClientFactory(subscriptionID string) (*armdatafactory.Clie
 	if err != nil {
 		return nil, err
 	}
+
 	clientCloudConfig, err := getClientCloudConfig()
 	if err != nil {
 		return nil, err
 	}
+
 	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -1065,6 +1162,7 @@ func getArmDataFactoryClientFactory(subscriptionID string) (*armdatafactory.Clie
 	if err != nil {
 		return nil, err
 	}
+
 	return armdatafactory.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
@@ -1074,6 +1172,7 @@ func getArmDataFactoryClientFactory(subscriptionID string) (*armdatafactory.Clie
 
 func getClientCloudConfig() (cloud.Configuration, error) {
 	envName := getDefaultEnvironmentName()
+
 	switch strings.ToUpper(envName) {
 	case "AZURECHINACLOUD":
 		return cloud.AzureChina, nil
@@ -1086,6 +1185,7 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 		if err != nil {
 			return cloud.Configuration{}, err
 		}
+
 		c := cloud.Configuration{
 			ActiveDirectoryAuthorityHost: env.ActiveDirectoryEndpoint,
 			Services: map[cloud.ServiceName]cloud.ServiceConfiguration{
@@ -1095,6 +1195,7 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 				},
 			},
 		}
+
 		return c, nil
 	default:
 		return cloud.Configuration{},

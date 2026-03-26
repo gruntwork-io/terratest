@@ -10,7 +10,6 @@ import (
 
 // GetCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client.
 func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
-
 	// Create a CosmosDB client
 	cosmosClient, err := CreateCosmosDBAccountClientE(subscriptionID)
 	if err != nil {
@@ -29,7 +28,8 @@ func GetCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccou
 	return cosmosClient, nil
 }
 
-// GetCosmosDBAccountClient is a helper function that will setup a CosmosDB account client. This function would fail the test if there is an error.
+// GetCosmosDBAccountClient is a helper function that will setup a CosmosDB account client.
+// This function would fail the test if there is an error.
 func GetCosmosDBAccountClient(t testing.TestingT, subscriptionID string) *documentdb.DatabaseAccountsClient {
 	cosmosDBAccount, err := GetCosmosDBAccountClientE(subscriptionID)
 	require.NoError(t, err)
@@ -37,16 +37,19 @@ func GetCosmosDBAccountClient(t testing.TestingT, subscriptionID string) *docume
 	return cosmosDBAccount
 }
 
-// GetCosmosDBAccount is a helper function that gets the database account. This function would fail the test if there is an error.
-func GetCosmosDBAccount(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string) *documentdb.DatabaseAccountGetResults {
-	cosmosDBAccount, err := GetCosmosDBAccountE(t, subscriptionID, resourceGroupName, accountName)
+// GetCosmosDBAccountContext is a helper function that gets the database account.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBAccountContext(t testing.TestingT, ctx context.Context, subscriptionID string, resourceGroupName string, accountName string) *documentdb.DatabaseAccountGetResults {
+	cosmosDBAccount, err := GetCosmosDBAccountContextE(ctx, subscriptionID, resourceGroupName, accountName)
 	require.NoError(t, err)
 
 	return cosmosDBAccount
 }
 
-// GetCosmosDBAccountE is a helper function that gets the database account.
-func GetCosmosDBAccountE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string) (*documentdb.DatabaseAccountGetResults, error) {
+// GetCosmosDBAccountContextE is a helper function that gets the database account.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBAccountContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string) (*documentdb.DatabaseAccountGetResults, error) {
 	// Create a CosmosDB client
 	cosmosClient, err := GetCosmosDBAccountClientE(subscriptionID)
 	if err != nil {
@@ -54,18 +57,32 @@ func GetCosmosDBAccountE(t testing.TestingT, subscriptionID string, resourceGrou
 	}
 
 	// Get the corresponding database account
-	cosmosDBAccount, err := cosmosClient.Get(context.Background(), resourceGroupName, accountName)
+	cosmosDBAccount, err := cosmosClient.Get(ctx, resourceGroupName, accountName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return DB
+	// Return DB
 	return &cosmosDBAccount, nil
+}
+
+// GetCosmosDBAccount is a helper function that gets the database account.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCosmosDBAccountContext] instead.
+func GetCosmosDBAccount(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string) *documentdb.DatabaseAccountGetResults {
+	return GetCosmosDBAccountContext(t, context.Background(), subscriptionID, resourceGroupName, accountName) //nolint:staticcheck
+}
+
+// GetCosmosDBAccountE is a helper function that gets the database account.
+//
+// Deprecated: Use [GetCosmosDBAccountContextE] instead.
+func GetCosmosDBAccountE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string) (*documentdb.DatabaseAccountGetResults, error) {
+	return GetCosmosDBAccountContextE(context.Background(), subscriptionID, resourceGroupName, accountName)
 }
 
 // GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client.
 func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
-
 	// Create a CosmosDB client
 	cosmosClient, err := CreateCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
@@ -84,7 +101,8 @@ func GetCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClien
 	return cosmosClient, nil
 }
 
-// GetCosmosDBSQLClient is a helper function that will setup a CosmosDB SQL client. This function would fail the test if there is an error.
+// GetCosmosDBSQLClient is a helper function that will setup a CosmosDB SQL client.
+// This function would fail the test if there is an error.
 func GetCosmosDBSQLClient(t testing.TestingT, subscriptionID string) *documentdb.SQLResourcesClient {
 	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	require.NoError(t, err)
@@ -92,16 +110,19 @@ func GetCosmosDBSQLClient(t testing.TestingT, subscriptionID string) *documentdb
 	return cosmosClient
 }
 
-// GetCosmosDBSQLDatabase is a helper function that gets a SQL database. This function would fail the test if there is an error.
-func GetCosmosDBSQLDatabase(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.SQLDatabaseGetResults {
-	cosmosSQLDB, err := GetCosmosDBSQLDatabaseE(t, subscriptionID, resourceGroupName, accountName, databaseName)
+// GetCosmosDBSQLDatabaseContext is a helper function that gets a SQL database.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLDatabaseContext(t testing.TestingT, ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.SQLDatabaseGetResults {
+	cosmosSQLDB, err := GetCosmosDBSQLDatabaseContextE(ctx, subscriptionID, resourceGroupName, accountName, databaseName)
 	require.NoError(t, err)
 
 	return cosmosSQLDB
 }
 
-// GetCosmosDBSQLDatabaseE is a helper function that gets a SQL database.
-func GetCosmosDBSQLDatabaseE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.SQLDatabaseGetResults, error) {
+// GetCosmosDBSQLDatabaseContextE is a helper function that gets a SQL database.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLDatabaseContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.SQLDatabaseGetResults, error) {
 	// Create a CosmosDB client
 	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
@@ -109,25 +130,43 @@ func GetCosmosDBSQLDatabaseE(t testing.TestingT, subscriptionID string, resource
 	}
 
 	// Get the corresponding database
-	cosmosSQLDB, err := cosmosClient.GetSQLDatabase(context.Background(), resourceGroupName, accountName, databaseName)
+	cosmosSQLDB, err := cosmosClient.GetSQLDatabase(ctx, resourceGroupName, accountName, databaseName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return DB
+	// Return DB
 	return &cosmosSQLDB, nil
 }
 
-// GetCosmosDBSQLContainer is a helper function that gets a SQL container. This function would fail the test if there is an error.
-func GetCosmosDBSQLContainer(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) *documentdb.SQLContainerGetResults {
-	cosmosSQLContainer, err := GetCosmosDBSQLContainerE(t, subscriptionID, resourceGroupName, accountName, databaseName, containerName)
+// GetCosmosDBSQLDatabase is a helper function that gets a SQL database.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCosmosDBSQLDatabaseContext] instead.
+func GetCosmosDBSQLDatabase(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.SQLDatabaseGetResults {
+	return GetCosmosDBSQLDatabaseContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, databaseName) //nolint:staticcheck
+}
+
+// GetCosmosDBSQLDatabaseE is a helper function that gets a SQL database.
+//
+// Deprecated: Use [GetCosmosDBSQLDatabaseContextE] instead.
+func GetCosmosDBSQLDatabaseE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.SQLDatabaseGetResults, error) {
+	return GetCosmosDBSQLDatabaseContextE(context.Background(), subscriptionID, resourceGroupName, accountName, databaseName)
+}
+
+// GetCosmosDBSQLContainerContext is a helper function that gets a SQL container.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLContainerContext(t testing.TestingT, ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) *documentdb.SQLContainerGetResults {
+	cosmosSQLContainer, err := GetCosmosDBSQLContainerContextE(ctx, subscriptionID, resourceGroupName, accountName, databaseName, containerName)
 	require.NoError(t, err)
 
 	return cosmosSQLContainer
 }
 
-// GetCosmosDBSQLContainerE is a helper function that gets a SQL container.
-func GetCosmosDBSQLContainerE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.SQLContainerGetResults, error) {
+// GetCosmosDBSQLContainerContextE is a helper function that gets a SQL container.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLContainerContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.SQLContainerGetResults, error) {
 	// Create a CosmosDB client
 	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
@@ -135,25 +174,43 @@ func GetCosmosDBSQLContainerE(t testing.TestingT, subscriptionID string, resourc
 	}
 
 	// Get the corresponding SQL container
-	cosmosSQLContainer, err := cosmosClient.GetSQLContainer(context.Background(), resourceGroupName, accountName, databaseName, containerName)
+	cosmosSQLContainer, err := cosmosClient.GetSQLContainer(ctx, resourceGroupName, accountName, databaseName, containerName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return container
+	// Return container
 	return &cosmosSQLContainer, nil
 }
 
-// GetCosmosDBSQLDatabaseThroughput is a helper function that gets a SQL database throughput configuration. This function would fail the test if there is an error.
-func GetCosmosDBSQLDatabaseThroughput(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.ThroughputSettingsGetResults {
-	cosmosSQLDBThroughput, err := GetCosmosDBSQLDatabaseThroughputE(t, subscriptionID, resourceGroupName, accountName, databaseName)
+// GetCosmosDBSQLContainer is a helper function that gets a SQL container.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCosmosDBSQLContainerContext] instead.
+func GetCosmosDBSQLContainer(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) *documentdb.SQLContainerGetResults {
+	return GetCosmosDBSQLContainerContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, databaseName, containerName) //nolint:staticcheck
+}
+
+// GetCosmosDBSQLContainerE is a helper function that gets a SQL container.
+//
+// Deprecated: Use [GetCosmosDBSQLContainerContextE] instead.
+func GetCosmosDBSQLContainerE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.SQLContainerGetResults, error) {
+	return GetCosmosDBSQLContainerContextE(context.Background(), subscriptionID, resourceGroupName, accountName, databaseName, containerName)
+}
+
+// GetCosmosDBSQLDatabaseThroughputContext is a helper function that gets a SQL database throughput configuration.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLDatabaseThroughputContext(t testing.TestingT, ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.ThroughputSettingsGetResults {
+	cosmosSQLDBThroughput, err := GetCosmosDBSQLDatabaseThroughputContextE(ctx, subscriptionID, resourceGroupName, accountName, databaseName)
 	require.NoError(t, err)
 
 	return cosmosSQLDBThroughput
 }
 
-// GetCosmosDBSQLDatabaseThroughputE is a helper function that gets a SQL database throughput configuration.
-func GetCosmosDBSQLDatabaseThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.ThroughputSettingsGetResults, error) {
+// GetCosmosDBSQLDatabaseThroughputContextE is a helper function that gets a SQL database throughput configuration.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLDatabaseThroughputContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
 	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
@@ -161,25 +218,43 @@ func GetCosmosDBSQLDatabaseThroughputE(t testing.TestingT, subscriptionID string
 	}
 
 	// Get the corresponding database throughput config
-	cosmosSQLDBThroughput, err := cosmosClient.GetSQLDatabaseThroughput(context.Background(), resourceGroupName, accountName, databaseName)
+	cosmosSQLDBThroughput, err := cosmosClient.GetSQLDatabaseThroughput(ctx, resourceGroupName, accountName, databaseName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return throughput config
+	// Return throughput config
 	return &cosmosSQLDBThroughput, nil
 }
 
-// GetCosmosDBSQLContainerThroughput is a helper function that gets a SQL container throughput configuration. This function would fail the test if there is an error.
-func GetCosmosDBSQLContainerThroughput(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) *documentdb.ThroughputSettingsGetResults {
-	cosmosSQLCtrThroughput, err := GetCosmosDBSQLContainerThroughputE(t, subscriptionID, resourceGroupName, accountName, databaseName, containerName)
+// GetCosmosDBSQLDatabaseThroughput is a helper function that gets a SQL database throughput configuration.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCosmosDBSQLDatabaseThroughputContext] instead.
+func GetCosmosDBSQLDatabaseThroughput(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) *documentdb.ThroughputSettingsGetResults {
+	return GetCosmosDBSQLDatabaseThroughputContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, databaseName) //nolint:staticcheck
+}
+
+// GetCosmosDBSQLDatabaseThroughputE is a helper function that gets a SQL database throughput configuration.
+//
+// Deprecated: Use [GetCosmosDBSQLDatabaseThroughputContextE] instead.
+func GetCosmosDBSQLDatabaseThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*documentdb.ThroughputSettingsGetResults, error) {
+	return GetCosmosDBSQLDatabaseThroughputContextE(context.Background(), subscriptionID, resourceGroupName, accountName, databaseName)
+}
+
+// GetCosmosDBSQLContainerThroughputContext is a helper function that gets a SQL container throughput configuration.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLContainerThroughputContext(t testing.TestingT, ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) *documentdb.ThroughputSettingsGetResults {
+	cosmosSQLCtrThroughput, err := GetCosmosDBSQLContainerThroughputContextE(ctx, subscriptionID, resourceGroupName, accountName, databaseName, containerName)
 	require.NoError(t, err)
 
 	return cosmosSQLCtrThroughput
 }
 
-// GetCosmosDBSQLContainerThroughputE is a helper function that gets a SQL container throughput configuration.
-func GetCosmosDBSQLContainerThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.ThroughputSettingsGetResults, error) {
+// GetCosmosDBSQLContainerThroughputContextE is a helper function that gets a SQL container throughput configuration.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLContainerThroughputContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
 	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
 	if err != nil {
@@ -187,11 +262,26 @@ func GetCosmosDBSQLContainerThroughputE(t testing.TestingT, subscriptionID strin
 	}
 
 	// Get the corresponding container throughput config
-	cosmosSQLCtrThroughput, err := cosmosClient.GetSQLContainerThroughput(context.Background(), resourceGroupName, accountName, databaseName, containerName)
+	cosmosSQLCtrThroughput, err := cosmosClient.GetSQLContainerThroughput(ctx, resourceGroupName, accountName, databaseName, containerName)
 	if err != nil {
 		return nil, err
 	}
 
-	//Return throughput config
+	// Return throughput config
 	return &cosmosSQLCtrThroughput, nil
+}
+
+// GetCosmosDBSQLContainerThroughput is a helper function that gets a SQL container throughput configuration.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCosmosDBSQLContainerThroughputContext] instead.
+func GetCosmosDBSQLContainerThroughput(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) *documentdb.ThroughputSettingsGetResults {
+	return GetCosmosDBSQLContainerThroughputContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, databaseName, containerName) //nolint:staticcheck
+}
+
+// GetCosmosDBSQLContainerThroughputE is a helper function that gets a SQL container throughput configuration.
+//
+// Deprecated: Use [GetCosmosDBSQLContainerThroughputContextE] instead.
+func GetCosmosDBSQLContainerThroughputE(t testing.TestingT, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*documentdb.ThroughputSettingsGetResults, error) {
+	return GetCosmosDBSQLContainerThroughputContextE(context.Background(), subscriptionID, resourceGroupName, accountName, databaseName, containerName)
 }

@@ -54,6 +54,7 @@ func safePtrToString(raw *string) string {
 	if raw == nil {
 		return ""
 	}
+
 	return *raw
 }
 
@@ -62,6 +63,7 @@ func safePtrToInt32(raw *int32) int32 {
 	if raw == nil {
 		return 0
 	}
+
 	return *raw
 }
 
@@ -70,5 +72,6 @@ func safePtrToList(raw *[]string) []string {
 	if raw == nil {
 		return []string{}
 	}
+
 	return *raw
 }

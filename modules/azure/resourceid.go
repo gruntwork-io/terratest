@@ -8,6 +8,7 @@ func GetNameFromResourceID(resourceID string) string {
 	if err != nil {
 		return ""
 	}
+
 	return id
 }
 
@@ -18,5 +19,6 @@ func GetNameFromResourceIDE(resourceID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return id, nil
 }
