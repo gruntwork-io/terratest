@@ -5,11 +5,14 @@ import (
 )
 
 // IpForEc2InstanceNotFound is an error that occurs when the IP for an EC2 instance is not found.
-type IpForEc2InstanceNotFound struct {
-	InstanceId string
+type IpForEc2InstanceNotFound struct { //nolint:staticcheck,revive // preserving deprecated type name
+	InstanceId string //nolint:staticcheck,revive // preserving existing field name
 	AwsRegion  string
 	Type       string
 }
+
+// IPForEc2InstanceNotFound is an alias for [IpForEc2InstanceNotFound].
+type IPForEc2InstanceNotFound = IpForEc2InstanceNotFound //nolint:staticcheck,revive // preserving deprecated type name
 
 func (err IpForEc2InstanceNotFound) Error() string {
 	return fmt.Sprintf("Could not find a %s IP address for EC2 Instance %s in %s", err.Type, err.InstanceId, err.AwsRegion)
@@ -17,7 +20,7 @@ func (err IpForEc2InstanceNotFound) Error() string {
 
 // HostnameForEc2InstanceNotFound is an error that occurs when the IP for an EC2 instance is not found.
 type HostnameForEc2InstanceNotFound struct {
-	InstanceId string
+	InstanceId string //nolint:staticcheck,revive // preserving existing field name
 	AwsRegion  string
 	Type       string
 }
@@ -114,11 +117,11 @@ func (err NoInstanceTypeError) Error() string {
 	)
 }
 
-// NoRdsInstanceTypeError is returned when none of the given instance types are avaiable for the region, database engine, and database engine combination given
+// NoRdsInstanceTypeError is returned when none of the given instance types are available for the region, database engine, and database engine combination given
 type NoRdsInstanceTypeError struct {
-	InstanceTypeOptions   []string
 	DatabaseEngine        string
 	DatabaseEngineVersion string
+	InstanceTypeOptions   []string
 }
 
 func (err NoRdsInstanceTypeError) Error() string {

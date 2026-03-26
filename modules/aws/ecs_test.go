@@ -1,64 +1,68 @@
-package aws
+package aws_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	aws "github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/random"
 )
 
 func TestEcsCluster(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	c1, err := CreateEcsClusterE(t, region, "terratest")
-	defer DeleteEcsCluster(t, region, c1)
+	region := aws.GetRandomStableRegion(t, nil, nil)
 
-	assert.Nil(t, err)
+	c1, err := aws.CreateEcsClusterE(t, region, "terratest")
+	defer aws.DeleteEcsCluster(t, region, c1)
+
+	require.NoError(t, err)
 	assert.Equal(t, "terratest", *c1.ClusterName)
 
-	c2, err := GetEcsClusterE(t, region, *c1.ClusterName)
+	c2, err := aws.GetEcsClusterE(t, region, *c1.ClusterName)
 
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "terratest", *c2.ClusterName)
 }
 
 func TestEcsClusterWithInclude(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	clusterName := "terratest-" + random.UniqueId()
+	region := aws.GetRandomStableRegion(t, nil, nil)
+	clusterName := "terratest-" + random.UniqueID()
 	tags := []types.Tag{{
-		Key:   aws.String("test-tag"),
-		Value: aws.String("hello-world"),
+		Key:   awsSDK.String("test-tag"),
+		Value: awsSDK.String("hello-world"),
 	}}
 
-	client := NewEcsClient(t, region)
+	client := aws.NewEcsClient(t, region)
 	c1, err := client.CreateCluster(context.Background(), &ecs.CreateClusterInput{
-		ClusterName: aws.String(clusterName),
+		ClusterName: awsSDK.String(clusterName),
 		Tags:        tags,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	defer DeleteEcsCluster(t, region, c1.Cluster)
+	defer aws.DeleteEcsCluster(t, region, c1.Cluster)
 
-	assert.Equal(t, clusterName, aws.ToString(c1.Cluster.ClusterName))
+	assert.Equal(t, clusterName, awsSDK.ToString(c1.Cluster.ClusterName))
 
-	c2, err := GetEcsClusterWithIncludeE(t, region, clusterName, []types.ClusterField{types.ClusterFieldTags})
-	assert.NoError(t, err)
+	c2, err := aws.GetEcsClusterWithIncludeE(t, region, clusterName, []types.ClusterField{types.ClusterFieldTags})
+	require.NoError(t, err)
 
-	assert.Equal(t, clusterName, aws.ToString(c2.ClusterName))
+	assert.Equal(t, clusterName, awsSDK.ToString(c2.ClusterName))
 	assert.Equal(t, tags, c2.Tags)
 	assert.Empty(t, c2.Statistics)
 
-	c3, err := GetEcsClusterWithIncludeE(t, region, clusterName, []types.ClusterField{types.ClusterFieldStatistics})
-	assert.NoError(t, err)
+	c3, err := aws.GetEcsClusterWithIncludeE(t, region, clusterName, []types.ClusterField{types.ClusterFieldStatistics})
+	require.NoError(t, err)
 
-	assert.Equal(t, clusterName, aws.ToString(c3.ClusterName))
+	assert.Equal(t, clusterName, awsSDK.ToString(c3.ClusterName))
 	assert.NotEmpty(t, c3.Statistics)
 	assert.Empty(t, c3.Tags)
 }

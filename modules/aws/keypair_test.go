@@ -1,12 +1,12 @@
-package aws
+package aws_test
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	aws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,11 +14,11 @@ import (
 func TestCreateImportAndDeleteEC2KeyPair(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	uniqueID := random.UniqueId()
-	name := fmt.Sprintf("test-key-pair-%s", uniqueID)
+	region := aws.GetRandomStableRegion(t, nil, nil)
+	uniqueID := random.UniqueID()
+	name := "test-key-pair-" + uniqueID
 
-	keyPair := CreateAndImportEC2KeyPair(t, region, name)
+	keyPair := aws.CreateAndImportEC2KeyPair(t, region, name)
 	defer deleteKeyPair(t, keyPair)
 
 	assert.True(t, keyPairExists(t, keyPair))
@@ -28,8 +28,10 @@ func TestCreateImportAndDeleteEC2KeyPair(t *testing.T) {
 	assert.Contains(t, keyPair.PrivateKey, "-----BEGIN RSA PRIVATE KEY-----")
 }
 
-func keyPairExists(t *testing.T, keyPair *Ec2Keypair) bool {
-	client := NewEc2Client(t, keyPair.Region)
+func keyPairExists(t *testing.T, keyPair *aws.Ec2Keypair) bool {
+	t.Helper()
+
+	client := aws.NewEc2Client(t, keyPair.Region)
 
 	input := ec2.DescribeKeyPairsInput{
 		KeyNames: []string{keyPair.Name},
@@ -40,13 +42,16 @@ func keyPairExists(t *testing.T, keyPair *Ec2Keypair) bool {
 		if strings.Contains(err.Error(), "InvalidKeyPair.NotFound") {
 			return false
 		}
+
 		t.Fatal(err)
 	}
 
 	return len(out.KeyPairs) == 1
 }
 
-func deleteKeyPair(t *testing.T, keyPair *Ec2Keypair) {
-	DeleteEC2KeyPair(t, keyPair)
+func deleteKeyPair(t *testing.T, keyPair *aws.Ec2Keypair) {
+	t.Helper()
+
+	aws.DeleteEC2KeyPair(t, keyPair)
 	assert.False(t, keyPairExists(t, keyPair))
 }

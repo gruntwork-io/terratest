@@ -16,7 +16,7 @@ type InvocationTypeOption string
 
 const (
 	InvocationTypeRequestResponse InvocationTypeOption = "RequestResponse"
-	InvocationTypeDryRun                               = "DryRun"
+	InvocationTypeDryRun          InvocationTypeOption = "DryRun"
 )
 
 func (itype *InvocationTypeOption) Value() (string, error) {
@@ -30,9 +30,11 @@ func (itype *InvocationTypeOption) Value() (string, error) {
 			msg := fmt.Sprintf("LambdaOptions.InvocationType, if specified, must either be \"%s\" or \"%s\"",
 				InvocationTypeRequestResponse,
 				InvocationTypeDryRun)
+
 			return "", errors.New(msg)
 		}
 	}
+
 	return string(InvocationTypeRequestResponse), nil
 }
 
@@ -68,6 +70,7 @@ type LambdaOutput struct {
 func InvokeFunction(t testing.TestingT, region, functionName string, payload interface{}) []byte {
 	out, err := InvokeFunctionE(t, region, functionName, payload)
 	require.NoError(t, err)
+
 	return out
 }
 
@@ -83,12 +86,12 @@ func InvokeFunctionE(t testing.TestingT, region, functionName string, payload in
 	}
 
 	if payload != nil {
-		payloadJson, err := json.Marshal(payload)
-
+		payloadJSON, err := json.Marshal(payload)
 		if err != nil {
 			return nil, err
 		}
-		invokeInput.Payload = payloadJson
+
+		invokeInput.Payload = payloadJSON
 	}
 
 	out, err := lambdaClient.Invoke(context.Background(), invokeInput)
@@ -107,6 +110,7 @@ func InvokeFunctionE(t testing.TestingT, region, functionName string, payload in
 func InvokeFunctionWithParams(t testing.TestingT, region, functionName string, input *LambdaOptions) *LambdaOutput {
 	out, err := InvokeFunctionWithParamsE(t, region, functionName, input)
 	require.NoError(t, err)
+
 	return out
 }
 
@@ -135,11 +139,12 @@ func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, 
 	}
 
 	if input.Payload != nil {
-		payloadJson, err := json.Marshal(input.Payload)
+		payloadJSON, err := json.Marshal(input.Payload)
 		if err != nil {
 			return nil, err
 		}
-		invokeInput.Payload = payloadJson
+
+		invokeInput.Payload = payloadJSON
 	}
 
 	out, err := lambdaClient.Invoke(context.Background(), invokeInput)
@@ -164,8 +169,8 @@ func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, 
 
 type FunctionError struct {
 	Message    string
-	StatusCode int32
 	Payload    []byte
+	StatusCode int32
 }
 
 func (err *FunctionError) Error() string {
@@ -176,6 +181,7 @@ func (err *FunctionError) Error() string {
 func NewLambdaClient(t testing.TestingT, region string) *lambda.Client {
 	client, err := NewLambdaClientE(t, region)
 	require.NoError(t, err)
+
 	return client
 }
 

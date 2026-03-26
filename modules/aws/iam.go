@@ -19,6 +19,7 @@ func GetIamCurrentUserName(t testing.TestingT) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -43,6 +44,7 @@ func GetIamCurrentUserArn(t testing.TestingT) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -67,6 +69,7 @@ func GetIamPolicyDocument(t testing.TestingT, region string, policyARN string) s
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -85,8 +88,9 @@ func GetIamPolicyDocumentE(t testing.TestingT, region string, policyARN string) 
 	}
 
 	var defaultVersion string
+
 	for _, version := range versions.Versions {
-		if version.IsDefaultVersion == true {
+		if version.IsDefaultVersion {
 			defaultVersion = *version.VersionId
 		}
 	}
@@ -118,6 +122,7 @@ func CreateMfaDevice(t testing.TestingT, iamClient *iam.Client, deviceName strin
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return mfaDevice
 }
 
@@ -163,8 +168,10 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.Client, mfaDevice *type
 		return err
 	}
 
+	const mfaEnableWait = 30 * time.Second
+
 	logger.Default.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
-	time.Sleep(30 * time.Second)
+	time.Sleep(mfaEnableWait)
 
 	authCode2, err := GetTimeBasedOneTimePassword(mfaDevice)
 	if err != nil {
@@ -177,13 +184,14 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.Client, mfaDevice *type
 		SerialNumber:        mfaDevice.SerialNumber,
 		UserName:            aws.String(iamUserName),
 	})
-
 	if err != nil {
 		return err
 	}
 
+	const mfaTokenWait = 10 * time.Second
+
 	logger.Log(t, "Waiting for MFA Device enablement to propagate.")
-	time.Sleep(10 * time.Second)
+	time.Sleep(mfaTokenWait)
 
 	return nil
 }
@@ -194,6 +202,7 @@ func NewIamClient(t testing.TestingT, region string) *iam.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 
@@ -203,5 +212,6 @@ func NewIamClientE(t testing.TestingT, region string) (*iam.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return iam.NewFromConfig(*sess), nil
 }

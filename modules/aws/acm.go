@@ -14,6 +14,7 @@ func GetAcmCertificateArn(t testing.TestingT, awsRegion string, certDomainName s
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return arn
 }
 
@@ -29,7 +30,9 @@ func GetAcmCertificateArnE(t testing.TestingT, awsRegion string, certDomainName 
 		return "", err
 	}
 
-	for _, summary := range result.CertificateSummaryList {
+	for i := range result.CertificateSummaryList {
+		summary := &result.CertificateSummaryList[i]
+
 		if *summary.DomainName == certDomainName {
 			return *summary.CertificateArn, nil
 		}
@@ -44,6 +47,7 @@ func NewAcmClient(t testing.TestingT, region string) *acm.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 

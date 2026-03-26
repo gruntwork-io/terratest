@@ -1,9 +1,9 @@
-package aws
+package aws_test
 
 import (
-	"fmt"
 	"testing"
 
+	terraaws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
@@ -12,29 +12,31 @@ import (
 func TestParameterIsFound(t *testing.T) {
 	t.Parallel()
 
-	expectedName := fmt.Sprintf("test-name-%s", random.UniqueId())
-	awsRegion := GetRandomRegion(t, nil, nil)
-	expectedValue := fmt.Sprintf("test-value-%s", random.UniqueId())
-	expectedDescription := fmt.Sprintf("test-description-%s", random.UniqueId())
-	version := PutParameter(t, awsRegion, expectedName, expectedDescription, expectedValue)
+	expectedName := "test-name-" + random.UniqueID()
+	awsRegion := terraaws.GetRandomRegion(t, nil, nil)
+	expectedValue := "test-value-" + random.UniqueID()
+	expectedDescription := "test-description-" + random.UniqueID()
+	version := terraaws.PutParameter(t, awsRegion, expectedName, expectedDescription, expectedValue)
 	logger.Default.Logf(t, "Created parameter with version %d", version)
-	keyValue := GetParameter(t, awsRegion, expectedName)
+	keyValue := terraaws.GetParameter(t, awsRegion, expectedName)
 	logger.Default.Logf(t, "Found key with name %s", expectedName)
 	assert.Equal(t, expectedValue, keyValue)
 }
 
 func TestParameterIsDeleted(t *testing.T) {
-	expectedName := fmt.Sprintf("test-name-%s", random.UniqueId())
-	awsRegion := GetRandomRegion(t, nil, nil)
-	expectedValue := fmt.Sprintf("test-value-%s", random.UniqueId())
-	expectedDescription := fmt.Sprintf("test-description-%s", random.UniqueId())
-	version := PutParameter(t, awsRegion, expectedName, expectedDescription, expectedValue)
+	t.Parallel()
+
+	expectedName := "test-name-" + random.UniqueID()
+	awsRegion := terraaws.GetRandomRegion(t, nil, nil)
+	expectedValue := "test-value-" + random.UniqueID()
+	expectedDescription := "test-description-" + random.UniqueID()
+	version := terraaws.PutParameter(t, awsRegion, expectedName, expectedDescription, expectedValue)
 	logger.Default.Logf(t, "Created parameter with version %d", version)
 
-	DeleteParameter(t, awsRegion, expectedName)
-	logger.Default.Logf(t, "Deleted paramter %s", expectedName)
+	terraaws.DeleteParameter(t, awsRegion, expectedName)
+	logger.Default.Logf(t, "Deleted parameter %s", expectedName)
 
-	actualValue, err := GetParameterE(t, awsRegion, expectedName)
-	assert.Equal(t, actualValue, "")
+	actualValue, err := terraaws.GetParameterE(t, awsRegion, expectedName)
+	assert.Empty(t, actualValue)
 	assert.Error(t, err)
 }

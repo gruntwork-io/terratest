@@ -1,20 +1,24 @@
-package aws
+package aws_test
 
 import (
 	"fmt"
 	"testing"
 
+	aws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetRecommendedRdsInstanceTypeHappyPath(t *testing.T) {
+	t.Parallel()
+
 	type TestingScenerios struct {
 		name               string
 		region             string
 		databaseEngine     string
 		engineMajorVersion string
-		instanceTypes      []string
 		expected           string
+		instanceTypes      []string
 	}
 
 	testingScenerios := []TestingScenerios{
@@ -57,15 +61,17 @@ func TestGetRecommendedRdsInstanceTypeHappyPath(t *testing.T) {
 
 		t.Run(scenerio.name, func(t *testing.T) {
 			t.Parallel()
-			engineVersion := GetValidEngineVersion(t, scenerio.region, scenerio.databaseEngine, scenerio.engineMajorVersion)
-			actual, err := GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, engineVersion, scenerio.instanceTypes)
-			assert.NoError(t, err)
+			engineVersion := aws.GetValidEngineVersion(t, scenerio.region, scenerio.databaseEngine, scenerio.engineMajorVersion)
+			actual, err := aws.GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, engineVersion, scenerio.instanceTypes)
+			require.NoError(t, err)
 			assert.Equal(t, scenerio.expected, actual)
 		})
 	}
 }
 
 func TestGetRecommendedRdsInstanceTypeErrors(t *testing.T) {
+	t.Parallel()
+
 	type TestingScenerios struct {
 		name                  string
 		region                string
@@ -139,9 +145,9 @@ func TestGetRecommendedRdsInstanceTypeErrors(t *testing.T) {
 		t.Run(scenerio.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, scenerio.databaseEngineVersion, scenerio.instanceTypes)
+			_, err := aws.GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, scenerio.databaseEngineVersion, scenerio.instanceTypes)
 			fmt.Println(err)
-			assert.EqualError(t, err, NoRdsInstanceTypeError{InstanceTypeOptions: scenerio.instanceTypes, DatabaseEngine: scenerio.databaseEngine, DatabaseEngineVersion: scenerio.databaseEngineVersion}.Error())
+			assert.EqualError(t, err, aws.NoRdsInstanceTypeError{InstanceTypeOptions: scenerio.instanceTypes, DatabaseEngine: scenerio.databaseEngine, DatabaseEngineVersion: scenerio.databaseEngineVersion}.Error())
 		})
 	}
 }

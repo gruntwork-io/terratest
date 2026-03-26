@@ -12,12 +12,12 @@ import (
 
 // RemoteFileSpecification describes which files you want to copy from your instances
 type RemoteFileSpecification struct {
-	AsgNames               []string            //ASGs where our instances will be
-	RemotePathToFileFilter map[string][]string //A map of the files to fetch, where the keys are directories on the remote host and the values are filters for what files to fetch from the directory. The filters support bash-style wildcards.
-	UseSudo                bool
-	SshUser                string
+	RemotePathToFileFilter map[string][]string // A map of the files to fetch, where the keys are directories on the remote host and the values are filters for what files to fetch from the directory. The filters support bash-style wildcards.
 	KeyPair                *Ec2Keypair
-	LocalDestinationDir    string //base path where to store downloaded artifacts locally. The final path of each resource will include the ip of the host and the name of the immediate parent folder.
+	SshUser                string   //nolint:staticcheck,revive // preserving existing field name
+	LocalDestinationDir    string   // base path where to store downloaded artifacts locally. The final path of each resource will include the ip of the host and the name of the immediate parent folder.
+	AsgNames               []string // ASGs where our instances will be
+	UseSudo                bool
 }
 
 // FetchContentsOfFileFromInstance looks up the public IP address of the EC2 Instance with the given ID, connects to
@@ -28,6 +28,7 @@ func FetchContentsOfFileFromInstance(t testing.TestingT, awsRegion string, sshUs
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -35,7 +36,7 @@ func FetchContentsOfFileFromInstance(t testing.TestingT, awsRegion string, sshUs
 // the Instance via SSH using the given username and Key Pair, fetches the contents of the file at the given path
 // (using sudo if useSudo is true), and returns the contents of that file as a string.
 func FetchContentsOfFileFromInstanceE(t testing.TestingT, awsRegion string, sshUserName string, keyPair *Ec2Keypair, instanceID string, useSudo bool, filePath string) (string, error) {
-	publicIp, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
+	publicIP, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
 	if err != nil {
 		return "", err
 	}
@@ -43,9 +44,10 @@ func FetchContentsOfFileFromInstanceE(t testing.TestingT, awsRegion string, sshU
 	host := ssh.Host{
 		SshUserName: sshUserName,
 		SshKeyPair:  keyPair.KeyPair,
-		Hostname:    publicIp,
+		Hostname:    publicIP,
 	}
 
+	//nolint:staticcheck // using deprecated ssh function
 	return ssh.FetchContentsOfFileE(t, host, useSudo, filePath)
 }
 
@@ -57,6 +59,7 @@ func FetchContentsOfFilesFromInstance(t testing.TestingT, awsRegion string, sshU
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -64,7 +67,7 @@ func FetchContentsOfFilesFromInstance(t testing.TestingT, awsRegion string, sshU
 // the Instance via SSH using the given username and Key Pair, fetches the contents of the files at the given paths
 // (using sudo if useSudo is true), and returns a map from file path to the contents of that file as a string.
 func FetchContentsOfFilesFromInstanceE(t testing.TestingT, awsRegion string, sshUserName string, keyPair *Ec2Keypair, instanceID string, useSudo bool, filePaths ...string) (map[string]string, error) {
-	publicIp, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
+	publicIP, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +75,10 @@ func FetchContentsOfFilesFromInstanceE(t testing.TestingT, awsRegion string, ssh
 	host := ssh.Host{
 		SshUserName: sshUserName,
 		SshKeyPair:  keyPair.KeyPair,
-		Hostname:    publicIp,
+		Hostname:    publicIP,
 	}
 
+	//nolint:staticcheck // using deprecated ssh function
 	return ssh.FetchContentsOfFilesE(t, host, useSudo, filePaths...)
 }
 
@@ -87,6 +91,7 @@ func FetchContentsOfFileFromAsg(t testing.TestingT, awsRegion string, sshUserNam
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -100,17 +105,18 @@ func FetchContentsOfFileFromAsgE(t testing.TestingT, awsRegion string, sshUserNa
 		return nil, err
 	}
 
-	instanceIdToContents := map[string]string{}
+	instanceIDToContents := map[string]string{}
 
 	for _, instanceID := range instanceIDs {
 		contents, err := FetchContentsOfFileFromInstanceE(t, awsRegion, sshUserName, keyPair, instanceID, useSudo, filePath)
 		if err != nil {
 			return nil, err
 		}
-		instanceIdToContents[instanceID] = contents
+
+		instanceIDToContents[instanceID] = contents
 	}
 
-	return instanceIdToContents, err
+	return instanceIDToContents, err
 }
 
 // FetchContentsOfFilesFromAsg looks up the EC2 Instances in the given ASG, looks up the public IPs of those EC2
@@ -122,6 +128,7 @@ func FetchContentsOfFilesFromAsg(t testing.TestingT, awsRegion string, sshUserNa
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -135,17 +142,18 @@ func FetchContentsOfFilesFromAsgE(t testing.TestingT, awsRegion string, sshUserN
 		return nil, err
 	}
 
-	instanceIdToFilePathToContents := map[string]map[string]string{}
+	instanceIDToFilePathToContents := map[string]map[string]string{}
 
 	for _, instanceID := range instanceIDs {
 		contents, err := FetchContentsOfFilesFromInstanceE(t, awsRegion, sshUserName, keyPair, instanceID, useSudo, filePaths...)
 		if err != nil {
 			return nil, err
 		}
-		instanceIdToFilePathToContents[instanceID] = contents
+
+		instanceIDToFilePathToContents[instanceID] = contents
 	}
 
-	return instanceIdToFilePathToContents, err
+	return instanceIDToFilePathToContents, err
 }
 
 // FetchFilesFromInstance looks up the EC2 Instances in the given ASG, looks up the public IPs of those EC2
@@ -154,7 +162,6 @@ func FetchContentsOfFilesFromAsgE(t testing.TestingT, awsRegion string, sshUserN
 // at localDirectory/<publicip>/<remoteFolderName>
 func FetchFilesFromInstance(t testing.TestingT, awsRegion string, sshUserName string, keyPair *Ec2Keypair, instanceID string, useSudo bool, remoteDirectory string, localDirectory string, filenameFilters []string) {
 	err := FetchFilesFromInstanceE(t, awsRegion, sshUserName, keyPair, instanceID, useSudo, remoteDirectory, localDirectory, filenameFilters)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,24 +172,26 @@ func FetchFilesFromInstance(t testing.TestingT, awsRegion string, sshUserName st
 // matching filenameFilters at the given remoteDirectory (using sudo if useSudo is true), and stores the files locally
 // at localDirectory/<publicip>/<remoteFolderName>
 func FetchFilesFromInstanceE(t testing.TestingT, awsRegion string, sshUserName string, keyPair *Ec2Keypair, instanceID string, useSudo bool, remoteDirectory string, localDirectory string, filenameFilters []string) error {
-	publicIp, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
-
+	publicIP, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
 	if err != nil {
 		return err
 	}
 
 	host := ssh.Host{
-		Hostname:    publicIp,
+		Hostname:    publicIP,
 		SshUserName: sshUserName,
 		SshKeyPair:  keyPair.KeyPair,
 	}
 
-	finalLocalDestDir := filepath.Join(localDirectory, publicIp, filepath.Base(remoteDirectory))
+	finalLocalDestDir := filepath.Join(localDirectory, publicIP, filepath.Base(remoteDirectory))
 
 	if !files.FileExists(finalLocalDestDir) {
-		os.MkdirAll(finalLocalDestDir, 0755)
+		if err := os.MkdirAll(finalLocalDestDir, 0755); err != nil { //nolint:mnd // standard directory permissions
+			return err
+		}
 	}
 
+	//nolint:staticcheck // using deprecated ssh function
 	scpOptions := ssh.ScpDownloadOptions{
 		RemoteHost:      host,
 		RemoteDir:       remoteDirectory,
@@ -190,40 +199,40 @@ func FetchFilesFromInstanceE(t testing.TestingT, awsRegion string, sshUserName s
 		FileNameFilters: filenameFilters,
 	}
 
+	//nolint:staticcheck // using deprecated ssh function
 	return ssh.ScpDirFromE(t, scpOptions, useSudo)
 }
 
-// FetchFilesFromAsgs looks up the EC2 Instances in all the ASGs given in the RemoteFileSpecification,
+// FetchFilesFromAsgsP looks up the EC2 Instances in all the ASGs given in the RemoteFileSpecification,
 // looks up the public IPs of those EC2 Instances, connects to each Instance via SSH using the given
 // username and Key Pair, downloads the files matching filenameFilters at the given
 // remoteDirectory (using sudo if useSudo is true), and stores the files locally at
-// localDirectory/<publicip>/<remoteFolderName>
-func FetchFilesFromAsgs(t testing.TestingT, awsRegion string, spec RemoteFileSpecification) {
-	err := FetchFilesFromAsgsE(t, awsRegion, spec)
-
+// localDirectory/<publicip>/<remoteFolderName>. This variant accepts a pointer to RemoteFileSpecification
+// to avoid copying the large struct.
+func FetchFilesFromAsgsP(t testing.TestingT, awsRegion string, spec *RemoteFileSpecification) {
+	err := FetchFilesFromAsgsPE(t, awsRegion, spec)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-// FetchFilesFromAsgsE looks up the EC2 Instances in all the ASGs given in the RemoteFileSpecification,
+// FetchFilesFromAsgsPE looks up the EC2 Instances in all the ASGs given in the RemoteFileSpecification,
 // looks up the public IPs of those EC2 Instances, connects to each Instance via SSH using the given
 // username and Key Pair, downloads the files matching filenameFilters at the given
 // remoteDirectory (using sudo if useSudo is true), and stores the files locally at
-// localDirectory/<publicip>/<remoteFolderName>
-func FetchFilesFromAsgsE(t testing.TestingT, awsRegion string, spec RemoteFileSpecification) error {
-	var errorsOccurred = new(multierror.Error)
+// localDirectory/<publicip>/<remoteFolderName>. This variant accepts a pointer to RemoteFileSpecification
+// to avoid copying the large struct.
+func FetchFilesFromAsgsPE(t testing.TestingT, awsRegion string, spec *RemoteFileSpecification) error {
+	errorsOccurred := new(multierror.Error)
 
 	for _, curAsg := range spec.AsgNames {
 		for curRemoteDir, fileFilters := range spec.RemotePathToFileFilter {
-
 			instanceIDs, err := GetInstanceIdsForAsgE(t, curAsg, awsRegion)
 			if err != nil {
 				errorsOccurred = multierror.Append(errorsOccurred, err)
 			} else {
 				for _, instanceID := range instanceIDs {
 					err = FetchFilesFromInstanceE(t, awsRegion, spec.SshUser, spec.KeyPair, instanceID, spec.UseSudo, curRemoteDir, spec.LocalDestinationDir, fileFilters)
-
 					if err != nil {
 						errorsOccurred = multierror.Append(errorsOccurred, err)
 					}
@@ -231,5 +240,20 @@ func FetchFilesFromAsgsE(t testing.TestingT, awsRegion string, spec RemoteFileSp
 			}
 		}
 	}
+
 	return errorsOccurred.ErrorOrNil()
+}
+
+// Deprecated: Use FetchFilesFromAsgsP instead, which accepts a pointer to RemoteFileSpecification.
+//
+//nolint:staticcheck,revive,gocritic // preserving deprecated function name
+func FetchFilesFromAsgs(t testing.TestingT, awsRegion string, spec RemoteFileSpecification) {
+	FetchFilesFromAsgsP(t, awsRegion, &spec)
+}
+
+// Deprecated: Use FetchFilesFromAsgsPE instead, which accepts a pointer to RemoteFileSpecification.
+//
+//nolint:staticcheck,revive,gocritic // preserving deprecated function name
+func FetchFilesFromAsgsE(t testing.TestingT, awsRegion string, spec RemoteFileSpecification) error {
+	return FetchFilesFromAsgsPE(t, awsRegion, &spec)
 }

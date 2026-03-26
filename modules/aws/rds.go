@@ -20,6 +20,7 @@ func GetAddressOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion 
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return address
 }
 
@@ -39,6 +40,7 @@ func GetPortOfRdsInstance(t testing.TestingT, dbInstanceID string, awsRegion str
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return port
 }
 
@@ -52,62 +54,89 @@ func GetPortOfRdsInstanceE(t testing.TestingT, dbInstanceID string, awsRegion st
 	return *dbInstance.Endpoint.Port, nil
 }
 
-// GetWhetherSchemaExistsInRdsMySqlInstance checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsMySqlInstance(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool {
-	output, err := GetWhetherSchemaExistsInRdsMySqlInstanceE(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
+// GetWhetherSchemaExistsInRdsMySQLInstance checks whether the specified schema/table name exists in the RDS MySQL instance.
+func GetWhetherSchemaExistsInRdsMySQLInstance(t testing.TestingT, dbURL string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool {
+	output, err := GetWhetherSchemaExistsInRdsMySQLInstanceE(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return output
 }
 
-// GetWhetherSchemaExistsInRdsMySqlInstanceE checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsMySqlInstanceE(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
-	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/", dbUsername, dbPassword, dbUrl, dbPort)
+// GetWhetherSchemaExistsInRdsMySqlInstance checks whether the specified schema/table name exists in the RDS MySQL instance.
+//
+// Deprecated: Use GetWhetherSchemaExistsInRdsMySQLInstance instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetWhetherSchemaExistsInRdsMySqlInstance(t testing.TestingT, dbURL string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool {
+	return GetWhetherSchemaExistsInRdsMySQLInstance(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
+}
+
+// GetWhetherSchemaExistsInRdsMySQLInstanceE checks whether the specified schema/table name exists in the RDS MySQL instance.
+func GetWhetherSchemaExistsInRdsMySQLInstanceE(t testing.TestingT, dbURL string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
+	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/", dbUsername, dbPassword, dbURL, dbPort)
+
 	db, connErr := sql.Open("mysql", connectionString)
 	if connErr != nil {
 		return false, connErr
 	}
-	defer db.Close()
-	var (
-		schemaName string
-	)
+
+	defer func() { _ = db.Close() }()
+
+	var schemaName string
+
 	sqlStatement := "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME=?;"
-	row := db.QueryRow(sqlStatement, expectedSchemaName)
+	row := db.QueryRowContext(context.Background(), sqlStatement, expectedSchemaName)
+
 	scanErr := row.Scan(&schemaName)
 	if scanErr != nil {
 		return false, scanErr
 	}
+
 	return true, nil
 }
 
-// GetWhetherSchemaExistsInRdsPostgresInstance checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsPostgresInstance(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool {
-	output, err := GetWhetherSchemaExistsInRdsPostgresInstanceE(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
+// GetWhetherSchemaExistsInRdsMySqlInstanceE checks whether the specified schema/table name exists in the RDS MySQL instance.
+//
+// Deprecated: Use GetWhetherSchemaExistsInRdsMySQLInstanceE instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetWhetherSchemaExistsInRdsMySqlInstanceE(t testing.TestingT, dbURL string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
+	return GetWhetherSchemaExistsInRdsMySQLInstanceE(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
+}
+
+// GetWhetherSchemaExistsInRdsPostgresInstance checks whether the specified schema/table name exists in the RDS Postgres instance.
+func GetWhetherSchemaExistsInRdsPostgresInstance(t testing.TestingT, dbURL string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool {
+	output, err := GetWhetherSchemaExistsInRdsPostgresInstanceE(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return output
 }
 
-// GetWhetherSchemaExistsInRdsPostgresInstanceE checks whether the specified schema/table name exists in the RDS instance
-func GetWhetherSchemaExistsInRdsPostgresInstanceE(t testing.TestingT, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
-	connectionString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
+// GetWhetherSchemaExistsInRdsPostgresInstanceE checks whether the specified schema/table name exists in the RDS Postgres instance.
+func GetWhetherSchemaExistsInRdsPostgresInstanceE(t testing.TestingT, dbURL string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) (bool, error) {
+	connectionString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s", dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
 
 	db, connErr := sql.Open("pgx", connectionString)
 	if connErr != nil {
 		return false, connErr
 	}
-	defer db.Close()
-	var (
-		schemaName string
-	)
+
+	defer func() { _ = db.Close() }()
+
+	var schemaName string
+
 	sqlStatement := `SELECT "catalog_name" FROM "information_schema"."schemata" where catalog_name=$1`
-	row := db.QueryRow(sqlStatement, expectedSchemaName)
+	row := db.QueryRowContext(context.Background(), sqlStatement, expectedSchemaName)
+
 	scanErr := row.Scan(&schemaName)
 	if scanErr != nil {
 		return false, scanErr
 	}
+
 	return true, nil
 }
 
@@ -117,18 +146,21 @@ func GetParameterValueForParameterOfRdsInstance(t testing.TestingT, parameterNam
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return parameterValue
 }
 
 // GetParameterValueForParameterOfRdsInstanceE gets the value of the parameter name specified for the RDS instance in the given region.
 func GetParameterValueForParameterOfRdsInstanceE(t testing.TestingT, parameterName string, dbInstanceID string, awsRegion string) (string, error) {
 	output := GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion)
+
 	for _, parameter := range output {
 		if aws.ToString(parameter.ParameterName) == parameterName {
 			return aws.ToString(parameter.ParameterValue), nil
 		}
 	}
-	return "", ParameterForDbInstanceNotFound{ParameterName: parameterName, DbInstanceID: dbInstanceID, AwsRegion: awsRegion}
+
+	return "", ParameterForDbInstanceNotFound{ParameterName: parameterName, DbInstanceID: dbInstanceID, AwsRegion: awsRegion} //nolint:staticcheck,revive // preserving existing field name
 }
 
 // GetOptionSettingForOfRdsInstance gets the value of the option name in the option group specified for the RDS instance in the given region.
@@ -137,6 +169,7 @@ func GetOptionSettingForOfRdsInstance(t testing.TestingT, optionName string, opt
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return optionValue
 }
 
@@ -144,16 +177,18 @@ func GetOptionSettingForOfRdsInstance(t testing.TestingT, optionName string, opt
 func GetOptionSettingForOfRdsInstanceE(t testing.TestingT, optionName string, optionSettingName string, dbInstanceID, awsRegion string) (string, error) {
 	optionGroupName := GetOptionGroupNameOfRdsInstance(t, dbInstanceID, awsRegion)
 	options := GetOptionsOfOptionGroup(t, optionGroupName, awsRegion)
-	for _, option := range options {
-		if aws.ToString(option.OptionName) == optionName {
-			for _, optionSetting := range option.OptionSettings {
+
+	for i := range options {
+		if aws.ToString(options[i].OptionName) == optionName {
+			for _, optionSetting := range options[i].OptionSettings {
 				if aws.ToString(optionSetting.Name) == optionSettingName {
 					return aws.ToString(optionSetting.Value), nil
 				}
 			}
 		}
 	}
-	return "", OptionGroupOptionSettingForDbInstanceNotFound{OptionName: optionName, OptionSettingName: optionSettingName, DbInstanceID: dbInstanceID, AwsRegion: awsRegion}
+
+	return "", OptionGroupOptionSettingForDbInstanceNotFound{OptionName: optionName, OptionSettingName: optionSettingName, DbInstanceID: dbInstanceID, AwsRegion: awsRegion} //nolint:staticcheck,revive // preserving existing field name
 }
 
 // GetOptionGroupNameOfRdsInstance gets the name of the option group associated with the RDS instance
@@ -162,6 +197,7 @@ func GetOptionGroupNameOfRdsInstance(t testing.TestingT, dbInstanceID string, aw
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return dbInstance
 }
 
@@ -171,6 +207,7 @@ func GetOptionGroupNameOfRdsInstanceE(t testing.TestingT, dbInstanceID string, a
 	if err != nil {
 		return "", err
 	}
+
 	return aws.ToString(dbInstance.OptionGroupMemberships[0].OptionGroupName), nil
 }
 
@@ -180,6 +217,7 @@ func GetOptionsOfOptionGroup(t testing.TestingT, optionGroupName string, awsRegi
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return output
 }
 
@@ -187,10 +225,12 @@ func GetOptionsOfOptionGroup(t testing.TestingT, optionGroupName string, awsRegi
 func GetOptionsOfOptionGroupE(t testing.TestingT, optionGroupName string, awsRegion string) ([]types.Option, error) {
 	rdsClient := NewRdsClient(t, awsRegion)
 	input := rds.DescribeOptionGroupsInput{OptionGroupName: aws.String(optionGroupName)}
+
 	output, err := rdsClient.DescribeOptionGroups(context.Background(), &input)
 	if err != nil {
 		return []types.Option{}, err
 	}
+
 	return output.OptionGroupsList[0].Options, nil
 }
 
@@ -200,6 +240,7 @@ func GetAllParametersOfRdsInstance(t testing.TestingT, dbInstanceID string, awsR
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return parameters
 }
 
@@ -209,12 +250,14 @@ func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, aws
 	if dbInstanceErr != nil {
 		return []types.Parameter{}, dbInstanceErr
 	}
+
 	parameterGroupName := aws.ToString(dbInstance.DBParameterGroups[0].DBParameterGroupName)
 
 	rdsClient := NewRdsClient(t, awsRegion)
 	input := rds.DescribeDBParametersInput{DBParameterGroupName: aws.String(parameterGroupName)}
 
 	var allParameters []types.Parameter
+
 	for {
 		output, err := rdsClient.DescribeDBParameters(context.Background(), &input)
 		if err != nil {
@@ -222,12 +265,14 @@ func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, aws
 		}
 
 		allParameters = append(allParameters, output.Parameters...)
+
 		if output.Marker == nil {
 			break
 		}
 
 		input.Marker = output.Marker
 	}
+
 	return allParameters, nil
 }
 
@@ -235,10 +280,12 @@ func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, aws
 func GetRdsInstanceDetailsE(t testing.TestingT, dbInstanceID string, awsRegion string) (*types.DBInstance, error) {
 	rdsClient := NewRdsClient(t, awsRegion)
 	input := rds.DescribeDBInstancesInput{DBInstanceIdentifier: aws.String(dbInstanceID)}
+
 	output, err := rdsClient.DescribeDBInstances(context.Background(), &input)
 	if err != nil {
 		return nil, err
 	}
+
 	return &output.DBInstances[0], nil
 }
 
@@ -248,6 +295,7 @@ func NewRdsClient(t testing.TestingT, region string) *rds.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 
@@ -267,6 +315,7 @@ func NewRdsClientE(t testing.TestingT, region string) (*rds.Client, error) {
 func GetRecommendedRdsInstanceType(t testing.TestingT, region string, engine string, engineVersion string, instanceTypeOptions []string) string {
 	out, err := GetRecommendedRdsInstanceTypeE(t, region, engine, engineVersion, instanceTypeOptions)
 	require.NoError(t, err)
+
 	return out
 }
 
@@ -278,6 +327,7 @@ func GetRecommendedRdsInstanceTypeE(t testing.TestingT, region string, engine st
 	if err != nil {
 		return "", err
 	}
+
 	return GetRecommendedRdsInstanceTypeWithClientE(t, client, engine, engineVersion, instanceTypeOptions)
 }
 
@@ -296,6 +346,7 @@ func GetRecommendedRdsInstanceTypeWithClientE(t testing.TestingT, rdsClient *rds
 			return instanceTypeOption, nil
 		}
 	}
+
 	return "", NoRdsInstanceTypeError{InstanceTypeOptions: instanceTypeOptions, DatabaseEngine: engine, DatabaseEngineVersion: engineVersion}
 }
 
@@ -325,6 +376,7 @@ func instanceTypeExistsForEngineAndRegionE(client *rds.Client, engine string, en
 func GetValidEngineVersion(t testing.TestingT, region string, engine string, majorVersion string) string {
 	out, err := GetValidEngineVersionE(t, region, engine, majorVersion)
 	require.NoError(t, err)
+
 	return out
 }
 
@@ -334,35 +386,48 @@ func GetValidEngineVersionE(t testing.TestingT, region string, engine string, ma
 	if err != nil {
 		return "", err
 	}
+
 	input := rds.DescribeDBEngineVersionsInput{
 		Engine:        aws.String(engine),
 		EngineVersion: aws.String(majorVersion),
 	}
+
 	out, err := client.DescribeDBEngineVersions(context.Background(), &input)
 	if err != nil || len(out.DBEngineVersions) == 0 {
 		return "", err
 	}
+
 	return *out.DBEngineVersions[0].EngineVersion, nil
 }
 
-// ParameterForDbInstanceNotFound is an error that occurs when the parameter group specified is not found for the DB instance
+// ParameterForDbInstanceNotFound is an error that occurs when the parameter group specified is not found for the DB instance.
+//
+//nolint:staticcheck,revive // preserving existing type name
 type ParameterForDbInstanceNotFound struct {
 	ParameterName string
-	DbInstanceID  string
+	DbInstanceID  string //nolint:staticcheck,revive // preserving existing field name
 	AwsRegion     string
 }
+
+// ParameterForDBInstanceNotFound is an alias for ParameterForDbInstanceNotFound with the correct Go naming convention.
+type ParameterForDBInstanceNotFound = ParameterForDbInstanceNotFound
 
 func (err ParameterForDbInstanceNotFound) Error() string {
 	return fmt.Sprintf("Could not find a parameter %s in parameter group of database %s in %s", err.ParameterName, err.DbInstanceID, err.AwsRegion)
 }
 
-// OptionGroupOptionSettingForDbInstanceNotFound is an error that occurs when the option setting specified is not found in the option group of the DB instance
+// OptionGroupOptionSettingForDbInstanceNotFound is an error that occurs when the option setting specified is not found in the option group of the DB instance.
+//
+//nolint:staticcheck,revive // preserving existing type name
 type OptionGroupOptionSettingForDbInstanceNotFound struct {
 	OptionName        string
 	OptionSettingName string
-	DbInstanceID      string
+	DbInstanceID      string //nolint:staticcheck,revive // preserving existing field name
 	AwsRegion         string
 }
+
+// OptionGroupOptionSettingForDBInstanceNotFound is an alias for OptionGroupOptionSettingForDbInstanceNotFound with the correct Go naming convention.
+type OptionGroupOptionSettingForDBInstanceNotFound = OptionGroupOptionSettingForDbInstanceNotFound
 
 func (err OptionGroupOptionSettingForDbInstanceNotFound) Error() string {
 	return fmt.Sprintf("Could not find a option setting %s in option name %s of database %s in %s", err.OptionName, err.OptionSettingName, err.DbInstanceID, err.AwsRegion)

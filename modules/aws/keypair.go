@@ -10,6 +10,8 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
+const rsaKeyBits = 2048
+
 // Ec2Keypair is an EC2 key pair.
 type Ec2Keypair struct {
 	*ssh.KeyPair
@@ -23,12 +25,13 @@ func CreateAndImportEC2KeyPair(t testing.TestingT, region string, name string) *
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return keyPair
 }
 
 // CreateAndImportEC2KeyPairE generates a public/private KeyPair and import it into EC2 in the given region under the given name.
 func CreateAndImportEC2KeyPairE(t testing.TestingT, region string, name string) (*Ec2Keypair, error) {
-	keyPair, err := ssh.GenerateRSAKeyPairE(t, 2048)
+	keyPair, err := ssh.GenerateRSAKeyPairE(t, rsaKeyBits)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +45,7 @@ func ImportEC2KeyPair(t testing.TestingT, region string, name string, keyPair *s
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return ec2KeyPair
 }
 
@@ -89,5 +93,6 @@ func DeleteEC2KeyPairE(t testing.TestingT, keyPair *Ec2Keypair) error {
 	}
 
 	_, err = client.DeleteKeyPair(context.Background(), params)
+
 	return err
 }

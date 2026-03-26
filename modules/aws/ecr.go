@@ -17,16 +17,19 @@ import (
 func CreateECRRepo(t testing.TestingT, region string, name string) *types.Repository {
 	repo, err := CreateECRRepoE(t, region, name)
 	require.NoError(t, err)
+
 	return repo
 }
 
 // CreateECRRepoE creates a new ECR Repository.
 func CreateECRRepoE(t testing.TestingT, region string, name string) (*types.Repository, error) {
 	client := NewECRClient(t, region)
+
 	resp, err := client.CreateRepository(context.Background(), &ecr.CreateRepositoryInput{RepositoryName: aws.String(name)})
 	if err != nil {
 		return nil, err
 	}
+
 	return resp.Repository, nil
 }
 
@@ -35,6 +38,7 @@ func CreateECRRepoE(t testing.TestingT, region string, name string) (*types.Repo
 func GetECRRepo(t testing.TestingT, region string, name string) *types.Repository {
 	repo, err := GetECRRepoE(t, region, name)
 	require.NoError(t, err)
+
 	return repo
 }
 
@@ -43,13 +47,16 @@ func GetECRRepo(t testing.TestingT, region string, name string) *types.Repositor
 func GetECRRepoE(t testing.TestingT, region string, name string) (*types.Repository, error) {
 	client := NewECRClient(t, region)
 	repositoryNames := []string{name}
+
 	resp, err := client.DescribeRepositories(context.Background(), &ecr.DescribeRepositoriesInput{RepositoryNames: repositoryNames})
 	if err != nil {
 		return nil, err
 	}
+
 	if len(resp.Repositories) != 1 {
 		return nil, errors.WithStackTrace(goerrors.New("an unexpected condition occurred. Please file an issue at github.com/gruntwork-io/terratest"))
 	}
+
 	return &resp.Repositories[0], nil
 }
 
@@ -63,10 +70,12 @@ func DeleteECRRepo(t testing.TestingT, region string, repo *types.Repository) {
 // DeleteECRRepoE will force delete the ECR repo by deleting all images prior to deleting the ECR repository.
 func DeleteECRRepoE(t testing.TestingT, region string, repo *types.Repository) error {
 	client := NewECRClient(t, region)
+
 	resp, err := client.ListImages(context.Background(), &ecr.ListImagesInput{RepositoryName: repo.RepositoryName})
 	if err != nil {
 		return err
 	}
+
 	if len(resp.ImageIds) > 0 {
 		_, err = client.BatchDeleteImage(context.Background(), &ecr.BatchDeleteImageInput{
 			RepositoryName: repo.RepositoryName,
@@ -81,6 +90,7 @@ func DeleteECRRepoE(t testing.TestingT, region string, repo *types.Repository) e
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -89,6 +99,7 @@ func DeleteECRRepoE(t testing.TestingT, region string, repo *types.Repository) e
 func NewECRClient(t testing.TestingT, region string) *ecr.Client {
 	sess, err := NewECRClientE(t, region)
 	require.NoError(t, err)
+
 	return sess
 }
 
@@ -98,6 +109,7 @@ func NewECRClientE(t testing.TestingT, region string) (*ecr.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return ecr.NewFromConfig(*sess), nil
 }
 
@@ -106,16 +118,19 @@ func NewECRClientE(t testing.TestingT, region string) (*ecr.Client, error) {
 func GetECRRepoLifecyclePolicy(t testing.TestingT, region string, repo *types.Repository) string {
 	policy, err := GetECRRepoLifecyclePolicyE(t, region, repo)
 	require.NoError(t, err)
+
 	return policy
 }
 
 // GetECRRepoLifecyclePolicyE gets the policies for the given ECR repository.
 func GetECRRepoLifecyclePolicyE(t testing.TestingT, region string, repo *types.Repository) (string, error) {
 	client := NewECRClient(t, region)
+
 	resp, err := client.GetLifecyclePolicy(context.Background(), &ecr.GetLifecyclePolicyInput{RepositoryName: repo.RepositoryName})
 	if err != nil {
 		return "", err
 	}
+
 	return *resp.LifecyclePolicyText, nil
 }
 
@@ -141,6 +156,7 @@ func PutECRRepoLifecyclePolicyE(t testing.TestingT, region string, repo *types.R
 	}
 
 	_, err = client.PutLifecyclePolicy(context.Background(), input)
+
 	return err
 }
 
@@ -149,16 +165,19 @@ func PutECRRepoLifecyclePolicyE(t testing.TestingT, region string, repo *types.R
 func GetECRRepoPolicy(t testing.TestingT, region string, repo *types.Repository) string {
 	policy, err := GetECRRepoPolicyE(t, region, repo)
 	require.NoError(t, err)
+
 	return policy
 }
 
 // GetECRRepoPolicyE gets the policies for the given ECR repository.
 func GetECRRepoPolicyE(t testing.TestingT, region string, repo *types.Repository) (string, error) {
 	client := NewECRClient(t, region)
+
 	resp, err := client.GetRepositoryPolicy(context.Background(), &ecr.GetRepositoryPolicyInput{RepositoryName: repo.RepositoryName})
 	if err != nil {
 		return "", err
 	}
+
 	return *resp.PolicyText, nil
 }
 
@@ -184,5 +203,6 @@ func PutECRRepoPolicyE(t testing.TestingT, region string, repo *types.Repository
 	}
 
 	_, err = client.SetRepositoryPolicy(context.Background(), input)
+
 	return err
 }

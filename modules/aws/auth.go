@@ -25,9 +25,9 @@ const (
 func NewAuthenticatedSession(region string) (*aws.Config, error) {
 	if assumeRoleArn, ok := os.LookupEnv(AuthAssumeRoleEnvVar); ok {
 		return NewAuthenticatedSessionFromRole(region, assumeRoleArn)
-	} else {
-		return NewAuthenticatedSessionFromDefaultCredentials(region)
 	}
+
+	return NewAuthenticatedSessionFromDefaultCredentials(region)
 }
 
 // NewAuthenticatedSessionFromDefaultCredentials gets an AWS Config, checking that the user has credentials properly configured in their environment.
@@ -52,6 +52,7 @@ func NewAuthenticatedSessionFromRole(region string, roleARN string) (*aws.Config
 	client := sts.NewFromConfig(*cfg)
 
 	roleProvider := stscreds.NewAssumeRoleProvider(client, roleARN)
+
 	retrieve, err := roleProvider.Retrieve(context.Background())
 	if err != nil {
 		return nil, CredentialsError{UnderlyingErr: err}

@@ -1,13 +1,16 @@
-package aws
+package aws_test
 
 import (
 	"testing"
 
+	aws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAccountId(t *testing.T) {
-	accountID := GetAccountId(t)
+	t.Parallel()
+
+	accountID := aws.GetAccountID(t)
 	assert.Regexp(t, "^[0-9]{12}$", accountID)
 }
 
@@ -17,7 +20,7 @@ func TestExtractAccountIdFromValidArn(t *testing.T) {
 	expectedAccountID := "123456789012"
 	arn := "arn:aws:iam::" + expectedAccountID + ":user/test"
 
-	actualAccountID, err := extractAccountIDFromARN(arn)
+	actualAccountID, err := aws.ExtractAccountIDFromARN(arn)
 	if err != nil {
 		t.Fatalf("Unexpected error while extracting account id from arn %s: %s", arn, err)
 	}
@@ -30,7 +33,7 @@ func TestExtractAccountIdFromValidArn(t *testing.T) {
 func TestExtractAccountIdFromInvalidArn(t *testing.T) {
 	t.Parallel()
 
-	_, err := extractAccountIDFromARN("invalidArn")
+	_, err := aws.ExtractAccountIDFromARN("invalidArn")
 	if err == nil {
 		t.Fatalf("Expected an error when extracting an account id from an invalid ARN, but got nil")
 	}

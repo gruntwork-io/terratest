@@ -15,12 +15,22 @@ import (
 
 // These are commonly used AMI account IDs.
 const (
-	CanonicalAccountId = "099720109477"
-	CentOsAccountId    = "679593333241"
-	AmazonAccountId    = "amazon"
+	// CanonicalAccountID is the AWS account ID for Canonical (Ubuntu).
+	CanonicalAccountID = "099720109477"
+	// CentOsAccountID is the AWS account ID for CentOS.
+	CentOsAccountID = "679593333241"
+	// AmazonAccountID is the AWS account ID (or alias) for Amazon.
+	AmazonAccountID = "amazon"
+
+	// Deprecated: Use [CanonicalAccountID] instead.
+	CanonicalAccountId = CanonicalAccountID //nolint:staticcheck,revive // preserving deprecated constant name
+	// Deprecated: Use [CentOsAccountID] instead.
+	CentOsAccountId = CentOsAccountID //nolint:staticcheck,revive // preserving deprecated constant name
+	// Deprecated: Use [AmazonAccountID] instead.
+	AmazonAccountId = AmazonAccountID //nolint:staticcheck,revive // preserving deprecated constant name
 )
 
-// DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI
+// DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI.
 func DeleteAmiAndAllSnapshots(t testing.TestingT, region string, ami string) {
 	err := DeleteAmiAndAllSnapshotsE(t, region, ami)
 	if err != nil {
@@ -28,7 +38,7 @@ func DeleteAmiAndAllSnapshots(t testing.TestingT, region string, ami string) {
 	}
 }
 
-// DeleteAmiAndAllSnapshotsE will delete the given AMI along with all EBS snapshots that backed that AMI
+// DeleteAmiAndAllSnapshotsE will delete the given AMI along with all EBS snapshots that backed that AMI.
 func DeleteAmiAndAllSnapshotsE(t testing.TestingT, region string, ami string) error {
 	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
 	if err != nil {
@@ -50,18 +60,20 @@ func DeleteAmiAndAllSnapshotsE(t testing.TestingT, region string, ami string) er
 	return nil
 }
 
-// GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI
+// GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI.
 func GetEbsSnapshotsForAmi(t testing.TestingT, region string, ami string) []string {
 	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return snapshots
 }
 
-// GetEbsSnapshotsForAmiE retrieves the EBS snapshots which back the given AMI
+// GetEbsSnapshotsForAmiE retrieves the EBS snapshots which back the given AMI.
 func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]string, error) {
 	logger.Default.Logf(t, "Retrieving EBS snapshots backing AMI %s", ami)
+
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return nil, err
@@ -77,7 +89,10 @@ func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]st
 	}
 
 	var snapshots []string
-	for _, image := range images.Images {
+
+	for i := range images.Images {
+		image := &images.Images[i]
+
 		for _, mapping := range image.BlockDeviceMappings {
 			if mapping.Ebs != nil && mapping.Ebs.SnapshotId != nil {
 				snapshots = append(snapshots, aws.ToString(mapping.Ebs.SnapshotId))
@@ -88,27 +103,29 @@ func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]st
 	return snapshots, err
 }
 
-// GetMostRecentAmiId gets the ID of the most recent AMI in the given region that has the given owner and matches the given filters. Each
-// filter should correspond to the name and values of a filter supported by DescribeImagesInput:
+// GetMostRecentAmiID gets the ID of the most recent AMI in the given region that has the given owner and matches
+// the given filters. Each filter should correspond to the name and values of a filter supported by DescribeImagesInput:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
-func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filters map[string][]string) string {
-	amiID, err := GetMostRecentAmiIdE(t, region, ownerId, filters)
+func GetMostRecentAmiID(t testing.TestingT, region string, ownerID string, filters map[string][]string) string {
+	amiID, err := GetMostRecentAmiIDE(t, region, ownerID, filters)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
-// GetMostRecentAmiIdE gets the ID of the most recent AMI in the given region that has the given owner and matches the given filters. Each
-// filter should correspond to the name and values of a filter supported by DescribeImagesInput:
+// GetMostRecentAmiIDE gets the ID of the most recent AMI in the given region that has the given owner and matches
+// the given filters. Each filter should correspond to the name and values of a filter supported by DescribeImagesInput:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
-func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filters map[string][]string) (string, error) {
+func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filters map[string][]string) (string, error) {
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return "", err
 	}
 
 	var ec2Filters []types.Filter
+
 	for name, values := range filters {
 		ec2Filters = append(ec2Filters, types.Filter{Name: aws.String(name), Values: values})
 	}
@@ -116,7 +133,7 @@ func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filt
 	input := ec2.DescribeImagesInput{
 		Filters:           ec2Filters,
 		IncludeDeprecated: aws.Bool(true),
-		Owners:            []string{ownerId},
+		Owners:            []string{ownerID},
 	}
 
 	out, err := ec2Client.DescribeImages(context.Background(), &input)
@@ -125,11 +142,26 @@ func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filt
 	}
 
 	if len(out.Images) == 0 {
-		return "", NoImagesFound{Region: region, OwnerId: ownerId, Filters: filters}
+		return "", NoImagesFound{Filters: filters, Region: region, OwnerID: ownerID}
 	}
 
 	mostRecentImage := mostRecentAMI(out.Images)
+
 	return aws.ToString(mostRecentImage.ImageId), nil
+}
+
+// Deprecated: Use [GetMostRecentAmiID] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filters map[string][]string) string {
+	return GetMostRecentAmiID(t, region, ownerId, filters)
+}
+
+// Deprecated: Use [GetMostRecentAmiIDE] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filters map[string][]string) (string, error) {
+	return GetMostRecentAmiIDE(t, region, ownerId, filters)
 }
 
 // Image sorting code borrowed from: https://github.com/hashicorp/packer/blob/7f4112ba229309cfc0ebaa10ded2abdfaf1b22c8/builder/amazon/common/step_source_ami_info.go
@@ -140,6 +172,7 @@ func (a imageSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a imageSort) Less(i, j int) bool {
 	iTime, _ := time.Parse(time.RFC3339, *a[i].CreationDate)
 	jTime, _ := time.Parse(time.RFC3339, *a[j].CreationDate)
+
 	return iTime.Unix() < jTime.Unix()
 }
 
@@ -147,6 +180,7 @@ func (a imageSort) Less(i, j int) bool {
 func mostRecentAMI(images []types.Image) types.Image {
 	sortedImages := images
 	sort.Sort(imageSort(sortedImages))
+
 	return sortedImages[len(sortedImages)-1]
 }
 
@@ -156,6 +190,7 @@ func GetUbuntu1404Ami(t testing.TestingT, region string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
@@ -169,7 +204,7 @@ func GetUbuntu1404AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
 }
 
 // GetUbuntu1604Ami gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
@@ -178,6 +213,7 @@ func GetUbuntu1604Ami(t testing.TestingT, region string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
@@ -191,7 +227,7 @@ func GetUbuntu1604AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
 }
 
 // GetUbuntu2004Ami gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
@@ -200,6 +236,7 @@ func GetUbuntu2004Ami(t testing.TestingT, region string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
@@ -213,7 +250,7 @@ func GetUbuntu2004AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
 }
 
 // GetUbuntu2204Ami gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
@@ -222,6 +259,7 @@ func GetUbuntu2204Ami(t testing.TestingT, region string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
@@ -235,7 +273,7 @@ func GetUbuntu2204AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIdE(t, region, CanonicalAccountId, filters)
+	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
 }
 
 // GetCentos7Ami returns a CentOS 7 public AMI from the given region.
@@ -246,6 +284,7 @@ func GetCentos7Ami(t testing.TestingT, region string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
@@ -261,7 +300,7 @@ func GetCentos7AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIdE(t, region, CentOsAccountId, filters)
+	return GetMostRecentAmiIDE(t, region, CentOsAccountID, filters)
 }
 
 // GetAmazonLinuxAmi returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
@@ -270,6 +309,7 @@ func GetAmazonLinuxAmi(t testing.TestingT, region string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
@@ -283,7 +323,7 @@ func GetAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIdE(t, region, AmazonAccountId, filters)
+	return GetMostRecentAmiIDE(t, region, AmazonAccountID, filters)
 }
 
 // GetEcsOptimizedAmazonLinuxAmi returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
@@ -292,6 +332,7 @@ func GetEcsOptimizedAmazonLinuxAmi(t testing.TestingT, region string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return amiID
 }
 
@@ -305,16 +346,16 @@ func GetEcsOptimizedAmazonLinuxAmiE(t testing.TestingT, region string) (string, 
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIdE(t, region, AmazonAccountId, filters)
+	return GetMostRecentAmiIDE(t, region, AmazonAccountID, filters)
 }
 
 // NoImagesFound is an error that occurs if no images were found.
 type NoImagesFound struct {
-	Region  string
-	OwnerId string
 	Filters map[string][]string
+	Region  string
+	OwnerID string //nolint:staticcheck,revive // preserving existing field name
 }
 
 func (err NoImagesFound) Error() string {
-	return fmt.Sprintf("No AMIs found in %s for owner ID %s and filters: %v", err.Region, err.OwnerId, err.Filters)
+	return fmt.Sprintf("No AMIs found in %s for owner ID %s and filters: %v", err.Region, err.OwnerID, err.Filters)
 }

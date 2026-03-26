@@ -14,12 +14,16 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
+// sqsMaxWaitTimeSeconds is the maximum number of seconds to wait for a message on a single SQS receive call.
+const sqsMaxWaitTimeSeconds = 20
+
 // CreateRandomQueue creates a new SQS queue with a random name that starts with the given prefix and return the queue URL.
 func CreateRandomQueue(t testing.TestingT, awsRegion string, prefix string) string {
 	url, err := CreateRandomQueueE(t, awsRegion, prefix)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return url
 }
 
@@ -42,7 +46,6 @@ func CreateRandomQueueE(t testing.TestingT, awsRegion string, prefix string) (st
 	queue, err := sqsClient.CreateQueue(context.Background(), &sqs.CreateQueueInput{
 		QueueName: aws.String(channelName),
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -56,6 +59,7 @@ func CreateRandomFifoQueue(t testing.TestingT, awsRegion string, prefix string) 
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return url
 }
 
@@ -82,7 +86,6 @@ func CreateRandomFifoQueueE(t testing.TestingT, awsRegion string, prefix string)
 			"FifoQueue":                 "true",
 		},
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -160,12 +163,13 @@ func SendMessageToQueueE(t testing.TestingT, awsRegion string, queueURL string, 
 		MessageBody: &message,
 		QueueUrl:    &queueURL,
 	})
-
 	if err != nil {
 		if strings.Contains(err.Error(), "AWS.SimpleQueueService.NonExistentQueue") {
 			logger.Default.Logf(t, "WARN: Client has stopped listening on queue %s", queueURL)
+
 			return nil
 		}
+
 		return err
 	}
 
@@ -196,12 +200,13 @@ func SendMessageToFifoQueueE(t testing.TestingT, awsRegion string, queueURL stri
 		QueueUrl:       &queueURL,
 		MessageGroupId: &messageGroupID,
 	})
-
 	if err != nil {
 		if strings.Contains(err.Error(), "AWS.SimpleQueueService.NonExistentQueue") {
 			logger.Default.Logf(t, "WARN: Client has stopped listening on queue %s", queueURL)
+
 			return nil
 		}
+
 		return err
 	}
 
@@ -212,9 +217,9 @@ func SendMessageToFifoQueueE(t testing.TestingT, awsRegion string, queueURL stri
 
 // QueueMessageResponse contains a queue message.
 type QueueMessageResponse struct {
+	Error         error
 	ReceiptHandle string
 	MessageBody   string
-	Error         error
 }
 
 // WaitForQueueMessage waits to receive a message from on the queueURL. Since the API only allows us to wait a max 20 seconds for a new
@@ -227,13 +232,15 @@ func WaitForQueueMessage(t testing.TestingT, awsRegion string, queueURL string, 
 
 	cycles := timeout
 	cycleLength := 1
-	if timeout >= 20 {
-		cycleLength = 20
+
+	if timeout >= sqsMaxWaitTimeSeconds {
+		cycleLength = sqsMaxWaitTimeSeconds
 		cycles = timeout / cycleLength
 	}
 
 	for i := 0; i < cycles; i++ {
 		logger.Default.Logf(t, "Waiting for message on %s (%ss)", queueURL, strconv.Itoa(i*cycleLength))
+
 		result, err := sqsClient.ReceiveMessage(context.Background(), &sqs.ReceiveMessageInput{
 			QueueUrl:                    aws.String(queueURL),
 			MessageSystemAttributeNames: []types.MessageSystemAttributeName{types.MessageSystemAttributeNameSentTimestamp},
@@ -241,13 +248,13 @@ func WaitForQueueMessage(t testing.TestingT, awsRegion string, queueURL string, 
 			MessageAttributeNames:       []string{"All"},
 			WaitTimeSeconds:             int32(cycleLength),
 		})
-
 		if err != nil {
 			return QueueMessageResponse{Error: err}
 		}
 
 		if len(result.Messages) > 0 {
 			logger.Default.Logf(t, "Message %s received on %s", *result.Messages[0].MessageId, queueURL)
+
 			return QueueMessageResponse{ReceiptHandle: *result.Messages[0].ReceiptHandle, MessageBody: *result.Messages[0].Body}
 		}
 	}
@@ -261,6 +268,7 @@ func NewSqsClient(t testing.TestingT, region string) *sqs.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 
@@ -276,7 +284,7 @@ func NewSqsClientE(t testing.TestingT, region string) (*sqs.Client, error) {
 
 // ReceiveMessageTimeout is an error that occurs if receiving a message times out.
 type ReceiveMessageTimeout struct {
-	QueueUrl   string
+	QueueUrl   string //nolint:staticcheck,revive // preserving existing field name
 	TimeoutSec int
 }
 

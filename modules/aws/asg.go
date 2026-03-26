@@ -14,6 +14,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
+// AsgCapacityInfo holds capacity information about an Auto Scaling Group.
 type AsgCapacityInfo struct {
 	MinCapacity     int64
 	MaxCapacity     int64
@@ -25,6 +26,7 @@ type AsgCapacityInfo struct {
 func GetCapacityInfoForAsg(t testing.TestingT, asgName string, awsRegion string) AsgCapacityInfo {
 	capacityInfo, err := GetCapacityInfoForAsgE(t, asgName, awsRegion)
 	require.NoError(t, err)
+
 	return capacityInfo
 }
 
@@ -36,20 +38,24 @@ func GetCapacityInfoForAsgE(t testing.TestingT, asgName string, awsRegion string
 	}
 
 	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []string{asgName}}
+
 	output, err := asgClient.DescribeAutoScalingGroups(context.Background(), &input)
 	if err != nil {
 		return AsgCapacityInfo{}, err
 	}
+
 	groups := output.AutoScalingGroups
 	if len(groups) == 0 {
 		return AsgCapacityInfo{}, NewNotFoundError("ASG", asgName, awsRegion)
 	}
+
 	capacityInfo := AsgCapacityInfo{
 		MinCapacity:     int64(*groups[0].MinSize),
 		MaxCapacity:     int64(*groups[0].MaxSize),
 		DesiredCapacity: int64(*groups[0].DesiredCapacity),
 		CurrentCapacity: int64(len(groups[0].Instances)),
 	}
+
 	return capacityInfo, nil
 }
 
@@ -59,6 +65,7 @@ func GetInstanceIdsForAsg(t testing.TestingT, asgName string, awsRegion string) 
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return ids
 }
 
@@ -70,14 +77,16 @@ func GetInstanceIdsForAsgE(t testing.TestingT, asgName string, awsRegion string)
 	}
 
 	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []string{asgName}}
+
 	output, err := asgClient.DescribeAutoScalingGroups(context.Background(), &input)
 	if err != nil {
 		return nil, err
 	}
 
 	var instanceIDs []string
-	for _, asg := range output.AutoScalingGroups {
-		for _, instance := range asg.Instances {
+
+	for i := range output.AutoScalingGroups {
+		for _, instance := range output.AutoScalingGroups[i].Instances {
 			instanceIDs = append(instanceIDs, aws.ToString(instance.InstanceId))
 		}
 	}
@@ -115,13 +124,16 @@ func WaitForCapacityE(
 			if err != nil {
 				return "", err
 			}
+
 			if capacityInfo.CurrentCapacity != capacityInfo.DesiredCapacity {
 				return "", NewAsgCapacityNotMetError(asgName, capacityInfo.DesiredCapacity, capacityInfo.CurrentCapacity)
 			}
+
 			return fmt.Sprintf("ASG %s is now at desired capacity %d", asgName, capacityInfo.DesiredCapacity), nil
 		},
 	)
 	logger.Default.Logf(t, "%s", msg)
+
 	return err
 }
 
@@ -131,6 +143,7 @@ func NewAsgClient(t testing.TestingT, region string) *autoscaling.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 

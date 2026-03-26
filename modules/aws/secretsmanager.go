@@ -14,6 +14,7 @@ import (
 func CreateSecretStringWithDefaultKey(t testing.TestingT, awsRegion, description, name, secretString string) string {
 	arn, err := CreateSecretStringWithDefaultKeyE(t, awsRegion, description, name, secretString)
 	require.NoError(t, err)
+
 	return arn
 }
 
@@ -28,7 +29,6 @@ func CreateSecretStringWithDefaultKeyE(t testing.TestingT, awsRegion, descriptio
 		Name:         aws.String(name),
 		SecretString: aws.String(secretString),
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -40,6 +40,7 @@ func CreateSecretStringWithDefaultKeyE(t testing.TestingT, awsRegion, descriptio
 func GetSecretValue(t testing.TestingT, awsRegion, id string) string {
 	secret, err := GetSecretValueE(t, awsRegion, id)
 	require.NoError(t, err)
+
 	return secret
 }
 
@@ -103,6 +104,7 @@ func DeleteSecretE(t testing.TestingT, awsRegion, id string, forceDelete bool) e
 func NewSecretsManagerClient(t testing.TestingT, region string) *secretsmanager.Client {
 	client, err := NewSecretsManagerClientE(t, region)
 	require.NoError(t, err)
+
 	return client
 }
 
