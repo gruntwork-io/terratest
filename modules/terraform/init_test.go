@@ -54,7 +54,7 @@ func TestInitBackendConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			testFolder, err := files.CopyTerraformFolderToTemp(testFolderPath, t.Name())
+			testFolder, err := files.CopyTerraformFolderToTemp(testFolderPath, tt.name)
 			require.NoError(t, err)
 
 			options, expectedPath := tt.setup(t, testFolder)
