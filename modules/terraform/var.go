@@ -5,17 +5,17 @@ type Var interface {
 	internal()
 }
 
-func VarInline(name string, value interface{}) Var {
+func VarInline(name string, value any) Var {
 	return varInline{name: name, value: value}
 }
 
 type varInline struct {
+	value any
 	name  string
-	value interface{}
 }
 
 func (vi varInline) Args() []string {
-	m := map[string]interface{}{vi.name: vi.value}
+	m := map[string]any{vi.name: vi.value}
 	return formatTerraformArgs(m, "-var", true, false)
 }
 func (vi varInline) internal() {}
@@ -29,4 +29,4 @@ type varFile string
 func (vf varFile) Args() []string {
 	return []string{"-var-file", string(vf)}
 }
-func (vi varFile) internal() {}
+func (vf varFile) internal() {}

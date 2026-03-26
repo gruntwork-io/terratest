@@ -1,10 +1,11 @@
-package terraform
+package terraform_test
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,11 +18,11 @@ func TestWorkspaceNew(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	out := WorkspaceSelectOrNew(t, options, "terratest")
+	out := terraform.WorkspaceSelectOrNew(t, options, "terratest")
 
 	assert.Equal(t, "terratest", out)
 }
@@ -34,14 +35,14 @@ func TestWorkspaceIllegalName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	out, err := WorkspaceSelectOrNewE(t, options, "###@@@&&&")
+	out, err := terraform.WorkspaceSelectOrNewE(t, options, "###@@@&&&")
 
-	assert.Error(t, err)
-	assert.Equal(t, "", out, "%q should be an empty string", out)
+	require.Error(t, err)
+	assert.Empty(t, out, "%q should be an empty string", out)
 }
 
 func TestWorkspaceSelect(t *testing.T) {
@@ -52,14 +53,14 @@ func TestWorkspaceSelect(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	out := WorkspaceSelectOrNew(t, options, "terratest")
+	out := terraform.WorkspaceSelectOrNew(t, options, "terratest")
 	assert.Equal(t, "terratest", out)
 
-	out = WorkspaceSelectOrNew(t, options, "default")
+	out = terraform.WorkspaceSelectOrNew(t, options, "default")
 	assert.Equal(t, "default", out)
 }
 
@@ -71,12 +72,12 @@ func TestWorkspaceApply(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	WorkspaceSelectOrNew(t, options, "Terratest")
-	out := InitAndApply(t, options)
+	terraform.WorkspaceSelectOrNew(t, options, "Terratest")
+	out := terraform.InitAndApply(t, options)
 
 	assert.Contains(t, out, "Hello, Terratest")
 }
@@ -89,21 +90,21 @@ func TestIsExistingWorkspace(t *testing.T) {
 		name     string
 		expected bool
 	}{
-		{"  default\n* foo\n", "default", true},
-		{"* default\n  foo\n", "default", true},
-		{"  foo\n* default\n", "default", true},
-		{"* foo\n  default\n", "default", true},
-		{"  foo\n* bar\n", "default", false},
-		{"* foo\n  bar\n", "default", false},
-		{"  default\n* foobar\n", "foo", false},
-		{"* default\n  foobar\n", "foo", false},
-		{"  default\n* foo\n", "foobar", false},
-		{"* default\n  foo\n", "foobar", false},
-		{"* default\n  foo\n", "foo", true},
+		{out: "  default\n* foo\n", name: "default", expected: true},
+		{out: "* default\n  foo\n", name: "default", expected: true},
+		{out: "  foo\n* default\n", name: "default", expected: true},
+		{out: "* foo\n  default\n", name: "default", expected: true},
+		{out: "  foo\n* bar\n", name: "default", expected: false},
+		{out: "* foo\n  bar\n", name: "default", expected: false},
+		{out: "  default\n* foobar\n", name: "foo", expected: false},
+		{out: "* default\n  foobar\n", name: "foo", expected: false},
+		{out: "  default\n* foo\n", name: "foobar", expected: false},
+		{out: "* default\n  foo\n", name: "foobar", expected: false},
+		{out: "* default\n  foo\n", name: "foo", expected: true},
 	}
 
 	for _, testCase := range testCases {
-		actual := isExistingWorkspace(testCase.out, testCase.name)
+		actual := terraform.IsExistingWorkspace(testCase.out, testCase.name)
 		assert.Equal(t, testCase.expected, actual, "Out: %q, Name: %q", testCase.out, testCase.name)
 	}
 }
@@ -113,17 +114,17 @@ func TestWorkspaceDeleteE(t *testing.T) {
 
 	// state describes an expected status when a given testCase begins
 	type state struct {
-		workspaces []string
 		current    string
+		workspaces []string
 	}
 
 	// testCase describes a named test case with a state, args and expcted results
 	type testCase struct {
+		expectedError     error
 		name              string
-		initialState      state
 		toDeleteWorkspace string
 		expectedCurrent   string
-		expectedError     error
+		initialState      state
 	}
 
 	testCases := []testCase{
@@ -155,7 +156,7 @@ func TestWorkspaceDeleteE(t *testing.T) {
 			},
 			toDeleteWorkspace: "hellothere",
 			expectedCurrent:   "staging",
-			expectedError:     WorkspaceDoesNotExist("hellothere"),
+			expectedError:     terraform.WorkspaceDoesNotExist("hellothere"),
 		},
 		{
 			name: "delete the default workspace triggers an error",
@@ -165,7 +166,7 @@ func TestWorkspaceDeleteE(t *testing.T) {
 			},
 			toDeleteWorkspace: "default",
 			expectedCurrent:   "staging",
-			expectedError:     &UnsupportedDefaultWorkspaceDeletion{},
+			expectedError:     &terraform.UnsupportedDefaultWorkspaceDeletion{},
 		},
 	}
 
@@ -173,24 +174,26 @@ func TestWorkspaceDeleteE(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
+
 			testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-workspace", testCase.name)
 			require.NoError(t, err)
 
-			options := &Options{
+			options := &terraform.Options{
 				TerraformDir: testFolder,
 			}
 
 			// Set up pre-existing environment based on test case description
 			for _, existingWorkspace := range testCase.initialState.workspaces {
-				_, err = RunTerraformCommandE(t, options, "workspace", "new", existingWorkspace)
+				_, err = terraform.RunTerraformCommandE(t, options, "workspace", "new", existingWorkspace)
 				require.NoError(t, err)
 			}
+
 			// Switch to the specified workspace
-			_, err = RunTerraformCommandE(t, options, "workspace", "select", testCase.initialState.current)
+			_, err = terraform.RunTerraformCommandE(t, options, "workspace", "select", testCase.initialState.current)
 			require.NoError(t, err)
 
 			// Testing time, wooohoooo
-			gotResult, gotErr := WorkspaceDeleteE(t, options, testCase.toDeleteWorkspace)
+			gotResult, gotErr := terraform.WorkspaceDeleteE(t, options, testCase.toDeleteWorkspace)
 
 			// Check for errors
 			if testCase.expectedError != nil {
@@ -198,12 +201,11 @@ func TestWorkspaceDeleteE(t *testing.T) {
 					t.Errorf("expected error: %v, got error: %v", testCase.expectedError, gotErr)
 				}
 			} else {
-				assert.NoError(t, gotErr)
+				require.NoError(t, gotErr)
 				// Check for results
 				assert.Equal(t, testCase.expectedCurrent, gotResult)
-				assert.False(t, isExistingWorkspace(RunTerraformCommand(t, options, "workspace", "list"), testCase.toDeleteWorkspace))
+				assert.False(t, terraform.IsExistingWorkspace(terraform.RunTerraformCommand(t, options, "workspace", "list"), testCase.toDeleteWorkspace))
 			}
 		})
-
 	}
 }

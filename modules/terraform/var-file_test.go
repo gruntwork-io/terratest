@@ -1,4 +1,4 @@
-package terraform
+package terraform_test
 
 import (
 	"fmt"
@@ -6,11 +6,14 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetVariablesFromVarFilesAsString(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 
 	testHcl := []byte(`
 		aws_region     = "us-east-2"
@@ -22,23 +25,24 @@ func TestGetVariablesFromVarFilesAsString(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	stringVal := GetVariableAsStringFromVarFile(t, randomFileName, "aws_region")
+	stringVal := terraform.GetVariableAsStringFromVarFile(t, randomFileName, "aws_region")
 
-	boolString := GetVariableAsStringFromVarFile(t, randomFileName, "boolean_type")
+	boolString := terraform.GetVariableAsStringFromVarFile(t, randomFileName, "boolean_type")
 
-	numString := GetVariableAsStringFromVarFile(t, randomFileName, "number_type")
+	numString := terraform.GetVariableAsStringFromVarFile(t, randomFileName, "number_type")
 
 	require.Equal(t, "us-east-2", stringVal)
 	require.Equal(t, "true", boolString)
 	require.Equal(t, "2", numString)
-
 }
 
 func TestGetVariablesFromVarFilesAsStringKeyDoesNotExist(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 
 	testHcl := []byte(`
 		aws_region     = "us-east-2"
@@ -48,16 +52,18 @@ func TestGetVariablesFromVarFilesAsStringKeyDoesNotExist(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsStringFromVarFileE(t, randomFileName, "badkey")
+	_, err := terraform.GetVariableAsStringFromVarFileE(t, randomFileName, "badkey")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsMapFromVarFile(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 	expected := make(map[string]string)
 	expected["foo"] = "bar"
 
@@ -69,15 +75,17 @@ func TestGetVariableAsMapFromVarFile(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	val := GetVariableAsMapFromVarFile(t, randomFileName, "tags")
+	val := terraform.GetVariableAsMapFromVarFile(t, randomFileName, "tags")
 	require.Equal(t, expected, val)
 }
 
 func TestGetVariableAsMapFromVarFileNotMap(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 
 	testHcl := []byte(`
 		aws_region     = "us-east-2"
@@ -87,16 +95,18 @@ func TestGetVariableAsMapFromVarFileNotMap(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsMapFromVarFileE(t, randomFileName, "aws_region")
+	_, err := terraform.GetVariableAsMapFromVarFileE(t, randomFileName, "aws_region")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsMapFromVarFileKeyDoesNotExist(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 
 	testHcl := []byte(`
 		aws_region     = "us-east-2"
@@ -106,16 +116,18 @@ func TestGetVariableAsMapFromVarFileKeyDoesNotExist(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsMapFromVarFileE(t, randomFileName, "badkey")
+	_, err := terraform.GetVariableAsMapFromVarFileE(t, randomFileName, "badkey")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsListFromVarFile(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 	expected := []string{"item1"}
 
 	testHcl := []byte(`
@@ -126,16 +138,18 @@ func TestGetVariableAsListFromVarFile(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	val := GetVariableAsListFromVarFile(t, randomFileName, "list")
+	val := terraform.GetVariableAsListFromVarFile(t, randomFileName, "list")
 
 	require.Equal(t, expected, val)
 }
 
 func TestGetVariableAsListNotList(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 
 	testHcl := []byte(`
 		aws_region     = "us-east-2"
@@ -145,16 +159,18 @@ func TestGetVariableAsListNotList(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsListFromVarFileE(t, randomFileName, "tags")
+	_, err := terraform.GetVariableAsListFromVarFileE(t, randomFileName, "tags")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsListKeyDoesNotExist(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 
 	testHcl := []byte(`
 		aws_region     = "us-east-2"
@@ -164,29 +180,36 @@ func TestGetVariableAsListKeyDoesNotExist(t *testing.T) {
 		}
 		list = ["item1"]`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsListFromVarFileE(t, randomFileName, "badkey")
+	_, err := terraform.GetVariableAsListFromVarFileE(t, randomFileName, "badkey")
 
 	require.Error(t, err)
 }
+
 func TestGetAllVariablesFromVarFileEFileDoesNotExist(t *testing.T) {
-	var variables map[string]interface{}
-	err := GetAllVariablesFromVarFileE(t, "filea", &variables)
+	t.Parallel()
+
+	var variables map[string]any
+
+	err := terraform.GetAllVariablesFromVarFileE(t, "filea", &variables)
 	require.Equal(t, "open filea: no such file or directory", err.Error())
 }
 
 func TestGetAllVariablesFromVarFileBadFile(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 	testHcl := []byte(`
 		thiswillnotwork`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	var variables map[string]interface{}
-	err := GetAllVariablesFromVarFileE(t, randomFileName, &variables)
+	var variables map[string]any
+
+	err := terraform.GetAllVariablesFromVarFileE(t, randomFileName, &variables)
 	require.Error(t, err)
 
 	// HCL library could change their error string, so we are only testing the error string contains what we add to it
@@ -194,43 +217,51 @@ func TestGetAllVariablesFromVarFileBadFile(t *testing.T) {
 }
 
 func TestGetAllVariablesFromVarFile(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 	testHcl := []byte(`
 	aws_region     = "us-east-2"
 	`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
-	var variables map[string]interface{}
-	err := GetAllVariablesFromVarFileE(t, randomFileName, &variables)
+	var variables map[string]any
+
+	err := terraform.GetAllVariablesFromVarFileE(t, randomFileName, &variables)
 	require.NoError(t, err)
 
-	expected := make(map[string]interface{})
+	expected := make(map[string]any)
 	expected["aws_region"] = "us-east-2"
 
 	require.Equal(t, expected, variables)
 }
 
 func TestGetAllVariablesFromVarFileStructOut(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars", random.UniqueID())
 	testHcl := []byte(`
 	aws_region     = "us-east-2"
 	`)
 
-	WriteFile(t, randomFileName, testHcl)
+	writeFile(t, randomFileName, testHcl)
 	defer os.Remove(randomFileName)
 
 	var region struct {
 		AwsRegion string `cty:"aws_region"`
 	}
-	err := GetAllVariablesFromVarFileE(t, randomFileName, &region)
+
+	err := terraform.GetAllVariablesFromVarFileE(t, randomFileName, &region)
 	require.NoError(t, err)
 	require.Equal(t, "us-east-2", region.AwsRegion)
 }
 
 func TestGetVariablesFromVarFilesAsStringJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 
 	testJSON := []byte(`
 		{
@@ -244,23 +275,24 @@ func TestGetVariablesFromVarFilesAsStringJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	stringVal := GetVariableAsStringFromVarFile(t, randomFileName, "aws_region")
+	stringVal := terraform.GetVariableAsStringFromVarFile(t, randomFileName, "aws_region")
 
-	boolString := GetVariableAsStringFromVarFile(t, randomFileName, "boolean_type")
+	boolString := terraform.GetVariableAsStringFromVarFile(t, randomFileName, "boolean_type")
 
-	numString := GetVariableAsStringFromVarFile(t, randomFileName, "number_type")
+	numString := terraform.GetVariableAsStringFromVarFile(t, randomFileName, "number_type")
 
 	require.Equal(t, "us-east-2", stringVal)
 	require.Equal(t, "true", boolString)
 	require.Equal(t, "2", numString)
-
 }
 
 func TestGetVariablesFromVarFilesAsStringKeyDoesNotExistJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 
 	testJSON := []byte(`
 		{
@@ -272,16 +304,18 @@ func TestGetVariablesFromVarFilesAsStringKeyDoesNotExistJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsStringFromVarFileE(t, randomFileName, "badkey")
+	_, err := terraform.GetVariableAsStringFromVarFileE(t, randomFileName, "badkey")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsMapFromVarFileJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 	expected := make(map[string]string)
 	expected["foo"] = "bar"
 
@@ -295,15 +329,17 @@ func TestGetVariableAsMapFromVarFileJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	val := GetVariableAsMapFromVarFile(t, randomFileName, "tags")
+	val := terraform.GetVariableAsMapFromVarFile(t, randomFileName, "tags")
 	require.Equal(t, expected, val)
 }
 
 func TestGetVariableAsMapFromVarFileNotMapJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 
 	testJSON := []byte(`
 		{
@@ -315,16 +351,18 @@ func TestGetVariableAsMapFromVarFileNotMapJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsMapFromVarFileE(t, randomFileName, "aws_region")
+	_, err := terraform.GetVariableAsMapFromVarFileE(t, randomFileName, "aws_region")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsMapFromVarFileKeyDoesNotExistJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 
 	testJSON := []byte(`
 		{
@@ -336,16 +374,18 @@ func TestGetVariableAsMapFromVarFileKeyDoesNotExistJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsMapFromVarFileE(t, randomFileName, "badkey")
+	_, err := terraform.GetVariableAsMapFromVarFileE(t, randomFileName, "badkey")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsListFromVarFileJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 	expected := []string{"item1"}
 
 	testJSON := []byte(`
@@ -358,16 +398,18 @@ func TestGetVariableAsListFromVarFileJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	val := GetVariableAsListFromVarFile(t, randomFileName, "list")
+	val := terraform.GetVariableAsListFromVarFile(t, randomFileName, "list")
 
 	require.Equal(t, expected, val)
 }
 
 func TestGetVariableAsListNotListJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 
 	testJSON := []byte(`
 		{
@@ -379,16 +421,18 @@ func TestGetVariableAsListNotListJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsListFromVarFileE(t, randomFileName, "tags")
+	_, err := terraform.GetVariableAsListFromVarFileE(t, randomFileName, "tags")
 
 	require.Error(t, err)
 }
 
 func TestGetVariableAsListKeyDoesNotExistJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 
 	testJSON := []byte(`
 		{
@@ -400,26 +444,29 @@ func TestGetVariableAsListKeyDoesNotExistJSON(t *testing.T) {
 			"list": ["item1"]
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	_, err := GetVariableAsListFromVarFileE(t, randomFileName, "badkey")
+	_, err := terraform.GetVariableAsListFromVarFileE(t, randomFileName, "badkey")
 
 	require.Error(t, err)
 }
 
 func TestGetAllVariablesFromVarFileBadFileJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 	testJSON := []byte(`
 		{
 			thiswillnotwork
 		}`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	var variables map[string]interface{}
-	err := GetAllVariablesFromVarFileE(t, randomFileName, &variables)
+	var variables map[string]any
+
+	err := terraform.GetAllVariablesFromVarFileE(t, randomFileName, &variables)
 	require.Error(t, err)
 
 	// HCL library could change their error string, so we are only testing the error string contains what we add to it
@@ -427,49 +474,56 @@ func TestGetAllVariablesFromVarFileBadFileJSON(t *testing.T) {
 }
 
 func TestGetAllVariablesFromVarFileJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 	testJSON := []byte(`
 	{
 		"aws_region": "us-east-2"
 	}
 	`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
-	var variables map[string]interface{}
-	err := GetAllVariablesFromVarFileE(t, randomFileName, &variables)
+	var variables map[string]any
+
+	err := terraform.GetAllVariablesFromVarFileE(t, randomFileName, &variables)
 	require.NoError(t, err)
 
-	expected := make(map[string]interface{})
+	expected := make(map[string]any)
 	expected["aws_region"] = "us-east-2"
 
 	require.Equal(t, expected, variables)
 }
 
 func TestGetAllVariablesFromVarFileStructOutJSON(t *testing.T) {
-	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueId())
+	t.Parallel()
+
+	randomFileName := fmt.Sprintf("./%s.tfvars.json", random.UniqueID())
 	testJSON := []byte(`
 	{
 		"aws_region": "us-east-2"
 	}
 	`)
 
-	WriteFile(t, randomFileName, testJSON)
+	writeFile(t, randomFileName, testJSON)
 	defer os.Remove(randomFileName)
 
 	var region struct {
 		AwsRegion string `cty:"aws_region"`
 	}
-	err := GetAllVariablesFromVarFileE(t, randomFileName, &region)
+
+	err := terraform.GetAllVariablesFromVarFileE(t, randomFileName, &region)
 	require.NoError(t, err)
 	require.Equal(t, "us-east-2", region.AwsRegion)
 }
 
-// Helper function to write a file to the filesystem
-// Will immediately fail the test if it could not write the file
-func WriteFile(t *testing.T, fileName string, bytes []byte) {
-	err := os.WriteFile(fileName, bytes, 0644)
+// writeFile is a helper function to write a file to the filesystem.
+// It will immediately fail the test if it could not write the file.
+func writeFile(t *testing.T, fileName string, bytes []byte) {
+	t.Helper()
 
+	err := os.WriteFile(fileName, bytes, 0644)
 	require.NoError(t, err)
 }

@@ -1,9 +1,10 @@
-package terraform
+package terraform_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,17 +16,17 @@ func TestFormatTerraformPlanFileAsArgs(t *testing.T) {
 		out      string
 		expected []string
 	}{
-		{"plan", "/some/plan/output", []string{"-out=/some/plan/output"}},
-		{"plan", "", nil},
-		{"apply", "/some/plan/output", []string{"/some/plan/output"}},
-		{"apply", "", nil},
-		{"show", "/some/plan/output", []string{"/some/plan/output"}},
-		{"show", "", nil},
+		{command: "plan", out: "/some/plan/output", expected: []string{"-out=/some/plan/output"}},
+		{command: "plan", out: "", expected: nil},
+		{command: "apply", out: "/some/plan/output", expected: []string{"/some/plan/output"}},
+		{command: "apply", out: "", expected: nil},
+		{command: "show", out: "/some/plan/output", expected: []string{"/some/plan/output"}},
+		{command: "show", out: "", expected: nil},
 	}
 
 	for _, testCase := range testCases {
-		checkResultWithRetry(t, 100, testCase.expected, fmt.Sprintf("FormatTerraformPlanFileAsArgs(%v)", testCase.out), func() interface{} {
-			return FormatTerraformPlanFileAsArg(testCase.command, testCase.out)
+		checkResultWithRetry(t, 100, testCase.expected, fmt.Sprintf("FormatTerraformPlanFileAsArgs(%v)", testCase.out), func() any {
+			return terraform.FormatTerraformPlanFileAsArg(testCase.command, testCase.out)
 		})
 	}
 }
@@ -34,25 +35,25 @@ func TestFormatTerraformVarsAsArgs(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		vars     map[string]interface{}
+		vars     map[string]any
 		expected []string
 	}{
-		{map[string]interface{}{}, nil},
-		{map[string]interface{}{"foo": "bar"}, []string{"-var", "foo=bar"}},
-		{map[string]interface{}{"foo": 123}, []string{"-var", "foo=123"}},
-		{map[string]interface{}{"foo": true}, []string{"-var", "foo=true"}},
-		{map[string]interface{}{"foo": nil}, []string{"-var", "foo=null"}},
-		{map[string]interface{}{"foo": []int{1, 2, 3}}, []string{"-var", "foo=[1, 2, 3]"}},
-		{map[string]interface{}{"foo": map[string]string{"baz": "blah"}}, []string{"-var", "foo={\"baz\" = \"blah\"}"}},
+		{vars: map[string]any{}, expected: nil},
+		{vars: map[string]any{"foo": "bar"}, expected: []string{"-var", "foo=bar"}},
+		{vars: map[string]any{"foo": 123}, expected: []string{"-var", "foo=123"}},
+		{vars: map[string]any{"foo": true}, expected: []string{"-var", "foo=true"}},
+		{vars: map[string]any{"foo": nil}, expected: []string{"-var", "foo=null"}},
+		{vars: map[string]any{"foo": []int{1, 2, 3}}, expected: []string{"-var", "foo=[1, 2, 3]"}},
+		{vars: map[string]any{"foo": map[string]string{"baz": "blah"}}, expected: []string{"-var", "foo={\"baz\" = \"blah\"}"}},
 		{
-			map[string]interface{}{"str": "bar", "int": -1, "bool": false, "list": []string{"foo", "bar", "baz"}, "map": map[string]int{"foo": 0}},
-			[]string{"-var", "str=bar", "-var", "int=-1", "-var", "bool=false", "-var", "list=[\"foo\", \"bar\", \"baz\"]", "-var", "map={\"foo\" = 0}"},
+			vars:     map[string]any{"str": "bar", "int": -1, "bool": false, "list": []string{"foo", "bar", "baz"}, "map": map[string]int{"foo": 0}},
+			expected: []string{"-var", "str=bar", "-var", "int=-1", "-var", "bool=false", "-var", "list=[\"foo\", \"bar\", \"baz\"]", "-var", "map={\"foo\" = 0}"},
 		},
 	}
 
 	for _, testCase := range testCases {
-		checkResultWithRetry(t, 100, testCase.expected, fmt.Sprintf("FormatTerraformVarsAsArgs(%v)", testCase.vars), func() interface{} {
-			return FormatTerraformVarsAsArgs(testCase.vars)
+		checkResultWithRetry(t, 100, testCase.expected, fmt.Sprintf("FormatTerraformVarsAsArgs(%v)", testCase.vars), func() any {
+			return terraform.FormatTerraformVarsAsArgs(testCase.vars)
 		})
 	}
 }
@@ -77,12 +78,15 @@ func TestFormatTerraformVarsAsArgs(t *testing.T) {
 //
 // Isn't it great that Go's designers built features into the language to prevent bugs that now force every Go
 // developer to write thousands of lines of extra code like this, which is of course likely to contain bugs itself?
-func checkResultWithRetry(t *testing.T, maxRetries int, expectedValue interface{}, description string, generateValue func() interface{}) {
+func checkResultWithRetry(t *testing.T, maxRetries int, expectedValue any, description string, generateValue func() any) {
+	t.Helper()
+
 	for i := 0; i < maxRetries; i++ {
 		actualValue := generateValue()
 		if assert.ObjectsAreEqual(expectedValue, actualValue) {
 			return
 		}
+
 		t.Logf("Retry %d of %s failed: expected %v, got %v", i, description, expectedValue, actualValue)
 	}
 
@@ -96,14 +100,14 @@ func TestFormatArgsAppliesLockCorrectly(t *testing.T) {
 		command  []string
 		expected []string
 	}{
-		{[]string{"plan"}, []string{"plan", "-lock=false"}},
-		{[]string{"validate"}, []string{"validate"}},
-		{[]string{"validate", "--all"}, []string{"validate", "--all"}},
-		{[]string{"plan", "--all"}, []string{"plan", "--all", "-lock=false"}},
+		{command: []string{"plan"}, expected: []string{"plan", "-lock=false"}},
+		{command: []string{"validate"}, expected: []string{"validate"}},
+		{command: []string{"validate", "--all"}, expected: []string{"validate", "--all"}},
+		{command: []string{"plan", "--all"}, expected: []string{"plan", "--all", "-lock=false"}},
 	}
 
 	for _, testCase := range testCases {
-		assert.Equal(t, testCase.expected, FormatArgs(&Options{}, testCase.command...))
+		assert.Equal(t, testCase.expected, terraform.FormatArgs(&terraform.Options{}, testCase.command...))
 	}
 }
 
@@ -111,20 +115,20 @@ func TestFormatSetVarsAfterVarFilesFormatsCorrectly(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
+		vars                 map[string]any
 		command              []string
-		vars                 map[string]interface{}
 		varFiles             []string
-		setVarsAfterVarFiles bool
 		expected             []string
+		setVarsAfterVarFiles bool
 	}{
-		{[]string{"plan"}, map[string]interface{}{"foo": "bar"}, []string{"test.tfvars"}, true, []string{"plan", "-var-file", "test.tfvars", "-var", "foo=bar", "-lock=false"}},
-		{[]string{"plan"}, map[string]interface{}{"foo": "bar", "hello": "world"}, []string{"test.tfvars"}, true, []string{"plan", "-var-file", "test.tfvars", "-var", "foo=bar", "-var", "hello=world", "-lock=false"}},
-		{[]string{"plan"}, map[string]interface{}{"foo": "bar", "hello": "world"}, []string{"test.tfvars"}, false, []string{"plan", "-var", "foo=bar", "-var", "hello=world", "-var-file", "test.tfvars", "-lock=false"}},
-		{[]string{"plan"}, map[string]interface{}{"foo": "bar"}, []string{"test.tfvars"}, false, []string{"plan", "-var", "foo=bar", "-var-file", "test.tfvars", "-lock=false"}},
+		{command: []string{"plan"}, vars: map[string]any{"foo": "bar"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: true, expected: []string{"plan", "-var-file", "test.tfvars", "-var", "foo=bar", "-lock=false"}},
+		{command: []string{"plan"}, vars: map[string]any{"foo": "bar", "hello": "world"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: true, expected: []string{"plan", "-var-file", "test.tfvars", "-var", "foo=bar", "-var", "hello=world", "-lock=false"}},
+		{command: []string{"plan"}, vars: map[string]any{"foo": "bar", "hello": "world"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: false, expected: []string{"plan", "-var", "foo=bar", "-var", "hello=world", "-var-file", "test.tfvars", "-lock=false"}},
+		{command: []string{"plan"}, vars: map[string]any{"foo": "bar"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: false, expected: []string{"plan", "-var", "foo=bar", "-var-file", "test.tfvars", "-lock=false"}},
 	}
 
 	for _, testCase := range testCases {
-		result := FormatArgs(&Options{SetVarsAfterVarFiles: testCase.setVarsAfterVarFiles, Vars: testCase.vars, VarFiles: testCase.varFiles}, testCase.command...)
+		result := terraform.FormatArgs(&terraform.Options{SetVarsAfterVarFiles: testCase.setVarsAfterVarFiles, Vars: testCase.vars, VarFiles: testCase.varFiles}, testCase.command...)
 
 		// Make sure that -var and -var-file options are in the expected order relative to each other
 		// Note that the order of the different -var and -var-file options may change
@@ -145,21 +149,21 @@ func TestMixedVars(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
+		vars                 map[string]any
 		command              []string
-		mixedVars            []Var
-		vars                 map[string]interface{}
+		mixedVars            []terraform.Var
 		varFiles             []string
-		setVarsAfterVarFiles bool
 		expected             []string
+		setVarsAfterVarFiles bool
 	}{
-		{[]string{"plan"}, []Var{VarFile("/path1"), VarInline("name", "value"), VarFile("/path2")}, map[string]interface{}{"foo": "bar"}, []string{"test.tfvars"}, true, []string{"plan", "-var-file", "/path1", "-var", "name=value", "-var-file", "/path2", "-var-file", "test.tfvars", "-var", "foo=bar", "-lock=false"}},
-		{[]string{"plan"}, []Var{VarInline("name1", "value"), VarInline("name2", "value"), VarFile("/path")}, map[string]interface{}{"foo": "bar", "hello": "world"}, []string{"test.tfvars"}, true, []string{"plan", "-var", "name1=value", "-var", "name2=value", "-var-file", "/path", "-var-file", "test.tfvars", "-var", "foo=bar", "-var", "hello=world", "-lock=false"}},
-		{[]string{"plan"}, []Var{VarFile("/path"), VarInline("name1", "value"), VarInline("name2", "value")}, map[string]interface{}{"foo": "bar", "hello": "world"}, []string{"test.tfvars"}, false, []string{"plan", "-var-file", "path", "-var", "name1=value", "-var", "name2=value", "-var", "foo=bar", "-var", "hello=world", "-var-file", "test.tfvars", "-lock=false"}},
-		{[]string{"plan"}, []Var{VarFile("/path"), VarInline("name", "value")}, map[string]interface{}{"foo": "bar"}, []string{"test.tfvars"}, false, []string{"plan", "-var-file", "/path", "-var", "name=value", "-var", "foo=bar", "-var-file", "test.tfvars", "-lock=false"}},
+		{command: []string{"plan"}, mixedVars: []terraform.Var{terraform.VarFile("/path1"), terraform.VarInline("name", "value"), terraform.VarFile("/path2")}, vars: map[string]any{"foo": "bar"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: true, expected: []string{"plan", "-var-file", "/path1", "-var", "name=value", "-var-file", "/path2", "-var-file", "test.tfvars", "-var", "foo=bar", "-lock=false"}},
+		{command: []string{"plan"}, mixedVars: []terraform.Var{terraform.VarInline("name1", "value"), terraform.VarInline("name2", "value"), terraform.VarFile("/path")}, vars: map[string]any{"foo": "bar", "hello": "world"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: true, expected: []string{"plan", "-var", "name1=value", "-var", "name2=value", "-var-file", "/path", "-var-file", "test.tfvars", "-var", "foo=bar", "-var", "hello=world", "-lock=false"}},
+		{command: []string{"plan"}, mixedVars: []terraform.Var{terraform.VarFile("/path"), terraform.VarInline("name1", "value"), terraform.VarInline("name2", "value")}, vars: map[string]any{"foo": "bar", "hello": "world"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: false, expected: []string{"plan", "-var-file", "path", "-var", "name1=value", "-var", "name2=value", "-var", "foo=bar", "-var", "hello=world", "-var-file", "test.tfvars", "-lock=false"}},
+		{command: []string{"plan"}, mixedVars: []terraform.Var{terraform.VarFile("/path"), terraform.VarInline("name", "value")}, vars: map[string]any{"foo": "bar"}, varFiles: []string{"test.tfvars"}, setVarsAfterVarFiles: false, expected: []string{"plan", "-var-file", "/path", "-var", "name=value", "-var", "foo=bar", "-var-file", "test.tfvars", "-lock=false"}},
 	}
 
 	for _, testCase := range testCases {
-		result := FormatArgs(&Options{SetVarsAfterVarFiles: testCase.setVarsAfterVarFiles, Vars: testCase.vars, VarFiles: testCase.varFiles, MixedVars: testCase.mixedVars}, testCase.command...)
+		result := terraform.FormatArgs(&terraform.Options{SetVarsAfterVarFiles: testCase.setVarsAfterVarFiles, Vars: testCase.vars, VarFiles: testCase.varFiles, MixedVars: testCase.mixedVars}, testCase.command...)
 
 		// Make sure that var defined in `MixedVars` are seriliazed in order and precede `Var`` and `VarFiles``
 		// Make sure that -var and -var-file options are in the expected order relative to each other

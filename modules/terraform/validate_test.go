@@ -1,9 +1,10 @@
-package terraform
+package terraform_test
 
 import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,11 +14,11 @@ func TestInitAndValidateWithNoError(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	out := InitAndValidate(t, options)
+	out := terraform.InitAndValidate(t, options)
 	require.Contains(t, out, "The configuration is valid")
 }
 
@@ -27,11 +28,11 @@ func TestInitAndValidateWithError(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-with-plan-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	out, err := InitAndValidateE(t, options)
+	out, err := terraform.InitAndValidateE(t, options)
 	require.Error(t, err)
 	require.Contains(t, out, "Reference to undeclared input variable")
 }
