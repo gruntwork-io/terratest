@@ -1,4 +1,4 @@
-package test_structure
+package test_structure //nolint:staticcheck // package name determined by directory
 
 import (
 	"fmt"
@@ -46,6 +46,7 @@ func CloneWithNewRootDir(opts *ValidationOptions, newRootDir string) (*Validatio
 	if err != nil {
 		return nil, err
 	}
+
 	excludeDirs, err := buildRelPathsFromFull(opts.RootDir, opts.ExcludeDirs)
 	if err != nil {
 		return nil, err
@@ -55,7 +56,9 @@ func CloneWithNewRootDir(opts *ValidationOptions, newRootDir string) (*Validatio
 	if err != nil {
 		return nil, err
 	}
+
 	out.FileType = opts.FileType
+
 	return out, nil
 }
 
@@ -83,6 +86,7 @@ func configureBaseValidationOptions(rootDir string, includeDirs, excludeDirs []s
 		if err != nil {
 			return nil, ValidationAbsolutePathErr{rootDir: rootDir}
 		}
+
 		rootDir = rootDirAbs
 	}
 
@@ -106,28 +110,34 @@ func NewValidationOptions(rootDir string, includeDirs, excludeDirs []string) (*V
 	if err != nil {
 		return opts, err
 	}
+
 	opts.FileType = TF
+
 	return opts, nil
 }
 
 func buildRelPathsFromFull(rootDir string, fullPaths []string) ([]string, error) {
 	var relPaths []string
+
 	for _, maybeFullPath := range fullPaths {
 		if filepath.IsAbs(maybeFullPath) {
 			relPath, err := filepath.Rel(rootDir, maybeFullPath)
 			if err != nil {
 				return nil, err
 			}
+
 			relPaths = append(relPaths, relPath)
 		} else {
 			relPaths = append(relPaths, maybeFullPath)
 		}
 	}
+
 	return relPaths, nil
 }
 
 func buildFullPathsFromRelative(rootDir string, relativePaths []string) []string {
 	var fullPaths []string
+
 	for _, maybeRelativePath := range relativePaths {
 		// If the relativePath is already an absolute path, don't modify it
 		if filepath.IsAbs(maybeRelativePath) {
@@ -136,6 +146,7 @@ func buildFullPathsFromRelative(rootDir string, relativePaths []string) []string
 			fullPaths = append(fullPaths, filepath.Clean(filepath.Join(rootDir, maybeRelativePath)))
 		}
 	}
+
 	return fullPaths
 }
 
@@ -144,12 +155,15 @@ func buildFullPathsFromRelative(rootDir string, relativePaths []string) []string
 func FindTerraformModulePathsInRootE(opts *ValidationOptions) ([]string, error) {
 	// Find all Terraform files (as specified by opts.FileType) from the configured RootDir
 	pattern := fmt.Sprintf("%s/**/%s", opts.RootDir, opts.FileType)
+
 	matches, err := zglob.Glob(pattern)
 	if err != nil {
 		return matches, err
 	}
+
 	// Keep a unique set of the base dirs that contain Terraform files
 	terraformDirSet := make(map[string]string)
+
 	for _, match := range matches {
 		// The glob match returns all full paths to every target file, whereas we're only interested in their root
 		// directories for the purposes of running Terraform validate
