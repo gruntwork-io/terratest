@@ -1,6 +1,7 @@
-package test
+package test_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -14,6 +15,8 @@ import (
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
+const expectedTextSSHPassword = "Hello, World"
+
 // An example of how to test the Terraform module in examples/terraform-ssh-password-example using Terratest. The test
 // also shows an example of how to break a test down into "stages" so you can skip stages by setting environment
 // variables (e.g., skip stage "teardown" by setting the environment variable "SKIP_teardown=true"), which speeds up
@@ -26,18 +29,18 @@ func TestTerraformSshPasswordExample(t *testing.T) {
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created.
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
-		terraform.Destroy(t, terraformOptions)
+		terraform.DestroyContext(t, t.Context(), terraformOptions)
 	})
 
 	// Deploy the example.
 	test_structure.RunTestStage(t, "setup", func() {
-		terraformOptions := configureTerraformSshPasswordOptions(t, exampleFolder)
+		terraformOptions := configureTerraformSSHPasswordOptions(t, exampleFolder)
 
 		// Save the options so later test stages can use them.
 		test_structure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
 
 		// This will run `terraform init` and `terraform apply` and fail the test if there are any errors.
-		terraform.InitAndApply(t, terraformOptions)
+		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 	})
 
 	// Make sure we can SSH to the public instance directly from the public internet.
@@ -48,14 +51,16 @@ func TestTerraformSshPasswordExample(t *testing.T) {
 	})
 }
 
-func configureTerraformSshPasswordOptions(t *testing.T, exampleFolder string) *terraform.Options {
+func configureTerraformSSHPasswordOptions(t *testing.T, exampleFolder string) *terraform.Options {
+	t.Helper()
+
 	// A unique ID we can use to namespace resources so we don't clash with anything already in the AWS account or
 	// tests running in parallel.
-	uniqueID := random.UniqueId()
+	uniqueID := random.UniqueID()
 
 	// Give this EC2 instance and other resources in the Terraform code a name with a unique ID so it doesn't clash
 	// with anything else in the AWS account.
-	instanceName := fmt.Sprintf("terratest-ssh-password-example-%s", uniqueID)
+	instanceName := "terratest-ssh-password-example-" + uniqueID
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
@@ -64,7 +69,7 @@ func configureTerraformSshPasswordOptions(t *testing.T, exampleFolder string) *t
 	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create a random password that we can use for SSH access.
-	password := random.UniqueId()
+	password := random.UniqueID()
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -85,8 +90,10 @@ func configureTerraformSshPasswordOptions(t *testing.T, exampleFolder string) *t
 }
 
 func testSSHPasswordToPublicHost(t *testing.T, terraformOptions *terraform.Options) {
+	t.Helper()
+
 	// Run `terraform output` to get the value of an output variable.
-	publicInstanceIP := terraform.Output(t, terraformOptions, "public_instance_ip")
+	publicInstanceIP := terraform.OutputContext(t, t.Context(), terraformOptions, "public_instance_ip")
 
 	// We're going to try to SSH to the instance IP, using the username and password that will be set up (by
 	// Terraform's user_data script) in the instance.
@@ -99,42 +106,38 @@ func testSSHPasswordToPublicHost(t *testing.T, terraformOptions *terraform.Optio
 	// It can take a minute or so for the instance to boot up, so retry a few times.
 	maxRetries := 30
 	timeBetweenRetries := 10 * time.Second
-	description := fmt.Sprintf("SSH to public host %s", publicInstanceIP)
+	description := "SSH to public host " + publicInstanceIP
 
 	// Run a simple echo command on the server.
-	expectedText := "Hello, World"
-	command := fmt.Sprintf("echo -n '%s'", expectedText)
+	command := fmt.Sprintf("echo -n '%s'", expectedTextSSHPassword)
 
 	// Verify that we can SSH to the instance and run commands.
 	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
-		actualText, err := ssh.CheckSshCommandE(t, publicHost, command)
-
+		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err != nil {
 			return "", err
 		}
 
-		if strings.TrimSpace(actualText) != expectedText {
-			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedText, actualText)
+		if strings.TrimSpace(actualText) != expectedTextSSHPassword {
+			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedTextSSHPassword, actualText)
 		}
 
 		return "", nil
 	})
 
 	// Run a command on the server that results in an error.
-	expectedText = "Hello, World"
-	command = fmt.Sprintf("echo -n '%s' && exit 1", expectedText)
-	description = fmt.Sprintf("SSH to public host %s with error command", publicInstanceIP)
+	command = fmt.Sprintf("echo -n '%s' && exit 1", expectedTextSSHPassword)
+	description = "SSH to public host " + publicInstanceIP + " with error command"
 
 	// Verify that we can SSH to the instance, run the command which forces an error, and see the output.
 	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
-		actualText, err := ssh.CheckSshCommandE(t, publicHost, command)
-
+		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err == nil {
-			return "", fmt.Errorf("Expected SSH command to return an error but got none")
+			return "", errors.New("Expected SSH command to return an error but got none")
 		}
 
-		if strings.TrimSpace(actualText) != expectedText {
-			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedText, actualText)
+		if strings.TrimSpace(actualText) != expectedTextSSHPassword {
+			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedTextSSHPassword, actualText)
 		}
 
 		return "", nil

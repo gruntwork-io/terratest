@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"crypto/tls"
@@ -36,7 +36,7 @@ func TestPackerDockerExampleLocal(t *testing.T) {
 	packer.BuildArtifact(t, packerOptions)
 
 	serverPort := 8080
-	expectedServerText := fmt.Sprintf("Hello, %s!", random.UniqueId())
+	expectedServerText := fmt.Sprintf("Hello, %s!", random.UniqueID())
 
 	dockerOptions := &docker.Options{
 		// website::tag::3::Set path to 'docker-compose.yml' and environment variables to run Docker image.
@@ -51,10 +51,10 @@ func TestPackerDockerExampleLocal(t *testing.T) {
 	}
 
 	// website::tag::6::Make sure to shut down the Docker container at the end of the test.
-	defer docker.RunDockerCompose(t, dockerOptions, "down")
+	defer docker.RunDockerComposeContext(t, t.Context(), dockerOptions, "down")
 
 	// website::tag::4::Run Docker Compose to fire up the web app. We run it in the background (-d) so it doesn't block this test.
-	docker.RunDockerCompose(t, dockerOptions, "up", "-d")
+	docker.RunDockerComposeContext(t, t.Context(), dockerOptions, "up", "-d")
 
 	// It can take a few seconds for the Docker container boot up, so retry a few times
 	maxRetries := 5
@@ -65,5 +65,5 @@ func TestPackerDockerExampleLocal(t *testing.T) {
 	tlsConfig := tls.Config{}
 
 	// website::tag::5::Verify that we get back a 200 OK with the expected text
-	http_helper.HttpGetWithRetry(t, url, &tlsConfig, 200, expectedServerText, maxRetries, timeBetweenRetries)
+	http_helper.HTTPGetWithRetryContext(t, t.Context(), url, &tlsConfig, 200, expectedServerText, maxRetries, timeBetweenRetries)
 }

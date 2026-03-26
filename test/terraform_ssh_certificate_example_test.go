@@ -1,8 +1,9 @@
-package test
+package test_test
 
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -19,6 +20,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const expectedTextSSHCert = "Hello, World"
+
 // An example of how to test the Terraform module in examples/terraform-ssh-certificate-example using Terratest. The test
 // also shows an example of how to break a test down into "stages" so you can skip stages by setting environment
 // variables (e.g., skip stage "teardown" by setting the environment variable "SKIP_teardown=true"), which speeds up
@@ -31,38 +34,40 @@ func TestTerraformSshCertificateExample(t *testing.T) {
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created.
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
-		terraform.Destroy(t, terraformOptions)
+		terraform.DestroyContext(t, t.Context(), terraformOptions)
 	})
 
 	// Deploy the example.
 	test_structure.RunTestStage(t, "setup", func() {
-		terraformOptions, keyPair := configureTerraformSshCertificateOptions(t, exampleFolder)
+		terraformOptions, keyPair := configureTerraformSSHCertificateOptions(t, exampleFolder)
 
 		// Save the options so later test stages can use them.
 		test_structure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
-		test_structure.SaveSshKeyPair(t, exampleFolder, keyPair)
+		test_structure.SaveSSHKeyPair(t, exampleFolder, keyPair)
 
 		// This will run `terraform init` and `terraform apply` and fail the test if there are any errors.
-		terraform.InitAndApply(t, terraformOptions)
+		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 	})
 
 	// Make sure we can SSH to the public instance directly from the public internet.
 	test_structure.RunTestStage(t, "validate", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
-		keypair := test_structure.LoadSshKeyPair(t, exampleFolder)
+		keypair := test_structure.LoadSSHKeyPair(t, exampleFolder)
 
 		testSSHCertificateToPublicHost(t, terraformOptions, keypair)
 	})
 }
 
-func configureTerraformSshCertificateOptions(t *testing.T, exampleFolder string) (*terraform.Options, *ssh.KeyPair) {
+func configureTerraformSSHCertificateOptions(t *testing.T, exampleFolder string) (*terraform.Options, *ssh.KeyPair) {
+	t.Helper()
+
 	// A unique ID we can use to namespace resources so we don't clash with anything already in the AWS account or
 	// tests running in parallel.
-	uniqueID := random.UniqueId()
+	uniqueID := random.UniqueID()
 
 	// Give this EC2 instance and other resources in the Terraform code a name with a unique ID so it doesn't clash
 	// with anything else in the AWS account.
-	instanceName := fmt.Sprintf("terratest-ssh-certificate-example-%s", uniqueID)
+	instanceName := "terratest-ssh-certificate-example-" + uniqueID
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
@@ -73,11 +78,14 @@ func configureTerraformSshCertificateOptions(t *testing.T, exampleFolder string)
 	// Create a random ssh certificate
 	k, err := rsa.GenerateKey(rand.Reader, 4096)
 	require.NoError(t, err)
+
 	caSigner, err := stdssh.NewSignerFromKey(k)
 	require.NoError(t, err)
+
 	keyPair := ssh.GenerateRSAKeyPair(t, 2048)
 	pub, _, _, _, err := stdssh.ParseAuthorizedKey([]byte(keyPair.PublicKey))
 	require.NoError(t, err)
+
 	cert := &stdssh.Certificate{
 		Key:             pub,
 		Serial:          1,
@@ -93,6 +101,7 @@ func configureTerraformSshCertificateOptions(t *testing.T, exampleFolder string)
 		},
 	}
 	require.NoError(t, cert.SignCert(rand.Reader, caSigner))
+
 	keyPair.PublicKey = string(stdssh.MarshalAuthorizedKey(cert))
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
@@ -114,8 +123,10 @@ func configureTerraformSshCertificateOptions(t *testing.T, exampleFolder string)
 }
 
 func testSSHCertificateToPublicHost(t *testing.T, terraformOptions *terraform.Options, keyPair *ssh.KeyPair) {
+	t.Helper()
+
 	// Run `terraform output` to get the value of an output variable.
-	publicInstanceIP := terraform.Output(t, terraformOptions, "public_instance_ip")
+	publicInstanceIP := terraform.OutputContext(t, t.Context(), terraformOptions, "public_instance_ip")
 
 	// We're going to try to SSH to the instance IP, using the username and password that will be set up (by
 	// Terraform's user_data script) in the instance.
@@ -128,42 +139,38 @@ func testSSHCertificateToPublicHost(t *testing.T, terraformOptions *terraform.Op
 	// It can take a minute or so for the instance to boot up, so retry a few times.
 	maxRetries := 30
 	timeBetweenRetries := 10 * time.Second
-	description := fmt.Sprintf("SSH to public host %s", publicInstanceIP)
+	description := "SSH to public host " + publicInstanceIP
 
 	// Run a simple echo command on the server.
-	expectedText := "Hello, World"
-	command := fmt.Sprintf("echo -n '%s'", expectedText)
+	command := fmt.Sprintf("echo -n '%s'", expectedTextSSHCert)
 
 	// Verify that we can SSH to the instance and run commands.
 	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
-		actualText, err := ssh.CheckSshCommandE(t, publicHost, command)
-
+		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err != nil {
 			return "", err
 		}
 
-		if strings.TrimSpace(actualText) != expectedText {
-			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedText, actualText)
+		if strings.TrimSpace(actualText) != expectedTextSSHCert {
+			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedTextSSHCert, actualText)
 		}
 
 		return "", nil
 	})
 
 	// Run a command on the server that results in an error.
-	expectedText = "Hello, World"
-	command = fmt.Sprintf("echo -n '%s' && exit 1", expectedText)
-	description = fmt.Sprintf("SSH to public host %s with error command", publicInstanceIP)
+	command = fmt.Sprintf("echo -n '%s' && exit 1", expectedTextSSHCert)
+	description = "SSH to public host " + publicInstanceIP + " with error command"
 
 	// Verify that we can SSH to the instance, run the command which forces an error, and see the output.
 	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
-		actualText, err := ssh.CheckSshCommandE(t, publicHost, command)
-
+		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err == nil {
-			return "", fmt.Errorf("Expected SSH command to return an error but got none")
+			return "", errors.New("Expected SSH command to return an error but got none")
 		}
 
-		if strings.TrimSpace(actualText) != expectedText {
-			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedText, actualText)
+		if strings.TrimSpace(actualText) != expectedTextSSHCert {
+			return "", fmt.Errorf("Expected SSH command to return '%s' but got '%s'", expectedTextSSHCert, actualText)
 		}
 
 		return "", nil

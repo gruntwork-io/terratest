@@ -51,4 +51,4 @@ jobs:
           ${{ runner.os }}-golangci-lint-
 
     - name: Lint
-      run: make lint-allow-list
+      run: make lint

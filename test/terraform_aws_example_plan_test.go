@@ -1,7 +1,6 @@
-package test
+package test_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -23,7 +22,7 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 
 	// Give this EC2 Instance a unique ID for a name tag so we can distinguish it from any other EC2 Instance running
 	// in your AWS account
-	expectedName := fmt.Sprintf("terratest-aws-example-%s", random.UniqueId())
+	expectedName := "terratest-aws-example-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
@@ -55,7 +54,7 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 	})
 
 	// website::tag::2::Run `terraform init`, `terraform plan`, and `terraform show` and fail the test if there are any errors
-	plan := terraform.InitAndPlanAndShowWithStruct(t, terraformOptions)
+	plan := terraform.InitAndPlanAndShowWithStructContext(t, t.Context(), terraformOptions)
 
 	// website::tag::3::Use the go struct to introspect the plan values.
 	terraform.RequirePlannedValuesMapKeyExists(t, plan, "aws_instance.example")
@@ -66,7 +65,8 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 	// website::tag::4::Alternatively, you can get the direct JSON output and use jsonpath to extract the data.
 	// jsonpath only returns lists.
 	var jsonEC2Tags []map[string]interface{}
-	jsonOut := terraform.InitAndPlanAndShow(t, terraformOptions)
+
+	jsonOut := terraform.InitAndPlanAndShowContext(t, t.Context(), terraformOptions)
 	k8s.UnmarshalJSONPath(
 		t,
 		[]byte(jsonOut),

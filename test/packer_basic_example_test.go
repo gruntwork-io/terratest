@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func TestPackerBasicExample(t *testing.T) {
 		// Variables to pass to our Packer build using -var options
 		Vars: map[string]string{
 			"aws_region":    awsRegion,
-			"ami_base_name": fmt.Sprintf("%s", random.UniqueId()),
+			"ami_base_name": random.UniqueID(),
 			"instance_type": instanceType,
 		},
 
@@ -69,7 +69,7 @@ func TestPackerBasicExample(t *testing.T) {
 	defer terratest_aws.DeleteAmiAndAllSnapshots(t, awsRegion, amiID)
 
 	// Check if AMI is shared/not shared with account
-	requestingAccount := terratest_aws.CanonicalAccountId
+	requestingAccount := terratest_aws.CanonicalAccountID
 	randomAccount := "123456789012" // Random Account
 	ec2Client := terratest_aws.NewEc2Client(t, awsRegion)
 	ShareAmi(t, amiID, requestingAccount, ec2Client)
@@ -96,7 +96,7 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 	instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create temporary packer variable file to store aws region
-	varFile, err := os.CreateTemp("", "*.json")
+	varFile, err := os.CreateTemp(t.TempDir(), "*.json")
 	require.NoError(t, err, "Did not expect temp file creation to cause error")
 
 	// Be sure to clean up temp file
@@ -137,7 +137,7 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 	defer terratest_aws.DeleteAmiAndAllSnapshots(t, awsRegion, amiID)
 
 	// Check if AMI is shared/not shared with account
-	requestingAccount := terratest_aws.CanonicalAccountId
+	requestingAccount := terratest_aws.CanonicalAccountID
 	randomAccount := "123456789012" // Random Account
 	ec2Client := terratest_aws.NewEc2Client(t, awsRegion)
 	ShareAmi(t, amiID, requestingAccount, ec2Client)
@@ -156,7 +156,8 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 	// Build a map of 3 randomId <-> packer.Options, in 3 random AWS Regions
 	// then build all of these AMIs in parallel and make sure that there are
 	// no errors.
-	var identifierToOptions = map[string]*packer.Options{}
+	identifierToOptions := map[string]*packer.Options{}
+
 	for i := 0; i < 3; i++ {
 		// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 		awsRegion := terratest_aws.GetRandomStableRegion(t, nil, nil)
@@ -171,7 +172,7 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 			// Variables to pass to our Packer build using -var options
 			Vars: map[string]string{
 				"aws_region":    awsRegion,
-				"ami_base_name": fmt.Sprintf("%s", random.UniqueId()),
+				"ami_base_name": random.UniqueID(),
 				"instance_type": instanceType,
 			},
 
@@ -184,19 +185,22 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 			MaxRetries:         DefaultMaxPackerRetries,
 		}
 
-		identifierToOptions[random.UniqueId()] = packerOptions
+		identifierToOptions[random.UniqueID()] = packerOptions
 	}
 
 	resultMap := packer.BuildArtifacts(t, identifierToOptions)
 
 	// Clean up the AMIs after we're done
-	for key, amiId := range resultMap {
+	for key, amiID := range resultMap {
 		awsRegion := identifierToOptions[key].Vars["aws_region"]
-		terratest_aws.DeleteAmiAndAllSnapshots(t, awsRegion, amiId)
+		terratest_aws.DeleteAmiAndAllSnapshots(t, awsRegion, amiID)
 	}
 }
 
+// ShareAmi shares an AMI with the specified account by modifying its launch permissions.
 func ShareAmi(t *testing.T, amiID string, accountID string, ec2Client *ec2.Client) {
+	t.Helper()
+
 	input := &ec2.ModifyImageAttributeInput{
 		ImageId: aws.String(amiID),
 		LaunchPermission: &types.LaunchPermissionModifications{
@@ -207,6 +211,7 @@ func ShareAmi(t *testing.T, amiID string, accountID string, ec2Client *ec2.Clien
 			},
 		},
 	}
+
 	_, err := ec2Client.ModifyImageAttribute(context.Background(), input)
 	if err != nil {
 		t.Fatal(err)

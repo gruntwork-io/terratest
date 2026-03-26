@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"fmt"
@@ -29,11 +29,12 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 		keyPair := test_structure.LoadEc2KeyPair(t, terraformDirectory)
 
 		// destroy terraform resources and delete ec2 key pair
-		terraform.Destroy(t, terraformOptions)
+		terraform.DestroyContext(t, t.Context(), terraformOptions)
 		aws.DeleteEC2KeyPair(t, keyPair)
 
 		// remove testFile, if it exists
 		testFile := filepath.Join(terraformDirectory, "public-ip")
+
 		if _, err := os.Stat(testFile); err == nil {
 			os.Remove(testFile)
 		}
@@ -41,14 +42,13 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 
 	// Deploy the example
 	test_structure.RunTestStage(t, "setup", func() {
-
 		// A unique ID we can use to namespace resources so we don't clash with anything already in the AWS account or
 		// tests running in parallel
-		uniqueID := random.UniqueId()
+		uniqueID := random.UniqueID()
 
 		// Give this EC2 Instance and other resources in the Terraform code a name with a unique ID so it doesn't clash
 		// with anything else in the AWS account.
-		instanceName := fmt.Sprintf("terratest-remote-exec-example-%s", uniqueID)
+		instanceName := "terratest-remote-exec-example-" + uniqueID
 
 		// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 		awsRegion := aws.GetRandomStableRegion(t, nil, nil)
@@ -57,11 +57,11 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 		instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 		// Create an EC2 KeyPair that we can use for SSH access
-		keyPairName := fmt.Sprintf("terratest-remote-exec-example-%s", uniqueID)
+		keyPairName := "terratest-remote-exec-example-" + uniqueID
 		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, keyPairName)
 
 		// start an SSH agent, with our key pair added
-		sshAgent := ssh.SshAgentWithKeyPair(t, keyPair.KeyPair)
+		sshAgent := ssh.SSHAgentWithKeyPair(t, t.Context(), keyPair.KeyPair)
 		defer sshAgent.Stop()
 
 		// Construct the terraform options with default retryable errors to handle the most common retryable errors in
@@ -87,10 +87,10 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 
 		// Because of the SshAgent option above, the terraform process will be provided an `SSH_AUTH_SOCK` environment
 		// variable, which will point to the socket file of our in-process `sshAgent` instance:
-		terraform.InitAndApply(t, terraformOptions)
+		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 		// save the `public_instance_ip` output variable for later steps
-		publicIP := terraform.Output(t, terraformOptions, "public_instance_ip")
+		publicIP := terraform.OutputContext(t, t.Context(), terraformOptions, "public_instance_ip")
 		test_structure.SaveString(t, terraformDirectory, "publicIP", publicIP)
 	})
 
@@ -109,7 +109,7 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 		if err != nil {
 			fmt.Print(err)
 		}
+
 		assert.Equal(t, strings.TrimSpace(publicIP), strings.TrimSpace(string(b)))
 	})
-
 }

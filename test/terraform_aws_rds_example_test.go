@@ -1,7 +1,6 @@
-package test
+package test_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -14,19 +13,20 @@ import (
 
 // An example of how to test the Terraform module in examples/terraform-aws-rds-example using Terratest.
 func TestTerraformAwsRdsExample(t *testing.T) {
-	ttable := []struct {
-		name string
+	t.Parallel()
 
+	ttable := []struct {
+		schemaCheck    func(t *testing.T, dbURL string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool
+		expectedOptins map[struct {
+			opName  string
+			setName string
+		}]string
+		expectedParameter  map[string]string
+		name               string
 		engineName         string
 		majorEngineVersion string
 		engineFamily       string
 		licenseModel       string
-		schemaCheck        func(t *testing.T, dbUrl string, dbPort int32, dbUsername string, dbPassword string, expectedSchemaName string) bool
-		expectedOptins     map[struct {
-			opName  string
-			setName string
-		}]string
-		expectedParameter map[string]string
 	}{
 		{
 			name:               "mysql",
@@ -34,8 +34,10 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			majorEngineVersion: "5.7",
 			engineFamily:       "mysql5.7",
 			licenseModel:       "general-public-license",
-			schemaCheck: func(t *testing.T, dbUrl string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
-				return aws.GetWhetherSchemaExistsInRdsMySqlInstance(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
+			schemaCheck: func(t *testing.T, dbURL string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
+				t.Helper()
+
+				return aws.GetWhetherSchemaExistsInRdsMySQLInstance(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
 			},
 			expectedOptins: map[struct {
 				opName  string
@@ -54,20 +56,21 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			majorEngineVersion: "13",
 			engineFamily:       "postgres13",
 			licenseModel:       "postgresql-license",
-			schemaCheck: func(t *testing.T, dbUrl string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
-				return aws.GetWhetherSchemaExistsInRdsPostgresInstance(t, dbUrl, dbPort, dbUsername, dbPassword, expectedSchemaName)
+			schemaCheck: func(t *testing.T, dbURL string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
+				t.Helper()
+
+				return aws.GetWhetherSchemaExistsInRdsPostgresInstance(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
 			},
 		},
 	}
 
 	for _, tt := range ttable {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
 			// Give this RDS Instance a unique ID for a name tag so we can distinguish it from any other RDS Instance running
 			// in your AWS account
-			expectedName := fmt.Sprintf("terratest-aws-rds-example-%s", strings.ToLower(random.UniqueId()))
+			expectedName := "terratest-aws-rds-example-" + strings.ToLower(random.UniqueID())
 			expectedPort := int32(3306)
 			expectedDatabaseName := "terratest"
 			username := "username"
@@ -104,13 +107,13 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			})
 
 			// At the end of the test, run `terraform destroy` to clean up any resources that were created
-			defer terraform.Destroy(t, terraformOptions)
+			defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 			// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-			terraform.InitAndApply(t, terraformOptions)
+			terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 			// Run `terraform output` to get the value of an output variable
-			dbInstanceID := terraform.Output(t, terraformOptions, "db_instance_id")
+			dbInstanceID := terraform.OutputContext(t, t.Context(), terraformOptions, "db_instance_id")
 
 			// Look up the endpoint address and port of the RDS instance
 			address := aws.GetAddressOfRdsInstance(t, dbInstanceID, awsRegion)
@@ -132,12 +135,14 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 
 			// assert all parameters
 			params := aws.GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion)
+
 			paramNames := map[string]struct{}{}
 			for _, param := range params {
 				paramNames[*param.ParameterName] = struct{}{}
 			}
+
 			assert.Len(t, paramNames, len(params), "should return no duplicate parameters")
-			assert.True(t, len(paramNames) > 100)
+			assert.Greater(t, len(paramNames), 100)
 
 			// assert expected options
 			for k, v := range tt.expectedOptins {
