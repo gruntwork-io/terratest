@@ -30,7 +30,8 @@ func GetVariableAsStringFromVarFile(t testing.TestingT, fileName string, key str
 // Will return an error if GetAllVariablesFromVarFileE returns an error or the key provided does not exist in the file.
 // For list or map, use GetVariableAsListFromVarFile or GetVariableAsMapFromVarFile, respectively.
 func GetVariableAsStringFromVarFileE(t testing.TestingT, fileName string, key string) (string, error) {
-	var variables map[string]interface{}
+	var variables map[string]any
+
 	err := GetAllVariablesFromVarFileE(t, fileName, &variables)
 	if err != nil {
 		return "", err
@@ -50,6 +51,7 @@ func GetVariableAsStringFromVarFileE(t testing.TestingT, fileName string, key st
 func GetVariableAsMapFromVarFile(t testing.TestingT, fileName string, key string) map[string]string {
 	result, err := GetVariableAsMapFromVarFileE(t, fileName, key)
 	require.NoError(t, err)
+
 	return result
 }
 
@@ -57,7 +59,8 @@ func GetVariableAsMapFromVarFile(t testing.TestingT, fileName string, key string
 // Note that this returns a map of strings. For maps containing complex types, use GetAllVariablesFromVarFile
 // Returns an error if GetAllVariablesFromVarFileE returns an error, the key provided does not exist, or the value associated with the key is not a map
 func GetVariableAsMapFromVarFileE(t testing.TestingT, fileName string, key string) (map[string]string, error) {
-	var variables map[string]interface{}
+	var variables map[string]any
+
 	err := GetAllVariablesFromVarFileE(t, fileName, &variables)
 	if err != nil {
 		return nil, err
@@ -74,9 +77,10 @@ func GetVariableAsMapFromVarFileE(t testing.TestingT, fileName string, key strin
 	}
 
 	resultMap := make(map[string]string)
-	for mapKey, mapVal := range variable.(map[string]interface{}) {
+	for mapKey, mapVal := range variable.(map[string]any) {
 		resultMap[mapKey] = fmt.Sprintf("%v", mapVal)
 	}
+
 	return resultMap, nil
 }
 
@@ -93,7 +97,8 @@ func GetVariableAsListFromVarFile(t testing.TestingT, fileName string, key strin
 // Note that this returns a list of strings. For lists containing complex types, use GetAllVariablesFromVarFile.
 // Will return error if GetAllVariablesFromVarFileE returns an error, the key provided does not exist, or the value associated with the key is not a list
 func GetVariableAsListFromVarFileE(t testing.TestingT, fileName string, key string) ([]string, error) {
-	var variables map[string]interface{}
+	var variables map[string]any
+
 	err := GetAllVariablesFromVarFileE(t, fileName, &variables)
 	if err != nil {
 		return nil, err
@@ -109,7 +114,7 @@ func GetVariableAsListFromVarFileE(t testing.TestingT, fileName string, key stri
 	}
 
 	resultArray := []string{}
-	for _, item := range variable.([]interface{}) {
+	for _, item := range variable.([]any) {
 		resultArray = append(resultArray, fmt.Sprintf("%v", item))
 	}
 
@@ -118,7 +123,7 @@ func GetVariableAsListFromVarFileE(t testing.TestingT, fileName string, key stri
 
 // GetAllVariablesFromVarFile Parses all data from a provided input file found ind in VarFile and stores the result in
 // the value pointed to by out.
-func GetAllVariablesFromVarFile(t testing.TestingT, fileName string, out interface{}) {
+func GetAllVariablesFromVarFile(t testing.TestingT, fileName string, out any) {
 	err := GetAllVariablesFromVarFileE(t, fileName, out)
 	require.NoError(t, err)
 }
@@ -126,7 +131,7 @@ func GetAllVariablesFromVarFile(t testing.TestingT, fileName string, out interfa
 // GetAllVariablesFromVarFileE Parses all data from a provided input file found ind in VarFile and stores the result in
 // the value pointed to by out. Returns an error if the specified file does not exist, the specified file is not
 // readable, or the specified file cannot be decoded from HCL.
-func GetAllVariablesFromVarFileE(t testing.TestingT, fileName string, out interface{}) error {
+func GetAllVariablesFromVarFileE(t testing.TestingT, fileName string, out any) error {
 	fileContents, err := os.ReadFile(fileName)
 	if err != nil {
 		return err
@@ -137,7 +142,7 @@ func GetAllVariablesFromVarFileE(t testing.TestingT, fileName string, out interf
 
 // parseAndDecodeVarFile uses the HCL2 parser to parse the given varfile string into an HCL or HCL JSON file body, and then decode it
 // into a map that maps var names to values.
-func parseAndDecodeVarFile(fileContents string, filename string, out interface{}) (err error) {
+func parseAndDecodeVarFile(fileContents string, filename string, out any) (err error) {
 	// The HCL2 parser and especially cty conversions will panic in many types of errors, so we have to recover from
 	// those panics here and convert them to normal errors
 	defer func() {
@@ -148,10 +153,13 @@ func parseAndDecodeVarFile(fileContents string, filename string, out interface{}
 
 	parser := hclparse.NewParser()
 
-	var file *hcl.File
-	var parseDiagnostics hcl.Diagnostics
+	var (
+		file             *hcl.File
+		parseDiagnostics hcl.Diagnostics
+	)
 
 	// determine if a JSON variables file is submitted and parse accordingly
+
 	if strings.HasSuffix(filename, ".json") {
 		file, parseDiagnostics = parser.ParseJSON([]byte(fileContents), filename)
 	} else {
@@ -169,11 +177,13 @@ func parseAndDecodeVarFile(fileContents string, filename string, out interface{}
 	}
 
 	valMap := map[string]cty.Value{}
+
 	for name, attr := range attrs {
 		val, hclDiags := attr.Expr.Value(nil) // nil because no function calls or variable references are allowed here
 		if hclDiags != nil && hclDiags.HasErrors() {
 			return hclDiags
 		}
+
 		valMap[name] = val
 	}
 
@@ -182,57 +192,69 @@ func parseAndDecodeVarFile(fileContents string, filename string, out interface{}
 		return err
 	}
 
-	typedOut, hasType := out.(*map[string]interface{})
+	typedOut, hasType := out.(*map[string]any)
 	if hasType {
 		genericMap, err := parseCtyValueToMap(ctyVal)
 		if err != nil {
 			return err
 		}
+
 		*typedOut = genericMap
+
 		return nil
 	}
+
 	return gocty.FromCtyValue(ctyVal, out)
 }
 
-// This is a hacky workaround to convert a cty Value to a Go map[string]interface{}. cty does not support this directly
+// This is a hacky workaround to convert a cty Value to a Go map[string]any. cty does not support this directly
 // (https://github.com/hashicorp/hcl2/issues/108) and doing it with gocty.FromCtyValue is nearly impossible, as cty
-// requires you to specify all the output types and will error out when it hits interface{}. So, as an ugly workaround,
+// requires you to specify all the output types and will error out when it hits any. So, as an ugly workaround,
 // we convert the given value to JSON using cty's JSON library and then convert the JSON back to a
-// map[string]interface{} using the Go json library.
-func parseCtyValueToMap(value cty.Value) (map[string]interface{}, error) {
+// map[string]any using the Go json library.
+func parseCtyValueToMap(value cty.Value) (map[string]any, error) {
 	jsonBytes, err := ctyjson.Marshal(value, cty.DynamicPseudoType)
 	if err != nil {
 		return nil, err
 	}
 
-	var ctyJsonOutput CtyJsonOutput
-	if err := json.Unmarshal(jsonBytes, &ctyJsonOutput); err != nil {
+	var ctyJSONOutput CtyJSONOutput
+
+	if err := json.Unmarshal(jsonBytes, &ctyJSONOutput); err != nil {
 		return nil, err
 	}
 
-	return ctyJsonOutput.Value, nil
+	return ctyJSONOutput.Value, nil
 }
 
-// When you convert a cty value to JSON, if any of that types are not yet known (i.e., are labeled as
-// DynamicPseudoType), cty's Marshall method will write the type information to a type field and the actual value to
-// a value field. This struct is used to capture that information so when we parse the JSON back into a Go struct, we
-// can pull out just the Value field we need.
-type CtyJsonOutput struct {
-	Value map[string]interface{}
-	Type  interface{}
+// CtyJSONOutput captures the output of marshalling a cty value to JSON. When you convert a cty value to JSON, if any
+// of the types are not yet known (i.e., are labeled as DynamicPseudoType), cty's Marshal method will write the type
+// information to a type field and the actual value to a value field. This struct is used to capture that information so
+// when we parse the JSON back into a Go struct, we can pull out just the Value field we need.
+type CtyJSONOutput struct {
+	Value map[string]any `json:"value"`
+	Type  any            `json:"type"`
 }
+
+// CtyJsonOutput is a backwards-compatible alias for [CtyJSONOutput].
+//
+// Deprecated: Use [CtyJSONOutput] instead.
+type CtyJsonOutput = CtyJSONOutput //nolint:revive,staticcheck // preserving deprecated type name
 
 // convertValuesMapToCtyVal takes a map of name - cty.Value pairs and converts to a single cty.Value object that can
 // then be converted to other go types.
 func convertValuesMapToCtyVal(valMap map[string]cty.Value) (cty.Value, error) {
 	valMapAsCty := cty.NilVal
-	if valMap != nil && len(valMap) > 0 {
+
+	if len(valMap) > 0 {
 		var err error
+
 		valMapAsCty, err = gocty.ToCtyValue(valMap, generateTypeFromValuesMap(valMap))
 		if err != nil {
 			return valMapAsCty, err
 		}
 	}
+
 	return valMapAsCty, nil
 }
 
@@ -245,5 +267,6 @@ func generateTypeFromValuesMap(valMap map[string]cty.Value) cty.Type {
 	for k, v := range valMap {
 		outType[k] = v.Type()
 	}
+
 	return cty.Object(outType)
 }

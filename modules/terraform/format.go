@@ -36,12 +36,13 @@ var TerraformCommandsWithPlanFileSupport = []string{
 // format the Terraform CLI expects (-var key=value).
 func FormatArgs(options *Options, args ...string) []string {
 	var terraformArgs []string
+
 	commandType := args[0]
 	lockSupported := slices.Contains(TerraformCommandsWithLockSupport, commandType)
 	planFileSupported := slices.Contains(TerraformCommandsWithPlanFileSupport, commandType)
 
 	// Include -var and -var-file flags unless we're running 'apply' with a plan file
-	includeVars := !(commandType == "apply" && len(options.PlanFilePath) > 0)
+	includeVars := commandType != "apply" || options.PlanFilePath == ""
 
 	terraformArgs = append(terraformArgs, args...)
 
@@ -85,15 +86,17 @@ func FormatTerraformPlanFileAsArg(commandType string, outPath string) []string {
 	if outPath == "" {
 		return nil
 	}
+
 	if commandType == "plan" {
 		return []string{fmt.Sprintf("%s=%s", "-out", outPath)}
 	}
+
 	return []string{outPath}
 }
 
 // FormatTerraformVarsAsArgs formats the given variables as command-line args for Terraform (e.g. of the format
 // -var key=value).
-func FormatTerraformVarsAsArgs(vars map[string]interface{}) []string {
+func FormatTerraformVarsAsArgs(vars map[string]any) []string {
 	return formatTerraformArgs(vars, "-var", true, false)
 }
 
@@ -105,6 +108,7 @@ func FormatTerraformLockAsArgs(lockCheck bool, lockTimeout string) []string {
 		lockTimeoutValue := fmt.Sprintf("%s=%s", "-lock-timeout", lockTimeout)
 		lockArgs = append(lockArgs, lockTimeoutValue)
 	}
+
 	return lockArgs
 }
 
@@ -117,16 +121,18 @@ func FormatTerraformPluginDirAsArgs(pluginDir string) []string {
 // FormatTerraformArgs will format multiple args with the arg name (e.g. "-var-file", []string{"foo.tfvars", "bar.tfvars", "baz.tfvars.json"})
 // returns "-var-file foo.tfvars -var-file bar.tfvars -var-file baz.tfvars.json"
 func FormatTerraformArgs(argName string, args []string) []string {
-	argsList := []string{}
+	argsList := make([]string, 0, 2*len(args)) //nolint:mnd // each arg produces a name-value pair
+
 	for _, argValue := range args {
 		argsList = append(argsList, argName, argValue)
 	}
+
 	return argsList
 }
 
 // FormatTerraformBackendConfigAsArgs formats the given variables as backend config args for Terraform (e.g. of the
 // format -backend-config=key=value).
-func FormatTerraformBackendConfigAsArgs(vars map[string]interface{}) []string {
+func FormatTerraformBackendConfigAsArgs(vars map[string]any) []string {
 	return formatting.FormatBackendConfigAsArgs(vars)
 }
 
@@ -135,7 +141,7 @@ func FormatTerraformBackendConfigAsArgs(vars map[string]interface{}) []string {
 // useSpaceAsSeparator is false, an equals will separate the prefix and each var (e.g., -backend-config=foo=bar). If
 // omitNil is false, then nil values will be included, (e.g. -backend-config=foo=null). If
 // omitNil is true, then nil values will not be included, (e.g. -backend-config=foo). If
-func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsSeparator bool, omitNil bool) []string {
+func formatTerraformArgs(vars map[string]any, prefix string, useSpaceAsSeparator bool, omitNil bool) []string {
 	var args []string
 
 	for key, value := range vars {
@@ -146,6 +152,7 @@ func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsS
 			hclString := toHclString(value, false)
 			argValue = fmt.Sprintf("%s=%s", key, hclString)
 		}
+
 		if useSpaceAsSeparator {
 			args = append(args, prefix, argValue)
 		} else {
@@ -161,12 +168,11 @@ func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsS
 // arbitrary Go types to an HCL string. Therefore, this method is a simple implementation that correctly handles
 // ints, booleans, lists, and maps. Everything else is forced into a string using Sprintf. Hopefully, this approach is
 // good enough for the type of variables we deal with in Terratest.
-func toHclString(value interface{}, isNested bool) string {
+func toHclString(value any, isNested bool) string {
 	// Ideally, we'd use a type switch here to identify slices and maps, but we can't do that, because Go doesn't
-	// support generics, and the type switch only matches concrete types. So we could match []interface{}, but if
+	// support generics, and the type switch only matches concrete types. So we could match []any, but if
 	// a user passes in []string{}, that would NOT match (the same logic applies to maps). Therefore, we have to
-	// use reflection and manually convert into []interface{} and map[string]interface{}.
-
+	// use reflection and manually convert into []any and map[string]any.
 	if slice, isSlice := tryToConvertToGenericSlice(value); isSlice {
 		return sliceToHclString(slice)
 	} else if m, isMap := tryToConvertToGenericMap(value); isMap {
@@ -179,13 +185,13 @@ func toHclString(value interface{}, isNested bool) string {
 // Try to convert the given value to a generic slice. Return the slice and true if the underlying value itself was a
 // slice and an empty slice and false if it wasn't. This is necessary because Go is a shitty language that doesn't
 // have generics, nor useful utility methods built-in. For more info, see: http://stackoverflow.com/a/12754757/483528
-func tryToConvertToGenericSlice(value interface{}) ([]interface{}, bool) {
+func tryToConvertToGenericSlice(value any) ([]any, bool) {
 	reflectValue := reflect.ValueOf(value)
 	if reflectValue.Kind() != reflect.Slice {
-		return []interface{}{}, false
+		return []any{}, false
 	}
 
-	genericSlice := make([]interface{}, reflectValue.Len())
+	genericSlice := make([]any, reflectValue.Len())
 
 	for i := 0; i < reflectValue.Len(); i++ {
 		genericSlice[i] = reflectValue.Index(i).Interface()
@@ -197,18 +203,18 @@ func tryToConvertToGenericSlice(value interface{}) ([]interface{}, bool) {
 // Try to convert the given value to a generic map. Return the map and true if the underlying value itself was a
 // map and an empty map and false if it wasn't. This is necessary because Go is a shitty language that doesn't
 // have generics, nor useful utility methods built-in. For more info, see: http://stackoverflow.com/a/12754757/483528
-func tryToConvertToGenericMap(value interface{}) (map[string]interface{}, bool) {
+func tryToConvertToGenericMap(value any) (map[string]any, bool) {
 	reflectValue := reflect.ValueOf(value)
 	if reflectValue.Kind() != reflect.Map {
-		return map[string]interface{}{}, false
+		return map[string]any{}, false
 	}
 
 	reflectType := reflect.TypeOf(value)
 	if reflectType.Key().Kind() != reflect.String {
-		return map[string]interface{}{}, false
+		return map[string]any{}, false
 	}
 
-	genericMap := make(map[string]interface{}, reflectValue.Len())
+	genericMap := make(map[string]any, reflectValue.Len())
 
 	mapKeys := reflectValue.MapKeys()
 	for _, key := range mapKeys {
@@ -219,8 +225,8 @@ func tryToConvertToGenericMap(value interface{}) (map[string]interface{}, bool) 
 }
 
 // Convert a slice to an HCL string. See ToHclString for details.
-func sliceToHclString(slice []interface{}) string {
-	hclValues := []string{}
+func sliceToHclString(slice []any) string {
+	hclValues := make([]string, 0, len(slice))
 
 	for _, value := range slice {
 		hclValue := toHclString(value, true)
@@ -231,8 +237,8 @@ func sliceToHclString(slice []interface{}) string {
 }
 
 // Convert a map to an HCL string. See ToHclString for details.
-func mapToHclString(m map[string]interface{}) string {
-	keyValuePairs := []string{}
+func mapToHclString(m map[string]any) string {
+	keyValuePairs := make([]string, 0, len(m))
 
 	for key, value := range m {
 		keyValuePair := fmt.Sprintf(`"%s" = %s`, key, toHclString(value, true))
@@ -244,13 +250,12 @@ func mapToHclString(m map[string]interface{}) string {
 
 // Convert a primitive, such as a bool, int, or string, to an HCL string. If this isn't a primitive, force its value
 // using Sprintf. See ToHclString for details.
-func primitiveToHclString(value interface{}, isNested bool) string {
+func primitiveToHclString(value any, isNested bool) string {
 	if value == nil {
 		return "null"
 	}
 
 	switch v := value.(type) {
-
 	case bool:
 		return strconv.FormatBool(v)
 
@@ -260,7 +265,7 @@ func primitiveToHclString(value interface{}, isNested bool) string {
 			return fmt.Sprintf("\"%v\"", v)
 		}
 
-		return fmt.Sprintf("%v", v)
+		return v
 
 	default:
 		return fmt.Sprintf("%v", v)

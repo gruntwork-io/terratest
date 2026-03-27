@@ -15,7 +15,7 @@ func (err OutputKeyNotFound) Error() string {
 
 // OutputValueNotMap occurs when casting a found output value to a map fails
 type OutputValueNotMap struct {
-	Value interface{}
+	Value any
 }
 
 func (err OutputValueNotMap) Error() string {
@@ -25,7 +25,7 @@ func (err OutputValueNotMap) Error() string {
 // OutputValueNotList occurs when casting a found output value to a
 // list of interfaces fails
 type OutputValueNotList struct {
-	Value interface{}
+	Value any
 }
 
 func (err OutputValueNotList) Error() string {
@@ -72,8 +72,8 @@ func (err InputFileKeyNotFound) Error() string {
 
 // PanicWhileParsingVarFile is returned when the HCL parsing routine panics due to errors.
 type PanicWhileParsingVarFile struct {
+	RecoveredValue any
 	ConfigFile     string
-	RecoveredValue interface{}
 }
 
 func (err PanicWhileParsingVarFile) Error() string {

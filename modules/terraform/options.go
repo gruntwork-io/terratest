@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const defaultTimeBetweenRetries = 5 * time.Second
+
 var (
 	DefaultRetryableTerraformErrors = map[string]string{
 		// Helm related terraform calls may fail when too many tests run in parallel. While the exact cause is unknown,
@@ -39,43 +41,43 @@ var (
 
 // Options for running Terraform commands
 type Options struct {
-	TerraformBinary string // Name of the binary that will be used
-	TerraformDir    string // The path to the folder where the Terraform code is defined.
+	Stdin            io.Reader         // Optional stdin to pass to Terraform commands
+	WarningsAsErrors map[string]string // Terraform warning messages that should be treated as errors. The keys are a regexp to match against the warning and the value is what to display to a user if that warning is matched.
+	Logger           *logger.Logger    // Set a non-default logger that should be used. See the logger package for more info.
+	BackendConfig    map[string]any    // The vars to pass to the terraform init command for extra configuration for the backend. If a var is nil, it will be formated as `--backend-config=var` instead of `--backend-config=var=null`
+	EnvVars          map[string]string // Environment variables to set when running Terraform
 
 	// The vars to pass to Terraform commands using the -var option. Note that terraform does not support passing `null`
-	// as a variable value through the command line. That is, if you use `map[string]interface{}{"foo": nil}` as `Vars`,
+	// as a variable value through the command line. That is, if you use `map[string]any{"foo": nil}` as `Vars`,
 	// this will translate to the string literal `"null"` being assigned to the variable `foo`. However, nulls in
 	// lists and maps/objects are supported. E.g., the following var will be set as expected (`{ bar = null }`:
-	// map[string]interface{}{
-	//     "foo": map[string]interface{}{"bar": nil},
+	// map[string]any{
+	//     "foo": map[string]any{"bar": nil},
 	// }
-	Vars map[string]interface{}
+	Vars map[string]any
 
-	VarFiles                 []string               // The var file paths to pass to Terraform commands using -var-file option.
-	MixedVars                []Var                  // Mix of `-var` and `-var-file` in arbritrary order, use `VarInline()` `VarFile()` to set the value.
-	Targets                  []string               // The target resources to pass to the terraform command with -target
-	Lock                     bool                   // The lock option to pass to the terraform command with -lock
-	LockTimeout              string                 // The lock timeout option to pass to the terraform command with -lock-timeout
-	EnvVars                  map[string]string      // Environment variables to set when running Terraform
-	BackendConfig            map[string]interface{} // The vars to pass to the terraform init command for extra configuration for the backend. If a var is nil, it will be formated as `--backend-config=var` instead of `--backend-config=var=null`
-	RetryableTerraformErrors map[string]string      // If Terraform apply fails with one of these (transient) errors, retry. The keys are a regexp to match against the error and the message is what to display to a user if that error is matched.
-	MaxRetries               int                    // Maximum number of times to retry errors matching RetryableTerraformErrors
-	TimeBetweenRetries       time.Duration          // The amount of time to wait between retries
-	Upgrade                  bool                   // Whether the -upgrade flag of the terraform init command should be set to true or not
-	Reconfigure              bool                   // Set the -reconfigure flag to the terraform init command
-	MigrateState             bool                   // Set the -migrate-state and -force-copy (suppress 'yes' answer prompt) flag to the terraform init command
-	NoColor                  bool                   // Whether the -no-color flag will be set for any Terraform command or not
-	SshAgent                 *ssh.SshAgent          // Overrides local SSH agent with the given in-process agent
-	NoStderr                 bool                   // Disable stderr redirection
-	OutputMaxLineSize        int                    // The max size of one line in stdout and stderr (in bytes)
-	Logger                   *logger.Logger         // Set a non-default logger that should be used. See the logger package for more info.
-	Parallelism              int                    // Set the parallelism setting for Terraform
-	PlanFilePath             string                 // The path to output a plan file to (for the plan command) or read one from (for the apply command)
-	PluginDir                string                 // The path of downloaded plugins to pass to the terraform init command (-plugin-dir)
-	SetVarsAfterVarFiles     bool                   // Pass -var options after -var-file options to Terraform commands
-	WarningsAsErrors         map[string]string      // Terraform warning messages that should be treated as errors. The keys are a regexp to match against the warning and the value is what to display to a user if that warning is matched.
-	ExtraArgs                ExtraArgs              // Extra arguments passed to Terraform commands
-	Stdin                    io.Reader              // Optional stdin to pass to Terraform commands
+	RetryableTerraformErrors map[string]string // If Terraform apply fails with one of these (transient) errors, retry. The keys are a regexp to match against the error and the message is what to display to a user if that error is matched.
+	SshAgent                 *ssh.SSHAgent     //nolint:revive,staticcheck // preserving deprecated field name. Overrides local SSH agent with the given in-process agent
+	TerraformBinary          string            // Name of the binary that will be used
+	TerraformDir             string            // The path to the folder where the Terraform code is defined.
+	PlanFilePath             string            // The path to output a plan file to (for the plan command) or read one from (for the apply command)
+	PluginDir                string            // The path of downloaded plugins to pass to the terraform init command (-plugin-dir)
+	LockTimeout              string            // The lock timeout option to pass to the terraform command with -lock-timeout
+	ExtraArgs                ExtraArgs         // Extra arguments passed to Terraform commands
+	Targets                  []string          // The target resources to pass to the terraform command with -target
+	MixedVars                []Var             // Mix of `-var` and `-var-file` in arbritrary order, use `VarInline()` `VarFile()` to set the value.
+	VarFiles                 []string          // The var file paths to pass to Terraform commands using -var-file option.
+	TimeBetweenRetries       time.Duration     // The amount of time to wait between retries
+	Parallelism              int               // Set the parallelism setting for Terraform
+	OutputMaxLineSize        int               // The max size of one line in stdout and stderr (in bytes)
+	MaxRetries               int               // Maximum number of times to retry errors matching RetryableTerraformErrors
+	NoStderr                 bool              // Disable stderr redirection
+	NoColor                  bool              // Whether the -no-color flag will be set for any Terraform command or not
+	MigrateState             bool              // Set the -migrate-state and -force-copy (suppress 'yes' answer prompt) flag to the terraform init command
+	Reconfigure              bool              // Set the -reconfigure flag to the terraform init command
+	Upgrade                  bool              // Whether the -upgrade flag of the terraform init command should be set to true or not
+	SetVarsAfterVarFiles     bool              // Pass -var options after -var-file options to Terraform commands
+	Lock                     bool              // The lock option to pass to the terraform command with -lock
 }
 
 type ExtraArgs struct {
@@ -110,18 +112,22 @@ func (options *Options) Clone() (*Options, error) {
 	for key, val := range options.EnvVars {
 		newOptions.EnvVars[key] = val
 	}
-	newOptions.Vars = make(map[string]interface{})
+
+	newOptions.Vars = make(map[string]any)
 	for key, val := range options.Vars {
 		newOptions.Vars[key] = val
 	}
-	newOptions.BackendConfig = make(map[string]interface{})
+
+	newOptions.BackendConfig = make(map[string]any)
 	for key, val := range options.BackendConfig {
 		newOptions.BackendConfig[key] = val
 	}
+
 	newOptions.RetryableTerraformErrors = make(map[string]string)
 	for key, val := range options.RetryableTerraformErrors {
 		newOptions.RetryableTerraformErrors[key] = val
 	}
+
 	newOptions.WarningsAsErrors = make(map[string]string)
 	for key, val := range options.WarningsAsErrors {
 		newOptions.WarningsAsErrors[key] = val
@@ -143,6 +149,7 @@ func WithDefaultRetryableErrors(t testing.TestingT, originalOptions *Options) *O
 	if newOptions.RetryableTerraformErrors == nil {
 		newOptions.RetryableTerraformErrors = map[string]string{}
 	}
+
 	for k, v := range DefaultRetryableTerraformErrors {
 		newOptions.RetryableTerraformErrors[k] = v
 	}
@@ -150,7 +157,7 @@ func WithDefaultRetryableErrors(t testing.TestingT, originalOptions *Options) *O
 	// These defaults for retry configuration are arbitrary, but have worked well in practice across Gruntwork
 	// modules.
 	newOptions.MaxRetries = 3
-	newOptions.TimeBetweenRetries = 5 * time.Second
+	newOptions.TimeBetweenRetries = defaultTimeBetweenRetries
 
 	return newOptions
 }

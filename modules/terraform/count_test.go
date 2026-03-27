@@ -1,9 +1,10 @@
-package terraform
+package terraform_test
 
 import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	ttesting "github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,65 +15,70 @@ func TestGetResourceCount(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
 	require.NoError(t, err)
 
-	terraformOptions := &Options{
+	terraformOptions := &terraform.Options{
 		TerraformDir: testFolder,
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"cnt": 1,
 		},
 	}
 
-	cnt := GetResourceCount(t, InitAndPlan(t, terraformOptions))
+	cnt := terraform.GetResourceCount(t, terraform.InitAndPlan(t, terraformOptions))
 	assert.Equal(t, 1, cnt.Add)
 	assert.Equal(t, 0, cnt.Change)
 	assert.Equal(t, 0, cnt.Destroy)
 }
 
-func TestGetResourceCountEColor(t *testing.T) {
+func TestGetResourceCountEColor(t *testing.T) { //nolint:tparallel // subtests share mutable terraform options
 	t.Parallel()
+
 	runTestGetResourceCountE(t, false)
 }
 
-func TestGetResourceCountENoColor(t *testing.T) {
+func TestGetResourceCountENoColor(t *testing.T) { //nolint:tparallel // subtests share mutable terraform options
 	t.Parallel()
+
 	runTestGetResourceCountE(t, true)
 }
 
-func runTestGetResourceCountE(t *testing.T, noColor bool) {
+func runTestGetResourceCountE(t *testing.T, noColor bool) { //nolint:tparallel // subtests share mutable terraform options
+	t.Helper()
 	testCases := []struct {
-		Name                                         string
-		tfFuncToRun                                  func(t ttesting.TestingT, options *Options) string
-		cntValue                                     int
-		expectedAdd, expectedChange, expectedDestroy int
+		tfFuncToRun     func(t ttesting.TestingT, options *terraform.Options) string
+		name            string
+		cntValue        int
+		expectedAdd     int
+		expectedChange  int
+		expectedDestroy int
 	}{
-		{"PlanZero", InitAndPlan, 0, 0, 0, 0},
-		{"ApplyZero", InitAndApply, 0, 0, 0, 0},
-		{"PlanAddResouce", InitAndPlan, 2, 2, 0, 0},
-		{"ApplyAddResouce", InitAndApply, 2, 2, 0, 0},
-		{"PlanNoOp", InitAndApply, 2, 0, 0, 0},
-		{"ApplyNoOp", InitAndApply, 2, 0, 0, 0},
-		{"PlanDestroyResource", InitAndPlan, 1, 0, 0, 1},
-		{"ApplyDestroyResource", InitAndApply, 1, 0, 0, 1},
-		{"Destroy", Destroy, 1, 0, 0, 1},
-		{"DestroyNoOp", Destroy, 1, 0, 0, 0},
+		{name: "PlanZero", tfFuncToRun: terraform.InitAndPlan, cntValue: 0, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "ApplyZero", tfFuncToRun: terraform.InitAndApply, cntValue: 0, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "PlanAddResouce", tfFuncToRun: terraform.InitAndPlan, cntValue: 2, expectedAdd: 2, expectedChange: 0, expectedDestroy: 0},
+		{name: "ApplyAddResouce", tfFuncToRun: terraform.InitAndApply, cntValue: 2, expectedAdd: 2, expectedChange: 0, expectedDestroy: 0},
+		{name: "PlanNoOp", tfFuncToRun: terraform.InitAndApply, cntValue: 2, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "ApplyNoOp", tfFuncToRun: terraform.InitAndApply, cntValue: 2, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "PlanDestroyResource", tfFuncToRun: terraform.InitAndPlan, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
+		{name: "ApplyDestroyResource", tfFuncToRun: terraform.InitAndApply, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
+		{name: "Destroy", tfFuncToRun: terraform.Destroy, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
+		{name: "DestroyNoOp", tfFuncToRun: terraform.Destroy, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
 	}
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
 	require.NoError(t, err)
 
-	terraformOptions := &Options{
+	terraformOptions := &terraform.Options{
 		TerraformDir: testFolder,
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"cnt": 0,
 		},
 		NoColor: noColor,
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.Name,
+		t.Run(tc.name,
 			func(t *testing.T) {
 				terraformOptions.Vars["cnt"] = tc.cntValue
-				cnt, err := GetResourceCountE(t, tc.tfFuncToRun(t, terraformOptions))
-				assert.NoError(t, err)
+				cnt, err := terraform.GetResourceCountE(t, tc.tfFuncToRun(t, terraformOptions))
+				require.NoError(t, err)
 				assert.Equal(t, tc.expectedAdd, cnt.Add)
 				assert.Equal(t, tc.expectedChange, cnt.Change)
 				assert.Equal(t, tc.expectedDestroy, cnt.Destroy)
@@ -82,10 +88,9 @@ func runTestGetResourceCountE(t *testing.T, noColor bool) {
 	t.Run("InvalidInput",
 		func(t *testing.T) {
 			terraformOptions.Vars["cnt"] = "abc"
-			cmdout, _ := PlanE(t, terraformOptions)
-			cnt, err := GetResourceCountE(t, cmdout)
-			assert.EqualError(t, err, getResourceCountErrMessage)
+			cmdout, _ := terraform.PlanE(t, terraformOptions)
+			cnt, err := terraform.GetResourceCountE(t, cmdout)
+			require.EqualError(t, err, terraform.GetResourceCountErrMessage)
 			assert.Nil(t, cnt)
 		})
-
 }

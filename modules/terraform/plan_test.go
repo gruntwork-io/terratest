@@ -1,12 +1,12 @@
-package terraform
+package terraform_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,11 +17,11 @@ func TestInitAndPlanWithError(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-with-plan-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	_, err = InitAndPlanE(t, options)
+	_, err = terraform.InitAndPlanE(t, options)
 	require.Error(t, err)
 }
 
@@ -31,7 +31,7 @@ func TestInitAndPlanWithNoError(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
@@ -39,8 +39,9 @@ func TestInitAndPlanWithNoError(t *testing.T) {
 	// report "No changes. Infrastructure is up-to-date." However, with 0.13 and above, if the Terraform configuration
 	// has never been applied at all, 'plan' always shows changes. So we have to run 'apply' first, and can then
 	// check that 'plan' returns the message we expect.
-	InitAndApply(t, options)
-	out, err := PlanE(t, options)
+	terraform.InitAndApply(t, options)
+
+	out, err := terraform.PlanE(t, options)
 	require.NoError(t, err)
 	require.Contains(t, out, "No changes.")
 }
@@ -51,14 +52,14 @@ func TestInitAndPlanWithOutput(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"cnt": 1,
 		},
 	}
 
-	out, err := InitAndPlanE(t, options)
+	out, err := terraform.InitAndPlanE(t, options)
 	require.NoError(t, err)
 	require.Contains(t, out, "1 to add, 0 to change, 0 to destroy.")
 }
@@ -68,22 +69,24 @@ func TestInitAndPlanWithPlanFile(t *testing.T) {
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
 	require.NoError(t, err)
+
 	planFilePath := filepath.Join(testFolder, "plan.out")
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"cnt": 1,
 		},
 		PlanFilePath: planFilePath,
 	}
 
-	out, err := InitAndPlanE(t, options)
+	out, err := terraform.InitAndPlanE(t, options)
 	require.NoError(t, err)
+
 	// clean output to be consistent in checks
 	out = strings.ReplaceAll(out, "\n", "")
 	assert.Contains(t, out, "1 to add, 0 to change, 0 to destroy.")
-	assert.Contains(t, out, fmt.Sprintf("Saved the plan to:%s", planFilePath))
+	assert.Contains(t, out, "Saved the plan to:"+planFilePath)
 	assert.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
 }
 
@@ -93,22 +96,24 @@ func TestInitAndPlanAndShowWithStructNoLogTempPlanFile(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"cnt": 1,
 		},
 	}
-	planStruct := InitAndPlanAndShowWithStructNoLogTempPlanFile(t, options)
-	assert.Equal(t, 1, len(planStruct.ResourceChangesMap))
+
+	planStruct := terraform.InitAndPlanAndShowWithStructNoLogTempPlanFile(t, options)
+	assert.Len(t, planStruct.ResourceChangesMap, 1)
 }
 
 func TestPlanWithExitCodeWithNoChanges(t *testing.T) {
 	t.Parallel()
+
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-no-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
@@ -116,24 +121,27 @@ func TestPlanWithExitCodeWithNoChanges(t *testing.T) {
 	// would return a code of 0. However, with 0.13 and above, if the Terraform configuration has never been applied
 	// at all, -detailed-exitcode always returns an exit code of 2. So we have to run 'apply' first, and can then
 	// check that 'plan' returns the exit code we expect.
-	InitAndApply(t, options)
-	exitCode := PlanExitCode(t, options)
-	require.Equal(t, DefaultSuccessExitCode, exitCode)
+	terraform.InitAndApply(t, options)
+
+	exitCode := terraform.PlanExitCode(t, options)
+	require.Equal(t, terraform.DefaultSuccessExitCode, exitCode)
 }
 
 func TestPlanWithExitCodeWithChanges(t *testing.T) {
 	t.Parallel()
+
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"cnt": 1,
 		},
 	}
-	exitCode := InitAndPlanWithExitCode(t, options)
-	require.Equal(t, TerraformPlanChangesPresentExitCode, exitCode)
+
+	exitCode := terraform.InitAndPlanWithExitCode(t, options)
+	require.Equal(t, terraform.TerraformPlanChangesPresentExitCode, exitCode)
 }
 
 func TestPlanWithExitCodeWithFailure(t *testing.T) {
@@ -142,11 +150,11 @@ func TestPlanWithExitCodeWithFailure(t *testing.T) {
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-with-plan-error", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terraform.Options{
 		TerraformDir: testFolder,
 	}
 
-	exitCode, getExitCodeErr := InitAndPlanWithExitCodeE(t, options)
+	exitCode, getExitCodeErr := terraform.InitAndPlanWithExitCodeE(t, options)
 	require.NoError(t, getExitCodeErr)
-	require.Equal(t, exitCode, 1)
+	require.Equal(t, 1, exitCode)
 }
