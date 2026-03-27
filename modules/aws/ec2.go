@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -12,15 +11,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetPrivateIpOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
-func GetPrivateIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	ip, err := GetPrivateIpOfEc2InstanceE(t, instanceID, awsRegion)
+// GetPrivateIPOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
+// This function will fail the test if there is an error.
+func GetPrivateIPOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
+	ip, err := GetPrivateIPOfEc2InstanceE(t, instanceID, awsRegion)
 	require.NoError(t, err)
+
 	return ip
 }
 
-// GetPrivateIpOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
-func GetPrivateIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
+// GetPrivateIpOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPrivateIPOfEc2Instance] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPrivateIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
+	return GetPrivateIPOfEc2Instance(t, instanceID, awsRegion)
+}
+
+// GetPrivateIPOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
+func GetPrivateIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
 	ips, err := GetPrivateIpsOfEc2InstancesE(t, []string{instanceID}, awsRegion)
 	if err != nil {
 		return "", err
@@ -35,10 +45,20 @@ func GetPrivateIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion
 	return ip, nil
 }
 
+// GetPrivateIpOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPrivateIPOfEc2InstanceE] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPrivateIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
+	return GetPrivateIPOfEc2InstanceE(t, instanceID, awsRegion)
+}
+
 // GetPrivateIpsOfEc2Instances gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 func GetPrivateIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRegion string) map[string]string {
 	ips, err := GetPrivateIpsOfEc2InstancesE(t, instanceIDs, awsRegion)
 	require.NoError(t, err)
+
 	return ips
 }
 
@@ -47,6 +67,7 @@ func GetPrivateIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsR
 	ec2Client := NewEc2Client(t, awsRegion)
 	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
+
 	output, err := ec2Client.DescribeInstances(context.Background(), &input)
 	if err != nil {
 		return nil, err
@@ -55,7 +76,8 @@ func GetPrivateIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsR
 	ips := map[string]string{}
 
 	for _, reservation := range output.Reservations {
-		for _, instance := range reservation.Instances {
+		for j := range reservation.Instances {
+			instance := &reservation.Instances[j]
 			ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateIpAddress)
 		}
 	}
@@ -67,6 +89,7 @@ func GetPrivateIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsR
 func GetPrivateHostnameOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
 	ip, err := GetPrivateHostnameOfEc2InstanceE(t, instanceID, awsRegion)
 	require.NoError(t, err)
+
 	return ip
 }
 
@@ -90,6 +113,7 @@ func GetPrivateHostnameOfEc2InstanceE(t testing.TestingT, instanceID string, aws
 func GetPrivateHostnamesOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRegion string) map[string]string {
 	ips, err := GetPrivateHostnamesOfEc2InstancesE(t, instanceIDs, awsRegion)
 	require.NoError(t, err)
+
 	return ips
 }
 
@@ -99,8 +123,10 @@ func GetPrivateHostnamesOfEc2InstancesE(t testing.TestingT, instanceIDs []string
 	if err != nil {
 		return nil, err
 	}
+
 	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
+
 	output, err := ec2Client.DescribeInstances(context.Background(), &input)
 	if err != nil {
 		return nil, err
@@ -109,7 +135,8 @@ func GetPrivateHostnamesOfEc2InstancesE(t testing.TestingT, instanceIDs []string
 	hostnames := map[string]string{}
 
 	for _, reservation := range output.Reservations {
-		for _, instance := range reservation.Instances {
+		for j := range reservation.Instances {
+			instance := &reservation.Instances[j]
 			hostnames[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateDnsName)
 		}
 	}
@@ -117,15 +144,26 @@ func GetPrivateHostnamesOfEc2InstancesE(t testing.TestingT, instanceIDs []string
 	return hostnames, nil
 }
 
-// GetPublicIpOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
-func GetPublicIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	ip, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
+// GetPublicIPOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
+// This function will fail the test if there is an error.
+func GetPublicIPOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
+	ip, err := GetPublicIPOfEc2InstanceE(t, instanceID, awsRegion)
 	require.NoError(t, err)
+
 	return ip
 }
 
-// GetPublicIpOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
-func GetPublicIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
+// GetPublicIpOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPublicIPOfEc2Instance] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPublicIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
+	return GetPublicIPOfEc2Instance(t, instanceID, awsRegion)
+}
+
+// GetPublicIPOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
+func GetPublicIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
 	ips, err := GetPublicIpsOfEc2InstancesE(t, []string{instanceID}, awsRegion)
 	if err != nil {
 		return "", err
@@ -140,10 +178,20 @@ func GetPublicIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion 
 	return ip, nil
 }
 
+// GetPublicIpOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPublicIPOfEc2InstanceE] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPublicIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
+	return GetPublicIPOfEc2InstanceE(t, instanceID, awsRegion)
+}
+
 // GetPublicIpsOfEc2Instances gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 func GetPublicIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRegion string) map[string]string {
 	ips, err := GetPublicIpsOfEc2InstancesE(t, instanceIDs, awsRegion)
 	require.NoError(t, err)
+
 	return ips
 }
 
@@ -152,6 +200,7 @@ func GetPublicIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRe
 	ec2Client := NewEc2Client(t, awsRegion)
 	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
+
 	output, err := ec2Client.DescribeInstances(context.Background(), &input)
 	if err != nil {
 		return nil, err
@@ -160,7 +209,8 @@ func GetPublicIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRe
 	ips := map[string]string{}
 
 	for _, reservation := range output.Reservations {
-		for _, instance := range reservation.Instances {
+		for j := range reservation.Instances {
+			instance := &reservation.Instances[j]
 			ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PublicIpAddress)
 		}
 	}
@@ -172,14 +222,16 @@ func GetPublicIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRe
 func GetEc2InstanceIdsByTag(t testing.TestingT, region string, tagName string, tagValue string) []string {
 	out, err := GetEc2InstanceIdsByTagE(t, region, tagName, tagValue)
 	require.NoError(t, err)
+
 	return out
 }
 
 // GetEc2InstanceIdsByTagE returns all the IDs of EC2 instances in the given region with the given tag.
 func GetEc2InstanceIdsByTagE(t testing.TestingT, region string, tagName string, tagValue string) ([]string, error) {
 	ec2Filters := map[string][]string{
-		fmt.Sprintf("tag:%s", tagName): {tagValue},
+		"tag:" + tagName: {tagValue},
 	}
+
 	return GetEc2InstanceIdsByFiltersE(t, region, ec2Filters)
 }
 
@@ -188,6 +240,7 @@ func GetEc2InstanceIdsByTagE(t testing.TestingT, region string, tagName string, 
 func GetEc2InstanceIdsByFilters(t testing.TestingT, region string, ec2Filters map[string][]string) []string {
 	out, err := GetEc2InstanceIdsByFiltersE(t, region, ec2Filters)
 	require.NoError(t, err)
+
 	return out
 }
 
@@ -214,7 +267,8 @@ func GetEc2InstanceIdsByFiltersE(t testing.TestingT, region string, ec2Filters m
 	var instanceIDs []string
 
 	for _, reservation := range output.Reservations {
-		for _, instance := range reservation.Instances {
+		for j := range reservation.Instances {
+			instance := &reservation.Instances[j]
 			instanceIDs = append(instanceIDs, *instance.InstanceId)
 		}
 	}
@@ -226,6 +280,7 @@ func GetEc2InstanceIdsByFiltersE(t testing.TestingT, region string, ec2Filters m
 func GetTagsForEc2Instance(t testing.TestingT, region string, instanceID string) map[string]string {
 	tags, err := GetTagsForEc2InstanceE(t, region, instanceID)
 	require.NoError(t, err)
+
 	return tags
 }
 
@@ -278,6 +333,7 @@ func DeleteAmiE(t testing.TestingT, region string, imageID string) error {
 	}
 
 	_, err = client.DeregisterImage(context.Background(), &ec2.DeregisterImageInput{ImageId: aws.String(imageID)})
+
 	return err
 }
 
@@ -294,6 +350,7 @@ func AddTagsToResourceE(t testing.TestingT, region string, resource string, tags
 	}
 
 	var awsTags []types.Tag
+
 	for key, value := range tags {
 		awsTags = append(awsTags, types.Tag{
 			Key:   aws.String(key),
@@ -336,6 +393,7 @@ func TerminateInstanceE(t testing.TestingT, region string, instanceID string) er
 func GetAmiPubliclyAccessible(t testing.TestingT, awsRegion string, amiID string) bool {
 	output, err := GetAmiPubliclyAccessibleE(t, awsRegion, amiID)
 	require.NoError(t, err)
+
 	return output
 }
 
@@ -345,11 +403,13 @@ func GetAmiPubliclyAccessibleE(t testing.TestingT, awsRegion string, amiID strin
 	if err != nil {
 		return false, err
 	}
+
 	for _, launchPermission := range launchPermissions {
 		if string(launchPermission.Group) == "all" {
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
@@ -357,21 +417,25 @@ func GetAmiPubliclyAccessibleE(t testing.TestingT, awsRegion string, amiID strin
 func GetAccountsWithLaunchPermissionsForAmi(t testing.TestingT, awsRegion string, amiID string) []string {
 	output, err := GetAccountsWithLaunchPermissionsForAmiE(t, awsRegion, amiID)
 	require.NoError(t, err)
+
 	return output
 }
 
 // GetAccountsWithLaunchPermissionsForAmiE returns list of accounts that the AMI is shared with
 func GetAccountsWithLaunchPermissionsForAmiE(t testing.TestingT, awsRegion string, amiID string) ([]string, error) {
 	var accountIDs []string
+
 	launchPermissions, err := GetLaunchPermissionsForAmiE(t, awsRegion, amiID)
 	if err != nil {
 		return accountIDs, err
 	}
+
 	for _, launchPermission := range launchPermissions {
 		if aws.ToString(launchPermission.UserId) != "" {
 			accountIDs = append(accountIDs, aws.ToString(launchPermission.UserId))
 		}
 	}
+
 	return accountIDs, nil
 }
 
@@ -387,6 +451,7 @@ func GetLaunchPermissionsForAmiE(t testing.TestingT, awsRegion string, amiID str
 	if err != nil {
 		return []types.LaunchPermission{}, err
 	}
+
 	return output.LaunchPermissions, nil
 }
 
@@ -400,6 +465,7 @@ func GetLaunchPermissionsForAmiE(t testing.TestingT, awsRegion string, amiID str
 func GetRecommendedInstanceType(t testing.TestingT, region string, instanceTypeOptions []string) string {
 	out, err := GetRecommendedInstanceTypeE(t, region, instanceTypeOptions)
 	require.NoError(t, err)
+
 	return out
 }
 
@@ -414,6 +480,7 @@ func GetRecommendedInstanceTypeE(t testing.TestingT, region string, instanceType
 	if err != nil {
 		return "", err
 	}
+
 	return GetRecommendedInstanceTypeWithClientE(t, client, instanceTypeOptions)
 }
 
@@ -435,13 +502,13 @@ func GetRecommendedInstanceTypeWithClientE(t testing.TestingT, ec2Client *ec2.Cl
 		return "", err
 	}
 
-	return pickRecommendedInstanceTypeE(availabilityZones, instanceTypeOfferings, instanceTypeOptions)
+	return PickRecommendedInstanceTypeE(availabilityZones, instanceTypeOfferings, instanceTypeOptions)
 }
 
-// pickRecommendedInstanceTypeE returns the first instance type from instanceTypeOptions that is available in all the
-// AZs in availabilityZones based on the availability data in instanceTypeOfferings. If none of the instance types are
-// available in all AZs, this function returns an error.
-func pickRecommendedInstanceTypeE(availabilityZones []string, instanceTypeOfferings []types.InstanceTypeOffering, instanceTypeOptions []string) (string, error) {
+// PickRecommendedInstanceTypeE picks the first instance type from instanceTypeOptions that is available in all the
+// given availability zones based on the given instance type offerings. Returns a NoInstanceTypeError if none of
+// the options are available in all AZs.
+func PickRecommendedInstanceTypeE(availabilityZones []string, instanceTypeOfferings []types.InstanceTypeOffering, instanceTypeOptions []string) (string, error) {
 	// O(n^3) for the win!
 	for _, instanceType := range instanceTypeOptions {
 		if instanceTypeExistsInAllAzs(instanceType, availabilityZones, instanceTypeOfferings) {
@@ -519,7 +586,8 @@ func getAllAvailabilityZonesE(client *ec2.Client) ([]string, error) {
 
 	var azs []string
 
-	for _, az := range out.AvailabilityZones {
+	for i := range out.AvailabilityZones {
+		az := &out.AvailabilityZones[i]
 		azs = append(azs, aws.ToString(az.ZoneName))
 	}
 
@@ -530,6 +598,7 @@ func getAllAvailabilityZonesE(client *ec2.Client) ([]string, error) {
 func NewEc2Client(t testing.TestingT, region string) *ec2.Client {
 	client, err := NewEc2ClientE(t, region)
 	require.NoError(t, err)
+
 	return client
 }
 

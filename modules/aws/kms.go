@@ -15,6 +15,7 @@ func GetCmkArn(t testing.TestingT, region string, cmkID string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -29,7 +30,6 @@ func GetCmkArnE(t testing.TestingT, region string, cmkID string) (string, error)
 	result, err := kmsClient.DescribeKey(context.Background(), &kms.DescribeKeyInput{
 		KeyId: aws.String(cmkID),
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -43,6 +43,7 @@ func NewKmsClient(t testing.TestingT, region string) *kms.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 

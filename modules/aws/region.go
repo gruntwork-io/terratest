@@ -49,12 +49,15 @@ var stableRegions = []string{
 // Note that regions in the approvedRegions list that are not considered stable are ignored.
 func GetRandomStableRegion(t testing.TestingT, approvedRegions []string, forbiddenRegions []string) string {
 	regionsToPickFrom := stableRegions
+
 	if len(approvedRegions) > 0 {
 		regionsToPickFrom = collections.ListIntersection(regionsToPickFrom, approvedRegions)
 	}
+
 	if len(forbiddenRegions) > 0 {
 		regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
 	}
+
 	return GetRandomRegion(t, regionsToPickFrom, nil)
 }
 
@@ -66,6 +69,7 @@ func GetRandomRegion(t testing.TestingT, approvedRegions []string, forbiddenRegi
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return region
 }
 
@@ -76,6 +80,7 @@ func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenReg
 	regionFromEnvVar := os.Getenv(regionOverrideEnvVarName)
 	if regionFromEnvVar != "" {
 		logger.Default.Logf(t, "Using AWS region %s from environment variable %s", regionFromEnvVar, regionOverrideEnvVarName)
+
 		return regionFromEnvVar, nil
 	}
 
@@ -86,6 +91,7 @@ func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenReg
 		if err != nil {
 			return "", err
 		}
+
 		regionsToPickFrom = allRegions
 	}
 
@@ -93,6 +99,7 @@ func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenReg
 	region := random.RandomString(regionsToPickFrom)
 
 	logger.Default.Logf(t, "Using region %s", region)
+
 	return region, nil
 }
 
@@ -102,6 +109,7 @@ func GetAllAwsRegions(t testing.TestingT) []string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -120,6 +128,7 @@ func GetAllAwsRegionsE(t testing.TestingT) ([]string, error) {
 	}
 
 	var regions []string
+
 	for _, region := range out.Regions {
 		regions = append(regions, aws.ToString(region.RegionName))
 	}
@@ -134,6 +143,7 @@ func GetAvailabilityZones(t testing.TestingT, region string) []string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -153,8 +163,9 @@ func GetAvailabilityZonesE(t testing.TestingT, region string) ([]string, error) 
 	}
 
 	var out []string
-	for _, availabilityZone := range resp.AvailabilityZones {
-		out = append(out, aws.ToString(availabilityZone.ZoneName))
+
+	for i := range resp.AvailabilityZones {
+		out = append(out, aws.ToString(resp.AvailabilityZones[i].ZoneName))
 	}
 
 	return out, nil
@@ -166,6 +177,7 @@ func GetRegionsForService(t testing.TestingT, serviceName string) []string {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -174,21 +186,21 @@ func GetRegionsForService(t testing.TestingT, serviceName string) []string {
 func GetRegionsForServiceE(t testing.TestingT, serviceName string) ([]string, error) {
 	// These values are available in any region, defaulting to us-east-1 since it's the oldest
 	ssmClient, err := NewSsmClientE(t, "us-east-1")
-
 	if err != nil {
 		return nil, err
 	}
 
 	paramPath := "/aws/service/global-infrastructure/services/%s/regions"
+
 	resp, err := ssmClient.GetParametersByPath(context.Background(), &ssm.GetParametersByPathInput{
 		Path: aws.String(fmt.Sprintf(paramPath, serviceName)),
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
 	var availableRegions []string
+
 	for _, p := range resp.Parameters {
 		availableRegions = append(availableRegions, *p.Value)
 	}
@@ -200,7 +212,6 @@ func GetRegionsForServiceE(t testing.TestingT, serviceName string) ([]string, er
 // Then returns one region randomly from the list
 func GetRandomRegionForService(t testing.TestingT, serviceName string) string {
 	availableRegions, err := GetRegionsForServiceE(t, serviceName)
-
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,13 +1,13 @@
-package aws
+package aws_test
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	terraaws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,18 +15,20 @@ import (
 func TestCreateAndDeleteSnsTopic(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	uniqueID := random.UniqueId()
-	name := fmt.Sprintf("test-sns-topic-%s", uniqueID)
+	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	uniqueID := random.UniqueID()
+	name := "test-sns-topic-" + uniqueID
 
-	arn := CreateSnsTopic(t, region, name)
+	arn := terraaws.CreateSnsTopic(t, region, name)
 	defer deleteTopic(t, region, arn)
 
 	assert.True(t, snsTopicExists(t, region, arn))
 }
 
 func snsTopicExists(t *testing.T, region string, arn string) bool {
-	snsClient := NewSnsClient(t, region)
+	t.Helper()
+
+	snsClient := terraaws.NewSnsClient(t, region)
 
 	input := sns.GetTopicAttributesInput{TopicArn: aws.String(arn)}
 
@@ -34,6 +36,7 @@ func snsTopicExists(t *testing.T, region string, arn string) bool {
 		if strings.Contains(err.Error(), "NotFound") {
 			return false
 		}
+
 		t.Fatal(err)
 	}
 
@@ -41,6 +44,8 @@ func snsTopicExists(t *testing.T, region string, arn string) bool {
 }
 
 func deleteTopic(t *testing.T, region string, arn string) {
-	DeleteSNSTopic(t, region, arn)
+	t.Helper()
+
+	terraaws.DeleteSNSTopic(t, region, arn)
 	assert.False(t, snsTopicExists(t, region, arn))
 }

@@ -20,6 +20,7 @@ func DeleteEbsSnapshot(t testing.TestingT, region string, snapshot string) {
 // DeleteEbsSnapshotE deletes the given EBS snapshot
 func DeleteEbsSnapshotE(t testing.TestingT, region string, snapshot string) error {
 	logger.Default.Logf(t, "Deleting EBS snapshot %s", snapshot)
+
 	ec2Client, err := NewEc2ClientE(t, region)
 	if err != nil {
 		return err
@@ -28,5 +29,6 @@ func DeleteEbsSnapshotE(t testing.TestingT, region string, snapshot string) erro
 	_, err = ec2Client.DeleteSnapshot(context.Background(), &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(snapshot),
 	})
+
 	return err
 }

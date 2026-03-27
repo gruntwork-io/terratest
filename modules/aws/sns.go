@@ -15,6 +15,7 @@ func CreateSnsTopic(t testing.TestingT, region string, snsTopicName string) stri
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -61,6 +62,7 @@ func DeleteSNSTopicE(t testing.TestingT, region string, snsTopicArn string) erro
 	}
 
 	_, err = snsClient.DeleteTopic(context.Background(), deleteTopicInput)
+
 	return err
 }
 
@@ -70,6 +72,7 @@ func NewSnsClient(t testing.TestingT, region string) *sns.Client {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 

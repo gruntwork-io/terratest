@@ -16,6 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// s3DeleteBatchSize is the maximum number of objects to delete in a single batch.
+const s3DeleteBatchSize = 1000
+
 // FindS3BucketWithTag finds the name of the S3 bucket in the given region with the given tag key=value.
 func FindS3BucketWithTag(t testing.TestingT, awsRegion string, key string, value string) string {
 	bucket, err := FindS3BucketWithTagE(t, awsRegion, key, value)
@@ -38,7 +41,6 @@ func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, valu
 
 	for _, bucket := range resp.Buckets {
 		tagResponse, err := s3Client.GetBucketTagging(context.Background(), &s3.GetBucketTaggingInput{Bucket: bucket.Name})
-
 		if err != nil {
 			if strings.Contains(err.Error(), "NoSuchBucket") {
 				// Occasionally, the ListBuckets call will return a bucket that has been deleted by S3
@@ -47,6 +49,7 @@ func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, valu
 				// so just ignore this error, and keep checking the other buckets.
 				continue
 			}
+
 			if !strings.Contains(err.Error(), "AuthorizationHeaderMalformed") &&
 				!strings.Contains(err.Error(), "BucketRegionError") &&
 				!strings.Contains(err.Error(), "NoSuchTagSet") {
@@ -57,6 +60,7 @@ func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, valu
 		for _, tag := range tagResponse.TagSet {
 			if *tag.Key == key && *tag.Value == value {
 				logger.Default.Logf(t, "Found S3 bucket %s with tag %s=%s", *bucket.Name, key, value)
+
 				return *bucket.Name, nil
 			}
 		}
@@ -114,18 +118,19 @@ func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, k
 		Bucket: &bucket,
 		Key:    &key,
 	})
-
 	if err != nil {
 		return "", err
 	}
 
 	buf := new(bytes.Buffer)
+
 	_, err = buf.ReadFrom(res.Body)
 	if err != nil {
 		return "", err
 	}
 
 	contents := buf.String()
+
 	logger.Default.Logf(t, "Read contents from s3://%s/%s", bucket, key)
 
 	return contents, nil
@@ -137,7 +142,7 @@ func PutS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, ke
 	require.NoError(t, err)
 }
 
-// PutS3ObjectContents puts the contents of the object in the given bucket with the given key.
+// PutS3ObjectContentsE puts the contents of the object in the given bucket with the given key.
 func PutS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, key string, body io.Reader) error {
 	s3Client, err := NewS3ClientE(t, awsRegion)
 	if err != nil {
@@ -151,6 +156,7 @@ func PutS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, k
 	}
 
 	_, err = s3Client.PutObject(context.Background(), params)
+
 	return err
 }
 
@@ -181,6 +187,7 @@ func CreateS3BucketE(t testing.TestingT, region string, name string) error {
 	}
 
 	_, err = s3Client.CreateBucket(context.Background(), params)
+
 	return err
 }
 
@@ -205,6 +212,7 @@ func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, po
 	}
 
 	_, err = s3Client.PutBucketPolicy(context.Background(), input)
+
 	return err
 }
 
@@ -232,6 +240,7 @@ func PutS3BucketVersioningE(t testing.TestingT, region string, bucketName string
 	}
 
 	_, err = s3Client.PutBucketVersioning(context.Background(), input)
+
 	return err
 }
 
@@ -253,7 +262,9 @@ func DeleteS3BucketE(t testing.TestingT, region string, name string) error {
 	params := &s3.DeleteBucketInput{
 		Bucket: aws.String(name),
 	}
+
 	_, err = s3Client.DeleteBucket(context.Background(), params)
+
 	return err
 }
 
@@ -284,14 +295,16 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 		}
 
 		// Checks if the bucket is already empty
-		if len((*bucketObjects).Versions) == 0 {
+		if len(bucketObjects.Versions) == 0 {
 			logger.Default.Logf(t, "Bucket %s is already empty", name)
+
 			return nil
 		}
 
 		// creating an array of pointers of ObjectIdentifier
-		objectsToDelete := make([]types.ObjectIdentifier, 0, 1000)
-		for _, object := range (*bucketObjects).Versions {
+		objectsToDelete := make([]types.ObjectIdentifier, 0, s3DeleteBatchSize)
+
+		for _, object := range bucketObjects.Versions {
 			obj := types.ObjectIdentifier{
 				Key:       object.Key,
 				VersionId: object.VersionId,
@@ -299,7 +312,7 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 			objectsToDelete = append(objectsToDelete, obj)
 		}
 
-		for _, object := range (*bucketObjects).DeleteMarkers {
+		for _, object := range bucketObjects.DeleteMarkers {
 			obj := types.ObjectIdentifier{
 				Key:       object.Key,
 				VersionId: object.VersionId,
@@ -320,7 +333,7 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 			return err
 		}
 
-		if *(*bucketObjects).IsTruncated { // if there are more objects in the bucket, IsTruncated = true
+		if *bucketObjects.IsTruncated { // if there are more objects in the bucket, IsTruncated = true
 			// params.Marker = (*deleteParams).Delete.Objects[len((*deleteParams).Delete.Objects)-1].Key
 			params.KeyMarker = bucketObjects.NextKeyMarker
 			logger.Default.Logf(t, "Requesting next batch | %s", *(params.KeyMarker))
@@ -328,7 +341,9 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 			break
 		}
 	}
+
 	logger.Default.Logf(t, "Bucket %s is now empty", name)
+
 	return err
 }
 
@@ -351,7 +366,6 @@ func GetS3BucketLoggingTargetE(t testing.TestingT, awsRegion string, bucket stri
 	res, err := s3Client.GetBucketLogging(context.Background(), &s3.GetBucketLoggingInput{
 		Bucket: &bucket,
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -382,7 +396,6 @@ func GetS3BucketLoggingTargetPrefixE(t testing.TestingT, awsRegion string, bucke
 	res, err := s3Client.GetBucketLogging(context.Background(), &s3.GetBucketLoggingInput{
 		Bucket: &bucket,
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -468,6 +481,7 @@ func GetS3BucketOwnershipControlsE(t testing.TestingT, awsRegion, bucket string)
 	for _, rule := range out.OwnershipControls.Rules {
 		rules = append(rules, string(rule.ObjectOwnership))
 	}
+
 	return rules, nil
 }
 
@@ -487,7 +501,9 @@ func AssertS3BucketExistsE(t testing.TestingT, region string, name string) error
 	params := &s3.HeadBucketInput{
 		Bucket: aws.String(name),
 	}
+
 	_, err = s3Client.HeadBucket(context.Background(), params)
+
 	return err
 }
 
@@ -507,6 +523,7 @@ func AssertS3BucketVersioningExistsE(t testing.TestingT, region string, bucketNa
 	if status == "Enabled" {
 		return nil
 	}
+
 	return NewBucketVersioningNotEnabledError(bucketName, region, status)
 }
 
@@ -526,6 +543,7 @@ func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName s
 	if policy == "" {
 		return NewNoBucketPolicyError(bucketName, region, policy)
 	}
+
 	return nil
 }
 
@@ -551,6 +569,7 @@ func NewS3ClientE(t testing.TestingT, region string) (*s3.Client, error) {
 func NewS3Uploader(t testing.TestingT, region string) *manager.Uploader {
 	uploader, err := NewS3UploaderE(t, region)
 	require.NoError(t, err)
+
 	return uploader
 }
 

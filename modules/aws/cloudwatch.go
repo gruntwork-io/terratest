@@ -14,6 +14,7 @@ func GetCloudWatchLogEntries(t testing.TestingT, awsRegion string, logStreamName
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return out
 }
 
@@ -28,12 +29,12 @@ func GetCloudWatchLogEntriesE(t testing.TestingT, awsRegion string, logStreamNam
 		LogGroupName:  aws.String(logGroupName),
 		LogStreamName: aws.String(logStreamName),
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
 	var entries []string
+
 	for _, event := range output.Events {
 		entries = append(entries, *event.Message)
 	}
@@ -47,6 +48,7 @@ func NewCloudWatchLogsClient(t testing.TestingT, region string) *cloudwatchlogs.
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return client
 }
 
@@ -56,5 +58,6 @@ func NewCloudWatchLogsClientE(t testing.TestingT, region string) (*cloudwatchlog
 	if err != nil {
 		return nil, err
 	}
+
 	return cloudwatchlogs.NewFromConfig(*sess), nil
 }

@@ -1,16 +1,16 @@
-package aws
+package aws_test
 
 import (
-	"fmt"
 	"testing"
 
+	aws "github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetRandomRegion(t *testing.T) {
 	t.Parallel()
 
-	randomRegion := GetRandomRegion(t, nil, nil)
+	randomRegion := aws.GetRandomRegion(t, nil, nil)
 	assertLooksLikeRegionName(t, randomRegion)
 }
 
@@ -21,7 +21,7 @@ func TestGetRandomRegionExcludesForbiddenRegions(t *testing.T) {
 	forbiddenRegions := []string{"us-west-2", "ap-northeast-2"}
 
 	for i := 0; i < 1000; i++ {
-		randomRegion := GetRandomRegion(t, approvedRegions, forbiddenRegions)
+		randomRegion := aws.GetRandomRegion(t, approvedRegions, forbiddenRegions)
 		assert.NotContains(t, forbiddenRegions, randomRegion)
 	}
 }
@@ -29,29 +29,33 @@ func TestGetRandomRegionExcludesForbiddenRegions(t *testing.T) {
 func TestGetAllAwsRegions(t *testing.T) {
 	t.Parallel()
 
-	regions := GetAllAwsRegions(t)
+	regions := aws.GetAllAwsRegions(t)
 
 	// The typical account had access to 15 regions as of April, 2018: https://aws.amazon.com/about-aws/global-infrastructure/
-	assert.True(t, len(regions) >= 15, "Number of regions: %d", len(regions))
+	assert.GreaterOrEqual(t, len(regions), 15, "Number of regions: %d", len(regions))
+
 	for _, region := range regions {
 		assertLooksLikeRegionName(t, region)
 	}
 }
 
 func assertLooksLikeRegionName(t *testing.T, regionName string) {
+	t.Helper()
+
 	assert.Regexp(t, "[a-z]{2}-[a-z]+?-[[:digit:]]+", regionName)
 }
 
 func TestGetAvailabilityZones(t *testing.T) {
 	t.Parallel()
 
-	randomRegion := GetRandomStableRegion(t, nil, nil)
-	azs := GetAvailabilityZones(t, randomRegion)
+	randomRegion := aws.GetRandomStableRegion(t, nil, nil)
+	azs := aws.GetAvailabilityZones(t, randomRegion)
 
 	// Every AWS account has access to different AZs, so he best we can do is make sure we get at least one back
-	assert.True(t, len(azs) > 1)
+	assert.Greater(t, len(azs), 1)
+
 	for _, az := range azs {
-		assert.Regexp(t, fmt.Sprintf("^%s[a-z]$", randomRegion), az)
+		assert.Regexp(t, "^"+randomRegion+"[a-z]$", az)
 	}
 }
 
@@ -60,8 +64,8 @@ func TestGetRandomRegionForService(t *testing.T) {
 
 	serviceName := "apigatewayv2"
 
-	regionsForService, _ := GetRegionsForServiceE(t, serviceName)
-	randomRegionForService := GetRandomRegionForService(t, serviceName)
+	regionsForService, _ := aws.GetRegionsForServiceE(t, serviceName)
+	randomRegionForService := aws.GetRandomRegionForService(t, serviceName)
 
 	assert.Contains(t, regionsForService, randomRegionForService)
 }

@@ -1,54 +1,61 @@
-package aws
+package aws_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/gruntwork-io/terratest/modules/random"
+	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	aws "github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/random"
 )
 
 func TestEcrRepo(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	ecrRepoName := fmt.Sprintf("terratest%s", strings.ToLower(random.UniqueId()))
-	repo1, err := CreateECRRepoE(t, region, ecrRepoName)
-	defer DeleteECRRepo(t, region, repo1)
+	region := aws.GetRandomStableRegion(t, nil, nil)
+	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
+
+	repo1, err := aws.CreateECRRepoE(t, region, ecrRepoName)
+	defer aws.DeleteECRRepo(t, region, repo1)
+
 	require.NoError(t, err)
 
-	assert.Equal(t, ecrRepoName, aws.ToString(repo1.RepositoryName))
+	assert.Equal(t, ecrRepoName, awsSDK.ToString(repo1.RepositoryName))
 
-	repo2, err := GetECRRepoE(t, region, ecrRepoName)
+	repo2, err := aws.GetECRRepoE(t, region, ecrRepoName)
 	require.NoError(t, err)
-	assert.Equal(t, ecrRepoName, aws.ToString(repo2.RepositoryName))
+	assert.Equal(t, ecrRepoName, awsSDK.ToString(repo2.RepositoryName))
 }
 
 func TestGetEcrRepoLifecyclePolicyError(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	ecrRepoName := fmt.Sprintf("terratest%s", strings.ToLower(random.UniqueId()))
-	repo1, err := CreateECRRepoE(t, region, ecrRepoName)
-	defer DeleteECRRepo(t, region, repo1)
+	region := aws.GetRandomStableRegion(t, nil, nil)
+	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
+
+	repo1, err := aws.CreateECRRepoE(t, region, ecrRepoName)
+	defer aws.DeleteECRRepo(t, region, repo1)
+
 	require.NoError(t, err)
 
-	assert.Equal(t, ecrRepoName, aws.ToString(repo1.RepositoryName))
+	assert.Equal(t, ecrRepoName, awsSDK.ToString(repo1.RepositoryName))
 
-	_, err = GetECRRepoLifecyclePolicyE(t, region, repo1)
+	_, err = aws.GetECRRepoLifecyclePolicyE(t, region, repo1)
 	require.Error(t, err)
 }
 
 func TestCanSetECRRepoLifecyclePolicyWithSingleRule(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	ecrRepoName := fmt.Sprintf("terratest%s", strings.ToLower(random.UniqueId()))
-	repo1, err := CreateECRRepoE(t, region, ecrRepoName)
-	defer DeleteECRRepo(t, region, repo1)
+	region := aws.GetRandomStableRegion(t, nil, nil)
+	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
+
+	repo1, err := aws.CreateECRRepoE(t, region, ecrRepoName)
+	defer aws.DeleteECRRepo(t, region, repo1)
+
 	require.NoError(t, err)
 
 	lifecyclePolicy := `{
@@ -69,20 +76,22 @@ func TestCanSetECRRepoLifecyclePolicyWithSingleRule(t *testing.T) {
 		]
 	}`
 
-	err = PutECRRepoLifecyclePolicyE(t, region, repo1, lifecyclePolicy)
+	err = aws.PutECRRepoLifecyclePolicyE(t, region, repo1, lifecyclePolicy)
 	require.NoError(t, err)
 
-	policy := GetECRRepoLifecyclePolicy(t, region, repo1)
+	policy := aws.GetECRRepoLifecyclePolicy(t, region, repo1)
 	assert.JSONEq(t, lifecyclePolicy, policy)
 }
 
 func TestCanSetRepositoryPolicyWithSimplePolicy(t *testing.T) {
 	t.Parallel()
 
-	region := GetRandomStableRegion(t, nil, nil)
-	ecrRepoName := fmt.Sprintf("terratest%s", strings.ToLower(random.UniqueId()))
-	repo, err := CreateECRRepoE(t, region, ecrRepoName)
-	defer DeleteECRRepo(t, region, repo)
+	region := aws.GetRandomStableRegion(t, nil, nil)
+	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
+
+	repo, err := aws.CreateECRRepoE(t, region, ecrRepoName)
+	defer aws.DeleteECRRepo(t, region, repo)
+
 	require.NoError(t, err)
 
 	repositoryPolicy := `
@@ -100,9 +109,9 @@ func TestCanSetRepositoryPolicyWithSimplePolicy(t *testing.T) {
 		]
 	}`
 
-	err = PutECRRepoPolicyE(t, region, repo, repositoryPolicy)
+	err = aws.PutECRRepoPolicyE(t, region, repo, repositoryPolicy)
 	require.NoError(t, err)
 
-	policy := GetECRRepoPolicy(t, region, repo)
+	policy := aws.GetECRRepoPolicy(t, region, repo)
 	assert.JSONEq(t, repositoryPolicy, policy)
 }

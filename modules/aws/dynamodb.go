@@ -10,36 +10,55 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetDynamoDbTableTags fetches resource tags of a specified dynamoDB table. This will fail the test if there are any errors
-func GetDynamoDbTableTags(t testing.TestingT, region string, tableName string) []types.Tag {
-	tags, err := GetDynamoDbTableTagsE(t, region, tableName)
+// GetDynamoDBTableTags fetches resource tags of a specified dynamoDB table. This will fail the test if there are any errors.
+func GetDynamoDBTableTags(t testing.TestingT, region string, tableName string) []types.Tag {
+	tags, err := GetDynamoDBTableTagsE(t, region, tableName)
 	require.NoError(t, err)
+
 	return tags
 }
 
-// GetDynamoDbTableTagsE fetches resource tags of a specified dynamoDB table.
-func GetDynamoDbTableTagsE(t testing.TestingT, region string, tableName string) ([]types.Tag, error) {
+// GetDynamoDBTableTagsE fetches resource tags of a specified dynamoDB table.
+func GetDynamoDBTableTagsE(t testing.TestingT, region string, tableName string) ([]types.Tag, error) {
 	table, err := GetDynamoDBTableE(t, region, tableName)
 	if err != nil {
 		return nil, err
 	}
+
 	client, err := NewDynamoDBClientE(t, region)
 	if err != nil {
 		return nil, err
 	}
+
 	out, err := client.ListTagsOfResource(context.Background(), &dynamodb.ListTagsOfResourceInput{
 		ResourceArn: table.TableArn,
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	return out.Tags, err
+}
+
+// Deprecated: Use GetDynamoDBTableTags instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetDynamoDbTableTags(t testing.TestingT, region string, tableName string) []types.Tag {
+	return GetDynamoDBTableTags(t, region, tableName)
+}
+
+// Deprecated: Use GetDynamoDBTableTagsE instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetDynamoDbTableTagsE(t testing.TestingT, region string, tableName string) ([]types.Tag, error) {
+	return GetDynamoDBTableTagsE(t, region, tableName)
 }
 
 // GetDynamoDBTableTimeToLive fetches information about the TTL configuration of a specified dynamoDB table. This will fail the test if there are any errors.
 func GetDynamoDBTableTimeToLive(t testing.TestingT, region string, tableName string) *types.TimeToLiveDescription {
 	ttl, err := GetDynamoDBTableTimeToLiveE(t, region, tableName)
 	require.NoError(t, err)
+
 	return ttl
 }
 
@@ -49,12 +68,14 @@ func GetDynamoDBTableTimeToLiveE(t testing.TestingT, region string, tableName st
 	if err != nil {
 		return nil, err
 	}
+
 	out, err := client.DescribeTimeToLive(context.Background(), &dynamodb.DescribeTimeToLiveInput{
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	return out.TimeToLiveDescription, err
 }
 
@@ -62,6 +83,7 @@ func GetDynamoDBTableTimeToLiveE(t testing.TestingT, region string, tableName st
 func GetDynamoDBTable(t testing.TestingT, region string, tableName string) *types.TableDescription {
 	table, err := GetDynamoDBTableE(t, region, tableName)
 	require.NoError(t, err)
+
 	return table
 }
 
@@ -71,12 +93,14 @@ func GetDynamoDBTableE(t testing.TestingT, region string, tableName string) (*ty
 	if err != nil {
 		return nil, err
 	}
+
 	out, err := client.DescribeTable(context.Background(), &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	return out.Table, err
 }
 
@@ -84,6 +108,7 @@ func GetDynamoDBTableE(t testing.TestingT, region string, tableName string) (*ty
 func NewDynamoDBClient(t testing.TestingT, region string) *dynamodb.Client {
 	client, err := NewDynamoDBClientE(t, region)
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -93,5 +118,6 @@ func NewDynamoDBClientE(t testing.TestingT, region string) (*dynamodb.Client, er
 	if err != nil {
 		return nil, err
 	}
+
 	return dynamodb.NewFromConfig(*sess), nil
 }

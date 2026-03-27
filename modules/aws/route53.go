@@ -2,7 +2,7 @@ package aws
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strings"
 	"testing"
 
@@ -12,16 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetRoute53Record returns a Route 53 Record
+// GetRoute53Record returns a Route 53 Record.
 func GetRoute53Record(t *testing.T, hostedZoneID, recordName, recordType, awsRegion string) *types.ResourceRecordSet {
+	t.Helper()
+
 	r, err := GetRoute53RecordE(t, hostedZoneID, recordName, recordType, awsRegion)
 	require.NoError(t, err)
 
 	return r
 }
 
-// GetRoute53RecordE returns a Route 53 Record
+// GetRoute53RecordE returns a Route 53 Record.
 func GetRoute53RecordE(t *testing.T, hostedZoneID, recordName, recordType, awsRegion string) (*types.ResourceRecordSet, error) {
+	t.Helper()
+
 	route53Client, err := NewRoute53ClientE(t, awsRegion)
 	if err != nil {
 		return nil, err
@@ -37,25 +41,29 @@ func GetRoute53RecordE(t *testing.T, hostedZoneID, recordName, recordType, awsRe
 		return nil, err
 	}
 
-	for _, record := range o.ResourceRecordSets {
-		if strings.EqualFold(recordName+".", *record.Name) {
-			return &record, nil
+	for i := range o.ResourceRecordSets {
+		if strings.EqualFold(recordName+".", *o.ResourceRecordSets[i].Name) {
+			return &o.ResourceRecordSets[i], nil
 		}
 	}
 
-	return nil, fmt.Errorf("record not found")
+	return nil, errors.New("record not found")
 }
 
-// NewRoute53Client creates a route 53 client.
+// NewRoute53Client creates a Route 53 client.
 func NewRoute53Client(t *testing.T, region string) *route53.Client {
+	t.Helper()
+
 	c, err := NewRoute53ClientE(t, region)
 	require.NoError(t, err)
 
 	return c
 }
 
-// NewRoute53ClientE creates a route 53 client.
+// NewRoute53ClientE creates a Route 53 client.
 func NewRoute53ClientE(t *testing.T, region string) (*route53.Client, error) {
+	t.Helper()
+
 	sess, err := NewAuthenticatedSession(region)
 	if err != nil {
 		return nil, err

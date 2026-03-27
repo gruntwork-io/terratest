@@ -15,6 +15,7 @@ import (
 func GetEcsCluster(t testing.TestingT, region string, name string) *types.Cluster {
 	cluster, err := GetEcsClusterE(t, region, name)
 	require.NoError(t, err)
+
 	return cluster
 }
 
@@ -28,6 +29,7 @@ func GetEcsClusterE(t testing.TestingT, region string, name string) (*types.Clus
 func GetEcsClusterWithInclude(t testing.TestingT, region string, name string, include []types.ClusterField) *types.Cluster {
 	clusterInfo, err := GetEcsClusterWithIncludeE(t, region, name, include)
 	require.NoError(t, err)
+
 	return clusterInfo
 }
 
@@ -45,6 +47,7 @@ func GetEcsClusterWithIncludeE(t testing.TestingT, region string, name string, i
 		},
 		Include: include,
 	}
+
 	output, err := client.DescribeClusters(context.Background(), input)
 	if err != nil {
 		return nil, err
@@ -73,21 +76,25 @@ func GetDefaultEcsCluster(t testing.TestingT, region string) *types.Cluster {
 func CreateEcsCluster(t testing.TestingT, region string, name string) *types.Cluster {
 	cluster, err := CreateEcsClusterE(t, region, name)
 	require.NoError(t, err)
+
 	return cluster
 }
 
 // CreateEcsClusterE creates ECS cluster in the given region under the given name.
 func CreateEcsClusterE(t testing.TestingT, region string, name string) (*types.Cluster, error) {
 	client := NewEcsClient(t, region)
+
 	cluster, err := client.CreateCluster(context.Background(), &ecs.CreateClusterInput{
 		ClusterName: aws.String(name),
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	return cluster.Cluster, nil
 }
 
+// DeleteEcsCluster deletes existing ECS cluster in the given region.
 func DeleteEcsCluster(t testing.TestingT, region string, cluster *types.Cluster) {
 	err := DeleteEcsClusterE(t, region, cluster)
 	require.NoError(t, err)
@@ -96,9 +103,11 @@ func DeleteEcsCluster(t testing.TestingT, region string, cluster *types.Cluster)
 // DeleteEcsClusterE deletes existing ECS cluster in the given region.
 func DeleteEcsClusterE(t testing.TestingT, region string, cluster *types.Cluster) error {
 	client := NewEcsClient(t, region)
+
 	_, err := client.DeleteCluster(context.Background(), &ecs.DeleteClusterInput{
 		Cluster: aws.String(*cluster.ClusterName),
 	})
+
 	return err
 }
 
@@ -106,6 +115,7 @@ func DeleteEcsClusterE(t testing.TestingT, region string, cluster *types.Cluster
 func GetEcsService(t testing.TestingT, region string, clusterName string, serviceName string) *types.Service {
 	service, err := GetEcsServiceE(t, region, clusterName, serviceName)
 	require.NoError(t, err)
+
 	return service
 }
 
@@ -127,6 +137,7 @@ func GetEcsServiceE(t testing.TestingT, region string, clusterName string, servi
 			"expected to find 1 ECS service named '%s' in cluster '%s' in region '%v', but found '%d'",
 			serviceName, clusterName, region, numServices)
 	}
+
 	return &output.Services[0], nil
 }
 
@@ -134,6 +145,7 @@ func GetEcsServiceE(t testing.TestingT, region string, clusterName string, servi
 func GetEcsTaskDefinition(t testing.TestingT, region string, taskDefinition string) *types.TaskDefinition {
 	task, err := GetEcsTaskDefinitionE(t, region, taskDefinition)
 	require.NoError(t, err)
+
 	return task
 }
 
@@ -145,6 +157,7 @@ func GetEcsTaskDefinitionE(t testing.TestingT, region string, taskDefinition str
 	if err != nil {
 		return nil, err
 	}
+
 	return output.TaskDefinition, nil
 }
 
@@ -152,6 +165,7 @@ func GetEcsTaskDefinitionE(t testing.TestingT, region string, taskDefinition str
 func NewEcsClient(t testing.TestingT, region string) *ecs.Client {
 	client, err := NewEcsClientE(t, region)
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -161,5 +175,6 @@ func NewEcsClientE(t testing.TestingT, region string) (*ecs.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return ecs.NewFromConfig(*sess), nil
 }

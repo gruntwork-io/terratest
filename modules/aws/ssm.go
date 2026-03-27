@@ -15,10 +15,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// ssmRetryInterval is the time between retries when waiting for SSM operations.
+const ssmRetryInterval = 2 * time.Second
+
 // GetParameter retrieves the latest version of SSM Parameter at keyName with decryption.
 func GetParameter(t testing.TestingT, awsRegion string, keyName string) string {
 	keyValue, err := GetParameterE(t, awsRegion, keyName)
 	require.NoError(t, err)
+
 	return keyValue
 }
 
@@ -40,6 +44,7 @@ func GetParameterWithClientE(t testing.TestingT, client *ssm.Client, keyName str
 	}
 
 	parameter := *resp.Parameter
+
 	return *parameter.Value, nil
 }
 
@@ -47,6 +52,7 @@ func GetParameterWithClientE(t testing.TestingT, client *ssm.Client, keyName str
 func PutParameter(t testing.TestingT, awsRegion string, keyName string, keyDescription string, keyValue string) int64 {
 	version, err := PutParameterE(t, awsRegion, keyName, keyDescription, keyValue)
 	require.NoError(t, err)
+
 	return version
 }
 
@@ -56,6 +62,7 @@ func PutParameterE(t testing.TestingT, awsRegion string, keyName string, keyDesc
 	if err != nil {
 		return 0, err
 	}
+
 	return PutParameterWithClientE(t, ssmClient, keyName, keyDescription, keyValue)
 }
 
@@ -86,6 +93,7 @@ func DeleteParameterE(t testing.TestingT, awsRegion string, keyName string) erro
 	if err != nil {
 		return err
 	}
+
 	return DeleteParameterWithClientE(t, ssmClient, keyName)
 }
 
@@ -103,6 +111,7 @@ func DeleteParameterWithClientE(t testing.TestingT, client *ssm.Client, keyName 
 func NewSsmClient(t testing.TestingT, region string) *ssm.Client {
 	client, err := NewSsmClientE(t, region)
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -122,12 +131,13 @@ func WaitForSsmInstanceE(t testing.TestingT, awsRegion, instanceID string, timeo
 	if err != nil {
 		return err
 	}
+
 	return WaitForSsmInstanceWithClientE(t, client, instanceID, timeout)
 }
 
 // WaitForSsmInstanceWithClientE waits until the instance get registered to the SSM inventory with the ability to provide the SSM client.
 func WaitForSsmInstanceWithClientE(t testing.TestingT, client *ssm.Client, instanceID string, timeout time.Duration) error {
-	timeBetweenRetries := 2 * time.Second
+	timeBetweenRetries := ssmRetryInterval
 	maxRetries := int(timeout.Seconds() / timeBetweenRetries.Seconds())
 	description := fmt.Sprintf("Waiting for %s to appear in the SSM inventory", instanceID)
 
@@ -140,9 +150,9 @@ func WaitForSsmInstanceWithClientE(t testing.TestingT, client *ssm.Client, insta
 			},
 		},
 	}
+
 	_, err := retry.DoWithRetryE(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
 		resp, err := client.GetInventory(context.Background(), input)
-
 		if err != nil {
 			return "", err
 		}
@@ -189,6 +199,7 @@ func CheckSSMCommandWithClientE(t testing.TestingT, client *ssm.Client, instance
 func CheckSsmCommandWithDocument(t testing.TestingT, awsRegion, instanceID, command string, commandDocName string, timeout time.Duration) *CommandOutput {
 	result, err := CheckSsmCommandWithDocumentE(t, awsRegion, instanceID, command, commandDocName, timeout)
 	require.NoErrorf(t, err, "failed to execute '%s' on %s (%v):]\n  stdout: %#v\n  stderr: %#v", command, instanceID, err, result.Stdout, result.Stderr)
+
 	return result
 }
 
@@ -201,13 +212,13 @@ func CheckSsmCommandWithDocumentE(t testing.TestingT, awsRegion, instanceID, com
 	if err != nil {
 		return nil, err
 	}
+
 	return CheckSSMCommandWithClientWithDocumentE(t, client, instanceID, command, commandDocName, timeout)
 }
 
 // CheckSSMCommandWithClientWithDocumentE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client with specified Command Doc type. Returns the result and an error if one occurs.
 func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.Client, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
-
-	timeBetweenRetries := 2 * time.Second
+	timeBetweenRetries := ssmRetryInterval
 	maxRetries := int(timeout.Seconds() / timeBetweenRetries.Seconds())
 
 	resp, err := client.SendCommand(
@@ -235,12 +246,12 @@ func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.Clie
 	}
 
 	result := &CommandOutput{}
+
 	_, err = retry.DoWithRetryableErrorsE(t, description, retryableErrors, maxRetries, timeBetweenRetries, func() (string, error) {
 		resp, err := client.GetCommandInvocation(context.Background(), &ssm.GetCommandInvocationInput{
 			CommandId:  resp.Command.CommandId,
 			InstanceId: &instanceID,
 		})
-
 		if err != nil {
 			return "", err
 		}
@@ -261,13 +272,13 @@ func CheckSSMCommandWithClientWithDocumentE(t testing.TestingT, client *ssm.Clie
 
 		return "", fmt.Errorf("bad status: %s", status)
 	})
-
 	if err != nil {
 		var actualErr retry.FatalError
 		if errors.As(err, &actualErr) {
 			return result, actualErr.Underlying
 		}
-		return result, fmt.Errorf("unexpected error: %v", err)
+
+		return result, fmt.Errorf("unexpected error: %w", err)
 	}
 
 	return result, nil
