@@ -1,4 +1,4 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"path"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,13 +17,13 @@ func TestStackGenerate(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	Init(t, &Options{
+	terragrunt.Init(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
 	})
 
-	out := StackGenerate(t, &Options{
+	out := terragrunt.StackGenerate(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
@@ -39,7 +40,7 @@ func TestStackGenerateE(t *testing.T) {
 	require.NoError(t, err)
 
 	// First initialize the stack
-	_, err = InitE(t, &Options{
+	_, err = terragrunt.InitE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
@@ -47,7 +48,7 @@ func TestStackGenerateE(t *testing.T) {
 	require.NoError(t, err)
 
 	// Then generate the stack
-	out, err := StackGenerateE(t, &Options{
+	out, err := terragrunt.StackGenerateE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
@@ -73,7 +74,7 @@ func TestStackGenerateNonExistentDir(t *testing.T) {
 	t.Parallel()
 
 	// Test with non-existent directory
-	_, err := StackGenerateE(t, &Options{
+	_, err := terragrunt.StackGenerateE(t, &terragrunt.Options{
 		TerragruntDir:    "/non/existent/path",
 		TerragruntBinary: "terragrunt",
 	})
@@ -94,14 +95,14 @@ func TestStackGenerateWithArgs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Initialize first
-	_, err = InitE(t, &Options{
+	_, err = terragrunt.InitE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
 	require.NoError(t, err)
 
 	// Generate with TerragruntArgs
-	out, err := StackGenerateE(t, &Options{
+	out, err := terragrunt.StackGenerateE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerragruntArgs:   []string{"--log-level", "error"},

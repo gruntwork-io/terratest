@@ -1,4 +1,4 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +17,7 @@ func TestRender(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	output := Render(t, &Options{
+	output := terragrunt.Render(t, &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -34,7 +35,7 @@ func TestRenderJson(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	output := RenderJson(t, &Options{
+	output := terragrunt.RenderJson(t, &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -48,7 +49,7 @@ func TestFilterLogLines(t *testing.T) {
 	t.Parallel()
 
 	input := "20:41:53.564 INFO   some log message\n  source = \"./modules/vpc\"\n\ntime=2023-07-11 level=info msg=hello\n  inputs = {\nGroup 1\n    name = \"test\"\n  }"
-	result := filterLogLines(input)
+	result := terragrunt.FilterLogLines(input)
 
 	// Log lines and metadata lines should be stripped
 	require.NotContains(t, result, "INFO")
@@ -67,6 +68,6 @@ func TestRenderE_InvalidConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "terragrunt.hcl"), []byte("not_valid!!!"), 0644))
 
-	_, err := RenderE(t, &Options{TerragruntDir: tmpDir})
+	_, err := terragrunt.RenderE(t, &terragrunt.Options{TerragruntDir: tmpDir})
 	require.Error(t, err)
 }

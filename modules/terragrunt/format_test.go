@@ -1,4 +1,4 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,13 +27,13 @@ foo="bar"
 	err = os.WriteFile(tgFile, []byte(unformattedContent), 0644)
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
 	// Run format command
-	FormatAll(t, options)
+	terragrunt.FormatAll(t, options)
 
 	// Read the formatted file to verify it was actually formatted
 	formattedContent, err := os.ReadFile(tgFile)
@@ -64,13 +65,13 @@ foo="bar"
 	err = os.WriteFile(tgFile, []byte(unformattedContent), 0644)
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
 
 	// Run format command - should succeed
-	_, err = FormatAllE(t, options)
+	_, err = terragrunt.FormatAllE(t, options)
 	require.NoError(t, err)
 
 	// Verify the file was actually formatted by reading it

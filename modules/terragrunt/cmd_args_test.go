@@ -1,4 +1,4 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"os/exec"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +19,7 @@ func TestTerragruntArgsIncluded(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    filepath.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		// Use --log-level which should affect the output
@@ -26,7 +27,7 @@ func TestTerragruntArgsIncluded(t *testing.T) {
 	}
 
 	// Run init - if TerragruntArgs work, we should only see error-level logs
-	output, err := InitE(t, options)
+	output, err := terragrunt.InitE(t, options)
 	require.NoError(t, err)
 
 	// With --log-level error, we shouldn't see info-level messages
@@ -43,7 +44,7 @@ func TestTerraformArgsIncluded(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    filepath.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		// Use -backend=false to disable backend initialization
@@ -52,7 +53,7 @@ func TestTerraformArgsIncluded(t *testing.T) {
 	}
 
 	// Run init with -backend=false flag
-	output, err := InitE(t, options)
+	output, err := terragrunt.InitE(t, options)
 	require.NoError(t, err)
 
 	// With -backend=false, we should NOT see backend initialization messages
@@ -70,15 +71,16 @@ func TestPlanExitCodeIncludesArgs(t *testing.T) {
 	require.NoError(t, err)
 
 	// First apply so we have state
-	baseOptions := &Options{
+	baseOptions := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	}
-	defer DestroyAll(t, baseOptions)
-	ApplyAll(t, baseOptions)
+	defer terragrunt.DestroyAll(t, baseOptions)
+
+	terragrunt.ApplyAll(t, baseOptions)
 
 	// Now run plan with exit code AND TerragruntArgs
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		// Use --log-level to verify TerragruntArgs are included in exit code functions
@@ -86,7 +88,7 @@ func TestPlanExitCodeIncludesArgs(t *testing.T) {
 	}
 
 	// This should return exit code 0 (no changes) and should respect the log level
-	exitCode, err := PlanAllExitCodeE(t, options)
+	exitCode, err := terragrunt.PlanAllExitCodeE(t, options)
 	require.NoError(t, err)
 	require.Equal(t, 0, exitCode)
 
@@ -98,7 +100,7 @@ func TestPlanExitCodeIncludesArgs(t *testing.T) {
 }
 
 // TestCombinedArgsOrdering verifies that both TerragruntArgs and TerraformArgs work together
-// in the correct order: TerragruntArgs → --non-interactive → command → TerraformArgs
+// in the correct order: TerragruntArgs -> --non-interactive -> command -> TerraformArgs
 func TestCombinedArgsOrdering(t *testing.T) {
 	t.Parallel()
 
@@ -106,7 +108,7 @@ func TestCombinedArgsOrdering(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir:    filepath.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		// Combine both TerragruntArgs and TerraformArgs
@@ -115,7 +117,7 @@ func TestCombinedArgsOrdering(t *testing.T) {
 	}
 
 	// Run init - both args should be passed in the correct order
-	output, err := InitE(t, options)
+	output, err := terragrunt.InitE(t, options)
 	require.NoError(t, err)
 
 	// Verify TerragruntArgs effect: should not see info-level logs
@@ -132,17 +134,17 @@ func TestValidateOptions(t *testing.T) {
 	t.Parallel()
 
 	// Test nil options
-	err := validateOptions(nil)
+	err := terragrunt.ValidateOptions(nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "options cannot be nil")
 
 	// Test missing TerragruntDir
-	err = validateOptions(&Options{})
+	err = terragrunt.ValidateOptions(&terragrunt.Options{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "TerragruntDir is required")
 
 	// Test valid options
-	err = validateOptions(&Options{
+	err = terragrunt.ValidateOptions(&terragrunt.Options{
 		TerragruntDir: "/some/path",
 	})
 	require.NoError(t, err)
@@ -153,22 +155,22 @@ func TestBuildTerragruntArgs(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
+		opts         *terragrunt.Options
 		name         string
-		opts         *Options
+		description  string
 		commandArgs  []string
 		expectedArgs []string
-		description  string
 	}{
 		{
 			name:         "empty args",
-			opts:         &Options{},
+			opts:         &terragrunt.Options{},
 			commandArgs:  []string{"init"},
 			expectedArgs: []string{"--non-interactive", "init"},
 			description:  "Should add --non-interactive even with no custom args",
 		},
 		{
 			name: "only terragrunt args",
-			opts: &Options{
+			opts: &terragrunt.Options{
 				TerragruntArgs: []string{"--log-level", "error"},
 			},
 			commandArgs:  []string{"init"},
@@ -177,7 +179,7 @@ func TestBuildTerragruntArgs(t *testing.T) {
 		},
 		{
 			name: "only terraform args",
-			opts: &Options{
+			opts: &terragrunt.Options{
 				TerraformArgs: []string{"-upgrade"},
 			},
 			commandArgs:  []string{"init"},
@@ -186,17 +188,17 @@ func TestBuildTerragruntArgs(t *testing.T) {
 		},
 		{
 			name: "both arg types",
-			opts: &Options{
+			opts: &terragrunt.Options{
 				TerragruntArgs: []string{"--log-level", "error", "--no-color"},
 				TerraformArgs:  []string{"-upgrade", "-backend=false"},
 			},
 			commandArgs:  []string{"init"},
 			expectedArgs: []string{"--log-level", "error", "--no-color", "--non-interactive", "init", "-upgrade", "-backend=false"},
-			description:  "Should maintain correct order: TerragruntArgs → --non-interactive → command → TerraformArgs",
+			description:  "Should maintain correct order: TerragruntArgs -> --non-interactive -> command -> TerraformArgs",
 		},
 		{
 			name: "stack command with args",
-			opts: &Options{
+			opts: &terragrunt.Options{
 				TerragruntArgs: []string{"--log-level", "error"},
 				TerraformArgs:  []string{"plan"},
 			},
@@ -211,7 +213,7 @@ func TestBuildTerragruntArgs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			actualArgs := buildTerragruntArgs(tt.opts, tt.commandArgs...)
+			actualArgs := terragrunt.BuildTerragruntArgs(tt.opts, tt.commandArgs...)
 			require.Equal(t, tt.expectedArgs, actualArgs, tt.description)
 		})
 	}
@@ -222,24 +224,24 @@ func TestPrepareOptions(t *testing.T) {
 	t.Parallel()
 
 	// Test that default binary is set
-	opts := &Options{
+	opts := &terragrunt.Options{
 		TerragruntDir: "/some/path",
 	}
-	err := prepareOptions(opts)
+	err := terragrunt.PrepareOptions(opts)
 	require.NoError(t, err)
-	require.Equal(t, DefaultTerragruntBinary, opts.TerragruntBinary)
+	require.Equal(t, terragrunt.DefaultTerragruntBinary, opts.TerragruntBinary)
 
 	// Test that custom binary is preserved
-	opts = &Options{
+	opts = &terragrunt.Options{
 		TerragruntDir:    "/some/path",
 		TerragruntBinary: "custom-terragrunt",
 	}
-	err = prepareOptions(opts)
+	err = terragrunt.PrepareOptions(opts)
 	require.NoError(t, err)
 	require.Equal(t, "custom-terragrunt", opts.TerragruntBinary)
 
 	// Test that validation errors propagate
-	err = prepareOptions(&Options{})
+	err = terragrunt.PrepareOptions(&terragrunt.Options{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "TerragruntDir is required")
 }
@@ -249,11 +251,11 @@ func TestHasWarning(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name             string
 		warningsAsErrors map[string]string
+		name             string
 		output           string
-		expectError      bool
 		errorContains    string
+		expectError      bool
 	}{
 		{
 			name:             "nil map returns no error",
@@ -303,10 +305,13 @@ func TestHasWarning(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			opts := &Options{WarningsAsErrors: tt.warningsAsErrors}
-			err := hasWarning(opts, tt.output)
+
+			opts := &terragrunt.Options{WarningsAsErrors: tt.warningsAsErrors}
+
+			err := terragrunt.HasWarning(opts, tt.output)
 			if tt.expectError {
 				require.Error(t, err)
+
 				if tt.errorContains != "" {
 					require.Contains(t, err.Error(), tt.errorContains)
 				}
@@ -327,15 +332,17 @@ func TestEnvVarsPropagation(t *testing.T) {
 
 	// Detect which IaC binary is available (terraform or tofu)
 	tfBinary := "terraform"
+
 	if _, err := exec.LookPath("terraform"); err != nil {
 		// terraform not found, try tofu
 		if _, err := exec.LookPath("tofu"); err != nil {
 			t.Skip("Neither terraform nor tofu found in PATH")
 		}
+
 		tfBinary = "tofu"
 	}
 
-	options := &Options{
+	options := &terragrunt.Options{
 		TerragruntDir: filepath.Join(testFolder, "live"),
 		EnvVars: map[string]string{
 			"TERRAGRUNT_TFPATH": tfBinary, // Use whichever binary is available
@@ -344,7 +351,7 @@ func TestEnvVarsPropagation(t *testing.T) {
 	}
 
 	// Run init - should succeed with env vars set
-	output, err := InitE(t, options)
+	output, err := terragrunt.InitE(t, options)
 	require.NoError(t, err)
 	require.NotEmpty(t, output)
 	// With TG_LOG_LEVEL=error, should not see info logs

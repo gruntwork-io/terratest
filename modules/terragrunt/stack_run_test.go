@@ -1,10 +1,11 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"path"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,13 +16,13 @@ func TestStackRun(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	Init(t, &Options{
+	terragrunt.Init(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
 	})
 
-	out := StackRun(t, &Options{
+	out := terragrunt.StackRun(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"plan"},
@@ -39,7 +40,7 @@ func TestStackRunE(t *testing.T) {
 	require.NoError(t, err)
 
 	// First initialize the stack
-	_, err = InitE(t, &Options{
+	_, err = terragrunt.InitE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
@@ -47,7 +48,7 @@ func TestStackRunE(t *testing.T) {
 	require.NoError(t, err)
 
 	// Then run plan on the stack
-	out, err := StackRunE(t, &Options{
+	out, err := terragrunt.StackRunE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"plan"},
@@ -78,7 +79,7 @@ func TestStackRunPlanWithNoColor(t *testing.T) {
 	require.NoError(t, err)
 
 	// First initialize the stack
-	_, err = InitE(t, &Options{
+	_, err = terragrunt.InitE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
@@ -86,7 +87,7 @@ func TestStackRunPlanWithNoColor(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run plan with no-color option
-	out, err := StackRunE(t, &Options{
+	out, err := terragrunt.StackRunE(t, &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerragruntArgs:   []string{"--no-color"},
@@ -107,7 +108,7 @@ func TestStackRunNonExistentDir(t *testing.T) {
 	t.Parallel()
 
 	// Test with non-existent directory
-	_, err := StackRunE(t, &Options{
+	_, err := terragrunt.StackRunE(t, &terragrunt.Options{
 		TerragruntDir:    "/non/existent/path",
 		TerragruntBinary: "terragrunt",
 	})
@@ -118,7 +119,7 @@ func TestStackRunEmptyOptions(t *testing.T) {
 	t.Parallel()
 
 	// Test with minimal options to verify default behavior
-	_, err := StackRunE(t, &Options{})
+	_, err := terragrunt.StackRunE(t, &terragrunt.Options{})
 	require.Error(t, err)
 	// Should fail due to missing TerragruntDir
 }

@@ -1,4 +1,4 @@
-package terragrunt
+package terragrunt_test
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/terragrunt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +16,7 @@ func TestHclValidate(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
-	HclValidate(t, &Options{
+	terragrunt.HclValidate(t, &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -27,6 +28,6 @@ func TestHclValidateE_InvalidConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "terragrunt.hcl"), []byte("not_valid!!!"), 0644))
 
-	_, err := HclValidateE(t, &Options{TerragruntDir: tmpDir})
+	_, err := terragrunt.HclValidateE(t, &terragrunt.Options{TerragruntDir: tmpDir})
 	require.Error(t, err)
 }
