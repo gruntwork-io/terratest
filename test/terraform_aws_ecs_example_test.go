@@ -1,7 +1,6 @@
-package test
+package test_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -17,8 +16,8 @@ import (
 func TestTerraformAwsEcsExample(t *testing.T) {
 	t.Parallel()
 
-	expectedClusterName := fmt.Sprintf("terratest-aws-ecs-example-cluster-%s", random.UniqueId())
-	expectedServiceName := fmt.Sprintf("terratest-aws-ecs-example-service-%s", random.UniqueId())
+	expectedClusterName := "terratest-aws-ecs-example-cluster-" + random.UniqueID()
+	expectedServiceName := "terratest-aws-ecs-example-service-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, []string{"us-east-1", "eu-west-1"}, nil)
@@ -38,13 +37,13 @@ func TestTerraformAwsEcsExample(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
-	taskDefinition := terraform.Output(t, terraformOptions, "task_definition")
+	taskDefinition := terraform.OutputContext(t, t.Context(), terraformOptions, "task_definition")
 
 	// Look up the ECS cluster by name
 	cluster := aws.GetEcsCluster(t, awsRegion, expectedClusterName)

@@ -1,7 +1,6 @@
-package test
+package test_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
@@ -26,7 +25,7 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 
 	// Give this lambda function a unique ID for a name so we can distinguish it from any other lambdas
 	// in your AWS account
-	functionName := fmt.Sprintf("terratest-aws-lambda-example-%s", random.UniqueId())
+	functionName := "terratest-aws-lambda-example-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
@@ -45,10 +44,10 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Invoke the function, so we can test its output
 	response := aws.InvokeFunction(t, awsRegion, functionName, ExampleFunctionPayload{ShouldFail: false, Echo: "hi!"})
@@ -60,14 +59,17 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 	_, err = aws.InvokeFunctionE(t, awsRegion, functionName, ExampleFunctionPayload{ShouldFail: true, Echo: "hi!"})
 
 	// Function-specific errors have their own special return
-	functionError, ok := err.(*aws.FunctionError)
-	require.True(t, ok)
+	var functionError *aws.FunctionError
+
+	require.ErrorAs(t, err, &functionError)
 
 	// Make sure the function-specific error comes back
 	assert.Contains(t, string(functionError.Payload), "failed to handle")
 }
 
 func buildLambdaBinary(t *testing.T, tempDir string) error {
+	t.Helper()
+
 	cmd := shell.Command{
 		Command: "go",
 		Args: []string{
@@ -83,7 +85,8 @@ func buildLambdaBinary(t *testing.T, tempDir string) error {
 		},
 	}
 
-	_, err := shell.RunCommandAndGetOutputE(t, cmd)
+	_, err := shell.RunCommandContextAndGetOutputE(t, t.Context(), &cmd)
+
 	return err
 }
 
@@ -102,7 +105,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 
 	// Give this lambda function a unique ID for a name so we can distinguish it from any other lambdas
 	// in your AWS account
-	functionName := fmt.Sprintf("terratest-aws-lambda-withparams-example-%s", random.UniqueId())
+	functionName := "terratest-aws-lambda-withparams-example-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
@@ -121,22 +124,23 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Call InvokeFunctionWithParms with an InvocationType of "DryRun".
 	// A "DryRun" invocation does not execute the function, so the example
 	// test function will not be checking the payload.
-	var invocationType aws.InvocationTypeOption = aws.InvocationTypeDryRun
+	invocationType := aws.InvocationTypeDryRun
+
 	input := &aws.LambdaOptions{InvocationType: &invocationType}
 	out := aws.InvokeFunctionWithParams(t, awsRegion, functionName, input)
 
 	// With "DryRun", there's no message in the output, but there is
 	// a status code which will have a value of 204 for a successful
 	// invocation.
-	assert.Equal(t, int(out.StatusCode), 204)
+	assert.Equal(t, 204, int(out.StatusCode))
 
 	// Invoke the function, this time causing the Lambda to error and
 	// capturing the error.
@@ -148,7 +152,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 	out, err = aws.InvokeFunctionWithParamsE(t, awsRegion, functionName, input)
 
 	// The Lambda executed, but should have failed.
-	assert.Error(t, err, "Unhandled")
+	require.Error(t, err, "Unhandled")
 
 	// Make sure the function-specific error comes back
 	assert.Contains(t, string(out.Payload), "failed to handle")
@@ -160,8 +164,9 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 		InvocationType: &invocationType,
 		Payload:        ExampleFunctionPayload{ShouldFail: false, Echo: "hi!"},
 	}
-	out, err = aws.InvokeFunctionWithParamsE(t, awsRegion, functionName, input)
-	require.NotNil(t, err)
+	_, err = aws.InvokeFunctionWithParamsE(t, awsRegion, functionName, input)
+
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "LambdaOptions.InvocationType, if specified, must either be \"RequestResponse\" or \"DryRun\"")
 }
 

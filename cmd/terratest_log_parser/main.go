@@ -49,7 +49,7 @@ import (
 
 var logger = logging.GetLogger("terratest_log_parser")
 
-const CUSTOM_USAGE_TEXT = `Usage: terratest_log_parser [--help] [--log-level=info] [--testlog=LOG_INPUT] [--outputdir=OUTPUT_DIR]
+const customUsageText = `Usage: terratest_log_parser [--help] [--log-level=info] [--testlog=LOG_INPUT] [--outputdir=OUTPUT_DIR]
 
 A tool for parsing parallel terratest output to produce a test summary and to break out the interleaved logs by test for better debuggability.
 
@@ -65,23 +65,29 @@ func run(cliContext *cli.Context) error {
 	filename := cliContext.String("testlog")
 	outputDir := cliContext.String("outputdir")
 	logLevel := cliContext.String("log-level")
+
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
 		return errors.WithStackTrace(err)
 	}
+
 	logger.SetLevel(level)
 
 	var file *os.File
+
 	if filename != "" {
 		logger.Infof("reading from file")
+
 		file, err = os.Open(filename)
 		if err != nil {
 			logger.Fatalf("Error opening file: %s", err)
 		}
 	} else {
 		logger.Infof("reading from stdin")
+
 		file = os.Stdin
 	}
+
 	defer file.Close()
 
 	outputDir, err = filepath.Abs(outputDir)
@@ -90,12 +96,13 @@ func run(cliContext *cli.Context) error {
 	}
 
 	parser.SpawnParsers(logger, file, outputDir)
+
 	return nil
 }
 
 func main() {
 	app := entrypoint.NewApp()
-	cli.AppHelpTemplate = CUSTOM_USAGE_TEXT
+	cli.AppHelpTemplate = customUsageText
 	entrypoint.HelpTextLineWidth = 120
 
 	app.Name = "terratest_log_parser"
@@ -107,6 +114,7 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error finding current directory: %s", err)
 	}
+
 	defaultOutputDir := filepath.Join(currentDir, "out")
 
 	logInputFlag := cli.StringFlag{

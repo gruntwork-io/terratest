@@ -1,8 +1,9 @@
-package formatting
+package formatting_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/internal/lib/formatting"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +39,9 @@ func TestFormatBackendConfigAsArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := FormatBackendConfigAsArgs(tt.input)
+			t.Parallel()
+
+			result := formatting.FormatBackendConfigAsArgs(tt.input)
 			assert.ElementsMatch(t, tt.expect, result)
 		})
 	}
@@ -66,7 +69,9 @@ func TestFormatPluginDirAsArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := FormatPluginDirAsArgs(tt.input)
+			t.Parallel()
+
+			result := formatting.FormatPluginDirAsArgs(tt.input)
 			assert.Equal(t, tt.expect, result)
 		})
 	}
@@ -93,7 +98,9 @@ func TestToHclString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := toHclString(tt.input, false)
+			t.Parallel()
+
+			result := formatting.ToHCLString(tt.input, false)
 			assert.Equal(t, tt.expect, result)
 		})
 	}
@@ -103,10 +110,10 @@ func TestToHclStringNested(t *testing.T) {
 	t.Parallel()
 
 	// Nested strings should be quoted
-	result := toHclString("nested", true)
+	result := formatting.ToHCLString("nested", true)
 	assert.Equal(t, `"nested"`, result)
 
 	// Non-nested strings should not be quoted
-	result = toHclString("not-nested", false)
+	result = formatting.ToHCLString("not-nested", false)
 	assert.Equal(t, "not-nested", result)
 }

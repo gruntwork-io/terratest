@@ -1,7 +1,6 @@
-package test
+package test_test
 
 import (
-	"fmt"
 	"testing"
 
 	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
@@ -20,7 +19,7 @@ func TestTerraformAwsDynamoDBExample(t *testing.T) {
 	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
 
 	// Set up expected values to be checked later
-	expectedTableName := fmt.Sprintf("terratest-aws-dynamodb-example-table-%s", random.UniqueId())
+	expectedTableName := "terratest-aws-dynamodb-example-table-" + random.UniqueID()
 	expectedKmsKeyArn := aws.GetCmkArn(t, awsRegion, "alias/aws/dynamodb")
 	expectedKeySchema := []types.KeySchemaElement{
 		{AttributeName: awsSDK.String("userId"), KeyType: types.KeyTypeHash},
@@ -44,10 +43,10 @@ func TestTerraformAwsDynamoDBExample(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Look up the DynamoDB table by name
 	table := aws.GetDynamoDBTable(t, awsRegion, expectedTableName)
@@ -66,6 +65,6 @@ func TestTerraformAwsDynamoDBExample(t *testing.T) {
 	assert.Equal(t, "ENABLED", string(ttl.TimeToLiveStatus))
 
 	// Verify resource tags
-	tags := aws.GetDynamoDbTableTags(t, awsRegion, expectedTableName)
+	tags := aws.GetDynamoDBTableTags(t, awsRegion, expectedTableName)
 	assert.ElementsMatch(t, expectedTags, tags)
 }

@@ -1,7 +1,6 @@
-package test
+package test_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -13,20 +12,22 @@ import (
 )
 
 func TestWindowsInstance(t *testing.T) {
+	t.Parallel()
+
 	// Uncomment any of the following to skip that section during the test
-	//os.Setenv("SKIP_setup", "true")
-	//os.Setenv("SKIP_build_ami", "true")
-	//os.Setenv("SKIP_deploy", "true")
-	//os.Setenv("SKIP_validate", "true")
-	//os.Setenv("SKIP_cleanup", "true")
+	// os.Setenv("SKIP_setup", "true")
+	// os.Setenv("SKIP_build_ami", "true")
+	// os.Setenv("SKIP_deploy", "true")
+	// os.Setenv("SKIP_validate", "true")
+	// os.Setenv("SKIP_cleanup", "true")
 
 	workingDir := filepath.Join(".", "stages", t.Name())
 	testBasePath := test_structure.CopyTerraformFolderToTemp(t, "..", "examples/terraform-aws-ec2-windows-example")
 
 	test_structure.RunTestStage(t, "setup", func() {
-		uniqueID := random.UniqueId()
+		uniqueID := random.UniqueID()
 		region := aws.GetRandomRegion(t, []string{}, []string{})
-		roleName := fmt.Sprintf("%s-test-role", uniqueID)
+		roleName := uniqueID + "-test-role"
 
 		instanceType := aws.GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 		test_structure.SaveString(t, workingDir, "region", region)
@@ -66,12 +67,11 @@ func TestWindowsInstance(t *testing.T) {
 
 	defer test_structure.RunTestStage(t, "cleanup", func() {
 		terratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
-		terraform.Destroy(t, terratestOptions)
+		terraform.DestroyContext(t, t.Context(), terratestOptions)
 	})
 
 	test_structure.RunTestStage(t, "deploy", func() {
 		terratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
-		terraform.InitAndApply(t, terratestOptions)
+		terraform.InitAndApplyContext(t, t.Context(), terratestOptions)
 	})
-
 }

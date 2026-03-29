@@ -1,8 +1,7 @@
-package test
+package test_test
 
 import (
 	"crypto/tls"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -42,7 +41,7 @@ func TestTerraformRedeployExample(t *testing.T) {
 	// At the end of the test, clean up all the resources we created
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
-		terraform.Destroy(t, terraformOptions)
+		terraform.DestroyContext(t, t.Context(), terraformOptions)
 	})
 
 	// At the end of the test, fetch the logs from each Instance. This can be useful for
@@ -73,9 +72,11 @@ func TestTerraformRedeployExample(t *testing.T) {
 
 // Do the initial deployment of the terraform-redeploy-example
 func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
+	t.Helper()
+
 	// A unique ID we can use to namespace resources so we don't clash with anything already in the AWS account or
 	// tests running in parallel
-	uniqueID := random.UniqueId()
+	uniqueID := random.UniqueID()
 
 	// Create a KeyPair we can use later to SSH to each Instance
 	keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueID)
@@ -83,10 +84,10 @@ func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
 
 	// Give the ASG and other resources in the Terraform code a name with a unique ID so it doesn't clash
 	// with anything else in the AWS account.
-	name := fmt.Sprintf("redeploy-test-%s", uniqueID)
+	name := "redeploy-test-" + uniqueID
 
 	// Specify the text the ASG will return when we make HTTP requests to it.
-	text := fmt.Sprintf("Hello, %s!", uniqueID)
+	text := "Hello, " + uniqueID + "!"
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
 	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
@@ -111,17 +112,19 @@ func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
 	test_structure.SaveTerraformOptions(t, workingDir, terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 }
 
 // Validate the ASG has been deployed and is working
 func validateAsgRunningWebServer(t *testing.T, awsRegion string, workingDir string) {
+	t.Helper()
+
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
 	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
 
 	// Run `terraform output` to get the value of an output variable
-	url := terraform.Output(t, terraformOptions, "url")
-	asgName := terraform.OutputRequired(t, terraformOptions, "asg_name")
+	url := terraform.OutputContext(t, t.Context(), terraformOptions, "url")
+	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
@@ -130,21 +133,25 @@ func validateAsgRunningWebServer(t *testing.T, awsRegion string, workingDir stri
 	// retry a few times.
 	maxRetries := 30
 	timeBetweenRetries := 10 * time.Second
+
 	aws.WaitForCapacity(t, asgName, awsRegion, maxRetries, timeBetweenRetries)
+
 	capacityInfo := aws.GetCapacityInfoForAsg(t, asgName, awsRegion)
-	assert.Equal(t, capacityInfo.DesiredCapacity, int64(3))
-	assert.Equal(t, capacityInfo.CurrentCapacity, int64(3))
+	assert.Equal(t, int64(3), capacityInfo.DesiredCapacity)
+	assert.Equal(t, int64(3), capacityInfo.CurrentCapacity)
 
 	// Figure out what text the ASG should return for each request
 	expectedText, _ := terraformOptions.Vars["instance_text"].(string)
 
 	// Verify that we get back a 200 OK with the expectedText
 	// It can take a few minutes for the ALB to boot up, so retry a few times
-	http_helper.HttpGetWithRetry(t, url, &tlsConfig, 200, expectedText, maxRetries, timeBetweenRetries)
+	http_helper.HTTPGetWithRetryContext(t, t.Context(), url, &tlsConfig, 200, expectedText, maxRetries, timeBetweenRetries)
 }
 
 // Validate we can deploy an update to the ASG with zero downtime for users accessing the ALB
 func validateAsgRedeploy(t *testing.T, workingDir string) {
+	t.Helper()
+
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
 	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
 
@@ -152,27 +159,27 @@ func validateAsgRedeploy(t *testing.T, workingDir string) {
 	originalText, _ := terraformOptions.Vars["instance_text"].(string)
 
 	// New text for the ASG to return for each request
-	newText := fmt.Sprintf("%s-redeploy", originalText)
+	newText := originalText + "-redeploy"
 	terraformOptions.Vars["instance_text"] = newText
 
 	// Save the updated Terraform Options struct
 	test_structure.SaveTerraformOptions(t, workingDir, terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
-	url := terraform.Output(t, terraformOptions, "url")
+	url := terraform.OutputContext(t, t.Context(), terraformOptions, "url")
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
 
 	// Check once per second that the ELB returns a proper response to make sure there is no downtime during deployment
-	elbChecks := retry.DoInBackgroundUntilStopped(t, fmt.Sprintf("Check URL %s", url), 1*time.Second, func() {
-		http_helper.HttpGetWithCustomValidation(t, url, &tlsConfig, func(statusCode int, body string) bool {
+	elbChecks := retry.DoInBackgroundUntilStopped(t, "Check URL "+url, 1*time.Second, func() {
+		http_helper.HTTPGetWithCustomValidationContext(t, t.Context(), url, &tlsConfig, func(statusCode int, body string) bool {
 			return statusCode == 200 && (body == originalText || body == newText)
 		})
 	})
 
 	// Redeploy the cluster
-	terraform.Apply(t, terraformOptions)
+	terraform.ApplyContext(t, t.Context(), terraformOptions)
 
 	// Stop checking the ELB
 	elbChecks.Done()
@@ -183,16 +190,18 @@ func validateAsgRedeploy(t *testing.T, workingDir string) {
 // Fetch the most recent syslogs for the instances in the ASG. This is a handy way to see what happened on each
 // Instance as part of your test log output, without having to re-run the test and manually SSH to the Instances.
 func fetchSyslogForAsg(t *testing.T, awsRegion string, workingDir string) {
+	t.Helper()
+
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
 	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
 
-	asgName := terraform.OutputRequired(t, terraformOptions, "asg_name")
+	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
 	asgLogs := aws.GetSyslogForInstancesInAsg(t, asgName, awsRegion)
 
-	logger.Logf(t, "===== First few hundred bytes of syslog for instances in ASG %s =====\n\n", asgName)
+	logger.Default.Logf(t, "===== First few hundred bytes of syslog for instances in ASG %s =====\n\n", asgName)
 
 	for instanceID, logs := range asgLogs {
-		logger.Logf(t, "Most recent syslog for Instance %s:\n\n%s\n", instanceID, logs)
+		logger.Default.Logf(t, "Most recent syslog for Instance %s:\n\n%s\n", instanceID, logs)
 	}
 }
 
@@ -200,34 +209,37 @@ func fetchSyslogForAsg(t *testing.T, awsRegion string, workingDir string) {
 const syslogPathUbuntu = "/var/log/syslog"
 
 // Default location where the User Data script generates an index.html on Ubuntu
-const indexHtmlUbuntu = "/index.html"
+const indexHTMLUbuntu = "/index.html"
 
 // This size is configured in the terraform-redeploy-example itself
 const asgSize = 3
 
 func fetchFilesFromAsg(t *testing.T, awsRegion string, workingDir string) {
+	t.Helper()
+
 	// Load the Terraform Options and Key Pair saved by the earlier deploy_terraform stage
 	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
 	keyPair := test_structure.LoadEc2KeyPair(t, workingDir)
 
-	asgName := terraform.OutputRequired(t, terraformOptions, "asg_name")
-	instanceIdToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, "ubuntu", keyPair, asgName, true, syslogPathUbuntu, indexHtmlUbuntu)
+	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
+	instanceIDToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, "ubuntu", keyPair, asgName, true, syslogPathUbuntu, indexHTMLUbuntu)
 
-	require.Len(t, instanceIdToFilePathToContents, asgSize)
+	require.Len(t, instanceIDToFilePathToContents, asgSize)
 
 	// Check that the index.html file on each Instance contains the expected text
 	expectedText := terraformOptions.Vars["instance_text"]
-	for instanceID, filePathToContents := range instanceIdToFilePathToContents {
-		require.Contains(t, filePathToContents, indexHtmlUbuntu)
-		assert.Equal(t, expectedText, strings.TrimSpace(filePathToContents[indexHtmlUbuntu]), "Expected %s on instance %s to contain %s", indexHtmlUbuntu, instanceID, expectedText)
+
+	for instanceID, filePathToContents := range instanceIDToFilePathToContents {
+		require.Contains(t, filePathToContents, indexHTMLUbuntu)
+		assert.Equal(t, expectedText, strings.TrimSpace(filePathToContents[indexHTMLUbuntu]), "Expected %s on instance %s to contain %s", indexHTMLUbuntu, instanceID, expectedText)
 	}
 
-	logger.Logf(t, "===== Full contents of syslog for instances in ASG %s =====\n\n", asgName)
+	logger.Default.Logf(t, "===== Full contents of syslog for instances in ASG %s =====\n\n", asgName)
 
 	// Print out the FULL contents of syslog (unlike the deprecated GetSyslogForInstancesInAsg, which only returns the
 	// first few hundred bytes)
-	for instanceID, filePathToContents := range instanceIdToFilePathToContents {
+	for instanceID, filePathToContents := range instanceIDToFilePathToContents {
 		require.Contains(t, filePathToContents, syslogPathUbuntu)
-		logger.Logf(t, "Full syslog for Instance %s:\n\n%s\n", instanceID, filePathToContents[syslogPathUbuntu])
+		logger.Default.Logf(t, "Full syslog for Instance %s:\n\n%s\n", instanceID, filePathToContents[syslogPathUbuntu])
 	}
 }

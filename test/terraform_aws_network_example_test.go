@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"testing"
@@ -37,21 +37,21 @@ func TestTerraformAwsNetworkExample(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
-	publicSubnetId := terraform.Output(t, terraformOptions, "public_subnet_id")
-	privateSubnetId := terraform.Output(t, terraformOptions, "private_subnet_id")
-	vpcId := terraform.Output(t, terraformOptions, "main_vpc_id")
+	publicSubnetID := terraform.OutputContext(t, t.Context(), terraformOptions, "public_subnet_id")
+	privateSubnetID := terraform.OutputContext(t, t.Context(), terraformOptions, "private_subnet_id")
+	vpcID := terraform.OutputContext(t, t.Context(), terraformOptions, "main_vpc_id")
 
-	subnets := aws.GetSubnetsForVpc(t, vpcId, awsRegion)
+	subnets := aws.GetSubnetsForVpc(t, vpcID, awsRegion)
 
-	require.Equal(t, 2, len(subnets))
+	require.Len(t, subnets, 2)
 	// Verify if the network that is supposed to be public is really public
-	assert.True(t, aws.IsPublicSubnet(t, publicSubnetId, awsRegion))
+	assert.True(t, aws.IsPublicSubnet(t, publicSubnetID, awsRegion))
 	// Verify if the network that is supposed to be private is really private
-	assert.False(t, aws.IsPublicSubnet(t, privateSubnetId, awsRegion))
+	assert.False(t, aws.IsPublicSubnet(t, privateSubnetID, awsRegion))
 }

@@ -1,7 +1,6 @@
-package test
+package test_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -17,7 +16,7 @@ func TestTerraformAwsS3Example(t *testing.T) {
 
 	// Give this S3 Bucket a unique ID for a name tag so we can distinguish it from any other Buckets provisioned
 	// in your AWS account
-	expectedName := fmt.Sprintf("terratest-aws-s3-example-%s", strings.ToLower(random.UniqueId()))
+	expectedName := "terratest-aws-s3-example-" + strings.ToLower(random.UniqueID())
 
 	// Give this S3 Bucket an environment to operate as a part of for the purposes of resource tagging
 	expectedEnvironment := "Automated Testing"
@@ -41,13 +40,13 @@ func TestTerraformAwsS3Example(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
-	bucketID := terraform.Output(t, terraformOptions, "bucket_id")
+	bucketID := terraform.OutputContext(t, t.Context(), terraformOptions, "bucket_id")
 
 	// Verify that our Bucket has versioning enabled
 	actualStatus := aws.GetS3BucketVersioning(t, awsRegion, bucketID)
@@ -59,7 +58,7 @@ func TestTerraformAwsS3Example(t *testing.T) {
 
 	// Verify that our bucket has server access logging TargetBucket set to what's expected
 	loggingTargetBucket := aws.GetS3BucketLoggingTarget(t, awsRegion, bucketID)
-	expectedLogsTargetBucket := fmt.Sprintf("%s-logs", bucketID)
+	expectedLogsTargetBucket := bucketID + "-logs"
 	loggingObjectTargetPrefix := aws.GetS3BucketLoggingTargetPrefix(t, awsRegion, bucketID)
 	expectedLogsTargetPrefix := "TFStateLogs/"
 

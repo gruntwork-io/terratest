@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"testing"
@@ -24,5 +24,5 @@ func TestOPAEvalTerraformModuleWithExtraArgs(t *testing.T) {
 	}
 
 	// This will run: opa eval --v0-compatible --fail -i <jsonfile> -d <rulepath> data.enforce_source.allow
-	terraform.OPAEval(t, tfOpts, opaOpts, "data.enforce_source.allow")
+	terraform.OPAEvalContext(t, t.Context(), tfOpts, opaOpts, "data.enforce_source.allow")
 }

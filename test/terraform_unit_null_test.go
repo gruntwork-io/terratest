@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"testing"
@@ -18,11 +18,12 @@ func TestUnitNullInput(t *testing.T) {
 		TerraformDir: "./fixtures/terraform-null",
 		Vars:         map[string]interface{}{"foo": foo},
 	}
-	terraform.InitAndApply(t, options)
 
-	fooOut := terraform.OutputMap(t, options, "foo")
+	terraform.InitAndApplyContext(t, t.Context(), options)
+
+	fooOut := terraform.OutputMapContext(t, t.Context(), options, "foo")
 	assert.Equal(t, fooOut, map[string]string{"nonnullable_string": "foo", "nullable_string": "<nil>"})
 
-	barOut := terraform.Output(t, options, "bar")
+	barOut := terraform.OutputContext(t, t.Context(), options, "bar")
 	assert.Equal(t, barOut, "I AM NULL")
 }

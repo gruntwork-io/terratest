@@ -1,4 +1,4 @@
-package test
+package test_test
 
 import (
 	"encoding/json"
@@ -20,136 +20,152 @@ func TestTerraformFormatNestedOneLevelList(t *testing.T) {
 	t.Parallel()
 
 	testList := [][]string{
-		[]string{random.UniqueId()},
+		{random.UniqueID()},
 	}
 
-	options := GetTerraformOptionsForFormatTests(t)
+	options := getTerraformOptionsForFormatTests(t)
 	options.Vars["example_any"] = testList
 
-	defer terraform.Destroy(t, options)
-	terraform.InitAndApply(t, options)
-	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	defer terraform.DestroyContext(t, t.Context(), options)
+
+	terraform.InitAndApplyContext(t, t.Context(), options)
+	outputMap := terraform.OutputForKeysContext(t, t.Context(), options, []string{"example_any"})
 	actualExampleList := outputMap["example_any"]
-	AssertEqualJson(t, actualExampleList, testList)
+
+	assertEqualJSON(t, actualExampleList, testList)
 }
 
 func TestTerraformFormatNestedTwoLevelList(t *testing.T) {
 	t.Parallel()
 
 	testList := [][][]string{
-		[][]string{[]string{random.UniqueId()}},
+		{{random.UniqueID()}},
 	}
 
-	options := GetTerraformOptionsForFormatTests(t)
+	options := getTerraformOptionsForFormatTests(t)
 	options.Vars["example_any"] = testList
 
-	defer terraform.Destroy(t, options)
-	terraform.InitAndApply(t, options)
-	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	defer terraform.DestroyContext(t, t.Context(), options)
+
+	terraform.InitAndApplyContext(t, t.Context(), options)
+	outputMap := terraform.OutputForKeysContext(t, t.Context(), options, []string{"example_any"})
 	actualExampleList := outputMap["example_any"]
-	AssertEqualJson(t, actualExampleList, testList)
+
+	assertEqualJSON(t, actualExampleList, testList)
 }
 
 func TestTerraformFormatNestedMultipleItems(t *testing.T) {
 	t.Parallel()
 
 	testList := [][]string{
-		[]string{random.UniqueId(), random.UniqueId()},
-		[]string{random.UniqueId(), random.UniqueId(), random.UniqueId()},
+		{random.UniqueID(), random.UniqueID()},
+		{random.UniqueID(), random.UniqueID(), random.UniqueID()},
 	}
 
-	options := GetTerraformOptionsForFormatTests(t)
+	options := getTerraformOptionsForFormatTests(t)
 	options.Vars["example_any"] = testList
 
-	defer terraform.Destroy(t, options)
-	terraform.InitAndApply(t, options)
-	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	defer terraform.DestroyContext(t, t.Context(), options)
+
+	terraform.InitAndApplyContext(t, t.Context(), options)
+	outputMap := terraform.OutputForKeysContext(t, t.Context(), options, []string{"example_any"})
 	actualExampleList := outputMap["example_any"]
-	AssertEqualJson(t, actualExampleList, testList)
+
+	assertEqualJSON(t, actualExampleList, testList)
 }
 
 func TestTerraformFormatNestedOneLevelMap(t *testing.T) {
 	t.Parallel()
 
 	testMap := map[string]map[string]string{
-		"test": map[string]string{
-			"foo": random.UniqueId(),
+		"test": {
+			"foo": random.UniqueID(),
 		},
 	}
 
-	options := GetTerraformOptionsForFormatTests(t)
+	options := getTerraformOptionsForFormatTests(t)
 	options.Vars["example_any"] = testMap
 
-	defer terraform.Destroy(t, options)
-	terraform.InitAndApply(t, options)
-	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	defer terraform.DestroyContext(t, t.Context(), options)
+
+	terraform.InitAndApplyContext(t, t.Context(), options)
+	outputMap := terraform.OutputForKeysContext(t, t.Context(), options, []string{"example_any"})
 	actualExampleMap := outputMap["example_any"]
-	AssertEqualJson(t, actualExampleMap, testMap)
+
+	assertEqualJSON(t, actualExampleMap, testMap)
 }
 
 func TestTerraformFormatNestedTwoLevelMap(t *testing.T) {
 	t.Parallel()
 
 	testMap := map[string]map[string]map[string]string{
-		"test": map[string]map[string]string{
-			"foo": map[string]string{
-				"bar": random.UniqueId(),
+		"test": {
+			"foo": {
+				"bar": random.UniqueID(),
 			},
 		},
 	}
 
-	options := GetTerraformOptionsForFormatTests(t)
+	options := getTerraformOptionsForFormatTests(t)
 	options.Vars["example_any"] = testMap
 
-	defer terraform.Destroy(t, options)
-	terraform.InitAndApply(t, options)
-	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	defer terraform.DestroyContext(t, t.Context(), options)
+
+	terraform.InitAndApplyContext(t, t.Context(), options)
+	outputMap := terraform.OutputForKeysContext(t, t.Context(), options, []string{"example_any"})
 	actualExampleMap := outputMap["example_any"]
-	AssertEqualJson(t, actualExampleMap, testMap)
+
+	assertEqualJSON(t, actualExampleMap, testMap)
 }
 
 func TestTerraformFormatNestedMultipleItemsMap(t *testing.T) {
 	t.Parallel()
 
 	testMap := map[string]map[string]string{
-		"test": map[string]string{
-			"foo": random.UniqueId(),
-			"bar": random.UniqueId(),
+		"test": {
+			"foo": random.UniqueID(),
+			"bar": random.UniqueID(),
 		},
-		"other": map[string]string{
-			"baz": random.UniqueId(),
-			"boo": random.UniqueId(),
+		"other": {
+			"baz": random.UniqueID(),
+			"boo": random.UniqueID(),
 		},
 	}
 
-	options := GetTerraformOptionsForFormatTests(t)
+	options := getTerraformOptionsForFormatTests(t)
 	options.Vars["example_any"] = testMap
 
-	defer terraform.Destroy(t, options)
-	terraform.InitAndApply(t, options)
-	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	defer terraform.DestroyContext(t, t.Context(), options)
+
+	terraform.InitAndApplyContext(t, t.Context(), options)
+	outputMap := terraform.OutputForKeysContext(t, t.Context(), options, []string{"example_any"})
 	actualExampleMap := outputMap["example_any"]
-	AssertEqualJson(t, actualExampleMap, testMap)
+
+	assertEqualJSON(t, actualExampleMap, testMap)
 }
 
 func TestTerraformFormatNestedListMap(t *testing.T) {
 	t.Parallel()
 
 	testMap := map[string][]string{
-		"test": []string{random.UniqueId(), random.UniqueId()},
+		"test": {random.UniqueID(), random.UniqueID()},
 	}
 
-	options := GetTerraformOptionsForFormatTests(t)
+	options := getTerraformOptionsForFormatTests(t)
 	options.Vars["example_any"] = testMap
 
-	defer terraform.Destroy(t, options)
-	terraform.InitAndApply(t, options)
-	outputMap := terraform.OutputForKeys(t, options, []string{"example_any"})
+	defer terraform.DestroyContext(t, t.Context(), options)
+
+	terraform.InitAndApplyContext(t, t.Context(), options)
+	outputMap := terraform.OutputForKeysContext(t, t.Context(), options, []string{"example_any"})
 	actualExampleMap := outputMap["example_any"]
-	AssertEqualJson(t, actualExampleMap, testMap)
+
+	assertEqualJSON(t, actualExampleMap, testMap)
 }
 
-func GetTerraformOptionsForFormatTests(t *testing.T) *terraform.Options {
+func getTerraformOptionsForFormatTests(t *testing.T) *terraform.Options {
+	t.Helper()
+
 	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-basic-example")
 
 	// Set up terratest to retry on known failures
@@ -173,15 +189,23 @@ func GetTerraformOptionsForFormatTests(t *testing.T) *terraform.Options {
 		MaxRetries:               maxTerraformRetries,
 		TimeBetweenRetries:       sleepBetweenTerraformRetries,
 	}
+
 	return terraformOptions
 }
 
 // The value of the output nested in the outputMap returned by OutputForKeys uses the interface{} type for nested
 // structures. This can't be compared to actual types like [][]string{}, so we instead compare the json versions.
-func AssertEqualJson(t *testing.T, actual interface{}, expected interface{}) {
-	actualJson, err := json.Marshal(actual)
+func assertEqualJSON(t *testing.T, actual interface{}, expected interface{}) {
+	t.Helper()
+
+	assert.JSONEq(t, toJSON(t, expected), toJSON(t, actual))
+}
+
+func toJSON(t *testing.T, v interface{}) string {
+	t.Helper()
+
+	data, err := json.Marshal(v)
 	require.NoError(t, err)
-	expectedJson, err := json.Marshal(expected)
-	require.NoError(t, err)
-	assert.Equal(t, actualJson, expectedJson)
+
+	return string(data)
 }

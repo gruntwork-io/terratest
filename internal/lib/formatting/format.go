@@ -20,7 +20,8 @@ func FormatPluginDirAsArgs(pluginDir string) []string {
 	if pluginDir == "" {
 		return nil
 	}
-	return []string{fmt.Sprintf("-plugin-dir=%v", pluginDir)}
+
+	return []string{"-plugin-dir=" + pluginDir}
 }
 
 // formatTerraformArgs formats vars as CLI args with the given prefix.
@@ -32,9 +33,10 @@ func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsS
 		if omitNil && value == nil {
 			argValue = key
 		} else {
-			hclString := toHclString(value, false)
+			hclString := ToHCLString(value, false)
 			argValue = fmt.Sprintf("%s=%s", key, hclString)
 		}
+
 		if useSpaceAsSeparator {
 			args = append(args, prefix, argValue)
 		} else {
@@ -45,9 +47,9 @@ func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsS
 	return args
 }
 
-// toHclString converts Go values to HCL-formatted strings for Terraform CLI arguments.
+// ToHCLString converts Go values to HCL-formatted strings for Terraform CLI arguments.
 // Handles primitives, slices, and maps. Example: []int{1,2,3} -> "[1, 2, 3]"
-func toHclString(value interface{}, isNested bool) string {
+func ToHCLString(value interface{}, isNested bool) string {
 	if slice, isSlice := tryToConvertToGenericSlice(value); isSlice {
 		return sliceToHclString(slice)
 	} else if m, isMap := tryToConvertToGenericMap(value); isMap {
@@ -96,10 +98,10 @@ func tryToConvertToGenericMap(value interface{}) (map[string]interface{}, bool) 
 }
 
 func sliceToHclString(slice []interface{}) string {
-	hclValues := []string{}
+	hclValues := make([]string, 0, len(slice))
 
 	for _, value := range slice {
-		hclValue := toHclString(value, true)
+		hclValue := ToHCLString(value, true)
 		hclValues = append(hclValues, hclValue)
 	}
 
@@ -107,10 +109,10 @@ func sliceToHclString(slice []interface{}) string {
 }
 
 func mapToHclString(m map[string]interface{}) string {
-	keyValuePairs := []string{}
+	keyValuePairs := make([]string, 0, len(m))
 
 	for key, value := range m {
-		keyValuePair := fmt.Sprintf(`"%s" = %s`, key, toHclString(value, true))
+		keyValuePair := fmt.Sprintf(`"%s" = %s`, key, ToHCLString(value, true))
 		keyValuePairs = append(keyValuePairs, keyValuePair)
 	}
 
@@ -123,17 +125,16 @@ func primitiveToHclString(value interface{}, isNested bool) string {
 	}
 
 	switch v := value.(type) {
-
 	case bool:
 		return strconv.FormatBool(v)
 
 	case string:
 		// If string is nested in a larger data structure (e.g. list of string, map of string), ensure value is quoted
 		if isNested {
-			return fmt.Sprintf("\"%v\"", v)
+			return "\"" + v + "\""
 		}
 
-		return fmt.Sprintf("%v", v)
+		return v
 
 	default:
 		return fmt.Sprintf("%v", v)
