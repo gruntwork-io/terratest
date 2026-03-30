@@ -45,6 +45,7 @@ require (
 
 require (
 	cloud.google.com/go/cloudbuild v1.19.0
+	cloud.google.com/go/pubsub v1.45.1
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.10.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3 v3.0.0
