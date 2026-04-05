@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -240,7 +239,7 @@ func readStdoutAndStderr(t testing.TestingT, log *logger.Logger, stdout, stderr 
 	stdoutReader := bufio.NewReader(stdout)
 	stderrReader := bufio.NewReader(stderr)
 
-	wg := &sync.WaitGroup{}
+	var wg sync.WaitGroup
 
 	wg.Add(2) //nolint:mnd // 2 goroutines: one for stdout, one for stderr
 
@@ -260,15 +259,7 @@ func readStdoutAndStderr(t testing.TestingT, log *logger.Logger, stdout, stderr 
 
 	wg.Wait()
 
-	if stdoutErr != nil {
-		return out, stdoutErr
-	}
-
-	if stderrErr != nil {
-		return out, stderrErr
-	}
-
-	return out, nil
+	return out, errors.Join(stdoutErr, stderrErr)
 }
 
 func readData(t testing.TestingT, log *logger.Logger, reader *bufio.Reader, writer io.StringWriter) error {
@@ -316,28 +307,16 @@ func readData(t testing.TestingT, log *logger.Logger, reader *bufio.Reader, writ
 	return nil
 }
 
-// GetExitCodeForRunCommandError tries to read the exit code for the error object returned from running a shell command. This is a bit tricky to do
-// in a way that works across platforms.
+// GetExitCodeForRunCommandError tries to read the exit code for the error object returned from running a shell command.
 func GetExitCodeForRunCommandError(err error) (int, error) {
 	var errWithOutput *ErrWithCmdOutput
 	if errors.As(err, &errWithOutput) {
 		err = errWithOutput.Underlying
 	}
 
-	// http://stackoverflow.com/a/10385867/483528
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
-		// The program has exited with an exit code != 0
-
-		// This works on both Unix and Windows. Although package
-		// syscall is generally platform dependent, WaitStatus is
-		// defined for both Unix and Windows and in both cases has
-		// an ExitStatus() method with the same signature.
-		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-			return status.ExitStatus(), nil
-		}
-
-		return 1, errors.New("could not determine exit code")
+		return exitErr.ExitCode(), nil
 	}
 
 	return 0, nil
@@ -346,7 +325,7 @@ func GetExitCodeForRunCommandError(err error) (int, error) {
 func formatEnvVars(command *Command) []string {
 	env := os.Environ()
 	for key, value := range command.Env {
-		env = append(env, fmt.Sprintf("%s=%s", key, value))
+		env = append(env, key+"="+value)
 	}
 
 	return env
