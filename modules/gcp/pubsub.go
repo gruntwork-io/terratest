@@ -27,6 +27,7 @@ func AssertTopicExistsContextE(t testing.TestingT, ctx context.Context, projectI
 	if err != nil {
 		return err
 	}
+
 	defer func() { _ = client.Close() }()
 
 	exists, err := client.Topic(topicName).Exists(ctx)
@@ -59,6 +60,7 @@ func AssertSubscriptionExistsContextE(t testing.TestingT, ctx context.Context, p
 	if err != nil {
 		return err
 	}
+
 	defer func() { _ = client.Close() }()
 
 	exists, err := client.Subscription(subscriptionName).Exists(ctx)
@@ -91,6 +93,7 @@ func CreateTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 	if err != nil {
 		return err
 	}
+
 	defer func() { _ = client.Close() }()
 
 	_, err = client.CreateTopic(ctx, topicName)
@@ -119,6 +122,7 @@ func DeleteTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 	if err != nil {
 		return err
 	}
+
 	defer func() { _ = client.Close() }()
 
 	if err := client.Topic(topicName).Delete(ctx); err != nil {
@@ -146,6 +150,7 @@ func CreateSubscriptionContextE(t testing.TestingT, ctx context.Context, project
 	if err != nil {
 		return err
 	}
+
 	defer func() { _ = client.Close() }()
 
 	_, err = client.CreateSubscription(ctx, subscriptionName, pubsub.SubscriptionConfig{
@@ -176,6 +181,7 @@ func DeleteSubscriptionContextE(t testing.TestingT, ctx context.Context, project
 	if err != nil {
 		return err
 	}
+
 	defer func() { _ = client.Close() }()
 
 	if err := client.Subscription(subscriptionName).Delete(ctx); err != nil {
@@ -191,5 +197,6 @@ func newPubSubClient(ctx context.Context, projectID string) (*pubsub.Client, err
 	if err != nil {
 		return nil, err
 	}
+
 	return client, nil
 }
