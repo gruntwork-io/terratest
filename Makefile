@@ -7,6 +7,14 @@ update-lint-config:
 	  cat .golangci.yml; } > $${tmpfile} && mv $${tmpfile} .golangci.yml
 
 lint:
-	golangci-lint run ./...
+	mise x golangci-lint -- golangci-lint run -v --timeout=30m ./...
 
-.PHONY: lint update-lint-config
+lint-incremental:
+	@echo "Incremental lint (new issues only)"
+	mise x golangci-lint -- golangci-lint run -v --timeout=30m --new-from-merge-base=main ./...
+
+lint-fix:
+	@echo "Linting with auto-fix"
+	mise x golangci-lint -- golangci-lint run -v --timeout=30m --fix ./...
+
+.PHONY: lint lint-incremental lint-fix update-lint-config
