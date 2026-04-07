@@ -65,20 +65,22 @@ func GetPrivateIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRe
 // GetPrivateIpsOfEc2InstancesE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 func GetPrivateIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRegion string) (map[string]string, error) {
 	ec2Client := NewEc2Client(t, awsRegion)
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	output, err := ec2Client.DescribeInstances(context.Background(), &input)
-	if err != nil {
-		return nil, err
-	}
 
 	ips := map[string]string{}
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateIpAddress)
+	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateIpAddress)
+			}
 		}
 	}
 
@@ -124,20 +126,22 @@ func GetPrivateHostnamesOfEc2InstancesE(t testing.TestingT, instanceIDs []string
 		return nil, err
 	}
 
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	output, err := ec2Client.DescribeInstances(context.Background(), &input)
-	if err != nil {
-		return nil, err
-	}
 
 	hostnames := map[string]string{}
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			hostnames[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateDnsName)
+	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				hostnames[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateDnsName)
+			}
 		}
 	}
 
@@ -198,20 +202,22 @@ func GetPublicIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsReg
 // GetPublicIpsOfEc2InstancesE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 func GetPublicIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRegion string) (map[string]string, error) {
 	ec2Client := NewEc2Client(t, awsRegion)
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	output, err := ec2Client.DescribeInstances(context.Background(), &input)
-	if err != nil {
-		return nil, err
-	}
 
 	ips := map[string]string{}
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PublicIpAddress)
+	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PublicIpAddress)
+			}
 		}
 	}
 
@@ -258,22 +264,24 @@ func GetEc2InstanceIdsByFiltersE(t testing.TestingT, region string, ec2Filters m
 		ec2FilterList = append(ec2FilterList, types.Filter{Name: aws.String(name), Values: values})
 	}
 
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
-	output, err := client.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{Filters: ec2FilterList})
-	if err != nil {
-		return nil, err
-	}
-
 	var instanceIDs []string
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			instanceIDs = append(instanceIDs, *instance.InstanceId)
+	paginator := ec2.NewDescribeInstancesPaginator(client, &ec2.DescribeInstancesInput{Filters: ec2FilterList})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				instanceIDs = append(instanceIDs, *instance.InstanceId)
+			}
 		}
 	}
 
-	return instanceIDs, err
+	return instanceIDs, nil
 }
 
 // GetTagsForEc2Instance returns all the tags for the given EC2 Instance.
@@ -304,15 +312,18 @@ func GetTagsForEc2InstanceE(t testing.TestingT, region string, instanceID string
 		},
 	}
 
-	out, err := client.DescribeTags(context.Background(), &input)
-	if err != nil {
-		return nil, err
-	}
-
 	tags := map[string]string{}
 
-	for _, tag := range out.Tags {
-		tags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
+	paginator := ec2.NewDescribeTagsPaginator(client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		for _, tag := range page.Tags {
+			tags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
+		}
 	}
 
 	return tags, nil
