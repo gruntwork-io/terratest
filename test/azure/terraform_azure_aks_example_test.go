@@ -27,8 +27,8 @@ func TestTerraformAzureAKSExample(t *testing.T) {
 	t.Parallel()
 	// MC_+ResourceGroupName_ClusterName_AzureRegion must be no greater than 80 chars.
 	// https://docs.microsoft.com/en-us/azure/aks/troubleshooting#what-naming-restrictions-are-enforced-for-aks-resources-and-parameters
-	expectedClusterName := fmt.Sprintf("terratest-aks-cluster-%s", random.UniqueId())
-	expectedResourceGroupName := fmt.Sprintf("terratest-aks-rg-%s", random.UniqueId())
+	expectedClusterName := fmt.Sprintf("terratest-aks-cluster-%s", random.UniqueID())
+	expectedResourceGroupName := fmt.Sprintf("terratest-aks-rg-%s", random.UniqueID())
 	expectedAagentCount := 3
 
 	terraformOptions := &terraform.Options{
@@ -60,7 +60,7 @@ func TestTerraformAzureAKSExample(t *testing.T) {
 	// To ensure we can reuse the resource config on the same cluster to test different scenarios, we setup a unique
 	// namespace for the resources for this test.
 	// Note that namespaces must be lowercase.
-	namespaceName := strings.ToLower(random.UniqueId())
+	namespaceName := strings.ToLower(random.UniqueID())
 
 	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
 	// - HOME/.kube/config for the kubectl config file

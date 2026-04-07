@@ -52,12 +52,6 @@ type InstanceGroup interface {
 
 	// GetInstanceIDsE gets the IDs of Instances in the given Instance Group.
 	GetInstanceIDsE(t testing.TestingT) ([]string, error)
-
-	// Deprecated: Use [InstanceGroup.GetInstanceIDs] instead.
-	GetInstanceIds(t testing.TestingT) []string //nolint:staticcheck,revive // preserving deprecated method name
-
-	// Deprecated: Use [InstanceGroup.GetInstanceIDsE] instead.
-	GetInstanceIdsE(t testing.TestingT) ([]string, error) //nolint:staticcheck,revive // preserving deprecated method name
 }
 
 // FetchInstance queries GCP to return an instance of the Compute Instance type.
@@ -267,14 +261,6 @@ func (i *Instance) GetPublicIP(t testing.TestingT) string {
 	return ip
 }
 
-// GetPublicIp gets the public IP address of the given Compute Instance.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [Instance.GetPublicIP] instead.
-func (i *Instance) GetPublicIp(t testing.TestingT) string { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.GetPublicIP(t)
-}
-
 // GetPublicIPE gets the public IP address of the given Compute Instance.
 func (i *Instance) GetPublicIPE(t testing.TestingT) (string, error) {
 	// If there are no accessConfigs specified, then this instance will have no external internet access:
@@ -286,13 +272,6 @@ func (i *Instance) GetPublicIPE(t testing.TestingT) (string, error) {
 	ip := i.NetworkInterfaces[0].AccessConfigs[0].NatIP
 
 	return ip, nil
-}
-
-// GetPublicIpE gets the public IP address of the given Compute Instance.
-//
-// Deprecated: Use [Instance.GetPublicIPE] instead.
-func (i *Instance) GetPublicIpE(t testing.TestingT) (string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.GetPublicIPE(t)
 }
 
 // GetLabels returns all the tags for the given Compute Instance.
@@ -479,21 +458,6 @@ func (i *Instance) AddSSHKeyContextE(t testing.TestingT, ctx context.Context, us
 	return nil
 }
 
-// AddSshKey adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [Instance.AddSSHKey] instead.
-func (i *Instance) AddSshKey(t testing.TestingT, username string, publicKey string) { //nolint:staticcheck,revive // preserving deprecated method name
-	i.AddSSHKey(t, username, publicKey)
-}
-
-// AddSshKeyE adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
-//
-// Deprecated: Use [Instance.AddSSHKeyE] instead.
-func (i *Instance) AddSshKeyE(t testing.TestingT, username string, publicKey string) error { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.AddSSHKeyE(t, username, publicKey)
-}
-
 // DeleteImage deletes the given Compute Image.
 // This will fail the test if there is an error.
 //
@@ -556,26 +520,11 @@ func (ig *ZonalInstanceGroup) GetInstanceIDsContext(t testing.TestingT, ctx cont
 	return ids
 }
 
-// GetInstanceIds gets the IDs of Instances in the given Zonal Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetInstanceIDs] instead.
-func (ig *ZonalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDs(t)
-}
-
 // GetInstanceIDsE gets the IDs of Instances in the given Zonal Instance Group.
 //
 // Deprecated: Use [ZonalInstanceGroup.GetInstanceIDsContextE] instead.
 func (ig *ZonalInstanceGroup) GetInstanceIDsE(t testing.TestingT) ([]string, error) {
 	return ig.GetInstanceIDsContextE(t, context.Background())
-}
-
-// GetInstanceIdsE gets the IDs of Instances in the given Zonal Instance Group.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetInstanceIDsE] instead.
-func (ig *ZonalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDsE(t)
 }
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Zonal Instance Group.
@@ -634,26 +583,11 @@ func (ig *RegionalInstanceGroup) GetInstanceIDsContext(t testing.TestingT, ctx c
 	return ids
 }
 
-// GetInstanceIds gets the IDs of Instances in the given Regional Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetInstanceIDs] instead.
-func (ig *RegionalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDs(t)
-}
-
 // GetInstanceIDsE gets the IDs of Instances in the given Regional Instance Group.
 //
 // Deprecated: Use [RegionalInstanceGroup.GetInstanceIDsContextE] instead.
 func (ig *RegionalInstanceGroup) GetInstanceIDsE(t testing.TestingT) ([]string, error) {
 	return ig.GetInstanceIDsContextE(t, context.Background())
-}
-
-// GetInstanceIdsE gets the IDs of Instances in the given Regional Instance Group.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetInstanceIDsE] instead.
-func (ig *RegionalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDsE(t)
 }
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Regional Instance Group.
@@ -756,21 +690,6 @@ func (ig *ZonalInstanceGroup) GetPublicIPsE(t testing.TestingT, projectID string
 	return getPublicIPsE(t, ig, projectID)
 }
 
-// GetPublicIps returns a slice of the public IPs from the given Zonal Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetPublicIPs] instead.
-func (ig *ZonalInstanceGroup) GetPublicIps(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPs(t, projectID)
-}
-
-// GetPublicIpsE returns a slice of the public IPs from the given Zonal Instance Group.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetPublicIPsE] instead.
-func (ig *ZonalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPsE(t, projectID)
-}
-
 // GetPublicIPs returns a slice of the public IPs from the given Regional Instance Group.
 // This will fail the test if there is an error.
 func (ig *RegionalInstanceGroup) GetPublicIPs(t testing.TestingT, projectID string) []string {
@@ -780,21 +699,6 @@ func (ig *RegionalInstanceGroup) GetPublicIPs(t testing.TestingT, projectID stri
 // GetPublicIPsE returns a slice of the public IPs from the given Regional Instance Group.
 func (ig *RegionalInstanceGroup) GetPublicIPsE(t testing.TestingT, projectID string) ([]string, error) {
 	return getPublicIPsE(t, ig, projectID)
-}
-
-// GetPublicIps returns a slice of the public IPs from the given Regional Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetPublicIPs] instead.
-func (ig *RegionalInstanceGroup) GetPublicIps(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPs(t, projectID)
-}
-
-// GetPublicIpsE returns a slice of the public IPs from the given Regional Instance Group.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetPublicIPsE] instead.
-func (ig *RegionalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPsE(t, projectID)
 }
 
 // getPublicIPs returns a slice of the public IPs from the given Instance Group.
@@ -979,11 +883,4 @@ func RandomValidGCPName() string {
 	id := strings.ToLower(random.UniqueID())
 
 	return "terratest-" + id
-}
-
-// RandomValidGcpName returns a random, valid name for GCP resources. Many resources in GCP require lowercase letters only.
-//
-// Deprecated: Use [RandomValidGCPName] instead.
-func RandomValidGcpName() string { //nolint:staticcheck,revive // preserving deprecated function name
-	return RandomValidGCPName()
 }

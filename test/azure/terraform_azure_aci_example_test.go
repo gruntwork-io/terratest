@@ -20,7 +20,7 @@ import (
 func TestTerraformAzureACIExample(t *testing.T) {
 	t.Parallel()
 
-	uniquePostfix := strings.ToLower(random.UniqueId())
+	uniquePostfix := strings.ToLower(random.UniqueID())
 
 	// website::tag::1:: Configure Terraform setting up a path to Terraform code.
 	terraformOptions := &terraform.Options{

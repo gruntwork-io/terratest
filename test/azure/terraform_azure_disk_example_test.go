@@ -22,7 +22,7 @@ func TestTerraformAzureDiskExample(t *testing.T) {
 
 	// Subscription ID, leave blank if available as an Environment Var
 	subID := ""
-	uniquePostfix := random.UniqueId()
+	uniquePostfix := random.UniqueID()
 
 	// Configure Terraform setting up a path to Terraform code.
 	terraformOptions := &terraform.Options{
