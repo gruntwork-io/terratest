@@ -55,19 +55,19 @@ func TestStackOutputIntegration(t *testing.T) {
 	strOutput := terragrunt.StackOutput(t, options, "mother")
 	assert.Contains(t, strOutput, "./test.txt")
 
-	// Test getting stack output as JSON using the StackOutputJson function
+	// Test getting stack output as JSON using the StackOutputJSON function
 	jsonOptions := &terragrunt.Options{
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
 		Logger:           logger.Discard,
 	}
 
-	strOutputJSON := terragrunt.StackOutputJson(t, jsonOptions, "mother")
+	strOutputJSON := terragrunt.StackOutputJSON(t, jsonOptions, "mother")
 	// The JSON output for a single value should still be cleaned to just show the value
 	assert.Contains(t, strOutputJSON, "./test.txt")
 
 	// Test getting all stack outputs as JSON
-	allOutputsJSON := terragrunt.StackOutputJson(t, jsonOptions, "")
+	allOutputsJSON := terragrunt.StackOutputJSON(t, jsonOptions, "")
 	require.NotEmpty(t, allOutputsJSON)
 
 	// For JSON output of all outputs, we should get valid JSON

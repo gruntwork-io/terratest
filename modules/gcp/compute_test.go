@@ -25,10 +25,10 @@ const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-2204-lts"
 // Zones that support running f1-micro instances
 var ZonesThatSupportF1Micro = []string{"us-central1-a", "us-east1-b", "us-west1-a", "europe-north1-a", "europe-west1-b", "europe-central2-a"}
 
-func TestGetPublicIpOfInstance(t *testing.T) {
+func TestGetPublicIPOfInstance(t *testing.T) {
 	t.Parallel()
 
-	instanceName := RandomValidGcpName()
+	instanceName := RandomValidGCPName()
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
@@ -43,7 +43,7 @@ func TestGetPublicIpOfInstance(t *testing.T) {
 		// Consider attempting to connect to the Compute Instance at this IP in the future, but for now, we just call the
 		// the function to ensure we don't have errors
 		instance := FetchInstance(t, projectID, instanceName)
-		ip := instance.GetPublicIp(t)
+		ip := instance.GetPublicIP(t)
 
 		if ip == "" {
 			return "", fmt.Errorf("Got blank IP. Retrying.\n")
@@ -54,7 +54,7 @@ func TestGetPublicIpOfInstance(t *testing.T) {
 	fmt.Printf("Public IP of Compute Instance %s = %s\n", instanceName, ip)
 }
 
-func TestZoneUrlToZone(t *testing.T) {
+func TestZoneURLToZone(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -66,7 +66,7 @@ func TestZoneUrlToZone(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		zone := ZoneUrlToZone(tc.zoneUrl)
+		zone := ZoneURLToZone(tc.zoneUrl)
 		assert.Equal(t, zone, tc.expectedZone, "Zone not extracted successfully from Zone URL")
 	}
 }
@@ -74,7 +74,7 @@ func TestZoneUrlToZone(t *testing.T) {
 func TestGetAndSetLabels(t *testing.T) {
 	t.Parallel()
 
-	instanceName := RandomValidGcpName()
+	instanceName := RandomValidGCPName()
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 
 	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
@@ -111,7 +111,7 @@ func TestGetAndSetMetadata(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	instanceName := RandomValidGcpName()
+	instanceName := RandomValidGCPName()
 
 	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 

@@ -20,7 +20,7 @@ func TestTerraformAzureContainerAppExample(t *testing.T) {
 	t.Parallel()
 
 	subscriptionID := ""
-	uniquePostfix := strings.ToLower(random.UniqueId())
+	uniquePostfix := strings.ToLower(random.UniqueID())
 
 	terraformOptions := &terraform.Options{
 		TerraformBinary: "",

@@ -22,7 +22,7 @@ func TestTerraformAzureSQLManagedInstanceExample(t *testing.T) {
 	}
 	t.Parallel()
 
-	uniquePostfix := strings.ToLower(random.UniqueId())
+	uniquePostfix := strings.ToLower(random.UniqueID())
 	expectedLocation := "westus"
 	expectedAdminLogin := "sqlmiadmin"
 	expectedSQLMIState := "Ready"

@@ -172,9 +172,9 @@ func TestSaveAndLoadAmiId(t *testing.T) {
 	tmpFolder := t.TempDir()
 
 	expectedData := "ami-abcd1234"
-	teststructure.SaveAmiId(t, tmpFolder, expectedData) //nolint:staticcheck // testing deprecated function
+	teststructure.SaveArtifactID(t, tmpFolder, expectedData)
 
-	actualData := teststructure.LoadAmiId(t, tmpFolder) //nolint:staticcheck // testing deprecated function
+	actualData := teststructure.LoadArtifactID(t, tmpFolder)
 	assert.Equal(t, expectedData, actualData)
 }
 

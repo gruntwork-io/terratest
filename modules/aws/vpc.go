@@ -73,13 +73,6 @@ func GetVpcByID(t testing.TestingT, vpcID string, region string) *Vpc {
 	return vpc
 }
 
-// GetVpcById fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByID] instead.
-func GetVpcById(t testing.TestingT, vpcID string, region string) *Vpc { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetVpcByID(t, vpcID, region)
-}
-
 // GetVpcByIDE fetches information about a VPC with given ID in the given region.
 func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) {
 	vpcIDFilter := types.Filter{Name: aws.String(vpcIDFilterName), Values: []string{vpcID}}
@@ -91,13 +84,6 @@ func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) 
 	}
 
 	return vpcs[0], err
-}
-
-// GetVpcByIdE fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByIDE] instead.
-func GetVpcByIdE(t testing.TestingT, vpcID string, region string) (*Vpc, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetVpcByIDE(t, vpcID, region)
 }
 
 // GetVpcsE fetches information about VPCs from given regions limited by filters
