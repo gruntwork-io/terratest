@@ -3,13 +3,13 @@ package azure
 import (
 	"context"
 	"fmt"
-	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates"
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys"
 	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +21,7 @@ func NewAzureCredentialE() (*azidentity.DefaultAzureCredential, error) {
 // KeyVaultSecretExistsContext indicates whether a key vault secret exists; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func KeyVaultSecretExistsContext(t *testing.T, ctx context.Context, keyVaultName string, secretName string) bool {
+func KeyVaultSecretExistsContext(t testing.TestingT, ctx context.Context, keyVaultName string, secretName string) bool {
 	t.Helper()
 
 	result, err := KeyVaultSecretExistsContextE(ctx, keyVaultName, secretName)
@@ -34,7 +34,7 @@ func KeyVaultSecretExistsContext(t *testing.T, ctx context.Context, keyVaultName
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [KeyVaultSecretExistsContext] instead.
-func KeyVaultSecretExists(t *testing.T, keyVaultName string, secretName string) bool {
+func KeyVaultSecretExists(t testing.TestingT, keyVaultName string, secretName string) bool {
 	t.Helper()
 
 	return KeyVaultSecretExistsContext(t, context.Background(), keyVaultName, secretName) //nolint:staticcheck
@@ -43,7 +43,7 @@ func KeyVaultSecretExists(t *testing.T, keyVaultName string, secretName string) 
 // KeyVaultKeyExistsContext indicates whether a key vault key exists; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func KeyVaultKeyExistsContext(t *testing.T, ctx context.Context, keyVaultName string, keyName string) bool {
+func KeyVaultKeyExistsContext(t testing.TestingT, ctx context.Context, keyVaultName string, keyName string) bool {
 	t.Helper()
 
 	result, err := KeyVaultKeyExistsContextE(ctx, keyVaultName, keyName)
@@ -56,7 +56,7 @@ func KeyVaultKeyExistsContext(t *testing.T, ctx context.Context, keyVaultName st
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [KeyVaultKeyExistsContext] instead.
-func KeyVaultKeyExists(t *testing.T, keyVaultName string, keyName string) bool {
+func KeyVaultKeyExists(t testing.TestingT, keyVaultName string, keyName string) bool {
 	t.Helper()
 
 	return KeyVaultKeyExistsContext(t, context.Background(), keyVaultName, keyName) //nolint:staticcheck
@@ -65,7 +65,7 @@ func KeyVaultKeyExists(t *testing.T, keyVaultName string, keyName string) bool {
 // KeyVaultCertificateExistsContext indicates whether a key vault certificate exists; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func KeyVaultCertificateExistsContext(t *testing.T, ctx context.Context, keyVaultName string, certificateName string) bool {
+func KeyVaultCertificateExistsContext(t testing.TestingT, ctx context.Context, keyVaultName string, certificateName string) bool {
 	t.Helper()
 
 	result, err := KeyVaultCertificateExistsContextE(ctx, keyVaultName, certificateName)
@@ -78,7 +78,7 @@ func KeyVaultCertificateExistsContext(t *testing.T, ctx context.Context, keyVaul
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [KeyVaultCertificateExistsContext] instead.
-func KeyVaultCertificateExists(t *testing.T, keyVaultName string, certificateName string) bool {
+func KeyVaultCertificateExists(t testing.TestingT, keyVaultName string, certificateName string) bool {
 	t.Helper()
 
 	return KeyVaultCertificateExistsContext(t, context.Background(), keyVaultName, certificateName) //nolint:staticcheck
@@ -237,7 +237,7 @@ func GetKeyVaultCertificatesClientE(keyVaultName string) (*azcertificates.Client
 // GetKeyVaultContext is a helper function that gets the keyvault management object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetKeyVaultContext(t *testing.T, ctx context.Context, resGroupName string, keyVaultName string, subscriptionID string) *armkeyvault.Vault {
+func GetKeyVaultContext(t testing.TestingT, ctx context.Context, resGroupName string, keyVaultName string, subscriptionID string) *armkeyvault.Vault {
 	t.Helper()
 
 	keyVault, err := GetKeyVaultContextE(t, ctx, resGroupName, keyVaultName, subscriptionID)
@@ -250,7 +250,7 @@ func GetKeyVaultContext(t *testing.T, ctx context.Context, resGroupName string, 
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetKeyVaultContext] instead.
-func GetKeyVault(t *testing.T, resGroupName string, keyVaultName string, subscriptionID string) *armkeyvault.Vault {
+func GetKeyVault(t testing.TestingT, resGroupName string, keyVaultName string, subscriptionID string) *armkeyvault.Vault {
 	t.Helper()
 
 	return GetKeyVaultContext(t, context.Background(), resGroupName, keyVaultName, subscriptionID) //nolint:staticcheck
@@ -258,7 +258,7 @@ func GetKeyVault(t *testing.T, resGroupName string, keyVaultName string, subscri
 
 // GetKeyVaultContextE is a helper function that gets the keyvault management object.
 // The ctx parameter supports cancellation and timeouts.
-func GetKeyVaultContextE(t *testing.T, ctx context.Context, resGroupName string, keyVaultName string, subscriptionID string) (*armkeyvault.Vault, error) {
+func GetKeyVaultContextE(t testing.TestingT, ctx context.Context, resGroupName string, keyVaultName string, subscriptionID string) (*armkeyvault.Vault, error) {
 	t.Helper()
 
 	// Create a key vault management client
@@ -279,7 +279,7 @@ func GetKeyVaultContextE(t *testing.T, ctx context.Context, resGroupName string,
 // GetKeyVaultE is a helper function that gets the keyvault management object.
 //
 // Deprecated: Use [GetKeyVaultContextE] instead.
-func GetKeyVaultE(t *testing.T, resGroupName string, keyVaultName string, subscriptionID string) (*armkeyvault.Vault, error) {
+func GetKeyVaultE(t testing.TestingT, resGroupName string, keyVaultName string, subscriptionID string) (*armkeyvault.Vault, error) {
 	t.Helper()
 
 	return GetKeyVaultContextE(t, context.Background(), resGroupName, keyVaultName, subscriptionID)

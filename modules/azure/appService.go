@@ -2,16 +2,16 @@ package azure
 
 import (
 	"context"
-	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v2"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // AppExistsContext indicates whether the specified application exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func AppExistsContext(t *testing.T, ctx context.Context, appName string, resourceGroupName string, subscriptionID string) bool {
+func AppExistsContext(t testing.TestingT, ctx context.Context, appName string, resourceGroupName string, subscriptionID string) bool {
 	t.Helper()
 
 	exists, err := AppExistsContextE(ctx, appName, resourceGroupName, subscriptionID)
@@ -24,7 +24,7 @@ func AppExistsContext(t *testing.T, ctx context.Context, appName string, resourc
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [AppExistsContext] instead.
-func AppExists(t *testing.T, appName string, resourceGroupName string, subscriptionID string) bool {
+func AppExists(t testing.TestingT, appName string, resourceGroupName string, subscriptionID string) bool {
 	t.Helper()
 
 	return AppExistsContext(t, context.Background(), appName, resourceGroupName, subscriptionID)
@@ -55,7 +55,7 @@ func AppExistsE(appName string, resourceGroupName string, subscriptionID string)
 // GetAppServiceContext gets the App service object for the specified application.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetAppServiceContext(t *testing.T, ctx context.Context, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
+func GetAppServiceContext(t testing.TestingT, ctx context.Context, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
 	t.Helper()
 
 	site, err := GetAppServiceContextE(ctx, appName, resGroupName, subscriptionID)
@@ -68,7 +68,7 @@ func GetAppServiceContext(t *testing.T, ctx context.Context, appName string, res
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetAppServiceContext] instead.
-func GetAppService(t *testing.T, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
+func GetAppService(t testing.TestingT, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
 	t.Helper()
 
 	return GetAppServiceContext(t, context.Background(), appName, resGroupName, subscriptionID)
