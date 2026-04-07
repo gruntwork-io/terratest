@@ -21,7 +21,6 @@ const (
 	CentOsAccountID = "679593333241"
 	// AmazonAccountID is the AWS account ID (or alias) for Amazon.
 	AmazonAccountID = "amazon"
-
 )
 
 // DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI.
