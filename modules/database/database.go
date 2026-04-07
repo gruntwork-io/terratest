@@ -41,7 +41,7 @@ type DBConfig struct {
 // the database. If there's any error, fail the test.
 //
 // Deprecated: Use DBConnectionWithContextE instead.
-func DBConnection(t testing.TestingT, dbType string, dbConfig DBConfig) *sql.DB {	t.Helper()
+func DBConnection(t testing.TestingT, dbType string, dbConfig DBConfig) *sql.DB { //nolint:gocritic // Preserving original signature for backward compatibility.	t.Helper()
 
 	db, err := DBConnectionE(t, dbType, dbConfig)
 	if err != nil {
@@ -55,7 +55,7 @@ func DBConnection(t testing.TestingT, dbType string, dbConfig DBConfig) *sql.DB 
 // database or an error.
 //
 // Deprecated: Use DBConnectionWithContextE instead.
-func DBConnectionE(t testing.TestingT, dbType string, dbConfig DBConfig) (*sql.DB, error) {	t.Helper()
+func DBConnectionE(t testing.TestingT, dbType string, dbConfig DBConfig) (*sql.DB, error) { //nolint:gocritic // Preserving original signature for backward compatibility.	t.Helper()
 
 	return DBConnectionWithContextE(t, context.Background(), dbType, &dbConfig)
 }
