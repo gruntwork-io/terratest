@@ -105,4 +105,3 @@ func GetDiskContextE(ctx context.Context, diskName string, resGroupName string, 
 func GetDiskE(diskName string, resGroupName string, subscriptionID string) (*compute.Disk, error) {
 	return GetDiskContextE(context.Background(), diskName, resGroupName, subscriptionID)
 }
-

@@ -232,4 +232,3 @@ func GetAvailabilitySetContextE(t testing.TestingT, ctx context.Context, avsName
 func GetAvailabilitySetE(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) (*compute.AvailabilitySet, error) {
 	return GetAvailabilitySetContextE(t, context.Background(), avsName, resGroupName, subscriptionID)
 }
-

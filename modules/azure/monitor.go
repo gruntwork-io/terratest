@@ -200,4 +200,3 @@ func GetActivityLogAlertResourceContextE(ctx context.Context, activityLogAlertNa
 func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName string, subscriptionID string) (*insights.ActivityLogAlertResource, error) {
 	return GetActivityLogAlertResourceContextE(context.Background(), activityLogAlertName, resGroupName, subscriptionID)
 }
-
