@@ -233,25 +233,3 @@ func GetAvailabilitySetE(t testing.TestingT, avsName string, resGroupName string
 	return GetAvailabilitySetContextE(t, context.Background(), avsName, resGroupName, subscriptionID)
 }
 
-// GetAvailabilitySetClientE gets a new Availability Set client in the specified Azure Subscription.
-// TODO: remove in next version
-func GetAvailabilitySetClientE(subscriptionID string) (*compute.AvailabilitySetsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the Availability Set client
-	client := compute.NewAvailabilitySetsClient(subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
-}
