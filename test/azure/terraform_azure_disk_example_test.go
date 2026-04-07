@@ -9,7 +9,7 @@ package test
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -48,5 +48,5 @@ func TestTerraformAzureDiskExample(t *testing.T) {
 
 	// Check the Disk Type
 	actualDisk := azure.GetDisk(t, expectedDiskName, resourceGroupName, subID)
-	assert.Equal(t, compute.DiskStorageAccountTypes(expectedDiskType), actualDisk.Sku.Name)
+	assert.Equal(t, armcompute.DiskStorageAccountTypes(expectedDiskType), *actualDisk.SKU.Name)
 }

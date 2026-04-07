@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Azure/go-autorest/autorest"
-	azureapi "github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 )
 
 // SubscriptionIDNotFound is an error that occurs when the Azure Subscription ID could not be found or was not provided.
@@ -64,12 +63,9 @@ func NewNotFoundError(objectType string, objectID string, region string) NotFoun
 // ResourceNotFoundErrorExists checks the Service Error Code for the 'Resource Not Found' error.
 func ResourceNotFoundErrorExists(err error) bool {
 	if err != nil {
-		var autorestError autorest.DetailedError
-		if errors.As(err, &autorestError) {
-			var requestError *azureapi.RequestError
-			if errors.As(autorestError.Original, &requestError) {
-				return requestError.ServiceError.Code == "ResourceNotFound"
-			}
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) {
+			return respErr.ErrorCode == "ResourceNotFound" || respErr.ErrorCode == "ResourceGroupNotFound"
 		}
 	}
 

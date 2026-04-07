@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,7 @@ func TestGetSynapseWorkspaceE(t *testing.T) {
 	subscriptionID := ""
 	workspaceName := ""
 
-	_, err := azure.GetSynapseWorkspaceE(t, subscriptionID, resGroupName, workspaceName)
+	_, err := azure.GetSynapseWorkspaceContextE(context.Background(), subscriptionID, resGroupName, workspaceName)
 	require.Error(t, err)
 }
 
@@ -32,6 +33,6 @@ func TestGetSynapseSqlPoolE(t *testing.T) {
 	workspaceName := ""
 	sqlPoolName := ""
 
-	_, err := azure.GetSynapseSqlPoolE(t, subscriptionID, resGroupName, workspaceName, sqlPoolName)
+	_, err := azure.GetSynapseSQLPoolContextE(context.Background(), subscriptionID, resGroupName, workspaceName, sqlPoolName)
 	require.Error(t, err)
 }

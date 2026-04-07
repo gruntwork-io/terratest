@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ If/when methods to create and delete log analytics resources are added, these te
 func TestLogAnalyticsWorkspace(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.LogAnalyticsWorkspaceExistsE("fake", "", "")
+	_, err := azure.LogAnalyticsWorkspaceExistsContextE(context.Background(), "fake", "", "")
 	assert.Error(t, err, "Workspace")
 }
 
@@ -28,6 +29,6 @@ func TestGetLogAnalyticsWorkspaceE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetLogAnalyticsWorkspaceE(workspaceName, resourceGroupName, subscriptionID)
+	_, err := azure.GetLogAnalyticsWorkspaceContextE(context.Background(), workspaceName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }

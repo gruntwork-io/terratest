@@ -7,6 +7,7 @@
 package azure
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,7 +25,7 @@ func TestGetVirtualMachineE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineE(vmName, rgName, subID)
+	_, err := GetVirtualMachineContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -35,7 +36,7 @@ func TestListVirtualMachinesForResourceGroupE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := ListVirtualMachinesForResourceGroupE(rgName, subID)
+	_, err := ListVirtualMachinesForResourceGroupContextE(context.Background(), rgName, subID)
 
 	require.Error(t, err)
 }
@@ -46,7 +47,7 @@ func TestGetVirtualMachinesForResourceGroupE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachinesForResourceGroupE(rgName, subID)
+	_, err := GetVirtualMachinesForResourceGroupContextE(context.Background(), rgName, subID)
 
 	require.Error(t, err)
 }
@@ -58,7 +59,7 @@ func TestGetVirtualMachineTagsE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineTagsE(vmName, rgName, subID)
+	_, err := GetVirtualMachineTagsContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -70,7 +71,7 @@ func TestGetSizeOfVirtualMachineE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetSizeOfVirtualMachineE(vmName, rgName, subID)
+	_, err := GetSizeOfVirtualMachineContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -82,7 +83,7 @@ func TestGetVirtualMachineImageE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineImageE(vmName, rgName, subID)
+	_, err := GetVirtualMachineImageContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -94,7 +95,7 @@ func TestGetVirtualMachineAvailabilitySetIDE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineAvailabilitySetIDE(vmName, rgName, subID)
+	_, err := GetVirtualMachineAvailabilitySetIDContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -106,7 +107,7 @@ func TestGetVirtualMachineOSDiskNameE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineOSDiskNameE(vmName, rgName, subID)
+	_, err := GetVirtualMachineOSDiskNameContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -118,7 +119,7 @@ func TestGetVirtualMachineManagedDisksE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineManagedDisksE(vmName, rgName, subID)
+	_, err := GetVirtualMachineManagedDisksContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -130,7 +131,7 @@ func TestGetVirtualMachineNicsE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetVirtualMachineNicsE(vmName, rgName, subID)
+	_, err := GetVirtualMachineNicsContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -142,7 +143,7 @@ func TestVirtualMachineExistsE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := VirtualMachineExistsE(vmName, rgName, subID)
+	_, err := VirtualMachineExistsContextE(context.Background(), vmName, rgName, subID)
 
 	require.Error(t, err)
 }

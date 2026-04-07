@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,27 +17,27 @@ If/when methods to create and delete recovery services resources are added, thes
 func TestRecoveryServicesVaultName(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetRecoveryServicesVaultE("", "", "")
+	_, err := azure.GetRecoveryServicesVaultContextE(context.Background(), "", "", "")
 	require.Error(t, err, "vault")
 }
 
 func TestRecoveryServicesVaultExists(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.RecoveryServicesVaultExistsE("", "", "")
+	_, err := azure.RecoveryServicesVaultExistsContextE(context.Background(), "", "", "")
 	require.Error(t, err, "vault exists")
 }
 
 func TestRecoveryServicesVaultBackupPolicyList(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetRecoveryServicesVaultBackupPolicyListE("", "", "")
+	_, err := azure.GetRecoveryServicesVaultBackupPolicyListContextE(context.Background(), "", "", "")
 	require.Error(t, err, "Backup policy list not faulted")
 }
 
 func TestRecoveryServicesVaultBackupProtectedVMList(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetRecoveryServicesVaultBackupProtectedVMListE("", "", "", "")
+	_, err := azure.GetRecoveryServicesVaultBackupProtectedVMListContextE(context.Background(), "", "", "", "")
 	require.Error(t, err, "Backup policy protected vm list not faulted")
 }

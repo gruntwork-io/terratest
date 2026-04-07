@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 )
 
 func TestPortRangeParsing(t *testing.T) {
@@ -50,7 +50,7 @@ func TestPortRangeParsing(t *testing.T) {
 func TestNsgRuleSummaryConversion(t *testing.T) {
 	// Quick test to make sure the safe nil handling is working
 	name := "test name"
-	sdkStruct := network.SecurityRulePropertiesFormat{}
+	sdkStruct := armnetwork.SecurityRulePropertiesFormat{}
 
 	// Verify the nil values were correctly defaulted to "" without a panic
 	result := convertToNsgRuleSummary(&name, &sdkStruct)

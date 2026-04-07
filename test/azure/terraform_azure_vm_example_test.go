@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -56,7 +56,7 @@ func testStrategiesForVMs(t *testing.T, terraformOptions *terraform.Options, sub
 	// Run `terraform output` to get the values of output variables.
 	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 	virtualMachineName := terraform.Output(t, terraformOptions, "vm_name")
-	expectedVMSize := compute.VirtualMachineSizeTypes(terraform.Output(t, terraformOptions, "vm_size"))
+	expectedVMSize := armcompute.VirtualMachineSizeTypes(terraform.Output(t, terraformOptions, "vm_size"))
 
 	// 1. Check the VM Size directly. This strategy gets one specific property of the VM per method.
 	actualVMSize := azure.GetSizeOfVirtualMachine(t, virtualMachineName, resourceGroupName, subscriptionID)
@@ -65,7 +65,7 @@ func testStrategiesForVMs(t *testing.T, terraformOptions *terraform.Options, sub
 	// 2. Check the VM size by reference. This strategy is beneficial when checking multiple properties
 	// by using one VM reference. Optional parameters have to be checked first to avoid nil panics.
 	vmByRef := azure.GetVirtualMachine(t, virtualMachineName, resourceGroupName, subscriptionID)
-	actualVMSize = vmByRef.HardwareProfile.VMSize
+	actualVMSize = *vmByRef.Properties.HardwareProfile.VMSize
 	assert.Equal(t, expectedVMSize, actualVMSize)
 
 	// 3. Check the VM size by instance. This strategy is beneficial when checking multiple properties
@@ -80,7 +80,7 @@ func testMultipleVMs(t *testing.T, terraformOptions *terraform.Options, subscrip
 	// Run `terraform output` to get the values of output variables.
 	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 	expectedVMName := terraform.Output(t, terraformOptions, "vm_name")
-	expectedVMSize := compute.VirtualMachineSizeTypes(terraform.Output(t, terraformOptions, "vm_size"))
+	expectedVMSize := armcompute.VirtualMachineSizeTypes(terraform.Output(t, terraformOptions, "vm_size"))
 	expectedAvsName := terraform.Output(t, terraformOptions, "availability_set_name")
 
 	// Check against all VM names in a Resource Group.
@@ -98,7 +98,7 @@ func testMultipleVMs(t *testing.T, terraformOptions *terraform.Options, subscrip
 	// which need to be checked for nil for optional configurations.
 	vmsByRef := azure.GetVirtualMachinesForResourceGroup(t, resourceGroupName, subscriptionID)
 	thisVM := vmsByRef[expectedVMName]
-	assert.Equal(t, expectedVMSize, thisVM.HardwareProfile.VMSize)
+	assert.Equal(t, expectedVMSize, *thisVM.HardwareProfile.VMSize)
 
 	// Check for the VM negative test.
 	fakeVM := fmt.Sprintf("vm-%s", random.UniqueID())
@@ -121,7 +121,7 @@ func testInformationOfVM(t *testing.T, terraformOptions *terraform.Options, subs
 
 	// Check the Admin User of the VM.
 	actualVM := azure.GetVirtualMachine(t, virtualMachineName, resourceGroupName, subscriptionID)
-	actualVmAdminUser := *actualVM.OsProfile.AdminUsername
+	actualVmAdminUser := *actualVM.Properties.OSProfile.AdminUsername
 	assert.Equal(t, expectedVmAdminUser[0], actualVmAdminUser)
 
 	// Check the Storage Image properties of the VM.
@@ -166,8 +166,8 @@ func testDisksOfVM(t *testing.T, terraformOptions *terraform.Options, subscripti
 	// Check the Disk Type of the Managed Disk of the VM.
 	// This does not apply to VHD disks saved under a storage account.
 	actualDisk := azure.GetDisk(t, expectedDiskName, resourceGroupName, subscriptionID)
-	actualDiskType := actualDisk.Sku.Name
-	assert.Equal(t, compute.DiskStorageAccountTypes(expectedDiskType), actualDiskType)
+	actualDiskType := *actualDisk.SKU.Name
+	assert.Equal(t, armcompute.DiskStorageAccountTypes(expectedDiskType), actualDiskType)
 }
 
 // These tests check the underlying Virtual Network, Network Interface and associated Public IP Address.

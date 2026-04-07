@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,7 @@ func TestKeyVaultSecretExists(t *testing.T) {
 
 	testKeyVaultName := "fakeKeyVault"
 	testKeyVaultSecretName := "fakeSecretName"
-	_, err := azure.KeyVaultSecretExistsE(testKeyVaultName, testKeyVaultSecretName)
+	_, err := azure.KeyVaultSecretExistsContextE(context.Background(), testKeyVaultName, testKeyVaultSecretName)
 	require.Error(t, err)
 }
 
@@ -27,7 +28,7 @@ func TestKeyVaultKeyExists(t *testing.T) {
 
 	testKeyVaultName := "fakeKeyVault"
 	testKeyVaultKeyName := "fakeKeyName"
-	_, err := azure.KeyVaultKeyExistsE(testKeyVaultName, testKeyVaultKeyName)
+	_, err := azure.KeyVaultKeyExistsContextE(context.Background(), testKeyVaultName, testKeyVaultKeyName)
 	require.Error(t, err)
 }
 
@@ -36,7 +37,7 @@ func TestKeyVaultCertificateExists(t *testing.T) {
 
 	testKeyVaultName := "fakeKeyVault"
 	testKeyVaultCertName := "fakeCertName"
-	_, err := azure.KeyVaultCertificateExistsE(testKeyVaultName, testKeyVaultCertName)
+	_, err := azure.KeyVaultCertificateExistsContextE(context.Background(), testKeyVaultName, testKeyVaultCertName)
 	require.Error(t, err)
 }
 
@@ -47,6 +48,6 @@ func TestGetKeyVault(t *testing.T) {
 	keyVaultName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetKeyVaultE(t, resGroupName, keyVaultName, subscriptionID)
+	_, err := azure.GetKeyVaultContextE(t, context.Background(), resGroupName, keyVaultName, subscriptionID)
 	require.Error(t, err)
 }

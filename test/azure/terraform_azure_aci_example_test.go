@@ -47,6 +47,6 @@ func TestTerraformAzureACIExample(t *testing.T) {
 
 	actualInstance := azure.GetContainerInstance(t, aciName, resourceGroupName, "")
 
-	assert.Equal(t, ipAddress, *actualInstance.ContainerGroupProperties.IPAddress.IP)
-	assert.Equal(t, fqdn, *actualInstance.ContainerGroupProperties.IPAddress.Fqdn)
+	assert.Equal(t, ipAddress, *actualInstance.Properties.IPAddress.IP)
+	assert.Equal(t, fqdn, *actualInstance.Properties.IPAddress.Fqdn)
 }

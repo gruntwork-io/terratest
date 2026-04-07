@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,41 +17,41 @@ If/when methods to create and delete storage accounts are added, these tests can
 func TestStorageAccountExists(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.StorageAccountExistsE("", "", "")
+	_, err := azure.StorageAccountExistsContextE(context.Background(), "", "", "")
 	require.Error(t, err)
 }
 
 func TestStorageBlobContainerExists(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.StorageBlobContainerExistsE("", "", "", "")
+	_, err := azure.StorageBlobContainerExistsContextE(context.Background(), "", "", "", "")
 	require.Error(t, err)
 }
 
 func TestStorageBlobContainerPublicAccess(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetStorageBlobContainerPublicAccessE("", "", "", "")
+	_, err := azure.GetStorageBlobContainerPublicAccessContextE(context.Background(), "", "", "", "")
 	require.Error(t, err)
 }
 
 func TestGetStorageAccountKind(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetStorageAccountKindE("", "", "")
+	_, err := azure.GetStorageAccountKindContextE(context.Background(), "", "", "")
 	require.Error(t, err)
 }
 
 func TestGetStorageAccountSkuTier(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetStorageAccountSkuTierE("", "", "")
+	_, err := azure.GetStorageAccountSkuTierContextE(context.Background(), "", "", "")
 	require.Error(t, err)
 }
 
 func TestGetStorageDNSString(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetStorageDNSStringE("", "", "")
+	_, err := azure.GetStorageDNSStringContextE(context.Background(), "", "", "")
 	require.Error(t, err)
 }

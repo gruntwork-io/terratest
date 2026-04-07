@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,7 @@ func TestDataFactoryExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	exists, err := azure.DataFactoryExistsE(dataFactoryName, resourceGroupName, subscriptionID)
+	exists, err := azure.DataFactoryExistsContextE(context.Background(), dataFactoryName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -32,6 +33,6 @@ func TestGetDataFactoryE(t *testing.T) {
 	subscriptionID := ""
 	dataFactoryName := ""
 
-	_, err := azure.GetDataFactoryE(subscriptionID, resGroupName, dataFactoryName)
+	_, err := azure.GetDataFactoryContextE(context.Background(), subscriptionID, resGroupName, dataFactoryName)
 	require.Error(t, err)
 }

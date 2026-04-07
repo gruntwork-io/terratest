@@ -47,8 +47,8 @@ func TestGetActionGroupClient(t *testing.T) {
 
 	subscriptionID := ""
 
-	client, err := CreateActionGroupClient(subscriptionID)
+	client, err := CreateActionGroupClientE(subscriptionID)
 
 	require.NoError(t, err)
-	assert.NotEmpty(t, *client)
+	assert.NotNil(t, client)
 }
