@@ -112,19 +112,3 @@ func RenderJSON(t testing.TestingT, options *Options) string {
 func RenderJSONE(t testing.TestingT, options *Options) (string, error) {
 	return RenderJSONContextE(t, context.Background(), options)
 }
-
-// RenderJson runs terragrunt render --format json and returns the cleaned JSON output.
-// This is useful for programmatic assertions on the resolved terragrunt configuration.
-//
-// Deprecated: Use [RenderJSONContext] instead.
-func RenderJson(t testing.TestingT, options *Options) string { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
-	return RenderJSONContext(t, context.Background(), options)
-}
-
-// RenderJsonE runs terragrunt render --format json and returns the cleaned JSON output.
-// This is useful for programmatic assertions on the resolved terragrunt configuration.
-//
-// Deprecated: Use [RenderJSONContextE] instead.
-func RenderJsonE(t testing.TestingT, options *Options) (string, error) { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
-	return RenderJSONContextE(t, context.Background(), options)
-}

@@ -29,13 +29,13 @@ func TestRender(t *testing.T) {
 	require.Contains(t, output, "  source = ")
 }
 
-func TestRenderJson(t *testing.T) {
+func TestRenderJSON(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	output := terragrunt.RenderJson(t, &terragrunt.Options{
+	output := terragrunt.RenderJSON(t, &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})

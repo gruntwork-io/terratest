@@ -18,7 +18,7 @@ import (
 func TestTerraformAzureNsgExample(t *testing.T) {
 	t.Parallel()
 
-	randomPostfixValue := random.UniqueId()
+	randomPostfixValue := random.UniqueID()
 
 	// Construct options for TF apply
 	terraformOptions := &terraform.Options{

@@ -16,7 +16,7 @@ import (
 func TestTerraformAzureDataFactoryExample(t *testing.T) {
 	t.Parallel()
 
-	uniquePostfix := strings.ToLower(random.UniqueId())
+	uniquePostfix := strings.ToLower(random.UniqueID())
 	expectedDataFactoryProvisioningState := "Succeeded"
 	expectedLocation := "eastus"
 

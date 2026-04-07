@@ -19,7 +19,7 @@ import (
 func TestTerraformAzureExample(t *testing.T) {
 	t.Parallel()
 
-	uniquePostfix := random.UniqueId()
+	uniquePostfix := random.UniqueID()
 
 	// website::tag::1:: Configure Terraform setting up a path to Terraform code.
 	terraformOptions := &terraform.Options{

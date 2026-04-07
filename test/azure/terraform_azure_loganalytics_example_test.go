@@ -22,7 +22,7 @@ func TestTerraformAzureLogAnalyticsExample(t *testing.T) {
 
 	// subscriptionID is overridden by the environment variable "ARM_SUBSCRIPTION_ID"
 	subscriptionID := ""
-	uniquePostfix := random.UniqueId()
+	uniquePostfix := random.UniqueID()
 
 	// website::tag::1:: Configure Terraform setting up a path to Terraform code.
 	terraformOptions := &terraform.Options{

@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // GetRoute53Record returns a Route 53 Record.
-func GetRoute53Record(t *testing.T, hostedZoneID, recordName, recordType, awsRegion string) *types.ResourceRecordSet {
+func GetRoute53Record(t testing.TestingT, hostedZoneID, recordName, recordType, awsRegion string) *types.ResourceRecordSet {
 	t.Helper()
 
 	r, err := GetRoute53RecordE(t, hostedZoneID, recordName, recordType, awsRegion)
@@ -23,7 +23,7 @@ func GetRoute53Record(t *testing.T, hostedZoneID, recordName, recordType, awsReg
 }
 
 // GetRoute53RecordE returns a Route 53 Record.
-func GetRoute53RecordE(t *testing.T, hostedZoneID, recordName, recordType, awsRegion string) (*types.ResourceRecordSet, error) {
+func GetRoute53RecordE(t testing.TestingT, hostedZoneID, recordName, recordType, awsRegion string) (*types.ResourceRecordSet, error) {
 	t.Helper()
 
 	route53Client, err := NewRoute53ClientE(t, awsRegion)
@@ -51,7 +51,7 @@ func GetRoute53RecordE(t *testing.T, hostedZoneID, recordName, recordType, awsRe
 }
 
 // NewRoute53Client creates a Route 53 client.
-func NewRoute53Client(t *testing.T, region string) *route53.Client {
+func NewRoute53Client(t testing.TestingT, region string) *route53.Client {
 	t.Helper()
 
 	c, err := NewRoute53ClientE(t, region)
@@ -61,7 +61,7 @@ func NewRoute53Client(t *testing.T, region string) *route53.Client {
 }
 
 // NewRoute53ClientE creates a Route 53 client.
-func NewRoute53ClientE(t *testing.T, region string) (*route53.Client, error) {
+func NewRoute53ClientE(t testing.TestingT, region string) (*route53.Client, error) {
 	t.Helper()
 
 	sess, err := NewAuthenticatedSession(region)

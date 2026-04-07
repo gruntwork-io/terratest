@@ -103,27 +103,6 @@ func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscripti
 	return GetDiagnosticsSettingsResourceContextE(context.Background(), name, resourceURI, subscriptionID)
 }
 
-// GetDiagnosticsSettingsClientE returns a diagnostics settings client.
-// TODO: delete in next version
-func GetDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	client := insights.NewDiagnosticSettingsClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
-}
-
 // GetVMInsightsOnboardingStatusContext gets diagnostics VM onboarding status.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -167,27 +146,6 @@ func GetVMInsightsOnboardingStatusContextE(t testing.TestingT, ctx context.Conte
 // Deprecated: Use [GetVMInsightsOnboardingStatusContextE] instead.
 func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
 	return GetVMInsightsOnboardingStatusContextE(t, context.Background(), resourceURI, subscriptionID)
-}
-
-// GetVMInsightsClientE gets a VM Insights client.
-// TODO: delete in next version
-func GetVMInsightsClientE(t testing.TestingT, subscriptionID string) (*insights.VMInsightsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	client := insights.NewVMInsightsClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
 }
 
 // GetActivityLogAlertResourceContext gets an Activity Log Alert Resource in the specified Azure Resource Group.
@@ -241,27 +199,4 @@ func GetActivityLogAlertResourceContextE(ctx context.Context, activityLogAlertNa
 // Deprecated: Use [GetActivityLogAlertResourceContextE] instead.
 func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName string, subscriptionID string) (*insights.ActivityLogAlertResource, error) {
 	return GetActivityLogAlertResourceContextE(context.Background(), activityLogAlertName, resGroupName, subscriptionID)
-}
-
-// GetActivityLogAlertsClientE gets an Action Groups client in the specified Azure Subscription.
-// TODO: delete in next version
-func GetActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the Action Groups client
-	client := insights.NewActivityLogAlertsClient(subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
 }

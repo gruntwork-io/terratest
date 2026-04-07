@@ -5,9 +5,9 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -48,7 +48,7 @@ type NsgRuleSummary struct {
 // defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
 // This function would fail the test if there is an error.
-func GetDefaultNsgRulesClient(t *testing.T, subscriptionID string) network.DefaultSecurityRulesClient {
+func GetDefaultNsgRulesClient(t testing.TestingT, subscriptionID string) network.DefaultSecurityRulesClient {
 	t.Helper()
 
 	client, err := GetDefaultNsgRulesClientE(subscriptionID)
@@ -82,7 +82,7 @@ func GetDefaultNsgRulesClientE(subscriptionID string) (network.DefaultSecurityRu
 // defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
 // This function would fail the test if there is an error.
-func GetCustomNsgRulesClient(t *testing.T, subscriptionID string) network.SecurityRulesClient {
+func GetCustomNsgRulesClient(t testing.TestingT, subscriptionID string) network.SecurityRulesClient {
 	t.Helper()
 
 	client, err := GetCustomNsgRulesClientE(subscriptionID)
@@ -115,7 +115,7 @@ func GetCustomNsgRulesClientE(subscriptionID string) (network.SecurityRulesClien
 // GetAllNSGRulesContext returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
 // from a network security group. The ctx parameter supports cancellation and timeouts.
 // This function would fail the test if there is an error.
-func GetAllNSGRulesContext(t *testing.T, ctx context.Context, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
+func GetAllNSGRulesContext(t testing.TestingT, ctx context.Context, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
 	t.Helper()
 
 	results, err := GetAllNSGRulesContextE(ctx, resourceGroupName, nsgName, subscriptionID)
@@ -175,7 +175,7 @@ func GetAllNSGRulesContextE(ctx context.Context, resourceGroupName, nsgName, sub
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetAllNSGRulesContext] instead.
-func GetAllNSGRules(t *testing.T, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
+func GetAllNSGRules(t testing.TestingT, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
 	t.Helper()
 
 	return GetAllNSGRulesContext(t, context.Background(), resourceGroupName, nsgName, subscriptionID) //nolint:staticcheck
@@ -242,7 +242,7 @@ func (summarizedRules *NsgRuleSummaryList) FindRuleByName(name string) NsgRuleSu
 
 // AllowsDestinationPort checks to see if the rule allows a specific destination port. This is helpful when verifying
 // that a given rule is configured properly for a given port.
-func (summarizedRule *NsgRuleSummary) AllowsDestinationPort(t *testing.T, port string) bool {
+func (summarizedRule *NsgRuleSummary) AllowsDestinationPort(t testing.TestingT, port string) bool {
 	t.Helper()
 
 	allowed, err := portRangeAllowsPort(summarizedRule.DestinationPortRange, port)
@@ -253,7 +253,7 @@ func (summarizedRule *NsgRuleSummary) AllowsDestinationPort(t *testing.T, port s
 
 // AllowsSourcePort checks to see if the rule allows a specific source port. This is helpful when verifying
 // that a given rule is configured properly for a given port.
-func (summarizedRule *NsgRuleSummary) AllowsSourcePort(t *testing.T, port string) bool {
+func (summarizedRule *NsgRuleSummary) AllowsSourcePort(t testing.TestingT, port string) bool {
 	t.Helper()
 
 	allowed, err := portRangeAllowsPort(summarizedRule.SourcePortRange, port)

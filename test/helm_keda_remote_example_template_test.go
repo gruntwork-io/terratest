@@ -36,7 +36,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeployment(t *testing.T) {
 	releaseName := "keda"
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
-	namespaceName := "medieval-" + strings.ToLower(random.UniqueId())
+	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
 	logger.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
@@ -83,7 +83,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedValuesFileFixtureDeployment(t *tes
 	releaseName := "keda"
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
-	namespaceName := "medieval-" + strings.ToLower(random.UniqueId())
+	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
 	logger.Logf(t, "Namespace: %s\n", namespaceName)
 	options := &helm.Options{
 		ValuesFiles:    []string{"./fixtures/helm/keda-values.yaml"},

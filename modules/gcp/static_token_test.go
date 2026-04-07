@@ -37,7 +37,7 @@ func TestStaticTokenClient(t *testing.T) {
 	// now we instantiate client with oauth2 token
 	// and run several function to make sure the new client is correctly configured with access token
 	t.Setenv("GOOGLE_OAUTH_ACCESS_TOKEN", token.AccessToken)
-	GetAllGcpRegions(t, projectID)
+	GetAllGCPRegions(t, projectID)
 	GetBuilds(t, projectID)
 	GetLoginProfile(t, GetGoogleIdentityEmailEnvVar(t))
 	_, err = newGCRAuthenticator()

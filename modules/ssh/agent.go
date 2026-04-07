@@ -23,19 +23,6 @@ type SSHAgent struct {
 	socketFile string
 }
 
-// SshAgent is a backwards-compatible alias for [SSHAgent].
-//
-// Deprecated: Use [SSHAgent] instead.
-type SshAgent = SSHAgent //nolint:staticcheck,revive // preserving deprecated type name
-
-// NewSshAgent creates an SSH agent, starts it in the background, and returns control back to the main thread.
-// You should stop the agent to clean up files afterwards by calling defer s.Stop().
-//
-// Deprecated: Use [NewSSHAgent] instead.
-func NewSshAgent(t testing.TestingT, socketDir string, socketFile string) (*SSHAgent, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return NewSSHAgent(t, context.Background(), socketDir, socketFile)
-}
-
 // NewSSHAgent creates an SSH agent, starts it in the background, and returns control back to the main thread.
 // You should stop the agent to clean up files afterwards by calling defer s.Stop().
 // The ctx parameter is used when establishing the Unix socket listener.
@@ -119,15 +106,6 @@ func (s *SSHAgent) Stop() {
 	_ = os.RemoveAll(s.socketDir)
 }
 
-// SshAgentWithKeyPair creates and returns an in-memory SSH agent with the given KeyPair already added.
-// You should stop the agent to clean up files afterwards by calling defer sshAgent.Stop().
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [SSHAgentWithKeyPair] instead.
-func SshAgentWithKeyPair(t testing.TestingT, keyPair *KeyPair) *SSHAgent { //nolint:staticcheck,revive // preserving deprecated function name
-	return SSHAgentWithKeyPair(t, context.Background(), keyPair)
-}
-
 // SSHAgentWithKeyPair creates and returns an in-memory SSH agent with the given KeyPair already added.
 // You should stop the agent to clean up files afterwards by calling defer sshAgent.Stop().
 // This will fail the test if there is an error.
@@ -141,28 +119,11 @@ func SSHAgentWithKeyPair(t testing.TestingT, ctx context.Context, keyPair *KeyPa
 	return sshAgent
 }
 
-// SshAgentWithKeyPairE creates and returns an in-memory SSH agent with the given KeyPair already added.
-// You should stop the agent to clean up files afterwards by calling defer sshAgent.Stop().
-//
-// Deprecated: Use [SSHAgentWithKeyPairE] instead.
-func SshAgentWithKeyPairE(t testing.TestingT, keyPair *KeyPair) (*SSHAgent, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return SSHAgentWithKeyPairE(t, context.Background(), keyPair)
-}
-
 // SSHAgentWithKeyPairE creates and returns an in-memory SSH agent with the given KeyPair already added.
 // You should stop the agent to clean up files afterwards by calling defer sshAgent.Stop().
 // The ctx parameter is used when establishing the Unix socket listener.
 func SSHAgentWithKeyPairE(t testing.TestingT, ctx context.Context, keyPair *KeyPair) (*SSHAgent, error) {
 	return SSHAgentWithKeyPairsE(t, ctx, []*KeyPair{keyPair})
-}
-
-// SshAgentWithKeyPairs creates and returns an in-memory SSH agent with the given KeyPairs already added.
-// You should stop the agent to clean up files afterwards by calling defer sshAgent.Stop().
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [SSHAgentWithKeyPairs] instead.
-func SshAgentWithKeyPairs(t testing.TestingT, keyPairs []*KeyPair) *SSHAgent { //nolint:staticcheck,revive // preserving deprecated function name
-	return SSHAgentWithKeyPairs(t, context.Background(), keyPairs)
 }
 
 // SSHAgentWithKeyPairs creates and returns an in-memory SSH agent with the given KeyPairs already added.
@@ -176,14 +137,6 @@ func SSHAgentWithKeyPairs(t testing.TestingT, ctx context.Context, keyPairs []*K
 	}
 
 	return sshAgent
-}
-
-// SshAgentWithKeyPairsE creates and returns an in-memory SSH agent with the given KeyPairs already added.
-// You should stop the agent to clean up files afterwards by calling defer sshAgent.Stop().
-//
-// Deprecated: Use [SSHAgentWithKeyPairsE] instead.
-func SshAgentWithKeyPairsE(t testing.TestingT, keyPairs []*KeyPair) (*SSHAgent, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return SSHAgentWithKeyPairsE(t, context.Background(), keyPairs)
 }
 
 // SSHAgentWithKeyPairsE creates and returns an in-memory SSH agent with the given KeyPairs already added.
