@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"crypto/tls"
 	"testing"
 	"time"
@@ -28,10 +27,10 @@ func TestTerraformHttpExample(t *testing.T) {
 	instanceText := "Hello, " + uniqueID + "!"
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.

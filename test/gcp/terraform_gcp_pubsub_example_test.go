@@ -6,7 +6,6 @@
 package test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -55,6 +54,6 @@ func TestTerraformGcpPubSubExample(t *testing.T) {
 	assert.Equal(t, expectedSubscriptionName, actualSubscriptionName)
 
 	// Verify the topic and subscription exist in GCP
-	gcp.AssertTopicExistsContext(t, context.Background(), projectID, actualTopicName)
-	gcp.AssertSubscriptionExistsContext(t, context.Background(), projectID, actualSubscriptionName)
+	gcp.AssertTopicExistsContext(t, t.Context(), projectID, actualTopicName)
+	gcp.AssertSubscriptionExistsContext(t, t.Context(), projectID, actualSubscriptionName)
 }

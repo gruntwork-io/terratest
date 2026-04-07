@@ -111,40 +111,49 @@ func IsServiceAvailable(service *corev1.Service) bool {
 	}
 }
 
-// GetServiceEndpoint will return the service access point. If the service endpoint is not ready, will fail the test
-// immediately.
-func GetServiceEndpoint(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) string {
-	endpoint, err := GetServiceEndpointE(t, options, service, servicePort)
+// GetServiceEndpointContext will return the service access point using the provided context. If the service endpoint is
+// not ready, will fail the test immediately.
+func GetServiceEndpointContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, service *corev1.Service, servicePort int) string {
+	t.Helper()
+	endpoint, err := GetServiceEndpointContextE(t, ctx, options, service, servicePort)
 	require.NoError(t, err)
 
 	return endpoint
 }
 
-// GetServiceEndpointE will return the service access point using the following logic:
+// GetServiceEndpoint will return the service access point. If the service endpoint is not ready, will fail the test
+// immediately.
+//
+// Deprecated: Use GetServiceEndpointContext instead.
+func GetServiceEndpoint(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) string {
+	return GetServiceEndpointContext(t, context.Background(), options, service, servicePort)
+}
+
+// GetServiceEndpointContextE will return the service access point using the provided context and the following logic:
 //   - For ClusterIP service type, return the URL that maps to ClusterIP and Service Port
 //   - For NodePort service type, identify the public IP of the node (if it exists, otherwise return the bound hostname),
 //     and the assigned node port for the provided service port, and return the URL that maps to node ip and node port.
 //   - For LoadBalancer service type, return the publicly accessible hostname of the load balancer.
 //     If the hostname is empty, it will return the public IP of the LoadBalancer.
 //   - All other service types are not supported.
-func GetServiceEndpointE(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) (string, error) {
+func GetServiceEndpointContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, service *corev1.Service, servicePort int) (string, error) {
 	switch service.Spec.Type {
 	case corev1.ServiceTypeClusterIP:
 		// ClusterIP service type will map directly to service port
 		return fmt.Sprintf("%s:%d", service.Spec.ClusterIP, servicePort), nil
 	case corev1.ServiceTypeNodePort:
-		return findEndpointForNodePortService(t, options, service, int32(servicePort))
+		return findEndpointForNodePortServiceContext(t, ctx, options, service, int32(servicePort))
 	case corev1.ServiceTypeExternalName:
 		return "", NewUnknownServiceTypeError(service)
 	case corev1.ServiceTypeLoadBalancer:
 		// For minikube, LoadBalancer service is exactly the same as NodePort service
-		isMinikube, err := IsMinikubeE(t, options)
+		isMinikube, err := IsMinikubeE(t, options) //nolint:contextcheck // IsMinikubeE not yet context-aware
 		if err != nil {
 			return "", err
 		}
 
 		if isMinikube {
-			return findEndpointForNodePortService(t, options, service, int32(servicePort))
+			return findEndpointForNodePortServiceContext(t, ctx, options, service, int32(servicePort))
 		}
 
 		ingress := service.Status.LoadBalancer.Ingress
@@ -162,10 +171,25 @@ func GetServiceEndpointE(t testing.TestingT, options *KubectlOptions, service *c
 	}
 }
 
-// Extracts a endpoint that can be reached outside the kubernetes cluster. NodePort type needs to find the right
-// allocated node port mapped to the service port, as well as find out the externally reachable ip (if available).
-func findEndpointForNodePortService(
+// GetServiceEndpointE will return the service access point using the following logic:
+//   - For ClusterIP service type, return the URL that maps to ClusterIP and Service Port
+//   - For NodePort service type, identify the public IP of the node (if it exists, otherwise return the bound hostname),
+//     and the assigned node port for the provided service port, and return the URL that maps to node ip and node port.
+//   - For LoadBalancer service type, return the publicly accessible hostname of the load balancer.
+//     If the hostname is empty, it will return the public IP of the LoadBalancer.
+//   - All other service types are not supported.
+//
+// Deprecated: Use GetServiceEndpointContextE instead.
+func GetServiceEndpointE(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) (string, error) {
+	return GetServiceEndpointContextE(t, context.Background(), options, service, servicePort)
+}
+
+// findEndpointForNodePortServiceContext extracts an endpoint that can be reached outside the kubernetes cluster using the
+// provided context. NodePort type needs to find the right allocated node port mapped to the service port, as well as
+// find out the externally reachable ip (if available).
+func findEndpointForNodePortServiceContext(
 	t testing.TestingT,
+	ctx context.Context,
 	options *KubectlOptions,
 	service *corev1.Service,
 	servicePort int32,
@@ -175,12 +199,12 @@ func findEndpointForNodePortService(
 		return "", err
 	}
 
-	node, err := pickRandomNodeE(t, options)
+	node, err := pickRandomNodeE(t, options) //nolint:contextcheck // pickRandomNodeE not yet context-aware
 	if err != nil {
 		return "", err
 	}
 
-	nodeHostname, err := FindNodeHostnameE(t, node)
+	nodeHostname, err := FindNodeHostnameContextE(t, ctx, node)
 	if err != nil {
 		return "", err
 	}
@@ -215,10 +239,23 @@ func pickRandomNodeE(t testing.TestingT, options *KubectlOptions) (corev1.Node, 
 	return nodes[index], nil
 }
 
-// FindNodeHostnameE returns the hostname or IP address of the given node, preferring the external IP when available.
+// FindNodeHostnameContext returns the hostname or IP address of the given node using the provided context, preferring
+// the external IP when available. This will fail the test if there is an error.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
-func FindNodeHostnameE(t testing.TestingT, node corev1.Node) (string, error) {
+func FindNodeHostnameContext(t testing.TestingT, ctx context.Context, node corev1.Node) string {
+	t.Helper()
+	hostname, err := FindNodeHostnameContextE(t, ctx, node)
+	require.NoError(t, err)
+
+	return hostname
+}
+
+// FindNodeHostnameContextE returns the hostname or IP address of the given node using the provided context, preferring
+// the external IP when available.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, node corev1.Node) (string, error) {
 	nodeIDUri, err := url.Parse(node.Spec.ProviderID)
 	if err != nil {
 		return "", err
@@ -226,10 +263,19 @@ func FindNodeHostnameE(t testing.TestingT, node corev1.Node) (string, error) {
 
 	switch nodeIDUri.Scheme {
 	case "aws":
-		return findAwsNodeHostnameE(t, &node, nodeIDUri)
+		return findAwsNodeHostnameContextE(t, ctx, &node, nodeIDUri)
 	default:
 		return findDefaultNodeHostnameE(&node)
 	}
+}
+
+// FindNodeHostnameE returns the hostname or IP address of the given node, preferring the external IP when available.
+//
+// Deprecated: Use FindNodeHostnameContextE instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func FindNodeHostnameE(t testing.TestingT, node corev1.Node) (string, error) {
+	return FindNodeHostnameContextE(t, context.Background(), node)
 }
 
 // findAwsNodeHostname will return the public ip of the node, assuming the node is an AWS EC2 instance.
@@ -238,7 +284,7 @@ func FindNodeHostnameE(t testing.TestingT, node corev1.Node) (string, error) {
 // expectedAWSIDPathParts is the number of path segments in an AWS provider ID (empty, availability zone, instance ID).
 const expectedAWSIDPathParts = 3
 
-func findAwsNodeHostnameE(t testing.TestingT, node *corev1.Node, awsIDUri *url.URL) (string, error) {
+func findAwsNodeHostnameContextE(t testing.TestingT, ctx context.Context, node *corev1.Node, awsIDUri *url.URL) (string, error) {
 	// Path is /AVAILABILITY_ZONE/INSTANCE_ID
 	parts := strings.Split(awsIDUri.Path, "/")
 	if len(parts) != expectedAWSIDPathParts {
@@ -251,7 +297,7 @@ func findAwsNodeHostnameE(t testing.TestingT, node *corev1.Node, awsIDUri *url.U
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html
 	region := availabilityZone[:len(availabilityZone)-1]
 
-	ipMap, err := aws.GetPublicIpsOfEc2InstancesContextE(t, context.Background(), []string{instanceID}, region)
+	ipMap, err := aws.GetPublicIpsOfEc2InstancesContextE(t, ctx, []string{instanceID}, region)
 	if err != nil {
 		return "", err
 	}

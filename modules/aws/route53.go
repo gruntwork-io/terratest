@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
+	ttesting "github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // GetRoute53RecordContextE returns a Route 53 Record.
 // The ctx parameter supports cancellation and timeouts.
-func GetRoute53RecordContextE(t *testing.T, ctx context.Context, hostedZoneID, recordName, recordType, awsRegion string) (*types.ResourceRecordSet, error) {
+func GetRoute53RecordContextE(t ttesting.TestingT, ctx context.Context, hostedZoneID, recordName, recordType, awsRegion string) (*types.ResourceRecordSet, error) {
 	t.Helper()
 
 	route53Client, err := NewRoute53ClientContextE(t, ctx, awsRegion)
@@ -44,7 +45,7 @@ func GetRoute53RecordContextE(t *testing.T, ctx context.Context, hostedZoneID, r
 // GetRoute53RecordContext returns a Route 53 Record.
 // This function will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetRoute53RecordContext(t *testing.T, ctx context.Context, hostedZoneID, recordName, recordType, awsRegion string) *types.ResourceRecordSet {
+func GetRoute53RecordContext(t ttesting.TestingT, ctx context.Context, hostedZoneID, recordName, recordType, awsRegion string) *types.ResourceRecordSet {
 	t.Helper()
 	r, err := GetRoute53RecordContextE(t, ctx, hostedZoneID, recordName, recordType, awsRegion)
 	require.NoError(t, err)
@@ -70,7 +71,7 @@ func GetRoute53RecordE(t *testing.T, hostedZoneID, recordName, recordType, awsRe
 
 // NewRoute53ClientContextE creates a Route 53 client.
 // The ctx parameter supports cancellation and timeouts.
-func NewRoute53ClientContextE(t *testing.T, ctx context.Context, region string) (*route53.Client, error) {
+func NewRoute53ClientContextE(t ttesting.TestingT, ctx context.Context, region string) (*route53.Client, error) {
 	t.Helper()
 
 	sess, err := NewAuthenticatedSessionContext(ctx, region)
@@ -84,7 +85,7 @@ func NewRoute53ClientContextE(t *testing.T, ctx context.Context, region string) 
 // NewRoute53ClientContext creates a Route 53 client.
 // This function will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func NewRoute53ClientContext(t *testing.T, ctx context.Context, region string) *route53.Client {
+func NewRoute53ClientContext(t ttesting.TestingT, ctx context.Context, region string) *route53.Client {
 	t.Helper()
 	c, err := NewRoute53ClientContextE(t, ctx, region)
 	require.NoError(t, err)

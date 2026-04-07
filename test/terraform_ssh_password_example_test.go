@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -64,10 +63,10 @@ func configureTerraformSSHPasswordOptions(t *testing.T, exampleFolder string) *t
 	instanceName := "terratest-ssh-password-example-" + uniqueID
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create a random password that we can use for SSH access.
 	password := random.UniqueID()

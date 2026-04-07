@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"testing"
 
 	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
@@ -17,11 +16,11 @@ func TestTerraformAwsDynamoDBExample(t *testing.T) {
 	t.Parallel()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Set up expected values to be checked later
 	expectedTableName := "terratest-aws-dynamodb-example-table-" + random.UniqueID()
-	expectedKmsKeyArn := aws.GetCmkArnContext(t, context.Background(), awsRegion, "alias/aws/dynamodb")
+	expectedKmsKeyArn := aws.GetCmkArnContext(t, t.Context(), awsRegion, "alias/aws/dynamodb")
 	expectedKeySchema := []types.KeySchemaElement{
 		{AttributeName: awsSDK.String("userId"), KeyType: types.KeyTypeHash},
 		{AttributeName: awsSDK.String("department"), KeyType: types.KeyTypeRange},
@@ -50,7 +49,7 @@ func TestTerraformAwsDynamoDBExample(t *testing.T) {
 	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Look up the DynamoDB table by name
-	table := aws.GetDynamoDBTableContext(t, context.Background(), awsRegion, expectedTableName)
+	table := aws.GetDynamoDBTableContext(t, t.Context(), awsRegion, expectedTableName)
 
 	assert.Equal(t, "ACTIVE", string(table.TableStatus))
 	assert.ElementsMatch(t, expectedKeySchema, table.KeySchema)
@@ -61,11 +60,11 @@ func TestTerraformAwsDynamoDBExample(t *testing.T) {
 	assert.Equal(t, "KMS", string(table.SSEDescription.SSEType))
 
 	// Verify TTL configuration
-	ttl := aws.GetDynamoDBTableTimeToLiveContext(t, context.Background(), awsRegion, expectedTableName)
+	ttl := aws.GetDynamoDBTableTimeToLiveContext(t, t.Context(), awsRegion, expectedTableName)
 	assert.Equal(t, "expires", awsSDK.ToString(ttl.AttributeName))
 	assert.Equal(t, "ENABLED", string(ttl.TimeToLiveStatus))
 
 	// Verify resource tags
-	tags := aws.GetDynamoDBTableTagsContext(t, context.Background(), awsRegion, expectedTableName)
+	tags := aws.GetDynamoDBTableTagsContext(t, t.Context(), awsRegion, expectedTableName)
 	assert.ElementsMatch(t, expectedTags, tags)
 }

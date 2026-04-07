@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -34,7 +33,7 @@ func TestTerraformSshExample(t *testing.T) {
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
-		aws.DeleteEC2KeyPairContext(t, context.Background(), keyPair)
+		aws.DeleteEC2KeyPairContext(t, t.Context(), keyPair)
 	})
 
 	// Deploy the example
@@ -75,14 +74,14 @@ func configureTerraformOptions(t *testing.T, exampleFolder string) (*terraform.O
 	instanceName := "terratest-ssh-example-" + uniqueID
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create an EC2 KeyPair that we can use for SSH access
 	keyPairName := "terratest-ssh-example-" + uniqueID
-	keyPair := aws.CreateAndImportEC2KeyPairContext(t, context.Background(), awsRegion, keyPairName)
+	keyPair := aws.CreateAndImportEC2KeyPairContext(t, t.Context(), awsRegion, keyPairName)
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -166,7 +165,7 @@ func testSSHToPrivateHost(t *testing.T, terraformOptions *terraform.Options, key
 	// Get IP of private instance from AWS helper function instead of Terraform output
 	privateInstanceID := terraform.OutputContext(t, t.Context(), terraformOptions, "private_instance_id")
 	deployedAWSRegion := terraformOptions.Vars["aws_region"].(string)
-	privateInstanceIP := aws.GetPrivateIPOfEc2InstanceContext(t, context.Background(), privateInstanceID, deployedAWSRegion)
+	privateInstanceIP := aws.GetPrivateIPOfEc2InstanceContext(t, t.Context(), privateInstanceID, deployedAWSRegion)
 
 	sshToPrivateHost(t, publicInstanceIP, privateInstanceIP, keyPair)
 }

@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
@@ -24,10 +23,10 @@ func TestTerraformAwsExample(t *testing.T) {
 	expectedName := "terratest-aws-example-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), awsRegion, []string{"t2.micro", "t3.micro"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro", "t3.micro"})
 
 	// website::tag::1::Configure Terraform setting path to Terraform code, EC2 instance name, and AWS Region. We also
 	// configure the options with default retryable errors to handle the most common retryable errors encountered in
@@ -57,10 +56,10 @@ func TestTerraformAwsExample(t *testing.T) {
 	// Run `terraform output` to get the value of an output variable
 	instanceID := terraform.OutputContext(t, t.Context(), terraformOptions, "instance_id")
 
-	aws.AddTagsToResourceContext(t, context.Background(), awsRegion, instanceID, map[string]string{"testing": "testing-tag-value"})
+	aws.AddTagsToResourceContext(t, t.Context(), awsRegion, instanceID, map[string]string{"testing": "testing-tag-value"})
 
 	// Look up the tags for the given Instance ID
-	instanceTags := aws.GetTagsForEc2InstanceContext(t, context.Background(), awsRegion, instanceID)
+	instanceTags := aws.GetTagsForEc2InstanceContext(t, t.Context(), awsRegion, instanceID)
 
 	// website::tag::3::Check if the EC2 instance with a given tag and name is set.
 	testingTag, containsTestingTag := instanceTags["testing"]

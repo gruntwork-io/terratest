@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
@@ -29,7 +28,7 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 	functionName := "terratest-aws-lambda-example-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -51,13 +50,13 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Invoke the function, so we can test its output
-	response := aws.InvokeFunctionContext(t, context.Background(), awsRegion, functionName, ExampleFunctionPayload{ShouldFail: false, Echo: "hi!"})
+	response := aws.InvokeFunctionContext(t, t.Context(), awsRegion, functionName, ExampleFunctionPayload{ShouldFail: false, Echo: "hi!"})
 
 	// This function just echos it's input as a JSON string when `ShouldFail` is `false``
 	assert.Equal(t, `"hi!"`, string(response))
 
 	// Invoke the function, this time causing it to error and capturing the error
-	_, err = aws.InvokeFunctionContextE(t, context.Background(), awsRegion, functionName, ExampleFunctionPayload{ShouldFail: true, Echo: "hi!"})
+	_, err = aws.InvokeFunctionContextE(t, t.Context(), awsRegion, functionName, ExampleFunctionPayload{ShouldFail: true, Echo: "hi!"})
 
 	// Function-specific errors have their own special return
 	var functionError *aws.FunctionError
@@ -109,7 +108,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 	functionName := "terratest-aws-lambda-withparams-example-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -136,7 +135,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 	invocationType := aws.InvocationTypeDryRun
 
 	input := &aws.LambdaOptions{InvocationType: &invocationType}
-	out := aws.InvokeFunctionWithParamsContext(t, context.Background(), awsRegion, functionName, input)
+	out := aws.InvokeFunctionWithParamsContext(t, t.Context(), awsRegion, functionName, input)
 
 	// With "DryRun", there's no message in the output, but there is
 	// a status code which will have a value of 204 for a successful
@@ -150,7 +149,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 		InvocationType: &invocationType,
 		Payload:        ExampleFunctionPayload{ShouldFail: true, Echo: "hi!"},
 	}
-	out, err = aws.InvokeFunctionWithParamsContextE(t, context.Background(), awsRegion, functionName, input)
+	out, err = aws.InvokeFunctionWithParamsContextE(t, t.Context(), awsRegion, functionName, input)
 
 	// The Lambda executed, but should have failed.
 	require.Error(t, err, "Unhandled")
@@ -165,7 +164,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 		InvocationType: &invocationType,
 		Payload:        ExampleFunctionPayload{ShouldFail: false, Echo: "hi!"},
 	}
-	_, err = aws.InvokeFunctionWithParamsContextE(t, context.Background(), awsRegion, functionName, input)
+	_, err = aws.InvokeFunctionWithParamsContextE(t, t.Context(), awsRegion, functionName, input)
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "LambdaOptions.InvocationType, if specified, must either be \"RequestResponse\" or \"DryRun\"")

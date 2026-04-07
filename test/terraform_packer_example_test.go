@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"crypto/tls"
 	"testing"
 	"time"
@@ -47,7 +46,7 @@ func TestTerraformPackerExample(t *testing.T) {
 	// Build the AMI for the web app
 	testStructure.RunTestStage(t, "build_ami", func() {
 		// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-		awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+		awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 		testStructure.SaveString(t, workingDir, "awsRegion", awsRegion)
 		buildAMI(t, awsRegion, workingDir)
 	})
@@ -69,7 +68,7 @@ func buildAMI(t *testing.T, awsRegion string, workingDir string) {
 	t.Helper()
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	packerOptions := &packer.Options{
 		// The path to where the Packer template is located
@@ -94,7 +93,7 @@ func buildAMI(t *testing.T, awsRegion string, workingDir string) {
 	testStructure.SavePackerOptions(t, workingDir, packerOptions)
 
 	// Build the AMI
-	amiID := packer.BuildArtifactContext(t, context.Background(), packerOptions)
+	amiID := packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
 	// Save the AMI ID so future test stages can use them
 	testStructure.SaveArtifactID(t, workingDir, amiID)
@@ -107,7 +106,7 @@ func deleteAMI(t *testing.T, awsRegion string, workingDir string) {
 	// Load the AMI ID and Packer Options saved by the earlier build_ami stage
 	amiID := testStructure.LoadArtifactID(t, workingDir)
 
-	aws.DeleteAmiContext(t, context.Background(), awsRegion, amiID)
+	aws.DeleteAmiContext(t, t.Context(), awsRegion, amiID)
 }
 
 // Deploy the terraform-packer-example using Terraform
@@ -126,7 +125,7 @@ func deployUsingTerraform(t *testing.T, awsRegion string, workingDir string) {
 	instanceText := "Hello, " + uniqueID + "!"
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Load the AMI ID saved by the earlier build_ami stage
 	amiID := testStructure.LoadArtifactID(t, workingDir)
@@ -173,7 +172,7 @@ func fetchSyslogForInstance(t *testing.T, awsRegion string, workingDir string) {
 	terraformOptions := testStructure.LoadTerraformOptions(t, workingDir)
 
 	instanceID := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "instance_id")
-	logs := aws.GetSyslogForInstanceContext(t, context.Background(), instanceID, awsRegion)
+	logs := aws.GetSyslogForInstanceContext(t, t.Context(), instanceID, awsRegion)
 
 	logger.Default.Logf(t, "Most recent syslog for Instance %s:\n\n%s\n", instanceID, logs)
 }
