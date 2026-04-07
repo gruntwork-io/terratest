@@ -65,16 +65,21 @@ func BuildArtifactsContextE(t testing.TestingT, ctx context.Context, artifactNam
 	artifactNameToArtifactID := map[string]string{}
 	errorsOccurred := new(multierror.Error)
 
+	var mu sync.Mutex
+
 	for artifactName, curOptions := range artifactNameToOptions {
 		go func() {
 			defer waitForArtifacts.Done()
 
 			artifactID, err := BuildArtifactContextE(t, ctx, curOptions)
+
+			mu.Lock()
 			if err != nil {
 				errorsOccurred = multierror.Append(errorsOccurred, err)
 			} else {
 				artifactNameToArtifactID[artifactName] = artifactID
 			}
+			mu.Unlock()
 		}()
 	}
 

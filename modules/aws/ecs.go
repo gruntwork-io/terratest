@@ -131,7 +131,10 @@ func GetDefaultEcsCluster(t testing.TestingT, region string) *types.Cluster {
 // CreateEcsClusterContextE creates ECS cluster in the given region under the given name.
 // The ctx parameter supports cancellation and timeouts.
 func CreateEcsClusterContextE(t testing.TestingT, ctx context.Context, region string, name string) (*types.Cluster, error) {
-	client := NewEcsClientContext(t, ctx, region)
+	client, err := NewEcsClientContextE(t, ctx, region)
+	if err != nil {
+		return nil, err
+	}
 
 	cluster, err := client.CreateCluster(ctx, &ecs.CreateClusterInput{
 		ClusterName: aws.String(name),
@@ -171,9 +174,12 @@ func CreateEcsClusterE(t testing.TestingT, region string, name string) (*types.C
 // DeleteEcsClusterContextE deletes existing ECS cluster in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteEcsClusterContextE(t testing.TestingT, ctx context.Context, region string, cluster *types.Cluster) error {
-	client := NewEcsClientContext(t, ctx, region)
+	client, err := NewEcsClientContextE(t, ctx, region)
+	if err != nil {
+		return err
+	}
 
-	_, err := client.DeleteCluster(ctx, &ecs.DeleteClusterInput{
+	_, err = client.DeleteCluster(ctx, &ecs.DeleteClusterInput{
 		Cluster: aws.String(*cluster.ClusterName),
 	})
 
@@ -206,7 +212,12 @@ func DeleteEcsClusterE(t testing.TestingT, region string, cluster *types.Cluster
 // GetEcsServiceContextE fetches information about specified ECS service.
 // The ctx parameter supports cancellation and timeouts.
 func GetEcsServiceContextE(t testing.TestingT, ctx context.Context, region string, clusterName string, serviceName string) (*types.Service, error) {
-	output, err := NewEcsClientContext(t, ctx, region).DescribeServices(ctx, &ecs.DescribeServicesInput{
+	client, err := NewEcsClientContextE(t, ctx, region)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := client.DescribeServices(ctx, &ecs.DescribeServicesInput{
 		Cluster: aws.String(clusterName),
 		Services: []string{
 			serviceName,
@@ -254,7 +265,12 @@ func GetEcsServiceE(t testing.TestingT, region string, clusterName string, servi
 // GetEcsTaskDefinitionContextE fetches information about specified ECS task definition.
 // The ctx parameter supports cancellation and timeouts.
 func GetEcsTaskDefinitionContextE(t testing.TestingT, ctx context.Context, region string, taskDefinition string) (*types.TaskDefinition, error) {
-	output, err := NewEcsClientContext(t, ctx, region).DescribeTaskDefinition(ctx, &ecs.DescribeTaskDefinitionInput{
+	client, err := NewEcsClientContextE(t, ctx, region)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := client.DescribeTaskDefinition(ctx, &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinition),
 	})
 	if err != nil {

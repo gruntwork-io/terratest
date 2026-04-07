@@ -153,7 +153,7 @@ func FetchContentsOfFileFromAsgContextE(t testing.TestingT, ctx context.Context,
 		instanceIDToContents[instanceID] = contents
 	}
 
-	return instanceIDToContents, err
+	return instanceIDToContents, nil
 }
 
 // FetchContentsOfFileFromAsgContext looks up the EC2 Instances in the given ASG, looks up the public IPs of those EC2
@@ -217,7 +217,7 @@ func FetchContentsOfFilesFromAsgContextE(t testing.TestingT, ctx context.Context
 		instanceIDToFilePathToContents[instanceID] = contents
 	}
 
-	return instanceIDToFilePathToContents, err
+	return instanceIDToFilePathToContents, nil
 }
 
 // FetchContentsOfFilesFromAsgContext looks up the EC2 Instances in the given ASG, looks up the public IPs of those EC2

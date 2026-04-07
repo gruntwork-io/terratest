@@ -95,7 +95,7 @@ func NewAuthenticatedSessionFromRole(region string, roleARN string) (*aws.Config
 
 // CreateAwsSessionWithCredsContext creates a new AWS Config using explicit credentials. This is useful if you want to create an IAM User dynamically and
 // create an AWS Config authenticated as the new IAM User.
-// The ctx parameter supports cancellation and timeouts.
+// The ctx parameter is accepted for API consistency but not currently used.
 func CreateAwsSessionWithCredsContext(ctx context.Context, region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
 	return &aws.Config{
 		Region:      region,

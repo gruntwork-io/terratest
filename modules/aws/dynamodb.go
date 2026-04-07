@@ -30,7 +30,7 @@ func GetDynamoDBTableTagsContextE(t testing.TestingT, ctx context.Context, regio
 		return nil, err
 	}
 
-	return out.Tags, err
+	return out.Tags, nil
 }
 
 // GetDynamoDBTableTagsContext fetches resource tags of a specified dynamoDB table. This will fail the test if there are any errors.
@@ -88,7 +88,7 @@ func GetDynamoDBTableTimeToLiveContextE(t testing.TestingT, ctx context.Context,
 		return nil, err
 	}
 
-	return out.TimeToLiveDescription, err
+	return out.TimeToLiveDescription, nil
 }
 
 // GetDynamoDBTableTimeToLiveContext fetches information about the TTL configuration of a specified dynamoDB table. This will fail the test if there are any errors.
@@ -131,7 +131,7 @@ func GetDynamoDBTableContextE(t testing.TestingT, ctx context.Context, region st
 		return nil, err
 	}
 
-	return out.Table, err
+	return out.Table, nil
 }
 
 // GetDynamoDBTableContext fetches information about the specified dynamoDB table. This will fail the test if there are any errors.

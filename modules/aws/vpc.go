@@ -340,13 +340,17 @@ func generateVpcIDFilter(vpcID string) types.Filter {
 // The ctx parameter supports cancellation and timeouts.
 func getTagsForResourceContextE(t testing.TestingT, ctx context.Context, resourceType string, resourceID string, region string) (map[string]string, error) {
 	client, err := NewEc2ClientContextE(t, ctx, region)
-	require.NoError(t, err)
+	if err != nil {
+		return nil, err
+	}
 
 	resourceTypeFilter := types.Filter{Name: aws.String(resourceTypeFilterName), Values: []string{resourceType}}
 	resourceIDFilter := types.Filter{Name: aws.String(resourceIDFilterName), Values: []string{resourceID}}
 
 	tagsOutput, err := client.DescribeTags(ctx, &ec2.DescribeTagsInput{Filters: []types.Filter{resourceTypeFilter, resourceIDFilter}})
-	require.NoError(t, err)
+	if err != nil {
+		return nil, err
+	}
 
 	tags := map[string]string{}
 
@@ -392,7 +396,9 @@ func GetTagsForVpcE(t testing.TestingT, vpcID string, region string) (map[string
 }
 
 // GetDefaultSubnetIDsForVpcPContextE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-// The ctx parameter supports cancellation and timeouts.
+// The P suffix differentiates this function (which accepts *Vpc pointer) from the deprecated
+// GetDefaultSubnetIDsForVpcE which accepts Vpc by value.
+// The ctx parameter is accepted for API consistency with other Context functions.
 func GetDefaultSubnetIDsForVpcPContextE(t testing.TestingT, ctx context.Context, vpc *Vpc) ([]string, error) {
 	if vpc.Name != defaultVPCName {
 		// You cannot create a default subnet in a nondefault VPC
@@ -418,7 +424,9 @@ func GetDefaultSubnetIDsForVpcPContextE(t testing.TestingT, ctx context.Context,
 
 // GetDefaultSubnetIDsForVpcPContext gets the ids of the subnets that are the default subnet for the AvailabilityZone.
 // This function will fail the test if there is an error.
-// The ctx parameter supports cancellation and timeouts.
+// The P suffix differentiates this function (which accepts *Vpc pointer) from the deprecated
+// GetDefaultSubnetIDsForVpc which accepts Vpc by value.
+// The ctx parameter is accepted for API consistency with other Context functions.
 func GetDefaultSubnetIDsForVpcPContext(t testing.TestingT, ctx context.Context, vpc *Vpc) []string {
 	t.Helper()
 

@@ -111,7 +111,7 @@ func GetEbsSnapshotsForAmiContextE(t testing.TestingT, ctx context.Context, regi
 		}
 	}
 
-	return snapshots, err
+	return snapshots, nil
 }
 
 // GetEbsSnapshotsForAmiContext retrieves the EBS snapshots which back the given AMI.

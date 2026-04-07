@@ -2,7 +2,6 @@ package gcp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -53,6 +52,10 @@ type InstanceGroup interface {
 	// GetInstanceIDsE gets the IDs of Instances in the given Instance Group.
 	GetInstanceIDsE(t testing.TestingT) ([]string, error)
 
+	// GetInstanceIDsContextE gets the IDs of Instances in the given Instance Group.
+	// The ctx parameter supports cancellation and timeouts.
+	GetInstanceIDsContextE(t testing.TestingT, ctx context.Context) ([]string, error)
+
 	// Deprecated: Use [InstanceGroup.GetInstanceIDs] instead.
 	GetInstanceIds(t testing.TestingT) []string //nolint:staticcheck,revive // preserving deprecated method name
 
@@ -94,7 +97,7 @@ func FetchInstanceContextE(t testing.TestingT, ctx context.Context, projectID st
 
 	service, err := NewComputeServiceContextE(t, ctx)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 
 	// If we want to fetch an Instance without knowing its Zone, we have to query GCP for all Instances in the project
@@ -855,7 +858,7 @@ func (ig *RegionalInstanceGroup) GetInstancesContextE(t testing.TestingT, ctx co
 
 // getInstancesContextE returns a collection of Instance structs from the given Instance Group.
 func getInstancesContextE(t testing.TestingT, ctx context.Context, ig InstanceGroup, projectID string) ([]*Instance, error) {
-	instanceIDs, err := ig.GetInstanceIDsE(t)
+	instanceIDs, err := ig.GetInstanceIDsContextE(t, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Instance Group IDs: %w", err)
 	}
@@ -980,7 +983,11 @@ func getPublicIPsContextE(t testing.TestingT, ctx context.Context, ig InstanceGr
 	var ips []string
 
 	for _, instance := range instances {
-		ip := instance.GetPublicIPContext(t, ctx)
+		ip, err := instance.GetPublicIPContextE(t, ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get public IP for instance: %w", err)
+		}
+
 		ips = append(ips, ip)
 	}
 
@@ -1054,7 +1061,11 @@ func (ig *RegionalInstanceGroup) GetRandomInstanceContextE(t testing.TestingT, c
 }
 
 func getRandomInstanceContextE(t testing.TestingT, ctx context.Context, ig InstanceGroup, name string, region string, size int64, projectID string) (*Instance, error) {
-	instanceIDs := ig.GetInstanceIDs(t)
+	instanceIDs, err := ig.GetInstanceIDsContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(instanceIDs) == 0 {
 		return nil, fmt.Errorf("could not find any instances in Instance Group %s in Region %s", name, region)
 	}
@@ -1170,7 +1181,7 @@ func NewInstancesServiceE(t testing.TestingT) (*compute.InstancesService, error)
 func NewInstancesServiceContextE(t testing.TestingT, ctx context.Context) (*compute.InstancesService, error) {
 	service, err := NewComputeServiceContextE(t, ctx)
 	if err != nil {
-		return nil, errors.New("failed to get new Instances Service")
+		return nil, fmt.Errorf("failed to get new Instances Service: %w", err)
 	}
 
 	return service.Instances, nil

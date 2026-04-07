@@ -408,7 +408,7 @@ func GetEc2InstanceIdsByFiltersContextE(t testing.TestingT, ctx context.Context,
 		}
 	}
 
-	return instanceIDs, err
+	return instanceIDs, nil
 }
 
 // GetEc2InstanceIdsByFiltersContext returns all the IDs of EC2 instances in the given region which match to EC2 filter list

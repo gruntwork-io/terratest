@@ -225,7 +225,10 @@ func GetWhetherSchemaExistsInRdsPostgresInstanceE(t testing.TestingT, dbURL stri
 // GetParameterValueForParameterOfRdsInstanceContextE gets the value of the parameter name specified for the RDS instance in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func GetParameterValueForParameterOfRdsInstanceContextE(t testing.TestingT, ctx context.Context, parameterName string, dbInstanceID string, awsRegion string) (string, error) {
-	output := GetAllParametersOfRdsInstanceContext(t, ctx, dbInstanceID, awsRegion)
+	output, err := GetAllParametersOfRdsInstanceContextE(t, ctx, dbInstanceID, awsRegion)
+	if err != nil {
+		return "", err
+	}
 
 	for _, parameter := range output {
 		if aws.ToString(parameter.ParameterName) == parameterName {
@@ -268,8 +271,15 @@ func GetParameterValueForParameterOfRdsInstanceE(t testing.TestingT, parameterNa
 // GetOptionSettingForOfRdsInstanceContextE gets the value of the option name in the option group specified for the RDS instance in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func GetOptionSettingForOfRdsInstanceContextE(t testing.TestingT, ctx context.Context, optionName string, optionSettingName string, dbInstanceID, awsRegion string) (string, error) {
-	optionGroupName := GetOptionGroupNameOfRdsInstanceContext(t, ctx, dbInstanceID, awsRegion)
-	options := GetOptionsOfOptionGroupContext(t, ctx, optionGroupName, awsRegion)
+	optionGroupName, err := GetOptionGroupNameOfRdsInstanceContextE(t, ctx, dbInstanceID, awsRegion)
+	if err != nil {
+		return "", err
+	}
+
+	options, err := GetOptionsOfOptionGroupContextE(t, ctx, optionGroupName, awsRegion)
+	if err != nil {
+		return "", err
+	}
 
 	for i := range options {
 		if aws.ToString(options[i].OptionName) == optionName {
@@ -356,7 +366,11 @@ func GetOptionGroupNameOfRdsInstanceE(t testing.TestingT, dbInstanceID string, a
 // GetOptionsOfOptionGroupContextE gets the options of the option group specified.
 // The ctx parameter supports cancellation and timeouts.
 func GetOptionsOfOptionGroupContextE(t testing.TestingT, ctx context.Context, optionGroupName string, awsRegion string) ([]types.Option, error) {
-	rdsClient := NewRdsClientContext(t, ctx, awsRegion)
+	rdsClient, err := NewRdsClientContextE(t, ctx, awsRegion)
+	if err != nil {
+		return []types.Option{}, err
+	}
+
 	input := rds.DescribeOptionGroupsInput{OptionGroupName: aws.String(optionGroupName)}
 
 	output, err := rdsClient.DescribeOptionGroups(ctx, &input)
@@ -406,7 +420,11 @@ func GetAllParametersOfRdsInstanceContextE(t testing.TestingT, ctx context.Conte
 
 	parameterGroupName := aws.ToString(dbInstance.DBParameterGroups[0].DBParameterGroupName)
 
-	rdsClient := NewRdsClientContext(t, ctx, awsRegion)
+	rdsClient, err := NewRdsClientContextE(t, ctx, awsRegion)
+	if err != nil {
+		return []types.Parameter{}, err
+	}
+
 	input := rds.DescribeDBParametersInput{DBParameterGroupName: aws.String(parameterGroupName)}
 
 	var allParameters []types.Parameter
@@ -461,7 +479,11 @@ func GetAllParametersOfRdsInstanceE(t testing.TestingT, dbInstanceID string, aws
 // GetRdsInstanceDetailsContextE gets the details of a single DB instance whose identifier is passed.
 // The ctx parameter supports cancellation and timeouts.
 func GetRdsInstanceDetailsContextE(t testing.TestingT, ctx context.Context, dbInstanceID string, awsRegion string) (*types.DBInstance, error) {
-	rdsClient := NewRdsClientContext(t, ctx, awsRegion)
+	rdsClient, err := NewRdsClientContextE(t, ctx, awsRegion)
+	if err != nil {
+		return nil, err
+	}
+
 	input := rds.DescribeDBInstancesInput{DBInstanceIdentifier: aws.String(dbInstanceID)}
 
 	output, err := rdsClient.DescribeDBInstances(ctx, &input)

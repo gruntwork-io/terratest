@@ -28,7 +28,7 @@ func CreateSnsTopicContextE(t testing.TestingT, ctx context.Context, region stri
 		return "", err
 	}
 
-	return aws.ToString(output.TopicArn), err
+	return aws.ToString(output.TopicArn), nil
 }
 
 // CreateSnsTopicContext creates an SNS Topic and return the ARN.
