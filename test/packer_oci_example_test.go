@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -18,10 +19,10 @@ func TestPackerOciExample(t *testing.T) {
 		t.Skip("The build is running on CircleCI, so skipping OCI tests.")
 	}
 
-	compartmentID := oci.GetRootCompartmentID(t)
-	baseImageID := oci.GetMostRecentImageID(t, compartmentID, "Canonical Ubuntu", "18.04")
-	availabilityDomain := oci.GetRandomAvailabilityDomain(t, compartmentID)
-	subnetID := oci.GetRandomSubnetID(t, compartmentID, availabilityDomain)
+	compartmentID := oci.GetRootCompartmentIDContext(t, context.Background())
+	baseImageID := oci.GetMostRecentImageIDContext(t, context.Background(), compartmentID, "Canonical Ubuntu", "18.04")
+	availabilityDomain := oci.GetRandomAvailabilityDomainContext(t, context.Background(), compartmentID)
+	subnetID := oci.GetRandomSubnetIDContext(t, context.Background(), compartmentID, availabilityDomain)
 	passPhrase := oci.GetPassPhraseFromEnvVar()
 
 	packerOptions := &packer.Options{
@@ -47,8 +48,8 @@ func TestPackerOciExample(t *testing.T) {
 	}
 
 	// Make sure the Packer build completes successfully
-	ocid := packer.BuildArtifact(t, packerOptions)
+	ocid := packer.BuildArtifactContext(t, context.Background(), packerOptions)
 
 	// Delete the OCI image after we're done
-	defer oci.DeleteImage(t, ocid)
+	defer oci.DeleteImageContext(t, context.Background(), ocid)
 }

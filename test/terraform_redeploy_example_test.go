@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"crypto/tls"
 	"strings"
 	"testing"
@@ -33,7 +34,7 @@ func TestTerraformRedeployExample(t *testing.T) {
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 	test_structure.RunTestStage(t, "pick_region", func() {
-		awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+		awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 		// Save the region, so that we reuse the same region when we skip stages
 		test_structure.SaveString(t, workingDir, "region", awsRegion)
 	})
@@ -79,7 +80,7 @@ func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
 	uniqueID := random.UniqueID()
 
 	// Create a KeyPair we can use later to SSH to each Instance
-	keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, uniqueID)
+	keyPair := aws.CreateAndImportEC2KeyPairContext(t, context.Background(), awsRegion, uniqueID)
 	test_structure.SaveEc2KeyPair(t, workingDir, keyPair)
 
 	// Give the ASG and other resources in the Terraform code a name with a unique ID so it doesn't clash
@@ -90,7 +91,7 @@ func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
 	text := "Hello, " + uniqueID + "!"
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -134,9 +135,9 @@ func validateAsgRunningWebServer(t *testing.T, awsRegion string, workingDir stri
 	maxRetries := 30
 	timeBetweenRetries := 10 * time.Second
 
-	aws.WaitForCapacity(t, asgName, awsRegion, maxRetries, timeBetweenRetries)
+	aws.WaitForCapacityContext(t, context.Background(), asgName, awsRegion, maxRetries, timeBetweenRetries)
 
-	capacityInfo := aws.GetCapacityInfoForAsg(t, asgName, awsRegion)
+	capacityInfo := aws.GetCapacityInfoForAsgContext(t, context.Background(), asgName, awsRegion)
 	assert.Equal(t, int64(3), capacityInfo.DesiredCapacity)
 	assert.Equal(t, int64(3), capacityInfo.CurrentCapacity)
 
@@ -196,7 +197,7 @@ func fetchSyslogForAsg(t *testing.T, awsRegion string, workingDir string) {
 	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
 
 	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
-	asgLogs := aws.GetSyslogForInstancesInAsg(t, asgName, awsRegion)
+	asgLogs := aws.GetSyslogForInstancesInAsgContext(t, context.Background(), asgName, awsRegion)
 
 	logger.Default.Logf(t, "===== First few hundred bytes of syslog for instances in ASG %s =====\n\n", asgName)
 
@@ -222,7 +223,7 @@ func fetchFilesFromAsg(t *testing.T, awsRegion string, workingDir string) {
 	keyPair := test_structure.LoadEc2KeyPair(t, workingDir)
 
 	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
-	instanceIDToFilePathToContents := aws.FetchContentsOfFilesFromAsg(t, awsRegion, "ubuntu", keyPair, asgName, true, syslogPathUbuntu, indexHTMLUbuntu)
+	instanceIDToFilePathToContents := aws.FetchContentsOfFilesFromAsgContext(t, context.Background(), awsRegion, "ubuntu", keyPair, asgName, true, syslogPathUbuntu, indexHTMLUbuntu)
 
 	require.Len(t, instanceIDToFilePathToContents, asgSize)
 

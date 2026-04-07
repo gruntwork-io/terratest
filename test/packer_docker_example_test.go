@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"strconv"
@@ -33,7 +34,7 @@ func TestPackerDockerExampleLocal(t *testing.T) {
 	}
 
 	// website::tag::2::Build the Docker image using Packer
-	packer.BuildArtifact(t, packerOptions)
+	packer.BuildArtifactContext(t, context.Background(), packerOptions)
 
 	serverPort := 8080
 	expectedServerText := fmt.Sprintf("Hello, %s!", random.UniqueID())

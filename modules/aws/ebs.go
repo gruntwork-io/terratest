@@ -9,26 +9,49 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-// DeleteEbsSnapshot deletes the given EBS snapshot
-func DeleteEbsSnapshot(t testing.TestingT, region string, snapshot string) {
-	err := DeleteEbsSnapshotE(t, region, snapshot)
+// DeleteEbsSnapshotContextE deletes the given EBS snapshot.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteEbsSnapshotContextE(t testing.TestingT, ctx context.Context, region string, snapshot string) error {
+	logger.Default.Logf(t, "Deleting EBS snapshot %s", snapshot)
+
+	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	if err != nil {
+		return err
+	}
+
+	ec2Client := ec2.NewFromConfig(*sess)
+
+	_, err = ec2Client.DeleteSnapshot(ctx, &ec2.DeleteSnapshotInput{
+		SnapshotId: aws.String(snapshot),
+	})
+
+	return err
+}
+
+// DeleteEbsSnapshotContext deletes the given EBS snapshot.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteEbsSnapshotContext(t testing.TestingT, ctx context.Context, region string, snapshot string) {
+	t.Helper()
+
+	err := DeleteEbsSnapshotContextE(t, ctx, region, snapshot)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-// DeleteEbsSnapshotE deletes the given EBS snapshot
+// DeleteEbsSnapshot deletes the given EBS snapshot.
+//
+// Deprecated: Use [DeleteEbsSnapshotContext] instead.
+func DeleteEbsSnapshot(t testing.TestingT, region string, snapshot string) {
+	t.Helper()
+
+	DeleteEbsSnapshotContext(t, context.Background(), region, snapshot)
+}
+
+// DeleteEbsSnapshotE deletes the given EBS snapshot.
+//
+// Deprecated: Use [DeleteEbsSnapshotContextE] instead.
 func DeleteEbsSnapshotE(t testing.TestingT, region string, snapshot string) error {
-	logger.Default.Logf(t, "Deleting EBS snapshot %s", snapshot)
-
-	ec2Client, err := NewEc2ClientE(t, region)
-	if err != nil {
-		return err
-	}
-
-	_, err = ec2Client.DeleteSnapshot(context.Background(), &ec2.DeleteSnapshotInput{
-		SnapshotId: aws.String(snapshot),
-	})
-
-	return err
+	return DeleteEbsSnapshotContextE(t, context.Background(), region, snapshot)
 }

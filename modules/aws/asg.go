@@ -22,24 +22,17 @@ type AsgCapacityInfo struct {
 	DesiredCapacity int64
 }
 
-// GetCapacityInfoForAsg returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
-func GetCapacityInfoForAsg(t testing.TestingT, asgName string, awsRegion string) AsgCapacityInfo {
-	capacityInfo, err := GetCapacityInfoForAsgE(t, asgName, awsRegion)
-	require.NoError(t, err)
-
-	return capacityInfo
-}
-
-// GetCapacityInfoForAsgE returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
-func GetCapacityInfoForAsgE(t testing.TestingT, asgName string, awsRegion string) (AsgCapacityInfo, error) {
-	asgClient, err := NewAsgClientE(t, awsRegion)
+// GetCapacityInfoForAsgContextE returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
+// The ctx parameter supports cancellation and timeouts.
+func GetCapacityInfoForAsgContextE(t testing.TestingT, ctx context.Context, asgName string, awsRegion string) (AsgCapacityInfo, error) {
+	asgClient, err := NewAsgClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return AsgCapacityInfo{}, err
 	}
 
 	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []string{asgName}}
 
-	output, err := asgClient.DescribeAutoScalingGroups(context.Background(), &input)
+	output, err := asgClient.DescribeAutoScalingGroups(ctx, &input)
 	if err != nil {
 		return AsgCapacityInfo{}, err
 	}
@@ -59,26 +52,45 @@ func GetCapacityInfoForAsgE(t testing.TestingT, asgName string, awsRegion string
 	return capacityInfo, nil
 }
 
-// GetInstanceIdsForAsg gets the IDs of EC2 Instances in the given ASG.
-func GetInstanceIdsForAsg(t testing.TestingT, asgName string, awsRegion string) []string {
-	ids, err := GetInstanceIdsForAsgE(t, asgName, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+// GetCapacityInfoForAsgContext returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCapacityInfoForAsgContext(t testing.TestingT, ctx context.Context, asgName string, awsRegion string) AsgCapacityInfo {
+	t.Helper()
 
-	return ids
+	capacityInfo, err := GetCapacityInfoForAsgContextE(t, ctx, asgName, awsRegion)
+	require.NoError(t, err)
+
+	return capacityInfo
 }
 
-// GetInstanceIdsForAsgE gets the IDs of EC2 Instances in the given ASG.
-func GetInstanceIdsForAsgE(t testing.TestingT, asgName string, awsRegion string) ([]string, error) {
-	asgClient, err := NewAsgClientE(t, awsRegion)
+// GetCapacityInfoForAsg returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
+//
+// Deprecated: Use [GetCapacityInfoForAsgContext] instead.
+func GetCapacityInfoForAsg(t testing.TestingT, asgName string, awsRegion string) AsgCapacityInfo {
+	t.Helper()
+
+	return GetCapacityInfoForAsgContext(t, context.Background(), asgName, awsRegion)
+}
+
+// GetCapacityInfoForAsgE returns the capacity info for the queried asg as a struct, AsgCapacityInfo.
+//
+// Deprecated: Use [GetCapacityInfoForAsgContextE] instead.
+func GetCapacityInfoForAsgE(t testing.TestingT, asgName string, awsRegion string) (AsgCapacityInfo, error) {
+	return GetCapacityInfoForAsgContextE(t, context.Background(), asgName, awsRegion)
+}
+
+// GetInstanceIdsForAsgContextE gets the IDs of EC2 Instances in the given ASG.
+// The ctx parameter supports cancellation and timeouts.
+func GetInstanceIdsForAsgContextE(t testing.TestingT, ctx context.Context, asgName string, awsRegion string) ([]string, error) {
+	asgClient, err := NewAsgClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return nil, err
 	}
 
 	input := autoscaling.DescribeAutoScalingGroupsInput{AutoScalingGroupNames: []string{asgName}}
 
-	output, err := asgClient.DescribeAutoScalingGroups(context.Background(), &input)
+	output, err := asgClient.DescribeAutoScalingGroups(ctx, &input)
 	if err != nil {
 		return nil, err
 	}
@@ -94,21 +106,41 @@ func GetInstanceIdsForAsgE(t testing.TestingT, asgName string, awsRegion string)
 	return instanceIDs, nil
 }
 
-// WaitForCapacity waits for the currently set desired capacity to be reached on the ASG
-func WaitForCapacity(
-	t testing.TestingT,
-	asgName string,
-	region string,
-	maxRetries int,
-	sleepBetweenRetries time.Duration,
-) {
-	err := WaitForCapacityE(t, asgName, region, maxRetries, sleepBetweenRetries)
-	require.NoError(t, err)
+// GetInstanceIdsForAsgContext gets the IDs of EC2 Instances in the given ASG.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetInstanceIdsForAsgContext(t testing.TestingT, ctx context.Context, asgName string, awsRegion string) []string {
+	t.Helper()
+
+	ids, err := GetInstanceIdsForAsgContextE(t, ctx, asgName, awsRegion)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return ids
 }
 
-// WaitForCapacityE waits for the currently set desired capacity to be reached on the ASG
-func WaitForCapacityE(
+// GetInstanceIdsForAsg gets the IDs of EC2 Instances in the given ASG.
+//
+// Deprecated: Use [GetInstanceIdsForAsgContext] instead.
+func GetInstanceIdsForAsg(t testing.TestingT, asgName string, awsRegion string) []string {
+	t.Helper()
+
+	return GetInstanceIdsForAsgContext(t, context.Background(), asgName, awsRegion)
+}
+
+// GetInstanceIdsForAsgE gets the IDs of EC2 Instances in the given ASG.
+//
+// Deprecated: Use [GetInstanceIdsForAsgContextE] instead.
+func GetInstanceIdsForAsgE(t testing.TestingT, asgName string, awsRegion string) ([]string, error) {
+	return GetInstanceIdsForAsgContextE(t, context.Background(), asgName, awsRegion)
+}
+
+// WaitForCapacityContextE waits for the currently set desired capacity to be reached on the ASG.
+// The ctx parameter supports cancellation and timeouts.
+func WaitForCapacityContextE(
 	t testing.TestingT,
+	ctx context.Context,
 	asgName string,
 	region string,
 	maxRetries int,
@@ -120,7 +152,7 @@ func WaitForCapacityE(
 		maxRetries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			capacityInfo, err := GetCapacityInfoForAsgE(t, asgName, region)
+			capacityInfo, err := GetCapacityInfoForAsgContextE(t, ctx, asgName, region)
 			if err != nil {
 				return "", err
 			}
@@ -137,9 +169,69 @@ func WaitForCapacityE(
 	return err
 }
 
-// NewAsgClient creates an Auto Scaling Group client.
-func NewAsgClient(t testing.TestingT, region string) *autoscaling.Client {
-	client, err := NewAsgClientE(t, region)
+// WaitForCapacityContext waits for the currently set desired capacity to be reached on the ASG.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func WaitForCapacityContext(
+	t testing.TestingT,
+	ctx context.Context,
+	asgName string,
+	region string,
+	maxRetries int,
+	sleepBetweenRetries time.Duration,
+) {
+	t.Helper()
+
+	err := WaitForCapacityContextE(t, ctx, asgName, region, maxRetries, sleepBetweenRetries)
+	require.NoError(t, err)
+}
+
+// WaitForCapacity waits for the currently set desired capacity to be reached on the ASG
+//
+// Deprecated: Use [WaitForCapacityContext] instead.
+func WaitForCapacity(
+	t testing.TestingT,
+	asgName string,
+	region string,
+	maxRetries int,
+	sleepBetweenRetries time.Duration,
+) {
+	t.Helper()
+
+	WaitForCapacityContext(t, context.Background(), asgName, region, maxRetries, sleepBetweenRetries)
+}
+
+// WaitForCapacityE waits for the currently set desired capacity to be reached on the ASG
+//
+// Deprecated: Use [WaitForCapacityContextE] instead.
+func WaitForCapacityE(
+	t testing.TestingT,
+	asgName string,
+	region string,
+	maxRetries int,
+	sleepBetweenRetries time.Duration,
+) error {
+	return WaitForCapacityContextE(t, context.Background(), asgName, region, maxRetries, sleepBetweenRetries)
+}
+
+// NewAsgClientContextE creates an Auto Scaling Group client.
+// The ctx parameter supports cancellation and timeouts.
+func NewAsgClientContextE(t testing.TestingT, ctx context.Context, region string) (*autoscaling.Client, error) {
+	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	if err != nil {
+		return nil, err
+	}
+
+	return autoscaling.NewFromConfig(*sess), nil
+}
+
+// NewAsgClientContext creates an Auto Scaling Group client.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func NewAsgClientContext(t testing.TestingT, ctx context.Context, region string) *autoscaling.Client {
+	t.Helper()
+
+	client, err := NewAsgClientContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,12 +239,18 @@ func NewAsgClient(t testing.TestingT, region string) *autoscaling.Client {
 	return client
 }
 
-// NewAsgClientE creates an Auto Scaling Group client.
-func NewAsgClientE(t testing.TestingT, region string) (*autoscaling.Client, error) {
-	sess, err := NewAuthenticatedSession(region)
-	if err != nil {
-		return nil, err
-	}
+// NewAsgClient creates an Auto Scaling Group client.
+//
+// Deprecated: Use [NewAsgClientContext] instead.
+func NewAsgClient(t testing.TestingT, region string) *autoscaling.Client {
+	t.Helper()
 
-	return autoscaling.NewFromConfig(*sess), nil
+	return NewAsgClientContext(t, context.Background(), region)
+}
+
+// NewAsgClientE creates an Auto Scaling Group client.
+//
+// Deprecated: Use [NewAsgClientContextE] instead.
+func NewAsgClientE(t testing.TestingT, region string) (*autoscaling.Client, error) {
+	return NewAsgClientContextE(t, context.Background(), region)
 }

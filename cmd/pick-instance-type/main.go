@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -42,7 +43,7 @@ func run(cliContext *cli.Context) error {
 	// Create mock testing.T implementation so we can re-use Terratest methods
 	t := MockTestingT{MockName: "pick-instance-type"}
 
-	recommendedInstanceType, err := aws.GetRecommendedInstanceTypeE(t, region, instanceTypes)
+	recommendedInstanceType, err := aws.GetRecommendedInstanceTypeContextE(t, context.Background(), region, instanceTypes)
 	if err != nil {
 		return err
 	}

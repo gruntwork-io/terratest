@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -20,7 +21,7 @@ func TestTerraformAwsEcsExample(t *testing.T) {
 	expectedServiceName := "terratest-aws-ecs-example-service-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegion(t, []string{"us-east-1", "eu-west-1"}, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, context.Background(), []string{"us-east-1", "eu-west-1"}, nil)
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -46,18 +47,18 @@ func TestTerraformAwsEcsExample(t *testing.T) {
 	taskDefinition := terraform.OutputContext(t, t.Context(), terraformOptions, "task_definition")
 
 	// Look up the ECS cluster by name
-	cluster := aws.GetEcsCluster(t, awsRegion, expectedClusterName)
+	cluster := aws.GetEcsClusterContext(t, context.Background(), awsRegion, expectedClusterName)
 
 	assert.Equal(t, int32(1), cluster.ActiveServicesCount)
 
 	// Look up the ECS service by name
-	service := aws.GetEcsService(t, awsRegion, expectedClusterName, expectedServiceName)
+	service := aws.GetEcsServiceContext(t, context.Background(), awsRegion, expectedClusterName, expectedServiceName)
 
 	assert.Equal(t, int32(0), service.DesiredCount)
 	assert.Equal(t, types.LaunchTypeFargate, service.LaunchType)
 
 	// Look up the ECS task definition by ARN
-	task := aws.GetEcsTaskDefinition(t, awsRegion, taskDefinition)
+	task := aws.GetEcsTaskDefinitionContext(t, context.Background(), awsRegion, taskDefinition)
 
 	assert.Equal(t, "256", awsSDK.ToString(task.Cpu))
 	assert.Equal(t, "512", awsSDK.ToString(task.Memory))

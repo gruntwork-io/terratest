@@ -258,8 +258,17 @@ func FetchZonalInstanceGroupContextE(t testing.TestingT, ctx context.Context, pr
 
 // GetPublicIP gets the public IP address of the given Compute Instance.
 // This will fail the test if there is an error.
+//
+// Deprecated: Use [Instance.GetPublicIPContext] instead.
 func (i *Instance) GetPublicIP(t testing.TestingT) string {
-	ip, err := i.GetPublicIPE(t)
+	return i.GetPublicIPContext(t, context.Background())
+}
+
+// GetPublicIPContext gets the public IP address of the given Compute Instance.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetPublicIPContext(t testing.TestingT, ctx context.Context) string {
+	ip, err := i.GetPublicIPContextE(t, ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -276,7 +285,15 @@ func (i *Instance) GetPublicIp(t testing.TestingT) string { //nolint:staticcheck
 }
 
 // GetPublicIPE gets the public IP address of the given Compute Instance.
+//
+// Deprecated: Use [Instance.GetPublicIPContextE] instead.
 func (i *Instance) GetPublicIPE(t testing.TestingT) (string, error) {
+	return i.GetPublicIPContextE(t, context.Background())
+}
+
+// GetPublicIPContextE gets the public IP address of the given Compute Instance.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetPublicIPContextE(t testing.TestingT, ctx context.Context) (string, error) {
 	// If there are no accessConfigs specified, then this instance will have no external internet access:
 	// https://cloud.google.com/compute/docs/reference/rest/v1/instances.
 	if len(i.NetworkInterfaces[0].AccessConfigs) == 0 {
@@ -296,13 +313,65 @@ func (i *Instance) GetPublicIpE(t testing.TestingT) (string, error) { //nolint:s
 }
 
 // GetLabels returns all the tags for the given Compute Instance.
+//
+// Deprecated: Use [Instance.GetLabelsContext] instead.
 func (i *Instance) GetLabels(t testing.TestingT) map[string]string {
-	return i.Labels
+	return i.GetLabelsContext(t, context.Background())
+}
+
+// GetLabelsContext returns all the tags for the given Compute Instance.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetLabelsContext(t testing.TestingT, ctx context.Context) map[string]string {
+	labels, err := i.GetLabelsContextE(t, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return labels
+}
+
+// GetLabelsE returns all the tags for the given Compute Instance.
+//
+// Deprecated: Use [Instance.GetLabelsContextE] instead.
+func (i *Instance) GetLabelsE(t testing.TestingT) (map[string]string, error) {
+	return i.GetLabelsContextE(t, context.Background())
+}
+
+// GetLabelsContextE returns all the tags for the given Compute Instance.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetLabelsContextE(t testing.TestingT, ctx context.Context) (map[string]string, error) {
+	return i.Labels, nil
 }
 
 // GetZone returns the Zone in which the Compute Instance is located.
+//
+// Deprecated: Use [Instance.GetZoneContext] instead.
 func (i *Instance) GetZone(t testing.TestingT) string {
-	return ZoneURLToZone(i.Zone)
+	return i.GetZoneContext(t, context.Background())
+}
+
+// GetZoneContext returns the Zone in which the Compute Instance is located.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetZoneContext(t testing.TestingT, ctx context.Context) string {
+	zone, err := i.GetZoneContextE(t, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return zone
+}
+
+// GetZoneE returns the Zone in which the Compute Instance is located.
+//
+// Deprecated: Use [Instance.GetZoneContextE] instead.
+func (i *Instance) GetZoneE(t testing.TestingT) (string, error) {
+	return i.GetZoneContextE(t, context.Background())
+}
+
+// GetZoneContextE returns the Zone in which the Compute Instance is located.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetZoneContextE(t testing.TestingT, ctx context.Context) (string, error) {
+	return ZoneURLToZone(i.Zone), nil
 }
 
 // SetLabels adds the tags to the given Compute Instance.
@@ -342,7 +411,7 @@ func (i *Instance) SetLabelsContextE(t testing.TestingT, ctx context.Context, la
 
 	req := compute.InstancesSetLabelsRequest{Labels: labels, LabelFingerprint: i.LabelFingerprint}
 
-	if _, err := service.Instances.SetLabels(i.projectID, i.GetZone(t), i.Name, &req).Context(ctx).Do(); err != nil {
+	if _, err := service.Instances.SetLabels(i.projectID, i.GetZoneContext(t, ctx), i.Name, &req).Context(ctx).Do(); err != nil {
 		return fmt.Errorf("Instances.SetLabels(%s) got error: %w", i.Name, err)
 	}
 
@@ -350,8 +419,34 @@ func (i *Instance) SetLabelsContextE(t testing.TestingT, ctx context.Context, la
 }
 
 // GetMetadata gets the given Compute Instance's metadata.
+//
+// Deprecated: Use [Instance.GetMetadataContext] instead.
 func (i *Instance) GetMetadata(t testing.TestingT) []*compute.MetadataItems {
-	return i.Metadata.Items
+	return i.GetMetadataContext(t, context.Background())
+}
+
+// GetMetadataContext gets the given Compute Instance's metadata.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetMetadataContext(t testing.TestingT, ctx context.Context) []*compute.MetadataItems {
+	metadata, err := i.GetMetadataContextE(t, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return metadata
+}
+
+// GetMetadataE gets the given Compute Instance's metadata.
+//
+// Deprecated: Use [Instance.GetMetadataContextE] instead.
+func (i *Instance) GetMetadataE(t testing.TestingT) ([]*compute.MetadataItems, error) {
+	return i.GetMetadataContextE(t, context.Background())
+}
+
+// GetMetadataContextE gets the given Compute Instance's metadata.
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) GetMetadataContextE(t testing.TestingT, ctx context.Context) ([]*compute.MetadataItems, error) {
+	return i.Metadata.Items, nil
 }
 
 // SetMetadata sets the given Compute Instance's metadata.
@@ -391,7 +486,7 @@ func (i *Instance) SetMetadataContextE(t testing.TestingT, ctx context.Context, 
 
 	metadataItems := NewMetadata(i.Metadata, metadata)
 
-	req := service.SetMetadata(i.projectID, i.GetZone(t), i.Name, metadataItems)
+	req := service.SetMetadata(i.projectID, i.GetZoneContext(t, ctx), i.Name, metadataItems)
 
 	if _, err := req.Context(ctx).Do(); err != nil {
 		return fmt.Errorf("Instances.SetMetadata(%s) got error: %w", i.Name, err)
@@ -694,29 +789,17 @@ func (ig *RegionalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx 
 
 // GetInstances returns a collection of Instance structs from the given Zonal Instance Group.
 // This will fail the test if there is an error.
+//
+// Deprecated: Use [ZonalInstanceGroup.GetInstancesContext] instead.
 func (ig *ZonalInstanceGroup) GetInstances(t testing.TestingT, projectID string) []*Instance {
-	return getInstances(t, ig, projectID)
+	return ig.GetInstancesContext(t, context.Background(), projectID)
 }
 
-// GetInstancesE returns a collection of Instance structs from the given Zonal Instance Group.
-func (ig *ZonalInstanceGroup) GetInstancesE(t testing.TestingT, projectID string) ([]*Instance, error) {
-	return getInstancesE(t, ig, projectID)
-}
-
-// GetInstances returns a collection of Instance structs from the given Regional Instance Group.
+// GetInstancesContext returns a collection of Instance structs from the given Zonal Instance Group.
 // This will fail the test if there is an error.
-func (ig *RegionalInstanceGroup) GetInstances(t testing.TestingT, projectID string) []*Instance {
-	return getInstances(t, ig, projectID)
-}
-
-// GetInstancesE returns a collection of Instance structs from the given Regional Instance Group.
-func (ig *RegionalInstanceGroup) GetInstancesE(t testing.TestingT, projectID string) ([]*Instance, error) {
-	return getInstancesE(t, ig, projectID)
-}
-
-// getInstances returns a collection of Instance structs from the given Instance Group.
-func getInstances(t testing.TestingT, ig InstanceGroup, projectID string) []*Instance {
-	instances, err := getInstancesE(t, ig, projectID)
+// The ctx parameter supports cancellation and timeouts.
+func (ig *ZonalInstanceGroup) GetInstancesContext(t testing.TestingT, ctx context.Context, projectID string) []*Instance {
+	instances, err := ig.GetInstancesContextE(t, ctx, projectID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -724,8 +807,54 @@ func getInstances(t testing.TestingT, ig InstanceGroup, projectID string) []*Ins
 	return instances
 }
 
-// getInstancesE returns a collection of Instance structs from the given Instance Group.
-func getInstancesE(t testing.TestingT, ig InstanceGroup, projectID string) ([]*Instance, error) {
+// GetInstancesE returns a collection of Instance structs from the given Zonal Instance Group.
+//
+// Deprecated: Use [ZonalInstanceGroup.GetInstancesContextE] instead.
+func (ig *ZonalInstanceGroup) GetInstancesE(t testing.TestingT, projectID string) ([]*Instance, error) {
+	return ig.GetInstancesContextE(t, context.Background(), projectID)
+}
+
+// GetInstancesContextE returns a collection of Instance structs from the given Zonal Instance Group.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *ZonalInstanceGroup) GetInstancesContextE(t testing.TestingT, ctx context.Context, projectID string) ([]*Instance, error) {
+	return getInstancesContextE(t, ctx, ig, projectID)
+}
+
+// GetInstances returns a collection of Instance structs from the given Regional Instance Group.
+// This will fail the test if there is an error.
+//
+// Deprecated: Use [RegionalInstanceGroup.GetInstancesContext] instead.
+func (ig *RegionalInstanceGroup) GetInstances(t testing.TestingT, projectID string) []*Instance {
+	return ig.GetInstancesContext(t, context.Background(), projectID)
+}
+
+// GetInstancesContext returns a collection of Instance structs from the given Regional Instance Group.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *RegionalInstanceGroup) GetInstancesContext(t testing.TestingT, ctx context.Context, projectID string) []*Instance {
+	instances, err := ig.GetInstancesContextE(t, ctx, projectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return instances
+}
+
+// GetInstancesE returns a collection of Instance structs from the given Regional Instance Group.
+//
+// Deprecated: Use [RegionalInstanceGroup.GetInstancesContextE] instead.
+func (ig *RegionalInstanceGroup) GetInstancesE(t testing.TestingT, projectID string) ([]*Instance, error) {
+	return ig.GetInstancesContextE(t, context.Background(), projectID)
+}
+
+// GetInstancesContextE returns a collection of Instance structs from the given Regional Instance Group.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *RegionalInstanceGroup) GetInstancesContextE(t testing.TestingT, ctx context.Context, projectID string) ([]*Instance, error) {
+	return getInstancesContextE(t, ctx, ig, projectID)
+}
+
+// getInstancesContextE returns a collection of Instance structs from the given Instance Group.
+func getInstancesContextE(t testing.TestingT, ctx context.Context, ig InstanceGroup, projectID string) ([]*Instance, error) {
 	instanceIDs, err := ig.GetInstanceIDsE(t)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Instance Group IDs: %w", err)
@@ -734,7 +863,7 @@ func getInstancesE(t testing.TestingT, ig InstanceGroup, projectID string) ([]*I
 	var instances []*Instance
 
 	for _, instanceID := range instanceIDs {
-		instance, err := FetchInstanceE(t, projectID, instanceID)
+		instance, err := FetchInstanceContextE(t, ctx, projectID, instanceID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get Instance: %w", err)
 		}
@@ -747,13 +876,35 @@ func getInstancesE(t testing.TestingT, ig InstanceGroup, projectID string) ([]*I
 
 // GetPublicIPs returns a slice of the public IPs from the given Zonal Instance Group.
 // This will fail the test if there is an error.
+//
+// Deprecated: Use [ZonalInstanceGroup.GetPublicIPsContext] instead.
 func (ig *ZonalInstanceGroup) GetPublicIPs(t testing.TestingT, projectID string) []string {
-	return getPublicIPs(t, ig, projectID)
+	return ig.GetPublicIPsContext(t, context.Background(), projectID)
+}
+
+// GetPublicIPsContext returns a slice of the public IPs from the given Zonal Instance Group.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *ZonalInstanceGroup) GetPublicIPsContext(t testing.TestingT, ctx context.Context, projectID string) []string {
+	ips, err := ig.GetPublicIPsContextE(t, ctx, projectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return ips
 }
 
 // GetPublicIPsE returns a slice of the public IPs from the given Zonal Instance Group.
+//
+// Deprecated: Use [ZonalInstanceGroup.GetPublicIPsContextE] instead.
 func (ig *ZonalInstanceGroup) GetPublicIPsE(t testing.TestingT, projectID string) ([]string, error) {
-	return getPublicIPsE(t, ig, projectID)
+	return ig.GetPublicIPsContextE(t, context.Background(), projectID)
+}
+
+// GetPublicIPsContextE returns a slice of the public IPs from the given Zonal Instance Group.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *ZonalInstanceGroup) GetPublicIPsContextE(t testing.TestingT, ctx context.Context, projectID string) ([]string, error) {
+	return getPublicIPsContextE(t, ctx, ig, projectID)
 }
 
 // GetPublicIps returns a slice of the public IPs from the given Zonal Instance Group.
@@ -773,13 +924,35 @@ func (ig *ZonalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID string
 
 // GetPublicIPs returns a slice of the public IPs from the given Regional Instance Group.
 // This will fail the test if there is an error.
+//
+// Deprecated: Use [RegionalInstanceGroup.GetPublicIPsContext] instead.
 func (ig *RegionalInstanceGroup) GetPublicIPs(t testing.TestingT, projectID string) []string {
-	return getPublicIPs(t, ig, projectID)
+	return ig.GetPublicIPsContext(t, context.Background(), projectID)
+}
+
+// GetPublicIPsContext returns a slice of the public IPs from the given Regional Instance Group.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *RegionalInstanceGroup) GetPublicIPsContext(t testing.TestingT, ctx context.Context, projectID string) []string {
+	ips, err := ig.GetPublicIPsContextE(t, ctx, projectID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return ips
 }
 
 // GetPublicIPsE returns a slice of the public IPs from the given Regional Instance Group.
+//
+// Deprecated: Use [RegionalInstanceGroup.GetPublicIPsContextE] instead.
 func (ig *RegionalInstanceGroup) GetPublicIPsE(t testing.TestingT, projectID string) ([]string, error) {
-	return getPublicIPsE(t, ig, projectID)
+	return ig.GetPublicIPsContextE(t, context.Background(), projectID)
+}
+
+// GetPublicIPsContextE returns a slice of the public IPs from the given Regional Instance Group.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *RegionalInstanceGroup) GetPublicIPsContextE(t testing.TestingT, ctx context.Context, projectID string) ([]string, error) {
+	return getPublicIPsContextE(t, ctx, ig, projectID)
 }
 
 // GetPublicIps returns a slice of the public IPs from the given Regional Instance Group.
@@ -797,19 +970,9 @@ func (ig *RegionalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID str
 	return ig.GetPublicIPsE(t, projectID)
 }
 
-// getPublicIPs returns a slice of the public IPs from the given Instance Group.
-func getPublicIPs(t testing.TestingT, ig InstanceGroup, projectID string) []string {
-	ips, err := getPublicIPsE(t, ig, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return ips
-}
-
-// getPublicIPsE returns a slice of the public IPs from the given Instance Group.
-func getPublicIPsE(t testing.TestingT, ig InstanceGroup, projectID string) ([]string, error) {
-	instances, err := getInstancesE(t, ig, projectID)
+// getPublicIPsContextE returns a slice of the public IPs from the given Instance Group.
+func getPublicIPsContextE(t testing.TestingT, ctx context.Context, ig InstanceGroup, projectID string) ([]string, error) {
+	instances, err := getInstancesContextE(t, ctx, ig, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Compute Instances from Instance Group: %w", err)
 	}
@@ -817,7 +980,7 @@ func getPublicIPsE(t testing.TestingT, ig InstanceGroup, projectID string) ([]st
 	var ips []string
 
 	for _, instance := range instances {
-		ip := instance.GetPublicIP(t)
+		ip := instance.GetPublicIPContext(t, ctx)
 		ips = append(ips, ip)
 	}
 
@@ -826,28 +989,17 @@ func getPublicIPsE(t testing.TestingT, ig InstanceGroup, projectID string) ([]st
 
 // GetRandomInstance returns a randomly selected Instance from the Zonal Instance Group.
 // This will fail the test if there is an error.
+//
+// Deprecated: Use [ZonalInstanceGroup.GetRandomInstanceContext] instead.
 func (ig *ZonalInstanceGroup) GetRandomInstance(t testing.TestingT) *Instance {
-	return getRandomInstance(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
+	return ig.GetRandomInstanceContext(t, context.Background())
 }
 
-// GetRandomInstanceE returns a randomly selected Instance from the Zonal Instance Group.
-func (ig *ZonalInstanceGroup) GetRandomInstanceE(t testing.TestingT) (*Instance, error) {
-	return getRandomInstanceE(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
-}
-
-// GetRandomInstance returns a randomly selected Instance from the Regional Instance Group.
+// GetRandomInstanceContext returns a randomly selected Instance from the Zonal Instance Group.
 // This will fail the test if there is an error.
-func (ig *RegionalInstanceGroup) GetRandomInstance(t testing.TestingT) *Instance {
-	return getRandomInstance(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
-}
-
-// GetRandomInstanceE returns a randomly selected Instance from the Regional Instance Group.
-func (ig *RegionalInstanceGroup) GetRandomInstanceE(t testing.TestingT) (*Instance, error) {
-	return getRandomInstanceE(t, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
-}
-
-func getRandomInstance(t testing.TestingT, ig InstanceGroup, name string, region string, size int64, projectID string) *Instance {
-	instance, err := getRandomInstanceE(t, ig, name, region, size, projectID)
+// The ctx parameter supports cancellation and timeouts.
+func (ig *ZonalInstanceGroup) GetRandomInstanceContext(t testing.TestingT, ctx context.Context) *Instance {
+	instance, err := ig.GetRandomInstanceContextE(t, ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -855,7 +1007,53 @@ func getRandomInstance(t testing.TestingT, ig InstanceGroup, name string, region
 	return instance
 }
 
-func getRandomInstanceE(t testing.TestingT, ig InstanceGroup, name string, region string, size int64, projectID string) (*Instance, error) {
+// GetRandomInstanceE returns a randomly selected Instance from the Zonal Instance Group.
+//
+// Deprecated: Use [ZonalInstanceGroup.GetRandomInstanceContextE] instead.
+func (ig *ZonalInstanceGroup) GetRandomInstanceE(t testing.TestingT) (*Instance, error) {
+	return ig.GetRandomInstanceContextE(t, context.Background())
+}
+
+// GetRandomInstanceContextE returns a randomly selected Instance from the Zonal Instance Group.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *ZonalInstanceGroup) GetRandomInstanceContextE(t testing.TestingT, ctx context.Context) (*Instance, error) {
+	return getRandomInstanceContextE(t, ctx, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
+}
+
+// GetRandomInstance returns a randomly selected Instance from the Regional Instance Group.
+// This will fail the test if there is an error.
+//
+// Deprecated: Use [RegionalInstanceGroup.GetRandomInstanceContext] instead.
+func (ig *RegionalInstanceGroup) GetRandomInstance(t testing.TestingT) *Instance {
+	return ig.GetRandomInstanceContext(t, context.Background())
+}
+
+// GetRandomInstanceContext returns a randomly selected Instance from the Regional Instance Group.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *RegionalInstanceGroup) GetRandomInstanceContext(t testing.TestingT, ctx context.Context) *Instance {
+	instance, err := ig.GetRandomInstanceContextE(t, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return instance
+}
+
+// GetRandomInstanceE returns a randomly selected Instance from the Regional Instance Group.
+//
+// Deprecated: Use [RegionalInstanceGroup.GetRandomInstanceContextE] instead.
+func (ig *RegionalInstanceGroup) GetRandomInstanceE(t testing.TestingT) (*Instance, error) {
+	return ig.GetRandomInstanceContextE(t, context.Background())
+}
+
+// GetRandomInstanceContextE returns a randomly selected Instance from the Regional Instance Group.
+// The ctx parameter supports cancellation and timeouts.
+func (ig *RegionalInstanceGroup) GetRandomInstanceContextE(t testing.TestingT, ctx context.Context) (*Instance, error) {
+	return getRandomInstanceContextE(t, ctx, ig, ig.Name, ig.Region, ig.Size, ig.projectID)
+}
+
+func getRandomInstanceContextE(t testing.TestingT, ctx context.Context, ig InstanceGroup, name string, region string, size int64, projectID string) (*Instance, error) {
 	instanceIDs := ig.GetInstanceIDs(t)
 	if len(instanceIDs) == 0 {
 		return nil, fmt.Errorf("could not find any instances in Instance Group %s in Region %s", name, region)
@@ -868,7 +1066,11 @@ func getRandomInstanceE(t testing.TestingT, ig InstanceGroup, name string, regio
 
 	randIndex := random.Random(0, clusterSize-1)
 	instanceID := instanceIDs[randIndex]
-	instance := FetchInstance(t, projectID, instanceID)
+
+	instance, err := FetchInstanceContextE(t, ctx, projectID, instanceID)
+	if err != nil {
+		return nil, err
+	}
 
 	return instance, nil
 }

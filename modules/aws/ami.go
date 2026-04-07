@@ -30,28 +30,21 @@ const (
 	AmazonAccountId = AmazonAccountID //nolint:staticcheck,revive // preserving deprecated constant name
 )
 
-// DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI.
-func DeleteAmiAndAllSnapshots(t testing.TestingT, region string, ami string) {
-	err := DeleteAmiAndAllSnapshotsE(t, region, ami)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-// DeleteAmiAndAllSnapshotsE will delete the given AMI along with all EBS snapshots that backed that AMI.
-func DeleteAmiAndAllSnapshotsE(t testing.TestingT, region string, ami string) error {
-	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
+// DeleteAmiAndAllSnapshotsContextE will delete the given AMI along with all EBS snapshots that backed that AMI.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteAmiAndAllSnapshotsContextE(t testing.TestingT, ctx context.Context, region string, ami string) error {
+	snapshots, err := GetEbsSnapshotsForAmiContextE(t, ctx, region, ami)
 	if err != nil {
 		return err
 	}
 
-	err = DeleteAmiE(t, region, ami)
+	err = DeleteAmiContextE(t, ctx, region, ami)
 	if err != nil {
 		return err
 	}
 
 	for _, snapshot := range snapshots {
-		err = DeleteEbsSnapshotE(t, region, snapshot)
+		err = DeleteEbsSnapshotContextE(t, ctx, region, snapshot)
 		if err != nil {
 			return err
 		}
@@ -60,26 +53,44 @@ func DeleteAmiAndAllSnapshotsE(t testing.TestingT, region string, ami string) er
 	return nil
 }
 
-// GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI.
-func GetEbsSnapshotsForAmi(t testing.TestingT, region string, ami string) []string {
-	snapshots, err := GetEbsSnapshotsForAmiE(t, region, ami)
+// DeleteAmiAndAllSnapshotsContext will delete the given AMI along with all EBS snapshots that backed that AMI.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteAmiAndAllSnapshotsContext(t testing.TestingT, ctx context.Context, region string, ami string) {
+	t.Helper()
+
+	err := DeleteAmiAndAllSnapshotsContextE(t, ctx, region, ami)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	return snapshots
 }
 
-// GetEbsSnapshotsForAmiE retrieves the EBS snapshots which back the given AMI.
-func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]string, error) {
+// DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI.
+//
+// Deprecated: Use [DeleteAmiAndAllSnapshotsContext] instead.
+func DeleteAmiAndAllSnapshots(t testing.TestingT, region string, ami string) {
+	t.Helper()
+
+	DeleteAmiAndAllSnapshotsContext(t, context.Background(), region, ami)
+}
+
+// DeleteAmiAndAllSnapshotsE will delete the given AMI along with all EBS snapshots that backed that AMI.
+//
+// Deprecated: Use [DeleteAmiAndAllSnapshotsContextE] instead.
+func DeleteAmiAndAllSnapshotsE(t testing.TestingT, region string, ami string) error {
+	return DeleteAmiAndAllSnapshotsContextE(t, context.Background(), region, ami)
+}
+
+// GetEbsSnapshotsForAmiContextE retrieves the EBS snapshots which back the given AMI.
+// The ctx parameter supports cancellation and timeouts.
+func GetEbsSnapshotsForAmiContextE(t testing.TestingT, ctx context.Context, region string, ami string) ([]string, error) {
 	logger.Default.Logf(t, "Retrieving EBS snapshots backing AMI %s", ami)
 
-	ec2Client, err := NewEc2ClientE(t, region)
+	ec2Client, err := NewEc2ClientContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
 
-	images, err := ec2Client.DescribeImages(context.Background(), &ec2.DescribeImagesInput{
+	images, err := ec2Client.DescribeImages(ctx, &ec2.DescribeImagesInput{
 		ImageIds: []string{
 			ami,
 		},
@@ -103,23 +114,41 @@ func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]st
 	return snapshots, err
 }
 
-// GetMostRecentAmiID gets the ID of the most recent AMI in the given region that has the given owner and matches
-// the given filters. Each filter should correspond to the name and values of a filter supported by DescribeImagesInput:
-// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
-func GetMostRecentAmiID(t testing.TestingT, region string, ownerID string, filters map[string][]string) string {
-	amiID, err := GetMostRecentAmiIDE(t, region, ownerID, filters)
+// GetEbsSnapshotsForAmiContext retrieves the EBS snapshots which back the given AMI.
+// The ctx parameter supports cancellation and timeouts.
+func GetEbsSnapshotsForAmiContext(t testing.TestingT, ctx context.Context, region string, ami string) []string {
+	t.Helper()
+
+	snapshots, err := GetEbsSnapshotsForAmiContextE(t, ctx, region, ami)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return amiID
+	return snapshots
 }
 
-// GetMostRecentAmiIDE gets the ID of the most recent AMI in the given region that has the given owner and matches
+// GetEbsSnapshotsForAmi retrieves the EBS snapshots which back the given AMI.
+//
+// Deprecated: Use [GetEbsSnapshotsForAmiContext] instead.
+func GetEbsSnapshotsForAmi(t testing.TestingT, region string, ami string) []string {
+	t.Helper()
+
+	return GetEbsSnapshotsForAmiContext(t, context.Background(), region, ami)
+}
+
+// GetEbsSnapshotsForAmiE retrieves the EBS snapshots which back the given AMI.
+//
+// Deprecated: Use [GetEbsSnapshotsForAmiContextE] instead.
+func GetEbsSnapshotsForAmiE(t testing.TestingT, region string, ami string) ([]string, error) {
+	return GetEbsSnapshotsForAmiContextE(t, context.Background(), region, ami)
+}
+
+// GetMostRecentAmiIDContextE gets the ID of the most recent AMI in the given region that has the given owner and matches
 // the given filters. Each filter should correspond to the name and values of a filter supported by DescribeImagesInput:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
-func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filters map[string][]string) (string, error) {
-	ec2Client, err := NewEc2ClientE(t, region)
+// The ctx parameter supports cancellation and timeouts.
+func GetMostRecentAmiIDContextE(t testing.TestingT, ctx context.Context, region string, ownerID string, filters map[string][]string) (string, error) {
+	ec2Client, err := NewEc2ClientContextE(t, ctx, region)
 	if err != nil {
 		return "", err
 	}
@@ -136,7 +165,7 @@ func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filt
 		Owners:            []string{ownerID},
 	}
 
-	out, err := ec2Client.DescribeImages(context.Background(), &input)
+	out, err := ec2Client.DescribeImages(ctx, &input)
 	if err != nil {
 		return "", err
 	}
@@ -150,18 +179,55 @@ func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filt
 	return aws.ToString(mostRecentImage.ImageId), nil
 }
 
-// Deprecated: Use [GetMostRecentAmiID] instead.
+// GetMostRecentAmiIDContext gets the ID of the most recent AMI in the given region that has the given owner and matches
+// the given filters. Each filter should correspond to the name and values of a filter supported by DescribeImagesInput:
+// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
+// The ctx parameter supports cancellation and timeouts.
+func GetMostRecentAmiIDContext(t testing.TestingT, ctx context.Context, region string, ownerID string, filters map[string][]string) string {
+	t.Helper()
+
+	amiID, err := GetMostRecentAmiIDContextE(t, ctx, region, ownerID, filters)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return amiID
+}
+
+// GetMostRecentAmiID gets the ID of the most recent AMI in the given region that has the given owner and matches
+// the given filters. Each filter should correspond to the name and values of a filter supported by DescribeImagesInput:
+// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
+//
+// Deprecated: Use [GetMostRecentAmiIDContext] instead.
+func GetMostRecentAmiID(t testing.TestingT, region string, ownerID string, filters map[string][]string) string {
+	t.Helper()
+
+	return GetMostRecentAmiIDContext(t, context.Background(), region, ownerID, filters)
+}
+
+// GetMostRecentAmiIDE gets the ID of the most recent AMI in the given region that has the given owner and matches
+// the given filters. Each filter should correspond to the name and values of a filter supported by DescribeImagesInput:
+// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeImagesInput
+//
+// Deprecated: Use [GetMostRecentAmiIDContextE] instead.
+func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filters map[string][]string) (string, error) {
+	return GetMostRecentAmiIDContextE(t, context.Background(), region, ownerID, filters)
+}
+
+// Deprecated: Use [GetMostRecentAmiIDContext] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filters map[string][]string) string {
-	return GetMostRecentAmiID(t, region, ownerId, filters)
+	t.Helper()
+
+	return GetMostRecentAmiIDContext(t, context.Background(), region, ownerId, filters)
 }
 
-// Deprecated: Use [GetMostRecentAmiIDE] instead.
+// Deprecated: Use [GetMostRecentAmiIDContextE] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filters map[string][]string) (string, error) {
-	return GetMostRecentAmiIDE(t, region, ownerId, filters)
+	return GetMostRecentAmiIDContextE(t, context.Background(), region, ownerId, filters)
 }
 
 // Image sorting code borrowed from: https://github.com/hashicorp/packer/blob/7f4112ba229309cfc0ebaa10ded2abdfaf1b22c8/builder/amazon/common/step_source_ami_info.go
@@ -184,18 +250,9 @@ func mostRecentAMI(images []types.Image) types.Image {
 	return sortedImages[len(sortedImages)-1]
 }
 
-// GetUbuntu1404Ami gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1404Ami(t testing.TestingT, region string) string {
-	amiID, err := GetUbuntu1404AmiE(t, region)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return amiID
-}
-
-// GetUbuntu1404AmiE gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1404AmiE(t testing.TestingT, region string) (string, error) {
+// GetUbuntu1404AmiContextE gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu1404AmiContextE(t testing.TestingT, ctx context.Context, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*ubuntu-trusty-14.04-amd64-server-*"},
 		"virtualization-type":              {"hvm"},
@@ -204,12 +261,15 @@ func GetUbuntu1404AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
+	return GetMostRecentAmiIDContextE(t, ctx, region, CanonicalAccountID, filters)
 }
 
-// GetUbuntu1604Ami gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1604Ami(t testing.TestingT, region string) string {
-	amiID, err := GetUbuntu1604AmiE(t, region)
+// GetUbuntu1404AmiContext gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu1404AmiContext(t testing.TestingT, ctx context.Context, region string) string {
+	t.Helper()
+
+	amiID, err := GetUbuntu1404AmiContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,8 +277,25 @@ func GetUbuntu1604Ami(t testing.TestingT, region string) string {
 	return amiID
 }
 
-// GetUbuntu1604AmiE gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu1604AmiE(t testing.TestingT, region string) (string, error) {
+// GetUbuntu1404Ami gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu1404AmiContext] instead.
+func GetUbuntu1404Ami(t testing.TestingT, region string) string {
+	t.Helper()
+
+	return GetUbuntu1404AmiContext(t, context.Background(), region)
+}
+
+// GetUbuntu1404AmiE gets the ID of the most recent Ubuntu 14.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu1404AmiContextE] instead.
+func GetUbuntu1404AmiE(t testing.TestingT, region string) (string, error) {
+	return GetUbuntu1404AmiContextE(t, context.Background(), region)
+}
+
+// GetUbuntu1604AmiContextE gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu1604AmiContextE(t testing.TestingT, ctx context.Context, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*ubuntu-xenial-16.04-amd64-server-*"},
 		"virtualization-type":              {"hvm"},
@@ -227,12 +304,15 @@ func GetUbuntu1604AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
+	return GetMostRecentAmiIDContextE(t, ctx, region, CanonicalAccountID, filters)
 }
 
-// GetUbuntu2004Ami gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu2004Ami(t testing.TestingT, region string) string {
-	amiID, err := GetUbuntu2004AmiE(t, region)
+// GetUbuntu1604AmiContext gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu1604AmiContext(t testing.TestingT, ctx context.Context, region string) string {
+	t.Helper()
+
+	amiID, err := GetUbuntu1604AmiContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,8 +320,25 @@ func GetUbuntu2004Ami(t testing.TestingT, region string) string {
 	return amiID
 }
 
-// GetUbuntu2004AmiE gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu2004AmiE(t testing.TestingT, region string) (string, error) {
+// GetUbuntu1604Ami gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu1604AmiContext] instead.
+func GetUbuntu1604Ami(t testing.TestingT, region string) string {
+	t.Helper()
+
+	return GetUbuntu1604AmiContext(t, context.Background(), region)
+}
+
+// GetUbuntu1604AmiE gets the ID of the most recent Ubuntu 16.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu1604AmiContextE] instead.
+func GetUbuntu1604AmiE(t testing.TestingT, region string) (string, error) {
+	return GetUbuntu1604AmiContextE(t, context.Background(), region)
+}
+
+// GetUbuntu2004AmiContextE gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu2004AmiContextE(t testing.TestingT, ctx context.Context, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*ubuntu-focal-20.04-amd64-server-*"},
 		"virtualization-type":              {"hvm"},
@@ -250,12 +347,15 @@ func GetUbuntu2004AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
+	return GetMostRecentAmiIDContextE(t, ctx, region, CanonicalAccountID, filters)
 }
 
-// GetUbuntu2204Ami gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu2204Ami(t testing.TestingT, region string) string {
-	amiID, err := GetUbuntu2204AmiE(t, region)
+// GetUbuntu2004AmiContext gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu2004AmiContext(t testing.TestingT, ctx context.Context, region string) string {
+	t.Helper()
+
+	amiID, err := GetUbuntu2004AmiContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -263,8 +363,25 @@ func GetUbuntu2204Ami(t testing.TestingT, region string) string {
 	return amiID
 }
 
-// GetUbuntu2204AmiE gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
-func GetUbuntu2204AmiE(t testing.TestingT, region string) (string, error) {
+// GetUbuntu2004Ami gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu2004AmiContext] instead.
+func GetUbuntu2004Ami(t testing.TestingT, region string) string {
+	t.Helper()
+
+	return GetUbuntu2004AmiContext(t, context.Background(), region)
+}
+
+// GetUbuntu2004AmiE gets the ID of the most recent Ubuntu 20.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu2004AmiContextE] instead.
+func GetUbuntu2004AmiE(t testing.TestingT, region string) (string, error) {
+	return GetUbuntu2004AmiContextE(t, context.Background(), region)
+}
+
+// GetUbuntu2204AmiContextE gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu2204AmiContextE(t testing.TestingT, ctx context.Context, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*ubuntu-jammy-22.04-amd64-server-*"},
 		"virtualization-type":              {"hvm"},
@@ -273,14 +390,15 @@ func GetUbuntu2204AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIDE(t, region, CanonicalAccountID, filters)
+	return GetMostRecentAmiIDContextE(t, ctx, region, CanonicalAccountID, filters)
 }
 
-// GetCentos7Ami returns a CentOS 7 public AMI from the given region.
-// WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
-// you can successfully launch the AMI.
-func GetCentos7Ami(t testing.TestingT, region string) string {
-	amiID, err := GetCentos7AmiE(t, region)
+// GetUbuntu2204AmiContext gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetUbuntu2204AmiContext(t testing.TestingT, ctx context.Context, region string) string {
+	t.Helper()
+
+	amiID, err := GetUbuntu2204AmiContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -288,10 +406,27 @@ func GetCentos7Ami(t testing.TestingT, region string) string {
 	return amiID
 }
 
-// GetCentos7AmiE returns a CentOS 7 public AMI from the given region.
+// GetUbuntu2204Ami gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu2204AmiContext] instead.
+func GetUbuntu2204Ami(t testing.TestingT, region string) string {
+	t.Helper()
+
+	return GetUbuntu2204AmiContext(t, context.Background(), region)
+}
+
+// GetUbuntu2204AmiE gets the ID of the most recent Ubuntu 22.04 HVM x86_64 EBS GP2 AMI in the given region.
+//
+// Deprecated: Use [GetUbuntu2204AmiContextE] instead.
+func GetUbuntu2204AmiE(t testing.TestingT, region string) (string, error) {
+	return GetUbuntu2204AmiContextE(t, context.Background(), region)
+}
+
+// GetCentos7AmiContextE returns a CentOS 7 public AMI from the given region.
 // WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
 // you can successfully launch the AMI.
-func GetCentos7AmiE(t testing.TestingT, region string) (string, error) {
+// The ctx parameter supports cancellation and timeouts.
+func GetCentos7AmiContextE(t testing.TestingT, ctx context.Context, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*CentOS Linux 7 x86_64 HVM EBS*"},
 		"virtualization-type":              {"hvm"},
@@ -300,12 +435,17 @@ func GetCentos7AmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIDE(t, region, CentOsAccountID, filters)
+	return GetMostRecentAmiIDContextE(t, ctx, region, CentOsAccountID, filters)
 }
 
-// GetAmazonLinuxAmi returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
-func GetAmazonLinuxAmi(t testing.TestingT, region string) string {
-	amiID, err := GetAmazonLinuxAmiE(t, region)
+// GetCentos7AmiContext returns a CentOS 7 public AMI from the given region.
+// WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
+// you can successfully launch the AMI.
+// The ctx parameter supports cancellation and timeouts.
+func GetCentos7AmiContext(t testing.TestingT, ctx context.Context, region string) string {
+	t.Helper()
+
+	amiID, err := GetCentos7AmiContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -313,8 +453,29 @@ func GetAmazonLinuxAmi(t testing.TestingT, region string) string {
 	return amiID
 }
 
-// GetAmazonLinuxAmiE returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
-func GetAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
+// GetCentos7Ami returns a CentOS 7 public AMI from the given region.
+// WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
+// you can successfully launch the AMI.
+//
+// Deprecated: Use [GetCentos7AmiContext] instead.
+func GetCentos7Ami(t testing.TestingT, region string) string {
+	t.Helper()
+
+	return GetCentos7AmiContext(t, context.Background(), region)
+}
+
+// GetCentos7AmiE returns a CentOS 7 public AMI from the given region.
+// WARNING: you may have to accept the terms & conditions of this AMI in AWS MarketPlace for your AWS Account before
+// you can successfully launch the AMI.
+//
+// Deprecated: Use [GetCentos7AmiContextE] instead.
+func GetCentos7AmiE(t testing.TestingT, region string) (string, error) {
+	return GetCentos7AmiContextE(t, context.Background(), region)
+}
+
+// GetAmazonLinuxAmiContextE returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetAmazonLinuxAmiContextE(t testing.TestingT, ctx context.Context, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*amzn2-ami-hvm-*-x86_64*"},
 		"virtualization-type":              {"hvm"},
@@ -323,12 +484,15 @@ func GetAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIDE(t, region, AmazonAccountID, filters)
+	return GetMostRecentAmiIDContextE(t, ctx, region, AmazonAccountID, filters)
 }
 
-// GetEcsOptimizedAmazonLinuxAmi returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
-func GetEcsOptimizedAmazonLinuxAmi(t testing.TestingT, region string) string {
-	amiID, err := GetEcsOptimizedAmazonLinuxAmiE(t, region)
+// GetAmazonLinuxAmiContext returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetAmazonLinuxAmiContext(t testing.TestingT, ctx context.Context, region string) string {
+	t.Helper()
+
+	amiID, err := GetAmazonLinuxAmiContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,8 +500,25 @@ func GetEcsOptimizedAmazonLinuxAmi(t testing.TestingT, region string) string {
 	return amiID
 }
 
-// GetEcsOptimizedAmazonLinuxAmiE returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
-func GetEcsOptimizedAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
+// GetAmazonLinuxAmi returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
+//
+// Deprecated: Use [GetAmazonLinuxAmiContext] instead.
+func GetAmazonLinuxAmi(t testing.TestingT, region string) string {
+	t.Helper()
+
+	return GetAmazonLinuxAmiContext(t, context.Background(), region)
+}
+
+// GetAmazonLinuxAmiE returns an Amazon Linux AMI HVM, SSD Volume Type public AMI for the given region.
+//
+// Deprecated: Use [GetAmazonLinuxAmiContextE] instead.
+func GetAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
+	return GetAmazonLinuxAmiContextE(t, context.Background(), region)
+}
+
+// GetEcsOptimizedAmazonLinuxAmiContextE returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
+// The ctx parameter supports cancellation and timeouts.
+func GetEcsOptimizedAmazonLinuxAmiContextE(t testing.TestingT, ctx context.Context, region string) (string, error) {
 	filters := map[string][]string{
 		"name":                             {"*amzn-ami*amazon-ecs-optimized*"},
 		"virtualization-type":              {"hvm"},
@@ -346,7 +527,36 @@ func GetEcsOptimizedAmazonLinuxAmiE(t testing.TestingT, region string) (string, 
 		"block-device-mapping.volume-type": {"gp2"},
 	}
 
-	return GetMostRecentAmiIDE(t, region, AmazonAccountID, filters)
+	return GetMostRecentAmiIDContextE(t, ctx, region, AmazonAccountID, filters)
+}
+
+// GetEcsOptimizedAmazonLinuxAmiContext returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
+// The ctx parameter supports cancellation and timeouts.
+func GetEcsOptimizedAmazonLinuxAmiContext(t testing.TestingT, ctx context.Context, region string) string {
+	t.Helper()
+
+	amiID, err := GetEcsOptimizedAmazonLinuxAmiContextE(t, ctx, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return amiID
+}
+
+// GetEcsOptimizedAmazonLinuxAmi returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
+//
+// Deprecated: Use [GetEcsOptimizedAmazonLinuxAmiContext] instead.
+func GetEcsOptimizedAmazonLinuxAmi(t testing.TestingT, region string) string {
+	t.Helper()
+
+	return GetEcsOptimizedAmazonLinuxAmiContext(t, context.Background(), region)
+}
+
+// GetEcsOptimizedAmazonLinuxAmiE returns an Amazon ECS-Optimized Amazon Linux AMI for the given region. This AMI is useful for running an ECS cluster.
+//
+// Deprecated: Use [GetEcsOptimizedAmazonLinuxAmiContextE] instead.
+func GetEcsOptimizedAmazonLinuxAmiE(t testing.TestingT, region string) (string, error) {
+	return GetEcsOptimizedAmazonLinuxAmiContextE(t, context.Background(), region)
 }
 
 // NoImagesFound is an error that occurs if no images were found.

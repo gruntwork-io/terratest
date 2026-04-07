@@ -1,6 +1,7 @@
 package test_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -14,14 +15,14 @@ import (
 func TestTerraformBackendExample(t *testing.T) {
 	t.Parallel()
 
-	awsRegion := aws.GetRandomRegion(t, nil, nil)
+	awsRegion := aws.GetRandomRegionContext(t, context.Background(), nil, nil)
 	uniqueID := random.UniqueID()
 
 	// Create an S3 bucket where we can store state
 	bucketName := "test-terraform-backend-example-" + strings.ToLower(uniqueID)
 	defer cleanupS3Bucket(t, awsRegion, bucketName)
 
-	aws.CreateS3Bucket(t, awsRegion, bucketName)
+	aws.CreateS3BucketContext(t, context.Background(), awsRegion, bucketName)
 
 	key := uniqueID + "/terraform.tfstate"
 	data := "data-for-test-" + uniqueID
@@ -45,7 +46,7 @@ func TestTerraformBackendExample(t *testing.T) {
 
 	// Check a state file actually got stored and contains our data in it somewhere (since that data is used in an
 	// output of the Terraform code)
-	contents := aws.GetS3ObjectContents(t, awsRegion, bucketName, key)
+	contents := aws.GetS3ObjectContentsContext(t, context.Background(), awsRegion, bucketName, key)
 	require.Contains(t, contents, data)
 
 	// The module doesn't really *do* anything, so we just check a dummy output here and move on
@@ -56,6 +57,6 @@ func TestTerraformBackendExample(t *testing.T) {
 func cleanupS3Bucket(t *testing.T, awsRegion string, bucketName string) {
 	t.Helper()
 
-	aws.EmptyS3Bucket(t, awsRegion, bucketName)
-	aws.DeleteS3Bucket(t, awsRegion, bucketName)
+	aws.EmptyS3BucketContext(t, context.Background(), awsRegion, bucketName)
+	aws.DeleteS3BucketContext(t, context.Background(), awsRegion, bucketName)
 }

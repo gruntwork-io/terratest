@@ -251,7 +251,7 @@ func findAwsNodeHostnameE(t testing.TestingT, node *corev1.Node, awsIDUri *url.U
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html
 	region := availabilityZone[:len(availabilityZone)-1]
 
-	ipMap, err := aws.GetPublicIpsOfEc2InstancesE(t, []string{instanceID}, region)
+	ipMap, err := aws.GetPublicIpsOfEc2InstancesContextE(t, context.Background(), []string{instanceID}, region)
 	if err != nil {
 		return "", err
 	}

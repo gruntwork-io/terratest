@@ -11,16 +11,9 @@ import (
 	"github.com/oracle/oci-go-sdk/core"
 )
 
-// DeleteImage deletes a custom image with given OCID.
-func DeleteImage(t testing.TestingT, ocid string) {
-	err := DeleteImageE(t, ocid)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-// DeleteImageE deletes a custom image with given OCID.
-func DeleteImageE(t testing.TestingT, ocid string) error {
+// DeleteImageContextE deletes a custom image with given OCID.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteImageContextE(t testing.TestingT, ctx context.Context, ocid string) error {
 	logger.Default.Logf(t, "Deleting image with OCID %s", ocid)
 
 	configProvider := common.DefaultConfigProvider()
@@ -31,23 +24,42 @@ func DeleteImageE(t testing.TestingT, ocid string) error {
 	}
 
 	request := core.DeleteImageRequest{ImageId: &ocid}
-	_, err = client.DeleteImage(context.Background(), request)
+	_, err = client.DeleteImage(ctx, request)
 
 	return err
 }
 
-// GetMostRecentImageID gets the OCID of the most recent image in the given compartment that has the given OS name and version.
-func GetMostRecentImageID(t testing.TestingT, compartmentID string, osName string, osVersion string) string {
-	ocid, err := GetMostRecentImageIDE(t, compartmentID, osName, osVersion)
+// DeleteImageContext deletes a custom image with given OCID.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteImageContext(t testing.TestingT, ctx context.Context, ocid string) {
+	t.Helper()
+
+	err := DeleteImageContextE(t, ctx, ocid)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	return ocid
 }
 
-// GetMostRecentImageIDE gets the OCID of the most recent image in the given compartment that has the given OS name and version.
-func GetMostRecentImageIDE(t testing.TestingT, compartmentID string, osName string, osVersion string) (string, error) {
+// DeleteImage deletes a custom image with given OCID.
+//
+// Deprecated: Use [DeleteImageContext] instead.
+func DeleteImage(t testing.TestingT, ocid string) {
+	t.Helper()
+
+	DeleteImageContext(t, context.Background(), ocid)
+}
+
+// DeleteImageE deletes a custom image with given OCID.
+//
+// Deprecated: Use [DeleteImageContextE] instead.
+func DeleteImageE(t testing.TestingT, ocid string) error {
+	return DeleteImageContextE(t, context.Background(), ocid)
+}
+
+// GetMostRecentImageIDContextE gets the OCID of the most recent image in the given compartment that has the given OS name and version.
+// The ctx parameter supports cancellation and timeouts.
+func GetMostRecentImageIDContextE(t testing.TestingT, ctx context.Context, compartmentID string, osName string, osVersion string) (string, error) {
 	configProvider := common.DefaultConfigProvider()
 
 	client, err := core.NewComputeClientWithConfigurationProvider(configProvider)
@@ -61,7 +73,7 @@ func GetMostRecentImageIDE(t testing.TestingT, compartmentID string, osName stri
 		OperatingSystemVersion: &osVersion,
 	}
 
-	response, err := client.ListImages(context.Background(), request)
+	response, err := client.ListImages(ctx, request)
 	if err != nil {
 		return "", err
 	}
@@ -73,6 +85,36 @@ func GetMostRecentImageIDE(t testing.TestingT, compartmentID string, osName stri
 	mostRecentImage := mostRecentImage(response.Items)
 
 	return *mostRecentImage.Id, nil
+}
+
+// GetMostRecentImageIDContext gets the OCID of the most recent image in the given compartment that has the given OS name and version.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetMostRecentImageIDContext(t testing.TestingT, ctx context.Context, compartmentID string, osName string, osVersion string) string {
+	t.Helper()
+
+	ocid, err := GetMostRecentImageIDContextE(t, ctx, compartmentID, osName, osVersion)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return ocid
+}
+
+// GetMostRecentImageID gets the OCID of the most recent image in the given compartment that has the given OS name and version.
+//
+// Deprecated: Use [GetMostRecentImageIDContext] instead.
+func GetMostRecentImageID(t testing.TestingT, compartmentID string, osName string, osVersion string) string {
+	t.Helper()
+
+	return GetMostRecentImageIDContext(t, context.Background(), compartmentID, osName, osVersion)
+}
+
+// GetMostRecentImageIDE gets the OCID of the most recent image in the given compartment that has the given OS name and version.
+//
+// Deprecated: Use [GetMostRecentImageIDContextE] instead.
+func GetMostRecentImageIDE(t testing.TestingT, compartmentID string, osName string, osVersion string) (string, error) {
+	return GetMostRecentImageIDContextE(t, context.Background(), compartmentID, osName, osVersion)
 }
 
 // Image sorting code borrowed from: https://github.com/hashicorp/packer/blob/7f4112ba229309cfc0ebaa10ded2abdfaf1b22c8/builder/amazon/common/step_source_ami_info.go

@@ -66,17 +66,10 @@ type LambdaOutput struct {
 	StatusCode int32
 }
 
-// InvokeFunction invokes a lambda function.
-func InvokeFunction(t testing.TestingT, region, functionName string, payload interface{}) []byte {
-	out, err := InvokeFunctionE(t, region, functionName, payload)
-	require.NoError(t, err)
-
-	return out
-}
-
-// InvokeFunctionE invokes a lambda function.
-func InvokeFunctionE(t testing.TestingT, region, functionName string, payload interface{}) ([]byte, error) {
-	lambdaClient, err := NewLambdaClientE(t, region)
+// InvokeFunctionContextE invokes a lambda function.
+// The ctx parameter supports cancellation and timeouts.
+func InvokeFunctionContextE(t testing.TestingT, ctx context.Context, region, functionName string, payload interface{}) ([]byte, error) {
+	lambdaClient, err := NewLambdaClientContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +87,7 @@ func InvokeFunctionE(t testing.TestingT, region, functionName string, payload in
 		invokeInput.Payload = payloadJSON
 	}
 
-	out, err := lambdaClient.Invoke(context.Background(), invokeInput)
+	out, err := lambdaClient.Invoke(ctx, invokeInput)
 	require.NoError(t, err)
 
 	if out.FunctionError != nil {
@@ -104,23 +97,40 @@ func InvokeFunctionE(t testing.TestingT, region, functionName string, payload in
 	return out.Payload, nil
 }
 
-// InvokeFunctionWithParams invokes a lambda function using parameters
-// supplied in the LambdaOptions struct and returns values in a LambdaOutput
-// struct.  Checks for failure using "require".
-func InvokeFunctionWithParams(t testing.TestingT, region, functionName string, input *LambdaOptions) *LambdaOutput {
-	out, err := InvokeFunctionWithParamsE(t, region, functionName, input)
+// InvokeFunctionContext invokes a lambda function.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func InvokeFunctionContext(t testing.TestingT, ctx context.Context, region, functionName string, payload interface{}) []byte {
+	t.Helper()
+	out, err := InvokeFunctionContextE(t, ctx, region, functionName, payload)
 	require.NoError(t, err)
 
 	return out
 }
 
-// InvokeFunctionWithParamsE invokes a lambda function using parameters
+// InvokeFunction invokes a lambda function.
+//
+// Deprecated: Use [InvokeFunctionContext] instead.
+func InvokeFunction(t testing.TestingT, region, functionName string, payload interface{}) []byte {
+	t.Helper()
+	return InvokeFunctionContext(t, context.Background(), region, functionName, payload)
+}
+
+// InvokeFunctionE invokes a lambda function.
+//
+// Deprecated: Use [InvokeFunctionContextE] instead.
+func InvokeFunctionE(t testing.TestingT, region, functionName string, payload interface{}) ([]byte, error) {
+	return InvokeFunctionContextE(t, context.Background(), region, functionName, payload)
+}
+
+// InvokeFunctionWithParamsContextE invokes a lambda function using parameters
 // supplied in the LambdaOptions struct.  Returns the status code and payload
 // in a LambdaOutput struct and the error.  A non-nil error will either reflect
 // a problem with the parameters supplied to this function or an error returned
 // by the Lambda.
-func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, input *LambdaOptions) (*LambdaOutput, error) {
-	lambdaClient, err := NewLambdaClientE(t, region)
+// The ctx parameter supports cancellation and timeouts.
+func InvokeFunctionWithParamsContextE(t testing.TestingT, ctx context.Context, region, functionName string, input *LambdaOptions) (*LambdaOutput, error) {
+	lambdaClient, err := NewLambdaClientContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +157,7 @@ func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, 
 		invokeInput.Payload = payloadJSON
 	}
 
-	out, err := lambdaClient.Invoke(context.Background(), invokeInput)
+	out, err := lambdaClient.Invoke(ctx, invokeInput)
 	if err != nil {
 		return nil, err
 	}
@@ -167,6 +177,39 @@ func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, 
 	return &lambdaOutput, nil
 }
 
+// InvokeFunctionWithParamsContext invokes a lambda function using parameters
+// supplied in the LambdaOptions struct and returns values in a LambdaOutput
+// struct.  Checks for failure using "require".
+// The ctx parameter supports cancellation and timeouts.
+func InvokeFunctionWithParamsContext(t testing.TestingT, ctx context.Context, region, functionName string, input *LambdaOptions) *LambdaOutput {
+	t.Helper()
+	out, err := InvokeFunctionWithParamsContextE(t, ctx, region, functionName, input)
+	require.NoError(t, err)
+
+	return out
+}
+
+// InvokeFunctionWithParams invokes a lambda function using parameters
+// supplied in the LambdaOptions struct and returns values in a LambdaOutput
+// struct.  Checks for failure using "require".
+//
+// Deprecated: Use [InvokeFunctionWithParamsContext] instead.
+func InvokeFunctionWithParams(t testing.TestingT, region, functionName string, input *LambdaOptions) *LambdaOutput {
+	t.Helper()
+	return InvokeFunctionWithParamsContext(t, context.Background(), region, functionName, input)
+}
+
+// InvokeFunctionWithParamsE invokes a lambda function using parameters
+// supplied in the LambdaOptions struct.  Returns the status code and payload
+// in a LambdaOutput struct and the error.  A non-nil error will either reflect
+// a problem with the parameters supplied to this function or an error returned
+// by the Lambda.
+//
+// Deprecated: Use [InvokeFunctionWithParamsContextE] instead.
+func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, input *LambdaOptions) (*LambdaOutput, error) {
+	return InvokeFunctionWithParamsContextE(t, context.Background(), region, functionName, input)
+}
+
 type FunctionError struct {
 	Message    string
 	Payload    []byte
@@ -177,20 +220,39 @@ func (err *FunctionError) Error() string {
 	return fmt.Sprintf("%q error with status code %d invoking lambda function: %q", err.Message, err.StatusCode, err.Payload)
 }
 
-// NewLambdaClient creates a new Lambda client.
-func NewLambdaClient(t testing.TestingT, region string) *lambda.Client {
-	client, err := NewLambdaClientE(t, region)
-	require.NoError(t, err)
-
-	return client
-}
-
-// NewLambdaClientE creates a new Lambda client.
-func NewLambdaClientE(t testing.TestingT, region string) (*lambda.Client, error) {
-	sess, err := NewAuthenticatedSession(region)
+// NewLambdaClientContextE creates a new Lambda client.
+// The ctx parameter supports cancellation and timeouts.
+func NewLambdaClientContextE(t testing.TestingT, ctx context.Context, region string) (*lambda.Client, error) {
+	sess, err := NewAuthenticatedSessionContext(ctx, region)
 	if err != nil {
 		return nil, err
 	}
 
 	return lambda.NewFromConfig(*sess), nil
+}
+
+// NewLambdaClientContext creates a new Lambda client.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func NewLambdaClientContext(t testing.TestingT, ctx context.Context, region string) *lambda.Client {
+	t.Helper()
+	client, err := NewLambdaClientContextE(t, ctx, region)
+	require.NoError(t, err)
+
+	return client
+}
+
+// NewLambdaClient creates a new Lambda client.
+//
+// Deprecated: Use [NewLambdaClientContext] instead.
+func NewLambdaClient(t testing.TestingT, region string) *lambda.Client {
+	t.Helper()
+	return NewLambdaClientContext(t, context.Background(), region)
+}
+
+// NewLambdaClientE creates a new Lambda client.
+//
+// Deprecated: Use [NewLambdaClientContextE] instead.
+func NewLambdaClientE(t testing.TestingT, region string) (*lambda.Client, error) {
+	return NewLambdaClientContextE(t, context.Background(), region)
 }

@@ -1,6 +1,7 @@
 package oci
 
 import (
+	"context"
 	"os"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -20,18 +21,9 @@ const subnetIDEnvVar = "TF_VAR_subnet_ocid"
 // You can set this environment variable to force Terratest to use a pass phrase.
 const passPhraseEnvVar = "TF_VAR_pass_phrase"
 
-// GetRootCompartmentID gets an OCID of the root compartment (a.k.a. tenancy OCID).
-func GetRootCompartmentID(t testing.TestingT) string {
-	tenancyID, err := GetRootCompartmentIDE(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return tenancyID
-}
-
-// GetRootCompartmentIDE gets an OCID of the root compartment (a.k.a. tenancy OCID).
-func GetRootCompartmentIDE(t testing.TestingT) (string, error) {
+// GetRootCompartmentIDContextE gets an OCID of the root compartment (a.k.a. tenancy OCID).
+// The ctx parameter is accepted for API consistency with other Context functions.
+func GetRootCompartmentIDContextE(t testing.TestingT, ctx context.Context) (string, error) {
 	configProvider := common.DefaultConfigProvider()
 
 	tenancyID, err := configProvider.TenancyOCID()
@@ -40,6 +32,36 @@ func GetRootCompartmentIDE(t testing.TestingT) (string, error) {
 	}
 
 	return tenancyID, nil
+}
+
+// GetRootCompartmentIDContext gets an OCID of the root compartment (a.k.a. tenancy OCID).
+// This function will fail the test if there is an error.
+// The ctx parameter is accepted for API consistency with other Context functions.
+func GetRootCompartmentIDContext(t testing.TestingT, ctx context.Context) string {
+	t.Helper()
+
+	tenancyID, err := GetRootCompartmentIDContextE(t, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return tenancyID
+}
+
+// GetRootCompartmentID gets an OCID of the root compartment (a.k.a. tenancy OCID).
+//
+// Deprecated: Use [GetRootCompartmentIDContext] instead.
+func GetRootCompartmentID(t testing.TestingT) string {
+	t.Helper()
+
+	return GetRootCompartmentIDContext(t, context.Background())
+}
+
+// GetRootCompartmentIDE gets an OCID of the root compartment (a.k.a. tenancy OCID).
+//
+// Deprecated: Use [GetRootCompartmentIDContextE] instead.
+func GetRootCompartmentIDE(t testing.TestingT) (string, error) {
+	return GetRootCompartmentIDContextE(t, context.Background())
 }
 
 // GetCompartmentIDFromEnvVar returns the compartment OCID for use with testing.

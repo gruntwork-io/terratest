@@ -13,34 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
-	"github.com/stretchr/testify/require"
 )
 
 // s3DeleteBatchSize is the maximum number of objects to delete in a single batch.
 const s3DeleteBatchSize = 1000
 
-// FindS3BucketWithTag finds the name of the S3 bucket in the given region with the given tag key=value.
-func FindS3BucketWithTag(t testing.TestingT, awsRegion string, key string, value string) string {
-	bucket, err := FindS3BucketWithTagE(t, awsRegion, key, value)
-	require.NoError(t, err)
-
-	return bucket
-}
-
-// FindS3BucketWithTagE finds the name of the S3 bucket in the given region with the given tag key=value.
-func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, value string) (string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// FindS3BucketWithTagContextE finds the name of the S3 bucket in the given region with the given tag key=value.
+// The ctx parameter supports cancellation and timeouts.
+func FindS3BucketWithTagContextE(t testing.TestingT, ctx context.Context, awsRegion string, key string, value string) (string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return "", err
 	}
 
-	resp, err := s3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
+	resp, err := s3Client.ListBuckets(ctx, &s3.ListBucketsInput{})
 	if err != nil {
 		return "", err
 	}
 
 	for _, bucket := range resp.Buckets {
-		tagResponse, err := s3Client.GetBucketTagging(context.Background(), &s3.GetBucketTaggingInput{Bucket: bucket.Name})
+		tagResponse, err := s3Client.GetBucketTagging(ctx, &s3.GetBucketTaggingInput{Bucket: bucket.Name})
 		if err != nil {
 			if strings.Contains(err.Error(), "NoSuchBucket") {
 				// Occasionally, the ListBuckets call will return a bucket that has been deleted by S3
@@ -69,22 +61,45 @@ func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, valu
 	return "", nil
 }
 
-// GetS3BucketTags fetches the given bucket's tags and returns them as a string map of strings.
-func GetS3BucketTags(t testing.TestingT, awsRegion string, bucket string) map[string]string {
-	tags, err := GetS3BucketTagsE(t, awsRegion, bucket)
-	require.NoError(t, err)
+// FindS3BucketWithTagContext finds the name of the S3 bucket in the given region with the given tag key=value.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FindS3BucketWithTagContext(t testing.TestingT, ctx context.Context, awsRegion string, key string, value string) string {
+	t.Helper()
 
-	return tags
+	bucket, err := FindS3BucketWithTagContextE(t, ctx, awsRegion, key, value)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return bucket
 }
 
-// GetS3BucketTagsE fetches the given bucket's tags and returns them as a string map of strings.
-func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[string]string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// FindS3BucketWithTag finds the name of the S3 bucket in the given region with the given tag key=value.
+//
+// Deprecated: Use [FindS3BucketWithTagContext] instead.
+func FindS3BucketWithTag(t testing.TestingT, awsRegion string, key string, value string) string {
+	t.Helper()
+
+	return FindS3BucketWithTagContext(t, context.Background(), awsRegion, key, value)
+}
+
+// FindS3BucketWithTagE finds the name of the S3 bucket in the given region with the given tag key=value.
+//
+// Deprecated: Use [FindS3BucketWithTagContextE] instead.
+func FindS3BucketWithTagE(t testing.TestingT, awsRegion string, key string, value string) (string, error) {
+	return FindS3BucketWithTagContextE(t, context.Background(), awsRegion, key, value)
+}
+
+// GetS3BucketTagsContextE fetches the given bucket's tags and returns them as a string map of strings.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketTagsContextE(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) (map[string]string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := s3Client.GetBucketTagging(context.Background(), &s3.GetBucketTaggingInput{
+	out, err := s3Client.GetBucketTagging(ctx, &s3.GetBucketTaggingInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
@@ -99,22 +114,45 @@ func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[
 	return tags, nil
 }
 
-// GetS3ObjectContents fetches the contents of the object in the given bucket with the given key and return it as a string.
-func GetS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, key string) string {
-	contents, err := GetS3ObjectContentsE(t, awsRegion, bucket, key)
-	require.NoError(t, err)
+// GetS3BucketTagsContext fetches the given bucket's tags and returns them as a string map of strings.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketTagsContext(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) map[string]string {
+	t.Helper()
 
-	return contents
+	tags, err := GetS3BucketTagsContextE(t, ctx, awsRegion, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return tags
 }
 
-// GetS3ObjectContentsE fetches the contents of the object in the given bucket with the given key and return it as a string.
-func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, key string) (string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// GetS3BucketTags fetches the given bucket's tags and returns them as a string map of strings.
+//
+// Deprecated: Use [GetS3BucketTagsContext] instead.
+func GetS3BucketTags(t testing.TestingT, awsRegion string, bucket string) map[string]string {
+	t.Helper()
+
+	return GetS3BucketTagsContext(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketTagsE fetches the given bucket's tags and returns them as a string map of strings.
+//
+// Deprecated: Use [GetS3BucketTagsContextE] instead.
+func GetS3BucketTagsE(t testing.TestingT, awsRegion string, bucket string) (map[string]string, error) {
+	return GetS3BucketTagsContextE(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3ObjectContentsContextE fetches the contents of the object in the given bucket with the given key and return it as a string.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3ObjectContentsContextE(t testing.TestingT, ctx context.Context, awsRegion string, bucket string, key string) (string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := s3Client.GetObject(context.Background(), &s3.GetObjectInput{
+	res, err := s3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
 	})
@@ -136,15 +174,40 @@ func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, k
 	return contents, nil
 }
 
-// PutS3ObjectContents puts the contents of the object in the given bucket with the given key.
-func PutS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, key string, body io.Reader) {
-	err := PutS3ObjectContentsE(t, awsRegion, bucket, key, body)
-	require.NoError(t, err)
+// GetS3ObjectContentsContext fetches the contents of the object in the given bucket with the given key and return it as a string.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3ObjectContentsContext(t testing.TestingT, ctx context.Context, awsRegion string, bucket string, key string) string {
+	t.Helper()
+
+	contents, err := GetS3ObjectContentsContextE(t, ctx, awsRegion, bucket, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return contents
 }
 
-// PutS3ObjectContentsE puts the contents of the object in the given bucket with the given key.
-func PutS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, key string, body io.Reader) error {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// GetS3ObjectContents fetches the contents of the object in the given bucket with the given key and return it as a string.
+//
+// Deprecated: Use [GetS3ObjectContentsContext] instead.
+func GetS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, key string) string {
+	t.Helper()
+
+	return GetS3ObjectContentsContext(t, context.Background(), awsRegion, bucket, key)
+}
+
+// GetS3ObjectContentsE fetches the contents of the object in the given bucket with the given key and return it as a string.
+//
+// Deprecated: Use [GetS3ObjectContentsContextE] instead.
+func GetS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, key string) (string, error) {
+	return GetS3ObjectContentsContextE(t, context.Background(), awsRegion, bucket, key)
+}
+
+// PutS3ObjectContentsContextE puts the contents of the object in the given bucket with the given key.
+// The ctx parameter supports cancellation and timeouts.
+func PutS3ObjectContentsContextE(t testing.TestingT, ctx context.Context, awsRegion string, bucket string, key string, body io.Reader) error {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return fmt.Errorf("failed to instantiate s3 client: %w", err)
 	}
@@ -155,22 +218,45 @@ func PutS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, k
 		Body:   body,
 	}
 
-	_, err = s3Client.PutObject(context.Background(), params)
+	_, err = s3Client.PutObject(ctx, params)
 
 	return err
 }
 
-// CreateS3Bucket creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
-func CreateS3Bucket(t testing.TestingT, region string, name string) {
-	err := CreateS3BucketE(t, region, name)
-	require.NoError(t, err)
+// PutS3ObjectContentsContext puts the contents of the object in the given bucket with the given key.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func PutS3ObjectContentsContext(t testing.TestingT, ctx context.Context, awsRegion string, bucket string, key string, body io.Reader) {
+	t.Helper()
+
+	err := PutS3ObjectContentsContextE(t, ctx, awsRegion, bucket, key, body)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// CreateS3BucketE creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
-func CreateS3BucketE(t testing.TestingT, region string, name string) error {
+// PutS3ObjectContents puts the contents of the object in the given bucket with the given key.
+//
+// Deprecated: Use [PutS3ObjectContentsContext] instead.
+func PutS3ObjectContents(t testing.TestingT, awsRegion string, bucket string, key string, body io.Reader) {
+	t.Helper()
+
+	PutS3ObjectContentsContext(t, context.Background(), awsRegion, bucket, key, body)
+}
+
+// PutS3ObjectContentsE puts the contents of the object in the given bucket with the given key.
+//
+// Deprecated: Use [PutS3ObjectContentsContextE] instead.
+func PutS3ObjectContentsE(t testing.TestingT, awsRegion string, bucket string, key string, body io.Reader) error {
+	return PutS3ObjectContentsContextE(t, context.Background(), awsRegion, bucket, key, body)
+}
+
+// CreateS3BucketContextE creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
+// The ctx parameter supports cancellation and timeouts.
+func CreateS3BucketContextE(t testing.TestingT, ctx context.Context, region string, name string) error {
 	logger.Default.Logf(t, "Creating bucket %s in %s", name, region)
 
-	s3Client, err := NewS3ClientE(t, region)
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
 	if err != nil {
 		return err
 	}
@@ -186,22 +272,45 @@ func CreateS3BucketE(t testing.TestingT, region string, name string) error {
 		}
 	}
 
-	_, err = s3Client.CreateBucket(context.Background(), params)
+	_, err = s3Client.CreateBucket(ctx, params)
 
 	return err
 }
 
-// PutS3BucketPolicy applies an IAM resource policy to a given S3 bucket to create its bucket policy
-func PutS3BucketPolicy(t testing.TestingT, region string, bucketName string, policyJSONString string) {
-	err := PutS3BucketPolicyE(t, region, bucketName, policyJSONString)
-	require.NoError(t, err)
+// CreateS3BucketContext creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func CreateS3BucketContext(t testing.TestingT, ctx context.Context, region string, name string) {
+	t.Helper()
+
+	err := CreateS3BucketContextE(t, ctx, region, name)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// PutS3BucketPolicyE applies an IAM resource policy to a given S3 bucket to create its bucket policy
-func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, policyJSONString string) error {
+// CreateS3Bucket creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
+//
+// Deprecated: Use [CreateS3BucketContext] instead.
+func CreateS3Bucket(t testing.TestingT, region string, name string) {
+	t.Helper()
+
+	CreateS3BucketContext(t, context.Background(), region, name)
+}
+
+// CreateS3BucketE creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
+//
+// Deprecated: Use [CreateS3BucketContextE] instead.
+func CreateS3BucketE(t testing.TestingT, region string, name string) error {
+	return CreateS3BucketContextE(t, context.Background(), region, name)
+}
+
+// PutS3BucketPolicyContextE applies an IAM resource policy to a given S3 bucket to create its bucket policy.
+// The ctx parameter supports cancellation and timeouts.
+func PutS3BucketPolicyContextE(t testing.TestingT, ctx context.Context, region string, bucketName string, policyJSONString string) error {
 	logger.Default.Logf(t, "Applying bucket policy for bucket %s in %s", bucketName, region)
 
-	s3Client, err := NewS3ClientE(t, region)
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
 	if err != nil {
 		return err
 	}
@@ -211,22 +320,45 @@ func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, po
 		Policy: aws.String(policyJSONString),
 	}
 
-	_, err = s3Client.PutBucketPolicy(context.Background(), input)
+	_, err = s3Client.PutBucketPolicy(ctx, input)
 
 	return err
 }
 
-// PutS3BucketVersioning creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
-func PutS3BucketVersioning(t testing.TestingT, region string, bucketName string) {
-	err := PutS3BucketVersioningE(t, region, bucketName)
-	require.NoError(t, err)
+// PutS3BucketPolicyContext applies an IAM resource policy to a given S3 bucket to create its bucket policy.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func PutS3BucketPolicyContext(t testing.TestingT, ctx context.Context, region string, bucketName string, policyJSONString string) {
+	t.Helper()
+
+	err := PutS3BucketPolicyContextE(t, ctx, region, bucketName, policyJSONString)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// PutS3BucketVersioningE creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
-func PutS3BucketVersioningE(t testing.TestingT, region string, bucketName string) error {
+// PutS3BucketPolicy applies an IAM resource policy to a given S3 bucket to create its bucket policy
+//
+// Deprecated: Use [PutS3BucketPolicyContext] instead.
+func PutS3BucketPolicy(t testing.TestingT, region string, bucketName string, policyJSONString string) {
+	t.Helper()
+
+	PutS3BucketPolicyContext(t, context.Background(), region, bucketName, policyJSONString)
+}
+
+// PutS3BucketPolicyE applies an IAM resource policy to a given S3 bucket to create its bucket policy
+//
+// Deprecated: Use [PutS3BucketPolicyContextE] instead.
+func PutS3BucketPolicyE(t testing.TestingT, region string, bucketName string, policyJSONString string) error {
+	return PutS3BucketPolicyContextE(t, context.Background(), region, bucketName, policyJSONString)
+}
+
+// PutS3BucketVersioningContextE creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
+// The ctx parameter supports cancellation and timeouts.
+func PutS3BucketVersioningContextE(t testing.TestingT, ctx context.Context, region string, bucketName string) error {
 	logger.Default.Logf(t, "Creating bucket versioning configuration for bucket %s in %s", bucketName, region)
 
-	s3Client, err := NewS3ClientE(t, region)
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
 	if err != nil {
 		return err
 	}
@@ -239,22 +371,45 @@ func PutS3BucketVersioningE(t testing.TestingT, region string, bucketName string
 		},
 	}
 
-	_, err = s3Client.PutBucketVersioning(context.Background(), input)
+	_, err = s3Client.PutBucketVersioning(ctx, input)
 
 	return err
 }
 
-// DeleteS3Bucket destroys the S3 bucket in the given region with the given name.
-func DeleteS3Bucket(t testing.TestingT, region string, name string) {
-	err := DeleteS3BucketE(t, region, name)
-	require.NoError(t, err)
+// PutS3BucketVersioningContext creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func PutS3BucketVersioningContext(t testing.TestingT, ctx context.Context, region string, bucketName string) {
+	t.Helper()
+
+	err := PutS3BucketVersioningContextE(t, ctx, region, bucketName)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// DeleteS3BucketE destroys the S3 bucket in the given region with the given name.
-func DeleteS3BucketE(t testing.TestingT, region string, name string) error {
+// PutS3BucketVersioning creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
+//
+// Deprecated: Use [PutS3BucketVersioningContext] instead.
+func PutS3BucketVersioning(t testing.TestingT, region string, bucketName string) {
+	t.Helper()
+
+	PutS3BucketVersioningContext(t, context.Background(), region, bucketName)
+}
+
+// PutS3BucketVersioningE creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
+//
+// Deprecated: Use [PutS3BucketVersioningContextE] instead.
+func PutS3BucketVersioningE(t testing.TestingT, region string, bucketName string) error {
+	return PutS3BucketVersioningContextE(t, context.Background(), region, bucketName)
+}
+
+// DeleteS3BucketContextE destroys the S3 bucket in the given region with the given name.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteS3BucketContextE(t testing.TestingT, ctx context.Context, region string, name string) error {
 	logger.Default.Logf(t, "Deleting bucket %s in %s", region, name)
 
-	s3Client, err := NewS3ClientE(t, region)
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
 	if err != nil {
 		return err
 	}
@@ -263,22 +418,45 @@ func DeleteS3BucketE(t testing.TestingT, region string, name string) error {
 		Bucket: aws.String(name),
 	}
 
-	_, err = s3Client.DeleteBucket(context.Background(), params)
+	_, err = s3Client.DeleteBucket(ctx, params)
 
 	return err
 }
 
-// EmptyS3Bucket removes the contents of an S3 bucket in the given region with the given name.
-func EmptyS3Bucket(t testing.TestingT, region string, name string) {
-	err := EmptyS3BucketE(t, region, name)
-	require.NoError(t, err)
+// DeleteS3BucketContext destroys the S3 bucket in the given region with the given name.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteS3BucketContext(t testing.TestingT, ctx context.Context, region string, name string) {
+	t.Helper()
+
+	err := DeleteS3BucketContextE(t, ctx, region, name)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// EmptyS3BucketE removes the contents of an S3 bucket in the given region with the given name.
-func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
+// DeleteS3Bucket destroys the S3 bucket in the given region with the given name.
+//
+// Deprecated: Use [DeleteS3BucketContext] instead.
+func DeleteS3Bucket(t testing.TestingT, region string, name string) {
+	t.Helper()
+
+	DeleteS3BucketContext(t, context.Background(), region, name)
+}
+
+// DeleteS3BucketE destroys the S3 bucket in the given region with the given name.
+//
+// Deprecated: Use [DeleteS3BucketContextE] instead.
+func DeleteS3BucketE(t testing.TestingT, region string, name string) error {
+	return DeleteS3BucketContextE(t, context.Background(), region, name)
+}
+
+// EmptyS3BucketContextE removes the contents of an S3 bucket in the given region with the given name.
+// The ctx parameter supports cancellation and timeouts.
+func EmptyS3BucketContextE(t testing.TestingT, ctx context.Context, region string, name string) error {
 	logger.Default.Logf(t, "Emptying bucket %s in %s", name, region)
 
-	s3Client, err := NewS3ClientE(t, region)
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
 	if err != nil {
 		return err
 	}
@@ -289,7 +467,7 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 
 	for {
 		// Requesting a batch of objects from s3 bucket
-		bucketObjects, err := s3Client.ListObjectVersions(context.Background(), params)
+		bucketObjects, err := s3Client.ListObjectVersions(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -328,7 +506,7 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 		}
 
 		// Running the Bulk delete job (limit 1000)
-		_, err = s3Client.DeleteObjects(context.Background(), deleteParams)
+		_, err = s3Client.DeleteObjects(ctx, deleteParams)
 		if err != nil {
 			return err
 		}
@@ -347,23 +525,44 @@ func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
 	return err
 }
 
-// GetS3BucketLoggingTarget fetches the given bucket's logging target bucket and returns it as a string
-func GetS3BucketLoggingTarget(t testing.TestingT, awsRegion string, bucket string) string {
-	loggingTarget, err := GetS3BucketLoggingTargetE(t, awsRegion, bucket)
-	require.NoError(t, err)
+// EmptyS3BucketContext removes the contents of an S3 bucket in the given region with the given name.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func EmptyS3BucketContext(t testing.TestingT, ctx context.Context, region string, name string) {
+	t.Helper()
 
-	return loggingTarget
+	err := EmptyS3BucketContextE(t, ctx, region, name)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// GetS3BucketLoggingTargetE fetches the given bucket's logging target bucket and returns it as the following string:
-// `TargetBucket` of the `LoggingEnabled` property for an S3 bucket
-func GetS3BucketLoggingTargetE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// EmptyS3Bucket removes the contents of an S3 bucket in the given region with the given name.
+//
+// Deprecated: Use [EmptyS3BucketContext] instead.
+func EmptyS3Bucket(t testing.TestingT, region string, name string) {
+	t.Helper()
+
+	EmptyS3BucketContext(t, context.Background(), region, name)
+}
+
+// EmptyS3BucketE removes the contents of an S3 bucket in the given region with the given name.
+//
+// Deprecated: Use [EmptyS3BucketContextE] instead.
+func EmptyS3BucketE(t testing.TestingT, region string, name string) error {
+	return EmptyS3BucketContextE(t, context.Background(), region, name)
+}
+
+// GetS3BucketLoggingTargetContextE fetches the given bucket's logging target bucket and returns it as the following string:
+// `TargetBucket` of the `LoggingEnabled` property for an S3 bucket.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketLoggingTargetContextE(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) (string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketLogging(context.Background(), &s3.GetBucketLoggingInput{
+	res, err := s3Client.GetBucketLogging(ctx, &s3.GetBucketLoggingInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
@@ -377,23 +576,47 @@ func GetS3BucketLoggingTargetE(t testing.TestingT, awsRegion string, bucket stri
 	return aws.ToString(res.LoggingEnabled.TargetBucket), nil
 }
 
-// GetS3BucketLoggingTargetPrefix fetches the given bucket's logging object prefix and returns it as a string
-func GetS3BucketLoggingTargetPrefix(t testing.TestingT, awsRegion string, bucket string) string {
-	loggingObjectTargetPrefix, err := GetS3BucketLoggingTargetPrefixE(t, awsRegion, bucket)
-	require.NoError(t, err)
+// GetS3BucketLoggingTargetContext fetches the given bucket's logging target bucket and returns it as a string.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketLoggingTargetContext(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) string {
+	t.Helper()
 
-	return loggingObjectTargetPrefix
+	loggingTarget, err := GetS3BucketLoggingTargetContextE(t, ctx, awsRegion, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return loggingTarget
 }
 
-// GetS3BucketLoggingTargetPrefixE fetches the given bucket's logging object prefix and returns it as the following string:
-// `TargetPrefix` of the `LoggingEnabled` property for an S3 bucket
-func GetS3BucketLoggingTargetPrefixE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// GetS3BucketLoggingTarget fetches the given bucket's logging target bucket and returns it as a string
+//
+// Deprecated: Use [GetS3BucketLoggingTargetContext] instead.
+func GetS3BucketLoggingTarget(t testing.TestingT, awsRegion string, bucket string) string {
+	t.Helper()
+
+	return GetS3BucketLoggingTargetContext(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketLoggingTargetE fetches the given bucket's logging target bucket and returns it as the following string:
+// `TargetBucket` of the `LoggingEnabled` property for an S3 bucket
+//
+// Deprecated: Use [GetS3BucketLoggingTargetContextE] instead.
+func GetS3BucketLoggingTargetE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
+	return GetS3BucketLoggingTargetContextE(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketLoggingTargetPrefixContextE fetches the given bucket's logging object prefix and returns it as the following string:
+// `TargetPrefix` of the `LoggingEnabled` property for an S3 bucket.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketLoggingTargetPrefixContextE(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) (string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketLogging(context.Background(), &s3.GetBucketLoggingInput{
+	res, err := s3Client.GetBucketLogging(ctx, &s3.GetBucketLoggingInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
@@ -407,22 +630,46 @@ func GetS3BucketLoggingTargetPrefixE(t testing.TestingT, awsRegion string, bucke
 	return aws.ToString(res.LoggingEnabled.TargetPrefix), nil
 }
 
-// GetS3BucketVersioning fetches the given bucket's versioning configuration status and returns it as a string
-func GetS3BucketVersioning(t testing.TestingT, awsRegion string, bucket string) string {
-	versioningStatus, err := GetS3BucketVersioningE(t, awsRegion, bucket)
-	require.NoError(t, err)
+// GetS3BucketLoggingTargetPrefixContext fetches the given bucket's logging object prefix and returns it as a string.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketLoggingTargetPrefixContext(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) string {
+	t.Helper()
 
-	return versioningStatus
+	loggingObjectTargetPrefix, err := GetS3BucketLoggingTargetPrefixContextE(t, ctx, awsRegion, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return loggingObjectTargetPrefix
 }
 
-// GetS3BucketVersioningE fetches the given bucket's versioning configuration status and returns it as a string
-func GetS3BucketVersioningE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// GetS3BucketLoggingTargetPrefix fetches the given bucket's logging object prefix and returns it as a string
+//
+// Deprecated: Use [GetS3BucketLoggingTargetPrefixContext] instead.
+func GetS3BucketLoggingTargetPrefix(t testing.TestingT, awsRegion string, bucket string) string {
+	t.Helper()
+
+	return GetS3BucketLoggingTargetPrefixContext(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketLoggingTargetPrefixE fetches the given bucket's logging object prefix and returns it as the following string:
+// `TargetPrefix` of the `LoggingEnabled` property for an S3 bucket
+//
+// Deprecated: Use [GetS3BucketLoggingTargetPrefixContextE] instead.
+func GetS3BucketLoggingTargetPrefixE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
+	return GetS3BucketLoggingTargetPrefixContextE(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketVersioningContextE fetches the given bucket's versioning configuration status and returns it as a string.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketVersioningContextE(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) (string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketVersioning(context.Background(), &s3.GetBucketVersioningInput{
+	res, err := s3Client.GetBucketVersioning(ctx, &s3.GetBucketVersioningInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
@@ -432,22 +679,45 @@ func GetS3BucketVersioningE(t testing.TestingT, awsRegion string, bucket string)
 	return string(res.Status), nil
 }
 
-// GetS3BucketPolicy fetches the given bucket's resource policy and returns it as a string
-func GetS3BucketPolicy(t testing.TestingT, awsRegion string, bucket string) string {
-	bucketPolicy, err := GetS3BucketPolicyE(t, awsRegion, bucket)
-	require.NoError(t, err)
+// GetS3BucketVersioningContext fetches the given bucket's versioning configuration status and returns it as a string.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketVersioningContext(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) string {
+	t.Helper()
 
-	return bucketPolicy
+	versioningStatus, err := GetS3BucketVersioningContextE(t, ctx, awsRegion, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return versioningStatus
 }
 
-// GetS3BucketPolicyE fetches the given bucket's resource policy and returns it as a string
-func GetS3BucketPolicyE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// GetS3BucketVersioning fetches the given bucket's versioning configuration status and returns it as a string
+//
+// Deprecated: Use [GetS3BucketVersioningContext] instead.
+func GetS3BucketVersioning(t testing.TestingT, awsRegion string, bucket string) string {
+	t.Helper()
+
+	return GetS3BucketVersioningContext(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketVersioningE fetches the given bucket's versioning configuration status and returns it as a string
+//
+// Deprecated: Use [GetS3BucketVersioningContextE] instead.
+func GetS3BucketVersioningE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
+	return GetS3BucketVersioningContextE(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketPolicyContextE fetches the given bucket's resource policy and returns it as a string.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketPolicyContextE(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) (string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := s3Client.GetBucketPolicy(context.Background(), &s3.GetBucketPolicyInput{
+	res, err := s3Client.GetBucketPolicy(ctx, &s3.GetBucketPolicyInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
@@ -457,20 +727,45 @@ func GetS3BucketPolicyE(t testing.TestingT, awsRegion string, bucket string) (st
 	return aws.ToString(res.Policy), nil
 }
 
-func GetS3BucketOwnershipControls(t testing.TestingT, awsRegion, bucket string) []string {
-	rules, err := GetS3BucketOwnershipControlsE(t, awsRegion, bucket)
-	require.NoError(t, err)
+// GetS3BucketPolicyContext fetches the given bucket's resource policy and returns it as a string.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketPolicyContext(t testing.TestingT, ctx context.Context, awsRegion string, bucket string) string {
+	t.Helper()
 
-	return rules
+	bucketPolicy, err := GetS3BucketPolicyContextE(t, ctx, awsRegion, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return bucketPolicy
 }
 
-func GetS3BucketOwnershipControlsE(t testing.TestingT, awsRegion, bucket string) ([]string, error) {
-	s3Client, err := NewS3ClientE(t, awsRegion)
+// GetS3BucketPolicy fetches the given bucket's resource policy and returns it as a string
+//
+// Deprecated: Use [GetS3BucketPolicyContext] instead.
+func GetS3BucketPolicy(t testing.TestingT, awsRegion string, bucket string) string {
+	t.Helper()
+
+	return GetS3BucketPolicyContext(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketPolicyE fetches the given bucket's resource policy and returns it as a string
+//
+// Deprecated: Use [GetS3BucketPolicyContextE] instead.
+func GetS3BucketPolicyE(t testing.TestingT, awsRegion string, bucket string) (string, error) {
+	return GetS3BucketPolicyContextE(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketOwnershipControlsContextE fetches the given bucket's ownership controls and returns them as a slice of strings.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketOwnershipControlsContextE(t testing.TestingT, ctx context.Context, awsRegion, bucket string) ([]string, error) {
+	s3Client, err := NewS3ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return nil, err
 	}
 
-	out, err := s3Client.GetBucketOwnershipControls(context.Background(), &s3.GetBucketOwnershipControlsInput{
+	out, err := s3Client.GetBucketOwnershipControls(ctx, &s3.GetBucketOwnershipControlsInput{
 		Bucket: &bucket,
 	})
 	if err != nil {
@@ -485,15 +780,40 @@ func GetS3BucketOwnershipControlsE(t testing.TestingT, awsRegion, bucket string)
 	return rules, nil
 }
 
-// AssertS3BucketExists checks if the given S3 bucket exists in the given region and fail the test if it does not.
-func AssertS3BucketExists(t testing.TestingT, region string, name string) {
-	err := AssertS3BucketExistsE(t, region, name)
-	require.NoError(t, err)
+// GetS3BucketOwnershipControlsContext fetches the given bucket's ownership controls and returns them as a slice of strings.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetS3BucketOwnershipControlsContext(t testing.TestingT, ctx context.Context, awsRegion, bucket string) []string {
+	t.Helper()
+
+	rules, err := GetS3BucketOwnershipControlsContextE(t, ctx, awsRegion, bucket)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return rules
 }
 
-// AssertS3BucketExistsE checks if the given S3 bucket exists in the given region and return an error if it does not.
-func AssertS3BucketExistsE(t testing.TestingT, region string, name string) error {
-	s3Client, err := NewS3ClientE(t, region)
+// GetS3BucketOwnershipControls fetches the given bucket's ownership controls and returns them as a slice of strings.
+//
+// Deprecated: Use [GetS3BucketOwnershipControlsContext] instead.
+func GetS3BucketOwnershipControls(t testing.TestingT, awsRegion, bucket string) []string {
+	t.Helper()
+
+	return GetS3BucketOwnershipControlsContext(t, context.Background(), awsRegion, bucket)
+}
+
+// GetS3BucketOwnershipControlsE fetches the given bucket's ownership controls and returns them as a slice of strings.
+//
+// Deprecated: Use [GetS3BucketOwnershipControlsContextE] instead.
+func GetS3BucketOwnershipControlsE(t testing.TestingT, awsRegion, bucket string) ([]string, error) {
+	return GetS3BucketOwnershipControlsContextE(t, context.Background(), awsRegion, bucket)
+}
+
+// AssertS3BucketExistsContextE checks if the given S3 bucket exists in the given region and return an error if it does not.
+// The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketExistsContextE(t testing.TestingT, ctx context.Context, region string, name string) error {
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
 	if err != nil {
 		return err
 	}
@@ -502,20 +822,43 @@ func AssertS3BucketExistsE(t testing.TestingT, region string, name string) error
 		Bucket: aws.String(name),
 	}
 
-	_, err = s3Client.HeadBucket(context.Background(), params)
+	_, err = s3Client.HeadBucket(ctx, params)
 
 	return err
 }
 
-// AssertS3BucketVersioningExists checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
-func AssertS3BucketVersioningExists(t testing.TestingT, region string, bucketName string) {
-	err := AssertS3BucketVersioningExistsE(t, region, bucketName)
-	require.NoError(t, err)
+// AssertS3BucketExistsContext checks if the given S3 bucket exists in the given region and fail the test if it does not.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketExistsContext(t testing.TestingT, ctx context.Context, region string, name string) {
+	t.Helper()
+
+	err := AssertS3BucketExistsContextE(t, ctx, region, name)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// AssertS3BucketVersioningExistsE checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
-func AssertS3BucketVersioningExistsE(t testing.TestingT, region string, bucketName string) error {
-	status, err := GetS3BucketVersioningE(t, region, bucketName)
+// AssertS3BucketExists checks if the given S3 bucket exists in the given region and fail the test if it does not.
+//
+// Deprecated: Use [AssertS3BucketExistsContext] instead.
+func AssertS3BucketExists(t testing.TestingT, region string, name string) {
+	t.Helper()
+
+	AssertS3BucketExistsContext(t, context.Background(), region, name)
+}
+
+// AssertS3BucketExistsE checks if the given S3 bucket exists in the given region and return an error if it does not.
+//
+// Deprecated: Use [AssertS3BucketExistsContextE] instead.
+func AssertS3BucketExistsE(t testing.TestingT, region string, name string) error {
+	return AssertS3BucketExistsContextE(t, context.Background(), region, name)
+}
+
+// AssertS3BucketVersioningExistsContextE checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
+// The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketVersioningExistsContextE(t testing.TestingT, ctx context.Context, region string, bucketName string) error {
+	status, err := GetS3BucketVersioningContextE(t, ctx, region, bucketName)
 	if err != nil {
 		return err
 	}
@@ -527,15 +870,38 @@ func AssertS3BucketVersioningExistsE(t testing.TestingT, region string, bucketNa
 	return NewBucketVersioningNotEnabledError(bucketName, region, status)
 }
 
-// AssertS3BucketPolicyExists checks if the given S3 bucket has a resource policy attached and returns an error if it does not
-func AssertS3BucketPolicyExists(t testing.TestingT, region string, bucketName string) {
-	err := AssertS3BucketPolicyExistsE(t, region, bucketName)
-	require.NoError(t, err)
+// AssertS3BucketVersioningExistsContext checks if the given S3 bucket has a versioning configuration enabled and fails the test if it does not.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketVersioningExistsContext(t testing.TestingT, ctx context.Context, region string, bucketName string) {
+	t.Helper()
+
+	err := AssertS3BucketVersioningExistsContextE(t, ctx, region, bucketName)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// AssertS3BucketPolicyExistsE checks if the given S3 bucket has a resource policy attached and returns an error if it does not
-func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName string) error {
-	policy, err := GetS3BucketPolicyE(t, region, bucketName)
+// AssertS3BucketVersioningExists checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
+//
+// Deprecated: Use [AssertS3BucketVersioningExistsContext] instead.
+func AssertS3BucketVersioningExists(t testing.TestingT, region string, bucketName string) {
+	t.Helper()
+
+	AssertS3BucketVersioningExistsContext(t, context.Background(), region, bucketName)
+}
+
+// AssertS3BucketVersioningExistsE checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
+//
+// Deprecated: Use [AssertS3BucketVersioningExistsContextE] instead.
+func AssertS3BucketVersioningExistsE(t testing.TestingT, region string, bucketName string) error {
+	return AssertS3BucketVersioningExistsContextE(t, context.Background(), region, bucketName)
+}
+
+// AssertS3BucketPolicyExistsContextE checks if the given S3 bucket has a resource policy attached and returns an error if it does not.
+// The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketPolicyExistsContextE(t testing.TestingT, ctx context.Context, region string, bucketName string) error {
+	policy, err := GetS3BucketPolicyContextE(t, ctx, region, bucketName)
 	if err != nil {
 		return err
 	}
@@ -547,17 +913,38 @@ func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName s
 	return nil
 }
 
-// NewS3Client creates an S3 client.
-func NewS3Client(t testing.TestingT, region string) *s3.Client {
-	client, err := NewS3ClientE(t, region)
-	require.NoError(t, err)
+// AssertS3BucketPolicyExistsContext checks if the given S3 bucket has a resource policy attached and fails the test if it does not.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketPolicyExistsContext(t testing.TestingT, ctx context.Context, region string, bucketName string) {
+	t.Helper()
 
-	return client
+	err := AssertS3BucketPolicyExistsContextE(t, ctx, region, bucketName)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
-// NewS3ClientE creates an S3 client.
-func NewS3ClientE(t testing.TestingT, region string) (*s3.Client, error) {
-	sess, err := NewAuthenticatedSession(region)
+// AssertS3BucketPolicyExists checks if the given S3 bucket has a resource policy attached and returns an error if it does not
+//
+// Deprecated: Use [AssertS3BucketPolicyExistsContext] instead.
+func AssertS3BucketPolicyExists(t testing.TestingT, region string, bucketName string) {
+	t.Helper()
+
+	AssertS3BucketPolicyExistsContext(t, context.Background(), region, bucketName)
+}
+
+// AssertS3BucketPolicyExistsE checks if the given S3 bucket has a resource policy attached and returns an error if it does not
+//
+// Deprecated: Use [AssertS3BucketPolicyExistsContextE] instead.
+func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName string) error {
+	return AssertS3BucketPolicyExistsContextE(t, context.Background(), region, bucketName)
+}
+
+// NewS3ClientContextE creates an S3 client.
+// The ctx parameter supports cancellation and timeouts.
+func NewS3ClientContextE(t testing.TestingT, ctx context.Context, region string) (*s3.Client, error) {
+	sess, err := NewAuthenticatedSessionContext(ctx, region)
 	if err != nil {
 		return nil, err
 	}
@@ -565,22 +952,75 @@ func NewS3ClientE(t testing.TestingT, region string) (*s3.Client, error) {
 	return s3.NewFromConfig(*sess), nil
 }
 
-// NewS3Uploader creates an S3 Uploader.
-func NewS3Uploader(t testing.TestingT, region string) *manager.Uploader {
-	uploader, err := NewS3UploaderE(t, region)
-	require.NoError(t, err)
+// NewS3ClientContext creates an S3 client.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func NewS3ClientContext(t testing.TestingT, ctx context.Context, region string) *s3.Client {
+	t.Helper()
 
-	return uploader
+	client, err := NewS3ClientContextE(t, ctx, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return client
 }
 
-// NewS3UploaderE creates an S3 Uploader.
-func NewS3UploaderE(t testing.TestingT, region string) (*manager.Uploader, error) {
-	sess, err := NewAuthenticatedSession(region)
+// NewS3Client creates an S3 client.
+//
+// Deprecated: Use [NewS3ClientContext] instead.
+func NewS3Client(t testing.TestingT, region string) *s3.Client {
+	t.Helper()
+
+	return NewS3ClientContext(t, context.Background(), region)
+}
+
+// NewS3ClientE creates an S3 client.
+//
+// Deprecated: Use [NewS3ClientContextE] instead.
+func NewS3ClientE(t testing.TestingT, region string) (*s3.Client, error) {
+	return NewS3ClientContextE(t, context.Background(), region)
+}
+
+// NewS3UploaderContextE creates an S3 Uploader.
+// The ctx parameter supports cancellation and timeouts.
+func NewS3UploaderContextE(t testing.TestingT, ctx context.Context, region string) (*manager.Uploader, error) {
+	sess, err := NewAuthenticatedSessionContext(ctx, region)
 	if err != nil {
 		return nil, err
 	}
 
 	return manager.NewUploader(s3.NewFromConfig(*sess)), nil
+}
+
+// NewS3UploaderContext creates an S3 Uploader.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func NewS3UploaderContext(t testing.TestingT, ctx context.Context, region string) *manager.Uploader {
+	t.Helper()
+
+	uploader, err := NewS3UploaderContextE(t, ctx, region)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return uploader
+}
+
+// NewS3Uploader creates an S3 Uploader.
+//
+// Deprecated: Use [NewS3UploaderContext] instead.
+func NewS3Uploader(t testing.TestingT, region string) *manager.Uploader {
+	t.Helper()
+
+	return NewS3UploaderContext(t, context.Background(), region)
+}
+
+// NewS3UploaderE creates an S3 Uploader.
+//
+// Deprecated: Use [NewS3UploaderContextE] instead.
+func NewS3UploaderE(t testing.TestingT, region string) (*manager.Uploader, error) {
+	return NewS3UploaderContextE(t, context.Background(), region)
 }
 
 // S3AccessLoggingNotEnabledErr is a custom error that occurs when acess logging hasn't been enabled on the S3 Bucket

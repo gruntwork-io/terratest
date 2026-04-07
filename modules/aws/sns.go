@@ -9,21 +9,12 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-// CreateSnsTopic creates an SNS Topic and return the ARN.
-func CreateSnsTopic(t testing.TestingT, region string, snsTopicName string) string {
-	out, err := CreateSnsTopicE(t, region, snsTopicName)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return out
-}
-
-// CreateSnsTopicE creates an SNS Topic and return the ARN.
-func CreateSnsTopicE(t testing.TestingT, region string, snsTopicName string) (string, error) {
+// CreateSnsTopicContextE creates an SNS Topic and return the ARN.
+// The ctx parameter supports cancellation and timeouts.
+func CreateSnsTopicContextE(t testing.TestingT, ctx context.Context, region string, snsTopicName string) (string, error) {
 	logger.Default.Logf(t, "Creating SNS topic %s in %s", snsTopicName, region)
 
-	snsClient, err := NewSnsClientE(t, region)
+	snsClient, err := NewSnsClientContextE(t, ctx, region)
 	if err != nil {
 		return "", err
 	}
@@ -32,7 +23,7 @@ func CreateSnsTopicE(t testing.TestingT, region string, snsTopicName string) (st
 		Name: &snsTopicName,
 	}
 
-	output, err := snsClient.CreateTopic(context.Background(), createTopicInput)
+	output, err := snsClient.CreateTopic(ctx, createTopicInput)
 	if err != nil {
 		return "", err
 	}
@@ -40,19 +31,42 @@ func CreateSnsTopicE(t testing.TestingT, region string, snsTopicName string) (st
 	return aws.ToString(output.TopicArn), err
 }
 
-// DeleteSNSTopic deletes an SNS Topic.
-func DeleteSNSTopic(t testing.TestingT, region string, snsTopicArn string) {
-	err := DeleteSNSTopicE(t, region, snsTopicArn)
+// CreateSnsTopicContext creates an SNS Topic and return the ARN.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func CreateSnsTopicContext(t testing.TestingT, ctx context.Context, region string, snsTopicName string) string {
+	t.Helper()
+
+	out, err := CreateSnsTopicContextE(t, ctx, region, snsTopicName)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	return out
 }
 
-// DeleteSNSTopicE deletes an SNS Topic.
-func DeleteSNSTopicE(t testing.TestingT, region string, snsTopicArn string) error {
+// CreateSnsTopic creates an SNS Topic and return the ARN.
+//
+// Deprecated: Use [CreateSnsTopicContext] instead.
+func CreateSnsTopic(t testing.TestingT, region string, snsTopicName string) string {
+	t.Helper()
+
+	return CreateSnsTopicContext(t, context.Background(), region, snsTopicName)
+}
+
+// CreateSnsTopicE creates an SNS Topic and return the ARN.
+//
+// Deprecated: Use [CreateSnsTopicContextE] instead.
+func CreateSnsTopicE(t testing.TestingT, region string, snsTopicName string) (string, error) {
+	return CreateSnsTopicContextE(t, context.Background(), region, snsTopicName)
+}
+
+// DeleteSNSTopicContextE deletes an SNS Topic.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteSNSTopicContextE(t testing.TestingT, ctx context.Context, region string, snsTopicArn string) error {
 	logger.Default.Logf(t, "Deleting SNS topic %s in %s", snsTopicArn, region)
 
-	snsClient, err := NewSnsClientE(t, region)
+	snsClient, err := NewSnsClientContextE(t, ctx, region)
 	if err != nil {
 		return err
 	}
@@ -61,14 +75,57 @@ func DeleteSNSTopicE(t testing.TestingT, region string, snsTopicArn string) erro
 		TopicArn: aws.String(snsTopicArn),
 	}
 
-	_, err = snsClient.DeleteTopic(context.Background(), deleteTopicInput)
+	_, err = snsClient.DeleteTopic(ctx, deleteTopicInput)
 
 	return err
 }
 
-// NewSnsClient creates a new SNS client.
-func NewSnsClient(t testing.TestingT, region string) *sns.Client {
-	client, err := NewSnsClientE(t, region)
+// DeleteSNSTopicContext deletes an SNS Topic.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteSNSTopicContext(t testing.TestingT, ctx context.Context, region string, snsTopicArn string) {
+	t.Helper()
+
+	err := DeleteSNSTopicContextE(t, ctx, region, snsTopicArn)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// DeleteSNSTopic deletes an SNS Topic.
+//
+// Deprecated: Use [DeleteSNSTopicContext] instead.
+func DeleteSNSTopic(t testing.TestingT, region string, snsTopicArn string) {
+	t.Helper()
+
+	DeleteSNSTopicContext(t, context.Background(), region, snsTopicArn)
+}
+
+// DeleteSNSTopicE deletes an SNS Topic.
+//
+// Deprecated: Use [DeleteSNSTopicContextE] instead.
+func DeleteSNSTopicE(t testing.TestingT, region string, snsTopicArn string) error {
+	return DeleteSNSTopicContextE(t, context.Background(), region, snsTopicArn)
+}
+
+// NewSnsClientContextE creates a new SNS client.
+// The ctx parameter supports cancellation and timeouts.
+func NewSnsClientContextE(t testing.TestingT, ctx context.Context, region string) (*sns.Client, error) {
+	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	if err != nil {
+		return nil, err
+	}
+
+	return sns.NewFromConfig(*sess), nil
+}
+
+// NewSnsClientContext creates a new SNS client.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func NewSnsClientContext(t testing.TestingT, ctx context.Context, region string) *sns.Client {
+	t.Helper()
+
+	client, err := NewSnsClientContextE(t, ctx, region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,12 +133,18 @@ func NewSnsClient(t testing.TestingT, region string) *sns.Client {
 	return client
 }
 
-// NewSnsClientE creates a new SNS client.
-func NewSnsClientE(t testing.TestingT, region string) (*sns.Client, error) {
-	sess, err := NewAuthenticatedSession(region)
-	if err != nil {
-		return nil, err
-	}
+// NewSnsClient creates a new SNS client.
+//
+// Deprecated: Use [NewSnsClientContext] instead.
+func NewSnsClient(t testing.TestingT, region string) *sns.Client {
+	t.Helper()
 
-	return sns.NewFromConfig(*sess), nil
+	return NewSnsClientContext(t, context.Background(), region)
+}
+
+// NewSnsClientE creates a new SNS client.
+//
+// Deprecated: Use [NewSnsClientContextE] instead.
+func NewSnsClientE(t testing.TestingT, region string) (*sns.Client, error) {
+	return NewSnsClientContextE(t, context.Background(), region)
 }
