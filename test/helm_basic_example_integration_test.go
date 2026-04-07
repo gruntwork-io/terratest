@@ -37,7 +37,7 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 	// To ensure we can reuse the resource config on the same cluster to test different scenarios, we setup a unique
 	// namespace for the resources for this test.
 	// Note that namespaces must be lowercase.
-	namespaceName := fmt.Sprintf("helm-basic-example-%s", strings.ToLower(random.UniqueId()))
+	namespaceName := fmt.Sprintf("helm-basic-example-%s", strings.ToLower(random.UniqueID()))
 
 	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
 	// - HOME/.kube/config for the kubectl config file
@@ -67,7 +67,7 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 	// `helm delete RELEASE_NAME` to clean up any resources that were created.
 	releaseName := fmt.Sprintf(
 		"nginx-service-%s",
-		strings.ToLower(random.UniqueId()),
+		strings.ToLower(random.UniqueID()),
 	)
 	defer helm.Delete(t, options, releaseName, true)
 

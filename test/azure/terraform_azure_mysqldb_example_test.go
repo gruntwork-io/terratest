@@ -21,7 +21,7 @@ import (
 func TestTerraformAzureMySQLDBExample(t *testing.T) {
 	t.Parallel()
 
-	uniquePostfix := strings.ToLower(random.UniqueId())
+	uniquePostfix := strings.ToLower(random.UniqueID())
 	expectedServerSkuName := "GP_Gen5_2"
 	expectedServerStoragemMb := "5120"
 	expectedDatabaseCharSet := "utf8"

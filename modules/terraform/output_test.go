@@ -341,7 +341,7 @@ func TestOutputJson(t *testing.T) {
   }
 }`
 
-	str := terraform.OutputJson(t, options, "")
+	str := terraform.OutputJSON(t, options, "")
 	require.Equal(t, expected, str, "JSON %q should match %q", expected, str)
 }
 

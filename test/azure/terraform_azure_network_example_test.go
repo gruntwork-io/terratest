@@ -22,7 +22,7 @@ func TestTerraformAzureNetworkExample(t *testing.T) {
 
 	// Create values for Terraform
 	subscriptionID := ""               // subscriptionID is overridden by the environment variable "ARM_SUBSCRIPTION_ID"
-	uniquePostfix := random.UniqueId() // "resource" - switch for terratest or manual terraform deployment
+	uniquePostfix := random.UniqueID() // "resource" - switch for terratest or manual terraform deployment
 	expectedLocation := "eastus2"
 	expectedSubnetRange := "10.0.20.0/24"
 	expectedPrivateIP := "10.0.20.5"
@@ -126,7 +126,7 @@ func TestTerraformAzureNetworkExample(t *testing.T) {
 		assert.False(t, actualDnsNotAvailable)
 
 		// Check new randomized DNS is available
-		newDNSLabel := fmt.Sprintf("dns-terratest-%s", strings.ToLower(random.UniqueId()))
+		newDNSLabel := fmt.Sprintf("dns-terratest-%s", strings.ToLower(random.UniqueID()))
 		actualDnsAvailable := azure.CheckPublicDNSNameAvailability(t, expectedLocation, newDNSLabel, subscriptionID)
 		assert.True(t, actualDnsAvailable)
 	})

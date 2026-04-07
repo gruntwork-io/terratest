@@ -20,7 +20,7 @@ import (
 
 func TestTerraformAzureActionGroupExample(t *testing.T) {
 	t.Parallel()
-	_random := strings.ToLower(random.UniqueId())
+	_random := strings.ToLower(random.UniqueID())
 
 	expectedResourceGroupName := fmt.Sprintf("tmp-rg-%s", _random)
 	expectedAppName := fmt.Sprintf("tmp-asp-%s", _random)

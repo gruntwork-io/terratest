@@ -1,6 +1,7 @@
 package ssh_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,7 +16,7 @@ func TestSshAgentWithKeyPair(t *testing.T) {
 	t.Parallel()
 
 	keyPair := ssh.GenerateRSAKeyPair(t, 2048)
-	sshAgent := ssh.SshAgentWithKeyPair(t, keyPair)
+	sshAgent := ssh.SSHAgentWithKeyPair(t, context.Background(), keyPair)
 
 	// Ensure that socket directory is set in environment, and it exists.
 	sockFile := filepath.Join(sshAgent.SocketDir(), "ssh_auth.sock")
@@ -39,7 +40,7 @@ func TestSshAgentWithKeyPairs(t *testing.T) {
 
 	keyPair := ssh.GenerateRSAKeyPair(t, 2048)
 	keyPair2 := ssh.GenerateRSAKeyPair(t, 2048)
-	sshAgent := ssh.SshAgentWithKeyPairs(t, []*ssh.KeyPair{keyPair, keyPair2})
+	sshAgent := ssh.SSHAgentWithKeyPairs(t, context.Background(), []*ssh.KeyPair{keyPair, keyPair2})
 
 	defer sshAgent.Stop()
 
@@ -55,8 +56,8 @@ func TestMultipleSshAgents(t *testing.T) {
 	keyPair2 := ssh.GenerateRSAKeyPair(t, 2048)
 
 	// Start a couple of agents.
-	sshAgent := ssh.SshAgentWithKeyPair(t, keyPair)
-	sshAgent2 := ssh.SshAgentWithKeyPair(t, keyPair2)
+	sshAgent := ssh.SSHAgentWithKeyPair(t, context.Background(), keyPair)
+	sshAgent2 := ssh.SSHAgentWithKeyPair(t, context.Background(), keyPair2)
 
 	defer sshAgent.Stop()
 	defer sshAgent2.Stop()

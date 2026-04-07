@@ -21,7 +21,7 @@ func TestTerraformAzureAvailabilitySetExample(t *testing.T) {
 
 	// subscriptionID is overridden by the environment variable "ARM_SUBSCRIPTION_ID"
 	subscriptionID := ""
-	uniquePostfix := random.UniqueId()
+	uniquePostfix := random.UniqueID()
 	expectedAvsName := fmt.Sprintf("avs-%s", uniquePostfix)
 	expectedVMName := fmt.Sprintf("vm-%s", uniquePostfix)
 	var expectedAvsFaultDomainCount int32 = 3

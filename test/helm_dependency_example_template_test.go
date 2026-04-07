@@ -44,7 +44,7 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication or helm home.
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
-	namespaceName := "medieval-" + strings.ToLower(random.UniqueId())
+	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
 	logger.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:

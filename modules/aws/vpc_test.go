@@ -33,7 +33,7 @@ func TestGetVpcById(t *testing.T) {
 	vpc := createVpc(t, region)
 	defer deleteVpc(t, *vpc.VpcId, region)
 
-	vpcTest := terraaws.GetVpcById(t, *vpc.VpcId, region)
+	vpcTest := terraaws.GetVpcByID(t, *vpc.VpcId, region)
 	assert.Equal(t, *vpc.VpcId, vpcTest.Id)
 	assert.NotEmpty(t, vpcTest.CidrAssociations)
 }
@@ -131,7 +131,7 @@ func TestGetTagsForVpc(t *testing.T) {
 	testTags["TagKey2"] = "TagValue2"
 
 	terraaws.AddTagsToResource(t, region, *vpc.VpcId, testTags)
-	vpcWithTags := terraaws.GetVpcById(t, *vpc.VpcId, region)
+	vpcWithTags := terraaws.GetVpcByID(t, *vpc.VpcId, region)
 	tags := terraaws.GetTagsForVpc(t, *vpc.VpcId, region)
 
 	assert.Len(t, vpcWithTags.Tags, len(testTags))

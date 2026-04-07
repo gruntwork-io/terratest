@@ -19,7 +19,7 @@ import (
 func TestTerraformAzureSynapseExample(t *testing.T) {
 	t.Parallel()
 
-	uniquePostfix := strings.ToLower(random.UniqueId())
+	uniquePostfix := strings.ToLower(random.UniqueID())
 	expectedSynapseSqlUser := "sqladminuser"
 	expectedSynapseProvisioningState := "Succeeded"
 	expectedLocation := "westus2"

@@ -22,7 +22,7 @@ func TestTerraformAzureVmExample(t *testing.T) {
 	t.Parallel()
 
 	subscriptionID := ""
-	uniquePostfix := random.UniqueId()
+	uniquePostfix := random.UniqueID()
 
 	// Configure Terraform setting up a path to Terraform code.
 	terraformOptions := &terraform.Options{
@@ -101,7 +101,7 @@ func testMultipleVMs(t *testing.T, terraformOptions *terraform.Options, subscrip
 	assert.Equal(t, expectedVMSize, thisVM.HardwareProfile.VMSize)
 
 	// Check for the VM negative test.
-	fakeVM := fmt.Sprintf("vm-%s", random.UniqueId())
+	fakeVM := fmt.Sprintf("vm-%s", random.UniqueID())
 	assert.Nil(t, vmsByRef[fakeVM].VMID)
 }
 
