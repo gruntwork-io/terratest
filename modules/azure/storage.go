@@ -434,47 +434,6 @@ func GetStorageFileShareE(fileShareName, storageAccountName, resourceGroupName, 
 	return GetStorageFileShareContextE(context.Background(), fileShareName, storageAccountName, resourceGroupName, subscriptionID)
 }
 
-// GetStorageAccountClientE creates a storage account client.
-// TODO: remove in next version
-func GetStorageAccountClientE(subscriptionID string) (*storage.AccountsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	storageAccountClient := storage.NewAccountsClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	storageAccountClient.Authorizer = *authorizer
-
-	return &storageAccountClient, nil
-}
-
-// GetStorageBlobContainerClientE creates a storage container client.
-// TODO: remove in next version
-func GetStorageBlobContainerClientE(subscriptionID string) (*storage.BlobContainersClient, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	blobContainerClient := storage.NewBlobContainersClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	blobContainerClient.Authorizer = *authorizer
-
-	return &blobContainerClient, nil
-}
-
 // GetStorageURISuffixE returns the proper storage URI suffix for the configured Azure environment.
 func GetStorageURISuffixE() (string, error) {
 	envName := "AzurePublicCloud"

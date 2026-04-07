@@ -75,26 +75,6 @@ func GetResourceGroupE(resourceGroupName, subscriptionID string) (bool, error) {
 	return GetResourceGroupContextE(context.Background(), resourceGroupName, subscriptionID)
 }
 
-// GetResourceGroupClientE gets a resource group client in a subscription.
-// TODO: remove in next version
-func GetResourceGroupClientE(subscriptionID string) (*resources.GroupsClient, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	resourceGroupClient := resources.NewGroupsClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	resourceGroupClient.Authorizer = *authorizer
-
-	return &resourceGroupClient, nil
-}
-
 // GetAResourceGroupContext returns a resource group within a subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
