@@ -47,6 +47,8 @@ func FindS3BucketWithTagContextE(t testing.TestingT, ctx context.Context, awsReg
 				!strings.Contains(err.Error(), "NoSuchTagSet") {
 				return "", err
 			}
+
+			continue
 		}
 
 		for _, tag := range tagResponse.TagSet {

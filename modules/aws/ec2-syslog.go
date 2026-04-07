@@ -36,6 +36,10 @@ func GetSyslogForInstanceContextE(t testing.TestingT, ctx context.Context, insta
 	}
 
 	syslogB64, err := retry.DoWithRetryE(t, description, maxRetries, syslogRetryInterval, func() (string, error) {
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+
 		out, err := client.GetConsoleOutput(ctx, &input)
 		if err != nil {
 			return "", err

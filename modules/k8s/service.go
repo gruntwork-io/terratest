@@ -17,27 +17,17 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-// ListServices will look for services in the given namespace that match the given filters and return them. This will
-// fail the test if there is an error.
+// ListServicesContextE looks up services in the given namespace that match the given filters and return them.
+// The ctx parameter supports cancellation and timeouts.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
-func ListServices(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []corev1.Service {
-	service, err := ListServicesE(t, options, filters)
-	require.NoError(t, err)
-
-	return service
-}
-
-// ListServicesE will look for services in the given namespace that match the given filters and return them.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListServicesE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Service, error) {
+func ListServicesContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Service, error) {
 	clientset, err := GetKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := clientset.CoreV1().Services(options.Namespace).List(context.Background(), filters)
+	resp, err := clientset.CoreV1().Services(options.Namespace).List(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -45,40 +35,100 @@ func ListServicesE(t testing.TestingT, options *KubectlOptions, filters metav1.L
 	return resp.Items, nil
 }
 
-// GetService returns a Kubernetes service resource in the provided namespace with the given name. This will
-// fail the test if there is an error.
-func GetService(t testing.TestingT, options *KubectlOptions, serviceName string) *corev1.Service {
-	service, err := GetServiceE(t, options, serviceName)
+// ListServicesContext looks up services in the given namespace that match the given filters and return them.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListServicesContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, filters metav1.ListOptions) []corev1.Service {
+	t.Helper()
+	services, err := ListServicesContextE(t, ctx, options, filters)
 	require.NoError(t, err)
 
-	return service
+	return services
 }
 
-// GetServiceE returns a Kubernetes service resource in the provided namespace with the given name.
-func GetServiceE(t testing.TestingT, options *KubectlOptions, serviceName string) (*corev1.Service, error) {
+// ListServices will look for services in the given namespace that match the given filters and return them. This will
+// fail the test if there is an error.
+//
+// Deprecated: Use [ListServicesContext] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListServices(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []corev1.Service {
+	t.Helper()
+
+	return ListServicesContext(t, context.Background(), options, filters)
+}
+
+// ListServicesE will look for services in the given namespace that match the given filters and return them.
+//
+// Deprecated: Use [ListServicesContextE] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListServicesE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Service, error) {
+	return ListServicesContextE(t, context.Background(), options, filters)
+}
+
+// GetServiceContextE returns a Kubernetes service resource in the provided namespace with the given name.
+// The ctx parameter supports cancellation and timeouts.
+func GetServiceContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string) (*corev1.Service, error) {
 	clientset, err := GetKubernetesClientFromOptionsE(t, options)
 	if err != nil {
 		return nil, err
 	}
 
-	return clientset.CoreV1().Services(options.Namespace).Get(context.Background(), serviceName, metav1.GetOptions{})
+	return clientset.CoreV1().Services(options.Namespace).Get(ctx, serviceName, metav1.GetOptions{})
 }
 
-// WaitUntilServiceAvailable waits until the service endpoint is ready to accept traffic.
-func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serviceName string, retries int, sleepBetweenRetries time.Duration) {
+// GetServiceContext returns a Kubernetes service resource in the provided namespace with the given name.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func GetServiceContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string) *corev1.Service {
+	t.Helper()
+	service, err := GetServiceContextE(t, ctx, options, serviceName)
+	require.NoError(t, err)
+
+	return service
+}
+
+// GetService returns a Kubernetes service resource in the provided namespace with the given name. This will
+// fail the test if there is an error.
+//
+// Deprecated: Use [GetServiceContext] instead.
+func GetService(t testing.TestingT, options *KubectlOptions, serviceName string) *corev1.Service {
+	t.Helper()
+
+	return GetServiceContext(t, context.Background(), options, serviceName)
+}
+
+// GetServiceE returns a Kubernetes service resource in the provided namespace with the given name.
+//
+// Deprecated: Use [GetServiceContextE] instead.
+func GetServiceE(t testing.TestingT, options *KubectlOptions, serviceName string) (*corev1.Service, error) {
+	return GetServiceContextE(t, context.Background(), options, serviceName)
+}
+
+// WaitUntilServiceAvailableContextE waits until the service endpoint is ready to accept traffic.
+// The ctx parameter supports cancellation and timeouts.
+func WaitUntilServiceAvailableContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for service %s to be provisioned.", serviceName)
-	message := retry.DoWithRetry(
+
+	message, err := retry.DoWithRetryE(
 		t,
 		statusMsg,
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			service, err := GetServiceE(t, options, serviceName)
+			if err := ctx.Err(); err != nil {
+				return "", err
+			}
+
+			service, err := GetServiceContextE(t, ctx, options, serviceName)
 			if err != nil {
 				return "", err
 			}
 
-			isMinikube, err := IsMinikubeE(t, options)
+			isMinikube, err := IsMinikubeE(t, options) //nolint:contextcheck // IsMinikubeE not yet context-aware
 			if err != nil {
 				return "", err
 			}
@@ -92,7 +142,30 @@ func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serv
 			return "Service is now available", nil
 		},
 	)
+	if err != nil {
+		return err
+	}
+
 	options.Logger.Logf(t, "%s", message)
+
+	return nil
+}
+
+// WaitUntilServiceAvailableContext waits until the service endpoint is ready to accept traffic.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func WaitUntilServiceAvailableContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	err := WaitUntilServiceAvailableContextE(t, ctx, options, serviceName, retries, sleepBetweenRetries)
+	require.NoError(t, err)
+}
+
+// WaitUntilServiceAvailable waits until the service endpoint is ready to accept traffic.
+//
+// Deprecated: Use [WaitUntilServiceAvailableContext] instead.
+func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serviceName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	WaitUntilServiceAvailableContext(t, context.Background(), options, serviceName, retries, sleepBetweenRetries)
 }
 
 // IsServiceAvailable returns true if the service endpoint is ready to accept traffic. Note that for Minikube, this
@@ -124,8 +197,10 @@ func GetServiceEndpointContext(t testing.TestingT, ctx context.Context, options 
 // GetServiceEndpoint will return the service access point. If the service endpoint is not ready, will fail the test
 // immediately.
 //
-// Deprecated: Use GetServiceEndpointContext instead.
+// Deprecated: Use [GetServiceEndpointContext] instead.
 func GetServiceEndpoint(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) string {
+	t.Helper()
+
 	return GetServiceEndpointContext(t, context.Background(), options, service, servicePort)
 }
 
@@ -179,7 +254,7 @@ func GetServiceEndpointContextE(t testing.TestingT, ctx context.Context, options
 //     If the hostname is empty, it will return the public IP of the LoadBalancer.
 //   - All other service types are not supported.
 //
-// Deprecated: Use GetServiceEndpointContextE instead.
+// Deprecated: Use [GetServiceEndpointContextE] instead.
 func GetServiceEndpointE(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) (string, error) {
 	return GetServiceEndpointContextE(t, context.Background(), options, service, servicePort)
 }
@@ -271,10 +346,12 @@ func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, node core
 
 // FindNodeHostnameE returns the hostname or IP address of the given node, preferring the external IP when available.
 //
-// Deprecated: Use FindNodeHostnameContextE instead.
+// Deprecated: Use [FindNodeHostnameContextE] instead.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
 func FindNodeHostnameE(t testing.TestingT, node corev1.Node) (string, error) {
+	t.Helper()
+
 	return FindNodeHostnameContextE(t, context.Background(), node)
 }
 

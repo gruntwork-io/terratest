@@ -22,6 +22,10 @@ func GetAddressOfRdsInstanceContextE(t testing.TestingT, ctx context.Context, db
 		return "", err
 	}
 
+	if dbInstance.Endpoint == nil {
+		return "", fmt.Errorf("RDS instance %s endpoint is not yet available", dbInstanceID)
+	}
+
 	return aws.ToString(dbInstance.Endpoint.Address), nil
 }
 
@@ -60,6 +64,10 @@ func GetPortOfRdsInstanceContextE(t testing.TestingT, ctx context.Context, dbIns
 	dbInstance, err := GetRdsInstanceDetailsContextE(t, ctx, dbInstanceID, awsRegion)
 	if err != nil {
 		return -1, err
+	}
+
+	if dbInstance.Endpoint == nil {
+		return -1, fmt.Errorf("RDS instance %s endpoint is not yet available", dbInstanceID)
 	}
 
 	return *dbInstance.Endpoint.Port, nil
@@ -652,8 +660,12 @@ func GetValidEngineVersionContextE(t testing.TestingT, ctx context.Context, regi
 	}
 
 	out, err := client.DescribeDBEngineVersions(ctx, &input)
-	if err != nil || len(out.DBEngineVersions) == 0 {
+	if err != nil {
 		return "", err
+	}
+
+	if len(out.DBEngineVersions) == 0 {
+		return "", fmt.Errorf("no engine versions found for engine %s version %s in region %s", engine, majorVersion, region)
 	}
 
 	return *out.DBEngineVersions[0].EngineVersion, nil

@@ -234,7 +234,7 @@ func CreateMfaDeviceE(t testing.TestingT, iamClient *iam.Client, deviceName stri
 func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient *iam.Client, mfaDevice *types.VirtualMFADevice) error {
 	logger.Default.Logf(t, "Enabling MFA device %s", aws.ToString(mfaDevice.SerialNumber))
 
-	iamUserName, err := GetIamCurrentUserArnContextE(t, ctx)
+	iamUserArn, err := GetIamCurrentUserArnContextE(t, ctx)
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 		AuthenticationCode1: aws.String(authCode1),
 		AuthenticationCode2: aws.String(authCode2),
 		SerialNumber:        mfaDevice.SerialNumber,
-		UserName:            aws.String(iamUserName),
+		UserName:            aws.String(iamUserArn),
 	})
 	if err != nil {
 		return err
