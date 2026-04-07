@@ -33,7 +33,7 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	// To ensure we can reuse the resource config on the same cluster to test different scenarios, we setup a unique
 	// namespace for the resources for this test.
 	// Note that namespaces must be lowercase.
-	namespaceName := strings.ToLower(random.UniqueId())
+	namespaceName := strings.ToLower(random.UniqueID())
 
 	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
 	// - HOME/.kube/config for the kubectl config file

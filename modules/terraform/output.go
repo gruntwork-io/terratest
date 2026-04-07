@@ -523,30 +523,12 @@ func OutputJSON(t testing.TestingT, options *Options, key string) string {
 	return OutputJSONContext(t, context.Background(), options, key)
 }
 
-// OutputJson calls terraform output for the given variable and returns the
-// result as the JSON string.
-// If key is an empty string, it will return all the output variables.
-//
-// Deprecated: Use [OutputJSONContext] instead.
-func OutputJson(t testing.TestingT, options *Options, key string) string { //nolint:revive,staticcheck // preserving deprecated function name
-	return OutputJSONContext(t, context.Background(), options, key)
-}
-
 // OutputJSONE calls terraform output for the given variable and returns the
 // result as the JSON string.
 // If key is an empty string, it will return all the output variables.
 //
 // Deprecated: Use [OutputJSONContextE] instead.
 func OutputJSONE(t testing.TestingT, options *Options, key string) (string, error) {
-	return OutputJSONContextE(t, context.Background(), options, key)
-}
-
-// OutputJsonE calls terraform output for the given variable and returns the
-// result as the JSON string.
-// If key is an empty string, it will return all the output variables.
-//
-// Deprecated: Use [OutputJSONContextE] instead.
-func OutputJsonE(t testing.TestingT, options *Options, key string) (string, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	return OutputJSONContextE(t, context.Background(), options, key)
 }
 

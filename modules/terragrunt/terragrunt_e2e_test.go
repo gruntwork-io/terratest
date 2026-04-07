@@ -103,8 +103,8 @@ func TestStackEndToEndIntegration(t *testing.T) {
 	t.Log("Stack integration test completed successfully")
 }
 
-// TestOutputAllJsonEndToEnd tests OutputAllJson extracts clean JSON from terragrunt output
-func TestOutputAllJsonEndToEnd(t *testing.T) {
+// TestOutputAllJSONEndToEnd tests OutputAllJSON extracts clean JSON from terragrunt output
+func TestOutputAllJSONEndToEnd(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerragruntFolderToTemp(
@@ -116,7 +116,7 @@ func TestOutputAllJsonEndToEnd(t *testing.T) {
 	terragrunt.ApplyAll(t, options)
 	defer terragrunt.DestroyAll(t, options)
 
-	output := terragrunt.OutputAllJson(t, options)
+	output := terragrunt.OutputAllJSON(t, options)
 
 	// Contains module outputs, no log noise
 	require.Contains(t, output, `"value": "foo"`)
