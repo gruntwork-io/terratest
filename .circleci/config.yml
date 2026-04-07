@@ -5,18 +5,14 @@ env: &env
     MODULE_GCP_CI_VERSION: v0.1.1
     MODULE_CI_CIRCLECI_HELPER_VERSION: v0.56.0
     TERRAFORM_VERSION: 1.5.7
-    TOFU_VERSION: 1.8.0
     PACKER_VERSION: 1.10.0
     TERRAGRUNT_VERSION: v0.80.4
     TERRAGRUNT_TEST_VERSION: v0.93.10  # Version used for terragrunt module tests
-    OPA_VERSION: v1.1.0
-    GO_VERSION: 1.26.0
     GO111MODULE: auto
     K8S_VERSION: v1.28.0  # Same as EKS
     MINIKUBE_VERSION: v1.35.0
     CRI_DOCKERD_VERSION: v0.3.16
     CNI_PLUGINS_VERSION: v1.6.2
-    HELM_VERSION: v3.13.1
     KUBECONFIG: /home/circleci/.kube/config
     BIN_BUILD_PARALLELISM: 3
     MISE_VERSION: v2024.4.0
@@ -73,13 +69,9 @@ setup_minikube: &setup_minikube
     done
 
 install_helm: &install_helm
-  name: install helm
+  name: verify helm
   command: |
-    # install helm
-    curl -Lo helm.tar.gz https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
-    tar -xvf helm.tar.gz
-    chmod +x linux-amd64/helm
-    sudo mv linux-amd64/helm /usr/local/bin/
+    which helm && helm version
 
 install_gruntwork_utils: &install_gruntwork_utils
   name: install gruntwork utils
@@ -95,31 +87,39 @@ install_gruntwork_utils: &install_gruntwork_utils
       --packer-version ${PACKER_VERSION} \
       --go-version NONE
 
-    # Install OPA
-    echo "Installing OPA version ${OPA_VERSION}"
-    curl -sLO "https://github.com/open-policy-agent/opa/releases/download/${OPA_VERSION}/opa_linux_amd64_static"
-    chmod +x ./opa_linux_amd64_static
-    sudo mv ./opa_linux_amd64_static /usr/local/bin/opa
+    # Trust mise.toml so mise can read it
+    mise trust mise.toml || true
 
-    # Temporary fix for installing go - remove when we can update gruntwork-module-circleci-helpers to version with fix
-    GO_VERSION="${GO_VERSION:-1.26.0}"
-    echo "Installing Go version ${GO_VERSION}"
-    curl -O --silent --location --fail --show-error --retry 3 "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz"
+    # Install tools via mise (versions must match mise.toml).
+    # NOTE: We use explicit tool@version because mise v2024.4.0 doesn't
+    # reliably resolve versions from mise.toml when run via `mise install`.
+    mise install go@1.26.1
+    mise install opa@1.1.0
+    mise install opentofu@1.8.0
+    mise install helm@3.13.1
+    mise install minikube@1.35.0
+
+    # Symlink mise-installed binaries into /usr/local/bin.
+    # We use `find` because asdf plugin install layouts vary by tool.
+    sudo ln -sf "$(find "$(mise where opa@1.1.0)" -name opa -type f | head -1)" /usr/local/bin/opa
+    sudo ln -sf "$(find "$(mise where helm@3.13.1)" -name helm -type f | head -1)" /usr/local/bin/helm
+    sudo ln -sf "$(find "$(mise where opentofu@1.8.0)" -name tofu -type f | head -1)" /usr/local/bin/tofu
+    sudo ln -sf "$(find "$(mise where minikube@1.35.0)" -name minikube -type f | head -1)" /usr/local/bin/minikube
+    opa version && helm version && tofu --version && minikube version
+
+    # Go: symlink the entire install dir so GOROOT resolves correctly
     sudo rm -rf /usr/local/go
-    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+    sudo ln -sf "$(mise where go@1.26.1)" /usr/local/go
     sudo rm -f /usr/bin/go
     sudo ln -sf /usr/local/go/bin/go /usr/bin/go
+    # Mise sets GOBIN to its own dir; override so `go install` puts binaries in ~/go/bin
+    echo 'export GOBIN="$HOME/go/bin"' >> $BASH_ENV
     echo "The installed version of Go is now $(go version)"
 
 install_tofu: &install_tofu
-  name: Install OpenTofu
+  name: verify opentofu
   command: |
-    curl -L "https://github.com/opentofu/opentofu/releases/download/v${TOFU_VERSION}/tofu_${TOFU_VERSION}_linux_amd64.zip" -o tofu.zip
-    unzip -o tofu.zip
-    sudo install -m 0755 tofu /usr/local/bin/tofu
-    rm -rf tofu
-    rm -rf tofu.zip
-    tofu --version
+    which tofu && tofu --version
 
 install_terragrunt_latest: &install_terragrunt_latest
   name: Install Terragrunt (latest test version)
