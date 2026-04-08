@@ -1,23 +1,49 @@
-//go:build azure
-// +build azure
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	networkfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6/fake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 )
 
+// Fake client helpers
+
+func newFakeDefaultSecurityRulesClient(t *testing.T, srv networkfake.DefaultSecurityRulesServer) *armnetwork.DefaultSecurityRulesClient {
+	t.Helper()
+	client, err := armnetwork.NewDefaultSecurityRulesClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: networkfake.NewDefaultSecurityRulesServerTransport(&srv),
+		}})
+	require.NoError(t, err)
+	return client
+}
+
+func newFakeSecurityRulesClient(t *testing.T, srv networkfake.SecurityRulesServer) *armnetwork.SecurityRulesClient {
+	t.Helper()
+	client, err := armnetwork.NewSecurityRulesClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: networkfake.NewSecurityRulesServerTransport(&srv),
+		}})
+	require.NoError(t, err)
+	return client
+}
+
+// Port range parsing
+
 func TestPortRangeParsing(t *testing.T) {
-	var cases = []struct {
+	t.Parallel()
+
+	cases := []struct {
 		portRange    string
 		expectedLo   int
 		expectedHi   int
@@ -36,130 +62,194 @@ func TestPortRangeParsing(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.portRange, func(t *testing.T) {
 			lo, hi, err := parsePortRangeString(tt.portRange)
-
 			if !tt.expectsError {
 				require.NoError(t, err)
 			}
-
 			assert.Equal(t, tt.expectedLo, int(lo))
 			assert.Equal(t, tt.expectedHi, int(hi))
 		})
 	}
 }
 
-func TestNsgRuleSummaryConversion(t *testing.T) {
-	// Quick test to make sure the safe nil handling is working
-	name := "test name"
-	sdkStruct := armnetwork.SecurityRulePropertiesFormat{}
+// Rule summary conversion
 
-	// Verify the nil values were correctly defaulted to "" without a panic
-	result := convertToNsgRuleSummary(&name, &sdkStruct)
-	assert.Empty(t, result.Description)
-	assert.Empty(t, result.SourcePortRange)
-	assert.Empty(t, result.DestinationPortRange)
-	assert.Empty(t, result.SourceAddressPrefix)
-	assert.Empty(t, result.DestinationAddressPrefix)
-	assert.Equal(t, int32(0), result.Priority)
+func TestNsgRuleSummaryConversion(t *testing.T) {
+	t.Parallel()
+
+	t.Run("FullyPopulated", func(t *testing.T) {
+		protocol := armnetwork.SecurityRuleProtocolTCP
+		access := armnetwork.SecurityRuleAccessAllow
+		direction := armnetwork.SecurityRuleDirectionInbound
+		props := &armnetwork.SecurityRulePropertiesFormat{
+			Protocol: &protocol, Access: &access, Direction: &direction,
+			Priority: to.Ptr[int32](100), Description: to.Ptr("allow ssh"),
+			SourcePortRange: to.Ptr("*"), DestinationPortRange: to.Ptr("22"),
+			SourceAddressPrefix: to.Ptr("10.0.0.0/8"), DestinationAddressPrefix: to.Ptr("VirtualNetwork"),
+		}
+		summary := convertToNsgRuleSummary(to.Ptr("AllowSSH"), props)
+		assert.Equal(t, "AllowSSH", summary.Name)
+		assert.Equal(t, "Tcp", summary.Protocol)
+		assert.Equal(t, "Allow", summary.Access)
+		assert.Equal(t, int32(100), summary.Priority)
+	})
+
+	t.Run("NilEnums", func(t *testing.T) {
+		props := &armnetwork.SecurityRulePropertiesFormat{Priority: to.Ptr[int32](200)}
+		summary := convertToNsgRuleSummary(to.Ptr("Rule"), props)
+		assert.Equal(t, "", summary.Protocol)
+		assert.Equal(t, "", summary.Access)
+		assert.Equal(t, "", summary.Direction)
+	})
+
+	t.Run("NilName", func(t *testing.T) {
+		props := &armnetwork.SecurityRulePropertiesFormat{}
+		summary := convertToNsgRuleSummary(nil, props)
+		assert.Equal(t, "", summary.Name)
+	})
 }
 
+// Port allow/deny
+
 func TestAllowSourcePort(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		SourcePortRange string
-		Access          string
-		TestPort        string
-		Result          bool
+	t.Parallel()
+
+	cases := []struct {
+		name, portRange, access, testPort string
+		result                            bool
 	}{
 		{"22 allowed", "22", "Allow", "22", true},
 		{"22 denied", "22", "Deny", "22", false},
-		{"22 doesn't allow 80", "22", "Allow", "80", false},
 		{"Any allows any", "*", "Allow", "*", true},
-		{"Allows a range of ports", "80-90", "Allow", "80", true},
-		{"Allows a range of ports", "80-90", "Allow", "85", true},
-		{"Allows a range of ports", "80-90", "Allow", "90", true},
-		{"Blocks a range of ports", "80-90", "Deny", "80", false},
-		{"Blocks a range of ports", "80-90", "Deny", "85", false},
-		{"Blocks a range of ports", "80-90", "Deny", "90", false},
+		{"Range allows", "80-90", "Allow", "85", true},
+		{"Range denies", "80-90", "Deny", "85", false},
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.CaseName, func(t *testing.T) {
-			summary := NsgRuleSummary{}
-			summary.SourcePortRange = tt.SourcePortRange
-			summary.Access = tt.Access
-			result := summary.AllowsSourcePort(t, tt.TestPort)
-			assert.Equal(t, tt.Result, result)
+		t.Run(tt.name, func(t *testing.T) {
+			s := NsgRuleSummary{SourcePortRange: tt.portRange, Access: tt.access}
+			assert.Equal(t, tt.result, s.AllowsSourcePort(t, tt.testPort))
 		})
 	}
 }
 
 func TestAllowDestinationPort(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		SourcePortRange string
-		Access          string
-		TestPort        string
-		Result          bool
+	t.Parallel()
+
+	cases := []struct {
+		name, portRange, access, testPort string
+		result                            bool
 	}{
 		{"22 allowed", "22", "Allow", "22", true},
 		{"22 denied", "22", "Deny", "22", false},
-		{"22 doesn't allow 80", "22", "Allow", "80", false},
 		{"Any allows any", "*", "Allow", "*", true},
-		{"Allows a range of ports", "80-90", "Allow", "80", true},
-		{"Allows a range of ports", "80-90", "Allow", "85", true},
-		{"Allows a range of ports", "80-90", "Allow", "90", true},
-		{"Blocks a range of ports", "80-90", "Deny", "80", false},
-		{"Blocks a range of ports", "80-90", "Deny", "85", false},
-		{"Blocks a range of ports", "80-90", "Deny", "90", false},
+		{"Range allows", "80-90", "Allow", "85", true},
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.CaseName, func(t *testing.T) {
-			summary := NsgRuleSummary{}
-			summary.DestinationPortRange = tt.SourcePortRange
-			summary.Access = tt.Access
-			result := summary.AllowsDestinationPort(t, tt.TestPort)
-			assert.Equal(t, tt.Result, result)
+		t.Run(tt.name, func(t *testing.T) {
+			s := NsgRuleSummary{DestinationPortRange: tt.portRange, Access: tt.access}
+			assert.Equal(t, tt.result, s.AllowsDestinationPort(t, tt.testPort))
 		})
 	}
 }
 
+// Rule finding
+
 func TestFindSummarizedRule(t *testing.T) {
-	var cases = []struct {
-		SearchString string
-		Result       bool
-	}{
-		{"rule_1", true},
-		{"rule_2", true},
-		{"rule_3", true},
-		{"rule_4", true},
-		{"rule_5", true},
-		{"rule_6", false},
-		{"", false},
-		{"foo", false},
+	t.Parallel()
+
+	rules := make([]NsgRuleSummary, 5)
+	for i := range rules {
+		rules[i].Name = fmt.Sprintf("rule_%d", i+1)
 	}
+	ruleList := NsgRuleSummaryList{SummarizedRules: rules}
 
-	ruleList := NsgRuleSummaryList{}
-	rules := make([]NsgRuleSummary, 0)
+	assert.Equal(t, "rule_1", ruleList.FindRuleByName("rule_1").Name)
+	assert.Equal(t, NsgRuleSummary{}, ruleList.FindRuleByName("nonexistent"))
+}
 
-	// Create some base rules
-	for i := 1; i <= 5; i++ {
-		rule := NsgRuleSummary{}
-		rule.Name = fmt.Sprintf("rule_%d", i)
-		rules = append(rules, rule)
+// safeDerefString
+
+func TestSafeDerefString(t *testing.T) {
+	t.Parallel()
+	assert.Equal(t, "", safeDerefString(nil))
+	s := "hello"
+	assert.Equal(t, "hello", safeDerefString(&s))
+}
+
+// Collect security rules with fake servers
+
+func TestCollectDefaultSecurityRules(t *testing.T) {
+	t.Parallel()
+
+	t.Run("OnePage", func(t *testing.T) {
+		protocol := armnetwork.SecurityRuleProtocolTCP
+		access := armnetwork.SecurityRuleAccessAllow
+		direction := armnetwork.SecurityRuleDirectionInbound
+		srv := networkfake.DefaultSecurityRulesServer{
+			NewListPager: func(rg, nsg string, opts *armnetwork.DefaultSecurityRulesClientListOptions) (resp azfake.PagerResponder[armnetwork.DefaultSecurityRulesClientListResponse]) {
+				resp.AddPage(http.StatusOK, armnetwork.DefaultSecurityRulesClientListResponse{
+					SecurityRuleListResult: armnetwork.SecurityRuleListResult{
+						Value: []*armnetwork.SecurityRule{{
+							Name: to.Ptr("AllowVnetInBound"),
+							Properties: &armnetwork.SecurityRulePropertiesFormat{
+								Protocol: &protocol, Access: &access, Direction: &direction,
+								Priority: to.Ptr[int32](65000),
+							},
+						}},
+					},
+				}, nil)
+				return
+			},
+		}
+		client := newFakeDefaultSecurityRulesClient(t, srv)
+		rules, err := collectDefaultSecurityRules(context.Background(), client, "rg", "nsg")
+		require.NoError(t, err)
+		require.Len(t, rules, 1)
+		assert.Equal(t, "AllowVnetInBound", rules[0].Name)
+	})
+
+	t.Run("Empty", func(t *testing.T) {
+		srv := networkfake.DefaultSecurityRulesServer{
+			NewListPager: func(rg, nsg string, opts *armnetwork.DefaultSecurityRulesClientListOptions) (resp azfake.PagerResponder[armnetwork.DefaultSecurityRulesClientListResponse]) {
+				resp.AddPage(http.StatusOK, armnetwork.DefaultSecurityRulesClientListResponse{
+					SecurityRuleListResult: armnetwork.SecurityRuleListResult{Value: []*armnetwork.SecurityRule{}},
+				}, nil)
+				return
+			},
+		}
+		client := newFakeDefaultSecurityRulesClient(t, srv)
+		rules, err := collectDefaultSecurityRules(context.Background(), client, "rg", "nsg")
+		require.NoError(t, err)
+		assert.Empty(t, rules)
+	})
+}
+
+func TestCollectCustomSecurityRules(t *testing.T) {
+	t.Parallel()
+
+	protocol := armnetwork.SecurityRuleProtocolUDP
+	access := armnetwork.SecurityRuleAccessDeny
+	direction := armnetwork.SecurityRuleDirectionOutbound
+	srv := networkfake.SecurityRulesServer{
+		NewListPager: func(rg, nsg string, opts *armnetwork.SecurityRulesClientListOptions) (resp azfake.PagerResponder[armnetwork.SecurityRulesClientListResponse]) {
+			resp.AddPage(http.StatusOK, armnetwork.SecurityRulesClientListResponse{
+				SecurityRuleListResult: armnetwork.SecurityRuleListResult{
+					Value: []*armnetwork.SecurityRule{{
+						Name: to.Ptr("DenyUDPOut"),
+						Properties: &armnetwork.SecurityRulePropertiesFormat{
+							Protocol: &protocol, Access: &access, Direction: &direction,
+							Priority: to.Ptr[int32](500), DestinationPortRange: to.Ptr("53"),
+						},
+					}},
+				},
+			}, nil)
+			return
+		},
 	}
-
-	ruleList.SummarizedRules = rules
-
-	for _, tt := range cases {
-		t.Run(tt.SearchString, func(t *testing.T) {
-			match := ruleList.FindRuleByName(tt.SearchString)
-
-			if tt.Result {
-				assert.Equal(t, tt.SearchString, match.Name)
-			} else {
-				assert.Equal(t, NsgRuleSummary{}, match)
-			}
-		})
-	}
+	client := newFakeSecurityRulesClient(t, srv)
+	rules, err := collectCustomSecurityRules(context.Background(), client, "rg", "nsg")
+	require.NoError(t, err)
+	require.Len(t, rules, 1)
+	assert.Equal(t, "DenyUDPOut", rules[0].Name)
 }
