@@ -34,7 +34,7 @@ func TestGetDeploymentEReturnsError(t *testing.T) {
 func TestGetDeployments(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -48,7 +48,7 @@ func TestGetDeployments(t *testing.T) {
 func TestListDeployments(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -65,7 +65,7 @@ func TestListDeployments(t *testing.T) {
 func TestWaitUntilDeploymentAvailable(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 	KubectlApplyFromString(t, options, configData)

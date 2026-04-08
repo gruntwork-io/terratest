@@ -20,7 +20,7 @@ func TestAssertTopicExistsNoFalseNegative(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueId())
+	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
 	logger.Logf(t, "Creating Pub/Sub topic %s to verify existence check works", topicName)
 
 	CreateTopicContext(t, context.Background(), projectID, topicName)
@@ -33,7 +33,7 @@ func TestAssertTopicExistsNoFalsePositive(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueId())
+	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
 	logger.Logf(t, "Checking that non-existent Pub/Sub topic %s returns an error", topicName)
 
 	err := AssertTopicExistsContextE(t, context.Background(), projectID, topicName)
@@ -44,8 +44,8 @@ func TestAssertSubscriptionExistsNoFalseNegative(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueId())
-	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueId())
+	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
+	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
 	logger.Logf(t, "Creating Pub/Sub topic %s and subscription %s to verify existence check works", topicName, subscriptionName)
 
 	CreateTopicContext(t, context.Background(), projectID, topicName)
@@ -61,7 +61,7 @@ func TestAssertSubscriptionExistsNoFalsePositive(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueId())
+	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
 	logger.Logf(t, "Checking that non-existent Pub/Sub subscription %s returns an error", subscriptionName)
 
 	err := AssertSubscriptionExistsContextE(t, context.Background(), projectID, subscriptionName)
@@ -72,8 +72,8 @@ func TestAssertTopicAndSubscriptionExist(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueId())
-	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueId())
+	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
+	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
 	logger.Logf(t, "Creating Pub/Sub topic %s and subscription %s", topicName, subscriptionName)
 
 	CreateTopicContext(t, context.Background(), projectID, topicName)

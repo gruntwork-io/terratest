@@ -31,7 +31,7 @@ func TestGetConfigMapEReturnsErrorForNonExistantConfigMap(t *testing.T) {
 func TestGetConfigMapEReturnsCorrectConfigMapInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_CONFIGMAP_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -45,7 +45,7 @@ func TestGetConfigMapEReturnsCorrectConfigMapInCorrectNamespace(t *testing.T) {
 func TestWaitUntilConfigMapAvailableReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_CONFIGMAP_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)

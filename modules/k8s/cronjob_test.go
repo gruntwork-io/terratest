@@ -20,7 +20,7 @@ import (
 func TestListCronJobsReturnsCronJobsInNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -37,13 +37,13 @@ func TestGetCronJobEReturnErrorForNotExistingCronJob(t *testing.T) {
 	t.Parallel()
 
 	options := NewKubectlOptions("", "", "default")
-	_, err := GetJobE(t, options, random.UniqueId())
+	_, err := GetJobE(t, options, random.UniqueID())
 	require.Error(t, err)
 }
 
 func TestGetCronJobEReturnsCorrectJobInNamespace(t *testing.T) {
 	t.Parallel()
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -57,7 +57,7 @@ func TestGetCronJobEReturnsCorrectJobInNamespace(t *testing.T) {
 func TestWaitUntilCronJobScheduleSuccessfullyContainer(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)

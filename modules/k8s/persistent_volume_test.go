@@ -29,9 +29,9 @@ func TestListPersistentVolumesReturnsAllPersistentVolumes(t *testing.T) {
 
 	numPvFound := 0
 	pvNames := map[string]struct{}{
-		strings.ToLower(random.UniqueId()): {},
-		strings.ToLower(random.UniqueId()): {},
-		strings.ToLower(random.UniqueId()): {},
+		strings.ToLower(random.UniqueID()): {},
+		strings.ToLower(random.UniqueID()): {},
+		strings.ToLower(random.UniqueID()): {},
 	}
 
 	options := NewKubectlOptions("", "", "")
@@ -70,7 +70,7 @@ func TestGetPersistentVolumeEReturnsErrorForNonExistentPersistentVolumes(t *test
 func TestGetPersistentVolumeReturnsCorrectPersistentVolume(t *testing.T) {
 	t.Parallel()
 
-	pvName := strings.ToLower(random.UniqueId())
+	pvName := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", "")
 	configData := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -83,7 +83,7 @@ func TestGetPersistentVolumeReturnsCorrectPersistentVolume(t *testing.T) {
 func TestWaitUntilPersistentVolumeInTheGivenStatusPhase(t *testing.T) {
 	t.Parallel()
 
-	pvName := strings.ToLower(random.UniqueId())
+	pvName := strings.ToLower(random.UniqueID())
 	pvAvailableStatusPhase := corev1.VolumeAvailable
 
 	options := NewKubectlOptions("", "", pvName)

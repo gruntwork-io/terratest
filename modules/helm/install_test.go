@@ -39,7 +39,7 @@ func TestRemoteChartInstall(t *testing.T) {
 	namespaceName := fmt.Sprintf(
 		"%s-%s",
 		strings.ToLower(t.Name()),
-		strings.ToLower(random.UniqueId()),
+		strings.ToLower(random.UniqueID()),
 	)
 
 	// Use default kubectl options to create a new namespace for this test, and then update the namespace for kubectl
@@ -60,7 +60,7 @@ func TestRemoteChartInstall(t *testing.T) {
 	}
 
 	// Add the stable repo under a random name so as not to touch existing repo configs
-	uniqueName := strings.ToLower(fmt.Sprintf("terratest-%s", random.UniqueId()))
+	uniqueName := strings.ToLower(fmt.Sprintf("terratest-%s", random.UniqueID()))
 	defer RemoveRepo(t, options, uniqueName)
 	AddRepo(t, options, uniqueName, remoteChartSource)
 	helmChart := fmt.Sprintf("%s/%s", uniqueName, remoteChartName)
@@ -68,7 +68,7 @@ func TestRemoteChartInstall(t *testing.T) {
 	// Generate a unique release name so we can defer the delete before installing
 	releaseName := fmt.Sprintf(
 		"%s-%s",
-		remoteChartName, strings.ToLower(random.UniqueId()),
+		remoteChartName, strings.ToLower(random.UniqueID()),
 	)
 	defer Delete(t, options, releaseName, true)
 
@@ -114,7 +114,7 @@ func TestHelmDependencyInstall(t *testing.T) {
 	require.NoError(t, err)
 
 	// Custom namespace name.
-	namespaceName := fmt.Sprintf("helm-dependency-example-%s", strings.ToLower(random.UniqueId()))
+	namespaceName := fmt.Sprintf("helm-dependency-example-%s", strings.ToLower(random.UniqueID()))
 
 	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
 	// - HOME/.kube/config for the kubectl config file
@@ -140,7 +140,7 @@ func TestHelmDependencyInstall(t *testing.T) {
 	// `helm delete RELEASE_NAME` to clean up any resources that were created.
 	releaseName := fmt.Sprintf(
 		"helm-dependency-example-%s",
-		strings.ToLower(random.UniqueId()),
+		strings.ToLower(random.UniqueID()),
 	)
 	defer Delete(t, options, releaseName, true)
 

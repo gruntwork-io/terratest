@@ -41,7 +41,7 @@ func TestRemoteChartRender(t *testing.T) {
 	namespaceName := fmt.Sprintf(
 		"%s-%s",
 		strings.ToLower(t.Name()),
-		strings.ToLower(random.UniqueId()),
+		strings.ToLower(random.UniqueID()),
 	)
 
 	releaseName := remoteChartName
