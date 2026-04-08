@@ -170,4 +170,3 @@ func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscri
 
 	return regions, nil
 }
-

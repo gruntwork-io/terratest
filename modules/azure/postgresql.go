@@ -126,4 +126,3 @@ func ListPostgreSQLDBContextE(t testing.TestingT, ctx context.Context, subscript
 
 	return databases, nil
 }
-

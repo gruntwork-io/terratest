@@ -163,4 +163,3 @@ func GetRecoveryServicesVaultBackupProtectedVMListContextE(ctx context.Context, 
 
 	return vmList, nil
 }
-

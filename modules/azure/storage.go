@@ -275,6 +275,7 @@ func GetStorageFileShareContextE(ctx context.Context, fileShareName, storageAcco
 	}
 
 	expand := "stats"
+
 	resp, err := client.Get(ctx, resourceGroupName, storageAccountName, fileShareName, &armstorage.FileSharesClientGetOptions{
 		Expand: &expand,
 	})
@@ -315,4 +316,3 @@ func GetStorageDNSStringContextE(ctx context.Context, storageAccountName, resour
 
 	return "", NewNotFoundError("storage account", storageAccountName, "")
 }
-

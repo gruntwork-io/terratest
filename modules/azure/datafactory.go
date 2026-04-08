@@ -65,4 +65,3 @@ func GetDataFactoryContextE(ctx context.Context, subscriptionID string, resGroup
 	// Return data factory
 	return &resp.Factory, nil
 }
-

@@ -63,4 +63,3 @@ func GetSynapseSQLPoolContextE(ctx context.Context, subscriptionID string, resGr
 
 	return &resp.SQLPool, nil
 }
-

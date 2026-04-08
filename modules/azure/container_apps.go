@@ -175,4 +175,3 @@ func GetContainerAppJobContextE(ctx context.Context, containerAppName string, re
 
 	return &app.Job, nil
 }
-

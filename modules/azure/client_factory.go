@@ -9,6 +9,7 @@ the new Azure SDK (github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/).
 package azure
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -112,7 +113,7 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 
 		if adEndpoint == "" || rmEndpoint == "" || tokenAudience == "" {
 			return cloud.Configuration{},
-				fmt.Errorf("AzureStackCloud requires AZURE_STACK_AD_ENDPOINT, " +
+				errors.New("AzureStackCloud requires AZURE_STACK_AD_ENDPOINT, " +
 					"AZURE_STACK_RESOURCE_MANAGER_ENDPOINT, and AZURE_STACK_TOKEN_AUDIENCE " +
 					"environment variables to be set")
 		}
@@ -166,7 +167,7 @@ func GetStorageURISuffixE() (string, error) {
 	case "AZURECHINACLOUD":
 		return "core.chinacloudapi.cn", nil
 	default:
-		return "", fmt.Errorf("Storage URI suffix not known for environment: %s", envName)
+		return "", fmt.Errorf("storage URI suffix not known for environment: %s", envName)
 	}
 }
 
@@ -1114,4 +1115,3 @@ func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.Job
 
 	return clientFactory.NewJobsClient(), nil
 }
-

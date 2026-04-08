@@ -126,4 +126,3 @@ func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID
 
 	return databases, nil
 }
-

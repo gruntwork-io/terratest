@@ -90,4 +90,3 @@ func GetManagedInstanceDatabaseContextE(ctx context.Context, subscriptionID stri
 
 	return &resp.ManagedDatabase, nil
 }
-

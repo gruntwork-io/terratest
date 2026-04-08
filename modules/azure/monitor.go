@@ -132,4 +132,3 @@ func GetActivityLogAlertResourceContextE(ctx context.Context, activityLogAlertNa
 
 	return &resp.ActivityLogAlertResource, nil
 }
-

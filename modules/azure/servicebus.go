@@ -402,4 +402,3 @@ func ListTopicAuthRulesContext(t testing.TestingT, ctx context.Context, subscrip
 
 	return results
 }
-

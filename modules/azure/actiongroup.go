@@ -44,4 +44,3 @@ func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGro
 
 	return &resp.ActionGroupResource, nil
 }
-

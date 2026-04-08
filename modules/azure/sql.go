@@ -115,4 +115,3 @@ func GetSQLDatabaseContextE(t testing.TestingT, ctx context.Context, subscriptio
 
 	return &resp.Database, nil
 }
-

@@ -180,4 +180,3 @@ func GetCosmosDBSQLContainerThroughputContextE(ctx context.Context, subscription
 	// Return throughput config
 	return &resp.ThroughputSettingsGetResults, nil
 }
-
