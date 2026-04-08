@@ -90,6 +90,7 @@ func extractVMNics(vm *armcompute.VirtualMachine) ([]string, error) {
 	}
 
 	vmNICs := vm.Properties.NetworkProfile.NetworkInterfaces
+
 	var nics []string
 
 	for _, nic := range vmNICs {
@@ -97,6 +98,7 @@ func extractVMNics(vm *armcompute.VirtualMachine) ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse NIC resource ID %q: %w", *nic.ID, err)
 		}
+
 		nics = append(nics, nicName)
 	}
 
@@ -129,10 +131,12 @@ func GetVirtualMachineManagedDisksContextE(ctx context.Context, vmName string, r
 // extractVMManagedDisks extracts the Managed Disk names from a Virtual Machine object.
 func extractVMManagedDisks(vm *armcompute.VirtualMachine) []string {
 	vmDisks := vm.Properties.StorageProfile.DataDisks
+
 	diskNames := make([]string, len(vmDisks))
 	for i, v := range vmDisks {
 		diskNames[i] = *v.Name
 	}
+
 	return diskNames
 }
 
@@ -236,19 +240,25 @@ func GetVirtualMachineImageContextE(ctx context.Context, vmName string, resGroup
 // For custom images where Publisher/Offer/SKU/Version may be nil, empty strings are returned.
 func extractVMImage(vm *armcompute.VirtualMachine) VMImage {
 	ref := vm.Properties.StorageProfile.ImageReference
+
 	var img VMImage
+
 	if ref.Publisher != nil {
 		img.Publisher = *ref.Publisher
 	}
+
 	if ref.Offer != nil {
 		img.Offer = *ref.Offer
 	}
+
 	if ref.SKU != nil {
 		img.SKU = *ref.SKU
 	}
+
 	if ref.Version != nil {
 		img.Version = *ref.Version
 	}
+
 	return img
 }
 
@@ -306,12 +316,15 @@ func GetVirtualMachineTagsContextE(ctx context.Context, vmName string, resGroupN
 // extractVMTags extracts the Tags from a Virtual Machine object as a map of string to string.
 func extractVMTags(vm *armcompute.VirtualMachine) map[string]string {
 	tags := make(map[string]string)
+
 	if vm.Tags == nil {
 		return tags
 	}
+
 	for k, v := range vm.Tags {
 		tags[k] = *v
 	}
+
 	return tags
 }
 
@@ -459,5 +472,6 @@ func fetchVirtualMachine(ctx context.Context, client *armcompute.VirtualMachines
 	if err != nil {
 		return nil, err
 	}
+
 	return &resp.VirtualMachine, nil
 }

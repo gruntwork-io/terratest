@@ -1,4 +1,4 @@
-package azure
+package azure //nolint:testpackage // tests access unexported functions
 
 import (
 	"context"
@@ -16,13 +16,15 @@ import (
 )
 
 // newFakeVMClient creates a fake VirtualMachinesClient backed by the given fake server.
-func newFakeVMClient(t *testing.T, srv computefake.VirtualMachinesServer) *armcompute.VirtualMachinesClient {
+func newFakeVMClient(t *testing.T, srv *computefake.VirtualMachinesServer) *armcompute.VirtualMachinesClient {
 	t.Helper()
+
 	client, err := armcompute.NewVirtualMachinesClient("fake-sub", &azfake.TokenCredential{},
 		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
-			Transport: computefake.NewVirtualMachinesServerTransport(&srv),
+			Transport: computefake.NewVirtualMachinesServerTransport(srv),
 		}})
 	require.NoError(t, err)
+
 	return client
 }
 
@@ -33,17 +35,17 @@ func newFakeVMClient(t *testing.T, srv computefake.VirtualMachinesServer) *armco
 func TestFetchVirtualMachine(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
 		name      string
-		server    computefake.VirtualMachinesServer
 		wantName  string
-		wantErr   bool
 		errSubstr string
+		server    computefake.VirtualMachinesServer
+		wantErr   bool
 	}{
 		{
 			name: "Success",
 			server: computefake.VirtualMachinesServer{
-				Get: func(ctx context.Context, resourceGroupName string, vmName string, options *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
+				Get: func(_ context.Context, _ string, _ string, _ *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
 					result := armcompute.VirtualMachinesClientGetResponse{
 						VirtualMachine: armcompute.VirtualMachine{
 							Name: to.Ptr("test-vm"),
@@ -55,6 +57,7 @@ func TestFetchVirtualMachine(t *testing.T) {
 						},
 					}
 					resp.SetResponse(http.StatusOK, result, nil)
+
 					return
 				},
 			},
@@ -63,8 +66,9 @@ func TestFetchVirtualMachine(t *testing.T) {
 		{
 			name: "NotFound",
 			server: computefake.VirtualMachinesServer{
-				Get: func(ctx context.Context, resourceGroupName string, vmName string, options *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
+				Get: func(_ context.Context, _ string, _ string, _ *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
 					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+
 					return
 				},
 			},
@@ -76,14 +80,17 @@ func TestFetchVirtualMachine(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			client := newFakeVMClient(t, tc.server)
+
+			client := newFakeVMClient(t, &tc.server)
 
 			vm, err := fetchVirtualMachine(context.Background(), client, "rg", "vm")
 			if tc.wantErr {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.errSubstr)
+
 				return
 			}
+
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantName, *vm.Name)
 		})
@@ -144,11 +151,14 @@ func TestExtractVMNics(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			got, err := extractVMNics(tc.vm)
 			if tc.wantErr {
 				require.Error(t, err)
+
 				return
 			}
+
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
 		})
@@ -162,10 +172,10 @@ func TestExtractVMNics(t *testing.T) {
 func TestExtractVMAvailabilitySetID(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
 		name string
-		vm   *armcompute.VirtualMachine
 		want string
+		vm   *armcompute.VirtualMachine
 	}{
 		{
 			name: "AvailabilitySetPresent",
@@ -192,6 +202,7 @@ func TestExtractVMAvailabilitySetID(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			got, err := extractVMAvailabilitySetID(tc.vm)
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
@@ -250,6 +261,7 @@ func TestExtractVMImage(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			got := extractVMImage(tc.vm)
 			assert.Equal(t, tc.want, got)
 		})
@@ -263,7 +275,7 @@ func TestExtractVMImage(t *testing.T) {
 func TestExtractVMTags(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
 		name string
 		vm   *armcompute.VirtualMachine
 		want map[string]string
@@ -288,6 +300,7 @@ func TestExtractVMTags(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			got := extractVMTags(tc.vm)
 			assert.Equal(t, tc.want, got)
 		})
@@ -301,8 +314,8 @@ func TestExtractVMTags(t *testing.T) {
 func TestListVirtualMachineNames(t *testing.T) {
 	t.Parallel()
 
-	srv := computefake.VirtualMachinesServer{
-		NewListPager: func(resourceGroupName string, options *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
+	srv := &computefake.VirtualMachinesServer{
+		NewListPager: func(_ string, _ *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
 			resp.AddPage(http.StatusOK, armcompute.VirtualMachinesClientListResponse{
 				VirtualMachineListResult: armcompute.VirtualMachineListResult{
 					Value: []*armcompute.VirtualMachine{
@@ -311,12 +324,14 @@ func TestListVirtualMachineNames(t *testing.T) {
 					},
 				},
 			}, nil)
+
 			return
 		},
 	}
 
 	client := newFakeVMClient(t, srv)
 	names, err := listVirtualMachineNames(context.Background(), client, "rg")
+
 	require.NoError(t, err)
 	assert.Equal(t, []string{"vm1", "vm2"}, names)
 }

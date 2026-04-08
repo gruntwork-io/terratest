@@ -1,4 +1,4 @@
-package azure
+package azure //nolint:testpackage // tests access unexported functions
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 func TestResourceNotFoundErrorExists(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
 		name     string
 		err      error
 		expected bool
@@ -29,6 +29,7 @@ func TestResourceNotFoundErrorExists(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			assert.Equal(t, tt.expected, ResourceNotFoundErrorExists(tt.err))
 		})
 	}
