@@ -9,6 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/hashicorp/go-multierror"
+	"github.com/stretchr/testify/require"
 )
 
 // RemoteFileSpecification describes which files you want to copy from your instances
@@ -49,9 +50,7 @@ func FetchContentsOfFileFromInstanceContext(t testing.TestingT, ctx context.Cont
 	t.Helper()
 
 	out, err := FetchContentsOfFileFromInstanceContextE(t, ctx, awsRegion, sshUserName, keyPair, instanceID, useSudo, filePath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -104,9 +103,7 @@ func FetchContentsOfFilesFromInstanceContext(t testing.TestingT, ctx context.Con
 	t.Helper()
 
 	out, err := FetchContentsOfFilesFromInstanceContextE(t, ctx, awsRegion, sshUserName, keyPair, instanceID, useSudo, filePaths...)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -166,9 +163,7 @@ func FetchContentsOfFileFromAsgContext(t testing.TestingT, ctx context.Context, 
 	t.Helper()
 
 	out, err := FetchContentsOfFileFromAsgContextE(t, ctx, awsRegion, sshUserName, keyPair, asgName, useSudo, filePath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -230,9 +225,7 @@ func FetchContentsOfFilesFromAsgContext(t testing.TestingT, ctx context.Context,
 	t.Helper()
 
 	out, err := FetchContentsOfFilesFromAsgContextE(t, ctx, awsRegion, sshUserName, keyPair, asgName, useSudo, filePaths...)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -285,7 +278,7 @@ func FetchFilesFromInstanceContextE(t testing.TestingT, ctx context.Context, aws
 	}
 
 	//nolint:staticcheck,contextcheck // ScpDirFromE has no Context variant yet
-	scpOptions := ssh.ScpDownloadOptions{
+	scpOptions := ssh.SCPDownloadOptions{
 		RemoteHost:      host,
 		RemoteDir:       remoteDirectory,
 		LocalDir:        finalLocalDestDir,
@@ -306,9 +299,7 @@ func FetchFilesFromInstanceContext(t testing.TestingT, ctx context.Context, awsR
 	t.Helper()
 
 	err := FetchFilesFromInstanceContextE(t, ctx, awsRegion, sshUserName, keyPair, instanceID, useSudo, remoteDirectory, localDirectory, filenameFilters)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // FetchFilesFromInstance looks up the EC2 Instances in the given ASG, looks up the public IPs of those EC2
@@ -374,9 +365,7 @@ func FetchFilesFromAsgsPContext(t testing.TestingT, ctx context.Context, awsRegi
 	t.Helper()
 
 	err := FetchFilesFromAsgsPContextE(t, ctx, awsRegion, spec)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // FetchFilesFromAsgsP looks up the EC2 Instances in all the ASGs given in the RemoteFileSpecification,

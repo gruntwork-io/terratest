@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // GetCloudWatchLogEntriesContextE returns the CloudWatch log messages in the given region for the given log stream and log group.
@@ -40,9 +41,7 @@ func GetCloudWatchLogEntriesContext(t testing.TestingT, ctx context.Context, aws
 	t.Helper()
 
 	out, err := GetCloudWatchLogEntriesContextE(t, ctx, awsRegion, logStreamName, logGroupName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -81,9 +80,7 @@ func NewCloudWatchLogsClientContext(t testing.TestingT, ctx context.Context, reg
 	t.Helper()
 
 	client, err := NewCloudWatchLogsClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

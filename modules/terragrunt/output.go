@@ -57,22 +57,6 @@ func OutputAllJSONE(t testing.TestingT, options *Options) (string, error) {
 	return OutputAllJSONContextE(t, context.Background(), options)
 }
 
-// OutputAllJson runs terragrunt run --all output -json and returns the raw JSON string.
-// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
-//
-// Deprecated: Use [OutputAllJSONContext] instead.
-func OutputAllJson(t testing.TestingT, options *Options) string { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
-	return OutputAllJSONContext(t, context.Background(), options)
-}
-
-// OutputAllJsonE runs terragrunt run --all output -json and returns the raw JSON string.
-// Note: Current terragrunt versions return separate JSON objects per module, not a combined object.
-//
-// Deprecated: Use [OutputAllJSONContextE] instead.
-func OutputAllJsonE(t testing.TestingT, options *Options) (string, error) { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
-	return OutputAllJSONContextE(t, context.Background(), options)
-}
-
 // OutputJSONContext runs terragrunt run output -json for a single unit and returns clean JSON.
 // The provided context is passed through to the underlying command execution, allowing for timeout
 // and cancellation control. If key is non-empty, returns the JSON value for that specific output.
@@ -122,23 +106,5 @@ func OutputJSON(t testing.TestingT, options *Options, key string) string {
 //
 // Deprecated: Use [OutputJSONContextE] instead.
 func OutputJSONE(t testing.TestingT, options *Options, key string) (string, error) {
-	return OutputJSONContextE(t, context.Background(), options, key)
-}
-
-// OutputJson runs terragrunt run output -json for a single unit and returns clean JSON.
-// If key is non-empty, returns the JSON value for that specific output.
-// If key is empty, returns all outputs as JSON.
-//
-// Deprecated: Use [OutputJSONContext] instead.
-func OutputJson(t testing.TestingT, options *Options, key string) string { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
-	return OutputJSONContext(t, context.Background(), options, key)
-}
-
-// OutputJsonE runs terragrunt run output -json for a single unit and returns clean JSON.
-// If key is non-empty, returns the JSON value for that specific output.
-// If key is empty, returns all outputs as JSON.
-//
-// Deprecated: Use [OutputJSONContextE] instead.
-func OutputJsonE(t testing.TestingT, options *Options, key string) (string, error) { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
 	return OutputJSONContextE(t, context.Background(), options, key)
 }

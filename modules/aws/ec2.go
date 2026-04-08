@@ -48,16 +48,6 @@ func GetPrivateIPOfEc2Instance(t testing.TestingT, instanceID string, awsRegion 
 	return GetPrivateIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
 }
 
-// GetPrivateIpOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPrivateIPOfEc2InstanceContext] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPrivateIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	t.Helper()
-	return GetPrivateIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
 // GetPrivateIPOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
 //
 // Deprecated: Use [GetPrivateIPOfEc2InstanceContextE] instead.
@@ -65,37 +55,30 @@ func GetPrivateIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion
 	return GetPrivateIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
 }
 
-// GetPrivateIpOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPrivateIPOfEc2InstanceContextE] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPrivateIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPrivateIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
-}
-
 // GetPrivateIpsOfEc2InstancesContextE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 // The ctx parameter supports cancellation and timeouts.
-func GetPrivateIpsOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) {
+func GetPrivateIpsOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) { //nolint:dupl // pagination pattern shared with hostname/public IP variants
 	ec2Client, err := NewEc2ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	output, err := ec2Client.DescribeInstances(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
 
 	ips := map[string]string{}
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateIpAddress)
+	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateIpAddress)
+			}
 		}
 	}
 
@@ -173,26 +156,28 @@ func GetPrivateHostnameOfEc2InstanceE(t testing.TestingT, instanceID string, aws
 
 // GetPrivateHostnamesOfEc2InstancesContextE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 // The ctx parameter supports cancellation and timeouts.
-func GetPrivateHostnamesOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) {
+func GetPrivateHostnamesOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) { //nolint:dupl // pagination pattern shared with IP/public IP variants
 	ec2Client, err := NewEc2ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	output, err := ec2Client.DescribeInstances(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
 
 	hostnames := map[string]string{}
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			hostnames[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateDnsName)
+	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				hostnames[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateDnsName)
+			}
 		}
 	}
 
@@ -262,16 +247,6 @@ func GetPublicIPOfEc2Instance(t testing.TestingT, instanceID string, awsRegion s
 	return GetPublicIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
 }
 
-// GetPublicIpOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPublicIPOfEc2InstanceContext] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPublicIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	t.Helper()
-	return GetPublicIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
 // GetPublicIPOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
 //
 // Deprecated: Use [GetPublicIPOfEc2InstanceContextE] instead.
@@ -279,37 +254,30 @@ func GetPublicIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion 
 	return GetPublicIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
 }
 
-// GetPublicIpOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPublicIPOfEc2InstanceContextE] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPublicIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPublicIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
-}
-
 // GetPublicIpsOfEc2InstancesContextE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 // The ctx parameter supports cancellation and timeouts.
-func GetPublicIpsOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) {
+func GetPublicIpsOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) { //nolint:dupl // pagination pattern shared with private IP/hostname variants
 	ec2Client, err := NewEc2ClientContextE(t, ctx, awsRegion)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
 	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	output, err := ec2Client.DescribeInstances(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
 
 	ips := map[string]string{}
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PublicIpAddress)
+	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PublicIpAddress)
+			}
 		}
 	}
 
@@ -393,18 +361,20 @@ func GetEc2InstanceIdsByFiltersContextE(t testing.TestingT, ctx context.Context,
 		ec2FilterList = append(ec2FilterList, types.Filter{Name: aws.String(name), Values: values})
 	}
 
-	// TODO: implement pagination for cases that extend beyond limit (1000 instances)
-	output, err := client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{Filters: ec2FilterList})
-	if err != nil {
-		return nil, err
-	}
-
 	var instanceIDs []string
 
-	for _, reservation := range output.Reservations {
-		for j := range reservation.Instances {
-			instance := &reservation.Instances[j]
-			instanceIDs = append(instanceIDs, *instance.InstanceId)
+	paginator := ec2.NewDescribeInstancesPaginator(client, &ec2.DescribeInstancesInput{Filters: ec2FilterList})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				instanceIDs = append(instanceIDs, *instance.InstanceId)
+			}
 		}
 	}
 
@@ -461,15 +431,18 @@ func GetTagsForEc2InstanceContextE(t testing.TestingT, ctx context.Context, regi
 		},
 	}
 
-	out, err := client.DescribeTags(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
-
 	tags := map[string]string{}
 
-	for _, tag := range out.Tags {
-		tags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
+	paginator := ec2.NewDescribeTagsPaginator(client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, tag := range page.Tags {
+			tags[aws.ToString(tag.Key)] = aws.ToString(tag.Value)
+		}
 	}
 
 	return tags, nil

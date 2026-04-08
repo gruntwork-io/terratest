@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // GetCmkArnContextE gets the ARN of a KMS Customer Master Key (CMK) in the given region with the given ID. The ID can be an alias, such
@@ -35,9 +36,7 @@ func GetCmkArnContext(t testing.TestingT, ctx context.Context, region string, cm
 	t.Helper()
 
 	out, err := GetCmkArnContextE(t, ctx, region, cmkID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -78,9 +77,7 @@ func NewKmsClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewKmsClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

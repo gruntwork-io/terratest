@@ -121,26 +121,10 @@ func GetVpcByID(t testing.TestingT, vpcID string, region string) *Vpc {
 	return GetVpcByIDContext(t, context.Background(), vpcID, region)
 }
 
-// GetVpcById fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByIDContext] instead.
-func GetVpcById(t testing.TestingT, vpcID string, region string) *Vpc { //nolint:staticcheck,revive // preserving deprecated function name
-	t.Helper()
-
-	return GetVpcByIDContext(t, context.Background(), vpcID, region)
-}
-
 // GetVpcByIDE fetches information about a VPC with given ID in the given region.
 //
 // Deprecated: Use [GetVpcByIDContextE] instead.
 func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) {
-	return GetVpcByIDContextE(t, context.Background(), vpcID, region)
-}
-
-// GetVpcByIdE fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByIDContextE] instead.
-func GetVpcByIdE(t testing.TestingT, vpcID string, region string) (*Vpc, error) { //nolint:staticcheck,revive // preserving deprecated function name
 	return GetVpcByIDContextE(t, context.Background(), vpcID, region)
 }
 
@@ -273,9 +257,7 @@ func GetSubnetsForVpcContext(t testing.TestingT, ctx context.Context, vpcID stri
 	vpcIDFilter := generateVpcIDFilter(vpcID)
 
 	subnets, err := GetSubnetsForVpcContextE(t, ctx, region, []types.Filter{vpcIDFilter})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return subnets
 }
@@ -315,9 +297,7 @@ func GetAzDefaultSubnetsForVpcContext(t testing.TestingT, ctx context.Context, v
 	t.Helper()
 
 	subnets, err := GetAzDefaultSubnetsForVpcContextE(t, ctx, vpcID, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return subnets
 }

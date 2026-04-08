@@ -113,9 +113,7 @@ func GetInstanceIdsForAsgContext(t testing.TestingT, ctx context.Context, asgNam
 	t.Helper()
 
 	ids, err := GetInstanceIdsForAsgContextE(t, ctx, asgName, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ids
 }
@@ -232,9 +230,7 @@ func NewAsgClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewAsgClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

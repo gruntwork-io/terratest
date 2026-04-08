@@ -34,7 +34,7 @@ func TestHelmLogsRedirect(t *testing.T) {
 	require.NoError(t, err)
 
 	// Namespace to deploy helm chart
-	namespaceName := fmt.Sprintf("helm-logs-%s", strings.ToLower(random.UniqueId()))
+	namespaceName := fmt.Sprintf("helm-logs-%s", strings.ToLower(random.UniqueID()))
 
 	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
 	// - HOME/.kube/config for the kubectl config file
@@ -58,7 +58,7 @@ func TestHelmLogsRedirect(t *testing.T) {
 	// Generate a unique release to avoid conflicts with other tests
 	releaseName := fmt.Sprintf(
 		"nginx-service-%s",
-		strings.ToLower(random.UniqueId()),
+		strings.ToLower(random.UniqueID()),
 	)
 	defer helm.Delete(t, options, releaseName, true)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // CreateSnsTopicContextE creates an SNS Topic and return the ARN.
@@ -38,9 +39,7 @@ func CreateSnsTopicContext(t testing.TestingT, ctx context.Context, region strin
 	t.Helper()
 
 	out, err := CreateSnsTopicContextE(t, ctx, region, snsTopicName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -87,9 +86,7 @@ func DeleteSNSTopicContext(t testing.TestingT, ctx context.Context, region strin
 	t.Helper()
 
 	err := DeleteSNSTopicContextE(t, ctx, region, snsTopicArn)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteSNSTopic deletes an SNS Topic.
@@ -126,9 +123,7 @@ func NewSnsClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewSnsClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

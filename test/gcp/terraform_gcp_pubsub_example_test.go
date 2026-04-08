@@ -24,8 +24,8 @@ func TestTerraformGcpPubSubExample(t *testing.T) {
 
 	// Create random unique names for our Pub/Sub resources
 	// so multiple tests running simultaneously don't collide.
-	expectedTopicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueId())
-	expectedSubscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueId())
+	expectedTopicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
+	expectedSubscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
 
 	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-pubsub-example")
 

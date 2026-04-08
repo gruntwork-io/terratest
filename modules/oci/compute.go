@@ -9,6 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/oracle/oci-go-sdk/common"
 	"github.com/oracle/oci-go-sdk/core"
+	"github.com/stretchr/testify/require"
 )
 
 // DeleteImageContextE deletes a custom image with given OCID.
@@ -36,9 +37,7 @@ func DeleteImageContext(t testing.TestingT, ctx context.Context, ocid string) {
 	t.Helper()
 
 	err := DeleteImageContextE(t, ctx, ocid)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteImage deletes a custom image with given OCID.
@@ -94,9 +93,7 @@ func GetMostRecentImageIDContext(t testing.TestingT, ctx context.Context, compar
 	t.Helper()
 
 	ocid, err := GetMostRecentImageIDContextE(t, ctx, compartmentID, osName, osVersion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ocid
 }

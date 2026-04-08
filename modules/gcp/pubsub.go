@@ -7,15 +7,14 @@ import (
 	"cloud.google.com/go/pubsub"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // AssertTopicExistsContext checks if the given Pub/Sub topic exists and fails the test if it does not.
 // The ctx parameter supports cancellation and timeouts.
 func AssertTopicExistsContext(t testing.TestingT, ctx context.Context, projectID string, topicName string) {
 	err := AssertTopicExistsContextE(t, ctx, projectID, topicName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // AssertTopicExistsContextE checks if the given Pub/Sub topic exists and returns an error if it does not.
@@ -46,9 +45,7 @@ func AssertTopicExistsContextE(t testing.TestingT, ctx context.Context, projectI
 // The ctx parameter supports cancellation and timeouts.
 func AssertSubscriptionExistsContext(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string) {
 	err := AssertSubscriptionExistsContextE(t, ctx, projectID, subscriptionName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // AssertSubscriptionExistsContextE checks if the given Pub/Sub subscription exists and returns an error if it does not.
@@ -79,9 +76,7 @@ func AssertSubscriptionExistsContextE(t testing.TestingT, ctx context.Context, p
 // The ctx parameter supports cancellation and timeouts.
 func CreateTopicContext(t testing.TestingT, ctx context.Context, projectID string, topicName string) {
 	err := CreateTopicContextE(t, ctx, projectID, topicName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // CreateTopicContextE creates a new Pub/Sub topic and returns an error if it fails.
@@ -108,9 +103,7 @@ func CreateTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 // The ctx parameter supports cancellation and timeouts.
 func DeleteTopicContext(t testing.TestingT, ctx context.Context, projectID string, topicName string) {
 	err := DeleteTopicContextE(t, ctx, projectID, topicName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteTopicContextE deletes the given Pub/Sub topic and returns an error if it fails.
@@ -136,9 +129,7 @@ func DeleteTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 // The ctx parameter supports cancellation and timeouts.
 func CreateSubscriptionContext(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string, topicName string) {
 	err := CreateSubscriptionContextE(t, ctx, projectID, subscriptionName, topicName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // CreateSubscriptionContextE creates a new Pub/Sub subscription on the given topic and returns an error if it fails.
@@ -167,9 +158,7 @@ func CreateSubscriptionContextE(t testing.TestingT, ctx context.Context, project
 // The ctx parameter supports cancellation and timeouts.
 func DeleteSubscriptionContext(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string) {
 	err := DeleteSubscriptionContextE(t, ctx, projectID, subscriptionName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteSubscriptionContextE deletes the given Pub/Sub subscription and returns an error if it fails.

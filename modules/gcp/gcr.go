@@ -10,6 +10,7 @@ import (
 	gcrremote "github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // DeleteGCRRepo deletes a GCR repository including all tagged images.
@@ -25,9 +26,7 @@ func DeleteGCRRepo(t testing.TestingT, repo string) {
 // The ctx parameter supports cancellation and timeouts.
 func DeleteGCRRepoContext(t testing.TestingT, ctx context.Context, repo string) {
 	err := DeleteGCRRepoContextE(t, ctx, repo)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteGCRRepoE deletes a GCR repository including all tagged images.
@@ -92,9 +91,7 @@ func DeleteGCRImageRef(t testing.TestingT, ref string) {
 // The ctx parameter supports cancellation and timeouts.
 func DeleteGCRImageRefContext(t testing.TestingT, ctx context.Context, ref string) {
 	err := DeleteGCRImageRefContextE(t, ctx, ref)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteGCRImageRefE deletes a single repo image ref/digest.

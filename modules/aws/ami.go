@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // These are commonly used AMI account IDs.
@@ -21,13 +22,6 @@ const (
 	CentOsAccountID = "679593333241"
 	// AmazonAccountID is the AWS account ID (or alias) for Amazon.
 	AmazonAccountID = "amazon"
-
-	// Deprecated: Use [CanonicalAccountID] instead.
-	CanonicalAccountId = CanonicalAccountID //nolint:staticcheck,revive // preserving deprecated constant name
-	// Deprecated: Use [CentOsAccountID] instead.
-	CentOsAccountId = CentOsAccountID //nolint:staticcheck,revive // preserving deprecated constant name
-	// Deprecated: Use [AmazonAccountID] instead.
-	AmazonAccountId = AmazonAccountID //nolint:staticcheck,revive // preserving deprecated constant name
 )
 
 // DeleteAmiAndAllSnapshotsContextE will delete the given AMI along with all EBS snapshots that backed that AMI.
@@ -59,9 +53,7 @@ func DeleteAmiAndAllSnapshotsContext(t testing.TestingT, ctx context.Context, re
 	t.Helper()
 
 	err := DeleteAmiAndAllSnapshotsContextE(t, ctx, region, ami)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteAmiAndAllSnapshots will delete the given AMI along with all EBS snapshots that backed that AMI.
@@ -120,9 +112,7 @@ func GetEbsSnapshotsForAmiContext(t testing.TestingT, ctx context.Context, regio
 	t.Helper()
 
 	snapshots, err := GetEbsSnapshotsForAmiContextE(t, ctx, region, ami)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return snapshots
 }
@@ -187,9 +177,7 @@ func GetMostRecentAmiIDContext(t testing.TestingT, ctx context.Context, region s
 	t.Helper()
 
 	amiID, err := GetMostRecentAmiIDContextE(t, ctx, region, ownerID, filters)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }
@@ -212,22 +200,6 @@ func GetMostRecentAmiID(t testing.TestingT, region string, ownerID string, filte
 // Deprecated: Use [GetMostRecentAmiIDContextE] instead.
 func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filters map[string][]string) (string, error) {
 	return GetMostRecentAmiIDContextE(t, context.Background(), region, ownerID, filters)
-}
-
-// Deprecated: Use [GetMostRecentAmiIDContext] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filters map[string][]string) string {
-	t.Helper()
-
-	return GetMostRecentAmiIDContext(t, context.Background(), region, ownerId, filters)
-}
-
-// Deprecated: Use [GetMostRecentAmiIDContextE] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filters map[string][]string) (string, error) {
-	return GetMostRecentAmiIDContextE(t, context.Background(), region, ownerId, filters)
 }
 
 // Image sorting code borrowed from: https://github.com/hashicorp/packer/blob/7f4112ba229309cfc0ebaa10ded2abdfaf1b22c8/builder/amazon/common/step_source_ami_info.go
@@ -270,9 +242,7 @@ func GetUbuntu1404AmiContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 
 	amiID, err := GetUbuntu1404AmiContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }
@@ -313,9 +283,7 @@ func GetUbuntu1604AmiContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 
 	amiID, err := GetUbuntu1604AmiContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }
@@ -356,9 +324,7 @@ func GetUbuntu2004AmiContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 
 	amiID, err := GetUbuntu2004AmiContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }
@@ -399,9 +365,7 @@ func GetUbuntu2204AmiContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 
 	amiID, err := GetUbuntu2204AmiContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }
@@ -446,9 +410,7 @@ func GetCentos7AmiContext(t testing.TestingT, ctx context.Context, region string
 	t.Helper()
 
 	amiID, err := GetCentos7AmiContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }
@@ -493,9 +455,7 @@ func GetAmazonLinuxAmiContext(t testing.TestingT, ctx context.Context, region st
 	t.Helper()
 
 	amiID, err := GetAmazonLinuxAmiContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }
@@ -536,9 +496,7 @@ func GetEcsOptimizedAmazonLinuxAmiContext(t testing.TestingT, ctx context.Contex
 	t.Helper()
 
 	amiID, err := GetEcsOptimizedAmazonLinuxAmiContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return amiID
 }

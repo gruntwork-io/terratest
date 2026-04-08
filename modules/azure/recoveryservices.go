@@ -3,17 +3,17 @@ package azure
 import (
 	"context"
 	"fmt"
-	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2016-06-01/recoveryservices"
 	"github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2020-02-02/backup"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // RecoveryServicesVaultExistsContext indicates whether a recovery services vault exists; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func RecoveryServicesVaultExistsContext(t *testing.T, ctx context.Context, vaultName, resourceGroupName, subscriptionID string) bool {
+func RecoveryServicesVaultExistsContext(t testing.TestingT, ctx context.Context, vaultName, resourceGroupName, subscriptionID string) bool {
 	t.Helper()
 
 	exists, err := RecoveryServicesVaultExistsContextE(ctx, vaultName, resourceGroupName, subscriptionID)
@@ -26,7 +26,7 @@ func RecoveryServicesVaultExistsContext(t *testing.T, ctx context.Context, vault
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [RecoveryServicesVaultExistsContext] instead.
-func RecoveryServicesVaultExists(t *testing.T, vaultName, resourceGroupName, subscriptionID string) bool {
+func RecoveryServicesVaultExists(t testing.TestingT, vaultName, resourceGroupName, subscriptionID string) bool {
 	t.Helper()
 
 	return RecoveryServicesVaultExistsContext(t, context.Background(), vaultName, resourceGroupName, subscriptionID)
@@ -35,7 +35,7 @@ func RecoveryServicesVaultExists(t *testing.T, vaultName, resourceGroupName, sub
 // GetRecoveryServicesVaultBackupPolicyListContext returns a list of backup policies for the given vault.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetRecoveryServicesVaultBackupPolicyListContext(t *testing.T, ctx context.Context, vaultName, resourceGroupName, subscriptionID string) map[string]backup.ProtectionPolicyResource {
+func GetRecoveryServicesVaultBackupPolicyListContext(t testing.TestingT, ctx context.Context, vaultName, resourceGroupName, subscriptionID string) map[string]backup.ProtectionPolicyResource {
 	t.Helper()
 
 	list, err := GetRecoveryServicesVaultBackupPolicyListContextE(ctx, vaultName, resourceGroupName, subscriptionID)
@@ -48,7 +48,7 @@ func GetRecoveryServicesVaultBackupPolicyListContext(t *testing.T, ctx context.C
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetRecoveryServicesVaultBackupPolicyListContext] instead.
-func GetRecoveryServicesVaultBackupPolicyList(t *testing.T, vaultName, resourceGroupName, subscriptionID string) map[string]backup.ProtectionPolicyResource {
+func GetRecoveryServicesVaultBackupPolicyList(t testing.TestingT, vaultName, resourceGroupName, subscriptionID string) map[string]backup.ProtectionPolicyResource {
 	t.Helper()
 
 	return GetRecoveryServicesVaultBackupPolicyListContext(t, context.Background(), vaultName, resourceGroupName, subscriptionID)
@@ -57,7 +57,7 @@ func GetRecoveryServicesVaultBackupPolicyList(t *testing.T, vaultName, resourceG
 // GetRecoveryServicesVaultBackupProtectedVMListContext returns a list of protected VMs on the given vault and policy.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetRecoveryServicesVaultBackupProtectedVMListContext(t *testing.T, ctx context.Context, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]backup.AzureIaaSComputeVMProtectedItem {
+func GetRecoveryServicesVaultBackupProtectedVMListContext(t testing.TestingT, ctx context.Context, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]backup.AzureIaaSComputeVMProtectedItem {
 	t.Helper()
 
 	list, err := GetRecoveryServicesVaultBackupProtectedVMListContextE(ctx, policyName, vaultName, resourceGroupName, subscriptionID)
@@ -70,7 +70,7 @@ func GetRecoveryServicesVaultBackupProtectedVMListContext(t *testing.T, ctx cont
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetRecoveryServicesVaultBackupProtectedVMListContext] instead.
-func GetRecoveryServicesVaultBackupProtectedVMList(t *testing.T, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]backup.AzureIaaSComputeVMProtectedItem {
+func GetRecoveryServicesVaultBackupProtectedVMList(t testing.TestingT, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]backup.AzureIaaSComputeVMProtectedItem {
 	t.Helper()
 
 	return GetRecoveryServicesVaultBackupProtectedVMListContext(t, context.Background(), policyName, vaultName, resourceGroupName, subscriptionID)

@@ -10,6 +10,7 @@ import (
 	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // CreateECRRepoContextE creates a new ECR Repository.
@@ -35,9 +36,7 @@ func CreateECRRepoContext(t testing.TestingT, ctx context.Context, region string
 	t.Helper()
 
 	repo, err := CreateECRRepoContextE(t, ctx, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return repo
 }
@@ -89,9 +88,7 @@ func GetECRRepoContext(t testing.TestingT, ctx context.Context, region string, n
 	t.Helper()
 
 	repo, err := GetECRRepoContextE(t, ctx, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return repo
 }
@@ -152,9 +149,7 @@ func DeleteECRRepoContext(t testing.TestingT, ctx context.Context, region string
 	t.Helper()
 
 	err := DeleteECRRepoContextE(t, ctx, region, repo)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteECRRepo will force delete the ECR repo by deleting all images prior to deleting the ECR repository.
@@ -192,9 +187,7 @@ func NewECRClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewECRClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }
@@ -239,9 +232,7 @@ func GetECRRepoLifecyclePolicyContext(t testing.TestingT, ctx context.Context, r
 	t.Helper()
 
 	policy, err := GetECRRepoLifecyclePolicyContextE(t, ctx, region, repo)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return policy
 }
@@ -290,9 +281,7 @@ func PutECRRepoLifecyclePolicyContext(t testing.TestingT, ctx context.Context, r
 	t.Helper()
 
 	err := PutECRRepoLifecyclePolicyContextE(t, ctx, region, repo, policy)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // PutECRRepoLifecyclePolicy puts the given policy for the given ECR repository.
@@ -335,9 +324,7 @@ func GetECRRepoPolicyContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 
 	policy, err := GetECRRepoPolicyContextE(t, ctx, region, repo)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return policy
 }
@@ -386,9 +373,7 @@ func PutECRRepoPolicyContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 
 	err := PutECRRepoPolicyContextE(t, ctx, region, repo, policy)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // PutECRRepoPolicy puts the given policy for the given ECR repository.

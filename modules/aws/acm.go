@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/acm"
+	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -39,9 +40,7 @@ func GetAcmCertificateArnContext(t testing.TestingT, ctx context.Context, awsReg
 	t.Helper()
 
 	arn, err := GetAcmCertificateArnContextE(t, ctx, awsRegion, certDomainName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return arn
 }
@@ -80,9 +79,7 @@ func NewAcmClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewAcmClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/oracle/oci-go-sdk/common"
 	"github.com/oracle/oci-go-sdk/core"
+	"github.com/stretchr/testify/require"
 )
 
 // GetAllVcnIDsContextE gets the list of VCNs available in the given compartment.
@@ -41,9 +42,7 @@ func GetAllVcnIDsContext(t testing.TestingT, ctx context.Context, compartmentID 
 	t.Helper()
 
 	vcnIDs, err := GetAllVcnIDsContextE(t, ctx, compartmentID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return vcnIDs
 }
@@ -111,9 +110,7 @@ func GetRandomSubnetIDContext(t testing.TestingT, ctx context.Context, compartme
 	t.Helper()
 
 	ocid, err := GetRandomSubnetIDContextE(t, ctx, compartmentID, availabilityDomain)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ocid
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
@@ -37,9 +38,7 @@ func GetAccountIDContext(t testing.TestingT, ctx context.Context) string {
 	t.Helper()
 
 	id, err := GetAccountIDContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return id
 }
@@ -57,22 +56,6 @@ func GetAccountID(t testing.TestingT) string {
 //
 // Deprecated: Use [GetAccountIDContextE] instead.
 func GetAccountIDE(t testing.TestingT) (string, error) {
-	return GetAccountIDContextE(t, context.Background())
-}
-
-// Deprecated: Use [GetAccountIDContext] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetAccountId(t testing.TestingT) string {
-	t.Helper()
-
-	return GetAccountIDContext(t, context.Background())
-}
-
-// Deprecated: Use [GetAccountIDContextE] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetAccountIdE(t testing.TestingT) (string, error) {
 	return GetAccountIDContextE(t, context.Background())
 }
 
@@ -107,9 +90,7 @@ func NewStsClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewStsClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

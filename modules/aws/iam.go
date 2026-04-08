@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // GetIamCurrentUserNameContextE gets the username for the current IAM user.
@@ -36,9 +37,7 @@ func GetIamCurrentUserNameContext(t testing.TestingT, ctx context.Context) strin
 	t.Helper()
 
 	out, err := GetIamCurrentUserNameContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -82,9 +81,7 @@ func GetIamCurrentUserArnContext(t testing.TestingT, ctx context.Context) string
 	t.Helper()
 
 	out, err := GetIamCurrentUserArnContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -156,9 +153,7 @@ func GetIamPolicyDocumentContext(t testing.TestingT, ctx context.Context, region
 	t.Helper()
 
 	out, err := GetIamPolicyDocumentContextE(t, ctx, region, policyARN)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -205,9 +200,7 @@ func CreateMfaDeviceContext(t testing.TestingT, ctx context.Context, iamClient *
 	t.Helper()
 
 	mfaDevice, err := CreateMfaDeviceContextE(t, ctx, iamClient, deviceName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return mfaDevice
 }
@@ -280,9 +273,7 @@ func EnableMfaDeviceContext(t testing.TestingT, ctx context.Context, iamClient *
 	t.Helper()
 
 	err := EnableMfaDeviceContextE(t, ctx, iamClient, mfaDevice)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // EnableMfaDevice enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
@@ -321,9 +312,7 @@ func NewIamClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewIamClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // s3DeleteBatchSize is the maximum number of objects to delete in a single batch.
@@ -70,9 +71,7 @@ func FindS3BucketWithTagContext(t testing.TestingT, ctx context.Context, awsRegi
 	t.Helper()
 
 	bucket, err := FindS3BucketWithTagContextE(t, ctx, awsRegion, key, value)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return bucket
 }
@@ -123,9 +122,7 @@ func GetS3BucketTagsContext(t testing.TestingT, ctx context.Context, awsRegion s
 	t.Helper()
 
 	tags, err := GetS3BucketTagsContextE(t, ctx, awsRegion, bucket)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return tags
 }
@@ -183,9 +180,7 @@ func GetS3ObjectContentsContext(t testing.TestingT, ctx context.Context, awsRegi
 	t.Helper()
 
 	contents, err := GetS3ObjectContentsContextE(t, ctx, awsRegion, bucket, key)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return contents
 }
@@ -232,9 +227,7 @@ func PutS3ObjectContentsContext(t testing.TestingT, ctx context.Context, awsRegi
 	t.Helper()
 
 	err := PutS3ObjectContentsContextE(t, ctx, awsRegion, bucket, key, body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // PutS3ObjectContents puts the contents of the object in the given bucket with the given key.
@@ -286,9 +279,7 @@ func CreateS3BucketContext(t testing.TestingT, ctx context.Context, region strin
 	t.Helper()
 
 	err := CreateS3BucketContextE(t, ctx, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // CreateS3Bucket creates an S3 bucket in the given region with the given name. Note that S3 bucket names must be globally unique.
@@ -334,9 +325,7 @@ func PutS3BucketPolicyContext(t testing.TestingT, ctx context.Context, region st
 	t.Helper()
 
 	err := PutS3BucketPolicyContextE(t, ctx, region, bucketName, policyJSONString)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // PutS3BucketPolicy applies an IAM resource policy to a given S3 bucket to create its bucket policy
@@ -385,9 +374,7 @@ func PutS3BucketVersioningContext(t testing.TestingT, ctx context.Context, regio
 	t.Helper()
 
 	err := PutS3BucketVersioningContextE(t, ctx, region, bucketName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // PutS3BucketVersioning creates an S3 bucket versioning configuration in the given region against the given bucket name, WITHOUT requiring MFA to remove versioning.
@@ -432,9 +419,7 @@ func DeleteS3BucketContext(t testing.TestingT, ctx context.Context, region strin
 	t.Helper()
 
 	err := DeleteS3BucketContextE(t, ctx, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteS3Bucket destroys the S3 bucket in the given region with the given name.
@@ -534,9 +519,7 @@ func EmptyS3BucketContext(t testing.TestingT, ctx context.Context, region string
 	t.Helper()
 
 	err := EmptyS3BucketContextE(t, ctx, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // EmptyS3Bucket removes the contents of an S3 bucket in the given region with the given name.
@@ -585,9 +568,7 @@ func GetS3BucketLoggingTargetContext(t testing.TestingT, ctx context.Context, aw
 	t.Helper()
 
 	loggingTarget, err := GetS3BucketLoggingTargetContextE(t, ctx, awsRegion, bucket)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return loggingTarget
 }
@@ -639,9 +620,7 @@ func GetS3BucketLoggingTargetPrefixContext(t testing.TestingT, ctx context.Conte
 	t.Helper()
 
 	loggingObjectTargetPrefix, err := GetS3BucketLoggingTargetPrefixContextE(t, ctx, awsRegion, bucket)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return loggingObjectTargetPrefix
 }
@@ -688,9 +667,7 @@ func GetS3BucketVersioningContext(t testing.TestingT, ctx context.Context, awsRe
 	t.Helper()
 
 	versioningStatus, err := GetS3BucketVersioningContextE(t, ctx, awsRegion, bucket)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return versioningStatus
 }
@@ -736,9 +713,7 @@ func GetS3BucketPolicyContext(t testing.TestingT, ctx context.Context, awsRegion
 	t.Helper()
 
 	bucketPolicy, err := GetS3BucketPolicyContextE(t, ctx, awsRegion, bucket)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return bucketPolicy
 }
@@ -789,9 +764,7 @@ func GetS3BucketOwnershipControlsContext(t testing.TestingT, ctx context.Context
 	t.Helper()
 
 	rules, err := GetS3BucketOwnershipControlsContextE(t, ctx, awsRegion, bucket)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return rules
 }
@@ -836,9 +809,7 @@ func AssertS3BucketExistsContext(t testing.TestingT, ctx context.Context, region
 	t.Helper()
 
 	err := AssertS3BucketExistsContextE(t, ctx, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // AssertS3BucketExists checks if the given S3 bucket exists in the given region and fail the test if it does not.
@@ -879,9 +850,7 @@ func AssertS3BucketVersioningExistsContext(t testing.TestingT, ctx context.Conte
 	t.Helper()
 
 	err := AssertS3BucketVersioningExistsContextE(t, ctx, region, bucketName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // AssertS3BucketVersioningExists checks if the given S3 bucket has a versioning configuration enabled and returns an error if it does not.
@@ -922,9 +891,7 @@ func AssertS3BucketPolicyExistsContext(t testing.TestingT, ctx context.Context, 
 	t.Helper()
 
 	err := AssertS3BucketPolicyExistsContextE(t, ctx, region, bucketName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // AssertS3BucketPolicyExists checks if the given S3 bucket has a resource policy attached and returns an error if it does not
@@ -961,9 +928,7 @@ func NewS3ClientContext(t testing.TestingT, ctx context.Context, region string) 
 	t.Helper()
 
 	client, err := NewS3ClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }
@@ -1002,9 +967,7 @@ func NewS3UploaderContext(t testing.TestingT, ctx context.Context, region string
 	t.Helper()
 
 	uploader, err := NewS3UploaderContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return uploader
 }

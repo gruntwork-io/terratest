@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/storage"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/api/iterator"
 )
 
@@ -28,9 +29,7 @@ func CreateStorageBucket(t testing.TestingT, projectID string, name string, attr
 // The ctx parameter supports cancellation and timeouts.
 func CreateStorageBucketContext(t testing.TestingT, ctx context.Context, projectID string, name string, attr *storage.BucketAttrs) {
 	err := CreateStorageBucketContextE(t, ctx, projectID, name, attr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // CreateStorageBucketE creates a Google Cloud bucket with the given BucketAttrs.
@@ -75,9 +74,7 @@ func DeleteStorageBucket(t testing.TestingT, name string) {
 // The ctx parameter supports cancellation and timeouts.
 func DeleteStorageBucketContext(t testing.TestingT, ctx context.Context, name string) {
 	err := DeleteStorageBucketContextE(t, ctx, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteStorageBucketE destroys the Google Cloud Storage bucket with the given name.
@@ -115,9 +112,7 @@ func ReadBucketObject(t testing.TestingT, bucketName string, filePath string) io
 // The ctx parameter supports cancellation and timeouts.
 func ReadBucketObjectContext(t testing.TestingT, ctx context.Context, bucketName string, filePath string) io.Reader {
 	out, err := ReadBucketObjectContextE(t, ctx, bucketName, filePath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -171,9 +166,7 @@ func WriteBucketObject(t testing.TestingT, bucketName string, filePath string, b
 // The ctx parameter supports cancellation and timeouts.
 func WriteBucketObjectContext(t testing.TestingT, ctx context.Context, bucketName string, filePath string, body io.Reader, contentType string) string {
 	out, err := WriteBucketObjectContextE(t, ctx, bucketName, filePath, body, contentType)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -236,9 +229,7 @@ func EmptyStorageBucket(t testing.TestingT, name string) {
 // The ctx parameter supports cancellation and timeouts.
 func EmptyStorageBucketContext(t testing.TestingT, ctx context.Context, name string) {
 	err := EmptyStorageBucketContextE(t, ctx, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // EmptyStorageBucketE removes the contents of a storage bucket with the given name.
@@ -301,9 +292,7 @@ func AssertStorageBucketExists(t testing.TestingT, name string) {
 // The ctx parameter supports cancellation and timeouts.
 func AssertStorageBucketExistsContext(t testing.TestingT, ctx context.Context, name string) {
 	err := AssertStorageBucketExistsContextE(t, ctx, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // AssertStorageBucketExistsE checks if the given storage bucket exists and returns an error if it does not.

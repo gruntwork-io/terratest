@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // DeleteEbsSnapshotContextE deletes the given EBS snapshot.
@@ -35,9 +36,7 @@ func DeleteEbsSnapshotContext(t testing.TestingT, ctx context.Context, region st
 	t.Helper()
 
 	err := DeleteEbsSnapshotContextE(t, ctx, region, snapshot)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteEbsSnapshot deletes the given EBS snapshot.

@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // sqsMaxWaitTimeSeconds is the maximum number of seconds to wait for a message on a single SQS receive call.
@@ -50,9 +51,7 @@ func CreateRandomQueueContext(t testing.TestingT, ctx context.Context, awsRegion
 	t.Helper()
 
 	url, err := CreateRandomQueueContextE(t, ctx, awsRegion, prefix)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return url
 }
@@ -110,9 +109,7 @@ func CreateRandomFifoQueueContext(t testing.TestingT, ctx context.Context, awsRe
 	t.Helper()
 
 	url, err := CreateRandomFifoQueueContextE(t, ctx, awsRegion, prefix)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return url
 }
@@ -156,9 +153,7 @@ func DeleteQueueContext(t testing.TestingT, ctx context.Context, awsRegion strin
 	t.Helper()
 
 	err := DeleteQueueContextE(t, ctx, awsRegion, queueURL)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteQueue deletes the SQS queue with the given URL.
@@ -201,9 +196,7 @@ func DeleteMessageFromQueueContext(t testing.TestingT, ctx context.Context, awsR
 	t.Helper()
 
 	err := DeleteMessageFromQueueContextE(t, ctx, awsRegion, queueURL, receipt)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteMessageFromQueue deletes the message with the given receipt from the SQS queue with the given URL.
@@ -257,9 +250,7 @@ func SendMessageToQueueContext(t testing.TestingT, ctx context.Context, awsRegio
 	t.Helper()
 
 	err := SendMessageToQueueContextE(t, ctx, awsRegion, queueURL, message)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // SendMessageToQueue sends the given message to the SQS queue with the given URL.
@@ -314,9 +305,7 @@ func SendMessageFifoToQueueContext(t testing.TestingT, ctx context.Context, awsR
 	t.Helper()
 
 	err := SendMessageFifoToQueueContextE(t, ctx, awsRegion, queueURL, message, messageGroupID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // SendMessageFifoToQueue sends the given message to the FIFO SQS queue with the given URL.
@@ -408,9 +397,7 @@ func NewSqsClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewSqsClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

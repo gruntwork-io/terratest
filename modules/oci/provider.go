@@ -6,6 +6,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/oracle/oci-go-sdk/common"
+	"github.com/stretchr/testify/require"
 )
 
 // You can set this environment variable to force Terratest to use a specific compartment.
@@ -41,9 +42,7 @@ func GetRootCompartmentIDContext(t testing.TestingT, ctx context.Context) string
 	t.Helper()
 
 	tenancyID, err := GetRootCompartmentIDContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return tenancyID
 }

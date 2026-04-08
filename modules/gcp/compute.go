@@ -12,6 +12,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
@@ -55,12 +56,6 @@ type InstanceGroup interface {
 	// GetInstanceIDsContextE gets the IDs of Instances in the given Instance Group.
 	// The ctx parameter supports cancellation and timeouts.
 	GetInstanceIDsContextE(t testing.TestingT, ctx context.Context) ([]string, error)
-
-	// Deprecated: Use [InstanceGroup.GetInstanceIDs] instead.
-	GetInstanceIds(t testing.TestingT) []string //nolint:staticcheck,revive // preserving deprecated method name
-
-	// Deprecated: Use [InstanceGroup.GetInstanceIDsE] instead.
-	GetInstanceIdsE(t testing.TestingT) ([]string, error) //nolint:staticcheck,revive // preserving deprecated method name
 }
 
 // FetchInstance queries GCP to return an instance of the Compute Instance type.
@@ -76,9 +71,7 @@ func FetchInstance(t testing.TestingT, projectID string, name string) *Instance 
 // The ctx parameter supports cancellation and timeouts.
 func FetchInstanceContext(t testing.TestingT, ctx context.Context, projectID string, name string) *Instance {
 	instance, err := FetchInstanceContextE(t, ctx, projectID, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return instance
 }
@@ -131,9 +124,7 @@ func FetchImage(t testing.TestingT, projectID string, name string) *Image {
 // The ctx parameter supports cancellation and timeouts.
 func FetchImageContext(t testing.TestingT, ctx context.Context, projectID string, name string) *Image {
 	image, err := FetchImageContextE(t, ctx, projectID, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return image
 }
@@ -178,9 +169,7 @@ func FetchRegionalInstanceGroup(t testing.TestingT, projectID string, region str
 // The ctx parameter supports cancellation and timeouts.
 func FetchRegionalInstanceGroupContext(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *RegionalInstanceGroup {
 	instanceGroup, err := FetchRegionalInstanceGroupContextE(t, ctx, projectID, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return instanceGroup
 }
@@ -225,9 +214,7 @@ func FetchZonalInstanceGroup(t testing.TestingT, projectID string, zone string, 
 // The ctx parameter supports cancellation and timeouts.
 func FetchZonalInstanceGroupContext(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *ZonalInstanceGroup {
 	instanceGroup, err := FetchZonalInstanceGroupContextE(t, ctx, projectID, zone, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return instanceGroup
 }
@@ -272,19 +259,9 @@ func (i *Instance) GetPublicIP(t testing.TestingT) string {
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) GetPublicIPContext(t testing.TestingT, ctx context.Context) string {
 	ip, err := i.GetPublicIPContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ip
-}
-
-// GetPublicIp gets the public IP address of the given Compute Instance.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [Instance.GetPublicIP] instead.
-func (i *Instance) GetPublicIp(t testing.TestingT) string { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.GetPublicIP(t)
 }
 
 // GetPublicIPE gets the public IP address of the given Compute Instance.
@@ -308,13 +285,6 @@ func (i *Instance) GetPublicIPContextE(t testing.TestingT, ctx context.Context) 
 	return ip, nil
 }
 
-// GetPublicIpE gets the public IP address of the given Compute Instance.
-//
-// Deprecated: Use [Instance.GetPublicIPE] instead.
-func (i *Instance) GetPublicIpE(t testing.TestingT) (string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.GetPublicIPE(t)
-}
-
 // GetLabels returns all the tags for the given Compute Instance.
 //
 // Deprecated: Use [Instance.GetLabelsContext] instead.
@@ -326,9 +296,7 @@ func (i *Instance) GetLabels(t testing.TestingT) map[string]string {
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) GetLabelsContext(t testing.TestingT, ctx context.Context) map[string]string {
 	labels, err := i.GetLabelsContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return labels
 }
@@ -357,9 +325,7 @@ func (i *Instance) GetZone(t testing.TestingT) string {
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) GetZoneContext(t testing.TestingT, ctx context.Context) string {
 	zone, err := i.GetZoneContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return zone
 }
@@ -390,9 +356,7 @@ func (i *Instance) SetLabels(t testing.TestingT, labels map[string]string) {
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) SetLabelsContext(t testing.TestingT, ctx context.Context, labels map[string]string) {
 	err := i.SetLabelsContextE(t, ctx, labels)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // SetLabelsE adds the tags to the given Compute Instance.
@@ -432,9 +396,7 @@ func (i *Instance) GetMetadata(t testing.TestingT) []*compute.MetadataItems {
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) GetMetadataContext(t testing.TestingT, ctx context.Context) []*compute.MetadataItems {
 	metadata, err := i.GetMetadataContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return metadata
 }
@@ -465,9 +427,7 @@ func (i *Instance) SetMetadata(t testing.TestingT, metadata map[string]string) {
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) SetMetadataContext(t testing.TestingT, ctx context.Context, metadata map[string]string) {
 	err := i.SetMetadataContextE(t, ctx, metadata)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // SetMetadataE adds the given metadata map to the existing metadata of the given Compute Instance.
@@ -544,9 +504,7 @@ func (i *Instance) AddSSHKey(t testing.TestingT, username string, publicKey stri
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) AddSSHKeyContext(t testing.TestingT, ctx context.Context, username string, publicKey string) {
 	err := i.AddSSHKeyContextE(t, ctx, username, publicKey)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // AddSSHKeyE adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
@@ -577,21 +535,6 @@ func (i *Instance) AddSSHKeyContextE(t testing.TestingT, ctx context.Context, us
 	return nil
 }
 
-// AddSshKey adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [Instance.AddSSHKey] instead.
-func (i *Instance) AddSshKey(t testing.TestingT, username string, publicKey string) { //nolint:staticcheck,revive // preserving deprecated method name
-	i.AddSSHKey(t, username, publicKey)
-}
-
-// AddSshKeyE adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
-//
-// Deprecated: Use [Instance.AddSSHKeyE] instead.
-func (i *Instance) AddSshKeyE(t testing.TestingT, username string, publicKey string) error { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.AddSSHKeyE(t, username, publicKey)
-}
-
 // DeleteImage deletes the given Compute Image.
 // This will fail the test if there is an error.
 //
@@ -605,9 +548,7 @@ func (i *Image) DeleteImage(t testing.TestingT) {
 // The ctx parameter supports cancellation and timeouts.
 func (i *Image) DeleteImageContext(t testing.TestingT, ctx context.Context) {
 	err := i.DeleteImageContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteImageE deletes the given Compute Image.
@@ -647,19 +588,9 @@ func (ig *ZonalInstanceGroup) GetInstanceIDs(t testing.TestingT) []string {
 // The ctx parameter supports cancellation and timeouts.
 func (ig *ZonalInstanceGroup) GetInstanceIDsContext(t testing.TestingT, ctx context.Context) []string {
 	ids, err := ig.GetInstanceIDsContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ids
-}
-
-// GetInstanceIds gets the IDs of Instances in the given Zonal Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetInstanceIDs] instead.
-func (ig *ZonalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDs(t)
 }
 
 // GetInstanceIDsE gets the IDs of Instances in the given Zonal Instance Group.
@@ -667,13 +598,6 @@ func (ig *ZonalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { //no
 // Deprecated: Use [ZonalInstanceGroup.GetInstanceIDsContextE] instead.
 func (ig *ZonalInstanceGroup) GetInstanceIDsE(t testing.TestingT) ([]string, error) {
 	return ig.GetInstanceIDsContextE(t, context.Background())
-}
-
-// GetInstanceIdsE gets the IDs of Instances in the given Zonal Instance Group.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetInstanceIDsE] instead.
-func (ig *ZonalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDsE(t)
 }
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Zonal Instance Group.
@@ -725,19 +649,9 @@ func (ig *RegionalInstanceGroup) GetInstanceIDs(t testing.TestingT) []string {
 // The ctx parameter supports cancellation and timeouts.
 func (ig *RegionalInstanceGroup) GetInstanceIDsContext(t testing.TestingT, ctx context.Context) []string {
 	ids, err := ig.GetInstanceIDsContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ids
-}
-
-// GetInstanceIds gets the IDs of Instances in the given Regional Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetInstanceIDs] instead.
-func (ig *RegionalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDs(t)
 }
 
 // GetInstanceIDsE gets the IDs of Instances in the given Regional Instance Group.
@@ -745,13 +659,6 @@ func (ig *RegionalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { /
 // Deprecated: Use [RegionalInstanceGroup.GetInstanceIDsContextE] instead.
 func (ig *RegionalInstanceGroup) GetInstanceIDsE(t testing.TestingT) ([]string, error) {
 	return ig.GetInstanceIDsContextE(t, context.Background())
-}
-
-// GetInstanceIdsE gets the IDs of Instances in the given Regional Instance Group.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetInstanceIDsE] instead.
-func (ig *RegionalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDsE(t)
 }
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Regional Instance Group.
@@ -803,9 +710,7 @@ func (ig *ZonalInstanceGroup) GetInstances(t testing.TestingT, projectID string)
 // The ctx parameter supports cancellation and timeouts.
 func (ig *ZonalInstanceGroup) GetInstancesContext(t testing.TestingT, ctx context.Context, projectID string) []*Instance {
 	instances, err := ig.GetInstancesContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return instances
 }
@@ -836,9 +741,7 @@ func (ig *RegionalInstanceGroup) GetInstances(t testing.TestingT, projectID stri
 // The ctx parameter supports cancellation and timeouts.
 func (ig *RegionalInstanceGroup) GetInstancesContext(t testing.TestingT, ctx context.Context, projectID string) []*Instance {
 	instances, err := ig.GetInstancesContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return instances
 }
@@ -890,9 +793,7 @@ func (ig *ZonalInstanceGroup) GetPublicIPs(t testing.TestingT, projectID string)
 // The ctx parameter supports cancellation and timeouts.
 func (ig *ZonalInstanceGroup) GetPublicIPsContext(t testing.TestingT, ctx context.Context, projectID string) []string {
 	ips, err := ig.GetPublicIPsContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ips
 }
@@ -910,21 +811,6 @@ func (ig *ZonalInstanceGroup) GetPublicIPsContextE(t testing.TestingT, ctx conte
 	return getPublicIPsContextE(t, ctx, ig, projectID)
 }
 
-// GetPublicIps returns a slice of the public IPs from the given Zonal Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetPublicIPs] instead.
-func (ig *ZonalInstanceGroup) GetPublicIps(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPs(t, projectID)
-}
-
-// GetPublicIpsE returns a slice of the public IPs from the given Zonal Instance Group.
-//
-// Deprecated: Use [ZonalInstanceGroup.GetPublicIPsE] instead.
-func (ig *ZonalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPsE(t, projectID)
-}
-
 // GetPublicIPs returns a slice of the public IPs from the given Regional Instance Group.
 // This will fail the test if there is an error.
 //
@@ -938,9 +824,7 @@ func (ig *RegionalInstanceGroup) GetPublicIPs(t testing.TestingT, projectID stri
 // The ctx parameter supports cancellation and timeouts.
 func (ig *RegionalInstanceGroup) GetPublicIPsContext(t testing.TestingT, ctx context.Context, projectID string) []string {
 	ips, err := ig.GetPublicIPsContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ips
 }
@@ -956,21 +840,6 @@ func (ig *RegionalInstanceGroup) GetPublicIPsE(t testing.TestingT, projectID str
 // The ctx parameter supports cancellation and timeouts.
 func (ig *RegionalInstanceGroup) GetPublicIPsContextE(t testing.TestingT, ctx context.Context, projectID string) ([]string, error) {
 	return getPublicIPsContextE(t, ctx, ig, projectID)
-}
-
-// GetPublicIps returns a slice of the public IPs from the given Regional Instance Group.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetPublicIPs] instead.
-func (ig *RegionalInstanceGroup) GetPublicIps(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPs(t, projectID)
-}
-
-// GetPublicIpsE returns a slice of the public IPs from the given Regional Instance Group.
-//
-// Deprecated: Use [RegionalInstanceGroup.GetPublicIPsE] instead.
-func (ig *RegionalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPsE(t, projectID)
 }
 
 // getPublicIPsContextE returns a slice of the public IPs from the given Instance Group.
@@ -1007,9 +876,7 @@ func (ig *ZonalInstanceGroup) GetRandomInstance(t testing.TestingT) *Instance {
 // The ctx parameter supports cancellation and timeouts.
 func (ig *ZonalInstanceGroup) GetRandomInstanceContext(t testing.TestingT, ctx context.Context) *Instance {
 	instance, err := ig.GetRandomInstanceContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return instance
 }
@@ -1040,9 +907,7 @@ func (ig *RegionalInstanceGroup) GetRandomInstance(t testing.TestingT) *Instance
 // The ctx parameter supports cancellation and timeouts.
 func (ig *RegionalInstanceGroup) GetRandomInstanceContext(t testing.TestingT, ctx context.Context) *Instance {
 	instance, err := ig.GetRandomInstanceContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return instance
 }
@@ -1099,9 +964,7 @@ func NewComputeService(t testing.TestingT) *compute.Service {
 // The ctx parameter supports cancellation and timeouts.
 func NewComputeServiceContext(t testing.TestingT, ctx context.Context) *compute.Service {
 	client, err := NewComputeServiceContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }
@@ -1162,9 +1025,7 @@ func NewInstancesService(t testing.TestingT) *compute.InstancesService {
 // The ctx parameter supports cancellation and timeouts.
 func NewInstancesServiceContext(t testing.TestingT, ctx context.Context) *compute.InstancesService {
 	client, err := NewInstancesServiceContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }
@@ -1192,11 +1053,4 @@ func RandomValidGCPName() string {
 	id := strings.ToLower(random.UniqueID())
 
 	return "terratest-" + id
-}
-
-// RandomValidGcpName returns a random, valid name for GCP resources. Many resources in GCP require lowercase letters only.
-//
-// Deprecated: Use [RandomValidGCPName] instead.
-func RandomValidGcpName() string { //nolint:staticcheck,revive // preserving deprecated function name
-	return RandomValidGCPName()
 }

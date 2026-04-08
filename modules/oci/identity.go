@@ -9,6 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/oracle/oci-go-sdk/common"
 	"github.com/oracle/oci-go-sdk/identity"
+	"github.com/stretchr/testify/require"
 )
 
 // GetAllAvailabilityDomainsContextE gets the list of availability domains available in the given compartment.
@@ -42,9 +43,7 @@ func GetAllAvailabilityDomainsContext(t testing.TestingT, ctx context.Context, c
 	t.Helper()
 
 	ads, err := GetAllAvailabilityDomainsContextE(t, ctx, compartmentID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ads
 }
@@ -95,9 +94,7 @@ func GetRandomAvailabilityDomainContext(t testing.TestingT, ctx context.Context,
 	t.Helper()
 
 	ad, err := GetRandomAvailabilityDomainContextE(t, ctx, compartmentID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ad
 }

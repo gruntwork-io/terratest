@@ -35,9 +35,7 @@ func GetAddressOfRdsInstanceContext(t testing.TestingT, ctx context.Context, dbI
 	t.Helper()
 
 	address, err := GetAddressOfRdsInstanceContextE(t, ctx, dbInstanceID, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return address
 }
@@ -79,9 +77,7 @@ func GetPortOfRdsInstanceContext(t testing.TestingT, ctx context.Context, dbInst
 	t.Helper()
 
 	port, err := GetPortOfRdsInstanceContextE(t, ctx, dbInstanceID, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return port
 }
@@ -133,9 +129,7 @@ func GetWhetherSchemaExistsInRdsMySQLInstanceContext(t testing.TestingT, ctx con
 	t.Helper()
 
 	output, err := GetWhetherSchemaExistsInRdsMySQLInstanceContextE(t, ctx, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return output
 }
@@ -207,9 +201,7 @@ func GetWhetherSchemaExistsInRdsPostgresInstanceContext(t testing.TestingT, ctx 
 	t.Helper()
 
 	output, err := GetWhetherSchemaExistsInRdsPostgresInstanceContextE(t, ctx, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return output
 }
@@ -253,9 +245,7 @@ func GetParameterValueForParameterOfRdsInstanceContext(t testing.TestingT, ctx c
 	t.Helper()
 
 	parameterValue, err := GetParameterValueForParameterOfRdsInstanceContextE(t, ctx, parameterName, dbInstanceID, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return parameterValue
 }
@@ -308,9 +298,7 @@ func GetOptionSettingForOfRdsInstanceContext(t testing.TestingT, ctx context.Con
 	t.Helper()
 
 	optionValue, err := GetOptionSettingForOfRdsInstanceContextE(t, ctx, optionName, optionSettingName, dbInstanceID, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return optionValue
 }
@@ -348,9 +336,7 @@ func GetOptionGroupNameOfRdsInstanceContext(t testing.TestingT, ctx context.Cont
 	t.Helper()
 
 	dbInstance, err := GetOptionGroupNameOfRdsInstanceContextE(t, ctx, dbInstanceID, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return dbInstance
 }
@@ -395,9 +381,7 @@ func GetOptionsOfOptionGroupContext(t testing.TestingT, ctx context.Context, opt
 	t.Helper()
 
 	output, err := GetOptionsOfOptionGroupContextE(t, ctx, optionGroupName, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return output
 }
@@ -461,9 +445,7 @@ func GetAllParametersOfRdsInstanceContext(t testing.TestingT, ctx context.Contex
 	t.Helper()
 
 	parameters, err := GetAllParametersOfRdsInstanceContextE(t, ctx, dbInstanceID, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return parameters
 }
@@ -526,9 +508,7 @@ func NewRdsClientContext(t testing.TestingT, ctx context.Context, region string)
 	t.Helper()
 
 	client, err := NewRdsClientContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return client
 }

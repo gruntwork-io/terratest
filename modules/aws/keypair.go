@@ -8,6 +8,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 const rsaKeyBits = 2048
@@ -37,9 +38,7 @@ func CreateAndImportEC2KeyPairContext(t testing.TestingT, ctx context.Context, r
 	t.Helper()
 
 	keyPair, err := CreateAndImportEC2KeyPairContextE(t, ctx, region, name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return keyPair
 }
@@ -92,9 +91,7 @@ func ImportEC2KeyPairContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 
 	ec2KeyPair, err := ImportEC2KeyPairContextE(t, ctx, region, name, keyPair)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return ec2KeyPair
 }
@@ -143,9 +140,7 @@ func DeleteEC2KeyPairContext(t testing.TestingT, ctx context.Context, keyPair *E
 	t.Helper()
 
 	err := DeleteEC2KeyPairContextE(t, ctx, keyPair)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 }
 
 // DeleteEC2KeyPair deletes an EC2 key pair.

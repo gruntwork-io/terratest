@@ -26,7 +26,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 
 	region := gcp.GetRandomRegion(t, projectId, RegionsThatSupportF1Micro, nil)
 
-	randomValidGcpName := gcp.RandomValidGcpName()
+	randomValidGcpName := gcp.RandomValidGCPName()
 	clusterSize := 3
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
@@ -70,7 +70,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 
 	// Validate that we get the right number of IP addresses
 	retry.DoWithRetry(t, "Attempting to fetch Public IP addresses from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
-		ips, err := instanceGroup.GetPublicIpsE(t, projectId)
+		ips, err := instanceGroup.GetPublicIPsE(t, projectId)
 		if err != nil {
 			return "", fmt.Errorf("Failed to get public IPs from Instance Group")
 		}

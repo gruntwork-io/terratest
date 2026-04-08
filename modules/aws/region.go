@@ -12,6 +12,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 // You can set this environment variable to force Terratest to use a specific region rather than a random one. This is
@@ -71,9 +72,7 @@ func GetRandomStableRegionContext(t testing.TestingT, ctx context.Context, appro
 	t.Helper()
 
 	region, err := GetRandomStableRegionContextE(t, ctx, approvedRegions, forbiddenRegions)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return region
 }
@@ -129,9 +128,7 @@ func GetRandomRegionContext(t testing.TestingT, ctx context.Context, approvedReg
 	t.Helper()
 
 	region, err := GetRandomRegionContextE(t, ctx, approvedRegions, forbiddenRegions)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return region
 }
@@ -186,9 +183,7 @@ func GetAllAwsRegionsContext(t testing.TestingT, ctx context.Context) []string {
 	t.Helper()
 
 	out, err := GetAllAwsRegionsContextE(t, ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -241,9 +236,7 @@ func GetAvailabilityZonesContext(t testing.TestingT, ctx context.Context, region
 	t.Helper()
 
 	out, err := GetAvailabilityZonesContextE(t, ctx, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -300,9 +293,7 @@ func GetRegionsForServiceContext(t testing.TestingT, ctx context.Context, servic
 	t.Helper()
 
 	out, err := GetRegionsForServiceContextE(t, ctx, serviceName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -343,9 +334,7 @@ func GetRandomRegionForServiceContext(t testing.TestingT, ctx context.Context, s
 	t.Helper()
 
 	region, err := GetRandomRegionForServiceContextE(t, ctx, serviceName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return region
 }

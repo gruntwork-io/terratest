@@ -4,19 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2020-10-01/resources"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // ResourceGroupExistsContext indicates whether a resource group exists within a subscription; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func ResourceGroupExistsContext(t *testing.T, ctx context.Context, resourceGroupName string, subscriptionID string) bool {
+func ResourceGroupExistsContext(t testing.TestingT, ctx context.Context, resourceGroupName string, subscriptionID string) bool {
 	t.Helper()
 
 	result, err := ResourceGroupExistsContextE(ctx, resourceGroupName, subscriptionID)
@@ -44,7 +44,7 @@ func ResourceGroupExistsContextE(ctx context.Context, resourceGroupName, subscri
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [ResourceGroupExistsContext] instead.
-func ResourceGroupExists(t *testing.T, resourceGroupName string, subscriptionID string) bool {
+func ResourceGroupExists(t testing.TestingT, resourceGroupName string, subscriptionID string) bool {
 	t.Helper()
 
 	return ResourceGroupExistsContext(t, context.Background(), resourceGroupName, subscriptionID)
@@ -75,30 +75,10 @@ func GetResourceGroupE(resourceGroupName, subscriptionID string) (bool, error) {
 	return GetResourceGroupContextE(context.Background(), resourceGroupName, subscriptionID)
 }
 
-// GetResourceGroupClientE gets a resource group client in a subscription.
-// TODO: remove in next version
-func GetResourceGroupClientE(subscriptionID string) (*resources.GroupsClient, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	resourceGroupClient := resources.NewGroupsClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	resourceGroupClient.Authorizer = *authorizer
-
-	return &resourceGroupClient, nil
-}
-
 // GetAResourceGroupContext returns a resource group within a subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetAResourceGroupContext(t *testing.T, ctx context.Context, resourceGroupName string, subscriptionID string) *resources.Group {
+func GetAResourceGroupContext(t testing.TestingT, ctx context.Context, resourceGroupName string, subscriptionID string) *resources.Group {
 	t.Helper()
 
 	rg, err := GetAResourceGroupContextE(ctx, resourceGroupName, subscriptionID)
@@ -127,7 +107,7 @@ func GetAResourceGroupContextE(ctx context.Context, resourceGroupName, subscript
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetAResourceGroupContext] instead.
-func GetAResourceGroup(t *testing.T, resourceGroupName string, subscriptionID string) *resources.Group {
+func GetAResourceGroup(t testing.TestingT, resourceGroupName string, subscriptionID string) *resources.Group {
 	t.Helper()
 
 	return GetAResourceGroupContext(t, context.Background(), resourceGroupName, subscriptionID)
@@ -143,7 +123,7 @@ func GetAResourceGroupE(resourceGroupName, subscriptionID string) (*resources.Gr
 // ListResourceGroupsByTagContext returns a resource group list within a subscription based on a tag key.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func ListResourceGroupsByTagContext(t *testing.T, ctx context.Context, tag, subscriptionID string) []resources.Group {
+func ListResourceGroupsByTagContext(t testing.TestingT, ctx context.Context, tag, subscriptionID string) []resources.Group {
 	t.Helper()
 
 	rg, err := ListResourceGroupsByTagContextE(ctx, tag, subscriptionID)
@@ -172,7 +152,7 @@ func ListResourceGroupsByTagContextE(ctx context.Context, tag string, subscripti
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [ListResourceGroupsByTagContext] instead.
-func ListResourceGroupsByTag(t *testing.T, tag, subscriptionID string) []resources.Group {
+func ListResourceGroupsByTag(t testing.TestingT, tag, subscriptionID string) []resources.Group {
 	t.Helper()
 
 	return ListResourceGroupsByTagContext(t, context.Background(), tag, subscriptionID)

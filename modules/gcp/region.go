@@ -9,6 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -37,9 +38,7 @@ func GetRandomRegion(t testing.TestingT, projectID string, approvedRegions []str
 // The ctx parameter supports cancellation and timeouts.
 func GetRandomRegionContext(t testing.TestingT, ctx context.Context, projectID string, approvedRegions []string, forbiddenRegions []string) string {
 	region, err := GetRandomRegionContextE(t, ctx, projectID, approvedRegions, forbiddenRegions)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return region
 }
@@ -102,9 +101,7 @@ func GetRandomZone(t testing.TestingT, projectID string, approvedZones []string,
 // The ctx parameter supports cancellation and timeouts.
 func GetRandomZoneContext(t testing.TestingT, ctx context.Context, projectID string, approvedZones []string, forbiddenZones []string, forbiddenRegions []string) string {
 	zone, err := GetRandomZoneContextE(t, ctx, projectID, approvedZones, forbiddenZones, forbiddenRegions)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return zone
 }
@@ -169,9 +166,7 @@ func GetRandomZoneForRegion(t testing.TestingT, projectID string, region string)
 // The ctx parameter supports cancellation and timeouts.
 func GetRandomZoneForRegionContext(t testing.TestingT, ctx context.Context, projectID string, region string) string {
 	zone, err := GetRandomZoneForRegionContextE(t, ctx, projectID, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return zone
 }
@@ -221,33 +216,14 @@ func GetAllGCPRegions(t testing.TestingT, projectID string) []string {
 	return GetAllGCPRegionsContext(t, context.Background(), projectID)
 }
 
-// GetAllGcpRegions gets the list of GCP regions available in this account.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [GetAllGCPRegionsContext] instead.
-func GetAllGcpRegions(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPRegionsContext(t, context.Background(), projectID)
-}
-
 // GetAllGCPRegionsContext gets the list of GCP regions available in this account.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetAllGCPRegionsContext(t testing.TestingT, ctx context.Context, projectID string) []string {
 	out, err := GetAllGCPRegionsContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
-}
-
-// GetAllGcpRegionsContext gets the list of GCP regions available in this account.
-// This will fail the test if there is an error.
-// The ctx parameter supports cancellation and timeouts.
-//
-// Deprecated: Use [GetAllGCPRegionsContext] instead.
-func GetAllGcpRegionsContext(t testing.TestingT, ctx context.Context, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPRegionsContext(t, ctx, projectID)
 }
 
 // GetAllGCPRegionsE gets the list of GCP regions available in this account.
@@ -255,21 +231,6 @@ func GetAllGcpRegionsContext(t testing.TestingT, ctx context.Context, projectID 
 // Deprecated: Use [GetAllGCPRegionsContextE] instead.
 func GetAllGCPRegionsE(t testing.TestingT, projectID string) ([]string, error) {
 	return GetAllGCPRegionsContextE(t, context.Background(), projectID)
-}
-
-// GetAllGcpRegionsE gets the list of GCP regions available in this account.
-//
-// Deprecated: Use [GetAllGCPRegionsContextE] instead.
-func GetAllGcpRegionsE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPRegionsContextE(t, context.Background(), projectID)
-}
-
-// GetAllGcpRegionsContextE gets the list of GCP regions available in this account.
-// The ctx parameter supports cancellation and timeouts.
-//
-// Deprecated: Use [GetAllGCPRegionsContextE] instead.
-func GetAllGcpRegionsContextE(t testing.TestingT, ctx context.Context, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPRegionsContextE(t, ctx, projectID)
 }
 
 // GetAllGCPRegionsContextE gets the list of GCP regions available in this account.
@@ -307,33 +268,14 @@ func GetAllGCPZones(t testing.TestingT, projectID string) []string {
 	return GetAllGCPZonesContext(t, context.Background(), projectID)
 }
 
-// GetAllGcpZones gets the list of GCP Zones available in this account.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [GetAllGCPZonesContext] instead.
-func GetAllGcpZones(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPZonesContext(t, context.Background(), projectID)
-}
-
 // GetAllGCPZonesContext gets the list of GCP Zones available in this account.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetAllGCPZonesContext(t testing.TestingT, ctx context.Context, projectID string) []string {
 	out, err := GetAllGCPZonesContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
-}
-
-// GetAllGcpZonesContext gets the list of GCP Zones available in this account.
-// This will fail the test if there is an error.
-// The ctx parameter supports cancellation and timeouts.
-//
-// Deprecated: Use [GetAllGCPZonesContext] instead.
-func GetAllGcpZonesContext(t testing.TestingT, ctx context.Context, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPZonesContext(t, ctx, projectID)
 }
 
 // GetAllGCPZonesE gets the list of GCP Zones available in this account.
@@ -341,21 +283,6 @@ func GetAllGcpZonesContext(t testing.TestingT, ctx context.Context, projectID st
 // Deprecated: Use [GetAllGCPZonesContextE] instead.
 func GetAllGCPZonesE(t testing.TestingT, projectID string) ([]string, error) {
 	return GetAllGCPZonesContextE(t, context.Background(), projectID)
-}
-
-// GetAllGcpZonesE gets the list of GCP Zones available in this account.
-//
-// Deprecated: Use [GetAllGCPZonesContextE] instead.
-func GetAllGcpZonesE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPZonesContextE(t, context.Background(), projectID)
-}
-
-// GetAllGcpZonesContextE gets the list of GCP Zones available in this account.
-// The ctx parameter supports cancellation and timeouts.
-//
-// Deprecated: Use [GetAllGCPZonesContextE] instead.
-func GetAllGcpZonesContextE(t testing.TestingT, ctx context.Context, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetAllGCPZonesContextE(t, ctx, projectID)
 }
 
 // GetAllGCPZonesContextE gets the list of GCP Zones available in this account.
@@ -391,13 +318,6 @@ func ZoneURLToZone(zoneURL string) string {
 	return tokens[len(tokens)-1]
 }
 
-// ZoneUrlToZone extracts the zone name from a GCP Zone URL.
-//
-// Deprecated: Use [ZoneURLToZone] instead.
-func ZoneUrlToZone(zoneURL string) string { //nolint:staticcheck,revive // preserving deprecated function name
-	return ZoneURLToZone(zoneURL)
-}
-
 // RegionURLToRegion extracts the region name from a GCP Region URL formatted like
 // https://www.googleapis.com/compute/v1/projects/project-123456/regions/southamerica-east1 and returns
 // "southamerica-east1".
@@ -405,13 +325,6 @@ func RegionURLToRegion(regionURL string) string {
 	tokens := strings.Split(regionURL, "/")
 
 	return tokens[len(tokens)-1]
-}
-
-// RegionUrlToRegion extracts the region name from a GCP Region URL.
-//
-// Deprecated: Use [RegionURLToRegion] instead.
-func RegionUrlToRegion(regionURL string) string { //nolint:staticcheck,revive // preserving deprecated function name
-	return RegionURLToRegion(regionURL)
 }
 
 // isInRegions returns true if the given zone is in any of the given regions.

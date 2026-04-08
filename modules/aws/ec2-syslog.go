@@ -11,6 +11,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 const syslogRetryInterval = 5 * time.Second
@@ -72,9 +73,7 @@ func GetSyslogForInstanceContext(t testing.TestingT, ctx context.Context, instan
 	t.Helper()
 
 	out, err := GetSyslogForInstanceContextE(t, ctx, instanceID, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -136,9 +135,7 @@ func GetSyslogForInstancesInAsgContext(t testing.TestingT, ctx context.Context, 
 	t.Helper()
 
 	out, err := GetSyslogForInstancesInAsgContextE(t, ctx, asgName, awsRegion)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }

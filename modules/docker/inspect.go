@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/shell"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
@@ -124,7 +124,7 @@ type inspectOutput struct {
 // struct, converted from the output JSON, along with any errors
 //
 // Deprecated: Use [InspectContext] instead.
-func Inspect(t *testing.T, id string) *ContainerInspect {
+func Inspect(t testing.TestingT, id string) *ContainerInspect {
 	t.Helper()
 
 	return InspectContext(t, context.Background(), id)
@@ -133,7 +133,7 @@ func Inspect(t *testing.T, id string) *ContainerInspect {
 // InspectContext runs the 'docker inspect {container id}' command and returns a [ContainerInspect] struct,
 // converted from the output JSON. This will fail the test if there are any errors. The ctx parameter supports
 // cancellation and timeouts.
-func InspectContext(t *testing.T, ctx context.Context, id string) *ContainerInspect {
+func InspectContext(t testing.TestingT, ctx context.Context, id string) *ContainerInspect {
 	t.Helper()
 
 	out, err := InspectContextE(t, ctx, id)
@@ -146,7 +146,7 @@ func InspectContext(t *testing.T, ctx context.Context, id string) *ContainerInsp
 // struct, converted from the output JSON, along with any errors
 //
 // Deprecated: Use [InspectContextE] instead.
-func InspectE(t *testing.T, id string) (*ContainerInspect, error) {
+func InspectE(t testing.TestingT, id string) (*ContainerInspect, error) {
 	t.Helper()
 
 	return InspectContextE(t, context.Background(), id)
@@ -154,7 +154,7 @@ func InspectE(t *testing.T, id string) (*ContainerInspect, error) {
 
 // InspectContextE runs the 'docker inspect {container id}' command and returns a [ContainerInspect] struct,
 // converted from the output JSON, along with any errors. The ctx parameter supports cancellation and timeouts.
-func InspectContextE(t *testing.T, ctx context.Context, id string) (*ContainerInspect, error) {
+func InspectContextE(t testing.TestingT, ctx context.Context, id string) (*ContainerInspect, error) {
 	t.Helper()
 
 	cmd := &shell.Command{
@@ -186,7 +186,7 @@ func InspectContextE(t *testing.T, ctx context.Context, id string) (*ContainerIn
 }
 
 // transformContainer converts 'docker inspect' output JSON into a more friendly and testable format
-func transformContainer(t *testing.T, container *inspectOutput) (*ContainerInspect, error) {
+func transformContainer(t testing.TestingT, container *inspectOutput) (*ContainerInspect, error) {
 	t.Helper()
 
 	name := strings.TrimLeft(container.Name, "/")
