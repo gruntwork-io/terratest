@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,7 +48,7 @@ type NsgRuleSummary struct {
 // defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
 // This function would fail the test if there is an error.
-func GetDefaultNsgRulesClient(t testing.TestingT, subscriptionID string) network.DefaultSecurityRulesClient {
+func GetDefaultNsgRulesClient(t testing.TestingT, subscriptionID string) *armnetwork.DefaultSecurityRulesClient {
 	t.Helper()
 
 	client, err := GetDefaultNsgRulesClientE(subscriptionID)
@@ -60,29 +60,15 @@ func GetDefaultNsgRulesClient(t testing.TestingT, subscriptionID string) network
 // GetDefaultNsgRulesClientE returns a rules client which can be used to read the list of *default* security rules
 // defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
-func GetDefaultNsgRulesClientE(subscriptionID string) (network.DefaultSecurityRulesClient, error) {
-	// Get new default client from client factory
-	nsgClient, err := CreateNsgDefaultRulesClientE(subscriptionID)
-	if err != nil {
-		return network.DefaultSecurityRulesClient{}, err
-	}
-
-	// Get an authorizer
-	auth, err := NewAuthorizer()
-	if err != nil {
-		return network.DefaultSecurityRulesClient{}, err
-	}
-
-	nsgClient.Authorizer = *auth
-
-	return *nsgClient, nil
+func GetDefaultNsgRulesClientE(subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
+	return CreateNsgDefaultRulesClientE(subscriptionID)
 }
 
 // GetCustomNsgRulesClient returns a rules client which can be used to read the list of *custom* security rules
 // defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
 // This function would fail the test if there is an error.
-func GetCustomNsgRulesClient(t testing.TestingT, subscriptionID string) network.SecurityRulesClient {
+func GetCustomNsgRulesClient(t testing.TestingT, subscriptionID string) *armnetwork.SecurityRulesClient {
 	t.Helper()
 
 	client, err := GetCustomNsgRulesClientE(subscriptionID)
@@ -94,22 +80,8 @@ func GetCustomNsgRulesClient(t testing.TestingT, subscriptionID string) network.
 // GetCustomNsgRulesClientE returns a rules client which can be used to read the list of *custom* security rules
 // defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
-func GetCustomNsgRulesClientE(subscriptionID string) (network.SecurityRulesClient, error) {
-	// Get new custom rules client from client factory
-	nsgClient, err := CreateNsgCustomRulesClientE(subscriptionID)
-	if err != nil {
-		return network.SecurityRulesClient{}, err
-	}
-
-	// Get an authorizer
-	auth, err := NewAuthorizer()
-	if err != nil {
-		return network.SecurityRulesClient{}, err
-	}
-
-	nsgClient.Authorizer = *auth
-
-	return *nsgClient, nil
+func GetCustomNsgRulesClientE(subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
+	return CreateNsgCustomRulesClientE(subscriptionID)
 }
 
 // GetAllNSGRulesContext returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
@@ -138,26 +110,14 @@ func GetAllNSGRulesContextE(ctx context.Context, resourceGroupName, nsgName, sub
 		return NsgRuleSummaryList{}, err
 	}
 
-	// Read all default (platform) rules.
-	defaultRuleList, err := defaultRulesClient.ListComplete(ctx, resourceGroupName, nsgName)
+	// Read all default (platform) rules using the pager pattern.
+	boundDefaultRules, err := collectDefaultSecurityRules(ctx, defaultRulesClient, resourceGroupName, nsgName)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
-	// Read any custom (user provided) rules
-	customRuleList, err := customRulesClient.ListComplete(ctx, resourceGroupName, nsgName)
-	if err != nil {
-		return NsgRuleSummaryList{}, err
-	}
-
-	// Convert the default list to our summary type
-	boundDefaultRules, err := bindRuleList(ctx, defaultRuleList)
-	if err != nil {
-		return NsgRuleSummaryList{}, err
-	}
-
-	// Convert the custom list to our summary type
-	boundCustomRules, err := bindRuleList(ctx, customRuleList)
+	// Read any custom (user provided) rules using the pager pattern.
+	boundCustomRules, err := collectCustomSecurityRules(ctx, customRulesClient, resourceGroupName, nsgName)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
@@ -170,37 +130,40 @@ func GetAllNSGRulesContextE(ctx context.Context, resourceGroupName, nsgName, sub
 	return NsgRuleSummaryList{SummarizedRules: allRules}, nil
 }
 
-// GetAllNSGRules returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules from a network
-// security group.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetAllNSGRulesContext] instead.
-func GetAllNSGRules(t testing.TestingT, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
-	t.Helper()
-
-	return GetAllNSGRulesContext(t, context.Background(), resourceGroupName, nsgName, subscriptionID) //nolint:staticcheck
-}
-
-// GetAllNSGRulesE returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules from a network
-// security group.
-//
-// Deprecated: Use [GetAllNSGRulesContextE] instead.
-func GetAllNSGRulesE(resourceGroupName, nsgName, subscriptionID string) (NsgRuleSummaryList, error) {
-	return GetAllNSGRulesContextE(context.Background(), resourceGroupName, nsgName, subscriptionID)
-}
-
-// bindRuleList takes a raw list of security rules from the SDK and converts them into a string-based
-// summary struct.
-func bindRuleList(ctx context.Context, source network.SecurityRuleListResultIterator) ([]NsgRuleSummary, error) {
+// collectDefaultSecurityRules uses the pager pattern to iterate over all default security rules and
+// convert them into NsgRuleSummary instances.
+func collectDefaultSecurityRules(ctx context.Context, client *armnetwork.DefaultSecurityRulesClient, resourceGroupName, nsgName string) ([]NsgRuleSummary, error) {
 	rules := make([]NsgRuleSummary, 0)
 
-	for source.NotDone() {
-		v := source.Value()
-		rules = append(rules, convertToNsgRuleSummary(v.Name, v.SecurityRulePropertiesFormat))
-
-		err := source.NextWithContext(ctx)
+	pager := client.NewListPager(resourceGroupName, nsgName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return []NsgRuleSummary{}, err
+		}
+
+		for _, rule := range page.Value {
+			rules = append(rules, convertToNsgRuleSummary(rule.Name, rule.Properties))
+		}
+	}
+
+	return rules, nil
+}
+
+// collectCustomSecurityRules uses the pager pattern to iterate over all custom security rules and
+// convert them into NsgRuleSummary instances.
+func collectCustomSecurityRules(ctx context.Context, client *armnetwork.SecurityRulesClient, resourceGroupName, nsgName string) ([]NsgRuleSummary, error) {
+	rules := make([]NsgRuleSummary, 0)
+
+	pager := client.NewListPager(resourceGroupName, nsgName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return []NsgRuleSummary{}, err
+		}
+
+		for _, rule := range page.Value {
+			rules = append(rules, convertToNsgRuleSummary(rule.Name, rule.Properties))
 		}
 	}
 
@@ -209,11 +172,11 @@ func bindRuleList(ctx context.Context, source network.SecurityRuleListResultIter
 
 // convertToNsgRuleSummary converts the raw SDK security rule type into a summarized struct, flattening the
 // rules properties and name into a single, string-based struct.
-func convertToNsgRuleSummary(name *string, rule *network.SecurityRulePropertiesFormat) NsgRuleSummary {
+func convertToNsgRuleSummary(name *string, rule *armnetwork.SecurityRulePropertiesFormat) NsgRuleSummary {
 	summary := NsgRuleSummary{}
 	summary.Description = safePtrToString(rule.Description)
 	summary.Name = safePtrToString(name)
-	summary.Protocol = string(rule.Protocol)
+	summary.Protocol = safeDerefString((*string)(rule.Protocol))
 	summary.SourcePortRange = safePtrToString(rule.SourcePortRange)
 	summary.SourcePortRanges = safePtrToList(rule.SourcePortRanges)
 	summary.DestinationPortRange = safePtrToString(rule.DestinationPortRange)
@@ -222,11 +185,20 @@ func convertToNsgRuleSummary(name *string, rule *network.SecurityRulePropertiesF
 	summary.SourceAdresssPrefixes = safePtrToList(rule.SourceAddressPrefixes)
 	summary.DestinationAddressPrefix = safePtrToString(rule.DestinationAddressPrefix)
 	summary.DestinationAddressPrefixes = safePtrToList(rule.DestinationAddressPrefixes)
-	summary.Access = string(rule.Access)
+	summary.Access = safeDerefString((*string)(rule.Access))
 	summary.Priority = safePtrToInt32(rule.Priority)
-	summary.Direction = string(rule.Direction)
+	summary.Direction = safeDerefString((*string)(rule.Direction))
 
 	return summary
+}
+
+// safeDerefString safely dereferences a *string, returning "" if nil.
+func safeDerefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+
+	return *s
 }
 
 // FindRuleByName looks for a matching rule by name within the current collection of rules.
