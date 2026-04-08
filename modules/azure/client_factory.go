@@ -11,6 +11,7 @@ package azure
 // snippet-tag-start::client_factory_example.imports
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -28,6 +29,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
@@ -35,7 +37,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
@@ -61,8 +62,58 @@ const (
 	ResourceManagerEndpointName = "ResourceManagerEndpoint"
 )
 
-// ClientType describes the type of client a module can create.
-type ClientType int
+// ---- Credential & cloud config helpers ----
+
+// newArmCredential creates a DefaultAzureCredential configured for the current cloud environment.
+func newArmCredential() (*azidentity.DefaultAzureCredential, error) {
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	})
+}
+
+// newArmClientOptions returns arm.ClientOptions configured for the current cloud environment.
+func newArmClientOptions() (*arm.ClientOptions, error) {
+	clientCloudConfig, err := getClientCloudConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Cloud: clientCloudConfig,
+		},
+	}, nil
+}
+
+// ---- Private ARM factory functions ----
+
+func getArmComputeClientFactory(subscriptionID string) (*armcompute.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	cred, err := newArmCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	return armcompute.NewClientFactory(targetSubscriptionID, cred, opts)
+}
+
+// ---- Public client creator functions ----
 
 // CreateSubscriptionsClientE returns a virtual machines client instance configured with the correct BaseURI depending on
 // the Azure environment that is currently setup (or "Public", if none is setup).
@@ -77,30 +128,15 @@ func CreateSubscriptionsClientE() (subscriptions.Client, error) {
 	return subscriptions.NewClientWithBaseURI(baseURI), nil
 }
 
-// snippet-tag-start::client_factory_example.CreateClient
-
-// CreateVirtualMachinesClientE returns a virtual machines client instance configured with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateVirtualMachinesClientE(subscriptionID string) (*compute.VirtualMachinesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateVirtualMachinesClientE returns a virtual machines client.
+func CreateVirtualMachinesClientE(subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
+	clientFactory, err := getArmComputeClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create correct client based on type passed
-	vmClient := compute.NewVirtualMachinesClientWithBaseURI(baseURI, subscriptionID)
-
-	return &vmClient, nil
+	return clientFactory.NewVirtualMachinesClient(), nil
 }
-
-// snippet-tag-end::client_factory_example.CreateClient
 
 // CreateManagedClustersClientE returns a virtual machines client instance configured with the correct BaseURI depending on
 // the Azure environment that is currently setup (or "Public", if none is setup).
@@ -295,32 +331,14 @@ func CreateStorageFileSharesClientE(subscriptionID string) (*storage.FileSharesC
 	return &fileShareClient, nil
 }
 
-// CreateAvailabilitySetClientE creates a new Availability Set client in the specified Azure Subscription
-func CreateAvailabilitySetClientE(subscriptionID string) (*compute.AvailabilitySetsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateAvailabilitySetClientE creates a new Availability Set client.
+func CreateAvailabilitySetClientE(subscriptionID string) (*armcompute.AvailabilitySetsClient, error) {
+	clientFactory, err := getArmComputeClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the Availability Set client
-	client := compute.NewAvailabilitySetsClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
+	return clientFactory.NewAvailabilitySetsClient(), nil
 }
 
 // CreateResourceGroupClientE gets a resource group client in a subscription
@@ -454,32 +472,14 @@ func getArmMySQLClientFactory(subscriptionID string) (*armmysql.ClientFactory, e
 	})
 }
 
-// CreateDisksClientE returns a new Disks client in the specified Azure Subscription
-func CreateDisksClientE(subscriptionID string) (*compute.DisksClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateDisksClientE returns a disks client.
+func CreateDisksClientE(subscriptionID string) (*armcompute.DisksClient, error) {
+	clientFactory, err := getArmComputeClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the Disks client
-	client := compute.NewDisksClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
+	return clientFactory.NewDisksClient(), nil
 }
 
 // CreateActionGroupClient creates an Action Groups client for Azure Monitor.
@@ -1030,27 +1030,29 @@ func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.Job
 }
 
 // GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
-// This function would fail the test if there is an error.
 func GetKeyVaultURISuffixE() (string, error) {
 	envName := getDefaultEnvironmentName()
 
-	env, err := autorestAzure.EnvironmentFromName(envName)
-	if err != nil {
-		return "", err
+	switch strings.ToUpper(envName) {
+	case "AZUREPUBLICCLOUD":
+		return "vault.azure.net", nil
+	case "AZUREUSGOVERNMENTCLOUD":
+		return "vault.usgovcloudapi.net", nil
+	case "AZURECHINACLOUD":
+		return "vault.azure.cn", nil
+	default:
+		return "", fmt.Errorf("KeyVault URI suffix not known for environment: %s", envName)
 	}
-
-	return env.KeyVaultDNSSuffix, nil
 }
 
-// getDefaultEnvironmentName returns either a configured Azure environment name, or the public default
+// getDefaultEnvironmentName returns either a configured Azure environment name, or the public default.
 func getDefaultEnvironmentName() string {
 	envName, exists := os.LookupEnv(AzureEnvironmentEnvName)
-
 	if exists && len(envName) > 0 {
 		return envName
 	}
 
-	return autorestAzure.PublicCloud.Name
+	return "AzurePublicCloud"
 }
 
 // getEnvironmentEndpointE returns the endpoint identified by the endpoint name parameter.
@@ -1181,22 +1183,26 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 	case "AZUREPUBLICCLOUD":
 		return cloud.AzurePublic, nil
 	case "AZURESTACKCLOUD":
-		env, err := autorestAzure.EnvironmentFromName(envName)
-		if err != nil {
-			return cloud.Configuration{}, err
+		adEndpoint := os.Getenv("AZURE_STACK_AD_ENDPOINT")
+		rmEndpoint := os.Getenv("AZURE_STACK_RESOURCE_MANAGER_ENDPOINT")
+		tokenAudience := os.Getenv("AZURE_STACK_TOKEN_AUDIENCE")
+
+		if adEndpoint == "" || rmEndpoint == "" || tokenAudience == "" {
+			return cloud.Configuration{},
+				errors.New("AzureStackCloud requires AZURE_STACK_AD_ENDPOINT, " +
+					"AZURE_STACK_RESOURCE_MANAGER_ENDPOINT, and AZURE_STACK_TOKEN_AUDIENCE " +
+					"environment variables to be set")
 		}
 
-		c := cloud.Configuration{
-			ActiveDirectoryAuthorityHost: env.ActiveDirectoryEndpoint,
+		return cloud.Configuration{
+			ActiveDirectoryAuthorityHost: adEndpoint,
 			Services: map[cloud.ServiceName]cloud.ServiceConfiguration{
 				cloud.ResourceManager: {
-					Audience: env.TokenAudience,
-					Endpoint: env.ResourceManagerEndpoint,
+					Audience: tokenAudience,
+					Endpoint: rmEndpoint,
 				},
 			},
-		}
-
-		return c, nil
+		}, nil
 	default:
 		return cloud.Configuration{},
 			fmt.Errorf("no cloud environment matching the name: %s. "+
