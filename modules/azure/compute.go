@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
@@ -82,17 +83,24 @@ func GetVirtualMachineNicsContextE(ctx context.Context, vmName string, resGroupN
 		return nil, err
 	}
 
-	// Get VM NIC(s); value always present, no nil checks needed.
+	return extractVMNics(vm)
+}
+
+// extractVMNics extracts the Network Interface names from a Virtual Machine object.
+func extractVMNics(vm *armcompute.VirtualMachine) ([]string, error) {
+	if vm.Properties == nil || vm.Properties.NetworkProfile == nil {
+		return nil, nil
+	}
+
 	vmNICs := vm.Properties.NetworkProfile.NetworkInterfaces
+	var nics []string
 
-	nics := make([]string, len(vmNICs))
-
-	for i, nic := range vmNICs {
-		// Get ID from resource string.
+	for _, nic := range vmNICs {
 		nicName, err := GetNameFromResourceIDE(*nic.ID)
-		if err == nil {
-			nics[i] = nicName
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse NIC resource ID %q: %w", *nic.ID, err)
 		}
+		nics = append(nics, nicName)
 	}
 
 	return nics, nil
@@ -119,18 +127,17 @@ func GetVirtualMachineManagedDisksContextE(ctx context.Context, vmName string, r
 		return nil, err
 	}
 
-	// Get VM attached Disks; value always present even if no disks attached, no nil check needed.
+	return extractVMManagedDisks(vm), nil
+}
+
+// extractVMManagedDisks extracts the Managed Disk names from a Virtual Machine object.
+func extractVMManagedDisks(vm *armcompute.VirtualMachine) []string {
 	vmDisks := vm.Properties.StorageProfile.DataDisks
-
-	// Get the Names of the attached Managed Disks
 	diskNames := make([]string, len(vmDisks))
-
 	for i, v := range vmDisks {
-		// Disk names are required, no nil check needed.
 		diskNames[i] = *v.Name
 	}
-
-	return diskNames, nil
+	return diskNames
 }
 
 // GetVirtualMachineOSDiskNameContext gets the OS Disk name of the specified Azure Virtual Machine.
@@ -154,7 +161,12 @@ func GetVirtualMachineOSDiskNameContextE(ctx context.Context, vmName string, res
 		return "", err
 	}
 
-	return *vm.Properties.StorageProfile.OSDisk.Name, nil
+	return extractVMOSDiskName(vm), nil
+}
+
+// extractVMOSDiskName extracts the OS Disk name from a Virtual Machine object.
+func extractVMOSDiskName(vm *armcompute.VirtualMachine) string {
+	return *vm.Properties.StorageProfile.OSDisk.Name
 }
 
 // GetVirtualMachineAvailabilitySetIDContext gets the Availability Set ID of the specified Azure Virtual Machine.
@@ -178,12 +190,15 @@ func GetVirtualMachineAvailabilitySetIDContextE(ctx context.Context, vmName stri
 		return "", err
 	}
 
-	// Virtual Machine has no associated Availability Set
+	return extractVMAvailabilitySetID(vm)
+}
+
+// extractVMAvailabilitySetID extracts the Availability Set ID from a Virtual Machine object.
+func extractVMAvailabilitySetID(vm *armcompute.VirtualMachine) (string, error) {
 	if vm.Properties.AvailabilitySet == nil {
 		return "", nil
 	}
 
-	// Get ID from resource string
 	avs, err := GetNameFromResourceIDE(*vm.Properties.AvailabilitySet.ID)
 	if err != nil {
 		return "", err
@@ -215,21 +230,33 @@ func GetVirtualMachineImageContext(t testing.TestingT, ctx context.Context, vmNa
 // GetVirtualMachineImageContextE gets the Image of the specified Azure Virtual Machine.
 // The ctx parameter supports cancellation and timeouts.
 func GetVirtualMachineImageContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (VMImage, error) {
-	var vmImage VMImage
-
 	// Get VM Object
 	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
-		return vmImage, err
+		return VMImage{}, err
 	}
 
-	// Populate VM Image; values always present, no nil checks needed
-	vmImage.Publisher = *vm.Properties.StorageProfile.ImageReference.Publisher
-	vmImage.Offer = *vm.Properties.StorageProfile.ImageReference.Offer
-	vmImage.SKU = *vm.Properties.StorageProfile.ImageReference.SKU
-	vmImage.Version = *vm.Properties.StorageProfile.ImageReference.Version
+	return extractVMImage(vm), nil
+}
 
-	return vmImage, nil
+// extractVMImage extracts the Image reference from a Virtual Machine object.
+// For custom images where Publisher/Offer/SKU/Version may be nil, empty strings are returned.
+func extractVMImage(vm *armcompute.VirtualMachine) VMImage {
+	ref := vm.Properties.StorageProfile.ImageReference
+	var img VMImage
+	if ref.Publisher != nil {
+		img.Publisher = *ref.Publisher
+	}
+	if ref.Offer != nil {
+		img.Offer = *ref.Offer
+	}
+	if ref.SKU != nil {
+		img.SKU = *ref.SKU
+	}
+	if ref.Version != nil {
+		img.Version = *ref.Version
+	}
+	return img
 }
 
 // GetSizeOfVirtualMachineContext gets the Size Type of the specified Azure Virtual Machine.
@@ -253,7 +280,12 @@ func GetSizeOfVirtualMachineContextE(ctx context.Context, vmName string, resGrou
 		return "", err
 	}
 
-	return *vm.Properties.HardwareProfile.VMSize, nil
+	return extractVMSize(vm), nil
+}
+
+// extractVMSize extracts the VM size from a Virtual Machine object.
+func extractVMSize(vm *armcompute.VirtualMachine) armcompute.VirtualMachineSizeTypes {
+	return *vm.Properties.HardwareProfile.VMSize
 }
 
 // GetVirtualMachineTagsContext gets the Tags of the specified Virtual Machine as a map.
@@ -271,21 +303,25 @@ func GetVirtualMachineTagsContext(t testing.TestingT, ctx context.Context, vmNam
 // GetVirtualMachineTagsContextE gets the Tags of the specified Virtual Machine as a map.
 // The ctx parameter supports cancellation and timeouts.
 func GetVirtualMachineTagsContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (map[string]string, error) {
-	// Setup a blank map to populate and return
-	tags := make(map[string]string)
-
 	// Get VM Object
 	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
-		return tags, err
+		return make(map[string]string), err
 	}
 
-	// Range through existing tags and populate above map accordingly
+	return extractVMTags(vm), nil
+}
+
+// extractVMTags extracts the Tags from a Virtual Machine object as a map of string to string.
+func extractVMTags(vm *armcompute.VirtualMachine) map[string]string {
+	tags := make(map[string]string)
+	if vm.Tags == nil {
+		return tags
+	}
 	for k, v := range vm.Tags {
 		tags[k] = *v
 	}
-
-	return tags, nil
+	return tags
 }
 
 // ***************************************************** //
@@ -307,14 +343,19 @@ func ListVirtualMachinesForResourceGroupContext(t testing.TestingT, ctx context.
 // ListVirtualMachinesForResourceGroupContextE gets a list of all Virtual Machine names in the specified Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func ListVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGroupName string, subscriptionID string) ([]string, error) {
-	var vmDetails []string
-
 	vmClient, err := GetVirtualMachineClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	pager := vmClient.NewListPager(resourceGroupName, nil)
+	return listVirtualMachineNames(ctx, vmClient, resourceGroupName)
+}
+
+// listVirtualMachineNames pages through VMs in a resource group and returns their names.
+func listVirtualMachineNames(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName string) ([]string, error) {
+	var vmDetails []string
+
+	pager := client.NewListPager(resourceGroupName, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -352,10 +393,14 @@ func GetVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGro
 		return nil, err
 	}
 
-	// Get the VMs in the Resource Group.
+	return listVirtualMachineProperties(ctx, vmClient, resourceGroupName)
+}
+
+// listVirtualMachineProperties pages through VMs in a resource group and returns a map of VM name to properties.
+func listVirtualMachineProperties(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName string) (map[string]armcompute.VirtualMachineProperties, error) {
 	vmDetails := make(map[string]armcompute.VirtualMachineProperties)
 
-	pager := vmClient.NewListPager(resourceGroupName, nil)
+	pager := client.NewListPager(resourceGroupName, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -363,7 +408,6 @@ func GetVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGro
 		}
 
 		for _, v := range page.Value {
-			// VM name and machine properties are required for each VM, no nil check required.
 			vmDetails[*v.Name] = *v.Properties
 		}
 	}
@@ -416,12 +460,16 @@ func GetVirtualMachineContextE(ctx context.Context, vmName string, resGroupName 
 		return nil, err
 	}
 
+	return fetchVirtualMachine(ctx, client, resGroupName, vmName)
+}
+
+// fetchVirtualMachine retrieves a single Virtual Machine from Azure using the provided client.
+func fetchVirtualMachine(ctx context.Context, client *armcompute.VirtualMachinesClient, resGroupName, vmName string) (*armcompute.VirtualMachine, error) {
 	resp, err := client.Get(ctx, resGroupName, vmName, &armcompute.VirtualMachinesClientGetOptions{
 		Expand: to.Ptr(armcompute.InstanceViewTypesInstanceView),
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	return &resp.VirtualMachine, nil
 }

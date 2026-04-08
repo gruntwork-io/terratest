@@ -79,12 +79,7 @@ func GetRecoveryServicesVaultContextE(ctx context.Context, vaultName, resourceGr
 		return nil, err
 	}
 
-	resp, err := client.Get(ctx, resourceGroupName, vaultName, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Vault, nil
+	return fetchRecoveryServicesVault(ctx, client, resourceGroupName, vaultName)
 }
 
 // GetRecoveryServicesVaultBackupPolicyListContextE returns a list of backup policies for the given vault.
@@ -105,21 +100,7 @@ func GetRecoveryServicesVaultBackupPolicyListContextE(ctx context.Context, vault
 		return nil, err
 	}
 
-	pager := client.NewListPager(vaultName, resourceGroupName, nil)
-	policyMap := make(map[string]armrecoveryservicesbackup.ProtectionPolicyResource)
-
-	for pager.More() {
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Value {
-			policyMap[*v.Name] = *v
-		}
-	}
-
-	return policyMap, nil
+	return collectBackupPolicies(ctx, client, vaultName, resourceGroupName)
 }
 
 // GetRecoveryServicesVaultBackupProtectedVMListContextE returns a list of protected VMs on the given vault and policy.
@@ -140,6 +121,40 @@ func GetRecoveryServicesVaultBackupProtectedVMListContextE(ctx context.Context, 
 		return nil, err
 	}
 
+	return collectBackupProtectedVMs(ctx, client, vaultName, resourceGroupName, policyName)
+}
+
+// fetchRecoveryServicesVault retrieves a recovery services vault using the provided client.
+func fetchRecoveryServicesVault(ctx context.Context, client *armrecoveryservices.VaultsClient, resourceGroupName, vaultName string) (*armrecoveryservices.Vault, error) {
+	resp, err := client.Get(ctx, resourceGroupName, vaultName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Vault, nil
+}
+
+// collectBackupPolicies retrieves all backup policies for a vault using the provided client.
+func collectBackupPolicies(ctx context.Context, client *armrecoveryservicesbackup.BackupPoliciesClient, vaultName, resourceGroupName string) (map[string]armrecoveryservicesbackup.ProtectionPolicyResource, error) {
+	pager := client.NewListPager(vaultName, resourceGroupName, nil)
+	policyMap := make(map[string]armrecoveryservicesbackup.ProtectionPolicyResource)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Value {
+			policyMap[*v.Name] = *v
+		}
+	}
+
+	return policyMap, nil
+}
+
+// collectBackupProtectedVMs retrieves all protected VMs matching the given policy using the provided client.
+func collectBackupProtectedVMs(ctx context.Context, client *armrecoveryservicesbackup.BackupProtectedItemsClient, vaultName, resourceGroupName, policyName string) (map[string]armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem, error) {
 	filter := fmt.Sprintf("backupManagementType eq 'AzureIaasVM' and itemType eq 'VM' and policyName eq '%s'", policyName)
 
 	pager := client.NewListPager(vaultName, resourceGroupName, &armrecoveryservicesbackup.BackupProtectedItemsClientListOptions{
