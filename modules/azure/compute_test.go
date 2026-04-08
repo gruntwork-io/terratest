@@ -1,148 +1,322 @@
-//go:build azure
-// +build azure
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure
 
 import (
+	"context"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	computefake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6/fake"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when CRUD methods are introduced for Azure Virtual Machines, these tests can be extended.
-*/
-
-func TestGetVirtualMachineE(t *testing.T) {
-	t.Parallel()
-
-	vmName := ""
-	rgName := ""
-	subID := ""
-
-	_, err := GetVirtualMachineE(vmName, rgName, subID)
-
-	require.Error(t, err)
+// newFakeVMClient creates a fake VirtualMachinesClient backed by the given fake server.
+func newFakeVMClient(t *testing.T, srv computefake.VirtualMachinesServer) *armcompute.VirtualMachinesClient {
+	t.Helper()
+	client, err := armcompute.NewVirtualMachinesClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: computefake.NewVirtualMachinesServerTransport(&srv),
+		}})
+	require.NoError(t, err)
+	return client
 }
 
-func TestListVirtualMachinesForResourceGroupE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// fetchVirtualMachine tests
+// ---------------------------------------------------------------------------
+
+func TestFetchVirtualMachine(t *testing.T) {
 	t.Parallel()
 
-	rgName := ""
-	subID := ""
+	tests := []struct {
+		name      string
+		server    computefake.VirtualMachinesServer
+		wantName  string
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			name: "Success",
+			server: computefake.VirtualMachinesServer{
+				Get: func(ctx context.Context, resourceGroupName string, vmName string, options *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
+					result := armcompute.VirtualMachinesClientGetResponse{
+						VirtualMachine: armcompute.VirtualMachine{
+							Name: to.Ptr("test-vm"),
+							Properties: &armcompute.VirtualMachineProperties{
+								HardwareProfile: &armcompute.HardwareProfile{
+									VMSize: to.Ptr(armcompute.VirtualMachineSizeTypesStandardDS1V2),
+								},
+							},
+						},
+					}
+					resp.SetResponse(http.StatusOK, result, nil)
+					return
+				},
+			},
+			wantName: "test-vm",
+		},
+		{
+			name: "NotFound",
+			server: computefake.VirtualMachinesServer{
+				Get: func(ctx context.Context, resourceGroupName string, vmName string, options *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+					return
+				},
+			},
+			wantErr:   true,
+			errSubstr: "ResourceNotFound",
+		},
+	}
 
-	_, err := ListVirtualMachinesForResourceGroupE(rgName, subID)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			client := newFakeVMClient(t, tc.server)
 
-	require.Error(t, err)
+			vm, err := fetchVirtualMachine(context.Background(), client, "rg", "vm")
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errSubstr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantName, *vm.Name)
+		})
+	}
 }
 
-func TestGetVirtualMachinesForResourceGroupE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// extractVMNics tests
+// ---------------------------------------------------------------------------
+
+func TestExtractVMNics(t *testing.T) {
 	t.Parallel()
 
-	rgName := ""
-	subID := ""
+	tests := []struct {
+		name    string
+		vm      *armcompute.VirtualMachine
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "TwoValidNICs",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					NetworkProfile: &armcompute.NetworkProfile{
+						NetworkInterfaces: []*armcompute.NetworkInterfaceReference{
+							{ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/nic1")},
+							{ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/nic2")},
+						},
+					},
+				},
+			},
+			want: []string{"nic1", "nic2"},
+		},
+		{
+			name: "NilNetworkProfile",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					NetworkProfile: nil,
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "InvalidNICResourceID",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					NetworkProfile: &armcompute.NetworkProfile{
+						NetworkInterfaces: []*armcompute.NetworkInterfaceReference{
+							{ID: to.Ptr("")},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
 
-	_, err := GetVirtualMachinesForResourceGroupE(rgName, subID)
-
-	require.Error(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := extractVMNics(tc.vm)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
 }
 
-func TestGetVirtualMachineTagsE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// extractVMAvailabilitySetID tests
+// ---------------------------------------------------------------------------
+
+func TestExtractVMAvailabilitySetID(t *testing.T) {
 	t.Parallel()
 
-	vmName := ""
-	rgName := ""
-	subID := ""
+	tests := []struct {
+		name string
+		vm   *armcompute.VirtualMachine
+		want string
+	}{
+		{
+			name: "AvailabilitySetPresent",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					AvailabilitySet: &armcompute.SubResource{
+						ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/availabilitySets/myAvSet"),
+					},
+				},
+			},
+			want: "myAvSet",
+		},
+		{
+			name: "NilAvailabilitySet",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					AvailabilitySet: nil,
+				},
+			},
+			want: "",
+		},
+	}
 
-	_, err := GetVirtualMachineTagsE(vmName, rgName, subID)
-
-	require.Error(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := extractVMAvailabilitySetID(tc.vm)
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
 }
 
-func TestGetSizeOfVirtualMachineE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// extractVMImage tests
+// ---------------------------------------------------------------------------
+
+func TestExtractVMImage(t *testing.T) {
 	t.Parallel()
 
-	vmName := ""
-	rgName := ""
-	subID := ""
+	tests := []struct {
+		name string
+		vm   *armcompute.VirtualMachine
+		want VMImage
+	}{
+		{
+			name: "MarketplaceImage",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					StorageProfile: &armcompute.StorageProfile{
+						ImageReference: &armcompute.ImageReference{
+							Publisher: to.Ptr("Canonical"),
+							Offer:     to.Ptr("UbuntuServer"),
+							SKU:       to.Ptr("18.04-LTS"),
+							Version:   to.Ptr("latest"),
+						},
+					},
+				},
+			},
+			want: VMImage{
+				Publisher: "Canonical",
+				Offer:     "UbuntuServer",
+				SKU:       "18.04-LTS",
+				Version:   "latest",
+			},
+		},
+		{
+			name: "CustomImage",
+			vm: &armcompute.VirtualMachine{
+				Properties: &armcompute.VirtualMachineProperties{
+					StorageProfile: &armcompute.StorageProfile{
+						ImageReference: &armcompute.ImageReference{
+							ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/images/myImage"),
+						},
+					},
+				},
+			},
+			want: VMImage{},
+		},
+	}
 
-	_, err := GetSizeOfVirtualMachineE(vmName, rgName, subID)
-
-	require.Error(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := extractVMImage(tc.vm)
+			assert.Equal(t, tc.want, got)
+		})
+	}
 }
 
-func TestGetVirtualMachineImageE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// extractVMTags tests
+// ---------------------------------------------------------------------------
+
+func TestExtractVMTags(t *testing.T) {
 	t.Parallel()
 
-	vmName := ""
-	rgName := ""
-	subID := ""
+	tests := []struct {
+		name string
+		vm   *armcompute.VirtualMachine
+		want map[string]string
+	}{
+		{
+			name: "TagsPresent",
+			vm: &armcompute.VirtualMachine{
+				Tags: map[string]*string{
+					"env":   to.Ptr("dev"),
+					"owner": to.Ptr("team-a"),
+				},
+			},
+			want: map[string]string{"env": "dev", "owner": "team-a"},
+		},
+		{
+			name: "NilTags",
+			vm:   &armcompute.VirtualMachine{},
+			want: map[string]string{},
+		},
+	}
 
-	_, err := GetVirtualMachineImageE(vmName, rgName, subID)
-
-	require.Error(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := extractVMTags(tc.vm)
+			assert.Equal(t, tc.want, got)
+		})
+	}
 }
 
-func TestGetVirtualMachineAvailabilitySetIDE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// listVirtualMachineNames tests
+// ---------------------------------------------------------------------------
+
+func TestListVirtualMachineNames(t *testing.T) {
 	t.Parallel()
 
-	vmName := ""
-	rgName := ""
-	subID := ""
+	srv := computefake.VirtualMachinesServer{
+		NewListPager: func(resourceGroupName string, options *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
+			resp.AddPage(http.StatusOK, armcompute.VirtualMachinesClientListResponse{
+				VirtualMachineListResult: armcompute.VirtualMachineListResult{
+					Value: []*armcompute.VirtualMachine{
+						{Name: to.Ptr("vm1")},
+						{Name: to.Ptr("vm2")},
+					},
+				},
+			}, nil)
+			return
+		},
+	}
 
-	_, err := GetVirtualMachineAvailabilitySetIDE(vmName, rgName, subID)
-
-	require.Error(t, err)
-}
-
-func TestGetVirtualMachineOSDiskNameE(t *testing.T) {
-	t.Parallel()
-
-	vmName := ""
-	rgName := ""
-	subID := ""
-
-	_, err := GetVirtualMachineOSDiskNameE(vmName, rgName, subID)
-
-	require.Error(t, err)
-}
-
-func TestGetVirtualMachineManagedDisksE(t *testing.T) {
-	t.Parallel()
-
-	vmName := ""
-	rgName := ""
-	subID := ""
-
-	_, err := GetVirtualMachineManagedDisksE(vmName, rgName, subID)
-
-	require.Error(t, err)
-}
-
-func TestGetVirtualMachineNicsE(t *testing.T) {
-	t.Parallel()
-
-	vmName := ""
-	rgName := ""
-	subID := ""
-
-	_, err := GetVirtualMachineNicsE(vmName, rgName, subID)
-
-	require.Error(t, err)
-}
-
-func TestVirtualMachineExistsE(t *testing.T) {
-	t.Parallel()
-
-	vmName := ""
-	rgName := ""
-	subID := ""
-
-	_, err := VirtualMachineExistsE(vmName, rgName, subID)
-
-	require.Error(t, err)
+	client := newFakeVMClient(t, srv)
+	names, err := listVirtualMachineNames(context.Background(), client, "rg")
+	require.NoError(t, err)
+	assert.Equal(t, []string{"vm1", "vm2"}, names)
 }
