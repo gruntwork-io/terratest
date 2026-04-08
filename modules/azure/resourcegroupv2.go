@@ -3,16 +3,16 @@ package azure
 import (
 	"context"
 	"fmt"
-	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
 // ResourceGroupExistsV2Context indicates whether a resource group exists within a subscription; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func ResourceGroupExistsV2Context(t *testing.T, ctx context.Context, resourceGroupName string, subscriptionID string) bool {
+func ResourceGroupExistsV2Context(t testing.TestingT, ctx context.Context, resourceGroupName string, subscriptionID string) bool {
 	t.Helper()
 
 	result, err := ResourceGroupExistsV2ContextE(ctx, resourceGroupName, subscriptionID)
@@ -40,7 +40,7 @@ func ResourceGroupExistsV2ContextE(ctx context.Context, resourceGroupName, subsc
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [ResourceGroupExistsV2Context] instead.
-func ResourceGroupExistsV2(t *testing.T, resourceGroupName string, subscriptionID string) bool {
+func ResourceGroupExistsV2(t testing.TestingT, resourceGroupName string, subscriptionID string) bool {
 	t.Helper()
 
 	return ResourceGroupExistsV2Context(t, context.Background(), resourceGroupName, subscriptionID)
@@ -74,7 +74,7 @@ func GetResourceGroupV2E(resourceGroupName, subscriptionID string) (bool, error)
 // GetAResourceGroupV2Context returns a resource group within a subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetAResourceGroupV2Context(t *testing.T, ctx context.Context, resourceGroupName string, subscriptionID string) *armresources.ResourceGroup {
+func GetAResourceGroupV2Context(t testing.TestingT, ctx context.Context, resourceGroupName string, subscriptionID string) *armresources.ResourceGroup {
 	t.Helper()
 
 	rg, err := GetAResourceGroupV2ContextE(ctx, resourceGroupName, subscriptionID)
@@ -103,7 +103,7 @@ func GetAResourceGroupV2ContextE(ctx context.Context, resourceGroupName, subscri
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetAResourceGroupV2Context] instead.
-func GetAResourceGroupV2(t *testing.T, resourceGroupName string, subscriptionID string) *armresources.ResourceGroup {
+func GetAResourceGroupV2(t testing.TestingT, resourceGroupName string, subscriptionID string) *armresources.ResourceGroup {
 	t.Helper()
 
 	return GetAResourceGroupV2Context(t, context.Background(), resourceGroupName, subscriptionID)
@@ -119,7 +119,7 @@ func GetAResourceGroupV2E(resourceGroupName, subscriptionID string) (*armresourc
 // ListResourceGroupsByTagV2Context returns a resource group list within a subscription based on a tag key.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func ListResourceGroupsByTagV2Context(t *testing.T, ctx context.Context, tag, subscriptionID string) []*armresources.ResourceGroup {
+func ListResourceGroupsByTagV2Context(t testing.TestingT, ctx context.Context, tag, subscriptionID string) []*armresources.ResourceGroup {
 	t.Helper()
 
 	rg, err := ListResourceGroupsByTagV2ContextE(ctx, tag, subscriptionID)
@@ -157,7 +157,7 @@ func ListResourceGroupsByTagV2ContextE(ctx context.Context, tag string, subscrip
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [ListResourceGroupsByTagV2Context] instead.
-func ListResourceGroupsByTagV2(t *testing.T, tag, subscriptionID string) []*armresources.ResourceGroup {
+func ListResourceGroupsByTagV2(t testing.TestingT, tag, subscriptionID string) []*armresources.ResourceGroup {
 	t.Helper()
 
 	return ListResourceGroupsByTagV2Context(t, context.Background(), tag, subscriptionID)

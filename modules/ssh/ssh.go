@@ -69,11 +69,6 @@ type SCPDownloadOptions struct {
 	MaxFileSizeMB int
 }
 
-// ScpDownloadOptions is a backwards-compatible alias for [SCPDownloadOptions].
-//
-// Deprecated: Use [SCPDownloadOptions] instead.
-type ScpDownloadOptions = SCPDownloadOptions //nolint:staticcheck,revive // preserving deprecated type name
-
 // GetPort returns the port to use for SSH connections. If [Host.CustomPort] is set,
 // it returns that value; otherwise, it returns the default SSH port 22.
 func (h *Host) GetPort() int {
@@ -200,7 +195,7 @@ func SCPFileFromContextE(t testing.TestingT, ctx context.Context, host *Host, re
 // This will fail the test if the connection fails.
 //
 // Deprecated: Use [SCPDirFromContext] instead.
-func ScpDirFrom(t testing.TestingT, options ScpDownloadOptions, useSudo bool) { //nolint:gocritic // preserving existing value parameter API
+func ScpDirFrom(t testing.TestingT, options SCPDownloadOptions, useSudo bool) { //nolint:gocritic // preserving existing value parameter API
 	SCPDirFromContext(t, context.Background(), &options, useSudo)
 }
 
@@ -210,7 +205,7 @@ func ScpDirFrom(t testing.TestingT, options ScpDownloadOptions, useSudo bool) { 
 // symlinks.
 //
 // Deprecated: Use [SCPDirFromContextE] instead.
-func ScpDirFromE(t testing.TestingT, options ScpDownloadOptions, useSudo bool) error { //nolint:gocritic // preserving existing value parameter API
+func ScpDirFromE(t testing.TestingT, options SCPDownloadOptions, useSudo bool) error { //nolint:gocritic // preserving existing value parameter API
 	return SCPDirFromContextE(t, context.Background(), &options, useSudo)
 }
 

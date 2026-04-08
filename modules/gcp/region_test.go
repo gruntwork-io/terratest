@@ -75,12 +75,12 @@ func TestGetRandomZoneExcludesForbiddenRegions(t *testing.T) {
 	}
 }
 
-func TestGetAllGcpRegions(t *testing.T) {
+func TestGetAllGCPRegions(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 
-	regions := GetAllGcpRegions(t, projectID)
+	regions := GetAllGCPRegions(t, projectID)
 
 	// The typical account had access to 17 regions as of August, 2018: https://cloud.google.com/compute/docs/regions-zones/
 	assert.True(t, len(regions) >= 17, "Number of regions: %d", len(regions))
@@ -89,12 +89,12 @@ func TestGetAllGcpRegions(t *testing.T) {
 	}
 }
 
-func TestGetAllGcpZones(t *testing.T) {
+func TestGetAllGCPZones(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
 
-	zones := GetAllGcpZones(t, projectID)
+	zones := GetAllGCPZones(t, projectID)
 
 	// The typical account had access to 52 zones as of August, 2018: https://cloud.google.com/compute/docs/regions-zones/
 	assert.True(t, len(zones) >= 52, "Number of zones: %d", len(zones))

@@ -36,7 +36,7 @@ func FetchContentsOfFileFromInstance(t testing.TestingT, awsRegion string, sshUs
 // the Instance via SSH using the given username and Key Pair, fetches the contents of the file at the given path
 // (using sudo if useSudo is true), and returns the contents of that file as a string.
 func FetchContentsOfFileFromInstanceE(t testing.TestingT, awsRegion string, sshUserName string, keyPair *Ec2Keypair, instanceID string, useSudo bool, filePath string) (string, error) {
-	publicIP, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
+	publicIP, err := GetPublicIPOfEc2InstanceE(t, instanceID, awsRegion)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +67,7 @@ func FetchContentsOfFilesFromInstance(t testing.TestingT, awsRegion string, sshU
 // the Instance via SSH using the given username and Key Pair, fetches the contents of the files at the given paths
 // (using sudo if useSudo is true), and returns a map from file path to the contents of that file as a string.
 func FetchContentsOfFilesFromInstanceE(t testing.TestingT, awsRegion string, sshUserName string, keyPair *Ec2Keypair, instanceID string, useSudo bool, filePaths ...string) (map[string]string, error) {
-	publicIP, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
+	publicIP, err := GetPublicIPOfEc2InstanceE(t, instanceID, awsRegion)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func FetchFilesFromInstance(t testing.TestingT, awsRegion string, sshUserName st
 // matching filenameFilters at the given remoteDirectory (using sudo if useSudo is true), and stores the files locally
 // at localDirectory/<publicip>/<remoteFolderName>
 func FetchFilesFromInstanceE(t testing.TestingT, awsRegion string, sshUserName string, keyPair *Ec2Keypair, instanceID string, useSudo bool, remoteDirectory string, localDirectory string, filenameFilters []string) error {
-	publicIP, err := GetPublicIpOfEc2InstanceE(t, instanceID, awsRegion)
+	publicIP, err := GetPublicIPOfEc2InstanceE(t, instanceID, awsRegion)
 	if err != nil {
 		return err
 	}
@@ -191,8 +191,7 @@ func FetchFilesFromInstanceE(t testing.TestingT, awsRegion string, sshUserName s
 		}
 	}
 
-	//nolint:staticcheck // using deprecated ssh function
-	scpOptions := ssh.ScpDownloadOptions{
+	scpOptions := ssh.SCPDownloadOptions{
 		RemoteHost:      host,
 		RemoteDir:       remoteDirectory,
 		LocalDir:        finalLocalDestDir,

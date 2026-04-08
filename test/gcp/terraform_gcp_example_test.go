@@ -32,10 +32,10 @@ func TestTerraformGcpExample(t *testing.T) {
 	zone := "us-east1-b"
 
 	// Give the example bucket a unique name so we can distinguish it from any other bucket in your GCP account
-	expectedBucketName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueId()))
+	expectedBucketName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueID()))
 
 	// Also give the example instance a unique name
-	expectedInstanceName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueId()))
+	expectedInstanceName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueID()))
 
 	// website::tag::1::Configure Terraform setting path to Terraform code, bucket name, and instance name. Construct
 	// the terraform options with default retryable errors to handle the most common retryable errors in terraform
@@ -108,7 +108,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 
 	// Setup values for our Terraform apply
 	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
-	randomValidGcpName := gcp.RandomValidGcpName()
+	randomValidGcpName := gcp.RandomValidGCPName()
 	zone := gcp.GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	terraformOptions := &terraform.Options{
@@ -140,7 +140,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	sshUsername := "terratest"
 
 	keyPair := ssh.GenerateRSAKeyPair(t, 2048)
-	instance.AddSshKey(t, sshUsername, keyPair.PublicKey)
+	instance.AddSSHKey(t, sshUsername, keyPair.PublicKey)
 
 	host := ssh.Host{
 		Hostname:    publicIp,
