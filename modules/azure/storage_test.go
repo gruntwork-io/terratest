@@ -1,56 +1,211 @@
-package azure_test
+package azure //nolint:testpackage // tests access unexported functions
 
 import (
+	"context"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	storagefake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/fake"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	azure "github.com/gruntwork-io/terratest/modules/azure"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when methods to create and delete storage accounts are added, these tests can be extended.
-*/
+// ---------------------------------------------------------------------------
+// Fake client helpers
+// ---------------------------------------------------------------------------
 
-func TestStorageAccountExists(t *testing.T) {
-	t.Parallel()
+func newFakeStorageAccountsClient(t *testing.T, srv *storagefake.AccountsServer) *armstorage.AccountsClient {
+	t.Helper()
 
-	_, err := azure.StorageAccountExistsE("", "", "")
-	require.Error(t, err)
+	client, err := armstorage.NewAccountsClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: storagefake.NewAccountsServerTransport(srv),
+		}})
+	require.NoError(t, err)
+
+	return client
 }
 
-func TestStorageBlobContainerExists(t *testing.T) {
-	t.Parallel()
+func newFakeBlobContainersClient(t *testing.T, srv *storagefake.BlobContainersServer) *armstorage.BlobContainersClient {
+	t.Helper()
 
-	_, err := azure.StorageBlobContainerExistsE("", "", "", "")
-	require.Error(t, err)
+	client, err := armstorage.NewBlobContainersClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: storagefake.NewBlobContainersServerTransport(srv),
+		}})
+	require.NoError(t, err)
+
+	return client
 }
 
-func TestStorageBlobContainerPublicAccess(t *testing.T) {
-	t.Parallel()
+func newFakeFileSharesClient(t *testing.T, srv *storagefake.FileSharesServer) *armstorage.FileSharesClient {
+	t.Helper()
 
-	_, err := azure.GetStorageBlobContainerPublicAccessE("", "", "", "")
-	require.Error(t, err)
+	client, err := armstorage.NewFileSharesClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: storagefake.NewFileSharesServerTransport(srv),
+		}})
+	require.NoError(t, err)
+
+	return client
 }
 
-func TestGetStorageAccountKind(t *testing.T) {
+// ---------------------------------------------------------------------------
+// fetchStorageAccountProperties tests
+// ---------------------------------------------------------------------------
+
+func TestFetchStorageAccountProperties_Success(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetStorageAccountKindE("", "", "")
-	require.Error(t, err)
+	srv := &storagefake.AccountsServer{
+		GetProperties: func(_ context.Context, _, _ string, _ *armstorage.AccountsClientGetPropertiesOptions) (resp azfake.Responder[armstorage.AccountsClientGetPropertiesResponse], errResp azfake.ErrorResponder) {
+			result := armstorage.AccountsClientGetPropertiesResponse{
+				Account: armstorage.Account{
+					Name: to.Ptr("teststorage"),
+					Kind: to.Ptr(armstorage.KindStorageV2),
+					SKU:  &armstorage.SKU{Tier: to.Ptr(armstorage.SKUTierStandard)},
+				},
+			}
+			resp.SetResponse(http.StatusOK, result, nil)
+
+			return
+		},
+	}
+
+	client := newFakeStorageAccountsClient(t, srv)
+	account, err := fetchStorageAccountProperties(context.Background(), client, "rg", "teststorage")
+
+	require.NoError(t, err)
+	assert.Equal(t, "teststorage", *account.Name)
 }
 
-func TestGetStorageAccountSkuTier(t *testing.T) {
+func TestFetchStorageAccountProperties_NotFound(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetStorageAccountSkuTierE("", "", "")
+	srv := &storagefake.AccountsServer{
+		GetProperties: func(_ context.Context, _, _ string, _ *armstorage.AccountsClientGetPropertiesOptions) (resp azfake.Responder[armstorage.AccountsClientGetPropertiesResponse], errResp azfake.ErrorResponder) {
+			errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+
+			return
+		},
+	}
+
+	client := newFakeStorageAccountsClient(t, srv)
+	_, err := fetchStorageAccountProperties(context.Background(), client, "rg", "missing")
+
 	require.Error(t, err)
+	assert.Contains(t, err.Error(), "ResourceNotFound")
 }
 
-func TestGetStorageDNSString(t *testing.T) {
+// ---------------------------------------------------------------------------
+// fetchBlobContainer tests
+// ---------------------------------------------------------------------------
+
+func TestFetchBlobContainer_Success(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetStorageDNSStringE("", "", "")
-	require.Error(t, err)
+	srv := &storagefake.BlobContainersServer{
+		Get: func(_ context.Context, _, _, _ string, _ *armstorage.BlobContainersClientGetOptions) (resp azfake.Responder[armstorage.BlobContainersClientGetResponse], errResp azfake.ErrorResponder) {
+			result := armstorage.BlobContainersClientGetResponse{
+				BlobContainer: armstorage.BlobContainer{
+					Name: to.Ptr("testcontainer"),
+				},
+			}
+			resp.SetResponse(http.StatusOK, result, nil)
+
+			return
+		},
+	}
+
+	client := newFakeBlobContainersClient(t, srv)
+	container, err := fetchBlobContainer(context.Background(), client, "rg", "teststorage", "testcontainer")
+
+	require.NoError(t, err)
+	assert.Equal(t, "testcontainer", *container.Name)
+}
+
+// ---------------------------------------------------------------------------
+// fetchFileShare tests
+// ---------------------------------------------------------------------------
+
+func TestFetchFileShare_Success(t *testing.T) {
+	t.Parallel()
+
+	srv := &storagefake.FileSharesServer{
+		Get: func(_ context.Context, _, _, _ string, _ *armstorage.FileSharesClientGetOptions) (resp azfake.Responder[armstorage.FileSharesClientGetResponse], errResp azfake.ErrorResponder) {
+			result := armstorage.FileSharesClientGetResponse{
+				FileShare: armstorage.FileShare{
+					Name: to.Ptr("testshare"),
+				},
+			}
+			resp.SetResponse(http.StatusOK, result, nil)
+
+			return
+		},
+	}
+
+	client := newFakeFileSharesClient(t, srv)
+	share, err := fetchFileShare(context.Background(), client, "rg", "teststorage", "testshare")
+
+	require.NoError(t, err)
+	assert.Equal(t, "testshare", *share.Name)
+}
+
+// ---------------------------------------------------------------------------
+// extractBlobContainerPublicAccess tests
+// ---------------------------------------------------------------------------
+
+func TestExtractBlobContainerPublicAccess_None(t *testing.T) {
+	t.Parallel()
+
+	container := &armstorage.BlobContainer{
+		ContainerProperties: &armstorage.ContainerProperties{
+			PublicAccess: to.Ptr(armstorage.PublicAccessNone),
+		},
+	}
+	assert.False(t, extractBlobContainerPublicAccess(container))
+}
+
+func TestExtractBlobContainerPublicAccess_Blob(t *testing.T) {
+	t.Parallel()
+
+	container := &armstorage.BlobContainer{
+		ContainerProperties: &armstorage.ContainerProperties{
+			PublicAccess: to.Ptr(armstorage.PublicAccessBlob),
+		},
+	}
+	assert.True(t, extractBlobContainerPublicAccess(container))
+}
+
+// ---------------------------------------------------------------------------
+// extractStorageAccountKind tests
+// ---------------------------------------------------------------------------
+
+func TestExtractStorageAccountKind(t *testing.T) {
+	t.Parallel()
+
+	account := &armstorage.Account{
+		Kind: to.Ptr(armstorage.KindStorageV2),
+	}
+	assert.Equal(t, "StorageV2", extractStorageAccountKind(account))
+}
+
+// ---------------------------------------------------------------------------
+// extractStorageAccountSkuTier tests
+// ---------------------------------------------------------------------------
+
+func TestExtractStorageAccountSkuTier(t *testing.T) {
+	t.Parallel()
+
+	account := &armstorage.Account{
+		SKU: &armstorage.SKU{
+			Tier: to.Ptr(armstorage.SKUTierStandard),
+		},
+	}
+	assert.Equal(t, "Standard", extractStorageAccountSkuTier(account))
 }

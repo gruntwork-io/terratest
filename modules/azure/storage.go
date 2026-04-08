@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
-	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -22,16 +21,6 @@ func StorageAccountExistsContext(t testing.TestingT, ctx context.Context, storag
 	return result
 }
 
-// StorageAccountExists indicates whether the storage account name exactly matches; otherwise false.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [StorageAccountExistsContext] instead.
-func StorageAccountExists(t testing.TestingT, storageAccountName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return StorageAccountExistsContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // StorageBlobContainerExistsContext returns true if the container name exactly matches; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -44,16 +33,6 @@ func StorageBlobContainerExistsContext(t testing.TestingT, ctx context.Context, 
 	return result
 }
 
-// StorageBlobContainerExists returns true if the container name exactly matches; otherwise false.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [StorageBlobContainerExistsContext] instead.
-func StorageBlobContainerExists(t testing.TestingT, containerName string, storageAccountName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return StorageBlobContainerExistsContext(t, context.Background(), containerName, storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // StorageFileShareExistsContext returns true if the file share name exactly matches; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -64,16 +43,6 @@ func StorageFileShareExistsContext(t testing.TestingT, ctx context.Context, file
 	require.NoError(t, err)
 
 	return result
-}
-
-// StorageFileShareExists returns true if the file share name exactly matches; otherwise false.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [StorageFileShareExistsContext] instead.
-func StorageFileShareExists(t testing.TestingT, fileShareName string, storageAccountName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return StorageFileShareExistsContext(t, context.Background(), fileShareName, storageAccountName, resourceGroupName, subscriptionID)
 }
 
 // StorageFileShareExistsContextE returns true if the file share name exactly matches; otherwise false.
@@ -91,13 +60,6 @@ func StorageFileShareExistsContextE(ctx context.Context, fileShareName string, s
 	return true, nil
 }
 
-// StorageFileShareExistsE returns true if the file share name exactly matches; otherwise false.
-//
-// Deprecated: Use [StorageFileShareExistsContextE] instead.
-func StorageFileShareExistsE(fileShareName string, storageAccountName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	return StorageFileShareExistsContextE(context.Background(), fileShareName, storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // GetStorageBlobContainerPublicAccessContext indicates whether a storage container has public access; otherwise false.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -108,16 +70,6 @@ func GetStorageBlobContainerPublicAccessContext(t testing.TestingT, ctx context.
 	require.NoError(t, err)
 
 	return result
-}
-
-// GetStorageBlobContainerPublicAccess indicates whether a storage container has public access; otherwise false.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetStorageBlobContainerPublicAccessContext] instead.
-func GetStorageBlobContainerPublicAccess(t testing.TestingT, containerName string, storageAccountName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return GetStorageBlobContainerPublicAccessContext(t, context.Background(), containerName, storageAccountName, resourceGroupName, subscriptionID)
 }
 
 // GetStorageAccountKindContext returns one of Storage, StorageV2, BlobStorage, FileStorage, or BlockBlobStorage.
@@ -132,16 +84,6 @@ func GetStorageAccountKindContext(t testing.TestingT, ctx context.Context, stora
 	return result
 }
 
-// GetStorageAccountKind returns one of Storage, StorageV2, BlobStorage, FileStorage, or BlockBlobStorage.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetStorageAccountKindContext] instead.
-func GetStorageAccountKind(t testing.TestingT, storageAccountName string, resourceGroupName string, subscriptionID string) string {
-	t.Helper()
-
-	return GetStorageAccountKindContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // GetStorageAccountSkuTierContext returns the storage account sku tier as Standard or Premium.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -154,16 +96,6 @@ func GetStorageAccountSkuTierContext(t testing.TestingT, ctx context.Context, st
 	return result
 }
 
-// GetStorageAccountSkuTier returns the storage account sku tier as Standard or Premium.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetStorageAccountSkuTierContext] instead.
-func GetStorageAccountSkuTier(t testing.TestingT, storageAccountName string, resourceGroupName string, subscriptionID string) string {
-	t.Helper()
-
-	return GetStorageAccountSkuTierContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // GetStorageDNSStringContext builds and returns the storage account dns string if the storage account exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -174,16 +106,6 @@ func GetStorageDNSStringContext(t testing.TestingT, ctx context.Context, storage
 	require.NoError(t, err)
 
 	return result
-}
-
-// GetStorageDNSString builds and returns the storage account dns string if the storage account exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetStorageDNSStringContext] instead.
-func GetStorageDNSString(t testing.TestingT, storageAccountName string, resourceGroupName string, subscriptionID string) string {
-	t.Helper()
-
-	return GetStorageDNSStringContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
 }
 
 // StorageAccountExistsContextE indicates whether the storage account name exists; otherwise false.
@@ -201,17 +123,10 @@ func StorageAccountExistsContextE(ctx context.Context, storageAccountName, resou
 	return true, nil
 }
 
-// StorageAccountExistsE indicates whether the storage account name exists; otherwise false.
-//
-// Deprecated: Use [StorageAccountExistsContextE] instead.
-func StorageAccountExistsE(storageAccountName, resourceGroupName, subscriptionID string) (bool, error) {
-	return StorageAccountExistsContextE(context.Background(), storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // GetStorageAccountContextE gets a storage account; otherwise error.
 // See https://docs.microsoft.com/rest/api/storagerp/storageaccounts/getproperties for more information.
 // The ctx parameter supports cancellation and timeouts.
-func GetStorageAccountContextE(ctx context.Context, storageAccountName, resourceGroupName, subscriptionID string) (*storage.Account, error) {
+func GetStorageAccountContextE(ctx context.Context, storageAccountName, resourceGroupName, subscriptionID string) (*armstorage.Account, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -230,14 +145,6 @@ func GetStorageAccountContextE(ctx context.Context, storageAccountName, resource
 	return storageAccount, nil
 }
 
-// GetStorageAccountE gets a storage account; otherwise error.
-// See https://docs.microsoft.com/rest/api/storagerp/storageaccounts/getproperties for more information.
-//
-// Deprecated: Use [GetStorageAccountContextE] instead.
-func GetStorageAccountE(storageAccountName, resourceGroupName, subscriptionID string) (*storage.Account, error) {
-	return GetStorageAccountContextE(context.Background(), storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // StorageBlobContainerExistsContextE returns true if the container name exists; otherwise false.
 // The ctx parameter supports cancellation and timeouts.
 func StorageBlobContainerExistsContextE(ctx context.Context, containerName, storageAccountName, resourceGroupName, subscriptionID string) (bool, error) {
@@ -253,13 +160,6 @@ func StorageBlobContainerExistsContextE(ctx context.Context, containerName, stor
 	return true, nil
 }
 
-// StorageBlobContainerExistsE returns true if the container name exists; otherwise false.
-//
-// Deprecated: Use [StorageBlobContainerExistsContextE] instead.
-func StorageBlobContainerExistsE(containerName, storageAccountName, resourceGroupName, subscriptionID string) (bool, error) {
-	return StorageBlobContainerExistsContextE(context.Background(), containerName, storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // GetStorageBlobContainerPublicAccessContextE indicates whether a storage container has public access; otherwise false.
 // The ctx parameter supports cancellation and timeouts.
 func GetStorageBlobContainerPublicAccessContextE(ctx context.Context, containerName, storageAccountName, resourceGroupName, subscriptionID string) (bool, error) {
@@ -272,14 +172,7 @@ func GetStorageBlobContainerPublicAccessContextE(ctx context.Context, containerN
 		return false, err
 	}
 
-	return (string(container.PublicAccess) != "None"), nil
-}
-
-// GetStorageBlobContainerPublicAccessE indicates whether a storage container has public access; otherwise false.
-//
-// Deprecated: Use [GetStorageBlobContainerPublicAccessContextE] instead.
-func GetStorageBlobContainerPublicAccessE(containerName, storageAccountName, resourceGroupName, subscriptionID string) (bool, error) {
-	return GetStorageBlobContainerPublicAccessContextE(context.Background(), containerName, storageAccountName, resourceGroupName, subscriptionID)
+	return extractBlobContainerPublicAccess(container), nil
 }
 
 // GetStorageAccountKindContextE returns one of Storage, StorageV2, BlobStorage, FileStorage, or BlockBlobStorage.
@@ -290,14 +183,7 @@ func GetStorageAccountKindContextE(ctx context.Context, storageAccountName, reso
 		return "", err
 	}
 
-	return string(storageAccount.Kind), nil
-}
-
-// GetStorageAccountKindE returns one of Storage, StorageV2, BlobStorage, FileStorage, or BlockBlobStorage.
-//
-// Deprecated: Use [GetStorageAccountKindContextE] instead.
-func GetStorageAccountKindE(storageAccountName, resourceGroupName, subscriptionID string) (string, error) {
-	return GetStorageAccountKindContextE(context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	return extractStorageAccountKind(storageAccount), nil
 }
 
 // GetStorageAccountSkuTierContextE returns the storage account sku tier as Standard or Premium.
@@ -308,19 +194,12 @@ func GetStorageAccountSkuTierContextE(ctx context.Context, storageAccountName, r
 		return "", err
 	}
 
-	return string(storageAccount.Sku.Tier), nil
-}
-
-// GetStorageAccountSkuTierE returns the storage account sku tier as Standard or Premium.
-//
-// Deprecated: Use [GetStorageAccountSkuTierContextE] instead.
-func GetStorageAccountSkuTierE(storageAccountName, resourceGroupName, subscriptionID string) (string, error) {
-	return GetStorageAccountSkuTierContextE(context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	return extractStorageAccountSkuTier(storageAccount), nil
 }
 
 // GetStorageBlobContainerContextE returns the Blob container client.
 // The ctx parameter supports cancellation and timeouts.
-func GetStorageBlobContainerContextE(ctx context.Context, containerName, storageAccountName, resourceGroupName, subscriptionID string) (*storage.BlobContainer, error) {
+func GetStorageBlobContainerContextE(ctx context.Context, containerName, storageAccountName, resourceGroupName, subscriptionID string) (*armstorage.BlobContainer, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -336,24 +215,12 @@ func GetStorageBlobContainerContextE(ctx context.Context, containerName, storage
 		return nil, err
 	}
 
-	container, err := client.Get(ctx, resourceGroupName, storageAccountName, containerName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &container, nil
-}
-
-// GetStorageBlobContainerE returns the Blob container client.
-//
-// Deprecated: Use [GetStorageBlobContainerContextE] instead.
-func GetStorageBlobContainerE(containerName, storageAccountName, resourceGroupName, subscriptionID string) (*storage.BlobContainer, error) {
-	return GetStorageBlobContainerContextE(context.Background(), containerName, storageAccountName, resourceGroupName, subscriptionID)
+	return fetchBlobContainer(ctx, client, resourceGroupName, storageAccountName, containerName)
 }
 
 // GetStorageAccountPropertyContextE returns StorageAccount properties.
 // The ctx parameter supports cancellation and timeouts.
-func GetStorageAccountPropertyContextE(ctx context.Context, storageAccountName, resourceGroupName, subscriptionID string) (*storage.Account, error) {
+func GetStorageAccountPropertyContextE(ctx context.Context, storageAccountName, resourceGroupName, subscriptionID string) (*armstorage.Account, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -369,25 +236,13 @@ func GetStorageAccountPropertyContextE(ctx context.Context, storageAccountName, 
 		return nil, err
 	}
 
-	account, err := client.GetProperties(ctx, resourceGroupName, storageAccountName, "")
-	if err != nil {
-		return nil, err
-	}
-
-	return &account, nil
-}
-
-// GetStorageAccountPropertyE returns StorageAccount properties.
-//
-// Deprecated: Use [GetStorageAccountPropertyContextE] instead.
-func GetStorageAccountPropertyE(storageAccountName, resourceGroupName, subscriptionID string) (*storage.Account, error) {
-	return GetStorageAccountPropertyContextE(context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	return fetchStorageAccountProperties(ctx, client, resourceGroupName, storageAccountName)
 }
 
 // GetStorageFileShareContext returns the specified file share.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetStorageFileShareContext(t testing.TestingT, ctx context.Context, fileShareName, storageAccountName, resourceGroupName, subscriptionID string) *storage.FileShare {
+func GetStorageFileShareContext(t testing.TestingT, ctx context.Context, fileShareName, storageAccountName, resourceGroupName, subscriptionID string) *armstorage.FileShare {
 	t.Helper()
 
 	fileShare, err := GetStorageFileShareContextE(ctx, fileShareName, storageAccountName, resourceGroupName, subscriptionID)
@@ -396,19 +251,9 @@ func GetStorageFileShareContext(t testing.TestingT, ctx context.Context, fileSha
 	return fileShare
 }
 
-// GetStorageFileShare returns the specified file share.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetStorageFileShareContext] instead.
-func GetStorageFileShare(t testing.TestingT, fileShareName, storageAccountName, resourceGroupName, subscriptionID string) *storage.FileShare {
-	t.Helper()
-
-	return GetStorageFileShareContext(t, context.Background(), fileShareName, storageAccountName, resourceGroupName, subscriptionID)
-}
-
 // GetStorageFileShareContextE returns the specified file share.
 // The ctx parameter supports cancellation and timeouts.
-func GetStorageFileShareContextE(ctx context.Context, fileShareName, storageAccountName, resourceGroupName, subscriptionID string) (*storage.FileShare, error) {
+func GetStorageFileShareContextE(ctx context.Context, fileShareName, storageAccountName, resourceGroupName, subscriptionID string) (*armstorage.FileShare, error) {
 	resourceGroupName, err2 := getTargetAzureResourceGroupName(resourceGroupName)
 	if err2 != nil {
 		return nil, err2
@@ -419,31 +264,56 @@ func GetStorageFileShareContextE(ctx context.Context, fileShareName, storageAcco
 		return nil, err
 	}
 
-	fileShare, err := client.Get(ctx, resourceGroupName, storageAccountName, fileShareName, "stats")
+	return fetchFileShare(ctx, client, resourceGroupName, storageAccountName, fileShareName)
+}
+
+// fetchStorageAccountProperties retrieves the storage account properties using the provided client.
+func fetchStorageAccountProperties(ctx context.Context, client *armstorage.AccountsClient, resourceGroupName, storageAccountName string) (*armstorage.Account, error) {
+	resp, err := client.GetProperties(ctx, resourceGroupName, storageAccountName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &fileShare, nil
+	return &resp.Account, nil
 }
 
-// GetStorageFileShareE returns the specified file share.
-//
-// Deprecated: Use [GetStorageFileShareContextE] instead.
-func GetStorageFileShareE(fileShareName, storageAccountName, resourceGroupName, subscriptionID string) (*storage.FileShare, error) {
-	return GetStorageFileShareContextE(context.Background(), fileShareName, storageAccountName, resourceGroupName, subscriptionID)
-}
-
-// GetStorageURISuffixE returns the proper storage URI suffix for the configured Azure environment.
-func GetStorageURISuffixE() (string, error) {
-	envName := "AzurePublicCloud"
-
-	env, err := azure.EnvironmentFromName(envName)
+// fetchBlobContainer retrieves a blob container using the provided client.
+func fetchBlobContainer(ctx context.Context, client *armstorage.BlobContainersClient, resourceGroupName, storageAccountName, containerName string) (*armstorage.BlobContainer, error) {
+	resp, err := client.Get(ctx, resourceGroupName, storageAccountName, containerName, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return env.StorageEndpointSuffix, nil
+	return &resp.BlobContainer, nil
+}
+
+// fetchFileShare retrieves a file share using the provided client with stats expansion.
+func fetchFileShare(ctx context.Context, client *armstorage.FileSharesClient, resourceGroupName, storageAccountName, fileShareName string) (*armstorage.FileShare, error) {
+	expand := "stats"
+
+	resp, err := client.Get(ctx, resourceGroupName, storageAccountName, fileShareName, &armstorage.FileSharesClientGetOptions{
+		Expand: &expand,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.FileShare, nil
+}
+
+// extractBlobContainerPublicAccess returns true if the container has public access other than "None".
+func extractBlobContainerPublicAccess(container *armstorage.BlobContainer) bool {
+	return string(*container.ContainerProperties.PublicAccess) != "None"
+}
+
+// extractStorageAccountKind returns the storage account kind as a string.
+func extractStorageAccountKind(account *armstorage.Account) string {
+	return string(*account.Kind)
+}
+
+// extractStorageAccountSkuTier returns the storage account SKU tier as a string.
+func extractStorageAccountSkuTier(account *armstorage.Account) string {
+	return string(*account.SKU.Tier)
 }
 
 // GetStorageAccountPrimaryBlobEndpointContextE gets the storage account blob endpoint as URI string.
@@ -454,14 +324,7 @@ func GetStorageAccountPrimaryBlobEndpointContextE(ctx context.Context, storageAc
 		return "", err
 	}
 
-	return *storageAccount.AccountProperties.PrimaryEndpoints.Blob, nil
-}
-
-// GetStorageAccountPrimaryBlobEndpointE gets the storage account blob endpoint as URI string.
-//
-// Deprecated: Use [GetStorageAccountPrimaryBlobEndpointContextE] instead.
-func GetStorageAccountPrimaryBlobEndpointE(storageAccountName, resourceGroupName, subscriptionID string) (string, error) {
-	return GetStorageAccountPrimaryBlobEndpointContextE(context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	return *storageAccount.Properties.PrimaryEndpoints.Blob, nil
 }
 
 // GetStorageDNSStringContextE builds and returns the storage account dns string if the storage account exists.
@@ -482,11 +345,4 @@ func GetStorageDNSStringContextE(ctx context.Context, storageAccountName, resour
 	}
 
 	return "", NewNotFoundError("storage account", storageAccountName, "")
-}
-
-// GetStorageDNSStringE builds and returns the storage account dns string if the storage account exists.
-//
-// Deprecated: Use [GetStorageDNSStringContextE] instead.
-func GetStorageDNSStringE(storageAccountName, resourceGroupName, subscriptionID string) (string, error) {
-	return GetStorageDNSStringContextE(context.Background(), storageAccountName, resourceGroupName, subscriptionID)
 }
