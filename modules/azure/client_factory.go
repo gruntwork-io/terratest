@@ -12,7 +12,6 @@ package azure
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -20,7 +19,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/privatedns/mgmt/privatedns"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
-	"github.com/Azure/azure-sdk-for-go/profiles/preview/cosmos-db/mgmt/documentdb"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -30,19 +28,21 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/servicebus/armservicebus/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse"
 	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
 	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-06-01/storage"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -60,6 +60,12 @@ const (
 
 	// ResourceManagerEndpointName is the name of the ResourceManagerEndpoint field in the Environment struct.
 	ResourceManagerEndpointName = "ResourceManagerEndpoint"
+
+	// Azure environment name constants (upper-cased for case-insensitive switch matching).
+	azurePublicCloud = "AZUREPUBLICCLOUD"
+	azureUSGovCloud  = "AZUREUSGOVERNMENTCLOUD"
+	azureChinaCloud  = "AZURECHINACLOUD"
+	azureStackCloud  = "AZURESTACKCLOUD"
 )
 
 // ---- Credential & cloud config helpers ----
@@ -132,6 +138,63 @@ func getArmNetworkClientFactory(subscriptionID string) (*armnetwork.ClientFactor
 	return armnetwork.NewClientFactory(targetSubscriptionID, cred, opts)
 }
 
+func getArmStorageClientFactory(subscriptionID string) (*armstorage.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	cred, err := newArmCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	return armstorage.NewClientFactory(targetSubscriptionID, cred, opts)
+}
+
+func getArmCosmosClientFactory(subscriptionID string) (*armcosmos.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	cred, err := newArmCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	return armcosmos.NewClientFactory(targetSubscriptionID, cred, opts)
+}
+
+func getArmServiceBusClientFactory(subscriptionID string) (*armservicebus.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	cred, err := newArmCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	return armservicebus.NewClientFactory(targetSubscriptionID, cred, opts)
+}
+
 // ---- Public client creator functions ----
 
 // CreateSubscriptionsClientE returns a virtual machines client instance configured with the correct BaseURI depending on
@@ -176,46 +239,24 @@ func CreateManagedClustersClientE(subscriptionID string) (containerservice.Manag
 	return containerservice.NewManagedClustersClientWithBaseURI(baseURI, subscriptionID), nil
 }
 
-// CreateCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateCosmosDBAccountClientE(subscriptionID string) (*documentdb.DatabaseAccountsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateCosmosDBAccountClientE returns a Cosmos DB database accounts client.
+func CreateCosmosDBAccountClientE(subscriptionID string) (*armcosmos.DatabaseAccountsClient, error) {
+	clientFactory, err := getArmCosmosClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a CosmosDB client
-	cosmosClient := documentdb.NewDatabaseAccountsClientWithBaseURI(baseURI, subscriptionID)
-
-	return &cosmosClient, nil
+	return clientFactory.NewDatabaseAccountsClient(), nil
 }
 
-// CreateCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateCosmosDBSQLClientE(subscriptionID string) (*documentdb.SQLResourcesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateCosmosDBSQLClientE returns a Cosmos DB SQL resources client.
+func CreateCosmosDBSQLClientE(subscriptionID string) (*armcosmos.SQLResourcesClient, error) {
+	clientFactory, err := getArmCosmosClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a CosmosDB client
-	cosmosClient := documentdb.NewSQLResourcesClientWithBaseURI(baseURI, subscriptionID)
-
-	return &cosmosClient, nil
+	return clientFactory.NewSQLResourcesClient(), nil
 }
 
 // getArmKeyVaultClientFactory gets an arm keyvault client factory
@@ -275,79 +316,63 @@ func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresql.Client
 }
 
 // CreateStorageAccountClientE creates a storage account client.
-func CreateStorageAccountClientE(subscriptionID string) (*storage.AccountsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+func CreateStorageAccountClientE(subscriptionID string) (*armstorage.AccountsClient, error) {
+	clientFactory, err := getArmStorageClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	storageAccountClient := storage.NewAccountsClientWithBaseURI(baseURI, subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	storageAccountClient.Authorizer = *authorizer
-
-	return &storageAccountClient, nil
+	return clientFactory.NewAccountsClient(), nil
 }
 
-// CreateStorageBlobContainerClientE creates a storage container client.
-func CreateStorageBlobContainerClientE(subscriptionID string) (*storage.BlobContainersClient, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateStorageBlobContainerClientE creates a storage blob container client.
+func CreateStorageBlobContainerClientE(subscriptionID string) (*armstorage.BlobContainersClient, error) {
+	clientFactory, err := getArmStorageClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	blobContainerClient := storage.NewBlobContainersClientWithBaseURI(baseURI, subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	blobContainerClient.Authorizer = *authorizer
-
-	return &blobContainerClient, nil
+	return clientFactory.NewBlobContainersClient(), nil
 }
 
-// CreateStorageFileSharesClientE creates a storage file share client.
-func CreateStorageFileSharesClientE(subscriptionID string) (*storage.FileSharesClient, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// CreateStorageFileSharesClientE creates a storage file shares client.
+func CreateStorageFileSharesClientE(subscriptionID string) (*armstorage.FileSharesClient, error) {
+	clientFactory, err := getArmStorageClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	return clientFactory.NewFileSharesClient(), nil
+}
+
+// CreateServiceBusNamespacesClientE returns a service bus namespaces client.
+func CreateServiceBusNamespacesClientE(subscriptionID string) (*armservicebus.NamespacesClient, error) {
+	clientFactory, err := getArmServiceBusClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	fileShareClient := storage.NewFileSharesClientWithBaseURI(baseURI, subscriptionID)
+	return clientFactory.NewNamespacesClient(), nil
+}
 
-	authorizer, err := NewAuthorizer()
+// CreateServiceBusTopicsClientE returns a service bus topics client.
+func CreateServiceBusTopicsClientE(subscriptionID string) (*armservicebus.TopicsClient, error) {
+	clientFactory, err := getArmServiceBusClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	fileShareClient.Authorizer = *authorizer
+	return clientFactory.NewTopicsClient(), nil
+}
 
-	return &fileShareClient, nil
+// CreateServiceBusSubscriptionsClientE returns a service bus subscriptions client.
+func CreateServiceBusSubscriptionsClientE(subscriptionID string) (*armservicebus.SubscriptionsClient, error) {
+	clientFactory, err := getArmServiceBusClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientFactory.NewSubscriptionsClient(), nil
 }
 
 // CreateAvailabilitySetClientE creates a new Availability Set client.
@@ -985,14 +1010,30 @@ func GetKeyVaultURISuffixE() (string, error) {
 	envName := getDefaultEnvironmentName()
 
 	switch strings.ToUpper(envName) {
-	case "AZUREPUBLICCLOUD":
+	case azurePublicCloud:
 		return "vault.azure.net", nil
-	case "AZUREUSGOVERNMENTCLOUD":
+	case azureUSGovCloud:
 		return "vault.usgovcloudapi.net", nil
-	case "AZURECHINACLOUD":
+	case azureChinaCloud:
 		return "vault.azure.cn", nil
 	default:
-		return "", fmt.Errorf("KeyVault URI suffix not known for environment: %s", envName)
+		return "", &UnknownEnvironmentError{EnvironmentName: envName}
+	}
+}
+
+// GetStorageURISuffixE returns the proper storage URI suffix for the configured Azure environment.
+func GetStorageURISuffixE() (string, error) {
+	envName := getDefaultEnvironmentName()
+
+	switch strings.ToUpper(envName) {
+	case azurePublicCloud:
+		return "core.windows.net", nil
+	case azureUSGovCloud:
+		return "core.usgovcloudapi.net", nil
+	case azureChinaCloud:
+		return "core.chinacloudapi.cn", nil
+	default:
+		return "", &UnknownEnvironmentError{EnvironmentName: envName}
 	}
 }
 
@@ -1127,13 +1168,13 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 	envName := getDefaultEnvironmentName()
 
 	switch strings.ToUpper(envName) {
-	case "AZURECHINACLOUD":
+	case azureChinaCloud:
 		return cloud.AzureChina, nil
-	case "AZUREUSGOVERNMENTCLOUD":
+	case azureUSGovCloud:
 		return cloud.AzureGovernment, nil
-	case "AZUREPUBLICCLOUD":
+	case azurePublicCloud:
 		return cloud.AzurePublic, nil
-	case "AZURESTACKCLOUD":
+	case azureStackCloud:
 		adEndpoint := os.Getenv("AZURE_STACK_AD_ENDPOINT")
 		rmEndpoint := os.Getenv("AZURE_STACK_RESOURCE_MANAGER_ENDPOINT")
 		tokenAudience := os.Getenv("AZURE_STACK_TOKEN_AUDIENCE")
@@ -1155,13 +1196,6 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 			},
 		}, nil
 	default:
-		return cloud.Configuration{},
-			fmt.Errorf("no cloud environment matching the name: %s. "+
-				"Available values are: "+
-				"AzurePublicCloud (default), "+
-				"AzureUSGovernmentCloud, "+
-				"AzureChinaCloud or "+
-				"AzureStackCloud",
-				envName)
+		return cloud.Configuration{}, &UnknownEnvironmentError{EnvironmentName: envName}
 	}
 }
