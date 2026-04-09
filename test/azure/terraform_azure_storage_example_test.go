@@ -7,7 +7,6 @@
 package test
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -50,22 +49,22 @@ func TestTerraformAzureStorageExample(t *testing.T) {
 	storageBlobContainerName := terraform.Output(t, terraformOptions, "storage_container_name")
 
 	// website::tag::4:: Verify storage account properties and ensure it matches the output.
-	storageAccountExists := azure.StorageAccountExistsContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	storageAccountExists := azure.StorageAccountExistsContext(t, t.Context(), storageAccountName, resourceGroupName, subscriptionID)
 	assert.True(t, storageAccountExists, "storage account does not exist")
 
-	containerExists := azure.StorageBlobContainerExistsContext(t, context.Background(), storageBlobContainerName, storageAccountName, resourceGroupName, subscriptionID)
+	containerExists := azure.StorageBlobContainerExistsContext(t, t.Context(), storageBlobContainerName, storageAccountName, resourceGroupName, subscriptionID)
 	assert.True(t, containerExists, "storage container does not exist")
 
-	publicAccess := azure.GetStorageBlobContainerPublicAccessContext(t, context.Background(), storageBlobContainerName, storageAccountName, resourceGroupName, subscriptionID)
+	publicAccess := azure.GetStorageBlobContainerPublicAccessContext(t, t.Context(), storageBlobContainerName, storageAccountName, resourceGroupName, subscriptionID)
 	assert.False(t, publicAccess, "storage container has public access")
 
-	accountKind := azure.GetStorageAccountKindContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	accountKind := azure.GetStorageAccountKindContext(t, t.Context(), storageAccountName, resourceGroupName, subscriptionID)
 	assert.Equal(t, storageAccountKind, accountKind, "storage account kind mismatch")
 
-	skuTier := azure.GetStorageAccountSkuTierContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	skuTier := azure.GetStorageAccountSkuTierContext(t, t.Context(), storageAccountName, resourceGroupName, subscriptionID)
 	assert.Equal(t, storageAccountTier, skuTier, "sku tier mismatch")
 
-	actualDNSString := azure.GetStorageDNSStringContext(t, context.Background(), storageAccountName, resourceGroupName, subscriptionID)
+	actualDNSString := azure.GetStorageDNSStringContext(t, t.Context(), storageAccountName, resourceGroupName, subscriptionID)
 	storageSuffix, _ := azure.GetStorageURISuffixE()
 	expectedDNS := fmt.Sprintf("https://%s.blob.%s/", storageAccountName, storageSuffix)
 	assert.Equal(t, expectedDNS, actualDNSString, "Storage DNS string mismatch")

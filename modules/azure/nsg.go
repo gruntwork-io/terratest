@@ -173,9 +173,13 @@ func collectCustomSecurityRules(ctx context.Context, client *armnetwork.Security
 // convertToNsgRuleSummary converts the raw SDK security rule type into a summarized struct, flattening the
 // rules properties and name into a single, string-based struct.
 func convertToNsgRuleSummary(name *string, rule *armnetwork.SecurityRulePropertiesFormat) NsgRuleSummary {
-	summary := NsgRuleSummary{}
+	summary := NsgRuleSummary{Name: safePtrToString(name)}
+
+	if rule == nil {
+		return summary
+	}
+
 	summary.Description = safePtrToString(rule.Description)
-	summary.Name = safePtrToString(name)
 	summary.Protocol = safeDerefString((*string)(rule.Protocol))
 	summary.SourcePortRange = safePtrToString(rule.SourcePortRange)
 	summary.SourcePortRanges = safePtrToList(rule.SourcePortRanges)

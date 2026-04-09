@@ -172,7 +172,7 @@ func GetStorageBlobContainerPublicAccessContextE(ctx context.Context, containerN
 		return false, err
 	}
 
-	return extractBlobContainerPublicAccess(container), nil
+	return ExtractBlobContainerPublicAccess(container), nil
 }
 
 // GetStorageAccountKindContextE returns one of Storage, StorageV2, BlobStorage, FileStorage, or BlockBlobStorage.
@@ -183,7 +183,7 @@ func GetStorageAccountKindContextE(ctx context.Context, storageAccountName, reso
 		return "", err
 	}
 
-	return extractStorageAccountKind(storageAccount), nil
+	return ExtractStorageAccountKind(storageAccount), nil
 }
 
 // GetStorageAccountSkuTierContextE returns the storage account sku tier as Standard or Premium.
@@ -194,7 +194,7 @@ func GetStorageAccountSkuTierContextE(ctx context.Context, storageAccountName, r
 		return "", err
 	}
 
-	return extractStorageAccountSkuTier(storageAccount), nil
+	return ExtractStorageAccountSkuTier(storageAccount), nil
 }
 
 // GetStorageBlobContainerContextE returns the Blob container client.
@@ -215,7 +215,7 @@ func GetStorageBlobContainerContextE(ctx context.Context, containerName, storage
 		return nil, err
 	}
 
-	return fetchBlobContainer(ctx, client, resourceGroupName, storageAccountName, containerName)
+	return FetchBlobContainer(ctx, client, resourceGroupName, storageAccountName, containerName)
 }
 
 // GetStorageAccountPropertyContextE returns StorageAccount properties.
@@ -236,7 +236,7 @@ func GetStorageAccountPropertyContextE(ctx context.Context, storageAccountName, 
 		return nil, err
 	}
 
-	return fetchStorageAccountProperties(ctx, client, resourceGroupName, storageAccountName)
+	return FetchStorageAccountProperties(ctx, client, resourceGroupName, storageAccountName)
 }
 
 // GetStorageFileShareContext returns the specified file share.
@@ -264,11 +264,11 @@ func GetStorageFileShareContextE(ctx context.Context, fileShareName, storageAcco
 		return nil, err
 	}
 
-	return fetchFileShare(ctx, client, resourceGroupName, storageAccountName, fileShareName)
+	return FetchFileShare(ctx, client, resourceGroupName, storageAccountName, fileShareName)
 }
 
-// fetchStorageAccountProperties retrieves the storage account properties using the provided client.
-func fetchStorageAccountProperties(ctx context.Context, client *armstorage.AccountsClient, resourceGroupName, storageAccountName string) (*armstorage.Account, error) {
+// FetchStorageAccountProperties retrieves the storage account properties using the provided client.
+func FetchStorageAccountProperties(ctx context.Context, client *armstorage.AccountsClient, resourceGroupName, storageAccountName string) (*armstorage.Account, error) {
 	resp, err := client.GetProperties(ctx, resourceGroupName, storageAccountName, nil)
 	if err != nil {
 		return nil, err
@@ -277,8 +277,8 @@ func fetchStorageAccountProperties(ctx context.Context, client *armstorage.Accou
 	return &resp.Account, nil
 }
 
-// fetchBlobContainer retrieves a blob container using the provided client.
-func fetchBlobContainer(ctx context.Context, client *armstorage.BlobContainersClient, resourceGroupName, storageAccountName, containerName string) (*armstorage.BlobContainer, error) {
+// FetchBlobContainer retrieves a blob container using the provided client.
+func FetchBlobContainer(ctx context.Context, client *armstorage.BlobContainersClient, resourceGroupName, storageAccountName, containerName string) (*armstorage.BlobContainer, error) {
 	resp, err := client.Get(ctx, resourceGroupName, storageAccountName, containerName, nil)
 	if err != nil {
 		return nil, err
@@ -287,8 +287,8 @@ func fetchBlobContainer(ctx context.Context, client *armstorage.BlobContainersCl
 	return &resp.BlobContainer, nil
 }
 
-// fetchFileShare retrieves a file share using the provided client with stats expansion.
-func fetchFileShare(ctx context.Context, client *armstorage.FileSharesClient, resourceGroupName, storageAccountName, fileShareName string) (*armstorage.FileShare, error) {
+// FetchFileShare retrieves a file share using the provided client with stats expansion.
+func FetchFileShare(ctx context.Context, client *armstorage.FileSharesClient, resourceGroupName, storageAccountName, fileShareName string) (*armstorage.FileShare, error) {
 	expand := "stats"
 
 	resp, err := client.Get(ctx, resourceGroupName, storageAccountName, fileShareName, &armstorage.FileSharesClientGetOptions{
@@ -301,18 +301,30 @@ func fetchFileShare(ctx context.Context, client *armstorage.FileSharesClient, re
 	return &resp.FileShare, nil
 }
 
-// extractBlobContainerPublicAccess returns true if the container has public access other than "None".
-func extractBlobContainerPublicAccess(container *armstorage.BlobContainer) bool {
-	return string(*container.ContainerProperties.PublicAccess) != "None"
+// ExtractBlobContainerPublicAccess returns true if the container has public access other than "None".
+func ExtractBlobContainerPublicAccess(container *armstorage.BlobContainer) bool {
+	if container == nil || container.ContainerProperties == nil || container.ContainerProperties.PublicAccess == nil {
+		return false
+	}
+
+	return *container.ContainerProperties.PublicAccess != armstorage.PublicAccessNone
 }
 
-// extractStorageAccountKind returns the storage account kind as a string.
-func extractStorageAccountKind(account *armstorage.Account) string {
+// ExtractStorageAccountKind returns the storage account kind as a string.
+func ExtractStorageAccountKind(account *armstorage.Account) string {
+	if account == nil || account.Kind == nil {
+		return ""
+	}
+
 	return string(*account.Kind)
 }
 
-// extractStorageAccountSkuTier returns the storage account SKU tier as a string.
-func extractStorageAccountSkuTier(account *armstorage.Account) string {
+// ExtractStorageAccountSkuTier returns the storage account SKU tier as a string.
+func ExtractStorageAccountSkuTier(account *armstorage.Account) string {
+	if account == nil || account.SKU == nil || account.SKU.Tier == nil {
+		return ""
+	}
+
 	return string(*account.SKU.Tier)
 }
 

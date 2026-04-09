@@ -12,7 +12,6 @@ package azure
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -61,6 +60,12 @@ const (
 
 	// ResourceManagerEndpointName is the name of the ResourceManagerEndpoint field in the Environment struct.
 	ResourceManagerEndpointName = "ResourceManagerEndpoint"
+
+	// Azure environment name constants (upper-cased for case-insensitive switch matching).
+	azurePublicCloud = "AZUREPUBLICCLOUD"
+	azureUSGovCloud  = "AZUREUSGOVERNMENTCLOUD"
+	azureChinaCloud  = "AZURECHINACLOUD"
+	azureStackCloud  = "AZURESTACKCLOUD"
 )
 
 // ---- Credential & cloud config helpers ----
@@ -1005,14 +1010,14 @@ func GetKeyVaultURISuffixE() (string, error) {
 	envName := getDefaultEnvironmentName()
 
 	switch strings.ToUpper(envName) {
-	case "AZUREPUBLICCLOUD":
+	case azurePublicCloud:
 		return "vault.azure.net", nil
-	case "AZUREUSGOVERNMENTCLOUD":
+	case azureUSGovCloud:
 		return "vault.usgovcloudapi.net", nil
-	case "AZURECHINACLOUD":
+	case azureChinaCloud:
 		return "vault.azure.cn", nil
 	default:
-		return "", fmt.Errorf("KeyVault URI suffix not known for environment: %s", envName)
+		return "", &UnknownEnvironmentError{EnvironmentName: envName}
 	}
 }
 
@@ -1021,14 +1026,14 @@ func GetStorageURISuffixE() (string, error) {
 	envName := getDefaultEnvironmentName()
 
 	switch strings.ToUpper(envName) {
-	case "AZUREPUBLICCLOUD":
+	case azurePublicCloud:
 		return "core.windows.net", nil
-	case "AZUREUSGOVERNMENTCLOUD":
+	case azureUSGovCloud:
 		return "core.usgovcloudapi.net", nil
-	case "AZURECHINACLOUD":
+	case azureChinaCloud:
 		return "core.chinacloudapi.cn", nil
 	default:
-		return "", fmt.Errorf("storage URI suffix not known for environment: %s", envName)
+		return "", &UnknownEnvironmentError{EnvironmentName: envName}
 	}
 }
 
@@ -1163,13 +1168,13 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 	envName := getDefaultEnvironmentName()
 
 	switch strings.ToUpper(envName) {
-	case "AZURECHINACLOUD":
+	case azureChinaCloud:
 		return cloud.AzureChina, nil
-	case "AZUREUSGOVERNMENTCLOUD":
+	case azureUSGovCloud:
 		return cloud.AzureGovernment, nil
-	case "AZUREPUBLICCLOUD":
+	case azurePublicCloud:
 		return cloud.AzurePublic, nil
-	case "AZURESTACKCLOUD":
+	case azureStackCloud:
 		adEndpoint := os.Getenv("AZURE_STACK_AD_ENDPOINT")
 		rmEndpoint := os.Getenv("AZURE_STACK_RESOURCE_MANAGER_ENDPOINT")
 		tokenAudience := os.Getenv("AZURE_STACK_TOKEN_AUDIENCE")
@@ -1191,13 +1196,6 @@ func getClientCloudConfig() (cloud.Configuration, error) {
 			},
 		}, nil
 	default:
-		return cloud.Configuration{},
-			fmt.Errorf("no cloud environment matching the name: %s. "+
-				"Available values are: "+
-				"AzurePublicCloud (default), "+
-				"AzureUSGovernmentCloud, "+
-				"AzureChinaCloud or "+
-				"AzureStackCloud",
-				envName)
+		return cloud.Configuration{}, &UnknownEnvironmentError{EnvironmentName: envName}
 	}
 }

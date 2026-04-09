@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -53,6 +54,10 @@ func GetIPOfPublicIPAddressByNameContextE(ctx context.Context, publicAddressName
 	pip, err := GetPublicIPAddressContextE(ctx, publicAddressName, resGroupName, subscriptionID)
 	if err != nil {
 		return "", err
+	}
+
+	if pip.Properties == nil || pip.Properties.IPAddress == nil {
+		return "", fmt.Errorf("public IP address %q has no IP address assigned", publicAddressName)
 	}
 
 	return *pip.Properties.IPAddress, nil

@@ -7,7 +7,6 @@
 package azure
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +19,7 @@ The below tests are currently stubbed out, with the expectation that they will t
 func TestListServiceBusNamespaceNamesE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListServiceBusNamespaceNamesContextE(context.Background(), "")
+	_, err := ListServiceBusNamespaceNamesContextE(t.Context(), "")
 
 	require.Error(t, err)
 }
@@ -28,7 +27,7 @@ func TestListServiceBusNamespaceNamesE(t *testing.T) {
 func TestListServiceBusNamespaceIDsByResourceGroupE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListServiceBusNamespaceIDsByResourceGroupContextE(context.Background(), "", "")
+	_, err := ListServiceBusNamespaceIDsByResourceGroupContextE(t.Context(), "", "")
 
 	require.Error(t, err)
 }
@@ -36,7 +35,7 @@ func TestListServiceBusNamespaceIDsByResourceGroupE(t *testing.T) {
 func TestListNamespaceAuthRulesE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListNamespaceAuthRulesContextE(context.Background(), "", "", "")
+	_, err := ListNamespaceAuthRulesContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -44,7 +43,7 @@ func TestListNamespaceAuthRulesE(t *testing.T) {
 func TestListNamespaceTopicsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListNamespaceTopicsContextE(context.Background(), "", "", "")
+	_, err := ListNamespaceTopicsContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -52,7 +51,7 @@ func TestListNamespaceTopicsE(t *testing.T) {
 func TestListTopicAuthRulesE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListTopicAuthRulesContextE(context.Background(), "", "", "", "")
+	_, err := ListTopicAuthRulesContextE(t.Context(), "", "", "", "")
 
 	require.Error(t, err)
 }
@@ -60,7 +59,7 @@ func TestListTopicAuthRulesE(t *testing.T) {
 func TestListTopicSubscriptionsNameE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListTopicSubscriptionsNameContextE(context.Background(), "", "", "", "")
+	_, err := ListTopicSubscriptionsNameContextE(t.Context(), "", "", "", "")
 
 	require.Error(t, err)
 }

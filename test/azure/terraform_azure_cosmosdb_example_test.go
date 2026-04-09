@@ -7,7 +7,6 @@
 package test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
@@ -49,23 +48,23 @@ func TestTerraformAzureCosmosDBExample(t *testing.T) {
 	//       of the environment variable ARM_SUBSCRIPTION_ID
 
 	// Database Account properties
-	actualCosmosDBAccount := azure.GetCosmosDBAccountContext(t, context.Background(), subscriptionID, resourceGroupName, accountName)
+	actualCosmosDBAccount := azure.GetCosmosDBAccountContext(t, t.Context(), subscriptionID, resourceGroupName, accountName)
 	assert.Equal(t, accountName, *actualCosmosDBAccount.Name)
 	assert.Equal(t, armcosmos.DatabaseAccountKindGlobalDocumentDB, *actualCosmosDBAccount.Kind)
 	assert.Equal(t, armcosmos.DefaultConsistencyLevelSession, *actualCosmosDBAccount.Properties.ConsistencyPolicy.DefaultConsistencyLevel)
 
 	// SQL Database properties
-	cosmosSQLDB := azure.GetCosmosDBSQLDatabaseContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, "testdb")
+	cosmosSQLDB := azure.GetCosmosDBSQLDatabaseContext(t, t.Context(), subscriptionID, resourceGroupName, accountName, "testdb")
 	assert.Equal(t, "testdb", *cosmosSQLDB.Name)
 
 	// SQL Database throughput
-	cosmosSQLDBThroughput := azure.GetCosmosDBSQLDatabaseThroughputContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, "testdb")
+	cosmosSQLDBThroughput := azure.GetCosmosDBSQLDatabaseThroughputContext(t, t.Context(), subscriptionID, resourceGroupName, accountName, "testdb")
 	assert.Equal(t, int32(throughput), *cosmosSQLDBThroughput.Properties.Resource.Throughput)
 
 	// SQL Container properties
-	cosmosSQLContainer1 := azure.GetCosmosDBSQLContainerContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-1")
-	cosmosSQLContainer2 := azure.GetCosmosDBSQLContainerContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-2")
-	cosmosSQLContainer3 := azure.GetCosmosDBSQLContainerContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-3")
+	cosmosSQLContainer1 := azure.GetCosmosDBSQLContainerContext(t, t.Context(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-1")
+	cosmosSQLContainer2 := azure.GetCosmosDBSQLContainerContext(t, t.Context(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-2")
+	cosmosSQLContainer3 := azure.GetCosmosDBSQLContainerContext(t, t.Context(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-3")
 	assert.Equal(t, "test-container-1", *cosmosSQLContainer1.Name)
 	assert.Equal(t, "/key1", *cosmosSQLContainer1.Properties.Resource.PartitionKey.Paths[0])
 	assert.Equal(t, "test-container-2", *cosmosSQLContainer2.Name)
@@ -74,6 +73,6 @@ func TestTerraformAzureCosmosDBExample(t *testing.T) {
 	assert.Equal(t, "/key3", *cosmosSQLContainer3.Properties.Resource.PartitionKey.Paths[0])
 
 	// SQL Container throughput
-	cosmosSQLContainer1Throughput := azure.GetCosmosDBSQLContainerThroughputContext(t, context.Background(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-1")
+	cosmosSQLContainer1Throughput := azure.GetCosmosDBSQLContainerThroughputContext(t, t.Context(), subscriptionID, resourceGroupName, accountName, "testdb", "test-container-1")
 	assert.Equal(t, int32(400), *cosmosSQLContainer1Throughput.Properties.Resource.Throughput)
 }

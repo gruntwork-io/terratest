@@ -43,7 +43,7 @@ func TestTerraformAzureServiceBusExample(t *testing.T) {
 	expectedResourceGroup := terraform.Output(t, terraformOptions, "resource_group")
 
 	for topicName, topicsMap := range expectedTopicSubscriptionsMap {
-		actualsubscriptionNames := azure.ListTopicSubscriptionsName(t,
+		actualsubscriptionNames := azure.ListTopicSubscriptionsNameContext(t, t.Context(),
 			os.Getenv("ARM_SUBSCRIPTION_ID"),
 			expectedNamespaceName,
 			expectedResourceGroup,
@@ -60,7 +60,7 @@ func TestTerraformAzureServiceBusExample(t *testing.T) {
 }
 
 func getMapKeylist(mapList map[string]interface{}) []string {
-	names := make([]string, 0)
+	var names []string
 	for key := range mapList {
 		names = append(names, key)
 	}

@@ -29,7 +29,7 @@ func ListServiceBusNamespaceContextE(ctx context.Context, subscriptionID string)
 	}
 
 	pager := nsClient.NewListPager(nil)
-	results := make([]*armservicebus.SBNamespace, 0)
+	var results []*armservicebus.SBNamespace
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -136,7 +136,7 @@ func ListServiceBusNamespaceByResourceGroupContextE(ctx context.Context, subscri
 	}
 
 	pager := nsClient.NewListByResourceGroupPager(resourceGroup, nil)
-	results := make([]*armservicebus.SBNamespace, 0)
+	var results []*armservicebus.SBNamespace
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -222,7 +222,7 @@ func ListNamespaceAuthRulesContextE(ctx context.Context, subscriptionID string, 
 	}
 
 	pager := nsClient.NewListAuthorizationRulesPager(resourceGroup, namespace, nil)
-	results := []string{}
+	var results []string
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -261,7 +261,7 @@ func ListNamespaceTopicsContextE(ctx context.Context, subscriptionID string, nam
 	}
 
 	pager := tClient.NewListByNamespacePager(resourceGroup, namespace, nil)
-	results := make([]*armservicebus.SBTopic, 0)
+	var results []*armservicebus.SBTopic
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -298,7 +298,7 @@ func ListTopicSubscriptionsContextE(ctx context.Context, subscriptionID string, 
 	}
 
 	pager := sClient.NewListByTopicPager(resourceGroup, namespace, topicName, nil)
-	results := make([]*armservicebus.SBSubscription, 0)
+	var results []*armservicebus.SBSubscription
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -335,7 +335,7 @@ func ListTopicSubscriptionsNameContextE(ctx context.Context, subscriptionID stri
 	}
 
 	pager := sClient.NewListByTopicPager(resourceGroup, namespace, topicName, nil)
-	results := []string{}
+	var results []string
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -374,7 +374,7 @@ func ListTopicAuthRulesContextE(ctx context.Context, subscriptionID string, name
 	}
 
 	pager := tClient.NewListAuthorizationRulesPager(resourceGroup, namespace, topicName, nil)
-	results := []string{}
+	var results []string
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
