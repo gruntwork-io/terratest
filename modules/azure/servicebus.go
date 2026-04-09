@@ -29,6 +29,7 @@ func ListServiceBusNamespaceContextE(ctx context.Context, subscriptionID string)
 	}
 
 	pager := nsClient.NewListPager(nil)
+
 	var results []*armservicebus.SBNamespace
 
 	for pager.More() {
@@ -136,6 +137,7 @@ func ListServiceBusNamespaceByResourceGroupContextE(ctx context.Context, subscri
 	}
 
 	pager := nsClient.NewListByResourceGroupPager(resourceGroup, nil)
+
 	var results []*armservicebus.SBNamespace
 
 	for pager.More() {
@@ -222,6 +224,7 @@ func ListNamespaceAuthRulesContextE(ctx context.Context, subscriptionID string, 
 	}
 
 	pager := nsClient.NewListAuthorizationRulesPager(resourceGroup, namespace, nil)
+
 	var results []string
 
 	for pager.More() {
@@ -261,6 +264,7 @@ func ListNamespaceTopicsContextE(ctx context.Context, subscriptionID string, nam
 	}
 
 	pager := tClient.NewListByNamespacePager(resourceGroup, namespace, nil)
+
 	var results []*armservicebus.SBTopic
 
 	for pager.More() {
@@ -298,6 +302,7 @@ func ListTopicSubscriptionsContextE(ctx context.Context, subscriptionID string, 
 	}
 
 	pager := sClient.NewListByTopicPager(resourceGroup, namespace, topicName, nil)
+
 	var results []*armservicebus.SBSubscription
 
 	for pager.More() {
@@ -335,6 +340,7 @@ func ListTopicSubscriptionsNameContextE(ctx context.Context, subscriptionID stri
 	}
 
 	pager := sClient.NewListByTopicPager(resourceGroup, namespace, topicName, nil)
+
 	var results []string
 
 	for pager.More() {
@@ -374,6 +380,7 @@ func ListTopicAuthRulesContextE(ctx context.Context, subscriptionID string, name
 	}
 
 	pager := tClient.NewListAuthorizationRulesPager(resourceGroup, namespace, topicName, nil)
+
 	var results []string
 
 	for pager.More() {
