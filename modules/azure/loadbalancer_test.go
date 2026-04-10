@@ -7,6 +7,7 @@
 package azure
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,7 +25,7 @@ func TestLoadBalancerExistsE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := LoadBalancerExistsE(loadBalancerName, resourceGroupName, subscriptionID)
+	_, err := LoadBalancerExistsContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -36,7 +37,7 @@ func TestGetLoadBalancerE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetLoadBalancerE(loadBalancerName, resourceGroupName, subscriptionID)
+	_, err := GetLoadBalancerContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
 
 	require.Error(t, err)
 }

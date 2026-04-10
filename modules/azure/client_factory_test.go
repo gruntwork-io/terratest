@@ -33,7 +33,7 @@ func TestDefaultEnvIsPublicWhenNotSet(t *testing.T) {
 	env := getDefaultEnvironmentName()
 
 	// Make sure it's public cloud
-	assert.Equal(t, autorest.PublicCloud.Name, env)
+	assert.Equal(t, "AzurePublicCloud", env)
 }
 
 func TestDefaultEnvSetToGov(t *testing.T) {
@@ -47,8 +47,8 @@ func TestDefaultEnvSetToGov(t *testing.T) {
 	// get the default
 	env := getDefaultEnvironmentName()
 
-	// Make sure it's public cloud
-	assert.Equal(t, autorest.USGovernmentCloud.Name, env)
+	// Make sure it's gov cloud
+	assert.Equal(t, govCloudEnvName, env)
 }
 
 func TestSubscriptionClientBaseURISetCorrectly(t *testing.T) {
@@ -85,18 +85,16 @@ func TestSubscriptionClientBaseURISetCorrectly(t *testing.T) {
 	}
 }
 
-// snippet-tag-start::client_factory_example.UnitTest
-
-func TestVMClientBaseURISetCorrectly(t *testing.T) {
+func TestGetClientCloudConfig(t *testing.T) {
 	var cases = []struct {
 		CaseName        string
 		EnvironmentName string
-		ExpectedBaseURI string
+		ExpectErr       bool
 	}{
-		{"GovCloud/VMClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/VMClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/VMClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/VMClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
+		{"PublicCloud", publicCloudEnvName, false},
+		{"GovCloud", govCloudEnvName, false},
+		{"ChinaCloud", chinaCloudEnvName, false},
+		{"GermanCloud", germanyCloudEnvName, true},
 	}
 
 	// save any current env value and restore on exit
@@ -104,24 +102,31 @@ func TestVMClientBaseURISetCorrectly(t *testing.T) {
 	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
 
 	for _, tt := range cases {
-		// The following is necessary to make sure testCase's values don't
-		// get updated due to concurrency within the scope of t.Run(..) below
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
-			// Override env setting
 			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
-			// Get a VM client
-			client, err := CreateVirtualMachinesClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
+			config, err := getClientCloudConfig()
+			if tt.ExpectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.NotEmpty(t, config.ActiveDirectoryAuthorityHost)
+			}
 		})
 	}
 }
 
-// snippet-tag-end::client_factory_example.UnitTest
+func TestCreateVirtualMachinesClientE(t *testing.T) {
+	// save any current env value and restore on exit
+	currentEnv := os.Getenv(AzureEnvironmentEnvName)
+	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
+	os.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
+
+	client, err := CreateVirtualMachinesClientE("")
+	require.NoError(t, err)
+	require.NotNil(t, client)
+}
 
 func TestManagedClustersClientBaseURISetCorrectly(t *testing.T) {
 	var cases = []struct {
@@ -157,72 +162,26 @@ func TestManagedClustersClientBaseURISetCorrectly(t *testing.T) {
 	}
 }
 
-func TestCosmosDBAccountClientBaseURISetCorrectly(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		EnvironmentName string
-		ExpectedBaseURI string
-	}{
-		{"GovCloud/CosmosDBAccountClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/CosmosDBAccountClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/CosmosDBAccountClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/CosmosDBAccountClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
-	}
-
-	// save any current env value and restore on exit
+func TestCosmosDBAccountClientCreation(t *testing.T) {
 	currentEnv := os.Getenv(AzureEnvironmentEnvName)
 	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
 
-	for _, tt := range cases {
-		// The following is necessary to make sure testCase's values don't
-		// get updated due to concurrency within the scope of t.Run(..) below
-		tt := tt
-		t.Run(tt.CaseName, func(t *testing.T) {
-			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+	os.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
-			// Get a VM client
-			client, err := CreateCosmosDBAccountClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
-		})
-	}
+	client, err := CreateCosmosDBAccountClientE("")
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
-func TestCosmosDBSQLClientBaseURISetCorrectly(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		EnvironmentName string
-		ExpectedBaseURI string
-	}{
-		{"GovCloud/CosmosDBAccountClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/CosmosDBAccountClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/CosmosDBAccountClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/CosmosDBAccountClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
-	}
-
-	// save any current env value and restore on exit
+func TestCosmosDBSQLClientCreation(t *testing.T) {
 	currentEnv := os.Getenv(AzureEnvironmentEnvName)
 	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
 
-	for _, tt := range cases {
-		// The following is necessary to make sure testCase's values don't
-		// get updated due to concurrency within the scope of t.Run(..) below
-		tt := tt
-		t.Run(tt.CaseName, func(t *testing.T) {
-			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+	os.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
-			// Get a VM client
-			client, err := CreateCosmosDBSQLClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
-		})
-	}
+	client, err := CreateCosmosDBSQLClientE("")
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestPublicIPAddressesClientBaseURISetCorrectly(t *testing.T) {

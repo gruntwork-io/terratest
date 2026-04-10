@@ -9,7 +9,9 @@ package test
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"context"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -41,7 +43,7 @@ func TestTerraformAzureExample(t *testing.T) {
 	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 
 	// website::tag::4:: Look up the size of the given Virtual Machine and ensure it matches the output.
-	actualVMSize := azure.GetSizeOfVirtualMachine(t, vmName, resourceGroupName, "")
-	expectedVMSize := compute.VirtualMachineSizeTypes("Standard_B1s")
+	actualVMSize := azure.GetSizeOfVirtualMachineContext(t, context.Background(), vmName, resourceGroupName, "")
+	expectedVMSize := armcompute.VirtualMachineSizeTypes("Standard_B1s")
 	assert.Equal(t, expectedVMSize, actualVMSize)
 }

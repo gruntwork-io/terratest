@@ -7,6 +7,7 @@
 package test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -51,36 +52,36 @@ func TestTerraformAzureLoadBalancerExample(t *testing.T) {
 	expectedLBPrivateFeConfigName := terraform.Output(t, terraformOptions, "lb_private_fe_config_static_name")
 	expectedLBPrivateIP := terraform.Output(t, terraformOptions, "lb_private_ip_static")
 
-	actualLBDoesNotExist := azure.LoadBalancerExists(t, "negative-test", resourceGroupName, subscriptionID)
+	actualLBDoesNotExist := azure.LoadBalancerExistsContext(t, context.Background(), "negative-test", resourceGroupName, subscriptionID)
 	assert.False(t, actualLBDoesNotExist)
 
 	t.Run("LoadBalancer_Public", func(t *testing.T) {
 		// Check Public Load Balancer exists.
-		actualLBPublicExists := azure.LoadBalancerExists(t, expectedLBPublicName, resourceGroupName, subscriptionID)
+		actualLBPublicExists := azure.LoadBalancerExistsContext(t, context.Background(), expectedLBPublicName, resourceGroupName, subscriptionID)
 		assert.True(t, actualLBPublicExists)
 
 		// Check Frontend Configuration for Load Balancer.
-		actualLBPublicFeConfigNames := azure.GetLoadBalancerFrontendIPConfigNames(t, expectedLBPublicName, resourceGroupName, subscriptionID)
+		actualLBPublicFeConfigNames := azure.GetLoadBalancerFrontendIPConfigNamesContext(t, context.Background(), expectedLBPublicName, resourceGroupName, subscriptionID)
 		assert.Contains(t, actualLBPublicFeConfigNames, expectedLBPublicFeConfigName)
 
 		// Check Frontend Configuration Public Address and Public IP assignment
-		actualLBPublicIPAddress, actualLBPublicIPType := azure.GetIPOfLoadBalancerFrontendIPConfig(t, expectedLBPublicFeConfigName, expectedLBPublicName, resourceGroupName, subscriptionID)
+		actualLBPublicIPAddress, actualLBPublicIPType := azure.GetIPOfLoadBalancerFrontendIPConfigContext(t, context.Background(), expectedLBPublicFeConfigName, expectedLBPublicName, resourceGroupName, subscriptionID)
 		assert.NotEmpty(t, actualLBPublicIPAddress)
 		assert.Equal(t, azure.PublicIP, actualLBPublicIPType)
 	})
 
 	t.Run("LoadBalancer_Private", func(t *testing.T) {
 		// Check Private Load Balancer exists.
-		actualLBPrivateExists := azure.LoadBalancerExists(t, expectedLBPrivateName, resourceGroupName, subscriptionID)
+		actualLBPrivateExists := azure.LoadBalancerExistsContext(t, context.Background(), expectedLBPrivateName, resourceGroupName, subscriptionID)
 		assert.True(t, actualLBPrivateExists)
 
 		// Check Frontend Configuration for Load Balancer.
-		actualLBPrivateFeConfigNames := azure.GetLoadBalancerFrontendIPConfigNames(t, expectedLBPrivateName, resourceGroupName, subscriptionID)
+		actualLBPrivateFeConfigNames := azure.GetLoadBalancerFrontendIPConfigNamesContext(t, context.Background(), expectedLBPrivateName, resourceGroupName, subscriptionID)
 		assert.Equal(t, 2, len(actualLBPrivateFeConfigNames))
 		assert.Contains(t, actualLBPrivateFeConfigNames, expectedLBPrivateFeConfigName)
 
 		// Check Frontend Configuration Private IP Type and Address.
-		actualLBPrivateIPAddress, actualLBPrivateIPType := azure.GetIPOfLoadBalancerFrontendIPConfig(t, expectedLBPrivateFeConfigName, expectedLBPrivateName, resourceGroupName, subscriptionID)
+		actualLBPrivateIPAddress, actualLBPrivateIPType := azure.GetIPOfLoadBalancerFrontendIPConfigContext(t, context.Background(), expectedLBPrivateFeConfigName, expectedLBPrivateName, resourceGroupName, subscriptionID)
 		assert.NotEmpty(t, actualLBPrivateIPAddress)
 		assert.Equal(t, expectedLBPrivateIP, actualLBPrivateIPAddress)
 		assert.Equal(t, azure.PrivateIP, actualLBPrivateIPType)
@@ -88,11 +89,11 @@ func TestTerraformAzureLoadBalancerExample(t *testing.T) {
 
 	t.Run("LoadBalancer_Default", func(t *testing.T) {
 		// Check No Frontend Config Load Balancer exists.
-		actualLBNoFEConfigExists := azure.LoadBalancerExists(t, expectedLBNoFEConfigName, resourceGroupName, subscriptionID)
+		actualLBNoFEConfigExists := azure.LoadBalancerExistsContext(t, context.Background(), expectedLBNoFEConfigName, resourceGroupName, subscriptionID)
 		assert.True(t, actualLBNoFEConfigExists)
 
 		// Check for No Frontend Configuration for Load Balancer.
-		actualLBNoFEConfigFeConfigNames := azure.GetLoadBalancerFrontendIPConfigNames(t, expectedLBNoFEConfigName, resourceGroupName, subscriptionID)
+		actualLBNoFEConfigFeConfigNames := azure.GetLoadBalancerFrontendIPConfigNamesContext(t, context.Background(), expectedLBNoFEConfigName, resourceGroupName, subscriptionID)
 		assert.Equal(t, 0, len(actualLBNoFEConfigFeConfigNames))
 	})
 }

@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -20,20 +20,9 @@ func DiskExistsContext(t testing.TestingT, ctx context.Context, diskName string,
 	return exists
 }
 
-// DiskExists indicates whether the specified Azure Managed Disk exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [DiskExistsContext] instead.
-func DiskExists(t testing.TestingT, diskName string, resGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return DiskExistsContext(t, context.Background(), diskName, resGroupName, subscriptionID)
-}
-
 // DiskExistsContextE indicates whether the specified Azure Managed Disk exists in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func DiskExistsContextE(ctx context.Context, diskName string, resGroupName string, subscriptionID string) (bool, error) {
-	// Get the Disk object
 	_, err := GetDiskContextE(ctx, diskName, resGroupName, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
@@ -46,17 +35,10 @@ func DiskExistsContextE(ctx context.Context, diskName string, resGroupName strin
 	return true, nil
 }
 
-// DiskExistsE indicates whether the specified Azure Managed Disk exists in the specified Azure Resource Group.
-//
-// Deprecated: Use [DiskExistsContextE] instead.
-func DiskExistsE(diskName string, resGroupName string, subscriptionID string) (bool, error) {
-	return DiskExistsContextE(context.Background(), diskName, resGroupName, subscriptionID)
-}
-
 // GetDiskContext returns a Disk in the specified Azure Resource Group.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetDiskContext(t testing.TestingT, ctx context.Context, diskName string, resGroupName string, subscriptionID string) *compute.Disk {
+func GetDiskContext(t testing.TestingT, ctx context.Context, diskName string, resGroupName string, subscriptionID string) *armcompute.Disk {
 	t.Helper()
 
 	disk, err := GetDiskContextE(ctx, diskName, resGroupName, subscriptionID)
@@ -65,43 +47,23 @@ func GetDiskContext(t testing.TestingT, ctx context.Context, diskName string, re
 	return disk
 }
 
-// GetDisk returns a Disk in the specified Azure Resource Group.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetDiskContext] instead.
-func GetDisk(t testing.TestingT, diskName string, resGroupName string, subscriptionID string) *compute.Disk {
-	t.Helper()
-
-	return GetDiskContext(t, context.Background(), diskName, resGroupName, subscriptionID)
-}
-
 // GetDiskContextE returns a Disk in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
-func GetDiskContextE(ctx context.Context, diskName string, resGroupName string, subscriptionID string) (*compute.Disk, error) {
-	// Validate resource group name and subscription ID
+func GetDiskContextE(ctx context.Context, diskName string, resGroupName string, subscriptionID string) (*armcompute.Disk, error) {
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the client reference
 	client, err := CreateDisksClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the Disk
-	disk, err := client.Get(ctx, resGroupName, diskName)
+	resp, err := client.Get(ctx, resGroupName, diskName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &disk, nil
-}
-
-// GetDiskE returns a Disk in the specified Azure Resource Group.
-//
-// Deprecated: Use [GetDiskContextE] instead.
-func GetDiskE(diskName string, resGroupName string, subscriptionID string) (*compute.Disk, error) {
-	return GetDiskContextE(context.Background(), diskName, resGroupName, subscriptionID)
+	return &resp.Disk, nil
 }

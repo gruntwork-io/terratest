@@ -46,27 +46,9 @@ func GetPrivateIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRe
 
 // GetPrivateIpsOfEc2InstancesE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 func GetPrivateIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRegion string) (map[string]string, error) {
-	ec2Client := NewEc2Client(t, awsRegion)
-	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	ips := map[string]string{}
-
-	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.Background())
-		if err != nil {
-			return nil, err
-		}
-
-		for _, reservation := range page.Reservations {
-			for j := range reservation.Instances {
-				instance := &reservation.Instances[j]
-				ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PrivateIpAddress)
-			}
-		}
-	}
-
-	return ips, nil
+	return getInstanceFieldMapE(t, instanceIDs, awsRegion, func(inst *types.Instance) string {
+		return aws.ToString(inst.PrivateIpAddress)
+	})
 }
 
 // GetPrivateHostnameOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
@@ -165,27 +147,9 @@ func GetPublicIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsReg
 
 // GetPublicIpsOfEc2InstancesE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 func GetPublicIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRegion string) (map[string]string, error) {
-	ec2Client := NewEc2Client(t, awsRegion)
-	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
-
-	ips := map[string]string{}
-
-	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.Background())
-		if err != nil {
-			return nil, err
-		}
-
-		for _, reservation := range page.Reservations {
-			for j := range reservation.Instances {
-				instance := &reservation.Instances[j]
-				ips[aws.ToString(instance.InstanceId)] = aws.ToString(instance.PublicIpAddress)
-			}
-		}
-	}
-
-	return ips, nil
+	return getInstanceFieldMapE(t, instanceIDs, awsRegion, func(inst *types.Instance) string {
+		return aws.ToString(inst.PublicIpAddress)
+	})
 }
 
 // GetEc2InstanceIdsByTag returns all the IDs of EC2 instances in the given region with the given tag.
@@ -567,6 +531,32 @@ func getAllAvailabilityZonesE(client *ec2.Client) ([]string, error) {
 	}
 
 	return azs, nil
+}
+
+// getInstanceFieldMapE is a shared helper that paginates through DescribeInstances and builds a map
+// of instance ID to a string field extracted by the given function.
+func getInstanceFieldMapE(t testing.TestingT, instanceIDs []string, awsRegion string, extractField func(*types.Instance) string) (map[string]string, error) {
+	ec2Client := NewEc2Client(t, awsRegion)
+	input := ec2.DescribeInstancesInput{InstanceIds: instanceIDs}
+
+	result := map[string]string{}
+
+	paginator := ec2.NewDescribeInstancesPaginator(ec2Client, &input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		for _, reservation := range page.Reservations {
+			for j := range reservation.Instances {
+				instance := &reservation.Instances[j]
+				result[aws.ToString(instance.InstanceId)] = extractField(instance)
+			}
+		}
+	}
+
+	return result, nil
 }
 
 // NewEc2Client creates an EC2 client.

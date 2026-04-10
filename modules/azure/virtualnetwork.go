@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -34,21 +34,6 @@ func VirtualNetworkExistsContextE(ctx context.Context, vnetName string, resGroup
 	return true, nil
 }
 
-// VirtualNetworkExists indicates whether the specified Azure Virtual Network exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [VirtualNetworkExistsContext] instead.
-func VirtualNetworkExists(t testing.TestingT, vnetName string, resGroupName string, subscriptionID string) bool {
-	return VirtualNetworkExistsContext(t, context.Background(), vnetName, resGroupName, subscriptionID) //nolint:staticcheck
-}
-
-// VirtualNetworkExistsE indicates whether the specified Azure Virtual Network exists.
-//
-// Deprecated: Use [VirtualNetworkExistsContextE] instead.
-func VirtualNetworkExistsE(vnetName string, resGroupName string, subscriptionID string) (bool, error) {
-	return VirtualNetworkExistsContextE(context.Background(), vnetName, resGroupName, subscriptionID)
-}
-
 // SubnetExistsContext indicates whether the specified Azure Virtual Network Subnet exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -72,21 +57,6 @@ func SubnetExistsContextE(ctx context.Context, subnetName string, vnetName strin
 	}
 
 	return true, nil
-}
-
-// SubnetExists indicates whether the specified Azure Virtual Network Subnet exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [SubnetExistsContext] instead.
-func SubnetExists(t testing.TestingT, subnetName string, vnetName string, resGroupName string, subscriptionID string) bool {
-	return SubnetExistsContext(t, context.Background(), subnetName, vnetName, resGroupName, subscriptionID) //nolint:staticcheck
-}
-
-// SubnetExistsE indicates whether the specified Azure Virtual Network Subnet exists.
-//
-// Deprecated: Use [SubnetExistsContextE] instead.
-func SubnetExistsE(subnetName string, vnetName string, resGroupName string, subscriptionID string) (bool, error) {
-	return SubnetExistsContextE(context.Background(), subnetName, vnetName, resGroupName, subscriptionID)
 }
 
 // CheckSubnetContainsIPContext checks if the Private IP is contained in the Subnet Address Range.
@@ -115,7 +85,7 @@ func CheckSubnetContainsIPContextE(ctx context.Context, ipAddress string, subnet
 	}
 
 	// Get Subnet IP range, this required field is never nil therefore no exception handling required.
-	subnetPrefix := *subnet.AddressPrefix
+	subnetPrefix := *subnet.Properties.AddressPrefix
 
 	// Check if the IP is in the Subnet Range using the net package
 	_, ipNet, err := net.ParseCIDR(subnetPrefix)
@@ -124,21 +94,6 @@ func CheckSubnetContainsIPContextE(ctx context.Context, ipAddress string, subnet
 	}
 
 	return ipNet.Contains(ip), nil
-}
-
-// CheckSubnetContainsIP checks if the Private IP is contained in the Subnet Address Range.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [CheckSubnetContainsIPContext] instead.
-func CheckSubnetContainsIP(t testing.TestingT, ipAddress string, subnetName string, vnetName string, resGroupName string, subscriptionID string) bool {
-	return CheckSubnetContainsIPContext(t, context.Background(), ipAddress, subnetName, vnetName, resGroupName, subscriptionID) //nolint:staticcheck
-}
-
-// CheckSubnetContainsIPE checks if the Private IP is contained in the Subnet Address Range.
-//
-// Deprecated: Use [CheckSubnetContainsIPContextE] instead.
-func CheckSubnetContainsIPE(ipAddress string, subnetName string, vnetName string, resGroupName string, subscriptionID string) (bool, error) {
-	return CheckSubnetContainsIPContextE(context.Background(), ipAddress, subnetName, vnetName, resGroupName, subscriptionID)
 }
 
 // GetVirtualNetworkSubnetsContext gets all Subnet names and their respective address prefixes in the
@@ -162,35 +117,22 @@ func GetVirtualNetworkSubnetsContextE(ctx context.Context, vnetName string, resG
 		return subNetDetails, err
 	}
 
-	subnets, err := client.List(ctx, resGroupName, vnetName)
-	if err != nil {
-		return subNetDetails, err
-	}
+	pager := client.NewListPager(resGroupName, vnetName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return subNetDetails, err
+		}
 
-	for _, v := range subnets.Values() {
-		subnetName := v.Name
-		subNetAddressPrefix := v.AddressPrefix
+		for _, v := range page.Value {
+			subnetName := v.Name
+			subNetAddressPrefix := v.Properties.AddressPrefix
 
-		subNetDetails[*subnetName] = *subNetAddressPrefix
+			subNetDetails[*subnetName] = *subNetAddressPrefix
+		}
 	}
 
 	return subNetDetails, nil
-}
-
-// GetVirtualNetworkSubnets gets all Subnet names and their respective address prefixes in the
-// specified Virtual Network. This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetVirtualNetworkSubnetsContext] instead.
-func GetVirtualNetworkSubnets(t testing.TestingT, vnetName string, resGroupName string, subscriptionID string) map[string]string {
-	return GetVirtualNetworkSubnetsContext(t, context.Background(), vnetName, resGroupName, subscriptionID) //nolint:staticcheck
-}
-
-// GetVirtualNetworkSubnetsE gets all Subnet names and their respective address prefixes in the specified Virtual Network.
-// Returning both the name and prefix together helps reduce calls for these frequently accessed properties.
-//
-// Deprecated: Use [GetVirtualNetworkSubnetsContextE] instead.
-func GetVirtualNetworkSubnetsE(vnetName string, resGroupName string, subscriptionID string) (map[string]string, error) {
-	return GetVirtualNetworkSubnetsContextE(context.Background(), vnetName, resGroupName, subscriptionID)
 }
 
 // GetVirtualNetworkDNSServerIPsContext gets a list of all Virtual Network DNS server IPs.
@@ -211,27 +153,21 @@ func GetVirtualNetworkDNSServerIPsContextE(ctx context.Context, vnetName string,
 		return nil, err
 	}
 
-	return *vnet.DhcpOptions.DNSServers, nil
-}
+	if vnet.Properties.DhcpOptions == nil {
+		return nil, nil
+	}
 
-// GetVirtualNetworkDNSServerIPs gets a list of all Virtual Network DNS server IPs.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetVirtualNetworkDNSServerIPsContext] instead.
-func GetVirtualNetworkDNSServerIPs(t testing.TestingT, vnetName string, resGroupName string, subscriptionID string) []string {
-	return GetVirtualNetworkDNSServerIPsContext(t, context.Background(), vnetName, resGroupName, subscriptionID) //nolint:staticcheck
-}
+	dnsServers := make([]string, len(vnet.Properties.DhcpOptions.DNSServers))
+	for i, s := range vnet.Properties.DhcpOptions.DNSServers {
+		dnsServers[i] = *s
+	}
 
-// GetVirtualNetworkDNSServerIPsE gets a list of all Virtual Network DNS server IPs.
-//
-// Deprecated: Use [GetVirtualNetworkDNSServerIPsContextE] instead.
-func GetVirtualNetworkDNSServerIPsE(vnetName string, resGroupName string, subscriptionID string) ([]string, error) {
-	return GetVirtualNetworkDNSServerIPsContextE(context.Background(), vnetName, resGroupName, subscriptionID)
+	return dnsServers, nil
 }
 
 // GetSubnetContextE gets a subnet.
 // The ctx parameter supports cancellation and timeouts.
-func GetSubnetContextE(ctx context.Context, subnetName string, vnetName string, resGroupName string, subscriptionID string) (*network.Subnet, error) {
+func GetSubnetContextE(ctx context.Context, subnetName string, vnetName string, resGroupName string, subscriptionID string) (*armnetwork.Subnet, error) {
 	// Validate Azure Resource Group
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
@@ -245,43 +181,22 @@ func GetSubnetContextE(ctx context.Context, subnetName string, vnetName string, 
 	}
 
 	// Get the Subnet
-	subnet, err := client.Get(ctx, resGroupName, vnetName, subnetName, "")
+	resp, err := client.Get(ctx, resGroupName, vnetName, subnetName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &subnet, nil
-}
-
-// GetSubnetE gets a subnet.
-//
-// Deprecated: Use [GetSubnetContextE] instead.
-func GetSubnetE(subnetName string, vnetName string, resGroupName string, subscriptionID string) (*network.Subnet, error) {
-	return GetSubnetContextE(context.Background(), subnetName, vnetName, resGroupName, subscriptionID)
+	return &resp.Subnet, nil
 }
 
 // GetSubnetClientE creates a subnet client.
-func GetSubnetClientE(subscriptionID string) (*network.SubnetsClient, error) {
-	// Create a new Subnet client from client factory
-	client, err := CreateNewSubnetClientE(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return client, nil
+func GetSubnetClientE(subscriptionID string) (*armnetwork.SubnetsClient, error) {
+	return CreateNewSubnetClientE(subscriptionID)
 }
 
 // GetVirtualNetworkContextE gets Virtual Network in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
-func GetVirtualNetworkContextE(ctx context.Context, vnetName string, resGroupName string, subscriptionID string) (*network.VirtualNetwork, error) {
+func GetVirtualNetworkContextE(ctx context.Context, vnetName string, resGroupName string, subscriptionID string) (*armnetwork.VirtualNetwork, error) {
 	// Validate Azure Resource Group
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
@@ -295,36 +210,15 @@ func GetVirtualNetworkContextE(ctx context.Context, vnetName string, resGroupNam
 	}
 
 	// Get the Virtual Network
-	vnet, err := client.Get(ctx, resGroupName, vnetName, "")
+	resp, err := client.Get(ctx, resGroupName, vnetName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &vnet, nil
-}
-
-// GetVirtualNetworkE gets Virtual Network in the specified Azure Resource Group.
-//
-// Deprecated: Use [GetVirtualNetworkContextE] instead.
-func GetVirtualNetworkE(vnetName string, resGroupName string, subscriptionID string) (*network.VirtualNetwork, error) {
-	return GetVirtualNetworkContextE(context.Background(), vnetName, resGroupName, subscriptionID)
+	return &resp.VirtualNetwork, nil
 }
 
 // GetVirtualNetworksClientE creates a virtual network client in the specified Azure Subscription.
-func GetVirtualNetworksClientE(subscriptionID string) (*network.VirtualNetworksClient, error) {
-	// Create a new Virtual Network client from client factory
-	client, err := CreateNewVirtualNetworkClientE(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return client, nil
+func GetVirtualNetworksClientE(subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+	return CreateNewVirtualNetworkClientE(subscriptionID)
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/go-autorest/autorest"
 	azureapi "github.com/Azure/go-autorest/autorest/azure"
 )
@@ -61,15 +62,37 @@ func NewNotFoundError(objectType string, objectID string, region string) NotFoun
 	return NotFoundError{objectType: objectType, objectID: objectID, searchSpace: region}
 }
 
+// UnknownEnvironmentError is returned when an Azure environment name is not recognized.
+type UnknownEnvironmentError struct {
+	EnvironmentName string
+}
+
+func (e *UnknownEnvironmentError) Error() string {
+	return fmt.Sprintf("unknown Azure environment: %s. "+
+		"Available values are: AzurePublicCloud (default), "+
+		"AzureUSGovernmentCloud, AzureChinaCloud, or AzureStackCloud",
+		e.EnvironmentName)
+}
+
 // ResourceNotFoundErrorExists checks the Service Error Code for the 'Resource Not Found' error.
+// It supports both the new Azure SDK (azcore.ResponseError) and legacy autorest errors.
 func ResourceNotFoundErrorExists(err error) bool {
-	if err != nil {
-		var autorestError autorest.DetailedError
-		if errors.As(err, &autorestError) {
-			var requestError *azureapi.RequestError
-			if errors.As(autorestError.Original, &requestError) {
-				return requestError.ServiceError.Code == "ResourceNotFound"
-			}
+	if err == nil {
+		return false
+	}
+
+	// New Azure SDK error type
+	var respErr *azcore.ResponseError
+	if errors.As(err, &respErr) {
+		return respErr.ErrorCode == "ResourceNotFound" || respErr.ErrorCode == "ResourceGroupNotFound"
+	}
+
+	// Legacy autorest error type (for unmigrated services)
+	var autorestError autorest.DetailedError
+	if errors.As(err, &autorestError) {
+		var requestError *azureapi.RequestError
+		if errors.As(autorestError.Original, &requestError) {
+			return requestError.ServiceError.Code == "ResourceNotFound" || requestError.ServiceError.Code == "ResourceGroupNotFound"
 		}
 	}
 
