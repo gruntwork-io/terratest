@@ -147,7 +147,7 @@ func TestHelmDependencyInstall(t *testing.T) {
 
 	// Deploy the chart using `helm install`.
 	err = helm.InstallE(t, options, helmChartPath, releaseName)
-	require.NoError(t, err)
+	assert.NoError(t, err) //nolint:testifylint // assert not require: deferred Delete must run even if install fails
 
 	// Verify that Kubernetes service is available after helm chart deployment.
 	_, err = k8s.GetServiceContextE(t, t.Context(), kubectlOptions, releaseName)
