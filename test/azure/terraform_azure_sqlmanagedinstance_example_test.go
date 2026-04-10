@@ -53,17 +53,17 @@ func TestTerraformAzureSQLManagedInstanceExample(t *testing.T) {
 	expectedManagedInstanceName := terraform.Output(t, terraformOptions, "managed_instance_name")
 
 	// check for if data factory exists
-	actualManagedInstanceExits := azure.SQLManagedInstanceExists(t, expectedManagedInstanceName, expectedResourceGroupName, "")
+	actualManagedInstanceExits := azure.SQLManagedInstanceExistsContext(t, t.Context(), expectedManagedInstanceName, expectedResourceGroupName, "")
 	assert.True(t, actualManagedInstanceExits)
 
 	// Get the SQL Managed Instance details and assert them against the terraform output
-	actualSQLManagedInstance := azure.GetManagedInstance(t, expectedResourceGroupName, expectedManagedInstanceName, "")
-	actualSQLManagedInstanceDatabase := azure.GetManagedInstanceDatabase(t, expectedResourceGroupName, expectedManagedInstanceName, expectedDatabaseName, "")
+	actualSQLManagedInstance := azure.GetManagedInstanceContext(t, t.Context(), expectedResourceGroupName, expectedManagedInstanceName, "")
+	actualSQLManagedInstanceDatabase := azure.GetManagedInstanceDatabaseContext(t, t.Context(), expectedResourceGroupName, expectedManagedInstanceName, expectedDatabaseName, "")
 
 	assert.Equal(t, expectedManagedInstanceName, *actualSQLManagedInstance.Name)
 	assert.Equal(t, expectedLocation, *actualSQLManagedInstance.Location)
-	assert.Equal(t, expectedSKUName, *actualSQLManagedInstance.Sku.Name)
-	assert.Equal(t, expectedSQLMIState, *actualSQLManagedInstance.ManagedInstanceProperties.State)
+	assert.Equal(t, expectedSKUName, *actualSQLManagedInstance.SKU.Name)
+	assert.Equal(t, expectedSQLMIState, *actualSQLManagedInstance.Properties.State)
 
 	assert.Equal(t, expectedDatabaseName, *actualSQLManagedInstanceDatabase.Name)
 

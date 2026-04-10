@@ -133,7 +133,7 @@ func GetAllNSGRulesContextE(ctx context.Context, resourceGroupName, nsgName, sub
 // collectDefaultSecurityRules uses the pager pattern to iterate over all default security rules and
 // convert them into NsgRuleSummary instances.
 func collectDefaultSecurityRules(ctx context.Context, client *armnetwork.DefaultSecurityRulesClient, resourceGroupName, nsgName string) ([]NsgRuleSummary, error) {
-	rules := make([]NsgRuleSummary, 0)
+	var rules []NsgRuleSummary
 
 	pager := client.NewListPager(resourceGroupName, nsgName, nil)
 	for pager.More() {
@@ -153,7 +153,7 @@ func collectDefaultSecurityRules(ctx context.Context, client *armnetwork.Default
 // collectCustomSecurityRules uses the pager pattern to iterate over all custom security rules and
 // convert them into NsgRuleSummary instances.
 func collectCustomSecurityRules(ctx context.Context, client *armnetwork.SecurityRulesClient, resourceGroupName, nsgName string) ([]NsgRuleSummary, error) {
-	rules := make([]NsgRuleSummary, 0)
+	var rules []NsgRuleSummary
 
 	pager := client.NewListPager(resourceGroupName, nsgName, nil)
 	for pager.More() {

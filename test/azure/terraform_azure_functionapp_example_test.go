@@ -44,13 +44,13 @@ func TestTerraformAzureFunctionAppExample(t *testing.T) {
 	appKind := terraform.Output(t, terraformOptions, "function_app_kind")
 
 	// website::tag::4:: Assert
-	assert.True(t, azure.AppExists(t, appName, resourceGroupName, ""))
-	site := azure.GetAppService(t, appName, resourceGroupName, "")
+	assert.True(t, azure.AppExistsContext(t, t.Context(), appName, resourceGroupName, ""))
+	site := azure.GetAppServiceContext(t, t.Context(), appName, resourceGroupName, "")
 
 	assert.Equal(t, appId, *site.ID)
-	assert.Equal(t, appDefaultHostName, *site.DefaultHostName)
+	assert.Equal(t, appDefaultHostName, *site.Properties.DefaultHostName)
 	assert.Equal(t, appKind, *site.Kind)
 
-	assert.NotEmpty(t, *site.OutboundIPAddresses)
-	assert.Equal(t, "Running", *site.State)
+	assert.NotEmpty(t, *site.Properties.OutboundIPAddresses)
+	assert.Equal(t, "Running", *site.Properties.State)
 }

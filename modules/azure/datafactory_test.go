@@ -19,7 +19,7 @@ func TestDataFactoryExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	exists, err := azure.DataFactoryExistsE(dataFactoryName, resourceGroupName, subscriptionID)
+	exists, err := azure.DataFactoryExistsContextE(t.Context(), dataFactoryName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -32,6 +32,6 @@ func TestGetDataFactoryE(t *testing.T) {
 	subscriptionID := ""
 	dataFactoryName := ""
 
-	_, err := azure.GetDataFactoryE(subscriptionID, resGroupName, dataFactoryName)
+	_, err := azure.GetDataFactoryContextE(t.Context(), subscriptionID, resGroupName, dataFactoryName)
 	require.Error(t, err)
 }

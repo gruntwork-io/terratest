@@ -7,7 +7,6 @@
 package azure
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +19,7 @@ func TestGetDiskE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := GetDiskContextE(context.Background(), diskName, rgName, subID)
+	_, err := GetDiskContextE(t.Context(), diskName, rgName, subID)
 
 	require.Error(t, err)
 }

@@ -1,7 +1,6 @@
 package azure //nolint:testpackage // tests access unexported functions
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -226,7 +225,7 @@ func TestCollectDefaultSecurityRules(t *testing.T) {
 			},
 		}
 		client := newFakeDefaultSecurityRulesClient(t, srv)
-		rules, err := collectDefaultSecurityRules(context.Background(), client, "rg", "nsg")
+		rules, err := collectDefaultSecurityRules(t.Context(), client, "rg", "nsg")
 
 		require.NoError(t, err)
 		require.Len(t, rules, 1)
@@ -246,7 +245,7 @@ func TestCollectDefaultSecurityRules(t *testing.T) {
 			},
 		}
 		client := newFakeDefaultSecurityRulesClient(t, srv)
-		rules, err := collectDefaultSecurityRules(context.Background(), client, "rg", "nsg")
+		rules, err := collectDefaultSecurityRules(t.Context(), client, "rg", "nsg")
 
 		require.NoError(t, err)
 		assert.Empty(t, rules)
@@ -277,7 +276,7 @@ func TestCollectCustomSecurityRules(t *testing.T) {
 		},
 	}
 	client := newFakeSecurityRulesClient(t, srv)
-	rules, err := collectCustomSecurityRules(context.Background(), client, "rg", "nsg")
+	rules, err := collectCustomSecurityRules(t.Context(), client, "rg", "nsg")
 
 	require.NoError(t, err)
 	require.Len(t, rules, 1)

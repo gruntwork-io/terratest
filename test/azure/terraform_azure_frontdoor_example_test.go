@@ -46,16 +46,16 @@ func TestTerraformAzureFrontDoorExample(t *testing.T) {
 	// NOTE: the value of subscriptionID can be left blank, it will be replaced by the value
 	//       of the environment variable ARM_SUBSCRIPTION_ID
 
-	frontDoorExists := azure.FrontDoorExists(t, frontDoorName, resourceGroupName, subscriptionID)
+	frontDoorExists := azure.FrontDoorExistsContext(t, t.Context(), frontDoorName, resourceGroupName, subscriptionID)
 	assert.True(t, frontDoorExists)
 
-	actualFrontDoorInstance := azure.GetFrontDoor(t, frontDoorName, resourceGroupName, subscriptionID)
+	actualFrontDoorInstance := azure.GetFrontDoorContext(t, t.Context(), frontDoorName, resourceGroupName, subscriptionID)
 	assert.Equal(t, frontDoorName, *actualFrontDoorInstance.Name)
 
-	endpointExists := azure.FrontDoorFrontendEndpointExists(t, frontendEndpointName, frontDoorName, resourceGroupName, subscriptionID)
+	endpointExists := azure.FrontDoorFrontendEndpointExistsContext(t, t.Context(), frontendEndpointName, frontDoorName, resourceGroupName, subscriptionID)
 	assert.True(t, endpointExists)
 
-	actualFrontDoorEndpoint := azure.GetFrontDoorFrontendEndpoint(t, frontendEndpointName, frontDoorName, resourceGroupName, subscriptionID)
-	endpointProperties := *actualFrontDoorEndpoint.FrontendEndpointProperties
+	actualFrontDoorEndpoint := azure.GetFrontDoorFrontendEndpointContext(t, t.Context(), frontendEndpointName, frontDoorName, resourceGroupName, subscriptionID)
+	endpointProperties := *actualFrontDoorEndpoint.Properties
 	assert.Equal(t, frontDoorUrl, *endpointProperties.HostName)
 }

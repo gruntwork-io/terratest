@@ -20,16 +20,6 @@ func AppExistsContext(t testing.TestingT, ctx context.Context, appName string, r
 	return exists
 }
 
-// AppExists indicates whether the specified application exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [AppExistsContext] instead.
-func AppExists(t testing.TestingT, appName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return AppExistsContext(t, context.Background(), appName, resourceGroupName, subscriptionID)
-}
-
 // AppExistsContextE indicates whether the specified application exists.
 // The ctx parameter supports cancellation and timeouts.
 func AppExistsContextE(ctx context.Context, appName string, resourceGroupName string, subscriptionID string) (bool, error) {
@@ -45,13 +35,6 @@ func AppExistsContextE(ctx context.Context, appName string, resourceGroupName st
 	return true, nil
 }
 
-// AppExistsE indicates whether the specified application exists.
-//
-// Deprecated: Use [AppExistsContextE] instead.
-func AppExistsE(appName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	return AppExistsContextE(context.Background(), appName, resourceGroupName, subscriptionID)
-}
-
 // GetAppServiceContext gets the App service object for the specified application.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -62,16 +45,6 @@ func GetAppServiceContext(t testing.TestingT, ctx context.Context, appName strin
 	require.NoError(t, err)
 
 	return site
-}
-
-// GetAppService gets the App service object for the specified application.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetAppServiceContext] instead.
-func GetAppService(t testing.TestingT, appName string, resGroupName string, subscriptionID string) *armappservice.Site {
-	t.Helper()
-
-	return GetAppServiceContext(t, context.Background(), appName, resGroupName, subscriptionID)
 }
 
 // GetAppServiceContextE gets the App service object for the specified application.
@@ -95,16 +68,9 @@ func GetAppServiceContextE(ctx context.Context, appName string, resGroupName str
 	return &resp.Site, nil
 }
 
-// GetAppServiceE gets the App service object for the specified application.
-//
-// Deprecated: Use [GetAppServiceContextE] instead.
-func GetAppServiceE(appName string, resGroupName string, subscriptionID string) (*armappservice.Site, error) {
-	return GetAppServiceContextE(context.Background(), appName, resGroupName, subscriptionID)
-}
-
 // GetAppServiceClientE creates and returns an App Service web apps client.
 func GetAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
-	clientFactory, err := getArmAppServiceClientFactory(subscriptionID)
+	clientFactory, err := getARMAppServiceClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}

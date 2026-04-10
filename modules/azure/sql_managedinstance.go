@@ -35,23 +35,6 @@ func SQLManagedInstanceExistsContextE(ctx context.Context, managedInstanceName s
 	return true, nil
 }
 
-// SQLManagedInstanceExists indicates whether the SQL Managed Instance exists for the subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [SQLManagedInstanceExistsContext] instead.
-func SQLManagedInstanceExists(t testing.TestingT, managedInstanceName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return SQLManagedInstanceExistsContext(t, context.Background(), managedInstanceName, resourceGroupName, subscriptionID)
-}
-
-// SQLManagedInstanceExistsE indicates whether the specified SQL Managed Instance exists and may return an error.
-//
-// Deprecated: Use [SQLManagedInstanceExistsContextE] instead.
-func SQLManagedInstanceExistsE(managedInstanceName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	return SQLManagedInstanceExistsContextE(context.Background(), managedInstanceName, resourceGroupName, subscriptionID)
-}
-
 // GetManagedInstanceContext retrieves the SQL managed instance object for the given subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -80,23 +63,6 @@ func GetManagedInstanceContextE(ctx context.Context, subscriptionID string, resG
 	return &resp.ManagedInstance, nil
 }
 
-// GetManagedInstance retrieves the SQL managed instance object for the given subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetManagedInstanceContext] instead.
-func GetManagedInstance(t testing.TestingT, resGroupName string, managedInstanceName string, subscriptionID string) *armsql.ManagedInstance {
-	t.Helper()
-
-	return GetManagedInstanceContext(t, context.Background(), resGroupName, managedInstanceName, subscriptionID)
-}
-
-// GetManagedInstanceE retrieves the SQL managed instance object for the given subscription.
-//
-// Deprecated: Use [GetManagedInstanceContextE] instead.
-func GetManagedInstanceE(subscriptionID string, resGroupName string, managedInstanceName string) (*armsql.ManagedInstance, error) {
-	return GetManagedInstanceContextE(context.Background(), subscriptionID, resGroupName, managedInstanceName)
-}
-
 // GetManagedInstanceDatabaseContext retrieves the SQL managed database object for the given subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -123,21 +89,4 @@ func GetManagedInstanceDatabaseContextE(ctx context.Context, subscriptionID stri
 	}
 
 	return &resp.ManagedDatabase, nil
-}
-
-// GetManagedInstanceDatabase retrieves the SQL managed database object for the given subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetManagedInstanceDatabaseContext] instead.
-func GetManagedInstanceDatabase(t testing.TestingT, resGroupName string, managedInstanceName string, databaseName string, subscriptionID string) *armsql.ManagedDatabase {
-	t.Helper()
-
-	return GetManagedInstanceDatabaseContext(t, context.Background(), resGroupName, managedInstanceName, databaseName, subscriptionID)
-}
-
-// GetManagedInstanceDatabaseE retrieves the SQL managed database object for the given subscription.
-//
-// Deprecated: Use [GetManagedInstanceDatabaseContextE] instead.
-func GetManagedInstanceDatabaseE(t testing.TestingT, subscriptionID string, resGroupName string, managedInstanceName string, databaseName string) (*armsql.ManagedDatabase, error) { //nolint:unparam // t kept for API compatibility
-	return GetManagedInstanceDatabaseContextE(context.Background(), subscriptionID, resGroupName, managedInstanceName, databaseName)
 }

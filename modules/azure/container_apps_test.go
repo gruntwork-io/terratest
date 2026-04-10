@@ -24,7 +24,7 @@ func TestManagedEnvironmentExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := ManagedEnvironmentExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := ManagedEnvironmentExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -35,7 +35,7 @@ func TestGetManagedEnvironmentE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetManagedEnvironmentE(environmentName, resourceGroupName, subscriptionID)
+	_, err := GetManagedEnvironmentContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -46,7 +46,7 @@ func TestContainerAppExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := ContainerAppExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := ContainerAppExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -57,7 +57,7 @@ func TestGetContainerAppE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerAppE(environmentName, resourceGroupName, subscriptionID)
+	_, err := GetContainerAppContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -68,7 +68,7 @@ func TestContainerAppJobExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := ContainerAppJobExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := ContainerAppJobExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -79,6 +79,6 @@ func TestGetContainerJobAppE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerAppJobE(environmentName, resourceGroupName, subscriptionID)
+	_, err := GetContainerAppJobContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }

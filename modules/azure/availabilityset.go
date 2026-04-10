@@ -56,19 +56,13 @@ func CheckAvailabilitySetContainsVMContextE(t testing.TestingT, ctx context.Cont
 		return false, err
 	}
 
+	// Get the Availability Set
 	resp, err := client.Get(ctx, resGroupName, avsName, nil)
 	if err != nil {
 		return false, err
 	}
 
-	for _, vm := range resp.Properties.VirtualMachines {
-		// VM IDs are always ALL CAPS in this property so ignoring case
-		if strings.EqualFold(vmName, GetNameFromResourceID(*vm.ID)) {
-			return true, nil
-		}
-	}
-
-	return false, NewNotFoundError("Virtual Machine", vmName, avsName)
+	return avsContainsVM(vmName, avsName, resp.Properties.VirtualMachines)
 }
 
 // GetAvailabilitySetVMNamesInCapsContext gets a list of VM names in the specified Azure Availability Set.
@@ -96,16 +90,7 @@ func GetAvailabilitySetVMNamesInCapsContextE(t testing.TestingT, ctx context.Con
 		return nil, err
 	}
 
-	vms := []string{}
-
-	for _, vm := range resp.Properties.VirtualMachines {
-		// IDs are returned in ALL CAPS for this property
-		if vmName := GetNameFromResourceID(*vm.ID); len(vmName) > 0 {
-			vms = append(vms, vmName)
-		}
-	}
-
-	return vms, nil
+	return extractAvsVMNames(resp.Properties.VirtualMachines), nil
 }
 
 // GetAvailabilitySetFaultDomainCountContext gets the Fault Domain Count for the specified Azure Availability Set.
@@ -134,20 +119,49 @@ func GetAvailabilitySetFaultDomainCountContextE(t testing.TestingT, ctx context.
 // GetAvailabilitySetContextE gets an Availability Set in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func GetAvailabilitySetContextE(t testing.TestingT, ctx context.Context, avsName string, resGroupName string, subscriptionID string) (*armcompute.AvailabilitySet, error) {
+	// Validate resource group name and subscription ID
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
+	// Get the client reference
 	client, err := CreateAvailabilitySetClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Get the Availability Set
 	resp, err := client.Get(ctx, resGroupName, avsName, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &resp.AvailabilitySet, nil
+}
+
+// avsContainsVM checks if the named VM is in the Availability Set's VM list using case-insensitive matching.
+func avsContainsVM(vmName string, avsName string, vms []*armcompute.SubResource) (bool, error) {
+	for _, vm := range vms {
+		// VM IDs are always ALL CAPS in this property so ignoring case
+		if strings.EqualFold(vmName, GetNameFromResourceID(*vm.ID)) {
+			return true, nil
+		}
+	}
+
+	return false, NewNotFoundError("Virtual Machine", vmName, avsName)
+}
+
+// extractAvsVMNames extracts the VM names from an Availability Set's VM list.
+func extractAvsVMNames(vms []*armcompute.SubResource) []string {
+	var names []string
+
+	for _, vm := range vms {
+		// IDs are returned in ALL CAPS for this property
+		if vmName := GetNameFromResourceID(*vm.ID); len(vmName) > 0 {
+			names = append(names, vmName)
+		}
+	}
+
+	return names
 }

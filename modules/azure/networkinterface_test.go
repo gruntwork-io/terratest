@@ -7,7 +7,6 @@
 package azure
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,7 +20,11 @@ If/when methods can be mocked or Create/Delete APIs are added, these tests can b
 func TestGetNetworkInterfaceE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetNetworkInterfaceContextE(context.Background(), "", "", "")
+	nicName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetNetworkInterfaceContextE(t.Context(), nicName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -29,7 +32,11 @@ func TestGetNetworkInterfaceE(t *testing.T) {
 func TestGetNetworkInterfacePrivateIPsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetNetworkInterfacePrivateIPsContextE(context.Background(), "", "", "")
+	nicName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetNetworkInterfacePrivateIPsContextE(t.Context(), nicName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -37,7 +44,11 @@ func TestGetNetworkInterfacePrivateIPsE(t *testing.T) {
 func TestGetNetworkInterfacePublicIPsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetNetworkInterfacePublicIPsContextE(context.Background(), "", "", "")
+	nicName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetNetworkInterfacePublicIPsContextE(t.Context(), nicName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -45,7 +56,11 @@ func TestGetNetworkInterfacePublicIPsE(t *testing.T) {
 func TestNetworkInterfaceExistsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := NetworkInterfaceExistsContextE(context.Background(), "", "", "")
+	nicName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := NetworkInterfaceExistsContextE(t.Context(), nicName, rgName, subID)
 
 	require.Error(t, err)
 }

@@ -7,7 +7,6 @@
 package azure
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,7 +20,11 @@ If/when methods can be mocked or Create/Delete APIs are added, these tests can b
 func TestGetVirtualNetworkE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetVirtualNetworkContextE(context.Background(), "", "", "")
+	vnetName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetVirtualNetworkContextE(t.Context(), vnetName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -29,7 +32,12 @@ func TestGetVirtualNetworkE(t *testing.T) {
 func TestGetSubnetE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetSubnetContextE(context.Background(), "", "", "", "")
+	subnetName := ""
+	vnetName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetSubnetContextE(t.Context(), subnetName, vnetName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -37,7 +45,11 @@ func TestGetSubnetE(t *testing.T) {
 func TestGetVirtualNetworkDNSServerIPsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetVirtualNetworkDNSServerIPsContextE(context.Background(), "", "", "")
+	vnetName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetVirtualNetworkDNSServerIPsContextE(t.Context(), vnetName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -45,7 +57,11 @@ func TestGetVirtualNetworkDNSServerIPsE(t *testing.T) {
 func TestGetVirtualNetworkSubnetsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetVirtualNetworkSubnetsContextE(context.Background(), "", "", "")
+	vnetName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetVirtualNetworkSubnetsContextE(t.Context(), vnetName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -53,7 +69,13 @@ func TestGetVirtualNetworkSubnetsE(t *testing.T) {
 func TestCheckSubnetContainsIPE(t *testing.T) {
 	t.Parallel()
 
-	_, err := CheckSubnetContainsIPContextE(context.Background(), "", "", "", "", "")
+	ipAddress := ""
+	subnetName := ""
+	vnetName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := CheckSubnetContainsIPContextE(t.Context(), ipAddress, subnetName, vnetName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -61,7 +83,12 @@ func TestCheckSubnetContainsIPE(t *testing.T) {
 func TestSubnetExistsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := SubnetExistsContextE(context.Background(), "", "", "", "")
+	subnetName := ""
+	vnetName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := SubnetExistsContextE(t.Context(), subnetName, vnetName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -69,7 +96,11 @@ func TestSubnetExistsE(t *testing.T) {
 func TestVirtualNetworkExistsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := VirtualNetworkExistsContextE(context.Background(), "", "", "")
+	vnetName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := VirtualNetworkExistsContextE(t.Context(), vnetName, rgName, subID)
 
 	require.Error(t, err)
 }

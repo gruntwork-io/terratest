@@ -10,7 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -49,14 +48,14 @@ func TestTerraformAzureSQLDBExample(t *testing.T) {
 	expectedSQLDBStatus := "Online"
 
 	// website::tag::4:: Get the SQL server details and assert them against the terraform output
-	actualSQLServer := azure.GetSQLServer(t, expectedResourceGroupName, expectedSQLServerName, "")
+	actualSQLServer := azure.GetSQLServerContext(t, t.Context(), expectedResourceGroupName, expectedSQLServerName, "")
 
 	assert.Equal(t, expectedSQLServerID, *actualSQLServer.ID)
 	assert.Equal(t, expectedSQLServerFullDomainName, *actualSQLServer.Properties.FullyQualifiedDomainName)
-	assert.Equal(t, armsql.ServerStateReady, *actualSQLServer.Properties.State)
+	assert.Equal(t, "Ready", *actualSQLServer.Properties.State)
 
 	// website::tag::5:: Get the SQL server DB details and assert them against the terraform output
-	actualSQLDatabase := azure.GetSQLDatabase(t, expectedResourceGroupName, expectedSQLServerName, expectedSQLDBName, "")
+	actualSQLDatabase := azure.GetSQLDatabaseContext(t, t.Context(), expectedResourceGroupName, expectedSQLServerName, expectedSQLDBName, "")
 
 	assert.Equal(t, expectedSQLDBID, *actualSQLDatabase.ID)
 	assert.Equal(t, expectedSQLDBStatus, string(*actualSQLDatabase.Properties.Status))

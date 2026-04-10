@@ -7,7 +7,6 @@
 package azure
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +36,7 @@ func TestGetAvailabilitySetE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := GetAvailabilitySetContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := GetAvailabilitySetContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -50,7 +49,7 @@ func TestCheckAvailabilitySetContainsVME(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := CheckAvailabilitySetContainsVMContextE(t, context.Background(), vmName, avsName, rgName, subscriptionID)
+	_, err := CheckAvailabilitySetContainsVMContextE(t, t.Context(), vmName, avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -62,7 +61,7 @@ func TestGetAvailabilitySetVMNamesInCapsE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := GetAvailabilitySetVMNamesInCapsContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := GetAvailabilitySetVMNamesInCapsContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -74,7 +73,7 @@ func TestGetAvailabilitySetFaultDomainCountE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := GetAvailabilitySetFaultDomainCountContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := GetAvailabilitySetFaultDomainCountContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -86,7 +85,7 @@ func TestAvailabilitySetExistsE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := AvailabilitySetExistsContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := AvailabilitySetExistsContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }

@@ -43,16 +43,16 @@ func TestTerraformAzureKeyVaultExample(t *testing.T) {
 	expectedCertificateName := terraform.Output(t, terraformOptions, "certificate_name")
 
 	// website::tag::4:: Determine whether the keyvault exists
-	keyVault := azure.GetKeyVault(t, resourceGroupName, keyVaultName, "")
+	keyVault := azure.GetKeyVaultContext(t, t.Context(), resourceGroupName, keyVaultName, "")
 	assert.Equal(t, keyVaultName, *keyVault.Name)
 
 	// website::tag::5:: Determine whether the secret, key, and certificate exists
-	secretExists := azure.KeyVaultSecretExists(t, keyVaultName, expectedSecretName)
+	secretExists := azure.KeyVaultSecretExistsContext(t, t.Context(), keyVaultName, expectedSecretName)
 	assert.True(t, secretExists, "kv-secret does not exist")
 
-	keyExists := azure.KeyVaultKeyExists(t, keyVaultName, expectedKeyName)
+	keyExists := azure.KeyVaultKeyExistsContext(t, t.Context(), keyVaultName, expectedKeyName)
 	assert.True(t, keyExists, "kv-key does not exist")
 
-	certificateExists := azure.KeyVaultCertificateExists(t, keyVaultName, expectedCertificateName)
+	certificateExists := azure.KeyVaultCertificateExistsContext(t, t.Context(), keyVaultName, expectedCertificateName)
 	assert.True(t, certificateExists, "kv-cert does not exist")
 }

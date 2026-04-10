@@ -24,7 +24,7 @@ func TestAppExistsE(t *testing.T) {
 	appName := ""
 	subscriptionID := ""
 
-	_, err := AppExistsE(appName, resGroupName, subscriptionID)
+	_, err := AppExistsContextE(t.Context(), appName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -35,7 +35,7 @@ func TestGetAppServiceE(t *testing.T) {
 	appName := ""
 	subscriptionID := ""
 
-	_, err := GetAppServiceE(appName, resGroupName, subscriptionID)
+	_, err := GetAppServiceContextE(t.Context(), appName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 

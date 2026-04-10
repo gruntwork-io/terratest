@@ -7,7 +7,6 @@
 package test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -50,14 +49,14 @@ func TestTerraformAzureAvailabilitySetExample(t *testing.T) {
 	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
 
 	// Check the Availability Set Exists
-	actualAvsExists := azure.AvailabilitySetExistsContext(t, context.Background(), expectedAvsName, resourceGroupName, subscriptionID)
+	actualAvsExists := azure.AvailabilitySetExistsContext(t, t.Context(), expectedAvsName, resourceGroupName, subscriptionID)
 	assert.True(t, actualAvsExists)
 
 	// Check the Availability Set Fault Domain Count
-	actualAvsFaultDomainCount := azure.GetAvailabilitySetFaultDomainCountContext(t, context.Background(), expectedAvsName, resourceGroupName, subscriptionID)
+	actualAvsFaultDomainCount := azure.GetAvailabilitySetFaultDomainCountContext(t, t.Context(), expectedAvsName, resourceGroupName, subscriptionID)
 	assert.Equal(t, expectedAvsFaultDomainCount, actualAvsFaultDomainCount)
 
 	// Check the Availability Set for a VM
-	actualVMPresent := azure.CheckAvailabilitySetContainsVMContext(t, context.Background(), expectedVMName, expectedAvsName, resourceGroupName, subscriptionID)
+	actualVMPresent := azure.CheckAvailabilitySetContainsVMContext(t, t.Context(), expectedVMName, expectedAvsName, resourceGroupName, subscriptionID)
 	assert.True(t, actualVMPresent)
 }

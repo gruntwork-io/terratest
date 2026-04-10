@@ -7,7 +7,6 @@
 package azure
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,7 +20,11 @@ If/when methods can be mocked or Create/Delete APIs are added, these tests can b
 func TestGetPublicIPAddressE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetPublicIPAddressContextE(context.Background(), "", "", "")
+	paName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetPublicIPAddressContextE(t.Context(), paName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -29,7 +32,11 @@ func TestGetPublicIPAddressE(t *testing.T) {
 func TestCheckPublicDNSNameAvailabilityE(t *testing.T) {
 	t.Parallel()
 
-	_, err := CheckPublicDNSNameAvailabilityContextE(context.Background(), "", "", "")
+	location := ""
+	domain := ""
+	subID := ""
+
+	_, err := CheckPublicDNSNameAvailabilityContextE(t.Context(), location, domain, subID)
 
 	require.Error(t, err)
 }
@@ -37,7 +44,11 @@ func TestCheckPublicDNSNameAvailabilityE(t *testing.T) {
 func TestGetIPOfPublicIPAddressByNameE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetIPOfPublicIPAddressByNameContextE(context.Background(), "", "", "")
+	paName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := GetIPOfPublicIPAddressByNameContextE(t.Context(), paName, rgName, subID)
 
 	require.Error(t, err)
 }
@@ -45,7 +56,11 @@ func TestGetIPOfPublicIPAddressByNameE(t *testing.T) {
 func TestPublicAddressExistsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := PublicAddressExistsContextE(context.Background(), "", "", "")
+	paName := ""
+	rgName := ""
+	subID := ""
+
+	_, err := PublicAddressExistsContextE(t.Context(), paName, rgName, subID)
 
 	require.Error(t, err)
 }

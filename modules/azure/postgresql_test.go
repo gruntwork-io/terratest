@@ -24,7 +24,7 @@ func TestGetPostgreSQLServerE(t *testing.T) {
 	serverName := ""
 	subscriptionID := ""
 
-	_, err := GetPostgreSQLServerE(t, subscriptionID, resGroupName, serverName)
+	_, err := GetPostgreSQLServerContextE(t, t.Context(), subscriptionID, resGroupName, serverName)
 	require.Error(t, err)
 }
 
@@ -36,6 +36,6 @@ func TestGetPostgreSQLDBE(t *testing.T) {
 	subscriptionID := ""
 	dbName := ""
 
-	_, err := GetPostgreSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
+	_, err := GetPostgreSQLDBContextE(t, t.Context(), subscriptionID, resGroupName, serverName, dbName)
 	require.Error(t, err)
 }

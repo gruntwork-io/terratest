@@ -43,21 +43,21 @@ func TestTerraformAzureContainerAppExample(t *testing.T) {
 	// NOTE: the value of subscriptionID can be left blank, it will be replaced by the value
 	//       of the environment variable ARM_SUBSCRIPTION_ID
 
-	envExsists := azure.ManagedEnvironmentExists(t, envName, resourceGroupName, subscriptionID)
+	envExsists := azure.ManagedEnvironmentExistsContext(t, t.Context(), envName, resourceGroupName, subscriptionID)
 	assert.True(t, envExsists)
 
-	actualEnv := azure.GetManagedEnvironment(t, envName, resourceGroupName, subscriptionID)
+	actualEnv := azure.GetManagedEnvironmentContext(t, t.Context(), envName, resourceGroupName, subscriptionID)
 	assert.Equal(t, envName, *actualEnv.Name)
 
-	containerAppExists := azure.ContainerAppExists(t, containerAppName, resourceGroupName, subscriptionID)
+	containerAppExists := azure.ContainerAppExistsContext(t, t.Context(), containerAppName, resourceGroupName, subscriptionID)
 	assert.True(t, containerAppExists)
 
-	actualContainerApp := azure.GetContainerApp(t, containerAppName, resourceGroupName, subscriptionID)
+	actualContainerApp := azure.GetContainerAppContext(t, t.Context(), containerAppName, resourceGroupName, subscriptionID)
 	assert.Equal(t, containerAppName, *actualContainerApp.Name)
 
-	containerAppJobExists := azure.ContainerAppJobExists(t, containerAppJobName, resourceGroupName, subscriptionID)
+	containerAppJobExists := azure.ContainerAppJobExistsContext(t, t.Context(), containerAppJobName, resourceGroupName, subscriptionID)
 	assert.True(t, containerAppJobExists)
 
-	actualContainerAppJob := azure.GetContainerAppJob(t, containerAppJobName, resourceGroupName, subscriptionID)
+	actualContainerAppJob := azure.GetContainerAppJobContext(t, t.Context(), containerAppJobName, resourceGroupName, subscriptionID)
 	assert.Equal(t, containerAppJobName, *actualContainerAppJob.Name)
 }

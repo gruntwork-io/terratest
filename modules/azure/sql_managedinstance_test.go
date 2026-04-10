@@ -23,7 +23,7 @@ func TestSQLManagedInstanceExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	exists, err := SQLManagedInstanceExistsE(managedInstanceName, resourceGroupName, subscriptionID)
+	exists, err := SQLManagedInstanceExistsContextE(t.Context(), managedInstanceName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -36,7 +36,7 @@ func TestGetManagedInstanceE(t *testing.T) {
 	managedInstanceName := ""
 	subscriptionID := ""
 
-	_, err := GetManagedInstanceE(subscriptionID, resGroupName, managedInstanceName)
+	_, err := GetManagedInstanceContextE(t.Context(), subscriptionID, resGroupName, managedInstanceName)
 	require.Error(t, err)
 }
 
@@ -48,6 +48,6 @@ func TestGetManagedInstanceDatabasesE(t *testing.T) {
 	databaseName := ""
 	subscriptionID := ""
 
-	_, err := GetManagedInstanceDatabaseE(t, subscriptionID, resGroupName, managedInstanceName, databaseName)
+	_, err := GetManagedInstanceDatabaseContextE(t.Context(), subscriptionID, resGroupName, managedInstanceName, databaseName)
 	require.Error(t, err)
 }

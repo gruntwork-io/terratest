@@ -83,7 +83,7 @@ func TestFetchVirtualMachine(t *testing.T) {
 
 			client := newFakeVMClient(t, &tc.server)
 
-			vm, err := fetchVirtualMachine(context.Background(), client, "rg", "vm")
+			vm, err := fetchVirtualMachine(t.Context(), client, "rg", "vm")
 			if tc.wantErr {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.errSubstr)
@@ -390,7 +390,7 @@ func TestListVirtualMachineNames(t *testing.T) {
 	}
 
 	client := newFakeVMClient(t, srv)
-	names, err := listVirtualMachineNames(context.Background(), client, "rg")
+	names, err := listVirtualMachineNames(t.Context(), client, "rg")
 
 	require.NoError(t, err)
 	assert.Equal(t, []string{"vm1", "vm2"}, names)
@@ -433,7 +433,7 @@ func TestListVirtualMachineProperties(t *testing.T) {
 	}
 
 	client := newFakeVMClient(t, srv)
-	props, err := listVirtualMachineProperties(context.Background(), client, "rg")
+	props, err := listVirtualMachineProperties(t.Context(), client, "rg")
 
 	require.NoError(t, err)
 	require.Len(t, props, 2)

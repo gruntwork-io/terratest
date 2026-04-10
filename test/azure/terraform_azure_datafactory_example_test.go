@@ -41,11 +41,11 @@ func TestTerraformAzureDataFactoryExample(t *testing.T) {
 	expectedDataFactoryName := terraform.Output(t, terraformOptions, "datafactory_name")
 
 	// check for if data factory exists
-	actualDataFactoryExits := azure.DataFactoryExists(t, expectedDataFactoryName, expectedResourceGroupName, "")
+	actualDataFactoryExits := azure.DataFactoryExistsContext(t, t.Context(), expectedDataFactoryName, expectedResourceGroupName, "")
 	assert.True(t, actualDataFactoryExits)
 
 	//Get data factory details and assert them against the terraform output
-	actualDataFactory := azure.GetDataFactory(t, expectedResourceGroupName, expectedDataFactoryName, "")
+	actualDataFactory := azure.GetDataFactoryContext(t, t.Context(), expectedResourceGroupName, expectedDataFactoryName, "")
 	assert.Equal(t, expectedDataFactoryName, *actualDataFactory.Name)
 	assert.Equal(t, expectedDataFactoryProvisioningState, *actualDataFactory.Properties.ProvisioningState)
 

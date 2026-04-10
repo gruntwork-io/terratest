@@ -51,15 +51,15 @@ func TestTerraformAzureSynapseExample(t *testing.T) {
 	expectedSqlPoolName := terraform.Output(t, terraformOptions, "synapse_sqlpool_name")
 
 	// website::tag::4:: Get synapse details and assert them against the terraform output
-	actualSynapseWorkspace := azure.GetSynapseWorkspace(t, expectedResourceGroupName, expectedSyWorkspaceName, "")
-	actualSynapseSqlPool := azure.GetSynapseSqlPool(t, expectedResourceGroupName, expectedSyWorkspaceName, expectedSqlPoolName, "")
+	actualSynapseWorkspace := azure.GetSynapseWorkspaceContext(t, t.Context(), expectedResourceGroupName, expectedSyWorkspaceName, "")
+	actualSynapseSqlPool := azure.GetSynapseSQLPoolContext(t, t.Context(), expectedResourceGroupName, expectedSyWorkspaceName, expectedSqlPoolName, "")
 
 	assert.Equal(t, expectedSyWorkspaceName, *actualSynapseWorkspace.Name)
-	assert.Equal(t, expectedSynapseSqlUser, *actualSynapseWorkspace.WorkspaceProperties.SQLAdministratorLogin)
-	assert.Equal(t, expectedSynapseProvisioningState, *actualSynapseWorkspace.WorkspaceProperties.ProvisioningState)
+	assert.Equal(t, expectedSynapseSqlUser, *actualSynapseWorkspace.Properties.SQLAdministratorLogin)
+	assert.Equal(t, expectedSynapseProvisioningState, *actualSynapseWorkspace.Properties.ProvisioningState)
 	assert.Equal(t, expectedLocation, *actualSynapseWorkspace.Location)
-	assert.Equal(t, expectedSyDLgen2Name, *actualSynapseWorkspace.WorkspaceProperties.DefaultDataLakeStorage.Filesystem)
+	assert.Equal(t, expectedSyDLgen2Name, *actualSynapseWorkspace.Properties.DefaultDataLakeStorage.Filesystem)
 
 	assert.Equal(t, expectedSqlPoolName, *actualSynapseSqlPool.Name)
-	assert.Equal(t, expectedSyPoolSkuName, *actualSynapseSqlPool.Sku.Name)
+	assert.Equal(t, expectedSyPoolSkuName, *actualSynapseSqlPool.SKU.Name)
 }

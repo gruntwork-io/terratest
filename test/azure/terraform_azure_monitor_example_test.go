@@ -40,7 +40,7 @@ func TestTerraformAzureMonitorExample(t *testing.T) {
 	expectedDiagnosticSettingName := terraform.Output(t, terraformOptions, "diagnostic_setting_name")
 	keyvaultID := terraform.Output(t, terraformOptions, "keyvault_id")
 
-	diagnosticSettingsResourceExists := azure.DiagnosticSettingsResourceExists(t, expectedDiagnosticSettingName, keyvaultID, subscriptionID)
+	diagnosticSettingsResourceExists := azure.DiagnosticSettingsResourceExistsContext(t, t.Context(), expectedDiagnosticSettingName, keyvaultID, subscriptionID)
 
 	assert.Equal(t, diagnosticSettingsResourceExists, true, "Diagnostic settings should exist")
 }

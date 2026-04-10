@@ -24,7 +24,7 @@ func TestContainerRegistryExistsE(t *testing.T) {
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := ContainerRegistryExistsE(registryName, resGroupName, subscriptionID)
+	_, err := ContainerRegistryExistsContextE(t.Context(), registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -35,7 +35,7 @@ func TestGetContainerRegistryE(t *testing.T) {
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerRegistryE(registryName, resGroupName, subscriptionID)
+	_, err := GetContainerRegistryContextE(t.Context(), registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -55,7 +55,7 @@ func TestContainerInstanceExistsE(t *testing.T) {
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := ContainerInstanceExistsE(instanceName, resGroupName, subscriptionID)
+	_, err := ContainerInstanceExistsContextE(t.Context(), instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -66,7 +66,7 @@ func TestGetContainerInstanceE(t *testing.T) {
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerInstanceE(instanceName, resGroupName, subscriptionID)
+	_, err := GetContainerInstanceContextE(t.Context(), instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 

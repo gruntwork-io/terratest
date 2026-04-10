@@ -47,15 +47,15 @@ func TestTerraformAzureLogAnalyticsExample(t *testing.T) {
 	retentionPeriodString := terraform.Output(t, terraformOptions, "loganalytics_workspace_retention")
 
 	// website::tag::4:: Verify the Log Analytics properties and ensure it matches the output.
-	workspaceExists := azure.LogAnalyticsWorkspaceExists(t, workspaceName, resourceGroupName, subscriptionID)
+	workspaceExists := azure.LogAnalyticsWorkspaceExistsContext(t, t.Context(), workspaceName, resourceGroupName, subscriptionID)
 	assert.True(t, workspaceExists, "log analytics workspace not found.")
 
-	actualWorkspace := azure.GetLogAnalyticsWorkspace(t, workspaceName, resourceGroupName, subscriptionID)
+	actualWorkspace := azure.GetLogAnalyticsWorkspaceContext(t, t.Context(), workspaceName, resourceGroupName, subscriptionID)
 
-	actualSku := string(actualWorkspace.Sku.Name)
+	actualSku := string(*actualWorkspace.Properties.SKU.Name)
 	assert.Equal(t, strings.ToLower(sku), strings.ToLower(actualSku), "log analytics sku mismatch")
 
-	actualRetentionPeriod := *actualWorkspace.RetentionInDays
+	actualRetentionPeriod := *actualWorkspace.Properties.RetentionInDays
 	expectedPeriod, _ := strconv.ParseInt(retentionPeriodString, 10, 32)
 	assert.Equal(t, int32(expectedPeriod), actualRetentionPeriod, "log analytics retention period mismatch")
 }

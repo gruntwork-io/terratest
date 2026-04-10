@@ -20,7 +20,7 @@ func TestResourceGroupExists(t *testing.T) {
 	t.Parallel()
 
 	resourceGroupName := "fakeResourceGroupName"
-	exists, err := ResourceGroupExistsE(resourceGroupName, "")
+	exists, err := ResourceGroupExistsContextE(t.Context(), resourceGroupName, "")
 	require.NoError(t, err)
 	require.False(t, exists)
 }
@@ -30,6 +30,6 @@ func TestGetAResourceGroup(t *testing.T) {
 
 	resourceGroupName := "fakeResourceGroupName"
 
-	_, err := GetAResourceGroupE(resourceGroupName, "")
+	_, err := GetAResourceGroupContextE(t.Context(), resourceGroupName, "")
 	require.Error(t, err)
 }

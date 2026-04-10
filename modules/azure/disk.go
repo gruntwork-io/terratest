@@ -23,6 +23,7 @@ func DiskExistsContext(t testing.TestingT, ctx context.Context, diskName string,
 // DiskExistsContextE indicates whether the specified Azure Managed Disk exists in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func DiskExistsContextE(ctx context.Context, diskName string, resGroupName string, subscriptionID string) (bool, error) {
+	// Get the Disk object
 	_, err := GetDiskContextE(ctx, diskName, resGroupName, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
@@ -50,16 +51,19 @@ func GetDiskContext(t testing.TestingT, ctx context.Context, diskName string, re
 // GetDiskContextE returns a Disk in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func GetDiskContextE(ctx context.Context, diskName string, resGroupName string, subscriptionID string) (*armcompute.Disk, error) {
+	// Validate resource group name and subscription ID
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
+	// Get the client reference
 	client, err := CreateDisksClientE(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Get the Disk
 	resp, err := client.Get(ctx, resGroupName, diskName, nil)
 	if err != nil {
 		return nil, err

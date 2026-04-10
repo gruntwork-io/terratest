@@ -44,12 +44,12 @@ func TestTerraformAzureRecoveryServicesExample(t *testing.T) {
 	policyVmName := terraform.Output(t, terraformOptions, "backup_policy_vm_name")
 
 	// website::tag::4:: Verify the recovery services resources
-	exists := azure.RecoveryServicesVaultExists(t, vaultName, resourceGroupName, subscriptionID)
+	exists := azure.RecoveryServicesVaultExistsContext(t, t.Context(), vaultName, resourceGroupName, subscriptionID)
 	assert.True(t, exists, "vault does not exist")
 
-	policyList := azure.GetRecoveryServicesVaultBackupPolicyList(t, vaultName, resourceGroupName, subscriptionID)
+	policyList := azure.GetRecoveryServicesVaultBackupPolicyListContext(t, t.Context(), vaultName, resourceGroupName, subscriptionID)
 	assert.NotNil(t, policyList, "vault backup policy list is nil")
 
-	vmPolicyList := azure.GetRecoveryServicesVaultBackupProtectedVMList(t, policyVmName, vaultName, resourceGroupName, subscriptionID)
+	vmPolicyList := azure.GetRecoveryServicesVaultBackupProtectedVMListContext(t, t.Context(), policyVmName, vaultName, resourceGroupName, subscriptionID)
 	assert.NotNil(t, vmPolicyList, "vault backup policy list for protected vm is nil")
 }

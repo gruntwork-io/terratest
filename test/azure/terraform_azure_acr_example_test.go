@@ -44,11 +44,11 @@ func TestTerraformAzureACRExample(t *testing.T) {
 	loginServer := terraform.Output(t, terraformOptions, "login_server")
 
 	// website::tag::4:: Assert
-	assert.True(t, azure.ContainerRegistryExists(t, acrName, resourceGroupName, ""))
+	assert.True(t, azure.ContainerRegistryExistsContext(t, t.Context(), acrName, resourceGroupName, ""))
 
-	actualACR := azure.GetContainerRegistry(t, acrName, resourceGroupName, "")
+	actualACR := azure.GetContainerRegistryContext(t, t.Context(), acrName, resourceGroupName, "")
 
-	assert.Equal(t, loginServer, *actualACR.LoginServer)
-	assert.True(t, *actualACR.AdminUserEnabled)
-	assert.Equal(t, acrSKU, string(actualACR.Sku.Name))
+	assert.Equal(t, loginServer, *actualACR.Properties.LoginServer)
+	assert.True(t, *actualACR.Properties.AdminUserEnabled)
+	assert.Equal(t, acrSKU, string(*actualACR.SKU.Name))
 }

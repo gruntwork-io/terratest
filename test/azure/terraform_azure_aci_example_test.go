@@ -43,10 +43,10 @@ func TestTerraformAzureACIExample(t *testing.T) {
 	fqdn := terraform.Output(t, terraformOptions, "fqdn")
 
 	// website::tag::4:: Assert
-	assert.True(t, azure.ContainerInstanceExists(t, aciName, resourceGroupName, ""))
+	assert.True(t, azure.ContainerInstanceExistsContext(t, t.Context(), aciName, resourceGroupName, ""))
 
-	actualInstance := azure.GetContainerInstance(t, aciName, resourceGroupName, "")
+	actualInstance := azure.GetContainerInstanceContext(t, t.Context(), aciName, resourceGroupName, "")
 
-	assert.Equal(t, ipAddress, *actualInstance.ContainerGroupProperties.IPAddress.IP)
-	assert.Equal(t, fqdn, *actualInstance.ContainerGroupProperties.IPAddress.Fqdn)
+	assert.Equal(t, ipAddress, *actualInstance.Properties.IPAddress.IP)
+	assert.Equal(t, fqdn, *actualInstance.Properties.IPAddress.Fqdn)
 }

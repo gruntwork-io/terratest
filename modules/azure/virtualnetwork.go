@@ -72,9 +72,8 @@ func CheckSubnetContainsIPContext(t testing.TestingT, ctx context.Context, ipAdd
 // CheckSubnetContainsIPContextE checks if the Private IP is contained in the Subnet Address Range.
 // The ctx parameter supports cancellation and timeouts.
 func CheckSubnetContainsIPContextE(ctx context.Context, ipAddress string, subnetName string, vnetName string, resGroupName string, subscriptionID string) (bool, error) {
-	// Convert the IP to a net IP address
-	ip := net.ParseIP(ipAddress)
-	if ip == nil {
+	// Validate IP before making a network call
+	if net.ParseIP(ipAddress) == nil {
 		return false, NewFailedToParseError("IP Address", ipAddress)
 	}
 
@@ -85,12 +84,19 @@ func CheckSubnetContainsIPContextE(ctx context.Context, ipAddress string, subnet
 	}
 
 	// Get Subnet IP range, this required field is never nil therefore no exception handling required.
-	subnetPrefix := *subnet.Properties.AddressPrefix
+	return checkIPInCIDR(ipAddress, *subnet.Properties.AddressPrefix)
+}
 
-	// Check if the IP is in the Subnet Range using the net package
-	_, ipNet, err := net.ParseCIDR(subnetPrefix)
+// checkIPInCIDR checks if the given IP address is contained in the given CIDR range.
+func checkIPInCIDR(ipAddress string, cidr string) (bool, error) {
+	ip := net.ParseIP(ipAddress)
+	if ip == nil {
+		return false, NewFailedToParseError("IP Address", ipAddress)
+	}
+
+	_, ipNet, err := net.ParseCIDR(cidr)
 	if err != nil {
-		return false, NewFailedToParseError("Subnet Range", subnetPrefix)
+		return false, NewFailedToParseError("Subnet Range", cidr)
 	}
 
 	return ipNet.Contains(ip), nil
@@ -153,8 +159,13 @@ func GetVirtualNetworkDNSServerIPsContextE(ctx context.Context, vnetName string,
 		return nil, err
 	}
 
+	return extractDNSServerIPs(vnet), nil
+}
+
+// extractDNSServerIPs extracts the DNS server IPs from a VirtualNetwork.
+func extractDNSServerIPs(vnet *armnetwork.VirtualNetwork) []string {
 	if vnet.Properties.DhcpOptions == nil {
-		return nil, nil
+		return nil
 	}
 
 	dnsServers := make([]string, len(vnet.Properties.DhcpOptions.DNSServers))
@@ -162,7 +173,7 @@ func GetVirtualNetworkDNSServerIPsContextE(ctx context.Context, vnetName string,
 		dnsServers[i] = *s
 	}
 
-	return dnsServers, nil
+	return dnsServers
 }
 
 // GetSubnetContextE gets a subnet.

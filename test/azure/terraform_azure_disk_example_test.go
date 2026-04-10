@@ -7,7 +7,6 @@
 package test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
@@ -48,6 +47,6 @@ func TestTerraformAzureDiskExample(t *testing.T) {
 	expectedDiskType := terraform.Output(t, terraformOptions, "disk_type")
 
 	// Check the Disk Type
-	actualDisk := azure.GetDiskContext(t, context.Background(), expectedDiskName, resourceGroupName, subID)
+	actualDisk := azure.GetDiskContext(t, t.Context(), expectedDiskName, resourceGroupName, subID)
 	assert.Equal(t, armcompute.DiskStorageAccountTypes(expectedDiskType), *actualDisk.SKU.Name)
 }
