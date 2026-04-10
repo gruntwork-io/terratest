@@ -57,9 +57,9 @@ func TestHelmLogsRedirect(t *testing.T) {
 
 	// Generate a unique release to avoid conflicts with other tests
 	releaseName := "nginx-service-" + strings.ToLower(random.UniqueID())
-	defer helm.Delete(t, options, releaseName, true)
+	defer helm.DeleteContext(t, t.Context(), options, releaseName, true)
 
-	helm.Install(t, options, helmChartPath, releaseName)
+	helm.InstallContext(t, t.Context(), options, helmChartPath, releaseName)
 
 	// Validate that logs were redirected to custom logger
 	require.Contains(t, customLogger.logs, releaseName)

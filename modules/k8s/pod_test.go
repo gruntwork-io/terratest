@@ -10,11 +10,12 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +30,7 @@ func TestListPodsReturnsPodsInNamespace(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -55,7 +56,7 @@ func TestGetPodEReturnsCorrectPodInCorrectNamespace(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -71,7 +72,7 @@ func TestWaitUntilNumPodsCreatedReturnsSuccessfully(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -85,7 +86,7 @@ func TestWaitUntilPodAvailableReturnsSuccessfully(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -99,7 +100,7 @@ func TestWaitUntilPodWithMultipleContainersAvailableReturnsSuccessfully(t *testi
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodWithMultipleContainersYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -113,7 +114,7 @@ func TestWaitUntilPodAvailableWithReadinessProbe(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_WITH_READINESS_PROBE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodWithReadinessProbe, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -127,7 +128,7 @@ func TestWaitUntilPodAvailableWithFailingReadinessProbe(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_WITH_FAILING_READINESS_PROBE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodWithFailingReadinessProbe, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -136,7 +137,7 @@ func TestWaitUntilPodAvailableWithFailingReadinessProbe(t *testing.T) {
 	require.Error(t, err)
 }
 
-const EXAMPLE_POD_YAML_TEMPLATE = `---
+const examplePodYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -158,7 +159,7 @@ spec:
     - containerPort: 80
 `
 
-const EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE = `---
+const examplePodWithMultipleContainersYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -188,14 +189,14 @@ spec:
     command: ["sh", "-c", "sed -i 's/80/8080/' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
 `
 
-const EXAMPLE_POD_WITH_READINESS_PROBE = EXAMPLE_POD_YAML_TEMPLATE + `
+const examplePodWithReadinessProbe = examplePodYAMLTemplate + `
     readinessProbe:
       httpGet:
         path: /
         port: 80
 `
 
-const EXAMPLE_POD_WITH_FAILING_READINESS_PROBE = EXAMPLE_POD_YAML_TEMPLATE + `
+const examplePodWithFailingReadinessProbe = examplePodYAMLTemplate + `
     readinessProbe:
       httpGet:
         path: /not-ready
@@ -286,20 +287,25 @@ func TestExecPod(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	configData := fmt.Sprintf(examplePodWithMultipleContainersYAMLTemplate, uniqueID, uniqueID)
+
+	t.Cleanup(func() { k8s.KubectlDeleteFromString(t, options, configData) })
 
 	k8s.KubectlApplyFromString(t, options, configData)
 
 	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
 
 	t.Run("TestExecPodWithoutContainer", func(t *testing.T) {
+		t.Parallel()
+
 		stdout, err := k8s.ExecPodE(t, options, "nginx-pod", "", "env")
 		require.NoError(t, err)
 		require.Contains(t, stdout, "NAME=nginx\n")
 	})
 
 	t.Run("TestExecPodWithContainer", func(t *testing.T) {
+		t.Parallel()
+
 		stdout, err := k8s.ExecPodE(t, options, "nginx-pod", "nginx-two", "env")
 		require.NoError(t, err)
 		require.Contains(t, stdout, "NAME=nginx-two\n")

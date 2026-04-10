@@ -150,7 +150,7 @@ func TestHelmDependencyInstall(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that Kubernetes service is available after helm chart deployment.
-	_, err = k8s.GetServiceE(t, kubectlOptions, releaseName)
+	_, err = k8s.GetServiceContextE(t, t.Context(), kubectlOptions, releaseName)
 	assert.NoError(t, err)
 }
 

@@ -10,9 +10,10 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"strings"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -24,8 +25,8 @@ import (
 func TestNamespaces(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueID()
-	namespaceName := strings.ToLower(uniqueId)
+	uniqueID := random.UniqueID()
+	namespaceName := strings.ToLower(uniqueID)
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 	k8s.CreateNamespace(t, options, namespaceName)
 
@@ -42,8 +43,8 @@ func TestNamespaces(t *testing.T) {
 func TestNamespaceWithMetadata(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueID()
-	namespaceName := strings.ToLower(uniqueId)
+	uniqueID := random.UniqueID()
+	namespaceName := strings.ToLower(uniqueID)
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 	namespaceLabels := map[string]string{"foo": "bar"}
 	namespaceObjectMetaWithLabels := metav1.ObjectMeta{
@@ -69,12 +70,12 @@ func TestNamespaceWithMetadata(t *testing.T) {
 func TestListNamespaces(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueID()
-	namespaceName := strings.ToLower(uniqueId)
+	uniqueID := random.UniqueID()
+	namespaceName := strings.ToLower(uniqueID)
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 
 	k8s.CreateNamespace(t, options, namespaceName)
-	defer k8s.DeleteNamespace(t, options, namespaceName)
+	t.Cleanup(func() { k8s.DeleteNamespace(t, options, namespaceName) })
 
 	t.Run("List all namespaces and find the created one", func(t *testing.T) {
 		t.Parallel()

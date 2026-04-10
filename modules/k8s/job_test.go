@@ -10,11 +10,12 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,7 +32,7 @@ func TestListJobsReturnsJobsInNamespace(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_JOB_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(exampleJobYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -57,7 +58,7 @@ func TestGetJobEReturnsCorrectJobInCorrectNamespace(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_JOB_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(exampleJobYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -73,7 +74,7 @@ func TestWaitUntilJobSucceedReturnsSuccessfully(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_JOB_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(exampleJobYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -144,7 +145,7 @@ func TestCreateJobFromCronJobReturnsCreatedJob(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_CRON_JOB_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(exampleCronJobYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -164,7 +165,7 @@ func TestCreateJobFromCronJobEReturnsErrorForNonExistentCronJob(t *testing.T) {
 	require.Error(t, err)
 }
 
-const EXAMPLE_JOB_YAML_TEMPLATE = `---
+const exampleJobYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -186,7 +187,7 @@ spec:
   backoffLimit: 4
 `
 
-const EXAMPLE_CRON_JOB_YAML_TEMPLATE = `---
+const exampleCronJobYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -10,12 +10,13 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"crypto/tls"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -27,7 +28,7 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	uniqueID := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
+	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
 	defer k8s.KubectlDeleteFromString(t, options, configData)
 
 	k8s.KubectlApplyFromString(t, options, configData)
@@ -43,8 +44,9 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	tlsConfig := tls.Config{}
 
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-	http_helper.HttpGetWithRetryWithCustomValidation(
+	http_helper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
+		t.Context(),
 		"http://"+tunnel.Endpoint(),
 		&tlsConfig,
 		60,
@@ -75,8 +77,9 @@ func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
 	tlsConfig := tls.Config{}
 
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-	http_helper.HttpGetWithRetryWithCustomValidation(
+	http_helper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
+		t.Context(),
 		"http://"+tunnel.Endpoint(),
 		&tlsConfig,
 		60,
@@ -131,8 +134,9 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 			tlsConfig := tls.Config{}
 
 			// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-			http_helper.HttpGetWithRetryWithCustomValidation(
+			http_helper.HTTPGetWithRetryWithCustomValidationContext(
 				t,
+				t.Context(),
 				"http://"+tunnel.Endpoint(),
 				&tlsConfig,
 				60,

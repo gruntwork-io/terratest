@@ -32,12 +32,14 @@ const kedaReleaseName = "keda"
 
 // An example of how to verify the rendered template object of a Helm Chart given various inputs.
 func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
+	t.Parallel()
+
 	// chart name
 	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	options := &helm.Options{
@@ -53,7 +55,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 	// we want to assert that the template renders without any errors.
 	// Additionally, we path a the templateFile for which we are setting test values to
 	// demonstrate how to select individual templates to render.
-	output := helm.RenderRemoteTemplate(t, options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
+	output := helm.RenderRemoteTemplateContext(t, t.Context(), options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
 
 	// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 	// ensure the Deployment resource is rendered correctly.
@@ -75,12 +77,14 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 
 // An example of how to verify the rendered template object of a Helm Chart given various inputs.
 func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
+	t.Parallel()
+
 	// chart name
 	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	options := &helm.Options{
@@ -96,7 +100,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 	// we want to assert that the template renders without any errors.
 	// Additionally, we path a the templateFile for which we are setting test values to
 	// demonstrate how to select individual templates to render.
-	output := helm.RenderRemoteTemplate(t, options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
+	output := helm.RenderRemoteTemplateContext(t, t.Context(), options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
 
 	// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 	// ensure the Deployment resource is rendered correctly.
@@ -118,12 +122,14 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 
 // An example of how to store a snapshot of the current manaifest for future comparison
 func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
+	t.Parallel()
+
 	// chart name
 	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	options := &helm.Options{
@@ -139,7 +145,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
 	// we want to assert that the template renders without any errors.
 	// Additionally, we path a the templateFile for which we are setting test values to
 	// demonstrate how to select individual templates to render.
-	output := helm.RenderRemoteTemplate(t, options, "https://kedacore.github.io/charts", releaseName, []string{})
+	output := helm.RenderRemoteTemplateContext(t, t.Context(), options, "https://kedacore.github.io/charts", releaseName, []string{})
 
 	// write chart manifest to a local filesystem directory
 	helm.UpdateSnapshot(t, options, output, releaseName)
@@ -147,12 +153,14 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
 
 // An example of how to verify the current helm k8s manifest against a previous snapshot
 func TestHelmKedaRemoteExampleTemplateRenderedPackageDiff(t *testing.T) {
+	t.Parallel()
+
 	// chart name
 	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	options := &helm.Options{
@@ -168,7 +176,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDiff(t *testing.T) {
 	// we want to assert that the template renders without any errors.
 	// Additionally, we path a the templateFile for which we are setting test values to
 	// demonstrate how to select individual templates to render.
-	output := helm.RenderRemoteTemplate(t, options, "https://kedacore.github.io/charts", releaseName, []string{})
+	output := helm.RenderRemoteTemplateContext(t, t.Context(), options, "https://kedacore.github.io/charts", releaseName, []string{})
 
 	// run the diff and assert the number of diffs matches the number of diffs in the snapshot
 	// (namespace diffs + intentional value changes for replicas/memory)

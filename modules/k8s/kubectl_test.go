@@ -10,13 +10,14 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
@@ -25,6 +26,8 @@ import (
 
 // Test that RunKubectlAndGetOutputE will run kubectl and return the output by running a can-i command call.
 func TestRunKubectlAndGetOutputReturnsOutput(t *testing.T) {
+	t.Parallel()
+
 	namespaceName := "kubectl-test-" + strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 	output, err := k8s.RunKubectlAndGetOutputE(t, options, "auth", "can-i", "get", "pods")
@@ -32,6 +35,7 @@ func TestRunKubectlAndGetOutputReturnsOutput(t *testing.T) {
 	require.Equal(t, "yes", output)
 }
 
+//nolint:paralleltest,tparallel // subtests share mutable parsedTimeout via http server
 func TestKubectlRequestTimeout(t *testing.T) {
 	t.Parallel()
 

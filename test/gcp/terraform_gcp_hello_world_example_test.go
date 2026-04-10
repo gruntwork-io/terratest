@@ -18,7 +18,7 @@ func TestTerraformGcpHelloWorldExample(t *testing.T) {
 	t.Parallel()
 
 	// website::tag::1:: Get the Project Id to use
-	projectId := gcp.GetGoogleProjectIDFromEnvVar(t)
+	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 
 	// website::tag::2:: Give the example instance a unique name
 	instanceName := "gcp-hello-world-example-" + strings.ToLower(random.UniqueID())
@@ -36,13 +36,13 @@ func TestTerraformGcpHelloWorldExample(t *testing.T) {
 
 		// website::tag::5:: Variables to pass to our Terraform code using TF_VAR_xxx environment variables
 		EnvVars: map[string]string{
-			"GOOGLE_CLOUD_PROJECT": projectId,
+			"GOOGLE_CLOUD_PROJECT": projectID,
 		},
 	})
 
 	// website::tag::8:: At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::7:: Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 }

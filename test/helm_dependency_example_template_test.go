@@ -46,7 +46,7 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	// - containerImageRepo=nginx
@@ -79,12 +79,13 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.name, func(subT *testing.T) {
-			// subT.Parallel()
+			subT.Parallel()
+
 			// Run RenderTemplate to render the template and capture the output. Note that we use the version without `E`, since
 			// we want to assert that the template renders without any errors.
 			// Additionally, although we know there is only one yaml file in the template, we deliberately path a templateFiles
 			// arg to demonstrate how to select individual templates to render.
-			output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{testCase.templateName})
+			output := helm.RenderTemplateContext(t, t.Context(), options, helmChartPath, releaseName, []string{testCase.templateName})
 
 			// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 			// ensure the Deployment resource is rendered correctly.
@@ -170,11 +171,11 @@ func TestHelmDependencyExampleTemplateRequiredTemplateArgs(t *testing.T) {
 		// test T struct to subT to make it clear which T struct corresponds to which test. However, in most cases you
 		// will not reference the main test T so you can name it the same.
 		t.Run(testCase.name, func(subT *testing.T) {
-			// subT.Parallel()
+			subT.Parallel()
 
 			// Now we try rendering the template, but verify we get an error
 			options := &helm.Options{SetValues: testCase.values}
-			_, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, []string{})
+			_, err := helm.RenderTemplateContextE(t, t.Context(), options, helmChartPath, releaseName, []string{})
 			require.Error(t, err)
 		})
 	}

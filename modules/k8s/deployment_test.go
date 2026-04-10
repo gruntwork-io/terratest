@@ -10,9 +10,10 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"strings"
 	"testing"
@@ -79,6 +80,8 @@ func TestWaitUntilDeploymentAvailable(t *testing.T) {
 }
 
 func TestTestIsDeploymentAvailable(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		deploy         *appsv1.Deployment
 		title          string

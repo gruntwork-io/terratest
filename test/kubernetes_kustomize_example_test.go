@@ -54,6 +54,6 @@ func TestKubernetesKustomizeExample(t *testing.T) {
 	// website::tag::4::Check if NGINX service was deployed successfully.
 	// This will get the service resource and verify that it exists and was retrieved successfully. This function will
 	// fail the test if the there is an error retrieving the service resource from Kubernetes.
-	service := k8s.GetService(t, options, "nginx-service")
+	service := k8s.GetServiceContext(t, t.Context(), options, "nginx-service")
 	require.Equal(t, "nginx-service", service.Name)
 }

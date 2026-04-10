@@ -24,6 +24,7 @@ import (
 )
 
 func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
+	t.Helper()
 	t.Parallel()
 
 	// Path to the Kubernetes resource config we will test
@@ -81,14 +82,14 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	return options, pod
 }
 
-func TestKubernetesBasicExampleLogsCheckWithContainerName(t *testing.T) {
+func TestKubernetesBasicExampleLogsCheckWithContainerName(t *testing.T) { //nolint:paralleltest // t.Parallel called in setupLogsTest
 	options, pod := setupLogsTest(t)
 	logs := k8s.GetPodLogs(t, options, &pod, "podinfo")
 
 	require.Contains(t, logs, "Starting podinfo")
 }
 
-func TestKubernetesBasicExampleLogsCheckWithNoContainerName(t *testing.T) {
+func TestKubernetesBasicExampleLogsCheckWithNoContainerName(t *testing.T) { //nolint:paralleltest // t.Parallel called in setupLogsTest
 	options, pod := setupLogsTest(t)
 	logs := k8s.GetPodLogs(t, options, &pod, "")
 

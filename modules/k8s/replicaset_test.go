@@ -10,8 +10,9 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"strings"
 	"testing"

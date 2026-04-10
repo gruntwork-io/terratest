@@ -39,14 +39,14 @@ func TestTerraformGcpPubSubExample(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Pull out the outputs from the Terraform configuration
-	actualTopicName := terraform.Output(t, terraformOptions, "topic_name")
-	actualSubscriptionName := terraform.Output(t, terraformOptions, "subscription_name")
+	actualTopicName := terraform.OutputContext(t, t.Context(), terraformOptions, "topic_name")
+	actualSubscriptionName := terraform.OutputContext(t, t.Context(), terraformOptions, "subscription_name")
 
 	// Verify the Terraform outputs match what we expected
 	assert.Equal(t, expectedTopicName, actualTopicName)

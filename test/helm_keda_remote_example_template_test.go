@@ -37,7 +37,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeployment(t *testing.T) {
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	options := &helm.Options{
@@ -53,7 +53,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeployment(t *testing.T) {
 	// we want to assert that the template renders without any errors.
 	// Additionally, we path a the templateFile for which we are setting test values to
 	// demonstrate how to select individual templates to render.
-	output := helm.RenderRemoteTemplate(t, options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
+	output := helm.RenderRemoteTemplateContext(t, t.Context(), options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
 
 	// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 	// ensure the Deployment resource is rendered correctly.
@@ -85,7 +85,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedValuesFileFixtureDeployment(t *tes
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 	options := &helm.Options{
 		ValuesFiles:    []string{"./fixtures/helm/keda-values.yaml"},
 		KubectlOptions: k8s.NewKubectlOptions("", "", namespaceName),
@@ -96,7 +96,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedValuesFileFixtureDeployment(t *tes
 	// we want to assert that the template renders without any errors.
 	// Additionally, we path a the templateFile for which we are setting test values to
 	// demonstrate how to select individual templates to render.
-	output := helm.RenderRemoteTemplate(t, options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
+	output := helm.RenderRemoteTemplateContext(t, t.Context(), options, "https://kedacore.github.io/charts", releaseName, []string{"templates/metrics-server/deployment.yaml"})
 
 	// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 	// ensure the Deployment resource is rendered correctly.

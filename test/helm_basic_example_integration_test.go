@@ -65,11 +65,11 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 	// By doing so, we can schedule the delete call here so that at the end of the test, we run
 	// `helm delete RELEASE_NAME` to clean up any resources that were created.
 	releaseName := "nginx-service-" + strings.ToLower(random.UniqueID())
-	defer helm.Delete(t, options, releaseName, true)
+	defer helm.DeleteContext(t, t.Context(), options, releaseName, true)
 
 	// Deploy the chart using `helm install`. Note that we use the version without `E`, since we want to assert the
 	// install succeeds without any errors.
-	helm.Install(t, options, helmChartPath, releaseName)
+	helm.InstallContext(t, t.Context(), options, helmChartPath, releaseName)
 
 	// Now let's verify the deployment. We will get the service endpoint and try to access it.
 
@@ -79,7 +79,7 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 
 	// Next we wait until the service is available. This will wait up to 10 seconds for the service to become available,
 	// to ensure that we can access it.
-	k8s.WaitUntilServiceAvailable(t, kubectlOptions, serviceName, 10, 1*time.Second)
+	k8s.WaitUntilServiceAvailableContext(t, t.Context(), kubectlOptions, serviceName, 10, 1*time.Second)
 
 	// Now we open a tunnel to port forward service port to localhost
 	tunnel := k8s.NewTunnel(
@@ -94,8 +94,9 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 
 	// Test the endpoint for up to 5 minutes. This will only fail if we timeout waiting for the service to return a 200
 	// response.
-	http_helper.HttpGetWithRetryWithCustomValidation(
+	http_helper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
+		t.Context(),
 		"http://"+endpoint,
 		&tlsConfig,
 		30,

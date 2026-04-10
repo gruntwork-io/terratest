@@ -4,11 +4,12 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	batchv1 "k8s.io/api/batch/v1"
 
@@ -75,6 +76,8 @@ func TestWaitUntilCronJobScheduleSuccessfullyContainer(t *testing.T) {
 }
 
 func TestIsCronJobSucceeded(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		cronJob        *batchv1.CronJob
 		title          string

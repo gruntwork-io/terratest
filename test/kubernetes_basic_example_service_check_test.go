@@ -52,19 +52,20 @@ func TestKubernetesBasicExampleServiceCheck(t *testing.T) {
 	k8s.KubectlApply(t, options, kubeResourcePath)
 
 	// This will wait up to 10 seconds for the service to become available, to ensure that we can access it.
-	k8s.WaitUntilServiceAvailable(t, options, "nginx-service", 10, 1*time.Second)
+	k8s.WaitUntilServiceAvailableContext(t, t.Context(), options, "nginx-service", 10, 1*time.Second)
 
 	// Now we verify that the service will successfully boot and start serving requests
-	service := k8s.GetService(t, options, "nginx-service")
-	endpoint := k8s.GetServiceEndpoint(t, options, service, 80)
+	service := k8s.GetServiceContext(t, t.Context(), options, "nginx-service")
+	endpoint := k8s.GetServiceEndpointContext(t, t.Context(), options, service, 80)
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
 
 	// Test the endpoint for up to 5 minutes. This will only fail if we timeout waiting for the service to return a 200
 	// response.
-	http_helper.HttpGetWithRetryWithCustomValidation(
+	http_helper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
+		t.Context(),
 		"http://"+endpoint,
 		&tlsConfig,
 		30,

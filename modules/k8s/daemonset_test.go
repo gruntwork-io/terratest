@@ -9,8 +9,9 @@
 package k8s_test
 
 import (
-	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
