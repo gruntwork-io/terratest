@@ -197,17 +197,20 @@ func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscri
 		return nil, err
 	}
 
-	// Get list of Azure locations
-	out, err := subscriptionClient.ListLocations(ctx, subscriptionID)
-	if err != nil {
-		return nil, err
-	}
+	// Get list of Azure locations via pager
+	pager := subscriptionClient.NewListLocationsPager(subscriptionID, nil)
 
-	// Populate a return slice
-	regions := make([]string, 0, len(*out.Value))
+	var regions []string
 
-	for _, region := range *out.Value {
-		regions = append(regions, *region.Name)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, region := range page.Value {
+			regions = append(regions, *region.Name)
+		}
 	}
 
 	return regions, nil

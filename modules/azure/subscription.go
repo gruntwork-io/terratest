@@ -1,25 +1,20 @@
 package azure
 
 import (
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions"
 )
 
-// GetSubscriptionClientE is a helper function that will setup an Azure Subscription client on your behalf
-func GetSubscriptionClientE() (*subscriptions.Client, error) {
-	// Create a Subscription client
-	client, err := CreateSubscriptionsClientE()
+// GetSubscriptionClientE is a helper function that will setup an Azure Subscription client on your behalf.
+func GetSubscriptionClientE() (*armsubscriptions.Client, error) {
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	// Attach authorizer to the client
-	client.Authorizer = *authorizer
-
-	return &client, nil
+	return armsubscriptions.NewClient(cred, opts)
 }
