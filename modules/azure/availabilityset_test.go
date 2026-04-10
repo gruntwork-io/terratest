@@ -7,7 +7,6 @@
 package azure_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -38,7 +37,7 @@ func TestGetAvailabilitySetE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetAvailabilitySetContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := azure.GetAvailabilitySetContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -51,7 +50,7 @@ func TestCheckAvailabilitySetContainsVME(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := azure.CheckAvailabilitySetContainsVMContextE(t, context.Background(), vmName, avsName, rgName, subscriptionID)
+	_, err := azure.CheckAvailabilitySetContainsVMContextE(t, t.Context(), vmName, avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -63,7 +62,7 @@ func TestGetAvailabilitySetVMNamesInCapsE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetAvailabilitySetVMNamesInCapsContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := azure.GetAvailabilitySetVMNamesInCapsContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -75,7 +74,7 @@ func TestGetAvailabilitySetFaultDomainCountE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetAvailabilitySetFaultDomainCountContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := azure.GetAvailabilitySetFaultDomainCountContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -87,7 +86,7 @@ func TestAvailabilitySetExistsE(t *testing.T) {
 	rgName := ""
 	subscriptionID := ""
 
-	_, err := azure.AvailabilitySetExistsContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	_, err := azure.AvailabilitySetExistsContextE(t, t.Context(), avsName, rgName, subscriptionID)
 
 	require.Error(t, err)
 }

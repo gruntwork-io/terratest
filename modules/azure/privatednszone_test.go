@@ -19,7 +19,7 @@ func TestPrivateDNSZoneExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	exists, err := azure.PrivateDNSZoneExistsE(zoneName, resourceGroupName, subscriptionID)
+	exists, err := azure.PrivateDNSZoneExistsContextE(t.Context(), zoneName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -32,6 +32,6 @@ func TestPrivateDNSZoneExistsE(t *testing.T) {
 	subscriptionID := ""
 	zoneName := ""
 
-	_, err := azure.GetPrivateDNSZoneE(subscriptionID, resGroupName, zoneName)
+	_, err := azure.GetPrivateDNSZoneContextE(t.Context(), zoneName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }

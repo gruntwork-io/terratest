@@ -7,7 +7,6 @@
 package azure_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -26,7 +25,7 @@ func TestLoadBalancerExistsE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.LoadBalancerExistsContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+	_, err := azure.LoadBalancerExistsContextE(t.Context(), loadBalancerName, resourceGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -38,7 +37,7 @@ func TestGetLoadBalancerE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetLoadBalancerContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+	_, err := azure.GetLoadBalancerContextE(t.Context(), loadBalancerName, resourceGroupName, subscriptionID)
 
 	require.Error(t, err)
 }

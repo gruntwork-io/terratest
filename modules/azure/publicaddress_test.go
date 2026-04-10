@@ -7,7 +7,6 @@
 package azure_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -22,7 +21,7 @@ If/when methods can be mocked or Create/Delete APIs are added, these tests can b
 func TestGetPublicIPAddressE(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetPublicIPAddressContextE(context.Background(), "", "", "")
+	_, err := azure.GetPublicIPAddressContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -30,7 +29,7 @@ func TestGetPublicIPAddressE(t *testing.T) {
 func TestCheckPublicDNSNameAvailabilityE(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.CheckPublicDNSNameAvailabilityContextE(context.Background(), "", "", "")
+	_, err := azure.CheckPublicDNSNameAvailabilityContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -38,7 +37,7 @@ func TestCheckPublicDNSNameAvailabilityE(t *testing.T) {
 func TestGetIPOfPublicIPAddressByNameE(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetIPOfPublicIPAddressByNameContextE(context.Background(), "", "", "")
+	_, err := azure.GetIPOfPublicIPAddressByNameContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -46,7 +45,7 @@ func TestGetIPOfPublicIPAddressByNameE(t *testing.T) {
 func TestPublicAddressExistsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.PublicAddressExistsContextE(context.Background(), "", "", "")
+	_, err := azure.PublicAddressExistsContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }

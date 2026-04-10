@@ -25,7 +25,7 @@ func TestContainerRegistryExistsE(t *testing.T) {
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerRegistryExistsE(registryName, resGroupName, subscriptionID)
+	_, err := azure.ContainerRegistryExistsContextE(t.Context(), registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -36,7 +36,7 @@ func TestGetContainerRegistryE(t *testing.T) {
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerRegistryE(registryName, resGroupName, subscriptionID)
+	_, err := azure.GetContainerRegistryContextE(t.Context(), registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -56,7 +56,7 @@ func TestContainerInstanceExistsE(t *testing.T) {
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerInstanceExistsE(instanceName, resGroupName, subscriptionID)
+	_, err := azure.ContainerInstanceExistsContextE(t.Context(), instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -67,7 +67,7 @@ func TestGetContainerInstanceE(t *testing.T) {
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerInstanceE(instanceName, resGroupName, subscriptionID)
+	_, err := azure.GetContainerInstanceContextE(t.Context(), instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 

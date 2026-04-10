@@ -25,7 +25,7 @@ func TestManagedEnvironmentExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.ManagedEnvironmentExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ManagedEnvironmentExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -36,7 +36,7 @@ func TestGetManagedEnvironmentE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetManagedEnvironmentE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetManagedEnvironmentContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -47,7 +47,7 @@ func TestContainerAppExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerAppExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ContainerAppExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -58,7 +58,7 @@ func TestGetContainerAppE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerAppE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetContainerAppContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -69,7 +69,7 @@ func TestContainerAppJobExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerAppJobExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ContainerAppJobExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -80,6 +80,6 @@ func TestGetContainerJobAppE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerAppJobE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetContainerAppJobContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }

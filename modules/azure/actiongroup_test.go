@@ -26,7 +26,7 @@ func TestGetActionGroupResourceEWithMissingResourceGroupName(t *testing.T) {
 	resGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
+	_, err := azure.GetActionGroupResourceContextE(t.Context(), ruleName, resGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -38,7 +38,7 @@ func TestGetActionGroupResourceEWithInvalidResourceGroupName(t *testing.T) {
 	resGroupName := "Hello"
 	subscriptionID := ""
 
-	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
+	_, err := azure.GetActionGroupResourceContextE(t.Context(), ruleName, resGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -48,8 +48,8 @@ func TestGetActionGroupClient(t *testing.T) {
 
 	subscriptionID := ""
 
-	client, err := azure.CreateActionGroupClient(subscriptionID)
+	client, err := azure.CreateActionGroupClientE(subscriptionID)
 
 	require.NoError(t, err)
-	assert.NotEmpty(t, *client)
+	assert.NotNil(t, client)
 }

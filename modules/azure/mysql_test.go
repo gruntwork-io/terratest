@@ -25,7 +25,7 @@ func TestGetMYSQLServerE(t *testing.T) {
 	serverName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetMYSQLServerE(t, subscriptionID, resGroupName, serverName)
+	_, err := azure.GetMYSQLServerContextE(t, t.Context(), subscriptionID, resGroupName, serverName)
 	require.Error(t, err)
 }
 
@@ -37,6 +37,6 @@ func TestGetMYSQLDBE(t *testing.T) {
 	subscriptionID := ""
 	dbName := ""
 
-	_, err := azure.GetMYSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
+	_, err := azure.GetMYSQLDBContextE(t, t.Context(), subscriptionID, resGroupName, serverName, dbName)
 	require.Error(t, err)
 }

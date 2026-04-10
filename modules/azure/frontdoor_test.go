@@ -25,7 +25,7 @@ func TestFrontDoorExists(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	exists, err := azure.FrontDoorExistsE(frontDoorName, resourceGroupName, subscriptionID)
+	exists, err := azure.FrontDoorExistsContextE(t.Context(), frontDoorName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -38,7 +38,7 @@ func TestGetFrontDoor(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	instance, err := azure.GetFrontDoorE(frontDoorName, resourceGroupName, subscriptionID)
+	instance, err := azure.GetFrontDoorContextE(t.Context(), frontDoorName, resourceGroupName, subscriptionID)
 
 	require.Nil(t, instance)
 	require.Error(t, err)
@@ -52,7 +52,7 @@ func TestFrontDoorFrontendEndpointExists(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	endpoint, err := azure.FrontDoorFrontendEndpointExistsE(endpointName, frontDoorName, resourceGroupName, subscriptionID)
+	endpoint, err := azure.FrontDoorFrontendEndpointExistsContextE(t.Context(), endpointName, frontDoorName, resourceGroupName, subscriptionID)
 
 	require.False(t, endpoint)
 	require.Error(t, err)
@@ -66,7 +66,7 @@ func TestGetFrontDoorFrontendEndpoint(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	endpoint, err := azure.GetFrontDoorFrontendEndpointE(endpointName, frontDoorName, resourceGroupName, subscriptionID)
+	endpoint, err := azure.GetFrontDoorFrontendEndpointContextE(t.Context(), endpointName, frontDoorName, resourceGroupName, subscriptionID)
 
 	require.Nil(t, endpoint)
 	require.Error(t, err)

@@ -7,7 +7,6 @@
 package azure_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -21,7 +20,7 @@ func TestGetDiskE(t *testing.T) {
 	rgName := ""
 	subID := ""
 
-	_, err := azure.GetDiskContextE(context.Background(), diskName, rgName, subID)
+	_, err := azure.GetDiskContextE(t.Context(), diskName, rgName, subID)
 
 	require.Error(t, err)
 }

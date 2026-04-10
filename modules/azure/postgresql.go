@@ -11,7 +11,7 @@ import (
 
 // GetPostgreSQLServerClientE is a helper function that will setup a postgresql server client.
 func GetPostgreSQLServerClientE(subscriptionID string) (*armpostgresql.ServersClient, error) {
-	clientFactory, err := getArmPostgreSQLClientFactory(subscriptionID)
+	clientFactory, err := getARMPostgreSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -29,16 +29,6 @@ func GetPostgreSQLServerContext(t testing.TestingT, ctx context.Context, resGrou
 	require.NoError(t, err)
 
 	return postgresqlServer
-}
-
-// GetPostgreSQLServer is a helper function that gets the server.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetPostgreSQLServerContext] instead.
-func GetPostgreSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armpostgresql.Server {
-	t.Helper()
-
-	return GetPostgreSQLServerContext(t, context.Background(), resGroupName, serverName, subscriptionID) //nolint:staticcheck
 }
 
 // GetPostgreSQLServerContextE is a helper function that gets the server.
@@ -59,16 +49,9 @@ func GetPostgreSQLServerContextE(t testing.TestingT, ctx context.Context, subscr
 	return &resp.Server, nil
 }
 
-// GetPostgreSQLServerE is a helper function that gets the server.
-//
-// Deprecated: Use [GetPostgreSQLServerContextE] instead.
-func GetPostgreSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*armpostgresql.Server, error) {
-	return GetPostgreSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
-}
-
 // GetPostgreSQLDBClientE is a helper function that will setup a postgresql DB client.
 func GetPostgreSQLDBClientE(subscriptionID string) (*armpostgresql.DatabasesClient, error) {
-	clientFactory, err := getArmPostgreSQLClientFactory(subscriptionID)
+	clientFactory, err := getARMPostgreSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -86,16 +69,6 @@ func GetPostgreSQLDBContext(t testing.TestingT, ctx context.Context, resGroupNam
 	require.NoError(t, err)
 
 	return database
-}
-
-// GetPostgreSQLDB is a helper function that gets the database.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetPostgreSQLDBContext] instead.
-func GetPostgreSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armpostgresql.Database {
-	t.Helper()
-
-	return GetPostgreSQLDBContext(t, context.Background(), resGroupName, serverName, dbName, subscriptionID) //nolint:staticcheck
 }
 
 // GetPostgreSQLDBContextE is a helper function that gets the database.
@@ -116,13 +89,6 @@ func GetPostgreSQLDBContextE(t testing.TestingT, ctx context.Context, subscripti
 	return &resp.Database, nil
 }
 
-// GetPostgreSQLDBE is a helper function that gets the database.
-//
-// Deprecated: Use [GetPostgreSQLDBContextE] instead.
-func GetPostgreSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*armpostgresql.Database, error) {
-	return GetPostgreSQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName, dbName)
-}
-
 // ListPostgreSQLDBContext is a helper function that gets all databases per server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -133,16 +99,6 @@ func ListPostgreSQLDBContext(t testing.TestingT, ctx context.Context, subscripti
 	require.NoError(t, err)
 
 	return dblist
-}
-
-// ListPostgreSQLDB is a helper function that gets all databases per server.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ListPostgreSQLDBContext] instead.
-func ListPostgreSQLDB(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) []*armpostgresql.Database {
-	t.Helper()
-
-	return ListPostgreSQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
 }
 
 // ListPostgreSQLDBContextE is a helper function that gets all databases per server.
@@ -169,11 +125,4 @@ func ListPostgreSQLDBContextE(t testing.TestingT, ctx context.Context, subscript
 	}
 
 	return databases, nil
-}
-
-// ListPostgreSQLDBE is a helper function that gets all databases per server.
-//
-// Deprecated: Use [ListPostgreSQLDBContextE] instead.
-func ListPostgreSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]*armpostgresql.Database, error) {
-	return ListPostgreSQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }

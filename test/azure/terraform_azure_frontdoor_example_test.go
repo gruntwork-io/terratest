@@ -56,6 +56,6 @@ func TestTerraformAzureFrontDoorExample(t *testing.T) {
 	assert.True(t, endpointExists)
 
 	actualFrontDoorEndpoint := azure.GetFrontDoorFrontendEndpointContext(t, t.Context(), frontendEndpointName, frontDoorName, resourceGroupName, subscriptionID)
-	endpointProperties := *actualFrontDoorEndpoint.FrontendEndpointProperties
+	endpointProperties := *actualFrontDoorEndpoint.Properties
 	assert.Equal(t, frontDoorURL, *endpointProperties.HostName)
 }
