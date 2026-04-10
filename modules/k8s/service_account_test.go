@@ -7,9 +7,10 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"strings"
 	"testing"
@@ -24,39 +25,39 @@ func TestGetServiceAccountWithAuthTokenGetsTokenThatCanBeUsedForAuth(t *testing.
 	t.Parallel()
 
 	// make a copy of kubeconfig to namespace it
-	tmpConfigPath := CopyHomeKubeConfigToTemp(t)
+	tmpConfigPath := k8s.CopyHomeKubeConfigToTemp(t)
 
 	// Create a new namespace to work in
 	namespaceName := strings.ToLower(random.UniqueID())
 
-	options := NewKubectlOptions("", tmpConfigPath, namespaceName)
+	options := k8s.NewKubectlOptions("", tmpConfigPath, namespaceName)
 
-	CreateNamespace(t, options, namespaceName)
-	defer DeleteNamespace(t, options, namespaceName)
+	k8s.CreateNamespace(t, options, namespaceName)
+	defer k8s.DeleteNamespace(t, options, namespaceName)
 
 	// Create service account
 	serviceAccountName := strings.ToLower(random.UniqueID())
-	CreateServiceAccount(t, options, serviceAccountName)
-	token := GetServiceAccountAuthToken(t, options, serviceAccountName)
-	require.NoError(t, AddConfigContextForServiceAccountE(t, options, serviceAccountName, serviceAccountName, token))
+	k8s.CreateServiceAccount(t, options, serviceAccountName)
+	token := k8s.GetServiceAccountAuthToken(t, options, serviceAccountName)
+	require.NoError(t, k8s.AddConfigContextForServiceAccountE(t, options, serviceAccountName, serviceAccountName, token))
 
 	// Now validate auth as service account. This is a bit tricky because we don't have an API endpoint in k8s that
 	// tells you who you are, so we will rely on the self subject access review and see if we have access to the
 	// kube-system namespace.
-	serviceAccountOptions := NewKubectlOptions(serviceAccountName, tmpConfigPath, namespaceName)
+	serviceAccountOptions := k8s.NewKubectlOptions(serviceAccountName, tmpConfigPath, namespaceName)
 	action := authv1.ResourceAttributes{
 		Namespace: "kube-system",
 		Verb:      "list",
 		Resource:  "pod",
 	}
-	require.False(t, CanIDo(t, serviceAccountOptions, action))
+	require.False(t, k8s.CanIDo(t, serviceAccountOptions, action))
 }
 
 func TestGetServiceAccountEReturnsErrorForNonExistantServiceAccount(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	_, err := GetServiceAccountE(t, options, "terratest")
+	options := k8s.NewKubectlOptions("", "", "default")
+	_, err := k8s.GetServiceAccountE(t, options, "terratest")
 	require.Error(t, err)
 }
 
@@ -64,13 +65,15 @@ func TestGetServiceAccountEReturnsCorrectServiceAccountInCorrectNamespace(t *tes
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_SERVICEACCOUNT_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	serviceAccount := GetServiceAccount(t, options, "terratest")
-	require.Equal(t, serviceAccount.Name, "terratest")
+	configData := fmt.Sprintf(exampleServiceAccountYAMLTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	serviceAccount := k8s.GetServiceAccount(t, options, "terratest")
+	require.Equal(t, "terratest", serviceAccount.Name)
 	require.Equal(t, serviceAccount.Namespace, uniqueID)
 }
 
@@ -78,19 +81,21 @@ func TestCreateServiceAccountECreatesServiceAccountInNamespaceWithGivenName(t *t
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	defer DeleteNamespace(t, options, options.Namespace)
-	CreateNamespace(t, options, options.Namespace)
+
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	defer k8s.DeleteNamespace(t, options, options.Namespace)
+
+	k8s.CreateNamespace(t, options, options.Namespace)
 
 	// Note: We don't need to delete this at the end of test, because deleting the namespace automatically deletes
 	// everything created in the namespace.
-	CreateServiceAccount(t, options, "terratest")
-	serviceAccount := GetServiceAccount(t, options, "terratest")
-	require.Equal(t, serviceAccount.Name, "terratest")
+	k8s.CreateServiceAccount(t, options, "terratest")
+	serviceAccount := k8s.GetServiceAccount(t, options, "terratest")
+	require.Equal(t, "terratest", serviceAccount.Name)
 	require.Equal(t, serviceAccount.Namespace, uniqueID)
 }
 
-const EXAMPLE_SERVICEACCOUNT_YAML_TEMPLATE = `---
+const exampleServiceAccountYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:

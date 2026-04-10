@@ -7,9 +7,10 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"strings"
 	"testing"
@@ -34,36 +35,38 @@ func TestListPersistentVolumesReturnsAllPersistentVolumes(t *testing.T) {
 		strings.ToLower(random.UniqueID()): {},
 	}
 
-	options := NewKubectlOptions("", "", "")
+	options := k8s.NewKubectlOptions("", "", "")
+
 	for pvName := range pvNames {
 		pv := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
-		defer KubectlDeleteFromString(t, options, pv)
-		KubectlApplyFromString(t, options, pv)
+		defer k8s.KubectlDeleteFromString(t, options, pv)
+
+		k8s.KubectlApplyFromString(t, options, pv)
 	}
 
-	pvs := ListPersistentVolumes(t, options, metav1.ListOptions{})
+	pvs := k8s.ListPersistentVolumes(t, options, metav1.ListOptions{})
 	for _, pv := range pvs {
 		if _, ok := pvNames[pv.Name]; ok {
 			numPvFound++
 		}
 	}
 
-	require.Equal(t, numPvFound, len(pvNames))
+	require.Len(t, pvNames, numPvFound)
 }
 
 func TestListPersistentVolumesReturnsZeroPersistentVolumesIfNoneCreated(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "")
-	pvs := ListPersistentVolumes(t, options, metav1.ListOptions{})
-	require.Equal(t, 0, len(pvs))
+	options := k8s.NewKubectlOptions("", "", "")
+	pvs := k8s.ListPersistentVolumes(t, options, metav1.ListOptions{})
+	require.Empty(t, pvs)
 }
 
 func TestGetPersistentVolumeEReturnsErrorForNonExistentPersistentVolumes(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "")
-	_, err := GetPersistentVolumeE(t, options, "non-existent")
+	options := k8s.NewKubectlOptions("", "", "")
+	_, err := k8s.GetPersistentVolumeE(t, options, "non-existent")
 	require.Error(t, err)
 }
 
@@ -71,12 +74,14 @@ func TestGetPersistentVolumeReturnsCorrectPersistentVolume(t *testing.T) {
 	t.Parallel()
 
 	pvName := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", "")
-	configData := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", "")
 
-	pv := GetPersistentVolume(t, options, pvName)
+	configData := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	pv := k8s.GetPersistentVolume(t, options, pvName)
 	require.Equal(t, pv.Name, pvName)
 }
 
@@ -86,12 +91,13 @@ func TestWaitUntilPersistentVolumeInTheGivenStatusPhase(t *testing.T) {
 	pvName := strings.ToLower(random.UniqueID())
 	pvAvailableStatusPhase := corev1.VolumeAvailable
 
-	options := NewKubectlOptions("", "", pvName)
+	options := k8s.NewKubectlOptions("", "", pvName)
 	configData := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
 
-	WaitUntilPersistentVolumeInStatus(t, options, pvName, &pvAvailableStatusPhase, 60, 1*time.Second)
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.WaitUntilPersistentVolumeInStatus(t, options, pvName, &pvAvailableStatusPhase, 60, 1*time.Second)
 }
 
 const PvFixtureYamlTemplate = `---

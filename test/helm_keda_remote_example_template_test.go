@@ -64,16 +64,16 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeployment(t *testing.T) {
 	require.Equal(t, namespaceName, deployment.Namespace)
 
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
-	var expectedMetricsServerReplica int32
+	var expectedMetricsServerReplica int32 = 999
 
-	expectedMetricsServerReplica = 999
 	deploymentMetricsServerReplica := *deployment.Spec.Replicas
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
+
 	expectedContainerRLM := "1234Mi"
 	deploymentContainers := deployment.Spec.Template.Spec.Containers
-	require.Equal(t, len(deploymentContainers), 1)
+	require.Len(t, deploymentContainers, 1)
 	currentContainerRLM := deploymentContainers[0].Resources.Limits.Memory().String()
-	require.Equal(t, currentContainerRLM, expectedContainerRLM)
+	require.Equal(t, expectedContainerRLM, currentContainerRLM)
 }
 
 // An example of how to verify the rendered template object of a Helm Chart given input from a `values.yaml` file.
@@ -107,14 +107,14 @@ func TestHelmKedaRemoteExampleTemplateRenderedValuesFileFixtureDeployment(t *tes
 	require.Equal(t, namespaceName, deployment.Namespace)
 
 	// Finally, we verify the deployment pod template spec is set to the expected value
-	var expectedMetricsServerReplica int32
+	var expectedMetricsServerReplica int32 = 3
 
-	expectedMetricsServerReplica = 3
 	deploymentMetricsServerReplica := *deployment.Spec.Replicas
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
+
 	expectedContainerRLM := "1234Mi"
 	deploymentContainers := deployment.Spec.Template.Spec.Containers
-	require.Equal(t, len(deploymentContainers), 1)
+	require.Len(t, deploymentContainers, 1)
 	currentContainerRLM := deploymentContainers[0].Resources.Limits.Memory().String()
-	require.Equal(t, currentContainerRLM, expectedContainerRLM)
+	require.Equal(t, expectedContainerRLM, currentContainerRLM)
 }

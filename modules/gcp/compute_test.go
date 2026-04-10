@@ -3,34 +3,36 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
-package gcp
+package gcp_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"testing"
 	"time"
 
+	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/compute/v1"
 )
 
-const DEFAULT_MACHINE_TYPE = "f1-micro"
-const DEFAULT_IMAGE_FAMILY_PROJECT_NAME = "ubuntu-os-cloud"
-const DEFAULT_IMAGE_FAMILY_NAME = "family/ubuntu-2204-lts"
+const defaultMachineType = "f1-micro"
+const defaultImageFamilyProjectName = "ubuntu-os-cloud"
+const defaultImageFamilyName = "family/ubuntu-2204-lts"
 
-// Zones that support running f1-micro instances
-var ZonesThatSupportF1Micro = []string{"us-central1-a", "us-east1-b", "us-west1-a", "europe-north1-a", "europe-west1-b", "europe-central2-a"}
+// zonesThatSupportF1Micro lists zones that support running f1-micro instances
+var zonesThatSupportF1Micro = []string{"us-central1-a", "us-east1-b", "us-west1-a", "europe-north1-a", "europe-west1-b", "europe-central2-a"}
 
 func TestGetPublicIPOfInstance(t *testing.T) {
 	t.Parallel()
 
-	instanceName := RandomValidGCPName()
-	projectID := GetGoogleProjectIDFromEnvVar(t)
-	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
+	instanceName := gcp.RandomValidGCPName()
+	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
+	zone := gcp.GetRandomZone(t, projectID, zonesThatSupportF1Micro, nil, nil)
 
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
@@ -42,12 +44,13 @@ func TestGetPublicIPOfInstance(t *testing.T) {
 	ip := retry.DoWithRetry(t, "Read IP address of Compute Instance", maxRetries, sleepBetweenRetries, func() (string, error) {
 		// Consider attempting to connect to the Compute Instance at this IP in the future, but for now, we just call the
 		// the function to ensure we don't have errors
-		instance := FetchInstance(t, projectID, instanceName)
+		instance := gcp.FetchInstance(t, projectID, instanceName)
 		ip := instance.GetPublicIP(t)
 
 		if ip == "" {
-			return "", fmt.Errorf("Got blank IP. Retrying.\n")
+			return "", errors.New("Got blank IP. Retrying.\n")
 		}
+
 		return ip, nil
 	})
 
@@ -66,25 +69,25 @@ func TestZoneURLToZone(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		zone := ZoneURLToZone(tc.zoneURL)
-		assert.Equal(t, zone, tc.expectedZone, "Zone not extracted successfully from Zone URL")
+		zone := gcp.ZoneURLToZone(tc.zoneURL)
+		assert.Equal(t, tc.expectedZone, zone, "Zone not extracted successfully from Zone URL")
 	}
 }
 
 func TestGetAndSetLabels(t *testing.T) {
 	t.Parallel()
 
-	instanceName := RandomValidGCPName()
-	projectID := GetGoogleProjectIDFromEnvVar(t)
+	instanceName := gcp.RandomValidGCPName()
+	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 
-	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
+	zone := gcp.GetRandomZone(t, projectID, zonesThatSupportF1Micro, nil, nil)
 
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
 
 	// Now that our Instance is launched, set the labels. Note that in GCP label keys and values can only contain
 	// lowercase letters, numeric characters, underscores and dashes.
-	instance := FetchInstance(t, projectID, instanceName)
+	instance := gcp.FetchInstance(t, projectID, instanceName)
 
 	labelsToWrite := map[string]string{
 		"context": "terratest",
@@ -96,10 +99,11 @@ func TestGetAndSetLabels(t *testing.T) {
 	sleepBetweenRetries := 3 * time.Second
 
 	retry.DoWithRetry(t, "Read newly set labels", maxRetries, sleepBetweenRetries, func() (string, error) {
-		instance := FetchInstance(t, projectID, instanceName)
+		instance := gcp.FetchInstance(t, projectID, instanceName)
+
 		labelsFromRead := instance.GetLabels(t)
 		if !reflect.DeepEqual(labelsFromRead, labelsToWrite) {
-			return "", fmt.Errorf("Labels that were written did not match labels that were read. Retrying.\n")
+			return "", errors.New("Labels that were written did not match labels that were read. Retrying.\n")
 		}
 
 		return "", nil
@@ -110,17 +114,17 @@ func TestGetAndSetLabels(t *testing.T) {
 func TestGetAndSetMetadata(t *testing.T) {
 	t.Parallel()
 
-	projectID := GetGoogleProjectIDFromEnvVar(t)
-	instanceName := RandomValidGCPName()
+	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
+	instanceName := gcp.RandomValidGCPName()
 
-	zone := GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
+	zone := gcp.GetRandomZone(t, projectID, zonesThatSupportF1Micro, nil, nil)
 
 	// Create a new Compute Instance
 	createComputeInstance(t, projectID, zone, instanceName)
 	defer deleteComputeInstance(t, projectID, zone, instanceName)
 
 	// Set the metadata
-	instance := FetchInstance(t, projectID, instanceName)
+	instance := gcp.FetchInstance(t, projectID, instanceName)
 
 	metadataToWrite := map[string]string{
 		"foo": "bar",
@@ -132,7 +136,8 @@ func TestGetAndSetMetadata(t *testing.T) {
 	sleepBetweenRetries := 3 * time.Second
 
 	retry.DoWithRetry(t, "Read newly set metadata", maxRetries, sleepBetweenRetries, func() (string, error) {
-		instance := FetchInstance(t, projectID, instanceName)
+		instance := gcp.FetchInstance(t, projectID, instanceName)
+
 		metadataFromRead := instance.GetMetadata(t)
 		for _, metadataItem := range metadataFromRead {
 			for key, val := range metadataToWrite {
@@ -144,7 +149,7 @@ func TestGetAndSetMetadata(t *testing.T) {
 
 		fmt.Printf("Metadata to write: %+v\nMetadata from read: %+v\n", metadataToWrite, metadataFromRead)
 
-		return "", fmt.Errorf("Metadata that was written was not found in metadata that was read. Retrying.\n")
+		return "", errors.New("Metadata that was written was not found in metadata that was read. Retrying.\n")
 	})
 }
 
@@ -163,9 +168,9 @@ func createComputeInstance(t *testing.T, projectID string, zone string, name str
 		t.Fatalf("Invalid Compute Instance name: %s. Must match RegEx %s\n", name, validNameExp)
 	}
 
-	machineType := DEFAULT_MACHINE_TYPE
-	sourceImageFamilyProjectName := DEFAULT_IMAGE_FAMILY_PROJECT_NAME
-	sourceImageFamilyName := DEFAULT_IMAGE_FAMILY_NAME
+	machineType := defaultMachineType
+	sourceImageFamilyProjectName := defaultImageFamilyProjectName
+	sourceImageFamilyName := defaultImageFamilyName
 
 	// Per GCP docs (https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMachineType), the MachineType
 	// is actually specified as a partial URL
@@ -195,13 +200,14 @@ func createComputeInstance(t *testing.T, projectID string, zone string, name str
 		},
 	}
 
-	service, err := NewComputeServiceE(t)
+	service, err := gcp.NewComputeServiceE(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create the Compute Instance
 	ctx := context.Background()
+
 	_, err = service.Instances.Insert(projectID, zone, instanceConfig).Context(ctx).Do()
 	if err != nil {
 		t.Fatalf("Error launching new Compute Instance: %s", err)
@@ -213,13 +219,14 @@ func deleteComputeInstance(t *testing.T, projectID string, zone string, name str
 	t.Helper()
 	t.Logf("Deleting Compute Instance %s\n", name)
 
-	service, err := NewComputeServiceE(t)
+	service, err := gcp.NewComputeServiceE(t)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Delete the Compute Instance
 	ctx := context.Background()
+
 	_, err = service.Instances.Delete(projectID, zone, name).Context(ctx).Do()
 	if err != nil {
 		t.Fatalf("Error deleting Compute Instance: %s", err)

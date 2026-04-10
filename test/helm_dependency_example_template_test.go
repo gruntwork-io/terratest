@@ -39,6 +39,7 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-dependency-example")
 	releaseName := "helm-dependency"
+
 	require.NoError(t, err)
 
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication or helm home.
@@ -96,9 +97,8 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 			// Finally, we verify the deployment pod template spec is set to the expected container image value
 			expectedContainerImage := "nginx:1.15.8"
 			deploymentContainers := deployment.Spec.Template.Spec.Containers
-			require.Equal(t, len(deploymentContainers), 1)
-			require.Equal(t, deploymentContainers[0].Image, expectedContainerImage)
-
+			require.Len(t, deploymentContainers, 1)
+			require.Equal(t, expectedContainerImage, deploymentContainers[0].Image)
 		})
 	}
 }
@@ -110,6 +110,7 @@ func TestHelmDependencyExampleTemplateRequiredTemplateArgs(t *testing.T) {
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-dependency-example")
 	releaseName := "helm-dependency"
+
 	require.NoError(t, err)
 
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication, helm home, or
@@ -121,40 +122,40 @@ func TestHelmDependencyExampleTemplateRequiredTemplateArgs(t *testing.T) {
 	// in the test output. In this case, each test case will be a complete values input except for one of the required
 	// values missing, to test that neglecting a required value will cause the template rendering to fail.
 	testCases := []struct {
-		name   string
 		values map[string]string
+		name   string
 	}{
 		{
-			"MissingContainerImageRepo in dependent chart",
-			map[string]string{
+			values: map[string]string{
 				"containerImageTag":        "1.15.8",
 				"basic.containerImageRepo": "nginx",
 				"basic.containerImageTag":  "1.15.8",
 			},
+			name: "MissingContainerImageRepo in dependent chart",
 		},
 		{
-			"MissingContainerImageRepo in basic chart",
-			map[string]string{
+			values: map[string]string{
 				"basic.containerImageTag": "1.15.8",
 				"containerImageRepo":      "nginx",
 				"containerImageTag":       "1.15.8",
 			},
+			name: "MissingContainerImageRepo in basic chart",
 		},
 		{
-			"MissingContainerImageTag in dependent chart",
-			map[string]string{
+			values: map[string]string{
 				"containerImageRepo":       "nginx",
 				"basic.containerImageRepo": "nginx",
 				"basic.containerImageTag":  "1.15.8",
 			},
+			name: "MissingContainerImageTag in dependent chart",
 		},
 		{
-			"MissingContainerImageTag in basic chart",
-			map[string]string{
+			values: map[string]string{
 				"basic.containerImageRepo": "nginx",
 				"containerImageRepo":       "nginx",
 				"containerImageTag":        "1.15.8",
 			},
+			name: "MissingContainerImageTag in basic chart",
 		},
 	}
 

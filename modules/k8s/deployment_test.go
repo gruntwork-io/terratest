@@ -7,9 +7,10 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 	"time"
 
@@ -26,8 +27,8 @@ import (
 func TestGetDeploymentEReturnsError(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "")
-	_, err := GetDeploymentE(t, options, "nginx-deployment")
+	options := k8s.NewKubectlOptions("", "", "")
+	_, err := k8s.GetDeploymentE(t, options, "nginx-deployment")
 	require.Error(t, err)
 }
 
@@ -35,13 +36,14 @@ func TestGetDeployments(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
 
-	deployment := GetDeployment(t, options, "nginx-deployment")
-	require.Equal(t, deployment.Name, "nginx-deployment")
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	deployment := k8s.GetDeployment(t, options, "nginx-deployment")
+	require.Equal(t, "nginx-deployment", deployment.Name)
 	require.Equal(t, deployment.Namespace, uniqueID)
 }
 
@@ -49,16 +51,17 @@ func TestListDeployments(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
 
-	deployments := ListDeployments(t, options, metav1.ListOptions{})
-	require.Equal(t, len(deployments), 1)
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	deployments := k8s.ListDeployments(t, options, metav1.ListOptions{})
+	require.Len(t, deployments, 1)
 
 	deployment := deployments[0]
-	require.Equal(t, deployment.Name, "nginx-deployment")
+	require.Equal(t, "nginx-deployment", deployment.Name)
 	require.Equal(t, deployment.Namespace, uniqueID)
 }
 
@@ -66,18 +69,19 @@ func TestWaitUntilDeploymentAvailable(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
 
-	WaitUntilDeploymentAvailable(t, options, "nginx-deployment", 60, 1*time.Second)
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.WaitUntilDeploymentAvailable(t, options, "nginx-deployment", 60, 1*time.Second)
 }
 
 func TestTestIsDeploymentAvailable(t *testing.T) {
 	testCases := []struct {
-		title          string
 		deploy         *appsv1.Deployment
+		title          string
 		expectedResult bool
 	}{
 		{
@@ -125,7 +129,8 @@ func TestTestIsDeploymentAvailable(t *testing.T) {
 		tc := tc
 		t.Run(tc.title, func(t *testing.T) {
 			t.Parallel()
-			actualResult := IsDeploymentAvailable(tc.deploy)
+
+			actualResult := k8s.IsDeploymentAvailable(tc.deploy)
 			require.Equal(t, tc.expectedResult, actualResult)
 		})
 	}

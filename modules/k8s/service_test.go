@@ -7,9 +7,10 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"crypto/tls"
 	"fmt"
 	"strings"
@@ -26,8 +27,8 @@ import (
 func TestGetServiceEReturnsErrorForNonExistantService(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	_, err := GetServiceE(t, options, "nginx-service")
+	options := k8s.NewKubectlOptions("", "", "default")
+	_, err := k8s.GetServiceE(t, options, "nginx-service")
 	require.Error(t, err)
 }
 
@@ -35,13 +36,14 @@ func TestGetServiceEReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(exampleDeploymentYAMLTemplate, uniqueID, uniqueID, uniqueID)
 
-	service := GetService(t, options, "nginx-service")
-	require.Equal(t, service.Name, "nginx-service")
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	service := k8s.GetService(t, options, "nginx-service")
+	require.Equal(t, "nginx-service", service.Name)
 	require.Equal(t, service.Namespace, uniqueID)
 }
 
@@ -49,16 +51,17 @@ func TestListServicesReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(exampleDeploymentYAMLTemplate, uniqueID, uniqueID, uniqueID)
 
-	services := ListServices(t, options, metav1.ListOptions{})
-	require.Equal(t, len(services), 1)
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	services := k8s.ListServices(t, options, metav1.ListOptions{})
+	require.Len(t, services, 1)
 
 	service := services[0]
-	require.Equal(t, service.Name, "nginx-service")
+	require.Equal(t, "nginx-service", service.Name)
 	require.Equal(t, service.Namespace, uniqueID)
 }
 
@@ -66,25 +69,27 @@ func TestWaitUntilServiceAvailableReturnsSuccessfullyOnNodePortType(t *testing.T
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(exampleDeploymentYAMLTemplate, uniqueID, uniqueID, uniqueID)
 
-	WaitUntilServiceAvailable(t, options, "nginx-service", 10, 1*time.Second)
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.WaitUntilServiceAvailable(t, options, "nginx-service", 10, 1*time.Second)
 }
 
 func TestGetServiceEndpointEReturnsAccessibleEndpointForNodePort(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(exampleDeploymentYAMLTemplate, uniqueID, uniqueID, uniqueID)
 
-	service := GetService(t, options, "nginx-service")
-	endpoint := GetServiceEndpoint(t, options, service, 80)
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	service := k8s.GetService(t, options, "nginx-service")
+	endpoint := k8s.GetServiceEndpoint(t, options, service, 80)
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
@@ -92,7 +97,7 @@ func TestGetServiceEndpointEReturnsAccessibleEndpointForNodePort(t *testing.T) {
 	// Test up to 5 minutes
 	http_helper.HttpGetWithRetryWithCustomValidation(
 		t,
-		fmt.Sprintf("http://%s", endpoint),
+		"http://"+endpoint,
 		&tlsConfig,
 		30,
 		10*time.Second,
@@ -102,7 +107,7 @@ func TestGetServiceEndpointEReturnsAccessibleEndpointForNodePort(t *testing.T) {
 	)
 }
 
-const EXAMPLE_DEPLOYMENT_YAML_TEMPLATE = `---
+const exampleDeploymentYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:

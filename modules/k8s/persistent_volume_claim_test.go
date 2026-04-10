@@ -7,9 +7,10 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"strings"
 	"testing"
 	"time"
@@ -28,13 +29,15 @@ func TestListPersistentVolumeClaimsReturnsPersistentVolumeClaimsInNamespace(t *t
 
 	pvcName := "test-dummy-pvc"
 	namespace := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", namespace)
-	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", namespace)
 
-	pvcs := ListPersistentVolumeClaims(t, options, metav1.ListOptions{})
-	require.Equal(t, len(pvcs), 1)
+	configData := renderFixtureYamlTemplate(namespace, pvcName)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	pvcs := k8s.ListPersistentVolumeClaims(t, options, metav1.ListOptions{})
+	require.Len(t, pvcs, 1)
 	pvc := pvcs[0]
 	require.Equal(t, pvc.Name, pvcName)
 	require.Equal(t, pvc.Namespace, namespace)
@@ -44,19 +47,20 @@ func TestListPersistentVolumeClaimsReturnsZeroPersistentVolumeClaimsIfNoneCreate
 	t.Parallel()
 
 	namespace := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", namespace)
-	CreateNamespace(t, options, namespace)
-	defer DeleteNamespace(t, options, namespace)
+	options := k8s.NewKubectlOptions("", "", namespace)
 
-	pvcs := ListPersistentVolumeClaims(t, options, metav1.ListOptions{})
-	require.Equal(t, len(pvcs), 0)
+	k8s.CreateNamespace(t, options, namespace)
+	defer k8s.DeleteNamespace(t, options, namespace)
+
+	pvcs := k8s.ListPersistentVolumeClaims(t, options, metav1.ListOptions{})
+	require.Empty(t, pvcs)
 }
 
 func TestGetPersistentVolumeClaimEReturnsErrorForNonExistantPersistentVolumeClaim(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	_, err := GetPersistentVolumeClaimE(t, options, "non-existent")
+	options := k8s.NewKubectlOptions("", "", "default")
+	_, err := k8s.GetPersistentVolumeClaimE(t, options, "non-existent")
 	require.Error(t, err)
 }
 
@@ -65,12 +69,14 @@ func TestGetPersistentVolumeClaimReturnsCorrectPersistentVolumeClaimInCorrectNam
 
 	pvcName := "test-dummy-pvc"
 	namespace := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", namespace)
-	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", namespace)
 
-	pvc := GetPersistentVolumeClaim(t, options, pvcName)
+	configData := renderFixtureYamlTemplate(namespace, pvcName)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	pvc := k8s.GetPersistentVolumeClaim(t, options, pvcName)
 	require.Equal(t, pvc.Name, pvcName)
 	require.Equal(t, pvc.Namespace, namespace)
 }
@@ -81,21 +87,23 @@ func TestWaitUntilPersistentVolumeClaimInGivenStatusPhase(t *testing.T) {
 	pvcName := "test-dummy-pvc"
 	namespace := strings.ToLower(random.UniqueID())
 	pvcBoundStatusPhase := corev1.ClaimBound
-	options := NewKubectlOptions("", "", namespace)
-	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", namespace)
 
-	WaitUntilPersistentVolumeClaimInStatus(t, options, pvcName, &pvcBoundStatusPhase, 60, 1*time.Second)
+	configData := renderFixtureYamlTemplate(namespace, pvcName)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	k8s.WaitUntilPersistentVolumeClaimInStatus(t, options, pvcName, &pvcBoundStatusPhase, 60, 1*time.Second)
 }
 
 func TestWaitUntilPersistentVolumeClaimInStatusEReturnsErrorWhenWaitingForAnUnexistentPvc(t *testing.T) {
 	t.Parallel()
 
 	pvcBoundStatusPhase := corev1.ClaimBound
-	options := NewKubectlOptions("", "", "default")
-	err := WaitUntilPersistentVolumeClaimInStatusE(t, options, "non-existent", &pvcBoundStatusPhase, 3, 1*time.Second)
-	require.NotEqual(t, err, nil)
+	options := k8s.NewKubectlOptions("", "", "default")
+	err := k8s.WaitUntilPersistentVolumeClaimInStatusE(t, options, "non-existent", &pvcBoundStatusPhase, 3, 1*time.Second)
+	require.Error(t, err)
 }
 
 func TestWaitUntilPersistentVolumeClaimInStatusEReturnsErrorWhenTimesOut(t *testing.T) {
@@ -104,20 +112,22 @@ func TestWaitUntilPersistentVolumeClaimInStatusEReturnsErrorWhenTimesOut(t *test
 	pvcName := "test-dummy-pvc"
 	pvcLostStatusPhase := corev1.ClaimLost
 	namespace := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", namespace)
-	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", namespace)
 
-	err := WaitUntilPersistentVolumeClaimInStatusE(t, options, pvcName, &pvcLostStatusPhase, 5, 1*time.Second)
-	require.NotEqual(t, err, nil)
+	configData := renderFixtureYamlTemplate(namespace, pvcName)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	err := k8s.WaitUntilPersistentVolumeClaimInStatusE(t, options, pvcName, &pvcLostStatusPhase, 5, 1*time.Second)
+	require.Error(t, err)
 }
 
 func TestIsPersistentVolumeClaimInStatusReturnsFalseIfPvcIsNil(t *testing.T) {
 	t.Parallel()
 
-	result := IsPersistentVolumeClaimInStatus(nil, nil)
-	require.Equal(t, result, false)
+	result := k8s.IsPersistentVolumeClaimInStatus(nil, nil)
+	require.False(t, result)
 }
 
 const pvcFixtureYamlTemplate = `---
@@ -169,5 +179,5 @@ spec:
 `
 
 func renderFixtureYamlTemplate(namespace, pvcName string) string {
-	return strings.Replace(strings.Replace(pvcFixtureYamlTemplate, "__namespace__", namespace, -1), "__pvcName__", pvcName, -1)
+	return strings.ReplaceAll(strings.ReplaceAll(pvcFixtureYamlTemplate, "__namespace__", namespace), "__pvcName__", pvcName)
 }

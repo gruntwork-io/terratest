@@ -7,9 +7,10 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"os"
 	"testing"
 
@@ -21,14 +22,15 @@ import (
 func TestDeleteConfigContext(t *testing.T) {
 	t.Parallel()
 
-	path := StoreConfigToTempFile(t, BASIC_CONFIG_WITH_EXTRA_CONTEXT)
+	path := k8s.StoreConfigToTempFile(t, BASIC_CONFIG_WITH_EXTRA_CONTEXT)
 	defer os.Remove(path)
 
-	err := DeleteConfigContextWithPathE(t, path, "extra_minikube")
+	err := k8s.DeleteConfigContextWithPathE(t, path, "extra_minikube")
 	require.NoError(t, err)
 
 	data, err := os.ReadFile(path)
 	require.NoError(t, err)
+
 	storedConfig := string(data)
 	assert.Equal(t, BASIC_CONFIG, storedConfig)
 }
@@ -36,14 +38,15 @@ func TestDeleteConfigContext(t *testing.T) {
 func TestDeleteConfigContextWithAnotherContextRemaining(t *testing.T) {
 	t.Parallel()
 
-	path := StoreConfigToTempFile(t, BASIC_CONFIG_WITH_EXTRA_CONTEXT_NO_GARBAGE)
+	path := k8s.StoreConfigToTempFile(t, BASIC_CONFIG_WITH_EXTRA_CONTEXT_NO_GARBAGE)
 	defer os.Remove(path)
 
-	err := DeleteConfigContextWithPathE(t, path, "extra_minikube")
+	err := k8s.DeleteConfigContextWithPathE(t, path, "extra_minikube")
 	require.NoError(t, err)
 
 	data, err := os.ReadFile(path)
 	require.NoError(t, err)
+
 	storedConfig := string(data)
 	assert.Equal(t, EXPECTED_CONFIG_AFTER_EXTRA_MINIKUBE_DELETED_NO_GARBAGE, storedConfig)
 }
@@ -80,17 +83,19 @@ func TestRemoveOrphanedClusterAndAuthInfoConfig(t *testing.T) {
 
 func removeOrphanedClusterAndAuthInfoConfigTestFunc(t *testing.T, inputConfig string, expectedOutputConfig string) {
 	t.Helper()
-	path := StoreConfigToTempFile(t, inputConfig)
+
+	path := k8s.StoreConfigToTempFile(t, inputConfig)
 	defer os.Remove(path)
 
-	config := LoadConfigFromPath(path)
+	config := k8s.LoadConfigFromPath(path)
 	rawConfig, err := config.RawConfig()
 	require.NoError(t, err)
-	RemoveOrphanedClusterAndAuthInfoConfig(&rawConfig)
+	k8s.RemoveOrphanedClusterAndAuthInfoConfig(&rawConfig)
 	err = clientcmd.ModifyConfig(config.ConfigAccess(), rawConfig, false)
 	require.NoError(t, err)
 	data, err := os.ReadFile(path)
 	require.NoError(t, err)
+
 	storedConfig := string(data)
 	assert.Equal(t, expectedOutputConfig, storedConfig)
 }

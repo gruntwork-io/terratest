@@ -32,7 +32,6 @@ const kedaReleaseName = "keda"
 
 // An example of how to verify the rendered template object of a Helm Chart given various inputs.
 func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
-
 	// chart name
 	releaseName := kedaReleaseName
 
@@ -65,9 +64,8 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 	require.Equal(t, namespaceName, deployment.Namespace)
 
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
-	var expectedMetricsServerReplica int32
+	var expectedMetricsServerReplica int32 = 999
 
-	expectedMetricsServerReplica = 999
 	deploymentMetricsServerReplica := *deployment.Spec.Replicas
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
 
@@ -77,7 +75,6 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 
 // An example of how to verify the rendered template object of a Helm Chart given various inputs.
 func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
-
 	// chart name
 	releaseName := kedaReleaseName
 
@@ -110,9 +107,8 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 	require.Equal(t, namespaceName, deployment.Namespace)
 
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
-	var expectedMetricsServerReplica int32
+	var expectedMetricsServerReplica int32 = 666
 
-	expectedMetricsServerReplica = 666
 	deploymentMetricsServerReplica := *deployment.Spec.Replicas
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
 
@@ -122,7 +118,6 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 
 // An example of how to store a snapshot of the current manaifest for future comparison
 func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
-
 	// chart name
 	releaseName := kedaReleaseName
 
@@ -152,7 +147,6 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
 
 // An example of how to verify the current helm k8s manifest against a previous snapshot
 func TestHelmKedaRemoteExampleTemplateRenderedPackageDiff(t *testing.T) {
-
 	// chart name
 	releaseName := kedaReleaseName
 

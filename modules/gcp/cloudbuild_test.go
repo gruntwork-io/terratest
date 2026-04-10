@@ -3,7 +3,7 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
-package gcp
+package gcp_test
 
 import (
 	"archive/tar"
@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	cloudbuildpb "cloud.google.com/go/cloudbuild/apiv1/v2/cloudbuildpb"
+	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/require"
@@ -34,20 +35,20 @@ func TestCreateBuild(t *testing.T) {
 	tarball := createSampleAppTarball(t)
 
 	// Create GCS bucket
-	projectID := GetGoogleProjectIDFromEnvVar(t)
+	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 	id := random.UniqueID()
 	gsBucketName := "cloud-build-terratest-" + strings.ToLower(id)
 	sampleAppPath := "docker-example.tar.gz"
 	imagePath := fmt.Sprintf("gcr.io/%s/test-image-%s", projectID, strings.ToLower(id))
 
-	logger.Logf(t, "Random values selected Bucket Name = %s\n", gsBucketName)
+	logger.Default.Logf(t, "Random values selected Bucket Name = %s\n", gsBucketName)
 
-	CreateStorageBucket(t, projectID, gsBucketName, nil)
-	defer DeleteStorageBucket(t, gsBucketName)
+	gcp.CreateStorageBucket(t, projectID, gsBucketName, nil)
+	defer gcp.DeleteStorageBucket(t, gsBucketName)
 
 	// Write the compressed archive to the storage bucket
-	objectURL := WriteBucketObject(t, gsBucketName, sampleAppPath, tarball, "application/gzip")
-	logger.Logf(t, "Got URL: %s", objectURL)
+	objectURL := gcp.WriteBucketObject(t, gsBucketName, sampleAppPath, tarball, "application/gzip")
+	logger.Default.Logf(t, "Got URL: %s", objectURL)
 
 	// Create a new build
 	build := &cloudbuildpb.Build{
@@ -67,7 +68,7 @@ func TestCreateBuild(t *testing.T) {
 	}
 
 	// CreateBuild blocks until the build is complete
-	b := CreateBuild(t, projectID, build)
+	b := gcp.CreateBuild(t, projectID, build)
 
 	// Attempt to delete the pushed build images (best-effort cleanup).
 	// Note: GCR (gcr.io) has been deprecated in favor of Artifact Registry.
@@ -75,20 +76,22 @@ func TestCreateBuild(t *testing.T) {
 	// the validity of the Cloud Build test itself.
 	// We could just use the `b` struct above, but we want to explicitly test
 	// the `GetBuild` method.
-	b2 := GetBuild(t, projectID, b.GetId())
+	b2 := gcp.GetBuild(t, projectID, b.GetId())
 	for _, image := range b2.GetImages() {
-		if err := DeleteGCRRepoE(t, image); err != nil {
-			logger.Logf(t, "Warning: Failed to delete image %s (this may be expected due to GCR deprecation): %v", image, err)
+		if err := gcp.DeleteGCRRepoE(t, image); err != nil {
+			logger.Default.Logf(t, "Warning: Failed to delete image %s (this may be expected due to GCR deprecation): %v", image, err)
 		}
 	}
 
 	// Empty the storage bucket so we can delete it
-	defer EmptyStorageBucket(t, gsBucketName)
+	defer gcp.EmptyStorageBucket(t, gsBucketName)
 }
 
 func createSampleAppTarball(t *testing.T) *bytes.Reader {
 	t.Helper()
+
 	var buf bytes.Buffer
+
 	tw := tar.NewWriter(&buf)
 
 	file := `FROM busybox:latest
@@ -112,6 +115,7 @@ MAINTAINER Rob Morgan (rob@gruntwork.io)
 
 	// gzip the tar archive
 	var zbuf bytes.Buffer
+
 	gzw := gzip.NewWriter(&zbuf)
 	_, gwerr := gzw.Write(buf.Bytes())
 	require.NoError(t, gwerr)

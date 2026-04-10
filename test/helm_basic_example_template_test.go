@@ -39,6 +39,7 @@ func TestHelmBasicExampleTemplateRenderedDeployment(t *testing.T) {
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-basic-example")
 	releaseName := "helm-basic"
+
 	require.NoError(t, err)
 
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication or helm home.
@@ -75,8 +76,8 @@ func TestHelmBasicExampleTemplateRenderedDeployment(t *testing.T) {
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
 	expectedContainerImage := "nginx:1.15.8"
 	deploymentContainers := deployment.Spec.Template.Spec.Containers
-	require.Equal(t, len(deploymentContainers), 1)
-	require.Equal(t, deploymentContainers[0].Image, expectedContainerImage)
+	require.Len(t, deploymentContainers, 1)
+	require.Equal(t, expectedContainerImage, deploymentContainers[0].Image)
 }
 
 // An example of how to verify required values for a helm chart.
@@ -86,6 +87,7 @@ func TestHelmBasicExampleTemplateRequiredTemplateArgs(t *testing.T) {
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-basic-example")
 	releaseName := "helm-basic"
+
 	require.NoError(t, err)
 
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication, helm home, or
@@ -97,16 +99,16 @@ func TestHelmBasicExampleTemplateRequiredTemplateArgs(t *testing.T) {
 	// in the test output. In this case, each test case will be a complete values input except for one of the required
 	// values missing, to test that neglecting a required value will cause the template rendering to fail.
 	testCases := []struct {
-		name   string
 		values map[string]string
+		name   string
 	}{
 		{
-			"MissingContainerImageRepo",
-			map[string]string{"containerImageTag": "1.15.8"},
+			values: map[string]string{"containerImageTag": "1.15.8"},
+			name:   "MissingContainerImageRepo",
 		},
 		{
-			"MissingContainerImageTag",
-			map[string]string{"containerImageRepo": "nginx"},
+			values: map[string]string{"containerImageRepo": "nginx"},
+			name:   "MissingContainerImageTag",
 		},
 	}
 

@@ -10,7 +10,6 @@
 package test_test
 
 import (
-	"fmt"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -33,7 +32,7 @@ func TestKubernetesRestConfigBasicExampleConfig(t *testing.T) {
 	// To ensure we can reuse the resource config on the same cluster to test different scenarios, we setup a unique
 	// namespace for the resources for this test.
 	// Note that namespaces must be lowercase.
-	namespaceName := fmt.Sprintf("kubernetes-basic-example-%s", strings.ToLower(random.UniqueID()))
+	namespaceName := "kubernetes-basic-example-" + strings.ToLower(random.UniqueID())
 
 	usr, err := user.Current()
 	if err != nil {
@@ -67,5 +66,5 @@ func TestKubernetesRestConfigBasicExampleConfig(t *testing.T) {
 	// This will get the service resource and verify that it exists and was retrieved successfully. This function will
 	// fail the test if the there is an error retrieving the service resource from Kubernetes.
 	service := k8s.GetService(t, options, "nginx-service")
-	require.Equal(t, service.Name, "nginx-service")
+	require.Equal(t, "nginx-service", service.Name)
 }

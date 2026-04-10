@@ -6,9 +6,10 @@
 // `connection refused` errors from `minikube`. To avoid overloading the system, we run the kubernetes tests and helm
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,8 +24,8 @@ import (
 func TestGetDaemonSetEReturnsErrorForNonExistantDaemonSet(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "")
-	_, err := GetDaemonSetE(t, options, "sample-ds")
+	options := k8s.NewKubectlOptions("", "", "")
+	_, err := k8s.GetDaemonSetE(t, options, "sample-ds")
 	require.Error(t, err)
 }
 
@@ -32,13 +33,14 @@ func TestGetDaemonSetEReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_DAEMONSET_YAML_TEMPLATE, uniqueID, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(exampleDaemonSetYAMLTemplate, uniqueID, uniqueID)
 
-	daemonSet := GetDaemonSet(t, options, "sample-ds")
-	require.Equal(t, daemonSet.Name, "sample-ds")
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	daemonSet := k8s.GetDaemonSet(t, options, "sample-ds")
+	require.Equal(t, "sample-ds", daemonSet.Name)
 	require.Equal(t, daemonSet.Namespace, uniqueID)
 }
 
@@ -46,20 +48,21 @@ func TestListDaemonSetsReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_DAEMONSET_YAML_TEMPLATE, uniqueID, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(exampleDaemonSetYAMLTemplate, uniqueID, uniqueID)
 
-	daemonSets := ListDaemonSets(t, options, metav1.ListOptions{})
-	require.Equal(t, len(daemonSets), 1)
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	daemonSets := k8s.ListDaemonSets(t, options, metav1.ListOptions{})
+	require.Len(t, daemonSets, 1)
 
 	daemonSet := daemonSets[0]
-	require.Equal(t, daemonSet.Name, "sample-ds")
+	require.Equal(t, "sample-ds", daemonSet.Name)
 	require.Equal(t, daemonSet.Namespace, uniqueID)
 }
 
-const EXAMPLE_DAEMONSET_YAML_TEMPLATE = `---
+const exampleDaemonSetYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:

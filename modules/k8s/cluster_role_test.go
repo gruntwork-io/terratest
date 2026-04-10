@@ -7,9 +7,10 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
+	"github.com/gruntwork-io/terratest/modules/k8s"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,23 +19,24 @@ import (
 func TestGetClusterRoleEReturnsErrorForNonExistantClusterRole(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	_, err := GetClusterRoleE(t, options, "non-existing-role")
+	options := k8s.NewKubectlOptions("", "", "default")
+	_, err := k8s.GetClusterRoleE(t, options, "non-existing-role")
 	require.Error(t, err)
 }
 
 func TestGetClusterRoleEReturnsCorrectClusterRoleInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	defer KubectlDeleteFromString(t, options, EXAMPLE_CLUSTER_ROLE_YAML_TEMPLATE)
-	KubectlApplyFromString(t, options, EXAMPLE_CLUSTER_ROLE_YAML_TEMPLATE)
+	options := k8s.NewKubectlOptions("", "", "default")
+	defer k8s.KubectlDeleteFromString(t, options, exampleClusterRoleYAMLTemplate)
 
-	role := GetClusterRole(t, options, "terratest-cluster-role")
-	require.Equal(t, role.Name, "terratest-cluster-role")
+	k8s.KubectlApplyFromString(t, options, exampleClusterRoleYAMLTemplate)
+
+	role := k8s.GetClusterRole(t, options, "terratest-cluster-role")
+	require.Equal(t, "terratest-cluster-role", role.Name)
 }
 
-const EXAMPLE_CLUSTER_ROLE_YAML_TEMPLATE = `---
+const exampleClusterRoleYAMLTemplate = `---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

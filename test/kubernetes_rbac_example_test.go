@@ -26,8 +26,10 @@ func TestKubernetesRBACExample(t *testing.T) {
 	t.Parallel()
 
 	// These are pulled from the kubernetes resource config
-	const serviceAccountName = "terratest-rbac-example-service-account"
-	const namespaceName = "terratest-rbac-example-namespace"
+	const (
+		serviceAccountName = "terratest-rbac-example-service-account"
+		namespaceName      = "terratest-rbac-example-namespace"
+	)
 
 	// Path to the Kubernetes resource config we will test
 	kubeResourcePath, err := filepath.Abs("../examples/kubernetes-rbac-example/namespace-service-account.yml")
@@ -37,6 +39,7 @@ func TestKubernetesRBACExample(t *testing.T) {
 	// entries to be able to add a new authentication option.
 	tmpConfigPath := k8s.CopyHomeKubeConfigToTemp(t)
 	defer os.Remove(tmpConfigPath)
+
 	options := k8s.NewKubectlOptions("", tmpConfigPath, namespaceName)
 
 	// At the end of the test, run `kubectl delete -f RESOURCE_CONFIG` to clean up any resources that were created.

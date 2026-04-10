@@ -6,6 +6,7 @@
 package test_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -58,7 +59,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 	retry.DoWithRetry(t, "Attempting to fetch Instances from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
 		instances, err := instanceGroup.GetInstancesE(t, projectId)
 		if err != nil {
-			return "", fmt.Errorf("Failed to get Instances: %s", err)
+			return "", fmt.Errorf("Failed to get Instances: %w", err)
 		}
 
 		if len(instances) != clusterSize {
@@ -72,7 +73,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 	retry.DoWithRetry(t, "Attempting to fetch Public IP addresses from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
 		ips, err := instanceGroup.GetPublicIPsE(t, projectId)
 		if err != nil {
-			return "", fmt.Errorf("Failed to get public IPs from Instance Group")
+			return "", errors.New("Failed to get public IPs from Instance Group")
 		}
 
 		if len(ips) != clusterSize {

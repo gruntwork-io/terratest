@@ -11,7 +11,6 @@ package test_test
 
 import (
 	"crypto/tls"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -66,7 +65,7 @@ func TestKubernetesBasicExampleServiceCheck(t *testing.T) {
 	// response.
 	http_helper.HttpGetWithRetryWithCustomValidation(
 		t,
-		fmt.Sprintf("http://%s", endpoint),
+		"http://"+endpoint,
 		&tlsConfig,
 		30,
 		10*time.Second,

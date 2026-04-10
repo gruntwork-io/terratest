@@ -6,6 +6,7 @@
 package test_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -32,10 +33,10 @@ func TestTerraformGcpExample(t *testing.T) {
 	zone := "us-east1-b"
 
 	// Give the example bucket a unique name so we can distinguish it from any other bucket in your GCP account
-	expectedBucketName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueID()))
+	expectedBucketName := "terratest-gcp-example-" + strings.ToLower(random.UniqueID())
 
 	// Also give the example instance a unique name
-	expectedInstanceName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueID()))
+	expectedInstanceName := "terratest-gcp-example-" + strings.ToLower(random.UniqueID())
 
 	// website::tag::1::Configure Terraform setting path to Terraform code, bucket name, and instance name. Construct
 	// the terraform options with default retryable errors to handle the most common retryable errors in terraform
@@ -64,7 +65,7 @@ func TestTerraformGcpExample(t *testing.T) {
 	instanceName := terraform.Output(t, terraformOptions, "instance_name")
 
 	// website::tag::3::Verify that the new bucket url matches the expected url
-	expectedURL := fmt.Sprintf("gs://%s", expectedBucketName)
+	expectedURL := "gs://" + expectedBucketName
 	assert.Equal(t, expectedURL, bucketURL)
 
 	// Verify that the Storage Bucket exists
@@ -88,8 +89,9 @@ func TestTerraformGcpExample(t *testing.T) {
 
 		testingTag, containsTestingTag := instanceLabels["testing"]
 		actualText := strings.TrimSpace(testingTag)
+
 		if !containsTestingTag {
-			return "", fmt.Errorf("Expected the tag 'testing' to exist")
+			return "", errors.New("Expected the tag 'testing' to exist")
 		}
 
 		if actualText != expectedText {

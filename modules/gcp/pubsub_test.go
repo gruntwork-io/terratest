@@ -3,6 +3,7 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
+//nolint:testpackage // uses unexported newPubSubClient
 package gcp
 
 import (
@@ -20,8 +21,8 @@ func TestAssertTopicExistsNoFalseNegative(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
-	logger.Logf(t, "Creating Pub/Sub topic %s to verify existence check works", topicName)
+	topicName := "pubsub-topic-" + random.UniqueID()
+	logger.Default.Logf(t, "Creating Pub/Sub topic %s to verify existence check works", topicName)
 
 	CreateTopicContext(t, context.Background(), projectID, topicName)
 	defer DeleteTopicContext(t, context.Background(), projectID, topicName)
@@ -33,8 +34,8 @@ func TestAssertTopicExistsNoFalsePositive(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
-	logger.Logf(t, "Checking that non-existent Pub/Sub topic %s returns an error", topicName)
+	topicName := "pubsub-topic-" + random.UniqueID()
+	logger.Default.Logf(t, "Checking that non-existent Pub/Sub topic %s returns an error", topicName)
 
 	err := AssertTopicExistsContextE(t, context.Background(), projectID, topicName)
 	require.Error(t, err, "Expected an error for non-existent Pub/Sub topic, but got none")
@@ -44,9 +45,9 @@ func TestAssertSubscriptionExistsNoFalseNegative(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
-	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
-	logger.Logf(t, "Creating Pub/Sub topic %s and subscription %s to verify existence check works", topicName, subscriptionName)
+	topicName := "pubsub-topic-" + random.UniqueID()
+	subscriptionName := "pubsub-sub-" + random.UniqueID()
+	logger.Default.Logf(t, "Creating Pub/Sub topic %s and subscription %s to verify existence check works", topicName, subscriptionName)
 
 	CreateTopicContext(t, context.Background(), projectID, topicName)
 	defer DeleteTopicContext(t, context.Background(), projectID, topicName)
@@ -61,8 +62,8 @@ func TestAssertSubscriptionExistsNoFalsePositive(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
-	logger.Logf(t, "Checking that non-existent Pub/Sub subscription %s returns an error", subscriptionName)
+	subscriptionName := "pubsub-sub-" + random.UniqueID()
+	logger.Default.Logf(t, "Checking that non-existent Pub/Sub subscription %s returns an error", subscriptionName)
 
 	err := AssertSubscriptionExistsContextE(t, context.Background(), projectID, subscriptionName)
 	require.Error(t, err, "Expected an error for non-existent Pub/Sub subscription, but got none")
@@ -72,9 +73,9 @@ func TestAssertTopicAndSubscriptionExist(t *testing.T) {
 	t.Parallel()
 
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
-	subscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
-	logger.Logf(t, "Creating Pub/Sub topic %s and subscription %s", topicName, subscriptionName)
+	topicName := "pubsub-topic-" + random.UniqueID()
+	subscriptionName := "pubsub-sub-" + random.UniqueID()
+	logger.Default.Logf(t, "Creating Pub/Sub topic %s and subscription %s", topicName, subscriptionName)
 
 	CreateTopicContext(t, context.Background(), projectID, topicName)
 	defer DeleteTopicContext(t, context.Background(), projectID, topicName)
@@ -88,6 +89,7 @@ func TestAssertTopicAndSubscriptionExist(t *testing.T) {
 	// Verify subscription is linked to the correct topic
 	client, err := newPubSubClient(context.Background(), projectID)
 	require.NoError(t, err)
+
 	defer func() { _ = client.Close() }()
 
 	cfg, err := client.Subscription(subscriptionName).Config(context.Background())

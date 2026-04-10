@@ -6,7 +6,6 @@
 package test_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp"
@@ -24,8 +23,8 @@ func TestTerraformGcpPubSubExample(t *testing.T) {
 
 	// Create random unique names for our Pub/Sub resources
 	// so multiple tests running simultaneously don't collide.
-	expectedTopicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
-	expectedSubscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
+	expectedTopicName := "pubsub-topic-" + random.UniqueID()
+	expectedSubscriptionName := "pubsub-sub-" + random.UniqueID()
 
 	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-pubsub-example")
 

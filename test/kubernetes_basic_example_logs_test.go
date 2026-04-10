@@ -53,11 +53,13 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	// Wait for at least 1 Pod to be ready from the DaemonSet
 	retries := 10
 	sleep := time.Second * 1
+
 	for i := 1; i < retries; i++ {
 		podsReady := k8s.GetDaemonSet(t, options, "podinfo-deamonset").Status.NumberReady
 		if podsReady > 0 {
 			break
 		}
+
 		time.Sleep(sleep)
 	}
 
@@ -69,7 +71,7 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	pods := k8s.ListPods(t, options, *listOptions)
 
 	// Check that we did not timeout waiting for the Pod of the DaemonSet to be ready
-	require.Greater(t, len(pods), 0)
+	require.NotEmpty(t, pods)
 
 	pod := pods[0]
 
