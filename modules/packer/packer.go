@@ -18,6 +18,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/go-version"
+	"github.com/stretchr/testify/require"
 )
 
 // ErrArtifactIDNotFound is returned when the Packer output does not contain an artifact ID.
@@ -50,25 +51,13 @@ type Options struct {
 	DisableTemporaryPluginPath bool              // If set, do not use a temporary directory for Packer plugins.
 }
 
-// BuildArtifacts can take a map of identifierName <-> Options and then parallelize
-// the packer builds. Once all the packer builds have completed a map of identifierName <-> generated identifier
-// is returned. The identifierName can be anything you want, it is only used so that you can
-// know which generated artifact is which.
-func BuildArtifacts(t testing.TestingT, artifactNameToOptions map[string]*Options) map[string]string {
-	result, err := BuildArtifactsE(t, artifactNameToOptions)
-	if err != nil {
-		t.Fatalf("Error building artifacts: %s", err.Error())
-	}
-
-	return result
-}
-
-// BuildArtifactsE can take a map of identifierName <-> Options and then parallelize
+// BuildArtifactsContextE can take a map of identifierName <-> Options and then parallelize
 // the packer builds. Once all the packer builds have completed a map of identifierName <-> generated identifier
 // is returned. If any artifact fails to build, the errors are accumulated and returned
 // as a MultiError. The identifierName can be anything you want, it is only used so that you can
 // know which generated artifact is which.
-func BuildArtifactsE(t testing.TestingT, artifactNameToOptions map[string]*Options) (map[string]string, error) {
+// The ctx parameter supports cancellation and timeouts.
+func BuildArtifactsContextE(t testing.TestingT, ctx context.Context, artifactNameToOptions map[string]*Options) (map[string]string, error) {
 	var waitForArtifacts sync.WaitGroup
 
 	waitForArtifacts.Add(len(artifactNameToOptions))
@@ -76,16 +65,21 @@ func BuildArtifactsE(t testing.TestingT, artifactNameToOptions map[string]*Optio
 	artifactNameToArtifactID := map[string]string{}
 	errorsOccurred := new(multierror.Error)
 
+	var mu sync.Mutex
+
 	for artifactName, curOptions := range artifactNameToOptions {
 		go func() {
 			defer waitForArtifacts.Done()
 
-			artifactID, err := BuildArtifactE(t, curOptions)
+			artifactID, err := BuildArtifactContextE(t, ctx, curOptions)
+
+			mu.Lock()
 			if err != nil {
 				errorsOccurred = multierror.Append(errorsOccurred, err)
 			} else {
 				artifactNameToArtifactID[artifactName] = artifactID
 			}
+			mu.Unlock()
 		}()
 	}
 
@@ -94,18 +88,47 @@ func BuildArtifactsE(t testing.TestingT, artifactNameToOptions map[string]*Optio
 	return artifactNameToArtifactID, errorsOccurred.ErrorOrNil()
 }
 
-// BuildArtifact builds the given Packer template and return the generated Artifact ID.
-func BuildArtifact(t testing.TestingT, options *Options) string {
-	artifactID, err := BuildArtifactE(t, options)
-	if err != nil {
-		t.Fatal(err)
-	}
+// BuildArtifactsContext can take a map of identifierName <-> Options and then parallelize
+// the packer builds. Once all the packer builds have completed a map of identifierName <-> generated identifier
+// is returned. The identifierName can be anything you want, it is only used so that you can
+// know which generated artifact is which.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func BuildArtifactsContext(t testing.TestingT, ctx context.Context, artifactNameToOptions map[string]*Options) map[string]string {
+	t.Helper()
 
-	return artifactID
+	result, err := BuildArtifactsContextE(t, ctx, artifactNameToOptions)
+	require.NoError(t, err)
+
+	return result
 }
 
-// BuildArtifactE builds the given Packer template and return the generated Artifact ID.
-func BuildArtifactE(t testing.TestingT, options *Options) (string, error) {
+// BuildArtifacts can take a map of identifierName <-> Options and then parallelize
+// the packer builds. Once all the packer builds have completed a map of identifierName <-> generated identifier
+// is returned. The identifierName can be anything you want, it is only used so that you can
+// know which generated artifact is which.
+//
+// Deprecated: Use [BuildArtifactsContext] instead.
+func BuildArtifacts(t testing.TestingT, artifactNameToOptions map[string]*Options) map[string]string {
+	t.Helper()
+
+	return BuildArtifactsContext(t, context.Background(), artifactNameToOptions)
+}
+
+// BuildArtifactsE can take a map of identifierName <-> Options and then parallelize
+// the packer builds. Once all the packer builds have completed a map of identifierName <-> generated identifier
+// is returned. If any artifact fails to build, the errors are accumulated and returned
+// as a MultiError. The identifierName can be anything you want, it is only used so that you can
+// know which generated artifact is which.
+//
+// Deprecated: Use [BuildArtifactsContextE] instead.
+func BuildArtifactsE(t testing.TestingT, artifactNameToOptions map[string]*Options) (map[string]string, error) {
+	return BuildArtifactsContextE(t, context.Background(), artifactNameToOptions)
+}
+
+// BuildArtifactContextE builds the given Packer template and return the generated Artifact ID.
+// The ctx parameter supports cancellation and timeouts.
+func BuildArtifactContextE(t testing.TestingT, ctx context.Context, options *Options) (string, error) {
 	options.Logger.Logf(t, "Running Packer to generate a custom artifact for template %s", options.Template)
 
 	// By default, we download packer plugins to a temporary directory rather than use the global plugin path.
@@ -132,7 +155,7 @@ func BuildArtifactE(t testing.TestingT, options *Options) (string, error) {
 		defer func() { _ = os.RemoveAll(pluginDir) }()
 	}
 
-	err := packerInit(t, options)
+	err := packerInit(t, ctx, options)
 	if err != nil {
 		return "", err
 	}
@@ -147,7 +170,7 @@ func BuildArtifactE(t testing.TestingT, options *Options) (string, error) {
 	description := fmt.Sprintf("%s %v", cmd.Command, cmd.Args)
 
 	output, err := retry.DoWithRetryableErrorsE(t, description, options.RetryableErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
-		return shell.RunCommandContextAndGetOutputE(t, context.Background(), &cmd)
+		return shell.RunCommandContextAndGetOutputE(t, ctx, &cmd)
 	})
 	if err != nil {
 		return "", err
@@ -156,18 +179,48 @@ func BuildArtifactE(t testing.TestingT, options *Options) (string, error) {
 	return ExtractArtifactID(output)
 }
 
+// BuildArtifactContext builds the given Packer template and return the generated Artifact ID.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func BuildArtifactContext(t testing.TestingT, ctx context.Context, options *Options) string {
+	t.Helper()
+
+	result, err := BuildArtifactContextE(t, ctx, options)
+	require.NoError(t, err)
+
+	return result
+}
+
+// BuildArtifact builds the given Packer template and return the generated Artifact ID.
+//
+// Deprecated: Use [BuildArtifactContext] instead.
+func BuildArtifact(t testing.TestingT, options *Options) string {
+	t.Helper()
+
+	return BuildArtifactContext(t, context.Background(), options)
+}
+
+// BuildArtifactE builds the given Packer template and return the generated Artifact ID.
+//
+// Deprecated: Use [BuildArtifactContextE] instead.
+func BuildArtifactE(t testing.TestingT, options *Options) (string, error) {
+	return BuildArtifactContextE(t, context.Background(), options)
+}
+
 // BuildAmi builds the given Packer template and return the generated AMI ID.
 //
-// Deprecated: Use BuildArtifact instead.
+// Deprecated: Use [BuildArtifactContext] instead.
 func BuildAmi(t testing.TestingT, options *Options) string {
-	return BuildArtifact(t, options)
+	t.Helper()
+
+	return BuildArtifactContext(t, context.Background(), options)
 }
 
 // BuildAmiE builds the given Packer template and return the generated AMI ID.
 //
-// Deprecated: Use BuildArtifactE instead.
+// Deprecated: Use [BuildArtifactContextE] instead.
 func BuildAmiE(t testing.TestingT, options *Options) (string, error) {
-	return BuildArtifactE(t, options)
+	return BuildArtifactContextE(t, context.Background(), options)
 }
 
 // artifactIDMatchLen is the expected number of submatches (full match + capture group)
@@ -197,7 +250,7 @@ func ExtractArtifactID(packerLogOutput string) (string, error) {
 }
 
 // hasPackerInit checks if the local version of Packer supports the init command.
-func hasPackerInit(t testing.TestingT, options *Options) (bool, error) {
+func hasPackerInit(t testing.TestingT, ctx context.Context, options *Options) (bool, error) {
 	// The init command was introduced in Packer 1.7.0
 	const packerInitVersion = "1.7.0"
 
@@ -213,7 +266,7 @@ func hasPackerInit(t testing.TestingT, options *Options) (bool, error) {
 		WorkingDir: options.WorkingDir,
 	}
 
-	versionCmdOutput, err := shell.RunCommandContextAndGetOutputE(t, context.Background(), &cmd)
+	versionCmdOutput, err := shell.RunCommandContextAndGetOutputE(t, ctx, &cmd)
 	if err != nil {
 		return false, err
 	}
@@ -233,8 +286,8 @@ func hasPackerInit(t testing.TestingT, options *Options) (bool, error) {
 }
 
 // packerInit runs 'packer init' if it is supported by the local packer.
-func packerInit(t testing.TestingT, options *Options) error {
-	hasInit, err := hasPackerInit(t, options)
+func packerInit(t testing.TestingT, ctx context.Context, options *Options) error {
+	hasInit, err := hasPackerInit(t, ctx, options)
 	if err != nil {
 		return err
 	}
@@ -260,7 +313,7 @@ func packerInit(t testing.TestingT, options *Options) error {
 	description := "Running Packer init"
 
 	_, err = retry.DoWithRetryableErrorsE(t, description, options.RetryableErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
-		return shell.RunCommandContextAndGetOutputE(t, context.Background(), &cmd)
+		return shell.RunCommandContextAndGetOutputE(t, ctx, &cmd)
 	})
 
 	return err
@@ -324,21 +377,10 @@ type packerManifestBuildFile struct {
 	Size int64  `json:"size"`
 }
 
-// GetArtifactIDFromManifestBuildName returns the artifact id from a build name contained in the manifest file.
+// GetArtifactIDFromManifestBuildNameContextE returns the artifact id from a build name contained in the manifest file.
 // See https://developer.hashicorp.com/packer/docs/post-processors/manifest for more info.
-// If the build name is not found, it will fail the test.
-func GetArtifactIDFromManifestBuildName(t testing.TestingT, manifestPath string, buildName string) string {
-	artifactID, err := GetArtifactIDFromManifestBuildNameE(t, manifestPath, buildName)
-	if err != nil {
-		t.Fatalf("failed to get artifact id from manifest build name: %s", err)
-	}
-
-	return artifactID
-}
-
-// GetArtifactIDFromManifestBuildNameE returns the artifact id from a build name contained in the manifest file.
-// See https://developer.hashicorp.com/packer/docs/post-processors/manifest for more info.
-func GetArtifactIDFromManifestBuildNameE(t testing.TestingT, manifestPath string, buildName string) (string, error) {
+// The ctx parameter is accepted for API consistency with other Context functions.
+func GetArtifactIDFromManifestBuildNameContextE(t testing.TestingT, ctx context.Context, manifestPath string, buildName string) (string, error) {
 	b, err := os.ReadFile(manifestPath)
 	if err != nil {
 		return "", fmt.Errorf("reading manifest file: %w", err)
@@ -357,4 +399,36 @@ func GetArtifactIDFromManifestBuildNameE(t testing.TestingT, manifestPath string
 	}
 
 	return "", &BuildNameNotFoundError{BuildName: buildName, ManifestPath: manifestPath}
+}
+
+// GetArtifactIDFromManifestBuildNameContext returns the artifact id from a build name contained in the manifest file.
+// See https://developer.hashicorp.com/packer/docs/post-processors/manifest for more info.
+// This function will fail the test if there is an error.
+// The ctx parameter is accepted for API consistency with other Context functions.
+func GetArtifactIDFromManifestBuildNameContext(t testing.TestingT, ctx context.Context, manifestPath string, buildName string) string {
+	t.Helper()
+
+	result, err := GetArtifactIDFromManifestBuildNameContextE(t, ctx, manifestPath, buildName)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetArtifactIDFromManifestBuildName returns the artifact id from a build name contained in the manifest file.
+// See https://developer.hashicorp.com/packer/docs/post-processors/manifest for more info.
+// If the build name is not found, it will fail the test.
+//
+// Deprecated: Use [GetArtifactIDFromManifestBuildNameContext] instead.
+func GetArtifactIDFromManifestBuildName(t testing.TestingT, manifestPath string, buildName string) string {
+	t.Helper()
+
+	return GetArtifactIDFromManifestBuildNameContext(t, context.Background(), manifestPath, buildName)
+}
+
+// GetArtifactIDFromManifestBuildNameE returns the artifact id from a build name contained in the manifest file.
+// See https://developer.hashicorp.com/packer/docs/post-processors/manifest for more info.
+//
+// Deprecated: Use [GetArtifactIDFromManifestBuildNameContextE] instead.
+func GetArtifactIDFromManifestBuildNameE(t testing.TestingT, manifestPath string, buildName string) (string, error) {
+	return GetArtifactIDFromManifestBuildNameContextE(t, context.Background(), manifestPath, buildName)
 }

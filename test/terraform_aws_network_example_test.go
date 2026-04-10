@@ -14,7 +14,7 @@ func TestTerraformAwsNetworkExample(t *testing.T) {
 	t.Parallel()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Give the VPC and the subnets correct CIDRs
 	vpcCidr := "10.10.0.0/16"
@@ -47,11 +47,11 @@ func TestTerraformAwsNetworkExample(t *testing.T) {
 	privateSubnetID := terraform.OutputContext(t, t.Context(), terraformOptions, "private_subnet_id")
 	vpcID := terraform.OutputContext(t, t.Context(), terraformOptions, "main_vpc_id")
 
-	subnets := aws.GetSubnetsForVpc(t, vpcID, awsRegion)
+	subnets := aws.GetSubnetsForVpcContext(t, t.Context(), vpcID, awsRegion)
 
 	require.Len(t, subnets, 2)
 	// Verify if the network that is supposed to be public is really public
-	assert.True(t, aws.IsPublicSubnet(t, publicSubnetID, awsRegion))
+	assert.True(t, aws.IsPublicSubnetContext(t, t.Context(), publicSubnetID, awsRegion))
 	// Verify if the network that is supposed to be private is really private
-	assert.False(t, aws.IsPublicSubnet(t, privateSubnetID, awsRegion))
+	assert.False(t, aws.IsPublicSubnetContext(t, t.Context(), privateSubnetID, awsRegion))
 }

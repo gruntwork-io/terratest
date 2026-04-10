@@ -35,7 +35,7 @@ func TestCreateBuild(t *testing.T) {
 
 	// Create GCS bucket
 	projectID := GetGoogleProjectIDFromEnvVar(t)
-	id := random.UniqueId()
+	id := random.UniqueID()
 	gsBucketName := "cloud-build-terratest-" + strings.ToLower(id)
 	sampleAppPath := "docker-example.tar.gz"
 	imagePath := fmt.Sprintf("gcr.io/%s/test-image-%s", projectID, strings.ToLower(id))

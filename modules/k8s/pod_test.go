@@ -25,7 +25,7 @@ import (
 func TestListPodsReturnsPodsInNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -49,7 +49,7 @@ func TestGetPodEReturnsErrorForNonExistantPod(t *testing.T) {
 func TestGetPodEReturnsCorrectPodInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -63,7 +63,7 @@ func TestGetPodEReturnsCorrectPodInCorrectNamespace(t *testing.T) {
 func TestWaitUntilNumPodsCreatedReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -75,7 +75,7 @@ func TestWaitUntilNumPodsCreatedReturnsSuccessfully(t *testing.T) {
 func TestWaitUntilPodAvailableReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -87,7 +87,7 @@ func TestWaitUntilPodAvailableReturnsSuccessfully(t *testing.T) {
 func TestWaitUntilPodWithMultipleContainersAvailableReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -99,7 +99,7 @@ func TestWaitUntilPodWithMultipleContainersAvailableReturnsSuccessfully(t *testi
 func TestWaitUntilPodAvailableWithReadinessProbe(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_WITH_READINESS_PROBE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -111,7 +111,7 @@ func TestWaitUntilPodAvailableWithReadinessProbe(t *testing.T) {
 func TestWaitUntilPodAvailableWithFailingReadinessProbe(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_WITH_FAILING_READINESS_PROBE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -267,7 +267,7 @@ func TestIsPodAvailable(t *testing.T) {
 func TestExecPod(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_WITH_MULTIPLE_CONTAINERS_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)

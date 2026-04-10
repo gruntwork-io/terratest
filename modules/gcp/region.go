@@ -9,6 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -37,9 +38,7 @@ func GetRandomRegion(t testing.TestingT, projectID string, approvedRegions []str
 // The ctx parameter supports cancellation and timeouts.
 func GetRandomRegionContext(t testing.TestingT, ctx context.Context, projectID string, approvedRegions []string, forbiddenRegions []string) string {
 	region, err := GetRandomRegionContextE(t, ctx, projectID, approvedRegions, forbiddenRegions)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return region
 }
@@ -102,9 +101,7 @@ func GetRandomZone(t testing.TestingT, projectID string, approvedZones []string,
 // The ctx parameter supports cancellation and timeouts.
 func GetRandomZoneContext(t testing.TestingT, ctx context.Context, projectID string, approvedZones []string, forbiddenZones []string, forbiddenRegions []string) string {
 	zone, err := GetRandomZoneContextE(t, ctx, projectID, approvedZones, forbiddenZones, forbiddenRegions)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return zone
 }
@@ -169,9 +166,7 @@ func GetRandomZoneForRegion(t testing.TestingT, projectID string, region string)
 // The ctx parameter supports cancellation and timeouts.
 func GetRandomZoneForRegionContext(t testing.TestingT, ctx context.Context, projectID string, region string) string {
 	zone, err := GetRandomZoneForRegionContextE(t, ctx, projectID, region)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return zone
 }
@@ -226,9 +221,7 @@ func GetAllGCPRegions(t testing.TestingT, projectID string) []string {
 // The ctx parameter supports cancellation and timeouts.
 func GetAllGCPRegionsContext(t testing.TestingT, ctx context.Context, projectID string) []string {
 	out, err := GetAllGCPRegionsContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }
@@ -280,9 +273,7 @@ func GetAllGCPZones(t testing.TestingT, projectID string) []string {
 // The ctx parameter supports cancellation and timeouts.
 func GetAllGCPZonesContext(t testing.TestingT, ctx context.Context, projectID string) []string {
 	out, err := GetAllGCPZonesContextE(t, ctx, projectID)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return out
 }

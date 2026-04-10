@@ -37,7 +37,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			schemaCheck: func(t *testing.T, dbURL string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
 				t.Helper()
 
-				return aws.GetWhetherSchemaExistsInRdsMySQLInstance(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
+				return aws.GetWhetherSchemaExistsInRdsMySQLInstanceContext(t, t.Context(), dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
 			},
 			expectedOptins: map[struct {
 				opName  string
@@ -59,7 +59,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			schemaCheck: func(t *testing.T, dbURL string, dbPort int32, dbUsername, dbPassword, expectedSchemaName string) bool {
 				t.Helper()
 
-				return aws.GetWhetherSchemaExistsInRdsPostgresInstance(t, dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
+				return aws.GetWhetherSchemaExistsInRdsPostgresInstanceContext(t, t.Context(), dbURL, dbPort, dbUsername, dbPassword, expectedSchemaName)
 			},
 		},
 	}
@@ -76,9 +76,9 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			username := "username"
 			password := "password"
 			// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-			awsRegion := aws.GetRandomStableRegion(t, nil, nil)
-			engineVersion := aws.GetValidEngineVersion(t, awsRegion, tt.engineName, tt.majorEngineVersion)
-			instanceType := aws.GetRecommendedRdsInstanceType(t, awsRegion, tt.engineName, engineVersion, []string{"db.t2.micro", "db.t3.micro", "db.t3.small"})
+			awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
+			engineVersion := aws.GetValidEngineVersionContext(t, t.Context(), awsRegion, tt.engineName, tt.majorEngineVersion)
+			instanceType := aws.GetRecommendedRdsInstanceTypeContext(t, t.Context(), awsRegion, tt.engineName, engineVersion, []string{"db.t2.micro", "db.t3.micro", "db.t3.small"})
 			moduleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-rds-example")
 
 			// Construct the terraform options with default retryable errors to handle the most common retryable errors in
@@ -116,8 +116,8 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			dbInstanceID := terraform.OutputContext(t, t.Context(), terraformOptions, "db_instance_id")
 
 			// Look up the endpoint address and port of the RDS instance
-			address := aws.GetAddressOfRdsInstance(t, dbInstanceID, awsRegion)
-			port := aws.GetPortOfRdsInstance(t, dbInstanceID, awsRegion)
+			address := aws.GetAddressOfRdsInstanceContext(t, t.Context(), dbInstanceID, awsRegion)
+			port := aws.GetPortOfRdsInstanceContext(t, t.Context(), dbInstanceID, awsRegion)
 			schemaExistsInRdsInstance := tt.schemaCheck(t, address, port, username, password, expectedDatabaseName)
 			// Lookup parameter values. All defined values are strings in the API call response
 
@@ -130,11 +130,11 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 
 			// assert expected parameters
 			for k, v := range tt.expectedParameter {
-				assert.Equal(t, v, aws.GetParameterValueForParameterOfRdsInstance(t, k, dbInstanceID, awsRegion))
+				assert.Equal(t, v, aws.GetParameterValueForParameterOfRdsInstanceContext(t, t.Context(), k, dbInstanceID, awsRegion))
 			}
 
 			// assert all parameters
-			params := aws.GetAllParametersOfRdsInstance(t, dbInstanceID, awsRegion)
+			params := aws.GetAllParametersOfRdsInstanceContext(t, t.Context(), dbInstanceID, awsRegion)
 
 			paramNames := map[string]struct{}{}
 			for _, param := range params {
@@ -147,7 +147,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			// assert expected options
 			for k, v := range tt.expectedOptins {
 				// Lookup option values. All defined values are strings in the API call response
-				assert.Equal(t, v, aws.GetOptionSettingForOfRdsInstance(t, k.opName, k.setName, dbInstanceID, awsRegion))
+				assert.Equal(t, v, aws.GetOptionSettingForOfRdsInstanceContext(t, t.Context(), k.opName, k.setName, dbInstanceID, awsRegion))
 			}
 		})
 	}

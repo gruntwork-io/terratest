@@ -31,7 +31,7 @@ func TestGetReplicaSetEReturnsError(t *testing.T) {
 func TestGetReplicaSets(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_REPLICASET_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -45,7 +45,7 @@ func TestGetReplicaSets(t *testing.T) {
 func TestListReplicaSets(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_REPLICASET_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)

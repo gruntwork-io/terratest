@@ -28,7 +28,7 @@ func TestTerraformScpExample(t *testing.T) {
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
-		aws.DeleteEC2KeyPair(t, keyPair)
+		aws.DeleteEC2KeyPairContext(t, t.Context(), keyPair)
 	})
 
 	// Deploy the example
@@ -80,14 +80,14 @@ func createTerraformOptions(t *testing.T, exampleFolder string) (*terraform.Opti
 	instanceName := "terratest-asg-scp-example-" + uniqueID
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create an EC2 KeyPair that we can use for SSH access
 	keyPairName := "terratest-asg-scp-example-" + uniqueID
-	keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, keyPairName)
+	keyPair := aws.CreateAndImportEC2KeyPairContext(t, t.Context(), awsRegion, keyPairName)
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -113,8 +113,8 @@ func testScpDirFromHost(t *testing.T, terraformOptions *terraform.Options, keyPa
 	// Run `terraform output` to get the value of an output variable
 	awsRegion := terraformOptions.Vars["aws_region"].(string)
 	asgName := terraform.OutputContext(t, t.Context(), terraformOptions, "asg_name")
-	instanceIds := aws.GetInstanceIdsForAsg(t, asgName, awsRegion)
-	publicInstanceIP := aws.GetPublicIPOfEc2Instance(t, instanceIds[0], awsRegion)
+	instanceIds := aws.GetInstanceIdsForAsgContext(t, t.Context(), asgName, awsRegion)
+	publicInstanceIP := aws.GetPublicIPOfEc2InstanceContext(t, t.Context(), instanceIds[0], awsRegion)
 
 	// We're going to try to SSH to the instance IP, using the Key Pair we created earlier, and the user "ubuntu",
 	// as we know the Instance is running an Ubuntu AMI that has such a user
@@ -188,8 +188,8 @@ func testScpFromHost(t *testing.T, terraformOptions *terraform.Options, keyPair 
 	// Run `terraform output` to get the value of an output variable
 	awsRegion := terraformOptions.Vars["aws_region"].(string)
 	asgName := terraform.OutputContext(t, t.Context(), terraformOptions, "asg_name")
-	instanceIds := aws.GetInstanceIdsForAsg(t, asgName, awsRegion)
-	publicInstanceIP := aws.GetPublicIPOfEc2Instance(t, instanceIds[0], awsRegion)
+	instanceIds := aws.GetInstanceIdsForAsgContext(t, t.Context(), asgName, awsRegion)
+	publicInstanceIP := aws.GetPublicIPOfEc2InstanceContext(t, t.Context(), instanceIds[0], awsRegion)
 
 	// We're going to try to SSH to the instance IP, using the Key Pair we created earlier, and the user "ubuntu",
 	// as we know the Instance is running an Ubuntu AMI that has such a user
@@ -235,8 +235,8 @@ func testScpFromAsg(t *testing.T, terraformOptions *terraform.Options, keyPair *
 	// Run `terraform output` to get the value of an output variable
 	awsRegion := terraformOptions.Vars["aws_region"].(string)
 	asgName := terraform.OutputContext(t, t.Context(), terraformOptions, "asg_name")
-	instanceIds := aws.GetInstanceIdsForAsg(t, asgName, awsRegion)
-	publicInstanceIP := aws.GetPublicIPOfEc2Instance(t, instanceIds[0], awsRegion)
+	instanceIds := aws.GetInstanceIdsForAsgContext(t, t.Context(), asgName, awsRegion)
+	publicInstanceIP := aws.GetPublicIPOfEc2InstanceContext(t, t.Context(), instanceIds[0], awsRegion)
 
 	// This is where we'll store the logs from the remote server
 	localDestinationDirectory := filepath.Join(exampleFolder, "logs")
@@ -265,7 +265,7 @@ func testScpFromAsg(t *testing.T, terraformOptions *terraform.Options, keyPair *
 	}
 
 	// Go and SCP the test file from EC2 instance
-	aws.FetchFilesFromAsgsPE(t, awsRegion, &spec)
+	aws.FetchFilesFromAsgsPContextE(t, t.Context(), awsRegion, &spec)
 
 	// Clean up the temp file we created
 	defer os.RemoveAll(localDestinationDirectory)

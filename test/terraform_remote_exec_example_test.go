@@ -30,7 +30,7 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 
 		// destroy terraform resources and delete ec2 key pair
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
-		aws.DeleteEC2KeyPair(t, keyPair)
+		aws.DeleteEC2KeyPairContext(t, t.Context(), keyPair)
 
 		// remove testFile, if it exists
 		testFile := filepath.Join(terraformDirectory, "public-ip")
@@ -51,14 +51,14 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 		instanceName := "terratest-remote-exec-example-" + uniqueID
 
 		// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-		awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+		awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 		// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-		instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+		instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 		// Create an EC2 KeyPair that we can use for SSH access
 		keyPairName := "terratest-remote-exec-example-" + uniqueID
-		keyPair := aws.CreateAndImportEC2KeyPair(t, awsRegion, keyPairName)
+		keyPair := aws.CreateAndImportEC2KeyPairContext(t, t.Context(), awsRegion, keyPairName)
 
 		// start an SSH agent, with our key pair added
 		sshAgent := ssh.SSHAgentWithKeyPair(t, t.Context(), keyPair.KeyPair)

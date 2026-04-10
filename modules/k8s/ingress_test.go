@@ -34,7 +34,7 @@ func TestGetIngressEReturnsErrorForNonExistantIngress(t *testing.T) {
 func TestGetIngressEReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -48,7 +48,7 @@ func TestGetIngressEReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 func TestListIngressesReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -65,7 +65,7 @@ func TestListIngressesReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 func TestWaitUntilIngressAvailableReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)

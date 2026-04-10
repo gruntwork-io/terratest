@@ -23,7 +23,7 @@ import (
 func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -52,7 +52,7 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -81,7 +81,7 @@ func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
 func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExamplePodWithServiceYAMLTemplate, uniqueID, uniqueID, uniqueID, uniqueID)
 	t.Cleanup(func() {

@@ -17,7 +17,7 @@ func TestPackerHelloWorldExample(t *testing.T) {
 	}
 
 	// website::tag::2:: Build the Packer template. This template will create a Docker image.
-	packer.BuildArtifact(t, packerOptions)
+	packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
 	// website::tag::3:: Run the Docker image, read the text file from it, and make sure it contains the expected output.
 	opts := &docker.RunOptions{

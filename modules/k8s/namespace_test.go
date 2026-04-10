@@ -23,7 +23,7 @@ import (
 func TestNamespaces(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueId()
+	uniqueId := random.UniqueID()
 	namespaceName := strings.ToLower(uniqueId)
 	options := NewKubectlOptions("", "", namespaceName)
 	CreateNamespace(t, options, namespaceName)
@@ -40,7 +40,7 @@ func TestNamespaces(t *testing.T) {
 func TestNamespaceWithMetadata(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueId()
+	uniqueId := random.UniqueID()
 	namespaceName := strings.ToLower(uniqueId)
 	options := NewKubectlOptions("", "", namespaceName)
 	namespaceLabels := map[string]string{"foo": "bar"}
@@ -65,7 +65,7 @@ func TestNamespaceWithMetadata(t *testing.T) {
 func TestListNamespaces(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueId()
+	uniqueId := random.UniqueID()
 	namespaceName := strings.ToLower(uniqueId)
 	options := NewKubectlOptions("", "", namespaceName)
 

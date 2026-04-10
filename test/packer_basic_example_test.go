@@ -1,7 +1,6 @@
 package test_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -34,10 +33,10 @@ func TestPackerBasicExample(t *testing.T) {
 	t.Parallel()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := terratest_aws.GetRandomStableRegion(t, nil, nil)
+	awsRegion := terratest_aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := terratest_aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// website::tag::1::Read Packer's template and set AWS Region variable.
 	packerOptions := &packer.Options{
@@ -62,24 +61,24 @@ func TestPackerBasicExample(t *testing.T) {
 
 	// website::tag::2::Build artifacts from Packer's template.
 	// Make sure the Packer build completes successfully
-	amiID := packer.BuildArtifact(t, packerOptions)
+	amiID := packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
 	// website::tag::4::Remove AMI after test.
 	// Clean up the AMI after we're done
-	defer terratest_aws.DeleteAmiAndAllSnapshots(t, awsRegion, amiID)
+	defer terratest_aws.DeleteAmiAndAllSnapshotsContext(t, t.Context(), awsRegion, amiID)
 
 	// Check if AMI is shared/not shared with account
 	requestingAccount := terratest_aws.CanonicalAccountID
 	randomAccount := "123456789012" // Random Account
-	ec2Client := terratest_aws.NewEc2Client(t, awsRegion)
+	ec2Client := terratest_aws.NewEc2ClientContext(t, t.Context(), awsRegion)
 	ShareAmi(t, amiID, requestingAccount, ec2Client)
-	accountsWithLaunchPermissions := terratest_aws.GetAccountsWithLaunchPermissionsForAmi(t, awsRegion, amiID)
+	accountsWithLaunchPermissions := terratest_aws.GetAccountsWithLaunchPermissionsForAmiContext(t, t.Context(), awsRegion, amiID)
 	assert.NotContains(t, accountsWithLaunchPermissions, randomAccount)
 	assert.Contains(t, accountsWithLaunchPermissions, requestingAccount)
 
 	// website::tag::3::Check AMI's properties.
 	// Check if AMI is private
-	amiIsPublic := terratest_aws.GetAmiPubliclyAccessible(t, awsRegion, amiID)
+	amiIsPublic := terratest_aws.GetAmiPubliclyAccessibleContext(t, t.Context(), awsRegion, amiID)
 	assert.False(t, amiIsPublic)
 }
 
@@ -90,10 +89,10 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 	t.Parallel()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := terratest_aws.GetRandomStableRegion(t, nil, nil)
+	awsRegion := terratest_aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := terratest_aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create temporary packer variable file to store aws region
 	varFile, err := os.CreateTemp(t.TempDir(), "*.json")
@@ -131,22 +130,22 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 	}
 
 	// Make sure the Packer build completes successfully
-	amiID := packer.BuildArtifact(t, packerOptions)
+	amiID := packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
 	// Clean up the AMI after we're done
-	defer terratest_aws.DeleteAmiAndAllSnapshots(t, awsRegion, amiID)
+	defer terratest_aws.DeleteAmiAndAllSnapshotsContext(t, t.Context(), awsRegion, amiID)
 
 	// Check if AMI is shared/not shared with account
 	requestingAccount := terratest_aws.CanonicalAccountID
 	randomAccount := "123456789012" // Random Account
-	ec2Client := terratest_aws.NewEc2Client(t, awsRegion)
+	ec2Client := terratest_aws.NewEc2ClientContext(t, t.Context(), awsRegion)
 	ShareAmi(t, amiID, requestingAccount, ec2Client)
-	accountsWithLaunchPermissions := terratest_aws.GetAccountsWithLaunchPermissionsForAmi(t, awsRegion, amiID)
+	accountsWithLaunchPermissions := terratest_aws.GetAccountsWithLaunchPermissionsForAmiContext(t, t.Context(), awsRegion, amiID)
 	assert.NotContains(t, accountsWithLaunchPermissions, randomAccount)
 	assert.Contains(t, accountsWithLaunchPermissions, requestingAccount)
 
 	// Check if AMI is private
-	amiIsPublic := terratest_aws.GetAmiPubliclyAccessible(t, awsRegion, amiID)
+	amiIsPublic := terratest_aws.GetAmiPubliclyAccessibleContext(t, t.Context(), awsRegion, amiID)
 	assert.False(t, amiIsPublic)
 }
 
@@ -160,10 +159,10 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-		awsRegion := terratest_aws.GetRandomStableRegion(t, nil, nil)
+		awsRegion := terratest_aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 		// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-		instanceType := terratest_aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+		instanceType := terratest_aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 		packerOptions := &packer.Options{
 			// The path to where the Packer template is located
@@ -188,12 +187,12 @@ func TestPackerMultipleConcurrentAmis(t *testing.T) {
 		identifierToOptions[random.UniqueID()] = packerOptions
 	}
 
-	resultMap := packer.BuildArtifacts(t, identifierToOptions)
+	resultMap := packer.BuildArtifactsContext(t, t.Context(), identifierToOptions)
 
 	// Clean up the AMIs after we're done
 	for key, amiID := range resultMap {
 		awsRegion := identifierToOptions[key].Vars["aws_region"]
-		terratest_aws.DeleteAmiAndAllSnapshots(t, awsRegion, amiID)
+		terratest_aws.DeleteAmiAndAllSnapshotsContext(t, t.Context(), awsRegion, amiID)
 	}
 }
 
@@ -212,7 +211,7 @@ func ShareAmi(t *testing.T, amiID string, accountID string, ec2Client *ec2.Clien
 		},
 	}
 
-	_, err := ec2Client.ModifyImageAttribute(context.Background(), input)
+	_, err := ec2Client.ModifyImageAttribute(t.Context(), input)
 	if err != nil {
 		t.Fatal(err)
 	}

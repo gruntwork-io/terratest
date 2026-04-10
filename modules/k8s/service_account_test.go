@@ -27,7 +27,7 @@ func TestGetServiceAccountWithAuthTokenGetsTokenThatCanBeUsedForAuth(t *testing.
 	tmpConfigPath := CopyHomeKubeConfigToTemp(t)
 
 	// Create a new namespace to work in
-	namespaceName := strings.ToLower(random.UniqueId())
+	namespaceName := strings.ToLower(random.UniqueID())
 
 	options := NewKubectlOptions("", tmpConfigPath, namespaceName)
 
@@ -35,7 +35,7 @@ func TestGetServiceAccountWithAuthTokenGetsTokenThatCanBeUsedForAuth(t *testing.
 	defer DeleteNamespace(t, options, namespaceName)
 
 	// Create service account
-	serviceAccountName := strings.ToLower(random.UniqueId())
+	serviceAccountName := strings.ToLower(random.UniqueID())
 	CreateServiceAccount(t, options, serviceAccountName)
 	token := GetServiceAccountAuthToken(t, options, serviceAccountName)
 	require.NoError(t, AddConfigContextForServiceAccountE(t, options, serviceAccountName, serviceAccountName, token))
@@ -63,7 +63,7 @@ func TestGetServiceAccountEReturnsErrorForNonExistantServiceAccount(t *testing.T
 func TestGetServiceAccountEReturnsCorrectServiceAccountInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_SERVICEACCOUNT_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -77,7 +77,7 @@ func TestGetServiceAccountEReturnsCorrectServiceAccountInCorrectNamespace(t *tes
 func TestCreateServiceAccountECreatesServiceAccountInNamespaceWithGivenName(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	defer DeleteNamespace(t, options, options.Namespace)
 	CreateNamespace(t, options, options.Namespace)

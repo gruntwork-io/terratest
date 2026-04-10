@@ -33,7 +33,7 @@ func TestPackerDockerExampleLocal(t *testing.T) {
 	}
 
 	// website::tag::2::Build the Docker image using Packer
-	packer.BuildArtifact(t, packerOptions)
+	packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
 	serverPort := 8080
 	expectedServerText := fmt.Sprintf("Hello, %s!", random.UniqueID())

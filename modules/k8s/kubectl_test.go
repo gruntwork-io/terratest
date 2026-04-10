@@ -24,7 +24,7 @@ import (
 
 // Test that RunKubectlAndGetOutputE will run kubectl and return the output by running a can-i command call.
 func TestRunKubectlAndGetOutputReturnsOutput(t *testing.T) {
-	namespaceName := fmt.Sprintf("kubectl-test-%s", strings.ToLower(random.UniqueId()))
+	namespaceName := fmt.Sprintf("kubectl-test-%s", strings.ToLower(random.UniqueID()))
 	options := NewKubectlOptions("", "", namespaceName)
 	output, err := RunKubectlAndGetOutputE(t, options, "auth", "can-i", "get", "pods")
 	require.NoError(t, err)

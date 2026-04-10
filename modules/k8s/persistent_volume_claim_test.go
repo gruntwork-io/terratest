@@ -27,7 +27,7 @@ func TestListPersistentVolumeClaimsReturnsPersistentVolumeClaimsInNamespace(t *t
 	t.Parallel()
 
 	pvcName := "test-dummy-pvc"
-	namespace := strings.ToLower(random.UniqueId())
+	namespace := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", namespace)
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -43,7 +43,7 @@ func TestListPersistentVolumeClaimsReturnsPersistentVolumeClaimsInNamespace(t *t
 func TestListPersistentVolumeClaimsReturnsZeroPersistentVolumeClaimsIfNoneCreated(t *testing.T) {
 	t.Parallel()
 
-	namespace := strings.ToLower(random.UniqueId())
+	namespace := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", namespace)
 	CreateNamespace(t, options, namespace)
 	defer DeleteNamespace(t, options, namespace)
@@ -64,7 +64,7 @@ func TestGetPersistentVolumeClaimReturnsCorrectPersistentVolumeClaimInCorrectNam
 	t.Parallel()
 
 	pvcName := "test-dummy-pvc"
-	namespace := strings.ToLower(random.UniqueId())
+	namespace := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", namespace)
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -79,7 +79,7 @@ func TestWaitUntilPersistentVolumeClaimInGivenStatusPhase(t *testing.T) {
 	t.Parallel()
 
 	pvcName := "test-dummy-pvc"
-	namespace := strings.ToLower(random.UniqueId())
+	namespace := strings.ToLower(random.UniqueID())
 	pvcBoundStatusPhase := corev1.ClaimBound
 	options := NewKubectlOptions("", "", namespace)
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
@@ -103,7 +103,7 @@ func TestWaitUntilPersistentVolumeClaimInStatusEReturnsErrorWhenTimesOut(t *test
 
 	pvcName := "test-dummy-pvc"
 	pvcLostStatusPhase := corev1.ClaimLost
-	namespace := strings.ToLower(random.UniqueId())
+	namespace := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", namespace)
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
 	defer KubectlDeleteFromString(t, options, configData)

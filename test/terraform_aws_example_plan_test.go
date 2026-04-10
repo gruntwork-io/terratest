@@ -25,10 +25,10 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 	expectedName := "terratest-aws-example-" + random.UniqueID()
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// website::tag::1::Configure Terraform setting path to Terraform code, EC2 instance name, and AWS Region. We also
 	// configure the options with default retryable errors to handle the most common retryable errors encountered in

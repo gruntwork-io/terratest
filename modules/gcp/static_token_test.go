@@ -42,7 +42,7 @@ func TestStaticTokenClient(t *testing.T) {
 	GetLoginProfile(t, GetGoogleIdentityEmailEnvVar(t))
 	_, err = newGCRAuthenticator()
 	require.NoError(t, err)
-	bucket := "gruntwork-terratest-" + strings.ToLower(random.UniqueId())
+	bucket := "gruntwork-terratest-" + strings.ToLower(random.UniqueID())
 	CreateStorageBucket(t, projectID, bucket, nil)
 	defer DeleteStorageBucket(t, bucket)
 }

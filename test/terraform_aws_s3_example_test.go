@@ -22,7 +22,7 @@ func TestTerraformAwsS3Example(t *testing.T) {
 	expectedEnvironment := "Automated Testing"
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -49,17 +49,17 @@ func TestTerraformAwsS3Example(t *testing.T) {
 	bucketID := terraform.OutputContext(t, t.Context(), terraformOptions, "bucket_id")
 
 	// Verify that our Bucket has versioning enabled
-	actualStatus := aws.GetS3BucketVersioning(t, awsRegion, bucketID)
+	actualStatus := aws.GetS3BucketVersioningContext(t, t.Context(), awsRegion, bucketID)
 	expectedStatus := "Enabled"
 	assert.Equal(t, expectedStatus, actualStatus)
 
 	// Verify that our Bucket has a policy attached
-	aws.AssertS3BucketPolicyExists(t, awsRegion, bucketID)
+	aws.AssertS3BucketPolicyExistsContext(t, t.Context(), awsRegion, bucketID)
 
 	// Verify that our bucket has server access logging TargetBucket set to what's expected
-	loggingTargetBucket := aws.GetS3BucketLoggingTarget(t, awsRegion, bucketID)
+	loggingTargetBucket := aws.GetS3BucketLoggingTargetContext(t, t.Context(), awsRegion, bucketID)
 	expectedLogsTargetBucket := bucketID + "-logs"
-	loggingObjectTargetPrefix := aws.GetS3BucketLoggingTargetPrefix(t, awsRegion, bucketID)
+	loggingObjectTargetPrefix := aws.GetS3BucketLoggingTargetPrefixContext(t, t.Context(), awsRegion, bucketID)
 	expectedLogsTargetPrefix := "TFStateLogs/"
 
 	assert.Equal(t, expectedLogsTargetBucket, loggingTargetBucket)

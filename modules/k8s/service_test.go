@@ -34,7 +34,7 @@ func TestGetServiceEReturnsErrorForNonExistantService(t *testing.T) {
 func TestGetServiceEReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -48,7 +48,7 @@ func TestGetServiceEReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 func TestListServicesReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -65,7 +65,7 @@ func TestListServicesReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 func TestWaitUntilServiceAvailableReturnsSuccessfullyOnNodePortType(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)
@@ -77,7 +77,7 @@ func TestWaitUntilServiceAvailableReturnsSuccessfullyOnNodePortType(t *testing.T
 func TestGetServiceEndpointEReturnsAccessibleEndpointForNodePort(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_DEPLOYMENT_YAML_TEMPLATE, uniqueID, uniqueID, uniqueID)
 	KubectlApplyFromString(t, options, configData)

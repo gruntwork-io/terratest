@@ -70,10 +70,10 @@ func configureTerraformSSHCertificateOptions(t *testing.T, exampleFolder string)
 	instanceName := "terratest-ssh-certificate-example-" + uniqueID
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	awsRegion := aws.GetRandomStableRegion(t, nil, nil)
+	awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 
 	// Some AWS regions are missing certain instance types, so pick an available type based on the region we picked
-	instanceType := aws.GetRecommendedInstanceType(t, awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Create a random ssh certificate
 	k, err := rsa.GenerateKey(rand.Reader, 4096)

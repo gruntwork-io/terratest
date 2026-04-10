@@ -44,18 +44,11 @@ const isDefaultFilterName = "isDefault"
 const isDefaultFilterValue = "true"
 const defaultVPCName = "Default"
 
-// GetDefaultVpc fetches information about the default VPC in the given region.
-func GetDefaultVpc(t testing.TestingT, region string) *Vpc {
-	vpc, err := GetDefaultVpcE(t, region)
-	require.NoError(t, err)
-
-	return vpc
-}
-
-// GetDefaultVpcE fetches information about the default VPC in the given region.
-func GetDefaultVpcE(t testing.TestingT, region string) (*Vpc, error) {
+// GetDefaultVpcContextE fetches information about the default VPC in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetDefaultVpcContextE(t testing.TestingT, ctx context.Context, region string) (*Vpc, error) {
 	defaultVpcFilter := types.Filter{Name: aws.String(isDefaultFilterName), Values: []string{isDefaultFilterValue}}
-	vpcs, err := GetVpcsE(t, []types.Filter{defaultVpcFilter}, region)
+	vpcs, err := GetVpcsContextE(t, ctx, []types.Filter{defaultVpcFilter}, region)
 
 	numVpcs := len(vpcs)
 	if numVpcs != 1 {
@@ -65,18 +58,39 @@ func GetDefaultVpcE(t testing.TestingT, region string) (*Vpc, error) {
 	return vpcs[0], err
 }
 
-// GetVpcByID fetches information about a VPC with given ID in the given region.
-func GetVpcByID(t testing.TestingT, vpcID string, region string) *Vpc {
-	vpc, err := GetVpcByIDE(t, vpcID, region)
+// GetDefaultVpcContext fetches information about the default VPC in the given region.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDefaultVpcContext(t testing.TestingT, ctx context.Context, region string) *Vpc {
+	t.Helper()
+
+	vpc, err := GetDefaultVpcContextE(t, ctx, region)
 	require.NoError(t, err)
 
 	return vpc
 }
 
-// GetVpcByIDE fetches information about a VPC with given ID in the given region.
-func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) {
+// GetDefaultVpc fetches information about the default VPC in the given region.
+//
+// Deprecated: Use [GetDefaultVpcContext] instead.
+func GetDefaultVpc(t testing.TestingT, region string) *Vpc {
+	t.Helper()
+
+	return GetDefaultVpcContext(t, context.Background(), region)
+}
+
+// GetDefaultVpcE fetches information about the default VPC in the given region.
+//
+// Deprecated: Use [GetDefaultVpcContextE] instead.
+func GetDefaultVpcE(t testing.TestingT, region string) (*Vpc, error) {
+	return GetDefaultVpcContextE(t, context.Background(), region)
+}
+
+// GetVpcByIDContextE fetches information about a VPC with given ID in the given region.
+// The ctx parameter supports cancellation and timeouts.
+func GetVpcByIDContextE(t testing.TestingT, ctx context.Context, vpcID string, region string) (*Vpc, error) {
 	vpcIDFilter := types.Filter{Name: aws.String(vpcIDFilterName), Values: []string{vpcID}}
-	vpcs, err := GetVpcsE(t, []types.Filter{vpcIDFilter}, region)
+	vpcs, err := GetVpcsContextE(t, ctx, []types.Filter{vpcIDFilter}, region)
 
 	numVpcs := len(vpcs)
 	if numVpcs != 1 {
@@ -86,14 +100,43 @@ func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) 
 	return vpcs[0], err
 }
 
-// GetVpcsE fetches information about VPCs from given regions limited by filters
-func GetVpcsE(t testing.TestingT, filters []types.Filter, region string) ([]*Vpc, error) {
-	client, err := NewEc2ClientE(t, region)
+// GetVpcByIDContext fetches information about a VPC with given ID in the given region.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetVpcByIDContext(t testing.TestingT, ctx context.Context, vpcID string, region string) *Vpc {
+	t.Helper()
+
+	vpc, err := GetVpcByIDContextE(t, ctx, vpcID, region)
+	require.NoError(t, err)
+
+	return vpc
+}
+
+// GetVpcByID fetches information about a VPC with given ID in the given region.
+//
+// Deprecated: Use [GetVpcByIDContext] instead.
+func GetVpcByID(t testing.TestingT, vpcID string, region string) *Vpc {
+	t.Helper()
+
+	return GetVpcByIDContext(t, context.Background(), vpcID, region)
+}
+
+// GetVpcByIDE fetches information about a VPC with given ID in the given region.
+//
+// Deprecated: Use [GetVpcByIDContextE] instead.
+func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) {
+	return GetVpcByIDContextE(t, context.Background(), vpcID, region)
+}
+
+// GetVpcsContextE fetches information about VPCs from given regions limited by filters
+// The ctx parameter supports cancellation and timeouts.
+func GetVpcsContextE(t testing.TestingT, ctx context.Context, filters []types.Filter, region string) ([]*Vpc, error) {
+	client, err := NewEc2ClientContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
 
-	vpcs, err := client.DescribeVpcs(context.Background(), &ec2.DescribeVpcsInput{Filters: filters})
+	vpcs, err := client.DescribeVpcs(ctx, &ec2.DescribeVpcsInput{Filters: filters})
 	if err != nil {
 		return nil, err
 	}
@@ -106,12 +149,12 @@ func GetVpcsE(t testing.TestingT, filters []types.Filter, region string) ([]*Vpc
 
 		vpcIDFilter := generateVpcIDFilter(aws.ToString(vpc.VpcId))
 
-		subnets, err := GetSubnetsForVpcE(t, region, []types.Filter{vpcIDFilter})
+		subnets, err := GetSubnetsForVpcContextE(t, ctx, region, []types.Filter{vpcIDFilter})
 		if err != nil {
 			return nil, err
 		}
 
-		tags, err := GetTagsForVpcE(t, aws.ToString(vpc.VpcId), region)
+		tags, err := GetTagsForVpcContextE(t, ctx, aws.ToString(vpc.VpcId), region)
 		if err != nil {
 			return nil, err
 		}
@@ -148,6 +191,13 @@ func GetVpcsE(t testing.TestingT, filters []types.Filter, region string) ([]*Vpc
 	return retVal, nil
 }
 
+// GetVpcsE fetches information about VPCs from given regions limited by filters
+//
+// Deprecated: Use [GetVpcsContextE] instead.
+func GetVpcsE(t testing.TestingT, filters []types.Filter, region string) ([]*Vpc, error) {
+	return GetVpcsContextE(t, context.Background(), filters, region)
+}
+
 // FindVPCName extracts the VPC name from its tags (if any). Falls back to "Default" if it's the default VPC or empty
 // string otherwise.
 func FindVPCName(vpc *types.Vpc) string {
@@ -172,47 +222,15 @@ func FindVpcName(vpc types.Vpc) string { //nolint:staticcheck,revive,gocritic //
 	return FindVPCName(&vpc)
 }
 
-// GetSubnetsForVpc gets the subnets in the specified VPC.
-func GetSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
-	vpcIDFilter := generateVpcIDFilter(vpcID)
-
-	subnets, err := GetSubnetsForVpcE(t, region, []types.Filter{vpcIDFilter})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return subnets
-}
-
-// GetAzDefaultSubnetsForVpc gets the default az subnets in the specified VPC.
-func GetAzDefaultSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
-	vpcIDFilter := generateVpcIDFilter(vpcID)
-	defaultForAzFilter := types.Filter{
-		Name:   aws.String(defaultForAzFilterName),
-		Values: []string{"true"},
-	}
-
-	subnets, err := GetSubnetsForVpcE(t, region, []types.Filter{vpcIDFilter, defaultForAzFilter})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return subnets
-}
-
-// generateVpcIDFilter is a helper method to generate vpc id filter
-func generateVpcIDFilter(vpcID string) types.Filter {
-	return types.Filter{Name: aws.String(vpcIDFilterName), Values: []string{vpcID}}
-}
-
-// GetSubnetsForVpcE gets the subnets in the specified VPC.
-func GetSubnetsForVpcE(t testing.TestingT, region string, filters []types.Filter) ([]Subnet, error) {
-	client, err := NewEc2ClientE(t, region)
+// GetSubnetsForVpcContextE gets the subnets in the specified VPC.
+// The ctx parameter supports cancellation and timeouts.
+func GetSubnetsForVpcContextE(t testing.TestingT, ctx context.Context, region string, filters []types.Filter) ([]Subnet, error) {
+	client, err := NewEc2ClientContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
 
-	subnetOutput, err := client.DescribeSubnets(context.Background(), &ec2.DescribeSubnetsInput{Filters: filters})
+	subnetOutput, err := client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{Filters: filters})
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +240,7 @@ func GetSubnetsForVpcE(t testing.TestingT, region string, filters []types.Filter
 	for i := range subnetOutput.Subnets {
 		ec2Subnet := &subnetOutput.Subnets[i]
 
-		subnetTags := GetTagsForSubnet(t, *ec2Subnet.SubnetId, region)
+		subnetTags := GetTagsForSubnetContext(t, ctx, *ec2Subnet.SubnetId, region)
 		subnet := Subnet{Id: aws.ToString(ec2Subnet.SubnetId), AvailabilityZone: aws.ToString(ec2Subnet.AvailabilityZone), DefaultForAz: aws.ToBool(ec2Subnet.DefaultForAz), Tags: subnetTags, CidrBlock: aws.ToString(ec2Subnet.CidrBlock)}
 		subnets = append(subnets, subnet)
 	}
@@ -230,16 +248,89 @@ func GetSubnetsForVpcE(t testing.TestingT, region string, filters []types.Filter
 	return subnets, nil
 }
 
-// getTagsForResourceE is a helper that gets the tags for a specified EC2 resource.
-func getTagsForResourceE(t testing.TestingT, resourceType string, resourceID string, region string) (map[string]string, error) {
-	client, err := NewEc2ClientE(t, region)
+// GetSubnetsForVpcContext gets the subnets in the specified VPC.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetSubnetsForVpcContext(t testing.TestingT, ctx context.Context, vpcID string, region string) []Subnet {
+	t.Helper()
+
+	vpcIDFilter := generateVpcIDFilter(vpcID)
+
+	subnets, err := GetSubnetsForVpcContextE(t, ctx, region, []types.Filter{vpcIDFilter})
 	require.NoError(t, err)
+
+	return subnets
+}
+
+// GetSubnetsForVpc gets the subnets in the specified VPC.
+//
+// Deprecated: Use [GetSubnetsForVpcContext] instead.
+func GetSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
+	t.Helper()
+
+	return GetSubnetsForVpcContext(t, context.Background(), vpcID, region)
+}
+
+// GetSubnetsForVpcE gets the subnets in the specified VPC.
+//
+// Deprecated: Use [GetSubnetsForVpcContextE] instead.
+func GetSubnetsForVpcE(t testing.TestingT, region string, filters []types.Filter) ([]Subnet, error) {
+	return GetSubnetsForVpcContextE(t, context.Background(), region, filters)
+}
+
+// GetAzDefaultSubnetsForVpcContextE gets the default az subnets in the specified VPC.
+// The ctx parameter supports cancellation and timeouts.
+func GetAzDefaultSubnetsForVpcContextE(t testing.TestingT, ctx context.Context, vpcID string, region string) ([]Subnet, error) {
+	vpcIDFilter := generateVpcIDFilter(vpcID)
+	defaultForAzFilter := types.Filter{
+		Name:   aws.String(defaultForAzFilterName),
+		Values: []string{"true"},
+	}
+
+	return GetSubnetsForVpcContextE(t, ctx, region, []types.Filter{vpcIDFilter, defaultForAzFilter})
+}
+
+// GetAzDefaultSubnetsForVpcContext gets the default az subnets in the specified VPC.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetAzDefaultSubnetsForVpcContext(t testing.TestingT, ctx context.Context, vpcID string, region string) []Subnet {
+	t.Helper()
+
+	subnets, err := GetAzDefaultSubnetsForVpcContextE(t, ctx, vpcID, region)
+	require.NoError(t, err)
+
+	return subnets
+}
+
+// GetAzDefaultSubnetsForVpc gets the default az subnets in the specified VPC.
+//
+// Deprecated: Use [GetAzDefaultSubnetsForVpcContext] instead.
+func GetAzDefaultSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
+	t.Helper()
+
+	return GetAzDefaultSubnetsForVpcContext(t, context.Background(), vpcID, region)
+}
+
+// generateVpcIDFilter is a helper method to generate vpc id filter
+func generateVpcIDFilter(vpcID string) types.Filter {
+	return types.Filter{Name: aws.String(vpcIDFilterName), Values: []string{vpcID}}
+}
+
+// getTagsForResourceContextE is a helper that gets the tags for a specified EC2 resource.
+// The ctx parameter supports cancellation and timeouts.
+func getTagsForResourceContextE(t testing.TestingT, ctx context.Context, resourceType string, resourceID string, region string) (map[string]string, error) {
+	client, err := NewEc2ClientContextE(t, ctx, region)
+	if err != nil {
+		return nil, err
+	}
 
 	resourceTypeFilter := types.Filter{Name: aws.String(resourceTypeFilterName), Values: []string{resourceType}}
 	resourceIDFilter := types.Filter{Name: aws.String(resourceIDFilterName), Values: []string{resourceID}}
 
-	tagsOutput, err := client.DescribeTags(context.Background(), &ec2.DescribeTagsInput{Filters: []types.Filter{resourceTypeFilter, resourceIDFilter}})
-	require.NoError(t, err)
+	tagsOutput, err := client.DescribeTags(ctx, &ec2.DescribeTagsInput{Filters: []types.Filter{resourceTypeFilter, resourceIDFilter}})
+	if err != nil {
+		return nil, err
+	}
 
 	tags := map[string]string{}
 
@@ -250,36 +341,45 @@ func getTagsForResourceE(t testing.TestingT, resourceType string, resourceID str
 	return tags, nil
 }
 
-// GetTagsForVpc gets the tags for the specified VPC.
-func GetTagsForVpc(t testing.TestingT, vpcID string, region string) map[string]string {
-	tags, err := GetTagsForVpcE(t, vpcID, region)
+// GetTagsForVpcContextE gets the tags for the specified VPC.
+// The ctx parameter supports cancellation and timeouts.
+func GetTagsForVpcContextE(t testing.TestingT, ctx context.Context, vpcID string, region string) (map[string]string, error) {
+	return getTagsForResourceContextE(t, ctx, vpcResourceTypeFilterValue, vpcID, region)
+}
+
+// GetTagsForVpcContext gets the tags for the specified VPC.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetTagsForVpcContext(t testing.TestingT, ctx context.Context, vpcID string, region string) map[string]string {
+	t.Helper()
+
+	tags, err := GetTagsForVpcContextE(t, ctx, vpcID, region)
 	require.NoError(t, err)
 
 	return tags
 }
 
-// GetTagsForVpcE gets the tags for the specified VPC.
-func GetTagsForVpcE(t testing.TestingT, vpcID string, region string) (map[string]string, error) {
-	return getTagsForResourceE(t, vpcResourceTypeFilterValue, vpcID, region)
-}
-
-// GetDefaultSubnetIDsForVpcP gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-func GetDefaultSubnetIDsForVpcP(t testing.TestingT, vpc *Vpc) []string {
-	subnetIDs, err := GetDefaultSubnetIDsForVpcPE(t, vpc)
-	require.NoError(t, err)
-
-	return subnetIDs
-}
-
-// GetDefaultSubnetIDsForVpc gets the ids of the subnets that are the default subnet for the AvailabilityZone.
+// GetTagsForVpc gets the tags for the specified VPC.
 //
-// Deprecated: Use [GetDefaultSubnetIDsForVpcP] instead.
-func GetDefaultSubnetIDsForVpc(t testing.TestingT, vpc Vpc) []string { //nolint:gocritic // preserving deprecated function signature
-	return GetDefaultSubnetIDsForVpcP(t, &vpc)
+// Deprecated: Use [GetTagsForVpcContext] instead.
+func GetTagsForVpc(t testing.TestingT, vpcID string, region string) map[string]string {
+	t.Helper()
+
+	return GetTagsForVpcContext(t, context.Background(), vpcID, region)
 }
 
-// GetDefaultSubnetIDsForVpcPE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-func GetDefaultSubnetIDsForVpcPE(t testing.TestingT, vpc *Vpc) ([]string, error) {
+// GetTagsForVpcE gets the tags for the specified VPC.
+//
+// Deprecated: Use [GetTagsForVpcContextE] instead.
+func GetTagsForVpcE(t testing.TestingT, vpcID string, region string) (map[string]string, error) {
+	return GetTagsForVpcContextE(t, context.Background(), vpcID, region)
+}
+
+// GetDefaultSubnetIDsForVpcPContextE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
+// The P suffix differentiates this function (which accepts *Vpc pointer) from the deprecated
+// GetDefaultSubnetIDsForVpcE which accepts Vpc by value.
+// The ctx parameter is accepted for API consistency with other Context functions.
+func GetDefaultSubnetIDsForVpcPContextE(t testing.TestingT, ctx context.Context, vpc *Vpc) ([]string, error) {
 	if vpc.Name != defaultVPCName {
 		// You cannot create a default subnet in a nondefault VPC
 		// https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html
@@ -302,36 +402,89 @@ func GetDefaultSubnetIDsForVpcPE(t testing.TestingT, vpc *Vpc) ([]string, error)
 	return subnetIDs, nil
 }
 
-// GetDefaultSubnetIDsForVpcE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-//
-// Deprecated: Use [GetDefaultSubnetIDsForVpcPE] instead.
-func GetDefaultSubnetIDsForVpcE(t testing.TestingT, vpc Vpc) ([]string, error) { //nolint:gocritic // preserving deprecated function signature
-	return GetDefaultSubnetIDsForVpcPE(t, &vpc)
+// GetDefaultSubnetIDsForVpcPContext gets the ids of the subnets that are the default subnet for the AvailabilityZone.
+// This function will fail the test if there is an error.
+// The P suffix differentiates this function (which accepts *Vpc pointer) from the deprecated
+// GetDefaultSubnetIDsForVpc which accepts Vpc by value.
+// The ctx parameter is accepted for API consistency with other Context functions.
+func GetDefaultSubnetIDsForVpcPContext(t testing.TestingT, ctx context.Context, vpc *Vpc) []string {
+	t.Helper()
+
+	subnetIDs, err := GetDefaultSubnetIDsForVpcPContextE(t, ctx, vpc)
+	require.NoError(t, err)
+
+	return subnetIDs
 }
 
-// GetTagsForSubnet gets the tags for the specified subnet.
-func GetTagsForSubnet(t testing.TestingT, subnetID string, region string) map[string]string {
-	tags, err := GetTagsForSubnetE(t, subnetID, region)
+// GetDefaultSubnetIDsForVpcP gets the ids of the subnets that are the default subnet for the AvailabilityZone.
+//
+// Deprecated: Use [GetDefaultSubnetIDsForVpcPContext] instead.
+func GetDefaultSubnetIDsForVpcP(t testing.TestingT, vpc *Vpc) []string {
+	t.Helper()
+
+	return GetDefaultSubnetIDsForVpcPContext(t, context.Background(), vpc)
+}
+
+// GetDefaultSubnetIDsForVpcPE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
+//
+// Deprecated: Use [GetDefaultSubnetIDsForVpcPContextE] instead.
+func GetDefaultSubnetIDsForVpcPE(t testing.TestingT, vpc *Vpc) ([]string, error) {
+	return GetDefaultSubnetIDsForVpcPContextE(t, context.Background(), vpc)
+}
+
+// GetDefaultSubnetIDsForVpc gets the ids of the subnets that are the default subnet for the AvailabilityZone.
+//
+// Deprecated: Use [GetDefaultSubnetIDsForVpcPContext] instead.
+func GetDefaultSubnetIDsForVpc(t testing.TestingT, vpc Vpc) []string { //nolint:gocritic // preserving deprecated function signature
+	t.Helper()
+
+	return GetDefaultSubnetIDsForVpcPContext(t, context.Background(), &vpc)
+}
+
+// GetDefaultSubnetIDsForVpcE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
+//
+// Deprecated: Use [GetDefaultSubnetIDsForVpcPContextE] instead.
+func GetDefaultSubnetIDsForVpcE(t testing.TestingT, vpc Vpc) ([]string, error) { //nolint:gocritic // preserving deprecated function signature
+	return GetDefaultSubnetIDsForVpcPContextE(t, context.Background(), &vpc)
+}
+
+// GetTagsForSubnetContextE gets the tags for the specified subnet.
+// The ctx parameter supports cancellation and timeouts.
+func GetTagsForSubnetContextE(t testing.TestingT, ctx context.Context, subnetID string, region string) (map[string]string, error) {
+	return getTagsForResourceContextE(t, ctx, subnetResourceTypeFilterValue, subnetID, region)
+}
+
+// GetTagsForSubnetContext gets the tags for the specified subnet.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetTagsForSubnetContext(t testing.TestingT, ctx context.Context, subnetID string, region string) map[string]string {
+	t.Helper()
+
+	tags, err := GetTagsForSubnetContextE(t, ctx, subnetID, region)
 	require.NoError(t, err)
 
 	return tags
 }
 
+// GetTagsForSubnet gets the tags for the specified subnet.
+//
+// Deprecated: Use [GetTagsForSubnetContext] instead.
+func GetTagsForSubnet(t testing.TestingT, subnetID string, region string) map[string]string {
+	t.Helper()
+
+	return GetTagsForSubnetContext(t, context.Background(), subnetID, region)
+}
+
 // GetTagsForSubnetE gets the tags for the specified subnet.
+//
+// Deprecated: Use [GetTagsForSubnetContextE] instead.
 func GetTagsForSubnetE(t testing.TestingT, subnetID string, region string) (map[string]string, error) {
-	return getTagsForResourceE(t, subnetResourceTypeFilterValue, subnetID, region)
+	return GetTagsForSubnetContextE(t, context.Background(), subnetID, region)
 }
 
-// IsPublicSubnet returns True if the subnet identified by the given id in the provided region is public.
-func IsPublicSubnet(t testing.TestingT, subnetID string, region string) bool {
-	isPublic, err := IsPublicSubnetE(t, subnetID, region)
-	require.NoError(t, err)
-
-	return isPublic
-}
-
-// IsPublicSubnetE returns True if the subnet identified by the given id in the provided region is public.
-func IsPublicSubnetE(t testing.TestingT, subnetID string, region string) (bool, error) {
+// IsPublicSubnetContextE returns True if the subnet identified by the given id in the provided region is public.
+// The ctx parameter supports cancellation and timeouts.
+func IsPublicSubnetContextE(t testing.TestingT, ctx context.Context, subnetID string, region string) (bool, error) {
 	subnetIDFilterName := "association.subnet-id"
 
 	subnetIDFilter := types.Filter{
@@ -339,19 +492,19 @@ func IsPublicSubnetE(t testing.TestingT, subnetID string, region string) (bool, 
 		Values: []string{subnetID},
 	}
 
-	client, err := NewEc2ClientE(t, region)
+	client, err := NewEc2ClientContextE(t, ctx, region)
 	if err != nil {
 		return false, err
 	}
 
-	rts, err := client.DescribeRouteTables(context.Background(), &ec2.DescribeRouteTablesInput{Filters: []types.Filter{subnetIDFilter}})
+	rts, err := client.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{Filters: []types.Filter{subnetIDFilter}})
 	if err != nil {
 		return false, err
 	}
 
 	if len(rts.RouteTables) == 0 {
 		// Subnets not explicitly associated with any route table are implicitly associated with the main route table
-		rts, err = getImplicitRouteTableForSubnetE(t, subnetID, region)
+		rts, err = getImplicitRouteTableForSubnetContextE(t, ctx, subnetID, region)
 		if err != nil {
 			return false, err
 		}
@@ -372,12 +525,41 @@ func IsPublicSubnetE(t testing.TestingT, subnetID string, region string) (bool, 
 	return false, nil
 }
 
-func getImplicitRouteTableForSubnetE(t testing.TestingT, subnetID string, region string) (*ec2.DescribeRouteTablesOutput, error) {
+// IsPublicSubnetContext returns True if the subnet identified by the given id in the provided region is public.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func IsPublicSubnetContext(t testing.TestingT, ctx context.Context, subnetID string, region string) bool {
+	t.Helper()
+
+	isPublic, err := IsPublicSubnetContextE(t, ctx, subnetID, region)
+	require.NoError(t, err)
+
+	return isPublic
+}
+
+// IsPublicSubnet returns True if the subnet identified by the given id in the provided region is public.
+//
+// Deprecated: Use [IsPublicSubnetContext] instead.
+func IsPublicSubnet(t testing.TestingT, subnetID string, region string) bool {
+	t.Helper()
+
+	return IsPublicSubnetContext(t, context.Background(), subnetID, region)
+}
+
+// IsPublicSubnetE returns True if the subnet identified by the given id in the provided region is public.
+//
+// Deprecated: Use [IsPublicSubnetContextE] instead.
+func IsPublicSubnetE(t testing.TestingT, subnetID string, region string) (bool, error) {
+	return IsPublicSubnetContextE(t, context.Background(), subnetID, region)
+}
+
+// getImplicitRouteTableForSubnetContextE gets the implicit route table for a subnet.
+func getImplicitRouteTableForSubnetContextE(t testing.TestingT, ctx context.Context, subnetID string, region string) (*ec2.DescribeRouteTablesOutput, error) {
 	mainRouteFilterName := "association.main"
 	mainRouteFilterValue := "true"
 	subnetFilterName := "subnet-id"
 
-	client, err := NewEc2ClientE(t, region)
+	client, err := NewEc2ClientContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
@@ -387,7 +569,7 @@ func getImplicitRouteTableForSubnetE(t testing.TestingT, subnetID string, region
 		Values: []string{subnetID},
 	}
 
-	subnetOutput, err := client.DescribeSubnets(context.Background(), &ec2.DescribeSubnetsInput{Filters: []types.Filter{subnetFilter}})
+	subnetOutput, err := client.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{Filters: []types.Filter{subnetFilter}})
 	if err != nil {
 		return nil, err
 	}
@@ -406,7 +588,7 @@ func getImplicitRouteTableForSubnetE(t testing.TestingT, subnetID string, region
 		Values: []string{*subnetOutput.Subnets[0].VpcId},
 	}
 
-	return client.DescribeRouteTables(context.Background(), &ec2.DescribeRouteTablesInput{Filters: []types.Filter{mainRouteFilter, vpcFilter}})
+	return client.DescribeRouteTables(ctx, &ec2.DescribeRouteTablesInput{Filters: []types.Filter{mainRouteFilter, vpcFilter}})
 }
 
 // GetRandomPrivateCidrBlock gets a random CIDR block from the range of acceptable private IP addresses per RFC 1918

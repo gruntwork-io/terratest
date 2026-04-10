@@ -31,7 +31,7 @@ func TestGetNetworkPolicyEReturnsErrorForNonExistantNetworkPolicy(t *testing.T) 
 func TestGetNetworkPolicyEReturnsCorrectNetworkPolicyInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_NETWORK_POLICY_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)
@@ -45,7 +45,7 @@ func TestGetNetworkPolicyEReturnsCorrectNetworkPolicyInCorrectNamespace(t *testi
 func TestWaitUntilNetworkPolicyAvailableReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
-	uniqueID := strings.ToLower(random.UniqueId())
+	uniqueID := strings.ToLower(random.UniqueID())
 	options := NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(EXAMPLE_NETWORK_POLICY_YAML_TEMPLATE, uniqueID, uniqueID)
 	defer KubectlDeleteFromString(t, options, configData)

@@ -8,22 +8,65 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/oracle/oci-go-sdk/common"
 	"github.com/oracle/oci-go-sdk/core"
+	"github.com/stretchr/testify/require"
 )
 
-// GetRandomSubnetID gets a randomly chosen subnet OCID in the given availability domain.
-// The returned value can be overridden by of the environment variable TF_VAR_subnet_ocid.
-func GetRandomSubnetID(t testing.TestingT, compartmentID string, availabilityDomain string) string {
-	ocid, err := GetRandomSubnetIDE(t, compartmentID, availabilityDomain)
+// GetAllVcnIDsContextE gets the list of VCNs available in the given compartment.
+// The ctx parameter supports cancellation and timeouts.
+func GetAllVcnIDsContextE(t testing.TestingT, ctx context.Context, compartmentID string) ([]string, error) {
+	configProvider := common.DefaultConfigProvider()
+
+	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 
-	return ocid
+	request := core.ListVcnsRequest{CompartmentId: &compartmentID}
+
+	response, err := client.ListVcns(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(response.Items) == 0 {
+		return nil, NoVCNsFoundError{CompartmentID: compartmentID}
+	}
+
+	return vcnsIDs(response.Items), nil
 }
 
-// GetRandomSubnetIDE gets a randomly chosen subnet OCID in the given availability domain.
+// GetAllVcnIDsContext gets the list of VCNs available in the given compartment.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetAllVcnIDsContext(t testing.TestingT, ctx context.Context, compartmentID string) []string {
+	t.Helper()
+
+	vcnIDs, err := GetAllVcnIDsContextE(t, ctx, compartmentID)
+	require.NoError(t, err)
+
+	return vcnIDs
+}
+
+// GetAllVcnIDs gets the list of VCNs available in the given compartment.
+//
+// Deprecated: Use [GetAllVcnIDsContext] instead.
+func GetAllVcnIDs(t testing.TestingT, compartmentID string) []string {
+	t.Helper()
+
+	return GetAllVcnIDsContext(t, context.Background(), compartmentID)
+}
+
+// GetAllVcnIDsE gets the list of VCNs available in the given compartment.
+//
+// Deprecated: Use [GetAllVcnIDsContextE] instead.
+func GetAllVcnIDsE(t testing.TestingT, compartmentID string) ([]string, error) {
+	return GetAllVcnIDsContextE(t, context.Background(), compartmentID)
+}
+
+// GetRandomSubnetIDContextE gets a randomly chosen subnet OCID in the given availability domain.
 // The returned value can be overridden by of the environment variable TF_VAR_subnet_ocid.
-func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDomain string) (string, error) {
+// The ctx parameter supports cancellation and timeouts.
+func GetRandomSubnetIDContextE(t testing.TestingT, ctx context.Context, compartmentID string, availabilityDomain string) (string, error) {
 	configProvider := common.DefaultConfigProvider()
 
 	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider)
@@ -31,7 +74,7 @@ func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDo
 		return "", err
 	}
 
-	vcnIDs, err := GetAllVcnIDsE(t, compartmentID)
+	vcnIDs, err := GetAllVcnIDsContextE(t, ctx, compartmentID)
 	if err != nil {
 		return "", err
 	}
@@ -44,7 +87,7 @@ func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDo
 			VcnId:         &vcnID,
 		}
 
-		response, err := client.ListSubnets(context.Background(), request)
+		response, err := client.ListSubnets(ctx, request)
 		if err != nil {
 			return "", err
 		}
@@ -59,37 +102,35 @@ func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDo
 	return subnetID, nil
 }
 
-// GetAllVcnIDs gets the list of VCNs available in the given compartment.
-func GetAllVcnIDs(t testing.TestingT, compartmentID string) []string {
-	vcnIDS, err := GetAllVcnIDsE(t, compartmentID)
-	if err != nil {
-		t.Fatal(err)
-	}
+// GetRandomSubnetIDContext gets a randomly chosen subnet OCID in the given availability domain.
+// The returned value can be overridden by of the environment variable TF_VAR_subnet_ocid.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetRandomSubnetIDContext(t testing.TestingT, ctx context.Context, compartmentID string, availabilityDomain string) string {
+	t.Helper()
 
-	return vcnIDS
+	ocid, err := GetRandomSubnetIDContextE(t, ctx, compartmentID, availabilityDomain)
+	require.NoError(t, err)
+
+	return ocid
 }
 
-// GetAllVcnIDsE gets the list of VCNs available in the given compartment.
-func GetAllVcnIDsE(t testing.TestingT, compartmentID string) ([]string, error) {
-	configProvider := common.DefaultConfigProvider()
+// GetRandomSubnetID gets a randomly chosen subnet OCID in the given availability domain.
+// The returned value can be overridden by of the environment variable TF_VAR_subnet_ocid.
+//
+// Deprecated: Use [GetRandomSubnetIDContext] instead.
+func GetRandomSubnetID(t testing.TestingT, compartmentID string, availabilityDomain string) string {
+	t.Helper()
 
-	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider)
-	if err != nil {
-		return nil, err
-	}
+	return GetRandomSubnetIDContext(t, context.Background(), compartmentID, availabilityDomain)
+}
 
-	request := core.ListVcnsRequest{CompartmentId: &compartmentID}
-
-	response, err := client.ListVcns(context.Background(), request)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(response.Items) == 0 {
-		return nil, NoVCNsFoundError{CompartmentID: compartmentID}
-	}
-
-	return vcnsIDs(response.Items), nil
+// GetRandomSubnetIDE gets a randomly chosen subnet OCID in the given availability domain.
+// The returned value can be overridden by of the environment variable TF_VAR_subnet_ocid.
+//
+// Deprecated: Use [GetRandomSubnetIDContextE] instead.
+func GetRandomSubnetIDE(t testing.TestingT, compartmentID string, availabilityDomain string) (string, error) {
+	return GetRandomSubnetIDContextE(t, context.Background(), compartmentID, availabilityDomain)
 }
 
 func mapSubnetsByAvailabilityDomain(allSubnets map[string][]string, subnets []core.Subnet) map[string][]string {
