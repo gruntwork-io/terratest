@@ -7,10 +7,12 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/assert"
 	authv1 "k8s.io/api/authorization/v1"
@@ -27,6 +29,6 @@ func TestCanIDoReturnsTrueForAllowedAction(t *testing.T) {
 		Verb:      "list",
 		Resource:  "pod",
 	}
-	options := NewKubectlOptions("", "", "kube-system")
-	assert.True(t, CanIDo(t, options, action))
+	options := k8s.NewKubectlOptions("", "", "kube-system")
+	assert.True(t, k8s.CanIDo(t, options, action))
 }

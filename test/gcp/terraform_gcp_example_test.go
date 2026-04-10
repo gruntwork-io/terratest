@@ -3,9 +3,10 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
-package test
+package test_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -26,16 +27,16 @@ func TestTerraformGcpExample(t *testing.T) {
 	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-example")
 
 	// Get the Project Id to use
-	projectId := gcp.GetGoogleProjectIDFromEnvVar(t)
+	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 
 	// Create all resources in the following zone
 	zone := "us-east1-b"
 
 	// Give the example bucket a unique name so we can distinguish it from any other bucket in your GCP account
-	expectedBucketName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueID()))
+	expectedBucketName := "terratest-gcp-example-" + strings.ToLower(random.UniqueID())
 
 	// Also give the example instance a unique name
-	expectedInstanceName := fmt.Sprintf("terratest-gcp-example-%s", strings.ToLower(random.UniqueID()))
+	expectedInstanceName := "terratest-gcp-example-" + strings.ToLower(random.UniqueID())
 
 	// website::tag::1::Configure Terraform setting path to Terraform code, bucket name, and instance name. Construct
 	// the terraform options with default retryable errors to handle the most common retryable errors in terraform
@@ -46,7 +47,7 @@ func TestTerraformGcpExample(t *testing.T) {
 
 		// Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
-			"gcp_project_id": projectId,
+			"gcp_project_id": projectID,
 			"zone":           zone,
 			"instance_name":  expectedInstanceName,
 			"bucket_name":    expectedBucketName,
@@ -54,25 +55,25 @@ func TestTerraformGcpExample(t *testing.T) {
 	})
 
 	// website::tag::5::At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::2::This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the value of some of the output variables
-	bucketURL := terraform.Output(t, terraformOptions, "bucket_url")
-	instanceName := terraform.Output(t, terraformOptions, "instance_name")
+	bucketURL := terraform.OutputContext(t, t.Context(), terraformOptions, "bucket_url")
+	instanceName := terraform.OutputContext(t, t.Context(), terraformOptions, "instance_name")
 
 	// website::tag::3::Verify that the new bucket url matches the expected url
-	expectedURL := fmt.Sprintf("gs://%s", expectedBucketName)
+	expectedURL := "gs://" + expectedBucketName
 	assert.Equal(t, expectedURL, bucketURL)
 
 	// Verify that the Storage Bucket exists
-	gcp.AssertStorageBucketExists(t, expectedBucketName)
+	gcp.AssertStorageBucketExistsContext(t, t.Context(), expectedBucketName)
 
 	// Add a tag to the Compute Instance
-	instance := gcp.FetchInstance(t, projectId, instanceName)
-	instance.SetLabels(t, map[string]string{"testing": "testing-tag-value2"})
+	instance := gcp.FetchInstanceContext(t, t.Context(), projectID, instanceName)
+	instance.SetLabelsContext(t, t.Context(), map[string]string{"testing": "testing-tag-value2"})
 
 	// Check for the labels within a retry loop as it can sometimes take a while for the
 	// changes to propagate.
@@ -83,13 +84,14 @@ func TestTerraformGcpExample(t *testing.T) {
 	// website::tag::4::Check if the GCP instance contains a given tag.
 	retry.DoWithRetry(t, fmt.Sprintf("Checking Instance %s for labels", instanceName), maxRetries, timeBetweenRetries, func() (string, error) {
 		// Look up the tags for the given Instance ID
-		instance := gcp.FetchInstance(t, projectId, instanceName)
-		instanceLabels := instance.GetLabels(t)
+		instance := gcp.FetchInstanceContext(t, t.Context(), projectID, instanceName)
+		instanceLabels := instance.GetLabelsContext(t, t.Context())
 
 		testingTag, containsTestingTag := instanceLabels["testing"]
 		actualText := strings.TrimSpace(testingTag)
+
 		if !containsTestingTag {
-			return "", fmt.Errorf("Expected the tag 'testing' to exist")
+			return "", errors.New("Expected the tag 'testing' to exist")
 		}
 
 		if actualText != expectedText {
@@ -109,7 +111,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	// Setup values for our Terraform apply
 	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 	randomValidGcpName := gcp.RandomValidGCPName()
-	zone := gcp.GetRandomZone(t, projectID, ZonesThatSupportF1Micro, nil, nil)
+	zone := gcp.GetRandomZoneContext(t, t.Context(), projectID, ZonesThatSupportF1Micro, nil, nil)
 
 	terraformOptions := &terraform.Options{
 		// The path to where our Terraform code is located
@@ -125,25 +127,25 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	}
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
-	publicIp := terraform.Output(t, terraformOptions, "public_ip")
+	publicIP := terraform.OutputContext(t, t.Context(), terraformOptions, "public_ip")
 
 	// Attempt to SSH and execute the command
-	instance := gcp.FetchInstance(t, projectID, randomValidGcpName)
+	instance := gcp.FetchInstanceContext(t, t.Context(), projectID, randomValidGcpName)
 
 	sampleText := "Hello World"
 	sshUsername := "terratest"
 
 	keyPair := ssh.GenerateRSAKeyPair(t, 2048)
-	instance.AddSSHKey(t, sshUsername, keyPair.PublicKey)
+	instance.AddSSHKeyContext(t, t.Context(), sshUsername, keyPair.PublicKey)
 
 	host := ssh.Host{
-		Hostname:    publicIp,
+		Hostname:    publicIP,
 		SshKeyPair:  keyPair,
 		SshUserName: sshUsername,
 	}
@@ -152,7 +154,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	sleepBetweenRetries := 3 * time.Second
 
 	retry.DoWithRetry(t, "Attempting to SSH", maxRetries, sleepBetweenRetries, func() (string, error) {
-		output, err := ssh.CheckSshCommandE(t, host, fmt.Sprintf("echo '%s'", sampleText))
+		output, err := ssh.CheckSSHCommandContextE(t, t.Context(), &host, fmt.Sprintf("echo '%s'", sampleText))
 		if err != nil {
 			return "", err
 		}

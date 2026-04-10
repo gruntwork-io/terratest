@@ -4,7 +4,7 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
 	"testing"
@@ -34,14 +34,14 @@ func TestTerraformAzureCosmosDBExample(t *testing.T) {
 	}
 
 	// website::tag::4:: At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::2:: Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::3:: Run `terraform output` to get the values of output variables
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
-	accountName := terraform.Output(t, terraformOptions, "account_name")
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
+	accountName := terraform.OutputContext(t, t.Context(), terraformOptions, "account_name")
 
 	// website::tag::4:: Get CosmosDB details and assert them against the terraform output
 	// NOTE: the value of subscriptionID can be left blank, it will be replaced by the value

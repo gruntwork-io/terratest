@@ -3,9 +3,10 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
-package test
+package test_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -22,9 +23,9 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-ig-example")
 
 	// Setup values for our Terraform apply
-	projectId := gcp.GetGoogleProjectIDFromEnvVar(t)
+	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 
-	region := gcp.GetRandomRegion(t, projectId, RegionsThatSupportF1Micro, nil)
+	region := gcp.GetRandomRegionContext(t, t.Context(), projectID, RegionsThatSupportF1Micro, nil)
 
 	randomValidGcpName := gcp.RandomValidGCPName()
 	clusterSize := 3
@@ -35,30 +36,30 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 
 		// Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
-			"gcp_project_id": projectId,
+			"gcp_project_id": projectID,
 			"gcp_region":     region,
 			"cluster_name":   randomValidGcpName,
 		},
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
-	instanceGroupName := terraform.Output(t, terraformOptions, "instance_group_name")
+	instanceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "instance_group_name")
 
-	instanceGroup := gcp.FetchRegionalInstanceGroup(t, projectId, region, instanceGroupName)
+	instanceGroup := gcp.FetchRegionalInstanceGroupContext(t, t.Context(), projectID, region, instanceGroupName)
 
 	// Validate that GetInstances() returns a non-zero number of Instances
 	maxRetries := 100
 	sleepBetweenRetries := 3 * time.Second
 
 	retry.DoWithRetry(t, "Attempting to fetch Instances from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
-		instances, err := instanceGroup.GetInstancesE(t, projectId)
+		instances, err := instanceGroup.GetInstancesContextE(t, t.Context(), projectID)
 		if err != nil {
-			return "", fmt.Errorf("Failed to get Instances: %s", err)
+			return "", fmt.Errorf("Failed to get Instances: %w", err)
 		}
 
 		if len(instances) != clusterSize {
@@ -70,9 +71,9 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 
 	// Validate that we get the right number of IP addresses
 	retry.DoWithRetry(t, "Attempting to fetch Public IP addresses from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
-		ips, err := instanceGroup.GetPublicIPsE(t, projectId)
+		ips, err := instanceGroup.GetPublicIPsContextE(t, t.Context(), projectID)
 		if err != nil {
-			return "", fmt.Errorf("Failed to get public IPs from Instance Group")
+			return "", errors.New("Failed to get public IPs from Instance Group")
 		}
 
 		if len(ips) != clusterSize {

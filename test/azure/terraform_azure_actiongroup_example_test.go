@@ -4,10 +4,9 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
-	"fmt"
 	"strings"
 
 	"testing"
@@ -20,10 +19,11 @@ import (
 
 func TestTerraformAzureActionGroupExample(t *testing.T) {
 	t.Parallel()
+
 	_random := strings.ToLower(random.UniqueID())
 
-	expectedResourceGroupName := fmt.Sprintf("tmp-rg-%s", _random)
-	expectedAppName := fmt.Sprintf("tmp-asp-%s", _random)
+	expectedResourceGroupName := "tmp-rg-" + _random
+	expectedAppName := "tmp-asp-" + _random
 
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../../examples/azure/terraform-azure-actiongroup-example",
@@ -41,20 +41,20 @@ func TestTerraformAzureActionGroupExample(t *testing.T) {
 		},
 	}
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	assert := assert.New(t)
-	actionGroupId := terraform.Output(t, terraformOptions, "action_group_id")
-	assert.NotNil(actionGroupId)
-	assert.Contains(actionGroupId, expectedAppName)
+	actionGroupID := terraform.OutputContext(t, t.Context(), terraformOptions, "action_group_id")
+	assert.NotNil(actionGroupID)
+	assert.Contains(actionGroupID, expectedAppName)
 
-	actionGroup := azure.GetActionGroupResource(t, expectedAppName, expectedResourceGroupName, "")
+	actionGroup := azure.GetActionGroupResourceContext(t, t.Context(), expectedAppName, expectedResourceGroupName, "")
 
 	assert.NotNil(actionGroup)
-	assert.Equal(1, len(*actionGroup.EmailReceivers))
-	assert.Equal(0, len(*actionGroup.SmsReceivers))
-	assert.Equal(1, len(*actionGroup.WebhookReceivers))
+	assert.Len(*actionGroup.EmailReceivers, 1)
+	assert.Empty(*actionGroup.SmsReceivers)
+	assert.Len(*actionGroup.WebhookReceivers, 1)
 }

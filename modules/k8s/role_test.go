@@ -7,12 +7,14 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/require"
 
@@ -22,8 +24,8 @@ import (
 func TestGetRoleEReturnsErrorForNonExistantRole(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	_, err := GetRoleE(t, options, "non-existing-role")
+	options := k8s.NewKubectlOptions("", "", "default")
+	_, err := k8s.GetRoleE(t, options, "non-existing-role")
 	require.Error(t, err)
 }
 
@@ -31,17 +33,19 @@ func TestGetRoleEReturnsCorrectRoleInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_ROLE_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	role := GetRole(t, options, "terratest-role")
-	require.Equal(t, role.Name, "terratest-role")
+	configData := fmt.Sprintf(exampleRoleYAMLTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	role := k8s.GetRole(t, options, "terratest-role")
+	require.Equal(t, "terratest-role", role.Name)
 	require.Equal(t, role.Namespace, uniqueID)
 }
 
-const EXAMPLE_ROLE_YAML_TEMPLATE = `---
+const exampleRoleYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:

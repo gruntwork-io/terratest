@@ -8,7 +8,7 @@
 // tests and helm tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.
 // We recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package test
+package test_test
 
 import (
 	"path/filepath"
@@ -39,13 +39,14 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-dependency-example")
 	releaseName := "helm-dependency"
+
 	require.NoError(t, err)
 
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication or helm home.
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
-	logger.Logf(t, "Namespace: %s\n", namespaceName)
+	logger.Default.Logf(t, "Namespace: %s\n", namespaceName)
 
 	// Setup the args. For this test, we will set the following input values:
 	// - containerImageRepo=nginx
@@ -78,12 +79,13 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.name, func(subT *testing.T) {
-			// subT.Parallel()
+			subT.Parallel()
+
 			// Run RenderTemplate to render the template and capture the output. Note that we use the version without `E`, since
 			// we want to assert that the template renders without any errors.
 			// Additionally, although we know there is only one yaml file in the template, we deliberately path a templateFiles
 			// arg to demonstrate how to select individual templates to render.
-			output := helm.RenderTemplate(t, options, helmChartPath, releaseName, []string{testCase.templateName})
+			output := helm.RenderTemplateContext(t, t.Context(), options, helmChartPath, releaseName, []string{testCase.templateName})
 
 			// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 			// ensure the Deployment resource is rendered correctly.
@@ -96,9 +98,8 @@ func TestHelmDependencyExampleTemplateRenderedDeployment(t *testing.T) {
 			// Finally, we verify the deployment pod template spec is set to the expected container image value
 			expectedContainerImage := "nginx:1.15.8"
 			deploymentContainers := deployment.Spec.Template.Spec.Containers
-			require.Equal(t, len(deploymentContainers), 1)
-			require.Equal(t, deploymentContainers[0].Image, expectedContainerImage)
-
+			require.Len(t, deploymentContainers, 1)
+			require.Equal(t, expectedContainerImage, deploymentContainers[0].Image)
 		})
 	}
 }
@@ -110,6 +111,7 @@ func TestHelmDependencyExampleTemplateRequiredTemplateArgs(t *testing.T) {
 	// Path to the helm chart we will test
 	helmChartPath, err := filepath.Abs("../examples/helm-dependency-example")
 	releaseName := "helm-dependency"
+
 	require.NoError(t, err)
 
 	// Since we aren't deploying any resources, there is no need to setup kubectl authentication, helm home, or
@@ -121,40 +123,40 @@ func TestHelmDependencyExampleTemplateRequiredTemplateArgs(t *testing.T) {
 	// in the test output. In this case, each test case will be a complete values input except for one of the required
 	// values missing, to test that neglecting a required value will cause the template rendering to fail.
 	testCases := []struct {
-		name   string
 		values map[string]string
+		name   string
 	}{
 		{
-			"MissingContainerImageRepo in dependent chart",
-			map[string]string{
+			values: map[string]string{
 				"containerImageTag":        "1.15.8",
 				"basic.containerImageRepo": "nginx",
 				"basic.containerImageTag":  "1.15.8",
 			},
+			name: "MissingContainerImageRepo in dependent chart",
 		},
 		{
-			"MissingContainerImageRepo in basic chart",
-			map[string]string{
+			values: map[string]string{
 				"basic.containerImageTag": "1.15.8",
 				"containerImageRepo":      "nginx",
 				"containerImageTag":       "1.15.8",
 			},
+			name: "MissingContainerImageRepo in basic chart",
 		},
 		{
-			"MissingContainerImageTag in dependent chart",
-			map[string]string{
+			values: map[string]string{
 				"containerImageRepo":       "nginx",
 				"basic.containerImageRepo": "nginx",
 				"basic.containerImageTag":  "1.15.8",
 			},
+			name: "MissingContainerImageTag in dependent chart",
 		},
 		{
-			"MissingContainerImageTag in basic chart",
-			map[string]string{
+			values: map[string]string{
 				"basic.containerImageRepo": "nginx",
 				"containerImageRepo":       "nginx",
 				"containerImageTag":        "1.15.8",
 			},
+			name: "MissingContainerImageTag in basic chart",
 		},
 	}
 
@@ -169,11 +171,11 @@ func TestHelmDependencyExampleTemplateRequiredTemplateArgs(t *testing.T) {
 		// test T struct to subT to make it clear which T struct corresponds to which test. However, in most cases you
 		// will not reference the main test T so you can name it the same.
 		t.Run(testCase.name, func(subT *testing.T) {
-			// subT.Parallel()
+			subT.Parallel()
 
 			// Now we try rendering the template, but verify we get an error
 			options := &helm.Options{SetValues: testCase.values}
-			_, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, []string{})
+			_, err := helm.RenderTemplateContextE(t, t.Context(), options, helmChartPath, releaseName, []string{})
 			require.Error(t, err)
 		})
 	}

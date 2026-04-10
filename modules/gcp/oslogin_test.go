@@ -3,12 +3,13 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
-package gcp
+package gcp_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 )
@@ -20,12 +21,14 @@ import (
 //
 // By grouping them in a single test function with subtests (without t.Parallel()),
 // we ensure they run sequentially while still allowing other GCP tests to run in parallel.
+//
+//nolint:paralleltest,tparallel // subtests must be sequential to avoid 409 concurrent mutation errors
 func TestOSLogin(t *testing.T) {
 	t.Parallel() // This test can run in parallel with OTHER GCP tests
 
 	// Clean up any stale SSH keys from previous test runs to avoid
 	// "Login profile size exceeds 32 KiB" errors.
-	user := GetGoogleIdentityEmailEnvVar(t)
+	user := gcp.GetGoogleIdentityEmailEnvVar(t)
 	purgeAllSSHKeys(t, user)
 
 	// Subtests run sequentially (no t.Parallel() on subtests) to avoid 409 conflicts
@@ -33,39 +36,43 @@ func TestOSLogin(t *testing.T) {
 		keyPair := ssh.GenerateRSAKeyPair(t, 2048)
 		key := keyPair.PublicKey
 
-		user := GetGoogleIdentityEmailEnvVar(t)
+		user := gcp.GetGoogleIdentityEmailEnvVar(t)
 
-		defer DeleteSSHKey(t, user, key)
-		ImportSSHKey(t, user, key)
+		defer gcp.DeleteSSHKey(t, user, key)
+
+		gcp.ImportSSHKey(t, user, key)
 	})
 
 	t.Run("ImportProjectSSHKey", func(t *testing.T) {
 		keyPair := ssh.GenerateRSAKeyPair(t, 2048)
 		key := keyPair.PublicKey
 
-		user := GetGoogleIdentityEmailEnvVar(t)
-		projectID := GetGoogleProjectIDFromEnvVar(t)
+		user := gcp.GetGoogleIdentityEmailEnvVar(t)
+		projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
 
-		defer DeleteSSHKey(t, user, key)
-		ImportProjectSSHKey(t, user, key, projectID)
+		defer gcp.DeleteSSHKey(t, user, key)
+
+		gcp.ImportProjectSSHKey(t, user, key, projectID)
 	})
 
 	t.Run("GetLoginProfile", func(t *testing.T) {
-		user := GetGoogleIdentityEmailEnvVar(t)
-		GetLoginProfile(t, user)
+		user := gcp.GetGoogleIdentityEmailEnvVar(t)
+		gcp.GetLoginProfile(t, user)
 	})
 
 	t.Run("SetOSLoginKey", func(t *testing.T) {
 		keyPair := ssh.GenerateRSAKeyPair(t, 2048)
 		key := keyPair.PublicKey
 
-		user := GetGoogleIdentityEmailEnvVar(t)
+		user := gcp.GetGoogleIdentityEmailEnvVar(t)
 
-		defer DeleteSSHKey(t, user, key)
-		ImportSSHKey(t, user, key)
-		loginProfile := GetLoginProfile(t, user)
+		defer gcp.DeleteSSHKey(t, user, key)
+
+		gcp.ImportSSHKey(t, user, key)
+		loginProfile := gcp.GetLoginProfile(t, user)
 
 		found := false
+
 		for _, v := range loginProfile.SshPublicKeys {
 			if key == v.Key {
 				found = true
@@ -82,7 +89,9 @@ func TestOSLogin(t *testing.T) {
 // This prevents "Login profile size exceeds 32 KiB" errors caused by
 // stale keys accumulating from previous test runs.
 func purgeAllSSHKeys(t *testing.T, user string) {
-	profile, err := GetLoginProfileE(t, user)
+	t.Helper()
+
+	profile, err := gcp.GetLoginProfileE(t, user)
 	if err != nil {
 		t.Logf("Warning: could not get login profile to purge keys: %v", err)
 		return
@@ -94,11 +103,12 @@ func purgeAllSSHKeys(t *testing.T, user string) {
 
 	logger.Default.Logf(t, "Purging %d stale SSH keys from OS Login profile for user %s", len(profile.SshPublicKeys), user)
 
-	service, err := NewOSLoginServiceContextE(t, t.Context())
+	service, err := gcp.NewOSLoginServiceContextE(t, t.Context())
 	if err != nil {
 		t.Logf("Warning: could not create OS Login service to purge keys: %v", err)
 		return
 	}
+
 	for fingerprint := range profile.SshPublicKeys {
 		path := fmt.Sprintf("users/%s/sshPublicKeys/%s", user, fingerprint)
 		if _, err := service.Users.SshPublicKeys.Delete(path).Context(t.Context()).Do(); err != nil {

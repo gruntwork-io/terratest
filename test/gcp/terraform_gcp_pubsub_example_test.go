@@ -3,10 +3,9 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation
 
-package test
+package test_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp"
@@ -24,8 +23,8 @@ func TestTerraformGcpPubSubExample(t *testing.T) {
 
 	// Create random unique names for our Pub/Sub resources
 	// so multiple tests running simultaneously don't collide.
-	expectedTopicName := fmt.Sprintf("pubsub-topic-%s", random.UniqueID())
-	expectedSubscriptionName := fmt.Sprintf("pubsub-sub-%s", random.UniqueID())
+	expectedTopicName := "pubsub-topic-" + random.UniqueID()
+	expectedSubscriptionName := "pubsub-sub-" + random.UniqueID()
 
 	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-pubsub-example")
 
@@ -40,14 +39,14 @@ func TestTerraformGcpPubSubExample(t *testing.T) {
 	})
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Pull out the outputs from the Terraform configuration
-	actualTopicName := terraform.Output(t, terraformOptions, "topic_name")
-	actualSubscriptionName := terraform.Output(t, terraformOptions, "subscription_name")
+	actualTopicName := terraform.OutputContext(t, t.Context(), terraformOptions, "topic_name")
+	actualSubscriptionName := terraform.OutputContext(t, t.Context(), terraformOptions, "subscription_name")
 
 	// Verify the Terraform outputs match what we expected
 	assert.Equal(t, expectedTopicName, actualTopicName)

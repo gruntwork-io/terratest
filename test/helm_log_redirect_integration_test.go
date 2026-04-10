@@ -8,7 +8,7 @@
 // tests and helm tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.
 // We recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package test
+package test_test
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func TestHelmLogsRedirect(t *testing.T) {
 	require.NoError(t, err)
 
 	// Namespace to deploy helm chart
-	namespaceName := fmt.Sprintf("helm-logs-%s", strings.ToLower(random.UniqueID()))
+	namespaceName := "helm-logs-" + strings.ToLower(random.UniqueID())
 
 	// Setup the kubectl config and context. Here we choose to use the defaults, which is:
 	// - HOME/.kube/config for the kubectl config file
@@ -56,13 +56,10 @@ func TestHelmLogsRedirect(t *testing.T) {
 	}
 
 	// Generate a unique release to avoid conflicts with other tests
-	releaseName := fmt.Sprintf(
-		"nginx-service-%s",
-		strings.ToLower(random.UniqueID()),
-	)
-	defer helm.Delete(t, options, releaseName, true)
+	releaseName := "nginx-service-" + strings.ToLower(random.UniqueID())
+	defer helm.DeleteContext(t, t.Context(), options, releaseName, true)
 
-	helm.Install(t, options, helmChartPath, releaseName)
+	helm.InstallContext(t, t.Context(), options, helmChartPath, releaseName)
 
 	// Validate that logs were redirected to custom logger
 	require.Contains(t, customLogger.logs, releaseName)

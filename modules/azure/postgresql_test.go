@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestGetPostgreSQLServerE(t *testing.T) {
 	serverName := ""
 	subscriptionID := ""
 
-	_, err := GetPostgreSQLServerE(t, subscriptionID, resGroupName, serverName)
+	_, err := azure.GetPostgreSQLServerE(t, subscriptionID, resGroupName, serverName)
 	require.Error(t, err)
 }
 
@@ -36,6 +37,6 @@ func TestGetPostgreSQLDBE(t *testing.T) {
 	subscriptionID := ""
 	dbName := ""
 
-	_, err := GetPostgreSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
+	_, err := azure.GetPostgreSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
 	require.Error(t, err)
 }

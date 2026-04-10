@@ -4,7 +4,7 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure //nolint:testpackage // tests access unexported functions
 
 import (
 	"os"
@@ -36,6 +36,8 @@ func TestGetTargetAzureSubscription(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := GetTargetAzureSubscription(tt.args.subID)
 
 			if tt.wantErr {
@@ -66,6 +68,8 @@ func TestGetTargetAzureResourceGroupName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := GetTargetAzureResourceGroupName(tt.args.rgName)
 
 			if tt.wantErr {
@@ -78,6 +82,8 @@ func TestGetTargetAzureResourceGroupName(t *testing.T) {
 }
 
 func TestSafePtrToString(t *testing.T) {
+	t.Parallel()
+
 	// When given a nil, should always return an empty string
 	var nilPtr *string = nil
 
@@ -91,6 +97,8 @@ func TestSafePtrToString(t *testing.T) {
 }
 
 func TestSafePtrToInt32(t *testing.T) {
+	t.Parallel()
+
 	// When given a nil, should always return an zero value int32
 	var nilPtr *int32 = nil
 

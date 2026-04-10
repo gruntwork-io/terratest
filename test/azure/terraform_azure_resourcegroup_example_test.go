@@ -4,7 +4,7 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
 	"testing"
@@ -32,19 +32,19 @@ func TestTerraformAzureResourceGroupExample(t *testing.T) {
 	}
 
 	// website::tag::4:: At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::2:: Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::3:: Run `terraform output` to get the values of output variables
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
 
 	// website::tag::4:: Verify the resource group exists
-	exists := azure.ResourceGroupExists(t, resourceGroupName, subscriptionID)
+	exists := azure.ResourceGroupExistsContext(t, t.Context(), resourceGroupName, subscriptionID)
 	assert.True(t, exists, "Resource group does not exist")
 
 	// website::tag::4:: Verify the resource group exists
-	existsv2 := azure.ResourceGroupExistsV2(t, resourceGroupName, subscriptionID)
+	existsv2 := azure.ResourceGroupExistsV2Context(t, t.Context(), resourceGroupName, subscriptionID)
 	assert.True(t, existsv2, "Resource group does not exist")
 }

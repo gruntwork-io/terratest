@@ -7,13 +7,15 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/require"
 
@@ -23,8 +25,8 @@ import (
 func TestGetSecretEReturnsErrorForNonExistantSecret(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	_, err := GetSecretE(t, options, "master-password")
+	options := k8s.NewKubectlOptions("", "", "default")
+	_, err := k8s.GetSecretE(t, options, "master-password")
 	require.Error(t, err)
 }
 
@@ -32,13 +34,15 @@ func TestGetSecretEReturnsCorrectSecretInCorrectNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_SECRET_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	secret := GetSecret(t, options, "master-password")
-	require.Equal(t, secret.Name, "master-password")
+	configData := fmt.Sprintf(exampleSecretYAMLTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	secret := k8s.GetSecret(t, options, "master-password")
+	require.Equal(t, "master-password", secret.Name)
 	require.Equal(t, secret.Namespace, uniqueID)
 }
 
@@ -46,15 +50,16 @@ func TestWaitUntilSecretAvailableReturnsSuccessfully(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_SECRET_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	KubectlApplyFromString(t, options, configData)
-	WaitUntilSecretAvailable(t, options, "master-password", 10, 1*time.Second)
+	configData := fmt.Sprintf(exampleSecretYAMLTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.WaitUntilSecretAvailable(t, options, "master-password", 10, 1*time.Second)
 }
 
-const EXAMPLE_SECRET_YAML_TEMPLATE = `---
+const exampleSecretYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:

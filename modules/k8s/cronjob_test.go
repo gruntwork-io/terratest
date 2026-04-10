@@ -1,13 +1,15 @@
 //go:build kubeall || kubernetes
 // +build kubeall kubernetes
 
-package k8s
+package k8s_test
 
 import (
 	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	batchv1 "k8s.io/api/batch/v1"
 
@@ -21,36 +23,41 @@ func TestListCronJobsReturnsCronJobsInNamespace(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	jobs := ListCronJobs(t, options, metav1.ListOptions{})
-	require.Equal(t, len(jobs), 1)
+	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	jobs := k8s.ListCronJobs(t, options, metav1.ListOptions{})
+	require.Len(t, jobs, 1)
 	job := jobs[0]
-	require.Equal(t, job.Name, "cron-job")
+	require.Equal(t, "cron-job", job.Name)
 	require.Equal(t, job.Namespace, uniqueID)
 }
 
 func TestGetCronJobEReturnErrorForNotExistingCronJob(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
-	_, err := GetJobE(t, options, random.UniqueID())
+	options := k8s.NewKubectlOptions("", "", "default")
+	_, err := k8s.GetJobE(t, options, random.UniqueID())
 	require.Error(t, err)
 }
 
 func TestGetCronJobEReturnsCorrectJobInNamespace(t *testing.T) {
 	t.Parallel()
-	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
 
-	job := GetCronJob(t, options, "cron-job")
-	require.Equal(t, job.Name, "cron-job")
+	uniqueID := strings.ToLower(random.UniqueID())
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+
+	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	job := k8s.GetCronJob(t, options, "cron-job")
+	require.Equal(t, "cron-job", job.Name)
 	require.Equal(t, job.Namespace, uniqueID)
 }
 
@@ -58,19 +65,22 @@ func TestWaitUntilCronJobScheduleSuccessfullyContainer(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	WaitUntilCronJobSucceed(t, options, "cron-job", 60, 5*time.Second)
+	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	k8s.WaitUntilCronJobSucceed(t, options, "cron-job", 60, 5*time.Second)
 }
 
 func TestIsCronJobSucceeded(t *testing.T) {
+	t.Parallel()
 
 	cases := []struct {
-		title          string
 		cronJob        *batchv1.CronJob
+		title          string
 		expectedResult bool
 	}{
 		{
@@ -97,7 +107,8 @@ func TestIsCronJobSucceeded(t *testing.T) {
 		tc := tc
 		t.Run(tc.title, func(t *testing.T) {
 			t.Parallel()
-			actualResult := IsCronJobSucceeded(tc.cronJob)
+
+			actualResult := k8s.IsCronJobSucceeded(tc.cronJob)
 			require.Equal(t, tc.expectedResult, actualResult)
 		})
 	}

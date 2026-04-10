@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestFrontDoorExists(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	exists, err := FrontDoorExistsE(frontDoorName, resourceGroupName, subscriptionID)
+	exists, err := azure.FrontDoorExistsE(frontDoorName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -37,7 +38,7 @@ func TestGetFrontDoor(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	instance, err := GetFrontDoorE(frontDoorName, resourceGroupName, subscriptionID)
+	instance, err := azure.GetFrontDoorE(frontDoorName, resourceGroupName, subscriptionID)
 
 	require.Nil(t, instance)
 	require.Error(t, err)
@@ -51,7 +52,7 @@ func TestFrontDoorFrontendEndpointExists(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	endpoint, err := FrontDoorFrontendEndpointExistsE(endpointName, frontDoorName, resourceGroupName, subscriptionID)
+	endpoint, err := azure.FrontDoorFrontendEndpointExistsE(endpointName, frontDoorName, resourceGroupName, subscriptionID)
 
 	require.False(t, endpoint)
 	require.Error(t, err)
@@ -65,7 +66,7 @@ func TestGetFrontDoorFrontendEndpoint(t *testing.T) {
 	resourceGroupName := "TestResourceGroup"
 	subscriptionID := ""
 
-	endpoint, err := GetFrontDoorFrontendEndpointE(endpointName, frontDoorName, resourceGroupName, subscriptionID)
+	endpoint, err := azure.GetFrontDoorFrontendEndpointE(endpointName, frontDoorName, resourceGroupName, subscriptionID)
 
 	require.Nil(t, endpoint)
 	require.Error(t, err)

@@ -7,7 +7,7 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package test
+package test_test
 
 import (
 	"path/filepath"
@@ -24,6 +24,7 @@ import (
 )
 
 func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
+	t.Helper()
 	t.Parallel()
 
 	// Path to the Kubernetes resource config we will test
@@ -53,11 +54,13 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	// Wait for at least 1 Pod to be ready from the DaemonSet
 	retries := 10
 	sleep := time.Second * 1
+
 	for i := 1; i < retries; i++ {
 		podsReady := k8s.GetDaemonSet(t, options, "podinfo-deamonset").Status.NumberReady
 		if podsReady > 0 {
 			break
 		}
+
 		time.Sleep(sleep)
 	}
 
@@ -69,7 +72,7 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	pods := k8s.ListPods(t, options, *listOptions)
 
 	// Check that we did not timeout waiting for the Pod of the DaemonSet to be ready
-	require.Greater(t, len(pods), 0)
+	require.NotEmpty(t, pods)
 
 	pod := pods[0]
 
@@ -79,14 +82,14 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	return options, pod
 }
 
-func TestKubernetesBasicExampleLogsCheckWithContainerName(t *testing.T) {
+func TestKubernetesBasicExampleLogsCheckWithContainerName(t *testing.T) { //nolint:paralleltest // t.Parallel called in setupLogsTest
 	options, pod := setupLogsTest(t)
 	logs := k8s.GetPodLogs(t, options, &pod, "podinfo")
 
 	require.Contains(t, logs, "Starting podinfo")
 }
 
-func TestKubernetesBasicExampleLogsCheckWithNoContainerName(t *testing.T) {
+func TestKubernetesBasicExampleLogsCheckWithNoContainerName(t *testing.T) { //nolint:paralleltest // t.Parallel called in setupLogsTest
 	options, pod := setupLogsTest(t)
 	logs := k8s.GetPodLogs(t, options, &pod, "")
 

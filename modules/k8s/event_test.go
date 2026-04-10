@@ -7,10 +7,12 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/require"
 
@@ -21,30 +23,32 @@ import (
 func TestListEventsEReturnsNilErrorWhenListingEvents(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "kube-system")
-	events, err := ListEventsE(t, options, v1.ListOptions{})
-	require.Nil(t, err)
-	require.Greater(t, len(events), 0)
+	options := k8s.NewKubectlOptions("", "", "kube-system")
+	events, err := k8s.ListEventsE(t, options, v1.ListOptions{})
+	require.NoError(t, err)
+	require.NotEmpty(t, events)
 }
 
 func TestListEventsInNamespace(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "kube-system")
-	events := ListEvents(t, options, v1.ListOptions{})
-	require.Greater(t, len(events), 0)
+	options := k8s.NewKubectlOptions("", "", "kube-system")
+	events := k8s.ListEvents(t, options, v1.ListOptions{})
+	require.NotEmpty(t, events)
 }
 
 func TestListEventsReturnsZeroEventsIfNoneCreated(t *testing.T) {
 	t.Parallel()
+
 	ns := "test-ns"
 
-	options := NewKubectlOptions("", "", "")
+	options := k8s.NewKubectlOptions("", "", "")
 
-	defer DeleteNamespace(t, options, ns)
-	CreateNamespace(t, options, ns)
+	defer k8s.DeleteNamespace(t, options, ns)
+
+	k8s.CreateNamespace(t, options, ns)
 
 	options.Namespace = ns
-	events := ListEvents(t, options, v1.ListOptions{})
-	require.Equal(t, 0, len(events))
+	events := k8s.ListEvents(t, options, v1.ListOptions{})
+	require.Empty(t, events)
 }

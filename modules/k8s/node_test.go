@@ -7,11 +7,13 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,13 +26,13 @@ func TestGetNodes(t *testing.T) {
 	t.Parallel()
 
 	// Assumes local kubernetes (minikube or docker-for-desktop kube), where there is only one node
-	options := NewKubectlOptions("", "", "default")
-	nodes := GetNodes(t, options)
-	require.Equal(t, len(nodes), 1)
+	options := k8s.NewKubectlOptions("", "", "default")
+	nodes := k8s.GetNodes(t, options)
+	require.Len(t, nodes, 1)
 
 	node := nodes[0]
 	// Make sure node name is not blank, indicating an uninitialized Node object
-	assert.NotEqual(t, node.Name, "")
+	assert.NotEmpty(t, node.Name)
 }
 
 // Tests that:
@@ -40,13 +42,13 @@ func TestGetReadyNodes(t *testing.T) {
 	t.Parallel()
 
 	// Assumes local kubernetes (minikube or docker-for-desktop kube), where there is only one node
-	options := NewKubectlOptions("", "", "default")
-	nodes := GetReadyNodes(t, options)
-	require.Equal(t, len(nodes), 1)
+	options := k8s.NewKubectlOptions("", "", "default")
+	nodes := k8s.GetReadyNodes(t, options)
+	require.Len(t, nodes, 1)
 
 	node := nodes[0]
 	// Make sure node name is not blank, indicating an uninitialized Node object
-	assert.NotEqual(t, node.Name, "")
+	assert.NotEmpty(t, node.Name)
 }
 
 // Tests that:
@@ -55,17 +57,19 @@ func TestGetReadyNodes(t *testing.T) {
 func TestWaitUntilAllNodesReady(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "default")
+	options := k8s.NewKubectlOptions("", "", "default")
 
-	WaitUntilAllNodesReady(t, options, 12, 5*time.Second)
+	k8s.WaitUntilAllNodesReady(t, options, 12, 5*time.Second)
 
-	nodes := GetNodes(t, options)
+	nodes := k8s.GetNodes(t, options)
+
 	nodeNames := map[string]bool{}
 	for _, node := range nodes {
 		nodeNames[node.Name] = true
 	}
 
-	readyNodes := GetReadyNodes(t, options)
+	readyNodes := k8s.GetReadyNodes(t, options)
+
 	readyNodeNames := map[string]bool{}
 	for _, node := range readyNodes {
 		readyNodeNames[node.Name] = true

@@ -7,20 +7,23 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/k8s"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Since we always run unit tests against minikube, we can only test if IsMinikubeE returns true.
 func TestIsMinikube(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "")
-	isMinikube, err := IsMinikubeE(t, options)
-	assert.NoError(t, err)
+	options := k8s.NewKubectlOptions("", "", "")
+	isMinikube, err := k8s.IsMinikubeE(t, options)
+	require.NoError(t, err)
 	assert.True(t, isMinikube)
 }

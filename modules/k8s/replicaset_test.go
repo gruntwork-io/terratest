@@ -7,10 +7,12 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"fmt"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"strings"
 	"testing"
@@ -23,8 +25,8 @@ import (
 func TestGetReplicaSetEReturnsError(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "")
-	_, err := GetReplicaSetE(t, options, "sample-rs")
+	options := k8s.NewKubectlOptions("", "", "")
+	_, err := k8s.GetReplicaSetE(t, options, "sample-rs")
 	require.Error(t, err)
 }
 
@@ -32,13 +34,15 @@ func TestGetReplicaSets(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_REPLICASET_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	replicaSet := GetReplicaSet(t, options, "sample-rs")
-	require.Equal(t, replicaSet.Name, "sample-rs")
+	configData := fmt.Sprintf(exampleReplicaSetYAMLTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	replicaSet := k8s.GetReplicaSet(t, options, "sample-rs")
+	require.Equal(t, "sample-rs", replicaSet.Name)
 	require.Equal(t, replicaSet.Namespace, uniqueID)
 }
 
@@ -46,20 +50,22 @@ func TestListReplicaSets(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_REPLICASET_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 
-	replicaSets := ListReplicaSets(t, options, metav1.ListOptions{})
-	require.Equal(t, len(replicaSets), 1)
+	configData := fmt.Sprintf(exampleReplicaSetYAMLTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+
+	replicaSets := k8s.ListReplicaSets(t, options, metav1.ListOptions{})
+	require.Len(t, replicaSets, 1)
 
 	replicaSet := replicaSets[0]
-	require.Equal(t, replicaSet.Name, "sample-rs")
+	require.Equal(t, "sample-rs", replicaSet.Name)
 	require.Equal(t, replicaSet.Namespace, uniqueID)
 }
 
-const EXAMPLE_REPLICASET_YAML_TEMPLATE = `---
+const exampleReplicaSetYAMLTemplate = `---
 apiVersion: v1
 kind: Namespace
 metadata:

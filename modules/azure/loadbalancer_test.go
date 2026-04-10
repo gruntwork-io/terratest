@@ -4,12 +4,13 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +26,7 @@ func TestLoadBalancerExistsE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := LoadBalancerExistsContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+	_, err := azure.LoadBalancerExistsContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -37,7 +38,7 @@ func TestGetLoadBalancerE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetLoadBalancerContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+	_, err := azure.GetLoadBalancerContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
 
 	require.Error(t, err)
 }

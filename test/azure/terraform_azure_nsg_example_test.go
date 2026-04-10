@@ -4,16 +4,16 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTerraformAzureNsgExample(t *testing.T) {
@@ -30,18 +30,19 @@ func TestTerraformAzureNsgExample(t *testing.T) {
 		},
 	}
 
-	defer terraform.Destroy(t, terraformOptions)
-	terraform.InitAndApply(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
-	nsgName := terraform.Output(t, terraformOptions, "nsg_name")
-	sshRuleName := terraform.Output(t, terraformOptions, "ssh_rule_name")
-	httpRuleName := terraform.Output(t, terraformOptions, "http_rule_name")
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
+
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
+	nsgName := terraform.OutputContext(t, t.Context(), terraformOptions, "nsg_name")
+	sshRuleName := terraform.OutputContext(t, t.Context(), terraformOptions, "ssh_rule_name")
+	httpRuleName := terraform.OutputContext(t, t.Context(), terraformOptions, "http_rule_name")
 
 	// A default NSG has 6 rules, and we have two custom rules for a total of 8
-	rules, err := azure.GetAllNSGRulesContextE(context.Background(), resourceGroupName, nsgName, "")
-	assert.NoError(t, err)
-	assert.Equal(t, 8, len(rules.SummarizedRules))
+	rules, err := azure.GetAllNSGRulesContextE(t.Context(), resourceGroupName, nsgName, "")
+	require.NoError(t, err)
+	assert.Len(t, rules.SummarizedRules, 8)
 
 	// We should have a rule for allowing ssh
 	sshRule := rules.FindRuleByName(sshRuleName)

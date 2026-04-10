@@ -7,11 +7,13 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -23,40 +25,43 @@ import (
 func TestNamespaces(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueID()
-	namespaceName := strings.ToLower(uniqueId)
-	options := NewKubectlOptions("", "", namespaceName)
-	CreateNamespace(t, options, namespaceName)
+	uniqueID := random.UniqueID()
+	namespaceName := strings.ToLower(uniqueID)
+	options := k8s.NewKubectlOptions("", "", namespaceName)
+	k8s.CreateNamespace(t, options, namespaceName)
+
 	defer func() {
-		DeleteNamespace(t, options, namespaceName)
-		namespace := GetNamespace(t, options, namespaceName)
-		require.Equal(t, namespace.Status.Phase, corev1.NamespaceTerminating)
+		k8s.DeleteNamespace(t, options, namespaceName)
+		namespace := k8s.GetNamespace(t, options, namespaceName)
+		require.Equal(t, corev1.NamespaceTerminating, namespace.Status.Phase)
 	}()
 
-	namespace := GetNamespace(t, options, namespaceName)
+	namespace := k8s.GetNamespace(t, options, namespaceName)
 	require.Equal(t, namespace.Name, namespaceName)
 }
 
 func TestNamespaceWithMetadata(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueID()
-	namespaceName := strings.ToLower(uniqueId)
-	options := NewKubectlOptions("", "", namespaceName)
+	uniqueID := random.UniqueID()
+	namespaceName := strings.ToLower(uniqueID)
+	options := k8s.NewKubectlOptions("", "", namespaceName)
 	namespaceLabels := map[string]string{"foo": "bar"}
 	namespaceObjectMetaWithLabels := metav1.ObjectMeta{
 		Name:   namespaceName,
 		Labels: namespaceLabels,
 	}
-	CreateNamespaceWithMetadata(t, options, namespaceObjectMetaWithLabels)
+	k8s.CreateNamespaceWithMetadata(t, options, namespaceObjectMetaWithLabels)
+
 	defer func() {
-		DeleteNamespace(t, options, namespaceName)
-		namespace := GetNamespace(t, options, namespaceName)
-		require.Equal(t, namespace.Status.Phase, corev1.NamespaceTerminating)
+		k8s.DeleteNamespace(t, options, namespaceName)
+		namespace := k8s.GetNamespace(t, options, namespaceName)
+		require.Equal(t, corev1.NamespaceTerminating, namespace.Status.Phase)
 	}()
 
-	namespace := GetNamespace(t, options, namespaceName)
+	namespace := k8s.GetNamespace(t, options, namespaceName)
 	require.Equal(t, namespace.Name, namespaceName)
+
 	for k, v := range namespaceLabels {
 		require.Equal(t, v, namespace.Labels[k], "Expected label %s=%s", k, v)
 	}
@@ -65,25 +70,27 @@ func TestNamespaceWithMetadata(t *testing.T) {
 func TestListNamespaces(t *testing.T) {
 	t.Parallel()
 
-	uniqueId := random.UniqueID()
-	namespaceName := strings.ToLower(uniqueId)
-	options := NewKubectlOptions("", "", namespaceName)
+	uniqueID := random.UniqueID()
+	namespaceName := strings.ToLower(uniqueID)
+	options := k8s.NewKubectlOptions("", "", namespaceName)
 
-	CreateNamespace(t, options, namespaceName)
-	defer DeleteNamespace(t, options, namespaceName)
+	k8s.CreateNamespace(t, options, namespaceName)
+	t.Cleanup(func() { k8s.DeleteNamespace(t, options, namespaceName) })
 
 	t.Run("List all namespaces and find the created one", func(t *testing.T) {
 		t.Parallel()
-		namespaces := ListNamespaces(t, options, metav1.ListOptions{})
+		namespaces := k8s.ListNamespaces(t, options, metav1.ListOptions{})
 		require.NotEmpty(t, namespaces, "Should find at least some namespaces")
 
 		found := false
+
 		for _, ns := range namespaces {
 			if ns.Name == namespaceName {
 				found = true
 				break
 			}
 		}
+
 		require.True(t, found, "Should find the created namespace in the list")
 	})
 }

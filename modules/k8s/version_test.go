@@ -7,11 +7,13 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,11 +28,11 @@ type KubectlVersion struct {
 func TestGetKubernetesClusterVersionE(t *testing.T) {
 	t.Parallel()
 
-	kubernetesClusterVersion, err := GetKubernetesClusterVersionE(t)
+	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionE(t)
 	require.NoError(t, err)
 
-	options := NewKubectlOptions("", "", "")
-	kubernetesClusterVersionFromKubectl, err := RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
+	options := k8s.NewKubectlOptions("", "", "")
+	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
 	require.NoError(t, err)
 
 	var kctlClusterVersion KubectlVersion
@@ -39,17 +41,17 @@ func TestGetKubernetesClusterVersionE(t *testing.T) {
 		json.Unmarshal([]byte(kubernetesClusterVersionFromKubectl), &kctlClusterVersion),
 	)
 
-	assert.EqualValues(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
+	assert.Equal(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
 }
 
 func TestGetKubernetesClusterVersionWithOptionsE(t *testing.T) {
 	t.Parallel()
 
-	options := NewKubectlOptions("", "", "")
-	kubernetesClusterVersion, err := GetKubernetesClusterVersionWithOptionsE(t, options)
+	options := k8s.NewKubectlOptions("", "", "")
+	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionWithOptionsE(t, options)
 	require.NoError(t, err)
 
-	kubernetesClusterVersionFromKubectl, err := RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
+	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
 	require.NoError(t, err)
 
 	var kctlClusterVersion KubectlVersion
@@ -58,5 +60,5 @@ func TestGetKubernetesClusterVersionWithOptionsE(t *testing.T) {
 		json.Unmarshal([]byte(kubernetesClusterVersionFromKubectl), &kctlClusterVersion),
 	)
 
-	assert.EqualValues(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
+	assert.Equal(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
 }

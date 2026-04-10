@@ -7,7 +7,7 @@
 // tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.  We
 // recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package k8s
+package k8s_test
 
 import (
 	"crypto/tls"
@@ -15,6 +15,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
 
 	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -24,24 +26,28 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
-	configData := fmt.Sprintf(EXAMPLE_POD_YAML_TEMPLATE, uniqueID, uniqueID)
-	defer KubectlDeleteFromString(t, options, configData)
-	KubectlApplyFromString(t, options, configData)
-	WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+
+	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
 
 	// Open a tunnel to pod from any available port locally
-	tunnel := NewTunnel(options, ResourceTypePod, "nginx-pod", 0, 80)
+	tunnel := k8s.NewTunnel(options, k8s.ResourceTypePod, "nginx-pod", 0, 80)
 	defer tunnel.Close()
+
 	tunnel.ForwardPort(t)
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
 
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-	http_helper.HttpGetWithRetryWithCustomValidation(
+	http_helper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
-		fmt.Sprintf("http://%s", tunnel.Endpoint()),
+		t.Context(),
+		"http://"+tunnel.Endpoint(),
 		&tlsConfig,
 		60,
 		5*time.Second,
@@ -53,24 +59,28 @@ func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
-	KubectlApplyFromString(t, options, configData)
-	defer KubectlDeleteFromString(t, options, configData)
-	WaitUntilDeploymentAvailable(t, options, "nginx-deployment", 60, 1*time.Second)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.WaitUntilDeploymentAvailable(t, options, "nginx-deployment", 60, 1*time.Second)
 
 	// Open a tunnel to pod from any available port locally
-	tunnel := NewTunnel(options, ResourceTypeDeployment, "nginx-deployment", 0, 80)
+	tunnel := k8s.NewTunnel(options, k8s.ResourceTypeDeployment, "nginx-deployment", 0, 80)
 	defer tunnel.Close()
+
 	tunnel.ForwardPort(t)
 
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
 
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-	http_helper.HttpGetWithRetryWithCustomValidation(
+	http_helper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
-		fmt.Sprintf("http://%s", tunnel.Endpoint()),
+		t.Context(),
+		"http://"+tunnel.Endpoint(),
 		&tlsConfig,
 		60,
 		5*time.Second,
@@ -82,14 +92,15 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 	t.Parallel()
 
 	uniqueID := strings.ToLower(random.UniqueID())
-	options := NewKubectlOptions("", "", uniqueID)
+	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExamplePodWithServiceYAMLTemplate, uniqueID, uniqueID, uniqueID, uniqueID)
+
 	t.Cleanup(func() {
-		KubectlDeleteFromString(t, options, configData)
+		k8s.KubectlDeleteFromString(t, options, configData)
 	})
-	KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromString(t, options, configData)
 	// t.FailNow()
-	WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
 
 	testCases := []struct {
 		name        string
@@ -109,10 +120,11 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			WaitUntilServiceAvailable(t, options, testCase.serviceName, 60, 1*time.Second)
+			k8s.WaitUntilServiceAvailable(t, options, testCase.serviceName, 60, 1*time.Second)
 
 			// Open a tunnel from any available port locally
-			tunnel := NewTunnel(options, ResourceTypeService, testCase.serviceName, 0, 8080)
+			tunnel := k8s.NewTunnel(options, k8s.ResourceTypeService, testCase.serviceName, 0, 8080)
+
 			t.Cleanup(func() {
 				tunnel.Close()
 			})
@@ -122,9 +134,10 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 			tlsConfig := tls.Config{}
 
 			// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-			http_helper.HttpGetWithRetryWithCustomValidation(
+			http_helper.HTTPGetWithRetryWithCustomValidationContext(
 				t,
-				fmt.Sprintf("http://%s", tunnel.Endpoint()),
+				t.Context(),
+				"http://"+tunnel.Endpoint(),
 				&tlsConfig,
 				60,
 				5*time.Second,
@@ -138,6 +151,7 @@ func verifyNginxWelcomePage(statusCode int, body string) bool {
 	if statusCode != 200 {
 		return false
 	}
+
 	return strings.Contains(body, "Welcome to nginx")
 }
 

@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,10 +22,10 @@ func TestGetNameFromResourceID(t *testing.T) {
 	sliceNotFound := "noresourcepresent"
 
 	// verify success
-	resultSuccess := GetNameFromResourceID(sliceSource)
+	resultSuccess := azure.GetNameFromResourceID(sliceSource)
 	assert.Equal(t, sliceResult, resultSuccess)
 
 	// verify error when separator not found
-	resultBadSeparator := GetNameFromResourceID(sliceNotFound)
+	resultBadSeparator := azure.GetNameFromResourceID(sliceNotFound)
 	assert.Empty(t, resultBadSeparator)
 }

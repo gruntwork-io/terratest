@@ -1,6 +1,7 @@
 //go:build gcp
 // +build gcp
 
+//nolint:testpackage // uses unexported newGCRAuthenticator, newStorageClient
 package gcp
 
 import (
@@ -40,9 +41,12 @@ func TestStaticTokenClient(t *testing.T) {
 	GetAllGCPRegions(t, projectID)
 	GetBuilds(t, projectID)
 	GetLoginProfile(t, GetGoogleIdentityEmailEnvVar(t))
+
 	_, err = newGCRAuthenticator()
 	require.NoError(t, err)
+
 	bucket := "gruntwork-terratest-" + strings.ToLower(random.UniqueID())
+
 	CreateStorageBucket(t, projectID, bucket, nil)
 	defer DeleteStorageBucket(t, bucket)
 }

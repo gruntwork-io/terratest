@@ -3,10 +3,10 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
+//nolint:testpackage // uses unexported isInRegion, isInRegions
 package gcp
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -70,7 +70,7 @@ func TestGetRandomZoneExcludesForbiddenRegions(t *testing.T) {
 		randomZone := GetRandomZone(t, projectID, approvedZones, nil, forbiddenRegions)
 
 		for _, forbiddenRegion := range forbiddenRegions {
-			assert.True(t, !isInRegion(randomZone, forbiddenRegion), "Expected that selected zone %s would not be in region %s, but it is.", randomZone, forbiddenRegion)
+			assert.False(t, isInRegion(randomZone, forbiddenRegion), "Expected that selected zone %s would not be in region %s, but it is.", randomZone, forbiddenRegion)
 		}
 	}
 }
@@ -83,7 +83,8 @@ func TestGetAllGCPRegions(t *testing.T) {
 	regions := GetAllGCPRegions(t, projectID)
 
 	// The typical account had access to 17 regions as of August, 2018: https://cloud.google.com/compute/docs/regions-zones/
-	assert.True(t, len(regions) >= 17, "Number of regions: %d", len(regions))
+	assert.GreaterOrEqual(t, len(regions), 17, "Number of regions: %d", len(regions))
+
 	for _, region := range regions {
 		assertLooksLikeRegionName(t, region)
 	}
@@ -97,7 +98,8 @@ func TestGetAllGCPZones(t *testing.T) {
 	zones := GetAllGCPZones(t, projectID)
 
 	// The typical account had access to 52 zones as of August, 2018: https://cloud.google.com/compute/docs/regions-zones/
-	assert.True(t, len(zones) >= 52, "Number of zones: %d", len(zones))
+	assert.GreaterOrEqual(t, len(zones), 52, "Number of zones: %d", len(zones))
+
 	for _, zone := range zones {
 		assertLooksLikeZoneName(t, zone)
 	}
@@ -120,7 +122,7 @@ func TestGetRandomZoneForRegion(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.True(t, strings.Contains(zone, region), "Expected zone %s to be in region %s", zone, region)
+		assert.Contains(t, zone, region, "Expected zone %s to be in region %s", zone, region)
 	}
 }
 
@@ -164,9 +166,11 @@ func TestGetInRegions(t *testing.T) {
 }
 
 func assertLooksLikeRegionName(t *testing.T, regionName string) {
+	t.Helper()
 	assert.Regexp(t, "[a-z]+-[a-z]+[[:digit:]]+", regionName)
 }
 
 func assertLooksLikeZoneName(t *testing.T, zoneName string) {
+	t.Helper()
 	assert.Regexp(t, "[a-z]+-[a-z]+[[:digit:]]+-[a-z]{1}", zoneName)
 }
