@@ -54,7 +54,7 @@ func TestTerraformAzureActionGroupExample(t *testing.T) {
 	actionGroup := azure.GetActionGroupResourceContext(t, t.Context(), expectedAppName, expectedResourceGroupName, "")
 
 	assert.NotNil(actionGroup)
-	assert.Len(*actionGroup.EmailReceivers, 1)
-	assert.Empty(*actionGroup.SmsReceivers)
-	assert.Len(*actionGroup.WebhookReceivers, 1)
+	assert.Len(actionGroup.Properties.EmailReceivers, 1)
+	assert.Empty(actionGroup.Properties.SmsReceivers)
+	assert.Len(actionGroup.Properties.WebhookReceivers, 1)
 }

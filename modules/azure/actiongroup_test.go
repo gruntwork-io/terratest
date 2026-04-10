@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,37 +18,26 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when methods to create and delete network resources are added, these tests can be extended.
 */
 
-func TestGetActionGroupResourceEWithMissingResourceGroupName(t *testing.T) {
+func TestGetActionGroupResourceContextEWithMissingResourceGroupName(t *testing.T) {
 	t.Parallel()
 
 	ruleName := "Hello"
 	resGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
+	_, err := azure.GetActionGroupResourceContextE(t.Context(), ruleName, resGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
 
-func TestGetActionGroupResourceEWithInvalidResourceGroupName(t *testing.T) {
+func TestGetActionGroupResourceContextEWithInvalidResourceGroupName(t *testing.T) {
 	t.Parallel()
 
 	ruleName := ""
 	resGroupName := "Hello"
 	subscriptionID := ""
 
-	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
+	_, err := azure.GetActionGroupResourceContextE(t.Context(), ruleName, resGroupName, subscriptionID)
 
 	require.Error(t, err)
-}
-
-func TestGetActionGroupClient(t *testing.T) {
-	t.Parallel()
-
-	subscriptionID := ""
-
-	client, err := azure.CreateActionGroupClient(subscriptionID)
-
-	require.NoError(t, err)
-	assert.NotEmpty(t, *client)
 }

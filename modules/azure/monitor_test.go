@@ -10,13 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDiagnosticsSettingsResourceExists(t *testing.T) {
+func TestDiagnosticsSettingsResourceExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	diagnosticsSettingResourceName := "fakename"
 	resGroupName := "fakeresgroup"
 	subscriptionID := "fakesubid"
 
-	_, err := azure.DiagnosticSettingsResourceExistsE(diagnosticsSettingResourceName, resGroupName, subscriptionID)
+	_, err := azure.DiagnosticSettingsResourceExistsContextE(t.Context(), diagnosticsSettingResourceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }

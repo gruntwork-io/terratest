@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +14,7 @@ import (
 // ruleName - required to find the ActionGroupResource.
 // resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
-func GetActionGroupResourceContext(t testing.TestingT, ctx context.Context, ruleName string, resGroupName string, subscriptionID string) *insights.ActionGroupResource {
+func GetActionGroupResourceContext(t testing.TestingT, ctx context.Context, ruleName string, resGroupName string, subscriptionID string) *armmonitor.ActionGroupResource {
 	actionGroupResource, err := GetActionGroupResourceContextE(ctx, ruleName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
@@ -26,23 +26,38 @@ func GetActionGroupResourceContext(t testing.TestingT, ctx context.Context, rule
 // ruleName - required to find the ActionGroupResource.
 // resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
-func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGroupName string, subscriptionID string) (*insights.ActionGroupResource, error) {
+func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGroupName string, subscriptionID string) (*armmonitor.ActionGroupResource, error) { //nolint:dupl
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := CreateActionGroupClient(subscriptionID)
+	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	actionGroup, err := client.Get(ctx, rgName, ruleName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	return &actionGroup, nil
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armmonitor.NewActionGroupsClient(subID, cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Get(ctx, rgName, ruleName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.ActionGroupResource, nil
 }
 
 // GetActionGroupResource gets the ActionGroupResource.
@@ -52,7 +67,7 @@ func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGro
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
 //
 // Deprecated: Use [GetActionGroupResourceContext] instead.
-func GetActionGroupResource(t testing.TestingT, ruleName string, resGroupName string, subscriptionID string) *insights.ActionGroupResource {
+func GetActionGroupResource(t testing.TestingT, ruleName string, resGroupName string, subscriptionID string) *armmonitor.ActionGroupResource {
 	return GetActionGroupResourceContext(t, context.Background(), ruleName, resGroupName, subscriptionID) //nolint:staticcheck
 }
 
@@ -62,6 +77,6 @@ func GetActionGroupResource(t testing.TestingT, ruleName string, resGroupName st
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
 //
 // Deprecated: Use [GetActionGroupResourceContextE] instead.
-func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionID string) (*insights.ActionGroupResource, error) {
+func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionID string) (*armmonitor.ActionGroupResource, error) {
 	return GetActionGroupResourceContextE(context.Background(), ruleName, resGroupName, subscriptionID)
 }

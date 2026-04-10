@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -55,7 +55,7 @@ func DiagnosticSettingsResourceExistsE(diagnosticSettingsResourceName string, re
 // GetDiagnosticsSettingsResourceContext gets the diagnostics settings for a specified resource.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetDiagnosticsSettingsResourceContext(t testing.TestingT, ctx context.Context, name string, resourceURI string, subscriptionID string) *insights.DiagnosticSettingsResource {
+func GetDiagnosticsSettingsResourceContext(t testing.TestingT, ctx context.Context, name string, resourceURI string, subscriptionID string) *armmonitor.DiagnosticSettingsResource {
 	t.Helper()
 
 	resource, err := GetDiagnosticsSettingsResourceContextE(ctx, name, resourceURI, subscriptionID)
@@ -68,7 +68,7 @@ func GetDiagnosticsSettingsResourceContext(t testing.TestingT, ctx context.Conte
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetDiagnosticsSettingsResourceContext] instead.
-func GetDiagnosticsSettingsResource(t testing.TestingT, name string, resourceURI string, subscriptionID string) *insights.DiagnosticSettingsResource {
+func GetDiagnosticsSettingsResource(t testing.TestingT, name string, resourceURI string, subscriptionID string) *armmonitor.DiagnosticSettingsResource {
 	t.Helper()
 
 	return GetDiagnosticsSettingsResourceContext(t, context.Background(), name, resourceURI, subscriptionID) //nolint:staticcheck
@@ -76,37 +76,47 @@ func GetDiagnosticsSettingsResource(t testing.TestingT, name string, resourceURI
 
 // GetDiagnosticsSettingsResourceContextE gets the diagnostics settings for a specified resource.
 // The ctx parameter supports cancellation and timeouts.
-func GetDiagnosticsSettingsResourceContextE(ctx context.Context, name string, resourceURI string, subscriptionID string) (*insights.DiagnosticSettingsResource, error) {
+func GetDiagnosticsSettingsResourceContextE(ctx context.Context, name string, resourceURI string, subscriptionID string) (*armmonitor.DiagnosticSettingsResource, error) {
 	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	_, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := CreateDiagnosticsSettingsClientE(subscriptionID)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	settings, err := client.Get(ctx, resourceURI, name)
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	return &settings, nil
+	client, err := armmonitor.NewDiagnosticSettingsClient(cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Get(ctx, resourceURI, name, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.DiagnosticSettingsResource, nil
 }
 
 // GetDiagnosticsSettingsResourceE gets the diagnostics settings for a specified resource.
 //
 // Deprecated: Use [GetDiagnosticsSettingsResourceContextE] instead.
-func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscriptionID string) (*insights.DiagnosticSettingsResource, error) {
+func GetDiagnosticsSettingsResourceE(name string, resourceURI string, subscriptionID string) (*armmonitor.DiagnosticSettingsResource, error) {
 	return GetDiagnosticsSettingsResourceContextE(context.Background(), name, resourceURI, subscriptionID)
 }
 
 // GetVMInsightsOnboardingStatusContext gets diagnostics VM onboarding status.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetVMInsightsOnboardingStatusContext(t testing.TestingT, ctx context.Context, resourceURI string, subscriptionID string) *insights.VMInsightsOnboardingStatus {
+func GetVMInsightsOnboardingStatusContext(t testing.TestingT, ctx context.Context, resourceURI string, subscriptionID string) *armmonitor.VMInsightsOnboardingStatus {
 	t.Helper()
 
 	status, err := GetVMInsightsOnboardingStatusContextE(t, ctx, resourceURI, subscriptionID)
@@ -119,7 +129,7 @@ func GetVMInsightsOnboardingStatusContext(t testing.TestingT, ctx context.Contex
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetVMInsightsOnboardingStatusContext] instead.
-func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subscriptionID string) *insights.VMInsightsOnboardingStatus {
+func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subscriptionID string) *armmonitor.VMInsightsOnboardingStatus {
 	t.Helper()
 
 	return GetVMInsightsOnboardingStatusContext(t, context.Background(), resourceURI, subscriptionID) //nolint:staticcheck
@@ -127,31 +137,41 @@ func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subsc
 
 // GetVMInsightsOnboardingStatusContextE gets diagnostics VM onboarding status.
 // The ctx parameter supports cancellation and timeouts.
-func GetVMInsightsOnboardingStatusContextE(t testing.TestingT, ctx context.Context, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
-	client, err := CreateVMInsightsClientE(subscriptionID)
+func GetVMInsightsOnboardingStatusContextE(t testing.TestingT, ctx context.Context, resourceURI string, subscriptionID string) (*armmonitor.VMInsightsOnboardingStatus, error) {
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	status, err := client.GetOnboardingStatus(ctx, resourceURI)
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	return &status, nil
+	client, err := armmonitor.NewVMInsightsClient(cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetOnboardingStatus(ctx, resourceURI, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.VMInsightsOnboardingStatus, nil
 }
 
 // GetVMInsightsOnboardingStatusE gets diagnostics VM onboarding status.
 //
 // Deprecated: Use [GetVMInsightsOnboardingStatusContextE] instead.
-func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
+func GetVMInsightsOnboardingStatusE(t testing.TestingT, resourceURI string, subscriptionID string) (*armmonitor.VMInsightsOnboardingStatus, error) {
 	return GetVMInsightsOnboardingStatusContextE(t, context.Background(), resourceURI, subscriptionID)
 }
 
 // GetActivityLogAlertResourceContext gets an Activity Log Alert Resource in the specified Azure Resource Group.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetActivityLogAlertResourceContext(t testing.TestingT, ctx context.Context, activityLogAlertName string, resGroupName string, subscriptionID string) *insights.ActivityLogAlertResource {
+func GetActivityLogAlertResourceContext(t testing.TestingT, ctx context.Context, activityLogAlertName string, resGroupName string, subscriptionID string) *armmonitor.ActivityLogAlertResource {
 	t.Helper()
 
 	activityLogAlertResource, err := GetActivityLogAlertResourceContextE(ctx, activityLogAlertName, resGroupName, subscriptionID)
@@ -164,7 +184,7 @@ func GetActivityLogAlertResourceContext(t testing.TestingT, ctx context.Context,
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetActivityLogAlertResourceContext] instead.
-func GetActivityLogAlertResource(t testing.TestingT, activityLogAlertName string, resGroupName string, subscriptionID string) *insights.ActivityLogAlertResource {
+func GetActivityLogAlertResource(t testing.TestingT, activityLogAlertName string, resGroupName string, subscriptionID string) *armmonitor.ActivityLogAlertResource {
 	t.Helper()
 
 	return GetActivityLogAlertResourceContext(t, context.Background(), activityLogAlertName, resGroupName, subscriptionID) //nolint:staticcheck
@@ -172,31 +192,44 @@ func GetActivityLogAlertResource(t testing.TestingT, activityLogAlertName string
 
 // GetActivityLogAlertResourceContextE gets an Activity Log Alert Resource in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
-func GetActivityLogAlertResourceContextE(ctx context.Context, activityLogAlertName string, resGroupName string, subscriptionID string) (*insights.ActivityLogAlertResource, error) {
+func GetActivityLogAlertResourceContextE(ctx context.Context, activityLogAlertName string, resGroupName string, subscriptionID string) (*armmonitor.ActivityLogAlertResource, error) { //nolint:dupl
 	// Validate resource group name and subscription ID
 	_, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the client reference
-	client, err := CreateActivityLogAlertsClientE(subscriptionID)
+	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the Activity Log Alert Resource
-	activityLogAlertResource, err := client.Get(ctx, resGroupName, activityLogAlertName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	return &activityLogAlertResource, nil
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armmonitor.NewActivityLogAlertsClient(subID, cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Get(ctx, resGroupName, activityLogAlertName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.ActivityLogAlertResource, nil
 }
 
 // GetActivityLogAlertResourceE gets an Activity Log Alert Resource in the specified Azure Resource Group.
 //
 // Deprecated: Use [GetActivityLogAlertResourceContextE] instead.
-func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName string, subscriptionID string) (*insights.ActivityLogAlertResource, error) {
+func GetActivityLogAlertResourceE(activityLogAlertName string, resGroupName string, subscriptionID string) (*armmonitor.ActivityLogAlertResource, error) {
 	return GetActivityLogAlertResourceContextE(context.Background(), activityLogAlertName, resGroupName, subscriptionID)
 }
