@@ -4,10 +4,9 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
@@ -37,17 +36,17 @@ func TestTerraformAzureDiskExample(t *testing.T) {
 	}
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the values of output variables
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
-	expectedDiskName := terraform.Output(t, terraformOptions, "disk_name")
-	expectedDiskType := terraform.Output(t, terraformOptions, "disk_type")
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
+	expectedDiskName := terraform.OutputContext(t, t.Context(), terraformOptions, "disk_name")
+	expectedDiskType := terraform.OutputContext(t, t.Context(), terraformOptions, "disk_type")
 
 	// Check the Disk Type
-	actualDisk := azure.GetDiskContext(t, context.Background(), expectedDiskName, resourceGroupName, subID)
+	actualDisk := azure.GetDiskContext(t, t.Context(), expectedDiskName, resourceGroupName, subID)
 	assert.Equal(t, armcompute.DiskStorageAccountTypes(expectedDiskType), *actualDisk.SKU.Name)
 }

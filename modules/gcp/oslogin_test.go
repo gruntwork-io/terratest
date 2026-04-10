@@ -82,6 +82,7 @@ func TestOSLogin(t *testing.T) {
 // This prevents "Login profile size exceeds 32 KiB" errors caused by
 // stale keys accumulating from previous test runs.
 func purgeAllSSHKeys(t *testing.T, user string) {
+	t.Helper()
 	profile, err := GetLoginProfileE(t, user)
 	if err != nil {
 		t.Logf("Warning: could not get login profile to purge keys: %v", err)

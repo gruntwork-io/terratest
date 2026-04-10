@@ -8,7 +8,7 @@
 // tests and helm tests separately from the others. This may not be necessary if you have a sufficiently powerful machine.
 // We recommend at least 4 cores and 16GB of RAM if you want to run all the tests together.
 
-package test
+package test_test
 
 import (
 	"strings"
@@ -23,6 +23,8 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 )
 
+const kedaReleaseName = "keda"
+
 // This file contains an example of how to use terratest to test *remote* helm chart template logic by rendering the templates
 // using `helm template`, and then reading in the rendered templates.
 // - TestHelmKedaRemoteExampleTemplateRenderedDeployment: An example of how to read in the rendered object and check the
@@ -32,7 +34,7 @@ import (
 func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 
 	// chart name
-	releaseName := "keda"
+	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
@@ -64,6 +66,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
 	var expectedMetricsServerReplica int32
+
 	expectedMetricsServerReplica = 999
 	deploymentMetricsServerReplica := *deployment.Spec.Replicas
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
@@ -76,7 +79,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 
 	// chart name
-	releaseName := "keda"
+	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
@@ -108,6 +111,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 
 	// Finally, we verify the deployment pod template spec is set to the expected container image value
 	var expectedMetricsServerReplica int32
+
 	expectedMetricsServerReplica = 666
 	deploymentMetricsServerReplica := *deployment.Spec.Replicas
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
@@ -120,7 +124,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
 
 	// chart name
-	releaseName := "keda"
+	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())
@@ -150,7 +154,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
 func TestHelmKedaRemoteExampleTemplateRenderedPackageDiff(t *testing.T) {
 
 	// chart name
-	releaseName := "keda"
+	releaseName := kedaReleaseName
 
 	// Set up the namespace; confirm that the template renders the expected value for the namespace.
 	namespaceName := "medieval-" + strings.ToLower(random.UniqueID())

@@ -1,11 +1,12 @@
 //go:build azure
 // +build azure
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,6 +17,6 @@ func TestDiagnosticsSettingsResourceExists(t *testing.T) {
 	resGroupName := "fakeresgroup"
 	subscriptionID := "fakesubid"
 
-	_, err := DiagnosticSettingsResourceExistsE(diagnosticsSettingResourceName, resGroupName, subscriptionID)
+	_, err := azure.DiagnosticSettingsResourceExistsE(diagnosticsSettingResourceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }

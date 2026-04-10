@@ -146,7 +146,7 @@ func TestHelmDependencyInstall(t *testing.T) {
 
 	// Deploy the chart using `helm install`.
 	err = InstallE(t, options, helmChartPath, releaseName)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify that Kubernetes service is available after helm chart deployment.
 	_, err = k8s.GetServiceE(t, kubectlOptions, releaseName)
@@ -154,6 +154,7 @@ func TestHelmDependencyInstall(t *testing.T) {
 }
 
 func waitForRemoteChartPods(t *testing.T, kubectlOptions *k8s.KubectlOptions, releaseName string, podCount int) {
+	t.Helper()
 	// Get pod and wait for it to be avaialable
 	// To get the pod, we need to filter it using the labels that the helm chart creates
 	filters := metav1.ListOptions{
@@ -166,7 +167,7 @@ func waitForRemoteChartPods(t *testing.T, kubectlOptions *k8s.KubectlOptions, re
 	// and potential resource contention when multiple helm tests run in parallel
 	k8s.WaitUntilNumPodsCreated(t, kubectlOptions, filters, podCount, 60, 10*time.Second)
 	pods := k8s.ListPods(t, kubectlOptions, filters)
-	for _, pod := range pods {
-		k8s.WaitUntilPodAvailable(t, kubectlOptions, pod.Name, 60, 10*time.Second)
+	for i := range pods {
+		k8s.WaitUntilPodAvailable(t, kubectlOptions, pods[i].Name, 60, 10*time.Second)
 	}
 }

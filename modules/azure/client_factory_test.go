@@ -3,7 +3,7 @@
 
 // This file contains unit tests for the client factory implementation(s).
 
-package azure
+package azure //nolint:testpackage // tests access unexported functions
 
 import (
 	"os"
@@ -22,12 +22,8 @@ const chinaCloudEnvName = "AzureChinaCloud"
 const germanyCloudEnvName = "AzureGermanCloud"
 
 func TestDefaultEnvIsPublicWhenNotSet(t *testing.T) {
-	// save any current env value and restore on exit
-	originalEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, originalEnv)
-
 	// Set env var to missing value
-	os.Setenv(AzureEnvironmentEnvName, "")
+	t.Setenv(AzureEnvironmentEnvName, "")
 
 	// get the default
 	env := getDefaultEnvironmentName()
@@ -37,12 +33,8 @@ func TestDefaultEnvIsPublicWhenNotSet(t *testing.T) {
 }
 
 func TestDefaultEnvSetToGov(t *testing.T) {
-	// save any current env value and restore on exit
-	originalEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, originalEnv)
-
 	// Set env var to gov
-	os.Setenv(AzureEnvironmentEnvName, govCloudEnvName)
+	t.Setenv(AzureEnvironmentEnvName, govCloudEnvName)
 
 	// get the default
 	env := getDefaultEnvironmentName()
@@ -63,17 +55,13 @@ func TestSubscriptionClientBaseURISetCorrectly(t *testing.T) {
 		{"GermanCloud/SubscriptionClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
 	}
 
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
 		// get updated due to concurrency within the scope of t.Run(..) below
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
 			// Get a VM client
 			client, err := CreateSubscriptionsClientE()
@@ -97,14 +85,10 @@ func TestGetClientCloudConfig(t *testing.T) {
 		{"GermanCloud", germanyCloudEnvName, true},
 	}
 
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
 	for _, tt := range cases {
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
 			config, err := getClientCloudConfig()
 			if tt.ExpectErr {
@@ -118,10 +102,7 @@ func TestGetClientCloudConfig(t *testing.T) {
 }
 
 func TestCreateVirtualMachinesClientE(t *testing.T) {
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-	os.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
+	t.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
 	client, err := CreateVirtualMachinesClientE("")
 	require.NoError(t, err)
@@ -140,17 +121,13 @@ func TestManagedClustersClientBaseURISetCorrectly(t *testing.T) {
 		{"GermanCloud/ManagedClustersClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
 	}
 
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
 		// get updated due to concurrency within the scope of t.Run(..) below
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
 			// Get a VM client
 			client, err := CreateManagedClustersClientE("")
@@ -163,10 +140,7 @@ func TestManagedClustersClientBaseURISetCorrectly(t *testing.T) {
 }
 
 func TestCosmosDBAccountClientCreation(t *testing.T) {
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
-	os.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
+	t.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
 	client, err := CreateCosmosDBAccountClientE("")
 	require.NoError(t, err)
@@ -174,10 +148,7 @@ func TestCosmosDBAccountClientCreation(t *testing.T) {
 }
 
 func TestCosmosDBSQLClientCreation(t *testing.T) {
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
-	os.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
+	t.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
 	client, err := CreateCosmosDBSQLClientE("")
 	require.NoError(t, err)
@@ -189,16 +160,13 @@ func TestPublicIPAddressesClientBaseURISetCorrectly(t *testing.T) {
 		CaseName        string
 		EnvironmentName string
 		ExpectedBaseURI string
+		ExpectErr       bool
 	}{
-		{"GovCloud/CosmosDBAccountClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/CosmosDBAccountClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/CosmosDBAccountClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/CosmosDBAccountClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
+		{"GovCloud/PublicIPAddressesClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
+		{"PublicCloud/PublicIPAddressesClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
+		{"ChinaCloud/PublicIPAddressesClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
+		{"GermanCloud/PublicIPAddressesClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true},
 	}
-
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
 
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
@@ -206,14 +174,22 @@ func TestPublicIPAddressesClientBaseURISetCorrectly(t *testing.T) {
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
-			// Get a VM client
+			// Get a PublicIPAddresses client
 			client, err := CreatePublicIPAddressesClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
+			if tt.ExpectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, client)
+				// Not ideal, but to get the base URI we need to access the internal field
+				internalField := reflect.ValueOf(client).Elem().FieldByName("internal")
+				require.True(t, internalField.IsValid(), "internal field not found - Azure SDK may have changed")
+				epField := internalField.Elem().FieldByName("ep")
+				require.True(t, epField.IsValid(), "ep field not found - Azure SDK may have changed")
+				assert.Equal(t, epField.String()+"/", tt.ExpectedBaseURI)
+			}
 		})
 	}
 }
@@ -223,16 +199,13 @@ func TestLoadBalancerClientBaseURISetCorrectly(t *testing.T) {
 		CaseName        string
 		EnvironmentName string
 		ExpectedBaseURI string
+		ExpectErr       bool
 	}{
-		{"GovCloud/CosmosDBAccountClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/CosmosDBAccountClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/CosmosDBAccountClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/CosmosDBAccountClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
+		{"GovCloud/LoadBalancersClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
+		{"PublicCloud/LoadBalancersClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
+		{"ChinaCloud/LoadBalancersClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
+		{"GermanCloud/LoadBalancersClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true},
 	}
-
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
 
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
@@ -240,14 +213,22 @@ func TestLoadBalancerClientBaseURISetCorrectly(t *testing.T) {
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
-			// Get a VM client
+			// Get a LoadBalancer client
 			client, err := CreateLoadBalancerClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
+			if tt.ExpectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, client)
+				// Not ideal, but to get the base URI we need to access the internal field
+				internalField := reflect.ValueOf(client).Elem().FieldByName("internal")
+				require.True(t, internalField.IsValid(), "internal field not found - Azure SDK may have changed")
+				epField := internalField.Elem().FieldByName("ep")
+				require.True(t, epField.IsValid(), "ep field not found - Azure SDK may have changed")
+				assert.Equal(t, epField.String()+"/", tt.ExpectedBaseURI)
+			}
 		})
 	}
 }
@@ -264,17 +245,13 @@ func TestFrontDoorClientBaseURISetCorrectly(t *testing.T) {
 		{"GermanCloud/FrontDoorClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
 	}
 
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
 		// get updated due to concurrency within the scope of t.Run(..) below
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
 			// Get a Front Door client
 			client, err := CreateFrontDoorClientE("")
@@ -298,17 +275,13 @@ func TestFrontDoorFrontendEndpointClientBaseURISetCorrectly(t *testing.T) {
 		{"GermanCloud/FrontDoorClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
 	}
 
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
 		// get updated due to concurrency within the scope of t.Run(..) below
 		tt := tt
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
-			os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 
 			// Get a AFD frontend endpoint client
 			client, err := CreateFrontDoorFrontendEndpointClientE("")
@@ -327,16 +300,12 @@ func TestCreateManagedEnvironmentsClientEEndpointURISetCorrectly(t *testing.T) {
 		ExpectedBaseURI string
 		ExpectErr       bool
 	}{
-		{"Default/ManagedEnvironmentsClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
+		{"Default/ManagedEnvironmentsClient", "", autorest.PublicCloud.ResourceManagerEndpoint, false},
 		{"PublicCloud/ManagedEnvironmentsClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
 		{"GovCloud/ManagedEnvironmentsClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
 		{"ChinaCloud/ManagedEnvironmentsClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
 		{"GermanCloud/ManagedEnvironmentsClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
 	}
-
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
 
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
@@ -345,8 +314,9 @@ func TestCreateManagedEnvironmentsClientEEndpointURISetCorrectly(t *testing.T) {
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
 			if tt.EnvironmentName != "" {
-				os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+				t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 			} else {
+				t.Setenv(AzureEnvironmentEnvName, "")
 				os.Unsetenv(AzureEnvironmentEnvName)
 			}
 
@@ -358,8 +328,11 @@ func TestCreateManagedEnvironmentsClientEEndpointURISetCorrectly(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, client)
 				// Not ideal, but to get the base URI we need to access the internal field
-				field := reflect.ValueOf(client).Elem().FieldByName("internal").Elem().FieldByName("ep")
-				assert.Equal(t, field.String()+"/", tt.ExpectedBaseURI)
+				internalField := reflect.ValueOf(client).Elem().FieldByName("internal")
+				require.True(t, internalField.IsValid(), "internal field not found - Azure SDK may have changed")
+				epField := internalField.Elem().FieldByName("ep")
+				require.True(t, epField.IsValid(), "ep field not found - Azure SDK may have changed")
+				assert.Equal(t, epField.String()+"/", tt.ExpectedBaseURI)
 			}
 		})
 	}
@@ -379,10 +352,6 @@ func TestCreateContainerAppsClientEEndpointURISetCorrectly(t *testing.T) {
 		{"GermanCloud/ContainerAppsClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
 	}
 
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
-
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
 		// get updated due to concurrency within the scope of t.Run(..) below
@@ -390,12 +359,13 @@ func TestCreateContainerAppsClientEEndpointURISetCorrectly(t *testing.T) {
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
 			if tt.EnvironmentName != "" {
-				os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+				t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 			} else {
+				t.Setenv(AzureEnvironmentEnvName, "")
 				os.Unsetenv(AzureEnvironmentEnvName)
 			}
 
-			// Get a ManagedEnvironmentsClient client
+			// Get a ContainerApps client
 			client, err := CreateContainerAppsClientE("")
 			if tt.ExpectErr {
 				require.Error(t, err)
@@ -403,8 +373,11 @@ func TestCreateContainerAppsClientEEndpointURISetCorrectly(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, client)
 				// Not ideal, but to get the base URI we need to access the internal field
-				field := reflect.ValueOf(client).Elem().FieldByName("internal").Elem().FieldByName("ep")
-				assert.Equal(t, field.String()+"/", tt.ExpectedBaseURI)
+				internalField := reflect.ValueOf(client).Elem().FieldByName("internal")
+				require.True(t, internalField.IsValid(), "internal field not found - Azure SDK may have changed")
+				epField := internalField.Elem().FieldByName("ep")
+				require.True(t, epField.IsValid(), "ep field not found - Azure SDK may have changed")
+				assert.Equal(t, epField.String()+"/", tt.ExpectedBaseURI)
 			}
 		})
 	}
@@ -417,16 +390,12 @@ func TestCreateContainerAppJobsClientEEndpointURISetCorrectly(t *testing.T) {
 		ExpectedBaseURI string
 		ExpectErr       bool
 	}{
-		{"Default/ContainerAppsClient", "", autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"PublicCloud/ContainerAppsClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"GovCloud/ContainerAppsClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
-		{"ChinaCloud/ContainerAppsClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
-		{"GermanCloud/ContainerAppsClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
+		{"Default/ContainerAppJobsClient", "", autorest.PublicCloud.ResourceManagerEndpoint, false},
+		{"PublicCloud/ContainerAppJobsClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
+		{"GovCloud/ContainerAppJobsClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
+		{"ChinaCloud/ContainerAppJobsClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
+		{"GermanCloud/ContainerAppJobsClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
 	}
-
-	// save any current env value and restore on exit
-	currentEnv := os.Getenv(AzureEnvironmentEnvName)
-	defer os.Setenv(AzureEnvironmentEnvName, currentEnv)
 
 	for _, tt := range cases {
 		// The following is necessary to make sure testCase's values don't
@@ -435,12 +404,13 @@ func TestCreateContainerAppJobsClientEEndpointURISetCorrectly(t *testing.T) {
 		t.Run(tt.CaseName, func(t *testing.T) {
 			// Override env setting
 			if tt.EnvironmentName != "" {
-				os.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
+				t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
 			} else {
+				t.Setenv(AzureEnvironmentEnvName, "")
 				os.Unsetenv(AzureEnvironmentEnvName)
 			}
 
-			// Get a ManagedEnvironmentsClient client
+			// Get a ContainerAppJobs client
 			client, err := CreateContainerAppJobsClientE("")
 			if tt.ExpectErr {
 				require.Error(t, err)
@@ -448,8 +418,11 @@ func TestCreateContainerAppJobsClientEEndpointURISetCorrectly(t *testing.T) {
 				require.NoError(t, err)
 				require.NotNil(t, client)
 				// Not ideal, but to get the base URI we need to access the internal field
-				field := reflect.ValueOf(client).Elem().FieldByName("internal").Elem().FieldByName("ep")
-				assert.Equal(t, field.String()+"/", tt.ExpectedBaseURI)
+				internalField := reflect.ValueOf(client).Elem().FieldByName("internal")
+				require.True(t, internalField.IsValid(), "internal field not found - Azure SDK may have changed")
+				epField := internalField.Elem().FieldByName("ep")
+				require.True(t, epField.IsValid(), "ep field not found - Azure SDK may have changed")
+				assert.Equal(t, epField.String()+"/", tt.ExpectedBaseURI)
 			}
 		})
 	}

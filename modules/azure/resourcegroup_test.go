@@ -3,11 +3,13 @@
 
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
-package azure
+
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +22,7 @@ func TestResourceGroupExists(t *testing.T) {
 	t.Parallel()
 
 	resourceGroupName := "fakeResourceGroupName"
-	exists, err := ResourceGroupExistsE(resourceGroupName, "")
+	exists, err := azure.ResourceGroupExistsE(resourceGroupName, "")
 	require.NoError(t, err)
 	require.False(t, exists)
 }
@@ -30,6 +32,6 @@ func TestGetAResourceGroup(t *testing.T) {
 
 	resourceGroupName := "fakeResourceGroupName"
 
-	_, err := GetAResourceGroupE(resourceGroupName, "")
+	_, err := azure.GetAResourceGroupE(resourceGroupName, "")
 	require.Error(t, err)
 }

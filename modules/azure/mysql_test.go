@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestGetMYSQLServerE(t *testing.T) {
 	serverName := ""
 	subscriptionID := ""
 
-	_, err := GetMYSQLServerE(t, subscriptionID, resGroupName, serverName)
+	_, err := azure.GetMYSQLServerE(t, subscriptionID, resGroupName, serverName)
 	require.Error(t, err)
 }
 
@@ -36,6 +37,6 @@ func TestGetMYSQLDBE(t *testing.T) {
 	subscriptionID := ""
 	dbName := ""
 
-	_, err := GetMYSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
+	_, err := azure.GetMYSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
 	require.Error(t, err)
 }

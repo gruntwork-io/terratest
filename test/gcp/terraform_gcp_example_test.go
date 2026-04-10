@@ -3,7 +3,7 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
 
-package test
+package test_test
 
 import (
 	"fmt"
@@ -131,7 +131,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
-	publicIp := terraform.Output(t, terraformOptions, "public_ip")
+	publicIP := terraform.Output(t, terraformOptions, "public_ip")
 
 	// Attempt to SSH and execute the command
 	instance := gcp.FetchInstance(t, projectID, randomValidGcpName)
@@ -143,7 +143,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	instance.AddSSHKey(t, sshUsername, keyPair.PublicKey)
 
 	host := ssh.Host{
-		Hostname:    publicIp,
+		Hostname:    publicIP,
 		SshKeyPair:  keyPair,
 		SshUserName: sshUsername,
 	}

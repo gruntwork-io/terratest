@@ -102,6 +102,7 @@ func TestRemoteChartRenderDiff(t *testing.T) {
 
 // render chart dump and return the rendered output
 func renderChartDump(t *testing.T, remoteChartVersion, snapshotDir string) string {
+	t.Helper()
 	const (
 		remoteChartSource = "https://charts.bitnami.com/bitnami"
 		remoteChartName   = "nginx"
@@ -171,7 +172,7 @@ func TestUnmarshall(t *testing.T) {
 		require.NoError(t, err)
 		var deployment appsv1.Deployment
 		err = UnmarshalK8SYamlE(t, string(b), &deployment)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Regexp(t, regexp.MustCompile(`mapping key ".+" already defined at line \d+`), err.Error())
 	})
 	t.Run("LiteralBlock", func(t *testing.T) {
@@ -179,7 +180,7 @@ func TestUnmarshall(t *testing.T) {
 		require.NoError(t, err)
 		var configmap corev1.ConfigMap
 		err = UnmarshalK8SYamlE(t, string(b), &configmap)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		data := `configmap-data-value-1;      
 configmap-data-value-2;
 `
@@ -197,7 +198,7 @@ func TestRenderWarning(t *testing.T) {
 	assert.Contains(t, stderr, "WARNING:")
 
 	var deployment appsv1.Deployment
-	UnmarshalK8SYaml(t, string(stdout), &deployment)
+	UnmarshalK8SYaml(t, stdout, &deployment)
 	assert.Equal(t, deployment.Name, "nginx-deployment")
 }
 

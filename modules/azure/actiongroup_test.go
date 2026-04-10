@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +26,7 @@ func TestGetActionGroupResourceEWithMissingResourceGroupName(t *testing.T) {
 	resGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
+	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -37,7 +38,7 @@ func TestGetActionGroupResourceEWithInvalidResourceGroupName(t *testing.T) {
 	resGroupName := "Hello"
 	subscriptionID := ""
 
-	_, err := GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
+	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
 
 	require.Error(t, err)
 }
@@ -47,7 +48,7 @@ func TestGetActionGroupClient(t *testing.T) {
 
 	subscriptionID := ""
 
-	client, err := CreateActionGroupClient(subscriptionID)
+	client, err := azure.CreateActionGroupClient(subscriptionID)
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, *client)

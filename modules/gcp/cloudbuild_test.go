@@ -87,6 +87,7 @@ func TestCreateBuild(t *testing.T) {
 }
 
 func createSampleAppTarball(t *testing.T) *bytes.Reader {
+	t.Helper()
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
 

@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestAppExistsE(t *testing.T) {
 	appName := ""
 	subscriptionID := ""
 
-	_, err := AppExistsE(appName, resGroupName, subscriptionID)
+	_, err := azure.AppExistsE(appName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -35,7 +36,7 @@ func TestGetAppServiceE(t *testing.T) {
 	appName := ""
 	subscriptionID := ""
 
-	_, err := GetAppServiceE(appName, resGroupName, subscriptionID)
+	_, err := azure.GetAppServiceE(appName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -44,6 +45,6 @@ func TestGetAppServiceClientE(t *testing.T) {
 
 	subscriptionID := ""
 
-	_, err := GetAppServiceClientE(subscriptionID)
+	_, err := azure.GetAppServiceClientE(subscriptionID)
 	require.NoError(t, err)
 }

@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,7 +20,7 @@ The below tests are currently stubbed out, with the expectation that they will t
 func TestListServiceBusNamespaceNamesE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListServiceBusNamespaceNamesContextE(t.Context(), "")
+	_, err := azure.ListServiceBusNamespaceNamesContextE(t.Context(), "")
 
 	require.Error(t, err)
 }
@@ -27,7 +28,7 @@ func TestListServiceBusNamespaceNamesE(t *testing.T) {
 func TestListServiceBusNamespaceIDsByResourceGroupE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListServiceBusNamespaceIDsByResourceGroupContextE(t.Context(), "", "")
+	_, err := azure.ListServiceBusNamespaceIDsByResourceGroupContextE(t.Context(), "", "")
 
 	require.Error(t, err)
 }
@@ -35,7 +36,7 @@ func TestListServiceBusNamespaceIDsByResourceGroupE(t *testing.T) {
 func TestListNamespaceAuthRulesE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListNamespaceAuthRulesContextE(t.Context(), "", "", "")
+	_, err := azure.ListNamespaceAuthRulesContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -43,7 +44,7 @@ func TestListNamespaceAuthRulesE(t *testing.T) {
 func TestListNamespaceTopicsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListNamespaceTopicsContextE(t.Context(), "", "", "")
+	_, err := azure.ListNamespaceTopicsContextE(t.Context(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -51,7 +52,7 @@ func TestListNamespaceTopicsE(t *testing.T) {
 func TestListTopicAuthRulesE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListTopicAuthRulesContextE(t.Context(), "", "", "", "")
+	_, err := azure.ListTopicAuthRulesContextE(t.Context(), "", "", "", "")
 
 	require.Error(t, err)
 }
@@ -59,7 +60,7 @@ func TestListTopicAuthRulesE(t *testing.T) {
 func TestListTopicSubscriptionsNameE(t *testing.T) {
 	t.Parallel()
 
-	_, err := ListTopicSubscriptionsNameContextE(t.Context(), "", "", "", "")
+	_, err := azure.ListTopicSubscriptionsNameContextE(t.Context(), "", "", "", "")
 
 	require.Error(t, err)
 }

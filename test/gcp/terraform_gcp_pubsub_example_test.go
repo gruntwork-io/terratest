@@ -3,7 +3,7 @@
 
 // NOTE: We use build tags to differentiate GCP testing for better isolation
 
-package test
+package test_test
 
 import (
 	"fmt"

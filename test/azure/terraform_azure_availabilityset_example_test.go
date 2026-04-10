@@ -4,11 +4,9 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
-	"context"
-	"fmt"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -23,8 +21,9 @@ func TestTerraformAzureAvailabilitySetExample(t *testing.T) {
 	// subscriptionID is overridden by the environment variable "ARM_SUBSCRIPTION_ID"
 	subscriptionID := ""
 	uniquePostfix := random.UniqueID()
-	expectedAvsName := fmt.Sprintf("avs-%s", uniquePostfix)
-	expectedVMName := fmt.Sprintf("vm-%s", uniquePostfix)
+	expectedAvsName := "avs-" + uniquePostfix
+	expectedVMName := "vm-" + uniquePostfix
+
 	var expectedAvsFaultDomainCount int32 = 3
 
 	// Configure Terraform setting up a path to Terraform code.
@@ -41,23 +40,23 @@ func TestTerraformAzureAvailabilitySetExample(t *testing.T) {
 	}
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// Run `terraform output` to get the values of output variables
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
 
 	// Check the Availability Set Exists
-	actualAvsExists := azure.AvailabilitySetExistsContext(t, context.Background(), expectedAvsName, resourceGroupName, subscriptionID)
+	actualAvsExists := azure.AvailabilitySetExistsContext(t, t.Context(), expectedAvsName, resourceGroupName, subscriptionID)
 	assert.True(t, actualAvsExists)
 
 	// Check the Availability Set Fault Domain Count
-	actualAvsFaultDomainCount := azure.GetAvailabilitySetFaultDomainCountContext(t, context.Background(), expectedAvsName, resourceGroupName, subscriptionID)
+	actualAvsFaultDomainCount := azure.GetAvailabilitySetFaultDomainCountContext(t, t.Context(), expectedAvsName, resourceGroupName, subscriptionID)
 	assert.Equal(t, expectedAvsFaultDomainCount, actualAvsFaultDomainCount)
 
 	// Check the Availability Set for a VM
-	actualVMPresent := azure.CheckAvailabilitySetContainsVMContext(t, context.Background(), expectedVMName, expectedAvsName, resourceGroupName, subscriptionID)
+	actualVMPresent := azure.CheckAvailabilitySetContainsVMContext(t, t.Context(), expectedVMName, expectedAvsName, resourceGroupName, subscriptionID)
 	assert.True(t, actualVMPresent)
 }

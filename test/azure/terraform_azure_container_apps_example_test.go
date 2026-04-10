@@ -4,7 +4,7 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
 	"strings"
@@ -31,33 +31,33 @@ func TestTerraformAzureContainerAppExample(t *testing.T) {
 		},
 	}
 
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
-	envName := terraform.Output(t, terraformOptions, "container_app_env_name")
-	containerAppName := terraform.Output(t, terraformOptions, "container_app_name")
-	containerAppJobName := terraform.Output(t, terraformOptions, "container_app_job_name")
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
+	envName := terraform.OutputContext(t, t.Context(), terraformOptions, "container_app_env_name")
+	containerAppName := terraform.OutputContext(t, t.Context(), terraformOptions, "container_app_name")
+	containerAppJobName := terraform.OutputContext(t, t.Context(), terraformOptions, "container_app_job_name")
 
 	// NOTE: the value of subscriptionID can be left blank, it will be replaced by the value
 	//       of the environment variable ARM_SUBSCRIPTION_ID
 
-	envExsists := azure.ManagedEnvironmentExists(t, envName, resourceGroupName, subscriptionID)
+	envExsists := azure.ManagedEnvironmentExistsContext(t, t.Context(), envName, resourceGroupName, subscriptionID)
 	assert.True(t, envExsists)
 
-	actualEnv := azure.GetManagedEnvironment(t, envName, resourceGroupName, subscriptionID)
+	actualEnv := azure.GetManagedEnvironmentContext(t, t.Context(), envName, resourceGroupName, subscriptionID)
 	assert.Equal(t, envName, *actualEnv.Name)
 
-	containerAppExists := azure.ContainerAppExists(t, containerAppName, resourceGroupName, subscriptionID)
+	containerAppExists := azure.ContainerAppExistsContext(t, t.Context(), containerAppName, resourceGroupName, subscriptionID)
 	assert.True(t, containerAppExists)
 
-	actualContainerApp := azure.GetContainerApp(t, containerAppName, resourceGroupName, subscriptionID)
+	actualContainerApp := azure.GetContainerAppContext(t, t.Context(), containerAppName, resourceGroupName, subscriptionID)
 	assert.Equal(t, containerAppName, *actualContainerApp.Name)
 
-	containerAppJobExists := azure.ContainerAppJobExists(t, containerAppJobName, resourceGroupName, subscriptionID)
+	containerAppJobExists := azure.ContainerAppJobExistsContext(t, t.Context(), containerAppJobName, resourceGroupName, subscriptionID)
 	assert.True(t, containerAppJobExists)
 
-	actualContainerAppJob := azure.GetContainerAppJob(t, containerAppJobName, resourceGroupName, subscriptionID)
+	actualContainerAppJob := azure.GetContainerAppJobContext(t, t.Context(), containerAppJobName, resourceGroupName, subscriptionID)
 	assert.Equal(t, containerAppJobName, *actualContainerAppJob.Name)
 }

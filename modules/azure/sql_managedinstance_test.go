@@ -3,11 +3,13 @@
 
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
-package azure
+
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +25,7 @@ func TestSQLManagedInstanceExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	exists, err := SQLManagedInstanceExistsE(managedInstanceName, resourceGroupName, subscriptionID)
+	exists, err := azure.SQLManagedInstanceExistsE(managedInstanceName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
@@ -36,7 +38,7 @@ func TestGetManagedInstanceE(t *testing.T) {
 	managedInstanceName := ""
 	subscriptionID := ""
 
-	_, err := GetManagedInstanceE(subscriptionID, resGroupName, managedInstanceName)
+	_, err := azure.GetManagedInstanceE(subscriptionID, resGroupName, managedInstanceName)
 	require.Error(t, err)
 }
 
@@ -48,6 +50,6 @@ func TestGetManagedInstanceDatabasesE(t *testing.T) {
 	databaseName := ""
 	subscriptionID := ""
 
-	_, err := GetManagedInstanceDatabaseE(t, subscriptionID, resGroupName, managedInstanceName, databaseName)
+	_, err := azure.GetManagedInstanceDatabaseE(t, subscriptionID, resGroupName, managedInstanceName, databaseName)
 	require.Error(t, err)
 }

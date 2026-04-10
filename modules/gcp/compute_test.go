@@ -58,7 +58,7 @@ func TestZoneURLToZone(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		zoneUrl      string
+		zoneURL      string
 		expectedZone string
 	}{
 		{"https://www.googleapis.com/compute/v1/projects/terratest-123456/zones/asia-east1-b", "asia-east1-b"},
@@ -66,7 +66,7 @@ func TestZoneURLToZone(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		zone := ZoneURLToZone(tc.zoneUrl)
+		zone := ZoneURLToZone(tc.zoneURL)
 		assert.Equal(t, zone, tc.expectedZone, "Zone not extracted successfully from Zone URL")
 	}
 }
@@ -152,6 +152,7 @@ func TestGetAndSetMetadata(t *testing.T) {
 // if you're writing a test that resembles real-world code that Terratest users may write, you should create a Compute
 // Instance using a Terraform apply, similar to the tests in /test.
 func createComputeInstance(t *testing.T, projectID string, zone string, name string) {
+	t.Helper()
 	t.Logf("Launching new Compute Instance %s\n", name)
 
 	// This RegEx was pulled straight from the GCP API error messages that complained when it's not honored
@@ -209,6 +210,7 @@ func createComputeInstance(t *testing.T, projectID string, zone string, name str
 
 // Helper function that destroys the given Compute Instance and all of its attached disks.
 func deleteComputeInstance(t *testing.T, projectID string, zone string, name string) {
+	t.Helper()
 	t.Logf("Deleting Compute Instance %s\n", name)
 
 	service, err := NewComputeServiceE(t)

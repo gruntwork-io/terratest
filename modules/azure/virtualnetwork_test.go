@@ -4,12 +4,13 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +22,7 @@ If/when methods can be mocked or Create/Delete APIs are added, these tests can b
 func TestGetVirtualNetworkE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetVirtualNetworkContextE(context.Background(), "", "", "")
+	_, err := azure.GetVirtualNetworkContextE(context.Background(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -29,7 +30,7 @@ func TestGetVirtualNetworkE(t *testing.T) {
 func TestGetSubnetE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetSubnetContextE(context.Background(), "", "", "", "")
+	_, err := azure.GetSubnetContextE(context.Background(), "", "", "", "")
 
 	require.Error(t, err)
 }
@@ -37,7 +38,7 @@ func TestGetSubnetE(t *testing.T) {
 func TestGetVirtualNetworkDNSServerIPsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetVirtualNetworkDNSServerIPsContextE(context.Background(), "", "", "")
+	_, err := azure.GetVirtualNetworkDNSServerIPsContextE(context.Background(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -45,7 +46,7 @@ func TestGetVirtualNetworkDNSServerIPsE(t *testing.T) {
 func TestGetVirtualNetworkSubnetsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := GetVirtualNetworkSubnetsContextE(context.Background(), "", "", "")
+	_, err := azure.GetVirtualNetworkSubnetsContextE(context.Background(), "", "", "")
 
 	require.Error(t, err)
 }
@@ -53,7 +54,7 @@ func TestGetVirtualNetworkSubnetsE(t *testing.T) {
 func TestCheckSubnetContainsIPE(t *testing.T) {
 	t.Parallel()
 
-	_, err := CheckSubnetContainsIPContextE(context.Background(), "", "", "", "", "")
+	_, err := azure.CheckSubnetContainsIPContextE(context.Background(), "", "", "", "", "")
 
 	require.Error(t, err)
 }
@@ -61,7 +62,7 @@ func TestCheckSubnetContainsIPE(t *testing.T) {
 func TestSubnetExistsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := SubnetExistsContextE(context.Background(), "", "", "", "")
+	_, err := azure.SubnetExistsContextE(context.Background(), "", "", "", "")
 
 	require.Error(t, err)
 }
@@ -69,7 +70,7 @@ func TestSubnetExistsE(t *testing.T) {
 func TestVirtualNetworkExistsE(t *testing.T) {
 	t.Parallel()
 
-	_, err := VirtualNetworkExistsContextE(context.Background(), "", "", "")
+	_, err := azure.VirtualNetworkExistsContextE(context.Background(), "", "", "")
 
 	require.Error(t, err)
 }

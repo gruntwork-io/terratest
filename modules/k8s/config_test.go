@@ -79,6 +79,7 @@ func TestRemoveOrphanedClusterAndAuthInfoConfig(t *testing.T) {
 }
 
 func removeOrphanedClusterAndAuthInfoConfigTestFunc(t *testing.T, inputConfig string, expectedOutputConfig string) {
+	t.Helper()
 	path := StoreConfigToTempFile(t, inputConfig)
 	defer os.Remove(path)
 

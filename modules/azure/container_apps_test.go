@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestManagedEnvironmentExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := ManagedEnvironmentExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ManagedEnvironmentExistsE(environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -35,7 +36,7 @@ func TestGetManagedEnvironmentE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetManagedEnvironmentE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetManagedEnvironmentE(environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -46,7 +47,7 @@ func TestContainerAppExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := ContainerAppExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ContainerAppExistsE(environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -57,7 +58,7 @@ func TestGetContainerAppE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerAppE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetContainerAppE(environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -68,7 +69,7 @@ func TestContainerAppJobExists(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := ContainerAppJobExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ContainerAppJobExistsE(environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -79,6 +80,6 @@ func TestGetContainerJobAppE(t *testing.T) {
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerAppJobE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetContainerAppJobE(environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }

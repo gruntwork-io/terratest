@@ -6,7 +6,7 @@
 // helm can overload the minikube system and thus interfere with the other kubernetes tests. To avoid overloading the
 // system, we run the kubernetes tests and helm tests separately from the others.
 
-package test
+package test_test
 
 import (
 	"crypto/tls"

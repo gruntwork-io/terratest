@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Since we always run unit tests against minikube, we can only test if IsMinikubeE returns true.
@@ -21,6 +22,6 @@ func TestIsMinikube(t *testing.T) {
 
 	options := NewKubectlOptions("", "", "")
 	isMinikube, err := IsMinikubeE(t, options)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, isMinikube)
 }

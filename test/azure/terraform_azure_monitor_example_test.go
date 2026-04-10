@@ -4,7 +4,7 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
 	"testing"
@@ -32,15 +32,15 @@ func TestTerraformAzureMonitorExample(t *testing.T) {
 	}
 
 	// website::tag::4:: At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::2:: Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
-	expectedDiagnosticSettingName := terraform.Output(t, terraformOptions, "diagnostic_setting_name")
-	keyvaultID := terraform.Output(t, terraformOptions, "keyvault_id")
+	expectedDiagnosticSettingName := terraform.OutputContext(t, t.Context(), terraformOptions, "diagnostic_setting_name")
+	keyvaultID := terraform.OutputContext(t, t.Context(), terraformOptions, "keyvault_id")
 
-	diagnosticSettingsResourceExists := azure.DiagnosticSettingsResourceExists(t, expectedDiagnosticSettingName, keyvaultID, subscriptionID)
+	diagnosticSettingsResourceExists := azure.DiagnosticSettingsResourceExistsContext(t, t.Context(), expectedDiagnosticSettingName, keyvaultID, subscriptionID)
 
-	assert.Equal(t, diagnosticSettingsResourceExists, true, "Diagnostic settings should exist")
+	assert.True(t, diagnosticSettingsResourceExists, "Diagnostic settings should exist")
 }

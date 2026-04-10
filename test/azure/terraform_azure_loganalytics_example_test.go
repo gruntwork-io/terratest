@@ -4,7 +4,7 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
 	"strconv"
@@ -35,22 +35,22 @@ func TestTerraformAzureLogAnalyticsExample(t *testing.T) {
 	}
 
 	// website::tag::4:: At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::2:: Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::3:: Run `terraform output` to get the values of output variables
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
-	workspaceName := terraform.Output(t, terraformOptions, "loganalytics_workspace_name")
-	sku := terraform.Output(t, terraformOptions, "loganalytics_workspace_sku")
-	retentionPeriodString := terraform.Output(t, terraformOptions, "loganalytics_workspace_retention")
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
+	workspaceName := terraform.OutputContext(t, t.Context(), terraformOptions, "loganalytics_workspace_name")
+	sku := terraform.OutputContext(t, t.Context(), terraformOptions, "loganalytics_workspace_sku")
+	retentionPeriodString := terraform.OutputContext(t, t.Context(), terraformOptions, "loganalytics_workspace_retention")
 
 	// website::tag::4:: Verify the Log Analytics properties and ensure it matches the output.
-	workspaceExists := azure.LogAnalyticsWorkspaceExists(t, workspaceName, resourceGroupName, subscriptionID)
+	workspaceExists := azure.LogAnalyticsWorkspaceExistsContext(t, t.Context(), workspaceName, resourceGroupName, subscriptionID)
 	assert.True(t, workspaceExists, "log analytics workspace not found.")
 
-	actualWorkspace := azure.GetLogAnalyticsWorkspace(t, workspaceName, resourceGroupName, subscriptionID)
+	actualWorkspace := azure.GetLogAnalyticsWorkspaceContext(t, t.Context(), workspaceName, resourceGroupName, subscriptionID)
 
 	actualSku := string(actualWorkspace.Sku.Name)
 	assert.Equal(t, strings.ToLower(sku), strings.ToLower(actualSku), "log analytics sku mismatch")

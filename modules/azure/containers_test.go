@@ -4,11 +4,12 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package azure
+package azure_test
 
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func TestContainerRegistryExistsE(t *testing.T) {
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := ContainerRegistryExistsE(registryName, resGroupName, subscriptionID)
+	_, err := azure.ContainerRegistryExistsE(registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -35,7 +36,7 @@ func TestGetContainerRegistryE(t *testing.T) {
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerRegistryE(registryName, resGroupName, subscriptionID)
+	_, err := azure.GetContainerRegistryE(registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -44,7 +45,7 @@ func TestGetContainerRegistryClientE(t *testing.T) {
 
 	subscriptionID := ""
 
-	_, err := GetContainerRegistryClientE(subscriptionID)
+	_, err := azure.GetContainerRegistryClientE(subscriptionID)
 	require.NoError(t, err)
 }
 
@@ -55,7 +56,7 @@ func TestContainerInstanceExistsE(t *testing.T) {
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := ContainerInstanceExistsE(instanceName, resGroupName, subscriptionID)
+	_, err := azure.ContainerInstanceExistsE(instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -66,7 +67,7 @@ func TestGetContainerInstanceE(t *testing.T) {
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := GetContainerInstanceE(instanceName, resGroupName, subscriptionID)
+	_, err := azure.GetContainerInstanceE(instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
@@ -75,6 +76,6 @@ func TestGetContainerInstanceClientE(t *testing.T) {
 
 	subscriptionID := ""
 
-	_, err := GetContainerInstanceClientE(subscriptionID)
+	_, err := azure.GetContainerInstanceClientE(subscriptionID)
 	require.NoError(t, err)
 }

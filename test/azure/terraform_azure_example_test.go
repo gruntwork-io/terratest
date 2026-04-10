@@ -4,12 +4,10 @@
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
 
-package test
+package test_test
 
 import (
 	"testing"
-
-	"context"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -33,17 +31,17 @@ func TestTerraformAzureExample(t *testing.T) {
 	}
 
 	// website::tag::4:: At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer terraform.Destroy(t, terraformOptions)
+	defer terraform.DestroyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::2:: Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
-	terraform.InitAndApply(t, terraformOptions)
+	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
 	// website::tag::3:: Run `terraform output` to get the values of output variables
-	vmName := terraform.Output(t, terraformOptions, "vm_name")
-	resourceGroupName := terraform.Output(t, terraformOptions, "resource_group_name")
+	vmName := terraform.OutputContext(t, t.Context(), terraformOptions, "vm_name")
+	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
 
 	// website::tag::4:: Look up the size of the given Virtual Machine and ensure it matches the output.
-	actualVMSize := azure.GetSizeOfVirtualMachineContext(t, context.Background(), vmName, resourceGroupName, "")
+	actualVMSize := azure.GetSizeOfVirtualMachineContext(t, t.Context(), vmName, resourceGroupName, "")
 	expectedVMSize := armcompute.VirtualMachineSizeTypes("Standard_B1s")
 	assert.Equal(t, expectedVMSize, actualVMSize)
 }

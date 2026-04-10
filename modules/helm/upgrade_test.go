@@ -145,7 +145,7 @@ func TestHelmDependencyUpgrade(t *testing.T) {
 
 	// Deploy the chart using `helm install`.
 	err = InstallE(t, options, helmChartPath, releaseName)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify that upgrade is working as expected.
 	err = UpgradeE(t, options, helmChartPath, releaseName)

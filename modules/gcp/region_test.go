@@ -164,9 +164,11 @@ func TestGetInRegions(t *testing.T) {
 }
 
 func assertLooksLikeRegionName(t *testing.T, regionName string) {
+	t.Helper()
 	assert.Regexp(t, "[a-z]+-[a-z]+[[:digit:]]+", regionName)
 }
 
 func assertLooksLikeZoneName(t *testing.T, zoneName string) {
+	t.Helper()
 	assert.Regexp(t, "[a-z]+-[a-z]+[[:digit:]]+-[a-z]{1}", zoneName)
 }
