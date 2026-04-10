@@ -18,31 +18,31 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure SQL DB, these tests can be extended
 */
 
-func TestSQLManagedInstanceExists(t *testing.T) {
+func TestSQLManagedInstanceExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	managedInstanceName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	exists, err := azure.SQLManagedInstanceExistsE(managedInstanceName, resourceGroupName, subscriptionID)
+	exists, err := azure.SQLManagedInstanceExistsContextE(t.Context(), managedInstanceName, resourceGroupName, subscriptionID)
 
 	require.False(t, exists)
 	require.Error(t, err)
 }
 
-func TestGetManagedInstanceE(t *testing.T) {
+func TestGetManagedInstanceContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	managedInstanceName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetManagedInstanceE(subscriptionID, resGroupName, managedInstanceName)
+	_, err := azure.GetManagedInstanceContextE(t.Context(), subscriptionID, resGroupName, managedInstanceName)
 	require.Error(t, err)
 }
 
-func TestGetManagedInstanceDatabasesE(t *testing.T) {
+func TestGetManagedInstanceDatabaseContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
@@ -50,6 +50,6 @@ func TestGetManagedInstanceDatabasesE(t *testing.T) {
 	databaseName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetManagedInstanceDatabaseE(t, subscriptionID, resGroupName, managedInstanceName, databaseName)
+	_, err := azure.GetManagedInstanceDatabaseContextE(t.Context(), subscriptionID, resGroupName, managedInstanceName, databaseName)
 	require.Error(t, err)
 }

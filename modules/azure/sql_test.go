@@ -18,18 +18,18 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure SQL DB, these tests can be extended
 */
 
-func TestGetSQLServerE(t *testing.T) {
+func TestGetSQLServerContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	serverName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetSQLServerE(t, resGroupName, serverName, subscriptionID)
+	_, err := azure.GetSQLServerContextE(t, t.Context(), subscriptionID, resGroupName, serverName)
 	require.Error(t, err)
 }
 
-func TestGetSQLDatabaseE(t *testing.T) {
+func TestGetSQLDatabaseContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
@@ -37,6 +37,6 @@ func TestGetSQLDatabaseE(t *testing.T) {
 	dbName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetSQLDatabaseE(t, resGroupName, serverName, dbName, subscriptionID)
+	_, err := azure.GetSQLDatabaseContextE(t, t.Context(), subscriptionID, resGroupName, serverName, dbName)
 	require.Error(t, err)
 }

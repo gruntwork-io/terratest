@@ -31,16 +31,6 @@ func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, resGroupName
 	return mysqlServer
 }
 
-// GetMYSQLServer is a helper function that gets the server.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetMYSQLServerContext] instead.
-func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armmysql.Server {
-	t.Helper()
-
-	return GetMYSQLServerContext(t, context.Background(), resGroupName, serverName, subscriptionID) //nolint:staticcheck
-}
-
 // GetMYSQLServerContextE is a helper function that gets the server.
 // The ctx parameter supports cancellation and timeouts.
 func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armmysql.Server, error) {
@@ -57,13 +47,6 @@ func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptio
 	}
 
 	return &resp.Server, nil
-}
-
-// GetMYSQLServerE is a helper function that gets the server.
-//
-// Deprecated: Use [GetMYSQLServerContextE] instead.
-func GetMYSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*armmysql.Server, error) {
-	return GetMYSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }
 
 // GetMYSQLDBClientE is a helper function that will setup a mysql DB client.
@@ -88,16 +71,6 @@ func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, resGroupName str
 	return database
 }
 
-// GetMYSQLDB is a helper function that gets the database.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetMYSQLDBContext] instead.
-func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armmysql.Database {
-	t.Helper()
-
-	return GetMYSQLDBContext(t, context.Background(), resGroupName, serverName, dbName, subscriptionID) //nolint:staticcheck
-}
-
 // GetMYSQLDBContextE is a helper function that gets the database.
 // The ctx parameter supports cancellation and timeouts.
 func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
@@ -116,13 +89,6 @@ func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID 
 	return &resp.Database, nil
 }
 
-// GetMYSQLDBE is a helper function that gets the database.
-//
-// Deprecated: Use [GetMYSQLDBContextE] instead.
-func GetMYSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
-	return GetMYSQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName, dbName)
-}
-
 // ListMySQLDBContext is a helper function that gets all databases per server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -133,16 +99,6 @@ func ListMySQLDBContext(t testing.TestingT, ctx context.Context, resGroupName st
 	require.NoError(t, err)
 
 	return dblist
-}
-
-// ListMySQLDB is a helper function that gets all databases per server.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ListMySQLDBContext] instead.
-func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) []*armmysql.Database {
-	t.Helper()
-
-	return ListMySQLDBContext(t, context.Background(), resGroupName, serverName, subscriptionID) //nolint:staticcheck
 }
 
 // ListMySQLDBContextE is a helper function that gets all databases per server.
@@ -169,11 +125,4 @@ func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID
 	}
 
 	return databases, nil
-}
-
-// ListMySQLDBE is a helper function that gets all databases per server.
-//
-// Deprecated: Use [ListMySQLDBContextE] instead.
-func ListMySQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]*armmysql.Database, error) {
-	return ListMySQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }

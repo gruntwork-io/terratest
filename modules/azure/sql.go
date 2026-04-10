@@ -25,16 +25,6 @@ func GetSQLServerContext(t testing.TestingT, ctx context.Context, resGroupName s
 	return sqlServer
 }
 
-// GetSQLServer is a helper function that gets the sql server object.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetSQLServerContext] instead.
-func GetSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armsql.Server {
-	t.Helper()
-
-	return GetSQLServerContext(t, context.Background(), resGroupName, serverName, subscriptionID)
-}
-
 // GetSQLServerContextE is a helper function that gets the sql server object.
 // The ctx parameter supports cancellation and timeouts.
 func GetSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armsql.Server, error) {
@@ -53,13 +43,6 @@ func GetSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionI
 	return &resp.Server, nil
 }
 
-// GetSQLServerE is a helper function that gets the sql server object.
-//
-// Deprecated: Use [GetSQLServerContextE] instead.
-func GetSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*armsql.Server, error) {
-	return GetSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
-}
-
 // GetDatabaseClient is a helper function that will setup a sql DB client.
 func GetDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error) {
 	return CreateDatabaseClient(subscriptionID)
@@ -75,16 +58,6 @@ func ListSQLServerDatabasesContext(t testing.TestingT, ctx context.Context, resG
 	require.NoError(t, err)
 
 	return dbList
-}
-
-// ListSQLServerDatabases is a helper function that gets a list of databases on a sql server.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ListSQLServerDatabasesContext] instead.
-func ListSQLServerDatabases(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) []*armsql.Database {
-	t.Helper()
-
-	return ListSQLServerDatabasesContext(t, context.Background(), resGroupName, serverName, subscriptionID)
 }
 
 // ListSQLServerDatabasesContextE is a helper function that gets a list of databases on a sql server.
@@ -113,13 +86,6 @@ func ListSQLServerDatabasesContextE(t testing.TestingT, ctx context.Context, res
 	return databases, nil
 }
 
-// ListSQLServerDatabasesE is a helper function that gets a list of databases on a sql server.
-//
-// Deprecated: Use [ListSQLServerDatabasesContextE] instead.
-func ListSQLServerDatabasesE(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) ([]*armsql.Database, error) {
-	return ListSQLServerDatabasesContextE(t, context.Background(), resGroupName, serverName, subscriptionID)
-}
-
 // GetSQLDatabaseContext is a helper function that gets the sql db.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -130,16 +96,6 @@ func GetSQLDatabaseContext(t testing.TestingT, ctx context.Context, resGroupName
 	require.NoError(t, err)
 
 	return database
-}
-
-// GetSQLDatabase is a helper function that gets the sql db.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetSQLDatabaseContext] instead.
-func GetSQLDatabase(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armsql.Database {
-	t.Helper()
-
-	return GetSQLDatabaseContext(t, context.Background(), resGroupName, serverName, dbName, subscriptionID)
 }
 
 // GetSQLDatabaseContextE is a helper function that gets the sql db.
@@ -158,11 +114,4 @@ func GetSQLDatabaseContextE(t testing.TestingT, ctx context.Context, subscriptio
 	}
 
 	return &resp.Database, nil
-}
-
-// GetSQLDatabaseE is a helper function that gets the sql db.
-//
-// Deprecated: Use [GetSQLDatabaseContextE] instead.
-func GetSQLDatabaseE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*armsql.Database, error) {
-	return GetSQLDatabaseContextE(t, context.Background(), subscriptionID, resGroupName, serverName, dbName)
 }

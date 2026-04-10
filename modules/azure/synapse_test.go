@@ -1,3 +1,9 @@
+//go:build azure
+// +build azure
+
+// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
+// CircleCI.
+
 package azure_test
 
 import (
@@ -5,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	azure "github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/gruntwork-io/terratest/modules/azure"
 )
 
 /*
@@ -13,18 +19,18 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure Synapse, these tests can be extended
 */
 
-func TestGetSynapseWorkspaceE(t *testing.T) {
+func TestGetSynapseWorkspaceContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	subscriptionID := ""
 	workspaceName := ""
 
-	_, err := azure.GetSynapseWorkspaceE(t, subscriptionID, resGroupName, workspaceName)
+	_, err := azure.GetSynapseWorkspaceContextE(t.Context(), subscriptionID, resGroupName, workspaceName)
 	require.Error(t, err)
 }
 
-func TestGetSynapseSqlPoolE(t *testing.T) {
+func TestGetSynapseSQLPoolContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
@@ -32,6 +38,6 @@ func TestGetSynapseSqlPoolE(t *testing.T) {
 	workspaceName := ""
 	sqlPoolName := ""
 
-	_, err := azure.GetSynapseSqlPoolE(t, subscriptionID, resGroupName, workspaceName, sqlPoolName)
+	_, err := azure.GetSynapseSQLPoolContextE(t.Context(), subscriptionID, resGroupName, workspaceName, sqlPoolName)
 	require.Error(t, err)
 }

@@ -18,18 +18,18 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure PostgreSQL server and database, these tests can be extended
 */
 
-func TestGetPostgreSQLServerE(t *testing.T) {
+func TestGetPostgreSQLServerContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	serverName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetPostgreSQLServerE(t, subscriptionID, resGroupName, serverName)
+	_, err := azure.GetPostgreSQLServerContextE(t, t.Context(), subscriptionID, resGroupName, serverName)
 	require.Error(t, err)
 }
 
-func TestGetPostgreSQLDBE(t *testing.T) {
+func TestGetPostgreSQLDBContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
@@ -37,6 +37,6 @@ func TestGetPostgreSQLDBE(t *testing.T) {
 	subscriptionID := ""
 	dbName := ""
 
-	_, err := azure.GetPostgreSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
+	_, err := azure.GetPostgreSQLDBContextE(t, t.Context(), subscriptionID, resGroupName, serverName, dbName)
 	require.Error(t, err)
 }

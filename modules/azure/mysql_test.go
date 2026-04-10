@@ -18,18 +18,18 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure MySQL server and database, these tests can be extended
 */
 
-func TestGetMYSQLServerE(t *testing.T) {
+func TestGetMYSQLServerContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	serverName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetMYSQLServerE(t, subscriptionID, resGroupName, serverName)
+	_, err := azure.GetMYSQLServerContextE(t, t.Context(), subscriptionID, resGroupName, serverName)
 	require.Error(t, err)
 }
 
-func TestGetMYSQLDBE(t *testing.T) {
+func TestGetMYSQLDBContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
@@ -37,6 +37,6 @@ func TestGetMYSQLDBE(t *testing.T) {
 	subscriptionID := ""
 	dbName := ""
 
-	_, err := azure.GetMYSQLDBE(t, subscriptionID, resGroupName, serverName, dbName)
+	_, err := azure.GetMYSQLDBContextE(t, t.Context(), subscriptionID, resGroupName, serverName, dbName)
 	require.Error(t, err)
 }
