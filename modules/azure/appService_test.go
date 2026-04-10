@@ -18,25 +18,25 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure MySQL server and database, these tests can be extended
 */
 
-func TestAppExistsE(t *testing.T) {
+func TestAppExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	appName := ""
 	subscriptionID := ""
 
-	_, err := azure.AppExistsE(appName, resGroupName, subscriptionID)
+	_, err := azure.AppExistsContextE(t.Context(), appName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestGetAppServiceE(t *testing.T) {
+func TestGetAppServiceContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	appName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetAppServiceE(appName, resGroupName, subscriptionID)
+	_, err := azure.GetAppServiceContextE(t.Context(), appName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
