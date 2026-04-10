@@ -31,9 +31,7 @@ const kedaReleaseName = "keda"
 //   computed values.
 
 // An example of how to verify the rendered template object of a Helm Chart given various inputs.
-func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
-	t.Parallel()
-
+func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) { //nolint:paralleltest // shares __snapshot__ dir
 	// chart name
 	releaseName := kedaReleaseName
 
@@ -76,9 +74,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) {
 }
 
 // An example of how to verify the rendered template object of a Helm Chart given various inputs.
-func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
-	t.Parallel()
-
+func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) { //nolint:paralleltest // shares __snapshot__ dir
 	// chart name
 	releaseName := kedaReleaseName
 
@@ -121,9 +117,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) {
 }
 
 // An example of how to store a snapshot of the current manaifest for future comparison
-func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
-	t.Parallel()
-
+func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) { //nolint:paralleltest // shares __snapshot__ dir
 	// chart name
 	releaseName := kedaReleaseName
 
@@ -152,9 +146,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) {
 }
 
 // An example of how to verify the current helm k8s manifest against a previous snapshot
-func TestHelmKedaRemoteExampleTemplateRenderedPackageDiff(t *testing.T) {
-	t.Parallel()
-
+func TestHelmKedaRemoteExampleTemplateRenderedPackageDiff(t *testing.T) { //nolint:paralleltest // shares __snapshot__ dir
 	// chart name
 	releaseName := kedaReleaseName
 
