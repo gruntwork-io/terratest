@@ -189,11 +189,11 @@ func testNetworkOfVM(t *testing.T, terraformOptions *terraform.Options, subscrip
 
 	// VirtualNetwork and Subnet tests
 	// Check the Subnet exists in the Virtual Network.
-	actualVnetSubnets := azure.GetVirtualNetworkSubnets(t, expectedVNetName, resourceGroupName, subscriptionID)
+	actualVnetSubnets := azure.GetVirtualNetworkSubnetsContext(t, context.Background(), expectedVNetName, resourceGroupName, subscriptionID)
 	assert.NotNil(t, actualVnetSubnets[expectedVNetName])
 
 	// Check the Private IP is in the Subnet Range.
-	actualVMNicIPInSubnet := azure.CheckSubnetContainsIP(t, expectedPrivateIPAddress, expectedSubnetName, expectedVNetName, resourceGroupName, subscriptionID)
+	actualVMNicIPInSubnet := azure.CheckSubnetContainsIPContext(t, context.Background(), expectedPrivateIPAddress, expectedSubnetName, expectedVNetName, resourceGroupName, subscriptionID)
 	assert.True(t, actualVMNicIPInSubnet)
 
 	// Network Interface Card tests
@@ -206,12 +206,12 @@ func testNetworkOfVM(t *testing.T, terraformOptions *terraform.Options, subscrip
 	assert.Equal(t, expectedNICCount, len(actualNics))
 
 	// Check for the Private IP in the NICs IP list.
-	actualPrivateIPAddress := azure.GetNetworkInterfacePrivateIPs(t, expectedNicName, resourceGroupName, subscriptionID)
+	actualPrivateIPAddress := azure.GetNetworkInterfacePrivateIPsContext(t, context.Background(), expectedNicName, resourceGroupName, subscriptionID)
 	assert.Contains(t, actualPrivateIPAddress, expectedPrivateIPAddress)
 
 	// Public IP Address test
 	// Check for the Public IP for the NIC. No expected value since it is assigned runtime.
-	actualPublicIP := azure.GetIPOfPublicIPAddressByName(t, expectedPublicAddressName, resourceGroupName, subscriptionID)
+	actualPublicIP := azure.GetIPOfPublicIPAddressByNameContext(t, context.Background(), expectedPublicAddressName, resourceGroupName, subscriptionID)
 	assert.NotNil(t, actualPublicIP)
 
 }

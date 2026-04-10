@@ -166,6 +166,66 @@ func TestExtractVMNics(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// extractVMManagedDisks tests
+// ---------------------------------------------------------------------------
+
+func TestExtractVMManagedDisks(t *testing.T) {
+	t.Parallel()
+
+	vm := &armcompute.VirtualMachine{
+		Properties: &armcompute.VirtualMachineProperties{
+			StorageProfile: &armcompute.StorageProfile{
+				DataDisks: []*armcompute.DataDisk{
+					{Name: to.Ptr("disk1")},
+					{Name: to.Ptr("disk2")},
+				},
+			},
+		},
+	}
+
+	got := extractVMManagedDisks(vm)
+	assert.Equal(t, []string{"disk1", "disk2"}, got)
+}
+
+// ---------------------------------------------------------------------------
+// extractVMOSDiskName tests
+// ---------------------------------------------------------------------------
+
+func TestExtractVMOSDiskName(t *testing.T) {
+	t.Parallel()
+
+	vm := &armcompute.VirtualMachine{
+		Properties: &armcompute.VirtualMachineProperties{
+			StorageProfile: &armcompute.StorageProfile{
+				OSDisk: &armcompute.OSDisk{
+					Name: to.Ptr("os-disk-1"),
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, "os-disk-1", extractVMOSDiskName(vm))
+}
+
+// ---------------------------------------------------------------------------
+// extractVMSize tests
+// ---------------------------------------------------------------------------
+
+func TestExtractVMSize(t *testing.T) {
+	t.Parallel()
+
+	vm := &armcompute.VirtualMachine{
+		Properties: &armcompute.VirtualMachineProperties{
+			HardwareProfile: &armcompute.HardwareProfile{
+				VMSize: to.Ptr(armcompute.VirtualMachineSizeTypesStandardDS1V2),
+			},
+		},
+	}
+
+	assert.Equal(t, armcompute.VirtualMachineSizeTypesStandardDS1V2, extractVMSize(vm))
+}
+
+// ---------------------------------------------------------------------------
 // extractVMAvailabilitySetID tests
 // ---------------------------------------------------------------------------
 
@@ -334,4 +394,49 @@ func TestListVirtualMachineNames(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, []string{"vm1", "vm2"}, names)
+}
+
+// ---------------------------------------------------------------------------
+// listVirtualMachineProperties tests
+// ---------------------------------------------------------------------------
+
+func TestListVirtualMachineProperties(t *testing.T) {
+	t.Parallel()
+
+	srv := &computefake.VirtualMachinesServer{
+		NewListPager: func(_ string, _ *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
+			resp.AddPage(http.StatusOK, armcompute.VirtualMachinesClientListResponse{
+				VirtualMachineListResult: armcompute.VirtualMachineListResult{
+					Value: []*armcompute.VirtualMachine{
+						{
+							Name: to.Ptr("vm1"),
+							Properties: &armcompute.VirtualMachineProperties{
+								HardwareProfile: &armcompute.HardwareProfile{
+									VMSize: to.Ptr(armcompute.VirtualMachineSizeTypesStandardDS1V2),
+								},
+							},
+						},
+						{
+							Name: to.Ptr("vm2"),
+							Properties: &armcompute.VirtualMachineProperties{
+								HardwareProfile: &armcompute.HardwareProfile{
+									VMSize: to.Ptr(armcompute.VirtualMachineSizeTypesStandardD2SV3),
+								},
+							},
+						},
+					},
+				},
+			}, nil)
+
+			return
+		},
+	}
+
+	client := newFakeVMClient(t, srv)
+	props, err := listVirtualMachineProperties(context.Background(), client, "rg")
+
+	require.NoError(t, err)
+	require.Len(t, props, 2)
+	assert.Equal(t, armcompute.VirtualMachineSizeTypesStandardDS1V2, *props["vm1"].HardwareProfile.VMSize)
+	assert.Equal(t, armcompute.VirtualMachineSizeTypesStandardD2SV3, *props["vm2"].HardwareProfile.VMSize)
 }

@@ -7,6 +7,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -66,68 +67,68 @@ func TestTerraformAzureNetworkExample(t *testing.T) {
 	// Integrated network resource tests
 	t.Run("VirtualNetwork_Subnet", func(t *testing.T) {
 		// Check the Subnet exists in the Virtual Network Subnets with the expected Address Prefix
-		actualVnetSubnets := azure.GetVirtualNetworkSubnets(t, expectedVNetName, expectedRgName, subscriptionID)
+		actualVnetSubnets := azure.GetVirtualNetworkSubnetsContext(t, context.Background(), expectedVNetName, expectedRgName, subscriptionID)
 		assert.NotNil(t, actualVnetSubnets[expectedSubnetName])
 		assert.Equal(t, expectedSubnetRange, actualVnetSubnets[expectedSubnetName])
 	})
 
 	t.Run("NIC_PublicAddress", func(t *testing.T) {
 		// Check the internal network interface does NOT have a public IP
-		actualPrivateIPOnly := azure.GetNetworkInterfacePublicIPs(t, expectedPrivateNicName, expectedRgName, subscriptionID)
+		actualPrivateIPOnly := azure.GetNetworkInterfacePublicIPsContext(t, context.Background(), expectedPrivateNicName, expectedRgName, subscriptionID)
 		assert.Equal(t, 0, len(actualPrivateIPOnly))
 
 		// Check the external network interface has a public IP
-		actualPublicIPs := azure.GetNetworkInterfacePublicIPs(t, expectedPublicNicName, expectedRgName, subscriptionID)
+		actualPublicIPs := azure.GetNetworkInterfacePublicIPsContext(t, context.Background(), expectedPublicNicName, expectedRgName, subscriptionID)
 		assert.Equal(t, 1, len(actualPublicIPs))
 	})
 
 	t.Run("Subnet_NIC", func(t *testing.T) {
 		// Check the private IP is in the subnet range
-		checkPrivateIpInSubnet := azure.CheckSubnetContainsIP(t, expectedPrivateIP, expectedSubnetName, expectedVNetName, expectedRgName, subscriptionID)
+		checkPrivateIpInSubnet := azure.CheckSubnetContainsIPContext(t, context.Background(), expectedPrivateIP, expectedSubnetName, expectedVNetName, expectedRgName, subscriptionID)
 		assert.True(t, checkPrivateIpInSubnet)
 	})
 
 	// Test for resource presence
 	t.Run("Exists", func(t *testing.T) {
 		// Check the Virtual Network exists
-		assert.True(t, azure.VirtualNetworkExists(t, expectedVNetName, expectedRgName, subscriptionID))
+		assert.True(t, azure.VirtualNetworkExistsContext(t, context.Background(), expectedVNetName, expectedRgName, subscriptionID))
 
 		// Check the Subnet exists
-		assert.True(t, azure.SubnetExists(t, expectedSubnetName, expectedVNetName, expectedRgName, subscriptionID))
+		assert.True(t, azure.SubnetExistsContext(t, context.Background(), expectedSubnetName, expectedVNetName, expectedRgName, subscriptionID))
 
 		// Check the Network Interfaces exist
-		assert.True(t, azure.NetworkInterfaceExists(t, expectedPrivateNicName, expectedRgName, subscriptionID))
-		assert.True(t, azure.NetworkInterfaceExists(t, expectedPublicNicName, expectedRgName, subscriptionID))
+		assert.True(t, azure.NetworkInterfaceExistsContext(t, context.Background(), expectedPrivateNicName, expectedRgName, subscriptionID))
+		assert.True(t, azure.NetworkInterfaceExistsContext(t, context.Background(), expectedPublicNicName, expectedRgName, subscriptionID))
 
 		// Check Network Interface that does not exist in the Resource Group
-		assert.False(t, azure.NetworkInterfaceExists(t, "negative-test", expectedRgName, subscriptionID))
+		assert.False(t, azure.NetworkInterfaceExistsContext(t, context.Background(), "negative-test", expectedRgName, subscriptionID))
 
 		// Check Public Address exists
-		assert.True(t, azure.PublicAddressExists(t, expectedPublicAddressName, expectedRgName, subscriptionID))
+		assert.True(t, azure.PublicAddressExistsContext(t, context.Background(), expectedPublicAddressName, expectedRgName, subscriptionID))
 	})
 
 	// Tests for useful network properties
 	t.Run("Network", func(t *testing.T) {
 		// Check the Virtual Network DNS server IPs
-		actualDNSIPs := azure.GetVirtualNetworkDNSServerIPs(t, expectedVNetName, expectedRgName, subscriptionID)
+		actualDNSIPs := azure.GetVirtualNetworkDNSServerIPsContext(t, context.Background(), expectedVNetName, expectedRgName, subscriptionID)
 		assert.Contains(t, actualDNSIPs, expectedDnsIp01)
 		assert.Contains(t, actualDNSIPs, expectedDnsIp02)
 
 		// Check the Network Interface private IP
-		actualPrivateIPs := azure.GetNetworkInterfacePrivateIPs(t, expectedPrivateNicName, expectedRgName, subscriptionID)
+		actualPrivateIPs := azure.GetNetworkInterfacePrivateIPsContext(t, context.Background(), expectedPrivateNicName, expectedRgName, subscriptionID)
 		assert.Contains(t, actualPrivateIPs, expectedPrivateIP)
 
 		// Check the Public Address's Public IP is allocated
-		actualPublicIP := azure.GetIPOfPublicIPAddressByName(t, expectedPublicAddressName, expectedRgName, subscriptionID)
+		actualPublicIP := azure.GetIPOfPublicIPAddressByNameContext(t, context.Background(), expectedPublicAddressName, expectedRgName, subscriptionID)
 		assert.NotEmpty(t, actualPublicIP)
 
 		// Check DNS created for this example is reserved
-		actualDnsNotAvailable := azure.CheckPublicDNSNameAvailability(t, expectedLocation, exectedDNSLabel, subscriptionID)
+		actualDnsNotAvailable := azure.CheckPublicDNSNameAvailabilityContext(t, context.Background(), expectedLocation, exectedDNSLabel, subscriptionID)
 		assert.False(t, actualDnsNotAvailable)
 
 		// Check new randomized DNS is available
 		newDNSLabel := fmt.Sprintf("dns-terratest-%s", strings.ToLower(random.UniqueID()))
-		actualDnsAvailable := azure.CheckPublicDNSNameAvailability(t, expectedLocation, newDNSLabel, subscriptionID)
+		actualDnsAvailable := azure.CheckPublicDNSNameAvailabilityContext(t, context.Background(), expectedLocation, newDNSLabel, subscriptionID)
 		assert.True(t, actualDnsAvailable)
 	})
 

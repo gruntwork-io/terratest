@@ -3,6 +3,7 @@
 
 // NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
 // CircleCI.
+
 package azure
 
 import (
@@ -14,67 +15,51 @@ import (
 /*
 The below tests are currently stubbed out, with the expectation that they will throw errors. These tests can be extended.
 */
+
 func TestListServiceBusNamespaceNamesE(t *testing.T) {
 	t.Parallel()
 
-	subscriptionID := ""
+	_, err := ListServiceBusNamespaceNamesContextE(t.Context(), "")
 
-	_, err := ListServiceBusNamespaceNamesE(subscriptionID)
 	require.Error(t, err)
 }
 
 func TestListServiceBusNamespaceIDsByResourceGroupE(t *testing.T) {
 	t.Parallel()
 
-	subscriptionID := ""
-	resourceGroup := ""
+	_, err := ListServiceBusNamespaceIDsByResourceGroupContextE(t.Context(), "", "")
 
-	_, err := ListServiceBusNamespaceIDsByResourceGroupE(subscriptionID, resourceGroup)
 	require.Error(t, err)
 }
 
 func TestListNamespaceAuthRulesE(t *testing.T) {
 	t.Parallel()
 
-	subscriptionID := ""
-	namespace := ""
-	resourceGroup := ""
+	_, err := ListNamespaceAuthRulesContextE(t.Context(), "", "", "")
 
-	_, err := ListNamespaceAuthRulesE(subscriptionID, namespace, resourceGroup)
 	require.Error(t, err)
 }
 
 func TestListNamespaceTopicsE(t *testing.T) {
 	t.Parallel()
 
-	subscriptionID := ""
-	namespace := ""
-	resourceGroup := ""
+	_, err := ListNamespaceTopicsContextE(t.Context(), "", "", "")
 
-	_, err := ListNamespaceTopicsE(subscriptionID, namespace, resourceGroup)
 	require.Error(t, err)
 }
 
 func TestListTopicAuthRulesE(t *testing.T) {
 	t.Parallel()
 
-	subscriptionID := ""
-	namespace := ""
-	resourceGroup := ""
-	topicName := ""
+	_, err := ListTopicAuthRulesContextE(t.Context(), "", "", "", "")
 
-	_, err := ListTopicAuthRulesE(subscriptionID, namespace, resourceGroup, topicName)
 	require.Error(t, err)
 }
 
 func TestListTopicSubscriptionsNameE(t *testing.T) {
 	t.Parallel()
 
-	subscriptionID := ""
-	namespace := ""
-	resourceGroup := ""
-	topicName := ""
+	_, err := ListTopicSubscriptionsNameContextE(t.Context(), "", "", "", "")
 
-	_, err := ListTopicSubscriptionsNameE(subscriptionID, namespace, resourceGroup, topicName)
 	require.Error(t, err)
 }

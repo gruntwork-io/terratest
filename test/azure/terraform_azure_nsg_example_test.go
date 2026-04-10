@@ -7,6 +7,7 @@
 package test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
@@ -38,7 +39,7 @@ func TestTerraformAzureNsgExample(t *testing.T) {
 	httpRuleName := terraform.Output(t, terraformOptions, "http_rule_name")
 
 	// A default NSG has 6 rules, and we have two custom rules for a total of 8
-	rules, err := azure.GetAllNSGRulesE(resourceGroupName, nsgName, "")
+	rules, err := azure.GetAllNSGRulesContextE(context.Background(), resourceGroupName, nsgName, "")
 	assert.NoError(t, err)
 	assert.Equal(t, 8, len(rules.SummarizedRules))
 
