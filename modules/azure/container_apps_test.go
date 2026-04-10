@@ -18,68 +18,68 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure Virtual Machines, these tests can be extended.
 */
 
-func TestManagedEnvironmentExists(t *testing.T) {
+func TestManagedEnvironmentExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	environmentName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.ManagedEnvironmentExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ManagedEnvironmentExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestGetManagedEnvironmentE(t *testing.T) {
+func TestGetManagedEnvironmentContextE(t *testing.T) {
 	t.Parallel()
 
 	environmentName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetManagedEnvironmentE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetManagedEnvironmentContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestContainerAppExists(t *testing.T) {
+func TestContainerAppExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	environmentName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerAppExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ContainerAppExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestGetContainerAppE(t *testing.T) {
+func TestGetContainerAppContextE(t *testing.T) {
 	t.Parallel()
 
 	environmentName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerAppE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetContainerAppContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestContainerAppJobExists(t *testing.T) {
+func TestContainerAppJobExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	environmentName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerAppJobExistsE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.ContainerAppJobExistsContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestGetContainerJobAppE(t *testing.T) {
+func TestGetContainerAppJobContextE(t *testing.T) {
 	t.Parallel()
 
 	environmentName := ""
 	resourceGroupName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerAppJobE(environmentName, resourceGroupName, subscriptionID)
+	_, err := azure.GetContainerAppJobContextE(t.Context(), environmentName, resourceGroupName, subscriptionID)
 	require.Error(t, err)
 }

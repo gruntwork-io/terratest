@@ -3,8 +3,8 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
-	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerinstance/armcontainerinstance"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerregistry/armcontainerregistry"
 	"github.com/gruntwork-io/terratest/modules/testing"
 
 	"github.com/stretchr/testify/require"
@@ -57,7 +57,7 @@ func ContainerRegistryExistsE(registryName string, resourceGroupName string, sub
 // GetContainerRegistryContext gets the container registry object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetContainerRegistryContext(t testing.TestingT, ctx context.Context, registryName string, resGroupName string, subscriptionID string) *containerregistry.Registry {
+func GetContainerRegistryContext(t testing.TestingT, ctx context.Context, registryName string, resGroupName string, subscriptionID string) *armcontainerregistry.Registry {
 	t.Helper()
 
 	resource, err := GetContainerRegistryContextE(ctx, registryName, resGroupName, subscriptionID)
@@ -70,7 +70,7 @@ func GetContainerRegistryContext(t testing.TestingT, ctx context.Context, regist
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetContainerRegistryContext] instead.
-func GetContainerRegistry(t testing.TestingT, registryName string, resGroupName string, subscriptionID string) *containerregistry.Registry {
+func GetContainerRegistry(t testing.TestingT, registryName string, resGroupName string, subscriptionID string) *armcontainerregistry.Registry {
 	t.Helper()
 
 	return GetContainerRegistryContext(t, context.Background(), registryName, resGroupName, subscriptionID) //nolint:staticcheck
@@ -78,50 +78,47 @@ func GetContainerRegistry(t testing.TestingT, registryName string, resGroupName 
 
 // GetContainerRegistryContextE gets the container registry object.
 // The ctx parameter supports cancellation and timeouts.
-func GetContainerRegistryContextE(ctx context.Context, registryName string, resGroupName string, subscriptionID string) (*containerregistry.Registry, error) {
+//
+//nolint:dupl
+func GetContainerRegistryContextE(ctx context.Context, registryName string, resGroupName string, subscriptionID string) (*armcontainerregistry.Registry, error) {
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := GetContainerRegistryClientE(subscriptionID)
+	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	resource, err := client.Get(ctx, rgName, registryName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	return &resource, nil
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armcontainerregistry.NewRegistriesClient(subID, cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Get(ctx, rgName, registryName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Registry, nil
 }
 
 // GetContainerRegistryE gets the container registry object.
 //
 // Deprecated: Use [GetContainerRegistryContextE] instead.
-func GetContainerRegistryE(registryName string, resGroupName string, subscriptionID string) (*containerregistry.Registry, error) {
+func GetContainerRegistryE(registryName string, resGroupName string, subscriptionID string) (*armcontainerregistry.Registry, error) {
 	return GetContainerRegistryContextE(context.Background(), registryName, resGroupName, subscriptionID)
-}
-
-// GetContainerRegistryClientE is a helper function that will setup an Azure Container Registry client on your behalf.
-func GetContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
-	// Create an ACR client
-	registryClient, err := CreateContainerRegistryClientE(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	registryClient.Authorizer = *authorizer
-
-	return registryClient, nil
 }
 
 // ContainerInstanceExistsContext indicates whether the specified container instance exists.
@@ -171,7 +168,7 @@ func ContainerInstanceExistsE(instanceName string, resourceGroupName string, sub
 // GetContainerInstanceContext gets the container instance object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetContainerInstanceContext(t testing.TestingT, ctx context.Context, instanceName string, resGroupName string, subscriptionID string) *containerinstance.ContainerGroup {
+func GetContainerInstanceContext(t testing.TestingT, ctx context.Context, instanceName string, resGroupName string, subscriptionID string) *armcontainerinstance.ContainerGroup {
 	t.Helper()
 
 	instance, err := GetContainerInstanceContextE(ctx, instanceName, resGroupName, subscriptionID)
@@ -184,7 +181,7 @@ func GetContainerInstanceContext(t testing.TestingT, ctx context.Context, instan
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetContainerInstanceContext] instead.
-func GetContainerInstance(t testing.TestingT, instanceName string, resGroupName string, subscriptionID string) *containerinstance.ContainerGroup {
+func GetContainerInstance(t testing.TestingT, instanceName string, resGroupName string, subscriptionID string) *armcontainerinstance.ContainerGroup {
 	t.Helper()
 
 	return GetContainerInstanceContext(t, context.Background(), instanceName, resGroupName, subscriptionID) //nolint:staticcheck
@@ -192,48 +189,45 @@ func GetContainerInstance(t testing.TestingT, instanceName string, resGroupName 
 
 // GetContainerInstanceContextE gets the container instance object.
 // The ctx parameter supports cancellation and timeouts.
-func GetContainerInstanceContextE(ctx context.Context, instanceName string, resGroupName string, subscriptionID string) (*containerinstance.ContainerGroup, error) {
+//
+//nolint:dupl
+func GetContainerInstanceContextE(ctx context.Context, instanceName string, resGroupName string, subscriptionID string) (*armcontainerinstance.ContainerGroup, error) {
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := GetContainerInstanceClientE(subscriptionID)
+	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	instance, err := client.Get(ctx, rgName, instanceName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	return &instance, nil
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armcontainerinstance.NewContainerGroupsClient(subID, cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Get(ctx, rgName, instanceName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.ContainerGroup, nil
 }
 
 // GetContainerInstanceE gets the container instance object.
 //
 // Deprecated: Use [GetContainerInstanceContextE] instead.
-func GetContainerInstanceE(instanceName string, resGroupName string, subscriptionID string) (*containerinstance.ContainerGroup, error) {
+func GetContainerInstanceE(instanceName string, resGroupName string, subscriptionID string) (*armcontainerinstance.ContainerGroup, error) {
 	return GetContainerInstanceContextE(context.Background(), instanceName, resGroupName, subscriptionID)
-}
-
-// GetContainerInstanceClientE is a helper function that will setup an Azure Container Instance client on your behalf.
-func GetContainerInstanceClientE(subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
-	// Create an ACI client
-	instanceClient, err := CreateContainerInstanceClientE(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	instanceClient.Authorizer = *authorizer
-
-	return instanceClient, nil
 }

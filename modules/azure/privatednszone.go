@@ -23,6 +23,8 @@ func PrivateDNSZoneExistsContextE(ctx context.Context, zoneName string, resource
 
 // GetPrivateDNSZoneContextE gets the specified private DNS zone object.
 // The ctx parameter supports cancellation and timeouts.
+//
+//nolint:dupl
 func GetPrivateDNSZoneContextE(ctx context.Context, zoneName string, resGroupName string, subscriptionID string) (*armprivatedns.PrivateZone, error) {
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {

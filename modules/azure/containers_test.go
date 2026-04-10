@@ -18,64 +18,46 @@ The below tests are currently stubbed out, with the expectation that they will t
 If/when CRUD methods are introduced for Azure MySQL server and database, these tests can be extended
 */
 
-func TestContainerRegistryExistsE(t *testing.T) {
+func TestContainerRegistryExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerRegistryExistsE(registryName, resGroupName, subscriptionID)
+	_, err := azure.ContainerRegistryExistsContextE(t.Context(), registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestGetContainerRegistryE(t *testing.T) {
+func TestGetContainerRegistryContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	registryName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerRegistryE(registryName, resGroupName, subscriptionID)
+	_, err := azure.GetContainerRegistryContextE(t.Context(), registryName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestGetContainerRegistryClientE(t *testing.T) {
-	t.Parallel()
-
-	subscriptionID := ""
-
-	_, err := azure.GetContainerRegistryClientE(subscriptionID)
-	require.NoError(t, err)
-}
-
-func TestContainerInstanceExistsE(t *testing.T) {
+func TestContainerInstanceExistsContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := azure.ContainerInstanceExistsE(instanceName, resGroupName, subscriptionID)
+	_, err := azure.ContainerInstanceExistsContextE(t.Context(), instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
 }
 
-func TestGetContainerInstanceE(t *testing.T) {
+func TestGetContainerInstanceContextE(t *testing.T) {
 	t.Parallel()
 
 	resGroupName := ""
 	instanceName := ""
 	subscriptionID := ""
 
-	_, err := azure.GetContainerInstanceE(instanceName, resGroupName, subscriptionID)
+	_, err := azure.GetContainerInstanceContextE(t.Context(), instanceName, resGroupName, subscriptionID)
 	require.Error(t, err)
-}
-
-func TestGetContainerInstanceClientE(t *testing.T) {
-	t.Parallel()
-
-	subscriptionID := ""
-
-	_, err := azure.GetContainerInstanceClientE(subscriptionID)
-	require.NoError(t, err)
 }

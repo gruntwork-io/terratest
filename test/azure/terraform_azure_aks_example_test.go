@@ -48,7 +48,7 @@ func TestTerraformAzureAKSExample(t *testing.T) {
 	cluster, err := azure.GetManagedClusterContextE(t, t.Context(), expectedResourceGroupName, expectedClusterName, "")
 	require.NoError(t, err)
 
-	actualCount := *(*cluster.ManagedClusterProperties.AgentPoolProfiles)[0].Count
+	actualCount := *cluster.Properties.AgentPoolProfiles[0].Count
 
 	// Test that the Node count matches the Terraform specification
 	assert.Equal(t, int32(expectedAagentCount), actualCount)
