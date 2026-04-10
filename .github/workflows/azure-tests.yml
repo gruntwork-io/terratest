@@ -1,0 +1,70 @@
+name: Azure Unit Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'modules/azure/**'
+      - 'test/azure/**'
+      - 'go.mod'
+      - 'go.sum'
+  pull_request:
+    paths:
+      - 'modules/azure/**'
+      - 'test/azure/**'
+      - 'go.mod'
+      - 'go.sum'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Azure Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install mise
+      uses: jdx/mise-action@v3
+      with:
+        version: 2025.12.10
+        experimental: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Go module cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download Go modules
+      run: go mod download
+
+    - name: Build Azure module
+      run: go build ./modules/azure/...
+
+    - name: Compile Azure module tests
+      run: go test -tags azure -c -o /dev/null ./modules/azure/...
+
+    - name: Compile Azure integration tests
+      run: go test -tags azure -c -o /dev/null ./test/azure/...
+
+    - name: Run Azure unit tests
+      run: |
+        mkdir -p /tmp/logs
+        go test -v -count=1 -timeout 10m ./modules/azure/... 2>&1 | tee /tmp/logs/azure-tests.log
+
+    - name: Upload test logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: azure-test-logs
+        path: /tmp/logs/

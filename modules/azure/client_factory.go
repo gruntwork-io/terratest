@@ -17,7 +17,6 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/privatedns/mgmt/privatedns"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -919,44 +918,6 @@ func CreateDataFactoriesClientE(subscriptionID string) (*armdatafactory.Factorie
 	}
 
 	return clientFactory.NewFactoriesClient(), nil
-}
-
-// CreatePrivateDNSZonesClientE is a helper function that will setup a private DNS zone client.
-func CreatePrivateDNSZonesClientE(subscriptionID string) (*privatedns.PrivateZonesClient, error) {
-	// Validate Azure subscription ID
-	subID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	// Create a private DNS zone client
-	privateZonesClient := privatedns.NewPrivateZonesClientWithBaseURI(baseURI, subID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	// Attach authorizer to the client
-	privateZonesClient.Authorizer = *authorizer
-
-	return &privateZonesClient, nil
-}
-
-// CreatePrivateDnsZonesClientE is a helper function that will setup a private DNS zone client.
-//
-// Deprecated: Use [CreatePrivateDNSZonesClientE] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func CreatePrivateDnsZonesClientE(subscriptionID string) (*privatedns.PrivateZonesClient, error) {
-	return CreatePrivateDNSZonesClientE(subscriptionID)
 }
 
 // CreateManagedEnvironmentsClientE creates a managed environments client for Azure Container Apps.
