@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  MINIKUBE_VERSION: "v1.35.0"
+  MINIKUBE_VERSION: "1.35.0"
   K8S_VERSION: "v1.28.0"
 
 jobs:
