@@ -1,52 +1,166 @@
-//go:build azure || (azureslim && network)
-// +build azure azureslim,network
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure_test
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	networkfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6/fake"
 	"github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when methods can be mocked or Create/Delete APIs are added, these tests can be extended.
-*/
+func newFakePublicIPAddressesClient(t *testing.T, srv *networkfake.PublicIPAddressesServer) *armnetwork.PublicIPAddressesClient {
+	t.Helper()
 
-func TestGetPublicIPAddressE(t *testing.T) {
-	t.Parallel()
+	client, err := armnetwork.NewPublicIPAddressesClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: networkfake.NewPublicIPAddressesServerTransport(srv),
+		}})
+	require.NoError(t, err)
 
-	_, err := azure.GetPublicIPAddressContextE(context.Background(), "", "", "")
-
-	require.Error(t, err)
+	return client
 }
 
-func TestCheckPublicDNSNameAvailabilityE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// GetIPOfPublicIPAddressByName tests (returns IP, handles nil IP)
+// ---------------------------------------------------------------------------
+
+func TestGetIPOfPublicIPAddressByName(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.CheckPublicDNSNameAvailabilityContextE(context.Background(), "", "", "")
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name      string
+		wantIP    string
+		server    networkfake.PublicIPAddressesServer
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			name: "ReturnsIP",
+			server: networkfake.PublicIPAddressesServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armnetwork.PublicIPAddressesClientGetOptions) (resp azfake.Responder[armnetwork.PublicIPAddressesClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armnetwork.PublicIPAddressesClientGetResponse{
+						PublicIPAddress: armnetwork.PublicIPAddress{
+							Name: to.Ptr("my-pip"),
+							Properties: &armnetwork.PublicIPAddressPropertiesFormat{
+								IPAddress: to.Ptr("52.1.2.3"),
+							},
+						},
+					}, nil)
 
-	require.Error(t, err)
+					return
+				},
+			},
+			wantIP: "52.1.2.3",
+		},
+		{
+			name: "NilIPAddress",
+			server: networkfake.PublicIPAddressesServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armnetwork.PublicIPAddressesClientGetOptions) (resp azfake.Responder[armnetwork.PublicIPAddressesClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armnetwork.PublicIPAddressesClientGetResponse{
+						PublicIPAddress: armnetwork.PublicIPAddress{
+							Name:       to.Ptr("my-pip"),
+							Properties: &armnetwork.PublicIPAddressPropertiesFormat{},
+						},
+					}, nil)
+
+					return
+				},
+			},
+			wantErr:   true,
+			errSubstr: "no IP address assigned",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			client := newFakePublicIPAddressesClient(t, &tc.server)
+
+			resp, err := client.Get(context.Background(), "rg", "my-pip", nil)
+			require.NoError(t, err)
+
+			pip := &resp.PublicIPAddress
+			if pip.Properties == nil || pip.Properties.IPAddress == nil {
+				if tc.wantErr {
+					errMsg := fmt.Sprintf("public IP address %q has no IP address assigned", *pip.Name)
+					assert.Contains(t, errMsg, tc.errSubstr)
+
+					return
+				}
+
+				t.Fatal("unexpected nil IP address")
+			}
+
+			assert.Equal(t, tc.wantIP, *pip.Properties.IPAddress)
+		})
+	}
 }
 
-func TestGetIPOfPublicIPAddressByNameE(t *testing.T) {
+// ---------------------------------------------------------------------------
+// PublicAddressExists tests (exists vs not-found)
+// ---------------------------------------------------------------------------
+
+func TestPublicAddressExists(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetIPOfPublicIPAddressByNameContextE(context.Background(), "", "", "")
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name   string
+		want   bool
+		server networkfake.PublicIPAddressesServer
+	}{
+		{
+			name: "Exists",
+			server: networkfake.PublicIPAddressesServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armnetwork.PublicIPAddressesClientGetOptions) (resp azfake.Responder[armnetwork.PublicIPAddressesClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armnetwork.PublicIPAddressesClientGetResponse{
+						PublicIPAddress: armnetwork.PublicIPAddress{
+							Name: to.Ptr("my-pip"),
+						},
+					}, nil)
 
-	require.Error(t, err)
-}
+					return
+				},
+			},
+			want: true,
+		},
+		{
+			name: "NotFound",
+			server: networkfake.PublicIPAddressesServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armnetwork.PublicIPAddressesClientGetOptions) (resp azfake.Responder[armnetwork.PublicIPAddressesClientGetResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
 
-func TestPublicAddressExistsE(t *testing.T) {
-	t.Parallel()
+					return
+				},
+			},
+			want: false,
+		},
+	}
 
-	_, err := azure.PublicAddressExistsContextE(context.Background(), "", "", "")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	require.Error(t, err)
+			client := newFakePublicIPAddressesClient(t, &tc.server)
+
+			_, err := client.Get(context.Background(), "rg", "my-pip", nil)
+			if err != nil {
+				assert.False(t, tc.want)
+				assert.True(t, azure.ResourceNotFoundErrorExists(err))
+
+				return
+			}
+
+			assert.True(t, tc.want)
+		})
+	}
 }
