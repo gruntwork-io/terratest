@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 env:
-  MINIKUBE_VERSION: "1.35.0"
   K8S_VERSION: "v1.28.0"
 
 jobs:
@@ -200,12 +199,8 @@ jobs:
           role-to-assume: arn:aws:iam::087285199408:role/terratest-gha
           aws-region: us-east-1
 
-      - name: Setup minikube
-        uses: medyagh/setup-minikube@v0.0.21
-        with:
-          kubernetes-version: ${{ env.K8S_VERSION }}
-          minikube-version: ${{ env.MINIKUBE_VERSION }}
-          driver: docker
+      - name: Start minikube
+        run: minikube start --driver=docker --kubernetes-version=${{ env.K8S_VERSION }}
 
       - name: Run k8s module tests
         run: |
@@ -270,12 +265,8 @@ jobs:
           role-to-assume: arn:aws:iam::087285199408:role/terratest-gha
           aws-region: us-east-1
 
-      - name: Setup minikube
-        uses: medyagh/setup-minikube@v0.0.21
-        with:
-          kubernetes-version: ${{ env.K8S_VERSION }}
-          minikube-version: ${{ env.MINIKUBE_VERSION }}
-          driver: docker
+      - name: Start minikube
+        run: minikube start --driver=docker --kubernetes-version=${{ env.K8S_VERSION }}
 
       - name: Run helm module tests
         run: |
