@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"net"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
@@ -123,25 +124,37 @@ func CheckSubnetContainsIPContext(t testing.TestingT, ctx context.Context, ipAdd
 // CheckSubnetContainsIPContextE checks if the Private IP is contained in the Subnet Address Range.
 // The ctx parameter supports cancellation and timeouts.
 func CheckSubnetContainsIPContextE(ctx context.Context, ipAddress string, subnetName string, vnetName string, resGroupName string, subscriptionID string) (bool, error) {
-	// Convert the IP to a net IP address
+	client, err := GetSubnetClientContextE(ctx, subscriptionID)
+	if err != nil {
+		return false, err
+	}
+
+	return CheckSubnetContainsIPWithClient(ctx, client, ipAddress, subnetName, vnetName, resGroupName)
+}
+
+// CheckSubnetContainsIPWithClient checks if the Private IP is contained in the Subnet Address Range
+// using a pre-built SubnetsClient.
+func CheckSubnetContainsIPWithClient(ctx context.Context, client *armnetwork.SubnetsClient, ipAddress string, subnetName string, vnetName string, resGroupName string) (bool, error) {
+	// Validate IP first (before network call)
 	ip := net.ParseIP(ipAddress)
 	if ip == nil {
 		return false, NewFailedToParseError("IP Address", ipAddress)
 	}
 
-	// Get Subnet
-	subnet, err := GetSubnetContextE(ctx, subnetName, vnetName, resGroupName, subscriptionID)
+	// Get subnet
+	subnet, err := GetSubnetWithClient(ctx, client, resGroupName, vnetName, subnetName)
 	if err != nil {
 		return false, err
 	}
 
-	// Get Subnet IP range, this required field is never nil therefore no exception handling required.
-	subnetPrefix := *subnet.Properties.AddressPrefix
+	// Check CIDR containment
+	if subnet.Properties == nil || subnet.Properties.AddressPrefix == nil {
+		return false, errors.New("subnet has no address prefix")
+	}
 
-	// Check if the IP is in the Subnet Range using the net package
-	_, ipNet, err := net.ParseCIDR(subnetPrefix)
-	if err != nil {
-		return false, NewFailedToParseError("Subnet Range", subnetPrefix)
+	_, ipNet, parseErr := net.ParseCIDR(*subnet.Properties.AddressPrefix)
+	if parseErr != nil {
+		return false, NewFailedToParseError("Subnet Range", *subnet.Properties.AddressPrefix)
 	}
 
 	return ipNet.Contains(ip), nil
@@ -178,25 +191,32 @@ func GetVirtualNetworkSubnetsContext(t testing.TestingT, ctx context.Context, vn
 // Returning both the name and prefix together helps reduce calls for these frequently accessed properties.
 // The ctx parameter supports cancellation and timeouts.
 func GetVirtualNetworkSubnetsContextE(ctx context.Context, vnetName string, resGroupName string, subscriptionID string) (map[string]string, error) {
-	subNetDetails := map[string]string{}
-
 	client, err := GetSubnetClientContextE(ctx, subscriptionID)
 	if err != nil {
-		return subNetDetails, err
+		return nil, err
 	}
+
+	return GetVirtualNetworkSubnetsWithClient(ctx, client, resGroupName, vnetName)
+}
+
+// GetVirtualNetworkSubnetsWithClient gets all Subnet names and their respective address prefixes
+// using the provided SubnetsClient.
+func GetVirtualNetworkSubnetsWithClient(ctx context.Context, client *armnetwork.SubnetsClient, resGroupName string, vnetName string) (map[string]string, error) {
+	subNetDetails := map[string]string{}
 
 	pager := client.NewListPager(resGroupName, vnetName, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return subNetDetails, err
+			return nil, err
 		}
 
 		for _, v := range page.Value {
-			subnetName := v.Name
-			subNetAddressPrefix := v.Properties.AddressPrefix
+			if v.Name == nil || v.Properties == nil || v.Properties.AddressPrefix == nil {
+				continue
+			}
 
-			subNetDetails[*subnetName] = *subNetAddressPrefix
+			subNetDetails[*v.Name] = *v.Properties.AddressPrefix
 		}
 	}
 
@@ -238,16 +258,23 @@ func GetVirtualNetworkDNSServerIPsContextE(ctx context.Context, vnetName string,
 		return nil, err
 	}
 
-	if vnet.Properties.DhcpOptions == nil {
-		return nil, nil
+	return ExtractVirtualNetworkDNSServerIPs(vnet), nil
+}
+
+// ExtractVirtualNetworkDNSServerIPs gets a list of all DNS server IPs from a VirtualNetwork.
+func ExtractVirtualNetworkDNSServerIPs(vnet *armnetwork.VirtualNetwork) []string {
+	if vnet.Properties == nil || vnet.Properties.DhcpOptions == nil {
+		return nil
 	}
 
-	dnsServers := make([]string, len(vnet.Properties.DhcpOptions.DNSServers))
-	for i, s := range vnet.Properties.DhcpOptions.DNSServers {
-		dnsServers[i] = *s
+	dnsServers := make([]string, 0, len(vnet.Properties.DhcpOptions.DNSServers))
+	for _, s := range vnet.Properties.DhcpOptions.DNSServers {
+		if s != nil {
+			dnsServers = append(dnsServers, *s)
+		}
 	}
 
-	return dnsServers, nil
+	return dnsServers
 }
 
 // GetSubnetE gets a subnet.
@@ -272,7 +299,11 @@ func GetSubnetContextE(ctx context.Context, subnetName string, vnetName string, 
 		return nil, err
 	}
 
-	// Get the Subnet
+	return GetSubnetWithClient(ctx, client, resGroupName, vnetName, subnetName)
+}
+
+// GetSubnetWithClient gets a subnet using the provided SubnetsClient.
+func GetSubnetWithClient(ctx context.Context, client *armnetwork.SubnetsClient, resGroupName string, vnetName string, subnetName string) (*armnetwork.Subnet, error) {
 	resp, err := client.Get(ctx, resGroupName, vnetName, subnetName, nil)
 	if err != nil {
 		return nil, err
@@ -316,7 +347,11 @@ func GetVirtualNetworkContextE(ctx context.Context, vnetName string, resGroupNam
 		return nil, err
 	}
 
-	// Get the Virtual Network
+	return GetVirtualNetworkWithClient(ctx, client, resGroupName, vnetName)
+}
+
+// GetVirtualNetworkWithClient gets a Virtual Network using the provided VirtualNetworksClient.
+func GetVirtualNetworkWithClient(ctx context.Context, client *armnetwork.VirtualNetworksClient, resGroupName string, vnetName string) (*armnetwork.VirtualNetwork, error) {
 	resp, err := client.Get(ctx, resGroupName, vnetName, nil)
 	if err != nil {
 		return nil, err

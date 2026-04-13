@@ -73,13 +73,16 @@ func GetCosmosDBAccountContextE(ctx context.Context, subscriptionID string, reso
 		return nil, err
 	}
 
-	// Get the corresponding database account
-	resp, err := cosmosClient.Get(ctx, resourceGroupName, accountName, nil)
+	return GetCosmosDBAccountWithClient(ctx, cosmosClient, resourceGroupName, accountName)
+}
+
+// GetCosmosDBAccountWithClient gets a database account using the provided DatabaseAccountsClient.
+func GetCosmosDBAccountWithClient(ctx context.Context, client *armcosmos.DatabaseAccountsClient, resourceGroupName string, accountName string) (*armcosmos.DatabaseAccountGetResults, error) {
+	resp, err := client.Get(ctx, resourceGroupName, accountName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return DB
 	return &resp.DatabaseAccountGetResults, nil
 }
 
@@ -148,13 +151,16 @@ func GetCosmosDBSQLDatabaseContextE(ctx context.Context, subscriptionID string, 
 		return nil, err
 	}
 
-	// Get the corresponding database
-	resp, err := cosmosClient.GetSQLDatabase(ctx, resourceGroupName, accountName, databaseName, nil)
+	return GetCosmosDBSQLDatabaseWithClient(ctx, cosmosClient, resourceGroupName, accountName, databaseName)
+}
+
+// GetCosmosDBSQLDatabaseWithClient gets a SQL database using the provided SQLResourcesClient.
+func GetCosmosDBSQLDatabaseWithClient(ctx context.Context, client *armcosmos.SQLResourcesClient, resourceGroupName string, accountName string, databaseName string) (*armcosmos.SQLDatabaseGetResults, error) {
+	resp, err := client.GetSQLDatabase(ctx, resourceGroupName, accountName, databaseName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return DB
 	return &resp.SQLDatabaseGetResults, nil
 }
 
@@ -192,13 +198,16 @@ func GetCosmosDBSQLContainerContextE(ctx context.Context, subscriptionID string,
 		return nil, err
 	}
 
-	// Get the corresponding SQL container
-	resp, err := cosmosClient.GetSQLContainer(ctx, resourceGroupName, accountName, databaseName, containerName, nil)
+	return GetCosmosDBSQLContainerWithClient(ctx, cosmosClient, resourceGroupName, accountName, databaseName, containerName)
+}
+
+// GetCosmosDBSQLContainerWithClient gets a SQL container using the provided SQLResourcesClient.
+func GetCosmosDBSQLContainerWithClient(ctx context.Context, client *armcosmos.SQLResourcesClient, resourceGroupName string, accountName string, databaseName string, containerName string) (*armcosmos.SQLContainerGetResults, error) {
+	resp, err := client.GetSQLContainer(ctx, resourceGroupName, accountName, databaseName, containerName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return container
 	return &resp.SQLContainerGetResults, nil
 }
 
@@ -236,13 +245,17 @@ func GetCosmosDBSQLDatabaseThroughputContextE(ctx context.Context, subscriptionI
 		return nil, err
 	}
 
-	// Get the corresponding database throughput config
-	resp, err := cosmosClient.GetSQLDatabaseThroughput(ctx, resourceGroupName, accountName, databaseName, nil)
+	return GetCosmosDBSQLDatabaseThroughputWithClient(ctx, cosmosClient, resourceGroupName, accountName, databaseName)
+}
+
+// GetCosmosDBSQLDatabaseThroughputWithClient gets a SQL database throughput configuration
+// using the provided SQLResourcesClient.
+func GetCosmosDBSQLDatabaseThroughputWithClient(ctx context.Context, client *armcosmos.SQLResourcesClient, resourceGroupName string, accountName string, databaseName string) (*armcosmos.ThroughputSettingsGetResults, error) {
+	resp, err := client.GetSQLDatabaseThroughput(ctx, resourceGroupName, accountName, databaseName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return throughput config
 	return &resp.ThroughputSettingsGetResults, nil
 }
 
@@ -280,12 +293,16 @@ func GetCosmosDBSQLContainerThroughputContextE(ctx context.Context, subscription
 		return nil, err
 	}
 
-	// Get the corresponding container throughput config
-	resp, err := cosmosClient.GetSQLContainerThroughput(ctx, resourceGroupName, accountName, databaseName, containerName, nil)
+	return GetCosmosDBSQLContainerThroughputWithClient(ctx, cosmosClient, resourceGroupName, accountName, databaseName, containerName)
+}
+
+// GetCosmosDBSQLContainerThroughputWithClient gets a SQL container throughput configuration
+// using the provided SQLResourcesClient.
+func GetCosmosDBSQLContainerThroughputWithClient(ctx context.Context, client *armcosmos.SQLResourcesClient, resourceGroupName string, accountName string, databaseName string, containerName string) (*armcosmos.ThroughputSettingsGetResults, error) {
+	resp, err := client.GetSQLContainerThroughput(ctx, resourceGroupName, accountName, databaseName, containerName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return throughput config
 	return &resp.ThroughputSettingsGetResults, nil
 }

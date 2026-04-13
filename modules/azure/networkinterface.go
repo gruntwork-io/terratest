@@ -85,20 +85,12 @@ func GetNetworkInterfacePrivateIPsContext(t testing.TestingT, ctx context.Contex
 // GetNetworkInterfacePrivateIPsContextE gets a list of the Private IPs of a Network Interface configs.
 // The ctx parameter supports cancellation and timeouts.
 func GetNetworkInterfacePrivateIPsContextE(ctx context.Context, nicName string, resGroupName string, subscriptionID string) ([]string, error) {
-	var privateIPs []string
-
-	// Get the Network Interface client
 	nic, err := GetNetworkInterfaceContextE(ctx, nicName, resGroupName, subscriptionID)
 	if err != nil {
-		return privateIPs, err
+		return nil, err
 	}
 
-	// Get the Private IPs from each configuration
-	for _, IPConfiguration := range nic.Properties.IPConfigurations {
-		privateIPs = append(privateIPs, *IPConfiguration.Properties.PrivateIPAddress)
-	}
-
-	return privateIPs, nil
+	return ExtractNetworkInterfacePrivateIPs(nic), nil
 }
 
 // GetNetworkInterfacePublicIPs returns a list of all the Public IPs found in the Network Interface configurations.
@@ -227,13 +219,34 @@ func GetNetworkInterfaceContextE(ctx context.Context, nicName string, resGroupNa
 		return nil, err
 	}
 
-	// Get the Network Interface
+	return GetNetworkInterfaceWithClient(ctx, client, resGroupName, nicName)
+}
+
+// GetNetworkInterfaceWithClient gets a Network Interface using the provided InterfacesClient.
+func GetNetworkInterfaceWithClient(ctx context.Context, client *armnetwork.InterfacesClient, resGroupName string, nicName string) (*armnetwork.Interface, error) {
 	resp, err := client.Get(ctx, resGroupName, nicName, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &resp.Interface, nil
+}
+
+// ExtractNetworkInterfacePrivateIPs gets a list of the Private IPs from a Network Interface.
+func ExtractNetworkInterfacePrivateIPs(nic *armnetwork.Interface) []string {
+	if nic.Properties == nil {
+		return nil
+	}
+
+	privateIPs := make([]string, 0, len(nic.Properties.IPConfigurations))
+
+	for _, ipConfig := range nic.Properties.IPConfigurations {
+		if ipConfig.Properties != nil && ipConfig.Properties.PrivateIPAddress != nil {
+			privateIPs = append(privateIPs, *ipConfig.Properties.PrivateIPAddress)
+		}
+	}
+
+	return privateIPs
 }
 
 // GetNetworkInterfaceClientContextE creates a new Network Interface client in the specified Azure Subscription.

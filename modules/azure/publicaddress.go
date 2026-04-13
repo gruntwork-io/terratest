@@ -90,11 +90,7 @@ func GetIPOfPublicIPAddressByNameContextE(ctx context.Context, publicAddressName
 		return "", err
 	}
 
-	if pip.Properties == nil || pip.Properties.IPAddress == nil {
-		return "", fmt.Errorf("public IP address %q has no IP address assigned", publicAddressName)
-	}
-
-	return *pip.Properties.IPAddress, nil
+	return ExtractIPOfPublicIPAddress(pip)
 }
 
 // CheckPublicDNSNameAvailability checks whether a domain name in the cloudapp.azure.com zone
@@ -166,12 +162,31 @@ func GetPublicIPAddressContextE(ctx context.Context, publicIPAddressName string,
 		return nil, err
 	}
 
+	return GetPublicIPAddressWithClient(ctx, client, resGroupName, publicIPAddressName)
+}
+
+// GetPublicIPAddressWithClient gets a Public IP Address using the provided PublicIPAddressesClient.
+func GetPublicIPAddressWithClient(ctx context.Context, client *armnetwork.PublicIPAddressesClient, resGroupName string, publicIPAddressName string) (*armnetwork.PublicIPAddress, error) {
 	resp, err := client.Get(ctx, resGroupName, publicIPAddressName, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &resp.PublicIPAddress, nil
+}
+
+// ExtractIPOfPublicIPAddress gets the IP string from a PublicIPAddress.
+func ExtractIPOfPublicIPAddress(pip *armnetwork.PublicIPAddress) (string, error) {
+	if pip.Properties == nil || pip.Properties.IPAddress == nil {
+		name := "<unknown>"
+		if pip.Name != nil {
+			name = *pip.Name
+		}
+
+		return "", fmt.Errorf("public IP address %q has no IP address assigned", name)
+	}
+
+	return *pip.Properties.IPAddress, nil
 }
 
 // GetPublicIPAddressClientContextE creates a Public IP Addresses client in the specified Azure Subscription.
