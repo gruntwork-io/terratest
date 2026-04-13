@@ -7,6 +7,13 @@ terraform {
 
 provider "aws" {
   region = "us-east-2"
+
+  default_tags {
+    tags = {
+      "gw:repo"    = "https://github.com/gruntwork-io/terratest"
+      "gw:example" = "terraform-aws-hello-world-example"
+    }
+  }
 }
 
 # website::tag::1:: Deploy an EC2 Instance.

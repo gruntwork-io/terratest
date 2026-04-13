@@ -16,6 +16,13 @@ data "aws_availability_zones" "available" {
 
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      "gw:repo"    = "https://github.com/gruntwork-io/terratest"
+      "gw:example" = "terraform-aws-network-example"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
