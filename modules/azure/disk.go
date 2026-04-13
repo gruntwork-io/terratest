@@ -8,6 +8,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// DiskExists indicates whether the specified Azure Managed Disk exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [DiskExistsContext] instead.
+func DiskExists(t testing.TestingT, diskName string, resGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return DiskExistsContext(t, context.Background(), diskName, resGroupName, subscriptionID)
+}
+
+// DiskExistsE indicates whether the specified Azure Managed Disk exists in the specified Azure Resource Group.
+//
+// Deprecated: Use [DiskExistsContextE] instead.
+func DiskExistsE(diskName string, resGroupName string, subscriptionID string) (bool, error) {
+	return DiskExistsContextE(context.Background(), diskName, resGroupName, subscriptionID)
+}
+
 // DiskExistsContext indicates whether the specified Azure Managed Disk exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -33,6 +50,23 @@ func DiskExistsContextE(ctx context.Context, diskName string, resGroupName strin
 	}
 
 	return true, nil
+}
+
+// GetDisk returns a Disk in the specified Azure Resource Group.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetDiskContext] instead.
+func GetDisk(t testing.TestingT, diskName string, resGroupName string, subscriptionID string) *armcompute.Disk {
+	t.Helper()
+
+	return GetDiskContext(t, context.Background(), diskName, resGroupName, subscriptionID)
+}
+
+// GetDiskE returns a Disk in the specified Azure Resource Group.
+//
+// Deprecated: Use [GetDiskContextE] instead.
+func GetDiskE(diskName string, resGroupName string, subscriptionID string) (*armcompute.Disk, error) {
+	return GetDiskContextE(context.Background(), diskName, resGroupName, subscriptionID)
 }
 
 // GetDiskContext returns a Disk in the specified Azure Resource Group.

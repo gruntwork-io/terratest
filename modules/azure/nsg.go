@@ -130,6 +130,25 @@ func GetCustomNsgRulesClientE(subscriptionID string) (*armnetwork.SecurityRulesC
 	return GetCustomNsgRulesClientContextE(context.Background(), subscriptionID)
 }
 
+// GetAllNSGRules returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
+// from a network security group.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetAllNSGRulesContext] instead.
+func GetAllNSGRules(t testing.TestingT, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
+	t.Helper()
+
+	return GetAllNSGRulesContext(t, context.Background(), resourceGroupName, nsgName, subscriptionID)
+}
+
+// GetAllNSGRulesE returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
+// from a network security group.
+//
+// Deprecated: Use [GetAllNSGRulesContextE] instead.
+func GetAllNSGRulesE(resourceGroupName, nsgName, subscriptionID string) (NsgRuleSummaryList, error) {
+	return GetAllNSGRulesContextE(context.Background(), resourceGroupName, nsgName, subscriptionID)
+}
+
 // GetAllNSGRulesContext returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
 // from a network security group. The ctx parameter supports cancellation and timeouts.
 // This function would fail the test if there is an error.

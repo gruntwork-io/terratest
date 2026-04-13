@@ -9,6 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// PublicAddressExists indicates whether the specified Azure Public Address exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [PublicAddressExistsContext] instead.
+func PublicAddressExists(t testing.TestingT, publicAddressName string, resGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return PublicAddressExistsContext(t, context.Background(), publicAddressName, resGroupName, subscriptionID)
+}
+
+// PublicAddressExistsE indicates whether the specified Azure Public Address exists.
+//
+// Deprecated: Use [PublicAddressExistsContextE] instead.
+func PublicAddressExistsE(publicAddressName string, resGroupName string, subscriptionID string) (bool, error) {
+	return PublicAddressExistsContextE(context.Background(), publicAddressName, resGroupName, subscriptionID)
+}
+
 // PublicAddressExistsContext indicates whether the specified Azure Public Address exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -36,6 +53,23 @@ func PublicAddressExistsContextE(ctx context.Context, publicAddressName string, 
 	return true, nil
 }
 
+// GetIPOfPublicIPAddressByName gets the IP of the specified Public IP Address.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetIPOfPublicIPAddressByNameContext] instead.
+func GetIPOfPublicIPAddressByName(t testing.TestingT, publicAddressName string, resGroupName string, subscriptionID string) string {
+	t.Helper()
+
+	return GetIPOfPublicIPAddressByNameContext(t, context.Background(), publicAddressName, resGroupName, subscriptionID)
+}
+
+// GetIPOfPublicIPAddressByNameE gets the IP of the specified Public IP Address.
+//
+// Deprecated: Use [GetIPOfPublicIPAddressByNameContextE] instead.
+func GetIPOfPublicIPAddressByNameE(publicAddressName string, resGroupName string, subscriptionID string) (string, error) {
+	return GetIPOfPublicIPAddressByNameContextE(context.Background(), publicAddressName, resGroupName, subscriptionID)
+}
+
 // GetIPOfPublicIPAddressByNameContext gets the IP of the specified Public IP Address.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -61,6 +95,24 @@ func GetIPOfPublicIPAddressByNameContextE(ctx context.Context, publicAddressName
 	}
 
 	return *pip.Properties.IPAddress, nil
+}
+
+// CheckPublicDNSNameAvailability checks whether a domain name in the cloudapp.azure.com zone
+// is available for use. This function would fail the test if there is an error.
+//
+// Deprecated: Use [CheckPublicDNSNameAvailabilityContext] instead.
+func CheckPublicDNSNameAvailability(t testing.TestingT, location string, domainNameLabel string, subscriptionID string) bool {
+	t.Helper()
+
+	return CheckPublicDNSNameAvailabilityContext(t, context.Background(), location, domainNameLabel, subscriptionID)
+}
+
+// CheckPublicDNSNameAvailabilityE checks whether a domain name in the cloudapp.azure.com zone
+// is available for use.
+//
+// Deprecated: Use [CheckPublicDNSNameAvailabilityContextE] instead.
+func CheckPublicDNSNameAvailabilityE(location string, domainNameLabel string, subscriptionID string) (bool, error) {
+	return CheckPublicDNSNameAvailabilityContextE(context.Background(), location, domainNameLabel, subscriptionID)
 }
 
 // CheckPublicDNSNameAvailabilityContext checks whether a domain name in the cloudapp.azure.com zone
@@ -92,6 +144,13 @@ func CheckPublicDNSNameAvailabilityContextE(ctx context.Context, location string
 	}
 
 	return *res.Available, nil
+}
+
+// GetPublicIPAddressE gets a Public IP Address in the specified Azure Resource Group.
+//
+// Deprecated: Use [GetPublicIPAddressContextE] instead.
+func GetPublicIPAddressE(publicIPAddressName string, resGroupName string, subscriptionID string) (*armnetwork.PublicIPAddress, error) {
+	return GetPublicIPAddressContextE(context.Background(), publicIPAddressName, resGroupName, subscriptionID)
 }
 
 // GetPublicIPAddressContextE gets a Public IP Address in the specified Azure Resource Group.

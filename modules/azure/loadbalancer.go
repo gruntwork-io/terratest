@@ -8,6 +8,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// LoadBalancerExists indicates whether the specified Load Balancer exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [LoadBalancerExistsContext] instead.
+func LoadBalancerExists(t testing.TestingT, loadBalancerName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return LoadBalancerExistsContext(t, context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+}
+
+// LoadBalancerExistsE indicates whether the specified Load Balancer exists.
+//
+// Deprecated: Use [LoadBalancerExistsContextE] instead.
+func LoadBalancerExistsE(loadBalancerName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	return LoadBalancerExistsContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+}
+
 // LoadBalancerExistsContext indicates whether the specified Load Balancer exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -33,6 +50,23 @@ func LoadBalancerExistsContextE(ctx context.Context, loadBalancerName string, re
 	}
 
 	return true, nil
+}
+
+// GetLoadBalancerFrontendIPConfigNames gets a list of the Frontend IP Configuration Names for the Load Balancer.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetLoadBalancerFrontendIPConfigNamesContext] instead.
+func GetLoadBalancerFrontendIPConfigNames(t testing.TestingT, loadBalancerName string, resourceGroupName string, subscriptionID string) []string {
+	t.Helper()
+
+	return GetLoadBalancerFrontendIPConfigNamesContext(t, context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+}
+
+// GetLoadBalancerFrontendIPConfigNamesE gets a list of the Frontend IP Configuration Names for the Load Balancer.
+//
+// Deprecated: Use [GetLoadBalancerFrontendIPConfigNamesContextE] instead.
+func GetLoadBalancerFrontendIPConfigNamesE(loadBalancerName string, resourceGroupName string, subscriptionID string) ([]string, error) {
+	return GetLoadBalancerFrontendIPConfigNamesContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
 }
 
 // GetLoadBalancerFrontendIPConfigNamesContext gets a list of the Frontend IP Configuration Names for the Load Balancer.
@@ -71,6 +105,23 @@ func GetLoadBalancerFrontendIPConfigNamesContextE(ctx context.Context, loadBalan
 	}
 
 	return configNames, nil
+}
+
+// GetIPOfLoadBalancerFrontendIPConfig gets the IP and LoadBalancerIPType for the specified Load Balancer Frontend IP Configuration.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetIPOfLoadBalancerFrontendIPConfigContext] instead.
+func GetIPOfLoadBalancerFrontendIPConfig(t testing.TestingT, feConfigName string, loadBalancerName string, resourceGroupName string, subscriptionID string) (ipAddress string, publicOrPrivate LoadBalancerIPType) {
+	t.Helper()
+
+	return GetIPOfLoadBalancerFrontendIPConfigContext(t, context.Background(), feConfigName, loadBalancerName, resourceGroupName, subscriptionID)
+}
+
+// GetIPOfLoadBalancerFrontendIPConfigE gets the IP and LoadBalancerIPType for the specified Load Balancer Frontend IP Configuration.
+//
+// Deprecated: Use [GetIPOfLoadBalancerFrontendIPConfigContextE] instead.
+func GetIPOfLoadBalancerFrontendIPConfigE(feConfigName string, loadBalancerName string, resourceGroupName string, subscriptionID string) (ipAddress string, publicOrPrivate LoadBalancerIPType, err1 error) {
+	return GetIPOfLoadBalancerFrontendIPConfigContextE(context.Background(), feConfigName, loadBalancerName, resourceGroupName, subscriptionID)
 }
 
 // GetIPOfLoadBalancerFrontendIPConfigContext gets the IP and LoadBalancerIPType for the specified Load Balancer Frontend IP Configuration.
@@ -113,6 +164,23 @@ func GetIPOfLoadBalancerFrontendIPConfigContextE(ctx context.Context, feConfigNa
 
 	// Return the Private IP as there are no other option available
 	return *feProps.PrivateIPAddress, PrivateIP, nil
+}
+
+// GetLoadBalancerFrontendIPConfig gets the specified Load Balancer Frontend IP Configuration network resource.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetLoadBalancerFrontendIPConfigContext] instead.
+func GetLoadBalancerFrontendIPConfig(t testing.TestingT, feConfigName string, loadBalancerName string, resourceGroupName string, subscriptionID string) *armnetwork.FrontendIPConfiguration {
+	t.Helper()
+
+	return GetLoadBalancerFrontendIPConfigContext(t, context.Background(), feConfigName, loadBalancerName, resourceGroupName, subscriptionID)
+}
+
+// GetLoadBalancerFrontendIPConfigE gets the specified Load Balancer Frontend IP Configuration network resource.
+//
+// Deprecated: Use [GetLoadBalancerFrontendIPConfigContextE] instead.
+func GetLoadBalancerFrontendIPConfigE(feConfigName string, loadBalancerName string, resourceGroupName string, subscriptionID string) (*armnetwork.FrontendIPConfiguration, error) {
+	return GetLoadBalancerFrontendIPConfigContextE(context.Background(), feConfigName, loadBalancerName, resourceGroupName, subscriptionID)
 }
 
 // GetLoadBalancerFrontendIPConfigContext gets the specified Load Balancer Frontend IP Configuration network resource.
@@ -162,6 +230,23 @@ func GetLoadBalancerFrontendIPConfigClientContextE(ctx context.Context, subscrip
 // Deprecated: Use [GetLoadBalancerFrontendIPConfigClientContextE] instead.
 func GetLoadBalancerFrontendIPConfigClientE(subscriptionID string) (*armnetwork.LoadBalancerFrontendIPConfigurationsClient, error) {
 	return GetLoadBalancerFrontendIPConfigClientContextE(context.Background(), subscriptionID)
+}
+
+// GetLoadBalancer gets a Load Balancer network resource in the specified Azure Resource Group.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetLoadBalancerContext] instead.
+func GetLoadBalancer(t testing.TestingT, loadBalancerName string, resourceGroupName string, subscriptionID string) *armnetwork.LoadBalancer {
+	t.Helper()
+
+	return GetLoadBalancerContext(t, context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
+}
+
+// GetLoadBalancerE gets a Load Balancer network resource in the specified Azure Resource Group.
+//
+// Deprecated: Use [GetLoadBalancerContextE] instead.
+func GetLoadBalancerE(loadBalancerName string, resourceGroupName string, subscriptionID string) (*armnetwork.LoadBalancer, error) {
+	return GetLoadBalancerContextE(context.Background(), loadBalancerName, resourceGroupName, subscriptionID)
 }
 
 // GetLoadBalancerContext gets a Load Balancer network resource in the specified Azure Resource Group.
