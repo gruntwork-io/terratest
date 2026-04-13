@@ -1,3 +1,5 @@
+//go:build aws
+
 package test_test
 
 import (
