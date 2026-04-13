@@ -9,6 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// AvailabilitySetExists indicates whether the specified Azure Availability Set exists.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [AvailabilitySetExistsContext] instead.
+func AvailabilitySetExists(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return AvailabilitySetExistsContext(t, context.Background(), avsName, resGroupName, subscriptionID)
+}
+
+// AvailabilitySetExistsE indicates whether the specified Azure Availability Set exists.
+//
+// Deprecated: Use [AvailabilitySetExistsContextE] instead.
+func AvailabilitySetExistsE(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) (bool, error) {
+	t.Helper()
+
+	return AvailabilitySetExistsContextE(t, context.Background(), avsName, resGroupName, subscriptionID)
+}
+
 // AvailabilitySetExistsContext indicates whether the specified Azure Availability Set exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -34,6 +53,25 @@ func AvailabilitySetExistsContextE(t testing.TestingT, ctx context.Context, avsN
 	}
 
 	return true, nil
+}
+
+// CheckAvailabilitySetContainsVM checks if the Virtual Machine is contained in the Availability Set VMs.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [CheckAvailabilitySetContainsVMContext] instead.
+func CheckAvailabilitySetContainsVM(t testing.TestingT, vmName string, avsName string, resGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	return CheckAvailabilitySetContainsVMContext(t, context.Background(), vmName, avsName, resGroupName, subscriptionID)
+}
+
+// CheckAvailabilitySetContainsVME checks if the Virtual Machine is contained in the Availability Set VMs.
+//
+// Deprecated: Use [CheckAvailabilitySetContainsVMContextE] instead.
+func CheckAvailabilitySetContainsVME(t testing.TestingT, vmName string, avsName string, resGroupName string, subscriptionID string) (bool, error) {
+	t.Helper()
+
+	return CheckAvailabilitySetContainsVMContextE(t, context.Background(), vmName, avsName, resGroupName, subscriptionID)
 }
 
 // CheckAvailabilitySetContainsVMContext checks if the Virtual Machine is contained in the Availability Set VMs.
@@ -69,6 +107,25 @@ func CheckAvailabilitySetContainsVMContextE(t testing.TestingT, ctx context.Cont
 	}
 
 	return false, NewNotFoundError("Virtual Machine", vmName, avsName)
+}
+
+// GetAvailabilitySetVMNamesInCaps gets a list of VM names in the specified Azure Availability Set.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetAvailabilitySetVMNamesInCapsContext] instead.
+func GetAvailabilitySetVMNamesInCaps(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) []string {
+	t.Helper()
+
+	return GetAvailabilitySetVMNamesInCapsContext(t, context.Background(), avsName, resGroupName, subscriptionID)
+}
+
+// GetAvailabilitySetVMNamesInCapsE gets a list of VM names in the specified Azure Availability Set.
+//
+// Deprecated: Use [GetAvailabilitySetVMNamesInCapsContextE] instead.
+func GetAvailabilitySetVMNamesInCapsE(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) ([]string, error) {
+	t.Helper()
+
+	return GetAvailabilitySetVMNamesInCapsContextE(t, context.Background(), avsName, resGroupName, subscriptionID)
 }
 
 // GetAvailabilitySetVMNamesInCapsContext gets a list of VM names in the specified Azure Availability Set.
@@ -108,6 +165,25 @@ func GetAvailabilitySetVMNamesInCapsContextE(t testing.TestingT, ctx context.Con
 	return vms, nil
 }
 
+// GetAvailabilitySetFaultDomainCount gets the Fault Domain Count for the specified Azure Availability Set.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetAvailabilitySetFaultDomainCountContext] instead.
+func GetAvailabilitySetFaultDomainCount(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) int32 {
+	t.Helper()
+
+	return GetAvailabilitySetFaultDomainCountContext(t, context.Background(), avsName, resGroupName, subscriptionID)
+}
+
+// GetAvailabilitySetFaultDomainCountE gets the Fault Domain Count for the specified Azure Availability Set.
+//
+// Deprecated: Use [GetAvailabilitySetFaultDomainCountContextE] instead.
+func GetAvailabilitySetFaultDomainCountE(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) (int32, error) {
+	t.Helper()
+
+	return GetAvailabilitySetFaultDomainCountContextE(t, context.Background(), avsName, resGroupName, subscriptionID)
+}
+
 // GetAvailabilitySetFaultDomainCountContext gets the Fault Domain Count for the specified Azure Availability Set.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -129,6 +205,15 @@ func GetAvailabilitySetFaultDomainCountContextE(t testing.TestingT, ctx context.
 	}
 
 	return *avs.Properties.PlatformFaultDomainCount, nil
+}
+
+// GetAvailabilitySetE gets an Availability Set in the specified Azure Resource Group.
+//
+// Deprecated: Use [GetAvailabilitySetContextE] instead.
+func GetAvailabilitySetE(t testing.TestingT, avsName string, resGroupName string, subscriptionID string) (*armcompute.AvailabilitySet, error) {
+	t.Helper()
+
+	return GetAvailabilitySetContextE(t, context.Background(), avsName, resGroupName, subscriptionID)
 }
 
 // GetAvailabilitySetContextE gets an Availability Set in the specified Azure Resource Group.
