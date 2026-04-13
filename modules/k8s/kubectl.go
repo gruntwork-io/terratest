@@ -82,6 +82,8 @@ func KubectlDelete(t testing.TestingT, options *KubectlOptions, configPath strin
 }
 
 // KubectlDeleteE will take in a file path and delete it from the cluster targeted by KubectlOptions.
+//
+// Deprecated: Use KubectlDeleteContextE instead.
 func KubectlDeleteE(t testing.TestingT, options *KubectlOptions, configPath string) error {
 	return KubectlDeleteContextE(t, context.Background(), options, configPath)
 }
@@ -106,6 +108,8 @@ func KubectlDeleteFromKustomize(t testing.TestingT, options *KubectlOptions, con
 }
 
 // KubectlDeleteFromKustomizeE will take in a kustomization directory path and delete it from the cluster targeted by KubectlOptions.
+//
+// Deprecated: Use KubectlDeleteFromKustomizeContextE instead.
 func KubectlDeleteFromKustomizeE(t testing.TestingT, options *KubectlOptions, configPath string) error {
 	return KubectlDeleteFromKustomizeContextE(t, context.Background(), options, configPath)
 }
@@ -131,6 +135,8 @@ func KubectlDeleteFromString(t testing.TestingT, options *KubectlOptions, config
 
 // KubectlDeleteFromStringE will take in a kubernetes resource config as a string and delete it on the cluster specified
 // by the provided kubectl options. If it fails, this will return the error.
+//
+// Deprecated: Use KubectlDeleteFromStringContextE instead.
 func KubectlDeleteFromStringE(t testing.TestingT, options *KubectlOptions, configData string) error {
 	return KubectlDeleteFromStringContextE(t, context.Background(), options, configData)
 }
@@ -163,6 +169,8 @@ func KubectlApply(t testing.TestingT, options *KubectlOptions, configPath string
 }
 
 // KubectlApplyE will take in a file path and apply it to the cluster targeted by KubectlOptions.
+//
+// Deprecated: Use KubectlApplyContextE instead.
 func KubectlApplyE(t testing.TestingT, options *KubectlOptions, configPath string) error {
 	return KubectlApplyContextE(t, context.Background(), options, configPath)
 }
@@ -187,6 +195,8 @@ func KubectlApplyFromKustomize(t testing.TestingT, options *KubectlOptions, conf
 }
 
 // KubectlApplyFromKustomizeE will take in a kustomization directory path and apply it to the cluster targeted by KubectlOptions.
+//
+// Deprecated: Use KubectlApplyFromKustomizeContextE instead.
 func KubectlApplyFromKustomizeE(t testing.TestingT, options *KubectlOptions, configPath string) error {
 	return KubectlApplyFromKustomizeContextE(t, context.Background(), options, configPath)
 }
@@ -212,6 +222,8 @@ func KubectlApplyFromString(t testing.TestingT, options *KubectlOptions, configD
 
 // KubectlApplyFromStringE will take in a kubernetes resource config as a string and apply it on the cluster specified
 // by the provided kubectl options. If it fails, this will return the error.
+//
+// Deprecated: Use KubectlApplyFromStringContextE instead.
 func KubectlApplyFromStringE(t testing.TestingT, options *KubectlOptions, configData string) error {
 	return KubectlApplyFromStringContextE(t, context.Background(), options, configData)
 }
