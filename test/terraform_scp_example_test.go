@@ -302,7 +302,7 @@ func writeSampleDataToInstance(t *testing.T, publicInstanceIP string, sshUserNam
 	randomData := random.UniqueID()
 
 	// Verify that we can SSH to the Instance and run commands
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		_, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, fmt.Sprintf("mkdir -p %s && touch %s && touch %s && echo \"%s\" >> %s", remoteTempFolder, remoteTempFilePath, remoteTempFilePath2, randomData, remoteTempFilePath))
 		if err != nil {
 			return "", err
@@ -328,7 +328,7 @@ func cleanup(t *testing.T, publicInstanceIP string, sshUserName string, keyPair 
 	description := "SSH to public host " + publicInstanceIP
 
 	// clean up the remote folder as we want may want to run another test case
-	defer retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	defer retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		_, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, "rm -rf "+folderToClean)
 		if err != nil {
 			return "", err

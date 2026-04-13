@@ -144,8 +144,9 @@ func WaitForCapacityContextE(
 	maxRetries int,
 	sleepBetweenRetries time.Duration,
 ) error {
-	msg, err := retry.DoWithRetryE(
+	msg, err := retry.DoWithRetryContextE(
 		t,
+		ctx,
 		fmt.Sprintf("Waiting for ASG %s to reach desired capacity.", asgName),
 		maxRetries,
 		sleepBetweenRetries,

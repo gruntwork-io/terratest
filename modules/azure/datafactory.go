@@ -78,7 +78,7 @@ func GetDataFactory(t testing.TestingT, resGroupName string, factoryName string,
 // The ctx parameter supports cancellation and timeouts.
 func GetDataFactoryContextE(ctx context.Context, subscriptionID string, resGroupName string, factoryName string) (*armdatafactory.Factory, error) {
 	// Create a datafactory client
-	datafactoryClient, err := CreateDataFactoriesClientE(subscriptionID)
+	datafactoryClient, err := CreateDataFactoriesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

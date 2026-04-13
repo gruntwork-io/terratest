@@ -38,9 +38,9 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 	// Use default kubectl options to create a new namespace for this test, and then update the namespace for kubectl
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
 
-	defer k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	defer k8s.DeleteNamespaceContext(t, t.Context(), kubectlOptions, namespaceName)
 
-	k8s.CreateNamespace(t, kubectlOptions, namespaceName)
+	k8s.CreateNamespaceContext(t, t.Context(), kubectlOptions, namespaceName)
 
 	// Override service type to node port and disable PDB (requires policy/v1 API
 	// which may not be available on older k8s clusters)
@@ -125,8 +125,8 @@ func TestHelmDependencyUpgrade(t *testing.T) {
 	// - Current context of the kubectl config file
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
 
-	k8s.CreateNamespace(t, kubectlOptions, namespaceName)
-	defer k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	k8s.CreateNamespaceContext(t, t.Context(), kubectlOptions, namespaceName)
+	defer k8s.DeleteNamespaceContext(t, t.Context(), kubectlOptions, namespaceName)
 
 	// Helm chart deployment options.
 	options := &helm.Options{

@@ -32,7 +32,7 @@ func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGro
 		return nil, err
 	}
 
-	client, err := CreateActionGroupClient(subscriptionID)
+	client, err := CreateActionGroupClientContext(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

@@ -23,10 +23,10 @@ func TestKubernetesHelloWorldExample(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", "default")
 
 	// website::tag::6:: At the end of the test, run "kubectl delete" to clean up any resources that were created.
-	defer k8s.KubectlDelete(t, options, kubeResourcePath)
+	defer k8s.KubectlDeleteContext(t, t.Context(), options, kubeResourcePath)
 
 	// website::tag::3:: Run `kubectl apply` to deploy. Fail the test if there are any errors.
-	k8s.KubectlApply(t, options, kubeResourcePath)
+	k8s.KubectlApplyContext(t, t.Context(), options, kubeResourcePath)
 
 	// website::tag::4:: Verify the service is available and get the URL for it.
 	k8s.WaitUntilServiceAvailableContext(t, t.Context(), options, "hello-world-service", 10, 1*time.Second)

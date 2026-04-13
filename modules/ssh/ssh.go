@@ -367,7 +367,7 @@ func CheckSSHConnectionWithRetryContextE(t testing.TestingT, ctx context.Context
 		handler = f[0]
 	}
 
-	_, err := retry.DoWithRetryE(t, "Checking SSH connection to "+host.Hostname, retries, sleepBetweenRetries, func() (string, error) {
+	_, err := retry.DoWithRetryContextE(t, ctx, "Checking SSH connection to "+host.Hostname, retries, sleepBetweenRetries, func() (string, error) {
 		return "", handler(t, ctx, host)
 	})
 
@@ -489,7 +489,7 @@ func CheckSSHCommandWithRetryContextE(t testing.TestingT, ctx context.Context, h
 		handler = f[0]
 	}
 
-	return retry.DoWithRetryE(t, "Checking SSH connection to "+host.Hostname, retries, sleepBetweenRetries, func() (string, error) {
+	return retry.DoWithRetryContextE(t, ctx, "Checking SSH connection to "+host.Hostname, retries, sleepBetweenRetries, func() (string, error) {
 		return handler(t, ctx, host, command)
 	})
 }

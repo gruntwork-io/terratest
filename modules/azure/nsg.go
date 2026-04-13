@@ -44,44 +44,90 @@ type NsgRuleSummary struct {
 	Priority                   int32
 }
 
-// GetDefaultNsgRulesClient returns a rules client which can be used to read the list of *default* security rules
+// GetDefaultNsgRulesClientContext returns a rules client which can be used to read the list of *default* security rules
 // defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
 // This function would fail the test if there is an error.
-func GetDefaultNsgRulesClient(t testing.TestingT, subscriptionID string) *armnetwork.DefaultSecurityRulesClient {
+// The ctx parameter supports cancellation and timeouts.
+func GetDefaultNsgRulesClientContext(t testing.TestingT, ctx context.Context, subscriptionID string) *armnetwork.DefaultSecurityRulesClient {
 	t.Helper()
 
-	client, err := GetDefaultNsgRulesClientE(subscriptionID)
+	client, err := GetDefaultNsgRulesClientContextE(ctx, subscriptionID)
 	require.NoError(t, err)
 
 	return client
 }
 
+// GetDefaultNsgRulesClient returns a rules client which can be used to read the list of *default* security rules
+// defined on a network security group. Note that the "default" rules are those provided implicitly
+// by the Azure platform.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetDefaultNsgRulesClientContext] instead.
+func GetDefaultNsgRulesClient(t testing.TestingT, subscriptionID string) *armnetwork.DefaultSecurityRulesClient {
+	t.Helper()
+
+	return GetDefaultNsgRulesClientContext(t, context.Background(), subscriptionID) //nolint:staticcheck
+}
+
+// GetDefaultNsgRulesClientContextE returns a rules client which can be used to read the list of *default* security rules
+// defined on a network security group. Note that the "default" rules are those provided implicitly
+// by the Azure platform.
+// The ctx parameter supports cancellation and timeouts.
+func GetDefaultNsgRulesClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
+	return CreateNsgDefaultRulesClientContextE(ctx, subscriptionID)
+}
+
 // GetDefaultNsgRulesClientE returns a rules client which can be used to read the list of *default* security rules
 // defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
+//
+// Deprecated: Use [GetDefaultNsgRulesClientContextE] instead.
 func GetDefaultNsgRulesClientE(subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
-	return CreateNsgDefaultRulesClientE(subscriptionID)
+	return GetDefaultNsgRulesClientContextE(context.Background(), subscriptionID)
+}
+
+// GetCustomNsgRulesClientContext returns a rules client which can be used to read the list of *custom* security rules
+// defined on a network security group. Note that the "custom" rules are those defined by
+// end users.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCustomNsgRulesClientContext(t testing.TestingT, ctx context.Context, subscriptionID string) *armnetwork.SecurityRulesClient {
+	t.Helper()
+
+	client, err := GetCustomNsgRulesClientContextE(ctx, subscriptionID)
+	require.NoError(t, err)
+
+	return client
 }
 
 // GetCustomNsgRulesClient returns a rules client which can be used to read the list of *custom* security rules
 // defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
 // This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCustomNsgRulesClientContext] instead.
 func GetCustomNsgRulesClient(t testing.TestingT, subscriptionID string) *armnetwork.SecurityRulesClient {
 	t.Helper()
 
-	client, err := GetCustomNsgRulesClientE(subscriptionID)
-	require.NoError(t, err)
+	return GetCustomNsgRulesClientContext(t, context.Background(), subscriptionID) //nolint:staticcheck
+}
 
-	return client
+// GetCustomNsgRulesClientContextE returns a rules client which can be used to read the list of *custom* security rules
+// defined on a network security group. Note that the "custom" rules are those defined by
+// end users.
+// The ctx parameter supports cancellation and timeouts.
+func GetCustomNsgRulesClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
+	return CreateNsgCustomRulesClientContextE(ctx, subscriptionID)
 }
 
 // GetCustomNsgRulesClientE returns a rules client which can be used to read the list of *custom* security rules
 // defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
+//
+// Deprecated: Use [GetCustomNsgRulesClientContextE] instead.
 func GetCustomNsgRulesClientE(subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
-	return CreateNsgCustomRulesClientE(subscriptionID)
+	return GetCustomNsgRulesClientContextE(context.Background(), subscriptionID)
 }
 
 // GetAllNSGRulesContext returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
@@ -99,13 +145,13 @@ func GetAllNSGRulesContext(t testing.TestingT, ctx context.Context, resourceGrou
 // GetAllNSGRulesContextE returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
 // from a network security group. The ctx parameter supports cancellation and timeouts.
 func GetAllNSGRulesContextE(ctx context.Context, resourceGroupName, nsgName, subscriptionID string) (NsgRuleSummaryList, error) {
-	defaultRulesClient, err := GetDefaultNsgRulesClientE(subscriptionID)
+	defaultRulesClient, err := GetDefaultNsgRulesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
 	// Get a client instance
-	customRulesClient, err := GetCustomNsgRulesClientE(subscriptionID)
+	customRulesClient, err := GetCustomNsgRulesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}

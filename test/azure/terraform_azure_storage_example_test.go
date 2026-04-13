@@ -65,7 +65,7 @@ func TestTerraformAzureStorageExample(t *testing.T) {
 	assert.Equal(t, storageAccountTier, skuTier, "sku tier mismatch")
 
 	actualDNSString := azure.GetStorageDNSStringContext(t, t.Context(), storageAccountName, resourceGroupName, subscriptionID)
-	storageSuffix, _ := azure.GetStorageURISuffixE()
+	storageSuffix, _ := azure.GetStorageURISuffixContextE(t.Context())
 	expectedDNS := fmt.Sprintf("https://%s.blob.%s/", storageAccountName, storageSuffix)
 	assert.Equal(t, expectedDNS, actualDNSString, "Storage DNS string mismatch")
 }

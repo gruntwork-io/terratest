@@ -647,6 +647,25 @@ func GetLaunchPermissionsForAmiContextE(t testing.TestingT, ctx context.Context,
 	return output.LaunchPermissions, nil
 }
 
+// GetLaunchPermissionsForAmiContext returns launchPermissions as configured in AWS.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetLaunchPermissionsForAmiContext(t testing.TestingT, ctx context.Context, awsRegion string, amiID string) []types.LaunchPermission {
+	t.Helper()
+	output, err := GetLaunchPermissionsForAmiContextE(t, ctx, awsRegion, amiID)
+	require.NoError(t, err)
+
+	return output
+}
+
+// GetLaunchPermissionsForAmi returns launchPermissions as configured in AWS.
+//
+// Deprecated: Use [GetLaunchPermissionsForAmiContext] instead.
+func GetLaunchPermissionsForAmi(t testing.TestingT, awsRegion string, amiID string) []types.LaunchPermission {
+	t.Helper()
+	return GetLaunchPermissionsForAmiContext(t, context.Background(), awsRegion, amiID)
+}
+
 // GetLaunchPermissionsForAmiE returns launchPermissions as configured in AWS
 //
 // Deprecated: Use [GetLaunchPermissionsForAmiContextE] instead.
@@ -732,6 +751,38 @@ func GetRecommendedInstanceTypeWithClientContextE(t testing.TestingT, ctx contex
 	}
 
 	return PickRecommendedInstanceTypeE(availabilityZones, instanceTypeOfferings, instanceTypeOptions)
+}
+
+// GetRecommendedInstanceTypeWithClientContext takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
+// first instance type in the list that is available in all Availability Zones (AZs) in the given region. If there's no
+// instance available in all AZs, this function exits with an error. This is useful because certain instance types,
+// such as t2.micro, are not available in some of the newer AZs, while t3.micro is not available in some of the older
+// AZs. If you have code that needs to run on a "small" instance across all AZs in many different regions, you can
+// use this function to automatically figure out which instance type you should use.
+// This function expects an authenticated EC2 client from the AWS SDK Go library.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetRecommendedInstanceTypeWithClientContext(t testing.TestingT, ctx context.Context, ec2Client *ec2.Client, instanceTypeOptions []string) string {
+	t.Helper()
+	out, err := GetRecommendedInstanceTypeWithClientContextE(t, ctx, ec2Client, instanceTypeOptions)
+	require.NoError(t, err)
+
+	return out
+}
+
+// GetRecommendedInstanceTypeWithClient takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
+// first instance type in the list that is available in all Availability Zones (AZs) in the given region. If there's no
+// instance available in all AZs, this function exits with an error. This is useful because certain instance types,
+// such as t2.micro, are not available in some of the newer AZs, while t3.micro is not available in some of the older
+// AZs. If you have code that needs to run on a "small" instance across all AZs in many different regions, you can
+// use this function to automatically figure out which instance type you should use.
+// This function expects an authenticated EC2 client from the AWS SDK Go library.
+// This function will fail the test if there is an error.
+//
+// Deprecated: Use [GetRecommendedInstanceTypeWithClientContext] instead.
+func GetRecommendedInstanceTypeWithClient(t testing.TestingT, ec2Client *ec2.Client, instanceTypeOptions []string) string {
+	t.Helper()
+	return GetRecommendedInstanceTypeWithClientContext(t, context.Background(), ec2Client, instanceTypeOptions)
 }
 
 // GetRecommendedInstanceTypeWithClientE takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the

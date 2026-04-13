@@ -56,7 +56,7 @@ func GetLogAnalyticsWorkspace(t testing.TestingT, workspaceName string, resource
 // GetLogAnalyticsWorkspaceContextE gets an operational insights workspace if it exists in a subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetLogAnalyticsWorkspaceContextE(ctx context.Context, workspaceName, resoureGroupName, subscriptionID string) (*operationalinsights.Workspace, error) {
-	client, err := GetLogAnalyticsWorkspacesClientE(subscriptionID)
+	client, err := GetLogAnalyticsWorkspacesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,9 @@ func LogAnalyticsWorkspaceExistsE(workspaceName string, resourceGroupName string
 	return LogAnalyticsWorkspaceExistsContextE(context.Background(), workspaceName, resourceGroupName, subscriptionID)
 }
 
-// GetLogAnalyticsWorkspacesClientE returns a workspaces client; otherwise error.
-func GetLogAnalyticsWorkspacesClientE(subscriptionID string) (*operationalinsights.WorkspacesClient, error) {
+// GetLogAnalyticsWorkspacesClientContextE returns a workspaces client; otherwise error.
+// The ctx parameter supports cancellation and timeouts.
+func GetLogAnalyticsWorkspacesClientContextE(_ context.Context, subscriptionID string) (*operationalinsights.WorkspacesClient, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		fmt.Println("Workspace client error getting subscription")
@@ -119,4 +120,11 @@ func GetLogAnalyticsWorkspacesClientE(subscriptionID string) (*operationalinsigh
 	client.Authorizer = *authorizer
 
 	return &client, nil
+}
+
+// GetLogAnalyticsWorkspacesClientE returns a workspaces client; otherwise error.
+//
+// Deprecated: Use [GetLogAnalyticsWorkspacesClientContextE] instead.
+func GetLogAnalyticsWorkspacesClientE(subscriptionID string) (*operationalinsights.WorkspacesClient, error) {
+	return GetLogAnalyticsWorkspacesClientContextE(context.Background(), subscriptionID)
 }

@@ -41,22 +41,22 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	// - Current context of the kubectl config file
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 
-	k8s.CreateNamespace(t, options, namespaceName)
+	k8s.CreateNamespaceContext(t, t.Context(), options, namespaceName)
 	// ... and make sure to delete the namespace at the end of the test
-	defer k8s.DeleteNamespace(t, options, namespaceName)
+	defer k8s.DeleteNamespaceContext(t, t.Context(), options, namespaceName)
 
 	// At the end of the test, run `kubectl delete -f RESOURCE_CONFIG` to clean up any resources that were created.
-	defer k8s.KubectlDelete(t, options, kubeResourcePath)
+	defer k8s.KubectlDeleteContext(t, t.Context(), options, kubeResourcePath)
 
 	// This will run `kubectl apply -f RESOURCE_CONFIG` and fail the test if there are any errors
-	k8s.KubectlApply(t, options, kubeResourcePath)
+	k8s.KubectlApplyContext(t, t.Context(), options, kubeResourcePath)
 
 	// Wait for at least 1 Pod to be ready from the DaemonSet
 	retries := 10
 	sleep := time.Second * 1
 
 	for i := 1; i < retries; i++ {
-		podsReady := k8s.GetDaemonSet(t, options, "podinfo-deamonset").Status.NumberReady
+		podsReady := k8s.GetDaemonSetContext(t, t.Context(), options, "podinfo-deamonset").Status.NumberReady
 		if podsReady > 0 {
 			break
 		}
@@ -69,7 +69,7 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	listOptions.LabelSelector = "app=podinfo"
 
 	// Get a list of Pods. The pods are not guaranteed to be in running state.
-	pods := k8s.ListPods(t, options, *listOptions)
+	pods := k8s.ListPodsContext(t, t.Context(), options, *listOptions)
 
 	// Check that we did not timeout waiting for the Pod of the DaemonSet to be ready
 	require.NotEmpty(t, pods)
@@ -77,21 +77,21 @@ func setupLogsTest(t *testing.T) (*k8s.KubectlOptions, v1.Pod) {
 	pod := pods[0]
 
 	// Wait fot the pod to be started and ready
-	k8s.WaitUntilPodAvailable(t, options, pod.Name, 5, 10*time.Second)
+	k8s.WaitUntilPodAvailableContext(t, t.Context(), options, pod.Name, 5, 10*time.Second)
 
 	return options, pod
 }
 
 func TestKubernetesBasicExampleLogsCheckWithContainerName(t *testing.T) { //nolint:paralleltest // t.Parallel called in setupLogsTest
 	options, pod := setupLogsTest(t)
-	logs := k8s.GetPodLogs(t, options, &pod, "podinfo")
+	logs := k8s.GetPodLogsContext(t, t.Context(), options, &pod, "podinfo")
 
 	require.Contains(t, logs, "Starting podinfo")
 }
 
 func TestKubernetesBasicExampleLogsCheckWithNoContainerName(t *testing.T) { //nolint:paralleltest // t.Parallel called in setupLogsTest
 	options, pod := setupLogsTest(t)
-	logs := k8s.GetPodLogs(t, options, &pod, "")
+	logs := k8s.GetPodLogsContext(t, t.Context(), options, &pod, "")
 
 	require.Contains(t, logs, "Starting podinfo")
 }

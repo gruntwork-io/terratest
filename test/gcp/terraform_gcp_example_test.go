@@ -82,7 +82,7 @@ func TestTerraformGcpExample(t *testing.T) {
 	expectedText := "testing-tag-value2"
 
 	// website::tag::4::Check if the GCP instance contains a given tag.
-	retry.DoWithRetry(t, fmt.Sprintf("Checking Instance %s for labels", instanceName), maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), fmt.Sprintf("Checking Instance %s for labels", instanceName), maxRetries, timeBetweenRetries, func() (string, error) {
 		// Look up the tags for the given Instance ID
 		instance := gcp.FetchInstanceContext(t, t.Context(), projectID, instanceName)
 		instanceLabels := instance.GetLabelsContext(t, t.Context())
@@ -153,7 +153,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	maxRetries := 20
 	sleepBetweenRetries := 3 * time.Second
 
-	retry.DoWithRetry(t, "Attempting to SSH", maxRetries, sleepBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), "Attempting to SSH", maxRetries, sleepBetweenRetries, func() (string, error) {
 		output, err := ssh.CheckSSHCommandContextE(t, t.Context(), &host, fmt.Sprintf("echo '%s'", sampleText))
 		if err != nil {
 			return "", err

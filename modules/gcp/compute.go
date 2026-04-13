@@ -992,7 +992,7 @@ func NewComputeServiceContextE(t testing.TestingT, ctx context.Context) (*comput
 
 	var client *http.Client
 
-	msg, retryErr := retry.DoWithRetryE(t, description, maxRetries, defaultRetryInterval, func() (string, error) {
+	msg, retryErr := retry.DoWithRetryContextE(t, ctx, description, maxRetries, defaultRetryInterval, func() (string, error) {
 		rawClient, err := google.DefaultClient(ctx, compute.CloudPlatformScope)
 		if err != nil {
 			return "Error retrieving default GCP client", err

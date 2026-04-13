@@ -120,7 +120,7 @@ func GetNetworkInterfaceConfigurationContextE(ctx context.Context, nicName strin
 	}
 
 	// Get the client reference
-	client, err := GetNetworkInterfaceConfigurationClientE(subscriptionID)
+	client, err := GetNetworkInterfaceConfigurationClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -134,9 +134,17 @@ func GetNetworkInterfaceConfigurationContextE(ctx context.Context, nicName strin
 	return &resp.InterfaceIPConfiguration, nil
 }
 
+// GetNetworkInterfaceConfigurationClientContextE creates a new Network Interface Configuration client in the specified Azure Subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkInterfaceConfigurationClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
+	return CreateNewNetworkInterfaceIPConfigurationClientContextE(ctx, subscriptionID)
+}
+
 // GetNetworkInterfaceConfigurationClientE creates a new Network Interface Configuration client in the specified Azure Subscription.
+//
+// Deprecated: Use [GetNetworkInterfaceConfigurationClientContextE] instead.
 func GetNetworkInterfaceConfigurationClientE(subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
-	return CreateNewNetworkInterfaceIPConfigurationClientE(subscriptionID)
+	return GetNetworkInterfaceConfigurationClientContextE(context.Background(), subscriptionID)
 }
 
 // GetNetworkInterfaceContextE gets a Network Interface in the specified Azure Resource Group.
@@ -149,7 +157,7 @@ func GetNetworkInterfaceContextE(ctx context.Context, nicName string, resGroupNa
 	}
 
 	// Get the client reference
-	client, err := GetNetworkInterfaceClientE(subscriptionID)
+	client, err := GetNetworkInterfaceClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +171,15 @@ func GetNetworkInterfaceContextE(ctx context.Context, nicName string, resGroupNa
 	return &resp.Interface, nil
 }
 
+// GetNetworkInterfaceClientContextE creates a new Network Interface client in the specified Azure Subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkInterfaceClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.InterfacesClient, error) {
+	return CreateNewNetworkInterfacesClientContextE(ctx, subscriptionID)
+}
+
 // GetNetworkInterfaceClientE creates a new Network Interface client in the specified Azure Subscription.
+//
+// Deprecated: Use [GetNetworkInterfaceClientContextE] instead.
 func GetNetworkInterfaceClientE(subscriptionID string) (*armnetwork.InterfacesClient, error) {
-	return CreateNewNetworkInterfacesClientE(subscriptionID)
+	return GetNetworkInterfaceClientContextE(context.Background(), subscriptionID)
 }

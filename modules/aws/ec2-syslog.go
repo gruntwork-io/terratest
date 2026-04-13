@@ -36,11 +36,7 @@ func GetSyslogForInstanceContextE(t testing.TestingT, ctx context.Context, insta
 		InstanceId: aws.String(instanceID),
 	}
 
-	syslogB64, err := retry.DoWithRetryE(t, description, maxRetries, syslogRetryInterval, func() (string, error) {
-		if ctx.Err() != nil {
-			return "", ctx.Err()
-		}
-
+	syslogB64, err := retry.DoWithRetryContextE(t, ctx, description, maxRetries, syslogRetryInterval, func() (string, error) {
 		out, err := client.GetConsoleOutput(ctx, &input)
 		if err != nil {
 			return "", err

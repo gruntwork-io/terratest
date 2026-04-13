@@ -13,27 +13,17 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-// ListPods will look for pods in the given namespace that match the given filters and return them. This will fail the
-// test if there is an error.
+// ListPodsContextE looks up pods in the given namespace that match the given filters and return them.
+// The ctx parameter supports cancellation and timeouts.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
-func ListPods(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []corev1.Pod {
-	pods, err := ListPodsE(t, options, filters)
-	require.NoError(t, err)
-
-	return pods
-}
-
-// ListPodsE will look for pods in the given namespace that match the given filters and return them.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListPodsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Pod, error) {
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+func ListPodsContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Pod, error) {
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := clientset.CoreV1().Pods(options.Namespace).List(context.Background(), filters)
+	resp, err := clientset.CoreV1().Pods(options.Namespace).List(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -41,47 +31,86 @@ func ListPodsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListO
 	return resp.Items, nil
 }
 
-// GetPod returns a Kubernetes pod resource in the provided namespace with the given name. This will
-// fail the test if there is an error.
-func GetPod(t testing.TestingT, options *KubectlOptions, podName string) *corev1.Pod {
-	pod, err := GetPodE(t, options, podName)
+// ListPodsContext looks up pods in the given namespace that match the given filters and return them.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListPodsContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, filters metav1.ListOptions) []corev1.Pod {
+	t.Helper()
+	pods, err := ListPodsContextE(t, ctx, options, filters)
+	require.NoError(t, err)
+
+	return pods
+}
+
+// ListPods will look for pods in the given namespace that match the given filters and return them. This will fail the
+// test if there is an error.
+//
+// Deprecated: Use [ListPodsContext] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListPods(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []corev1.Pod {
+	t.Helper()
+
+	return ListPodsContext(t, context.Background(), options, filters)
+}
+
+// ListPodsE will look for pods in the given namespace that match the given filters and return them.
+//
+// Deprecated: Use [ListPodsContextE] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListPodsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Pod, error) {
+	return ListPodsContextE(t, context.Background(), options, filters)
+}
+
+// GetPodContextE returns a Kubernetes pod resource in the provided namespace with the given name.
+// The ctx parameter supports cancellation and timeouts.
+func GetPodContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, podName string) (*corev1.Pod, error) {
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientset.CoreV1().Pods(options.Namespace).Get(ctx, podName, metav1.GetOptions{})
+}
+
+// GetPodContext returns a Kubernetes pod resource in the provided namespace with the given name.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func GetPodContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, podName string) *corev1.Pod {
+	t.Helper()
+	pod, err := GetPodContextE(t, ctx, options, podName)
 	require.NoError(t, err)
 
 	return pod
 }
 
+// GetPod returns a Kubernetes pod resource in the provided namespace with the given name. This will
+// fail the test if there is an error.
+//
+// Deprecated: Use [GetPodContext] instead.
+func GetPod(t testing.TestingT, options *KubectlOptions, podName string) *corev1.Pod {
+	t.Helper()
+
+	return GetPodContext(t, context.Background(), options, podName)
+}
+
 // GetPodE returns a Kubernetes pod resource in the provided namespace with the given name.
+//
+// Deprecated: Use [GetPodContextE] instead.
 func GetPodE(t testing.TestingT, options *KubectlOptions, podName string) (*corev1.Pod, error) {
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
-	if err != nil {
-		return nil, err
-	}
-
-	return clientset.CoreV1().Pods(options.Namespace).Get(context.Background(), podName, metav1.GetOptions{})
+	return GetPodContextE(t, context.Background(), options, podName)
 }
 
-// WaitUntilNumPodsCreated waits until the desired number of pods are created that match the provided filter. This will
-// retry the check for the specified amount of times, sleeping for the provided duration between each try. This will
-// fail the test if the retry times out.
+// WaitUntilNumPodsCreatedContextE waits until the desired number of pods are created that match the provided filter.
+// The ctx parameter supports cancellation and timeouts.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
-func WaitUntilNumPodsCreated(
+func WaitUntilNumPodsCreatedContextE(
 	t testing.TestingT,
-	options *KubectlOptions,
-	filters metav1.ListOptions,
-	desiredCount int,
-	retries int,
-	sleepBetweenRetries time.Duration,
-) {
-	require.NoError(t, WaitUntilNumPodsCreatedE(t, options, filters, desiredCount, retries, sleepBetweenRetries))
-}
-
-// WaitUntilNumPodsCreatedE waits until the desired number of pods are created that match the provided filter. This will
-// retry the check for the specified amount of times, sleeping for the provided duration between each try.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func WaitUntilNumPodsCreatedE(
-	t testing.TestingT,
+	ctx context.Context,
 	options *KubectlOptions,
 	filters metav1.ListOptions,
 	desiredCount int,
@@ -90,13 +119,14 @@ func WaitUntilNumPodsCreatedE(
 ) error {
 	statusMsg := fmt.Sprintf("Wait for num pods created to match desired count %d.", desiredCount)
 
-	message, err := retry.DoWithRetryE(
+	message, err := retry.DoWithRetryContextE(
 		t,
+		ctx,
 		statusMsg,
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			pods, err := ListPodsE(t, options, filters)
+			pods, err := ListPodsContextE(t, ctx, options, filters)
 			if err != nil {
 				return "", err
 			}
@@ -118,24 +148,74 @@ func WaitUntilNumPodsCreatedE(
 	return nil
 }
 
-// WaitUntilPodAvailable waits until all of the containers within the pod are ready and started, retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try. This will fail the test if there is an error or if the check times out.
-func WaitUntilPodAvailable(t testing.TestingT, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration) {
-	require.NoError(t, WaitUntilPodAvailableE(t, options, podName, retries, sleepBetweenRetries))
+// WaitUntilNumPodsCreatedContext waits until the desired number of pods are created that match the provided filter.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func WaitUntilNumPodsCreatedContext(
+	t testing.TestingT,
+	ctx context.Context,
+	options *KubectlOptions,
+	filters metav1.ListOptions,
+	desiredCount int,
+	retries int,
+	sleepBetweenRetries time.Duration,
+) {
+	t.Helper()
+	require.NoError(t, WaitUntilNumPodsCreatedContextE(t, ctx, options, filters, desiredCount, retries, sleepBetweenRetries))
 }
 
-// WaitUntilPodAvailableE waits until all of the containers within the pod are ready and started, retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try.
-func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration) error {
+// WaitUntilNumPodsCreated waits until the desired number of pods are created that match the provided filter. This will
+// retry the check for the specified amount of times, sleeping for the provided duration between each try. This will
+// fail the test if the retry times out.
+//
+// Deprecated: Use [WaitUntilNumPodsCreatedContext] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func WaitUntilNumPodsCreated(
+	t testing.TestingT,
+	options *KubectlOptions,
+	filters metav1.ListOptions,
+	desiredCount int,
+	retries int,
+	sleepBetweenRetries time.Duration,
+) {
+	t.Helper()
+	WaitUntilNumPodsCreatedContext(t, context.Background(), options, filters, desiredCount, retries, sleepBetweenRetries)
+}
+
+// WaitUntilNumPodsCreatedE waits until the desired number of pods are created that match the provided filter. This will
+// retry the check for the specified amount of times, sleeping for the provided duration between each try.
+//
+// Deprecated: Use [WaitUntilNumPodsCreatedContextE] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func WaitUntilNumPodsCreatedE(
+	t testing.TestingT,
+	options *KubectlOptions,
+	filters metav1.ListOptions,
+	desiredCount int,
+	retries int,
+	sleepBetweenRetries time.Duration,
+) error {
+	return WaitUntilNumPodsCreatedContextE(t, context.Background(), options, filters, desiredCount, retries, sleepBetweenRetries)
+}
+
+// WaitUntilPodAvailableContextE waits until all of the containers within the pod are ready and started,
+// retrying the check for the specified amount of times, sleeping for the provided duration between each try.
+// The ctx parameter supports cancellation and timeouts.
+func WaitUntilPodAvailableContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration) error { //nolint:dupl // similar retry pattern across resource types is intentional
 	statusMsg := fmt.Sprintf("Wait for pod %s to be provisioned.", podName)
 
-	message, err := retry.DoWithRetryE(
+	message, err := retry.DoWithRetryContextE(
 		t,
+		ctx,
 		statusMsg,
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			pod, err := GetPodE(t, options, podName)
+			pod, err := GetPodContextE(t, ctx, options, podName)
 			if err != nil {
 				return "", err
 			}
@@ -157,6 +237,32 @@ func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName
 	return nil
 }
 
+// WaitUntilPodAvailableContext waits until all of the containers within the pod are ready and started,
+// retrying the check for the specified amount of times, sleeping for the provided duration between each try.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func WaitUntilPodAvailableContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	require.NoError(t, WaitUntilPodAvailableContextE(t, ctx, options, podName, retries, sleepBetweenRetries))
+}
+
+// WaitUntilPodAvailable waits until all of the containers within the pod are ready and started, retrying the check for the specified amount of times, sleeping
+// for the provided duration between each try. This will fail the test if there is an error or if the check times out.
+//
+// Deprecated: Use [WaitUntilPodAvailableContext] instead.
+func WaitUntilPodAvailable(t testing.TestingT, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	WaitUntilPodAvailableContext(t, context.Background(), options, podName, retries, sleepBetweenRetries)
+}
+
+// WaitUntilPodAvailableE waits until all of the containers within the pod are ready and started, retrying the check for the specified amount of times, sleeping
+// for the provided duration between each try.
+//
+// Deprecated: Use [WaitUntilPodAvailableContextE] instead.
+func WaitUntilPodAvailableE(t testing.TestingT, options *KubectlOptions, podName string, retries int, sleepBetweenRetries time.Duration) error {
+	return WaitUntilPodAvailableContextE(t, context.Background(), options, podName, retries, sleepBetweenRetries)
+}
+
 // IsPodAvailable returns true if the all of the containers within the pod are ready and started
 func IsPodAvailable(pod *corev1.Pod) bool {
 	// Ensure all containers have reported their status
@@ -176,19 +282,21 @@ func IsPodAvailable(pod *corev1.Pod) bool {
 	return pod.Status.Phase == corev1.PodRunning
 }
 
-// GetPodLogsE returns the logs of a Pod at the time when the function was called. Pass container name if there are more containers in the Pod or set to "" if there is only one.
+// GetPodLogsContextE returns the logs of a Pod at the time when the function was called.
+// The ctx parameter supports cancellation and timeouts.
+// Pass container name if there are more containers in the Pod or set to "" if there is only one.
 // If the Pod is not running an Error is returned.
 // If the provided containerName is not the name of a container in the Pod an Error is returned.
-func GetPodLogsE(t testing.TestingT, options *KubectlOptions, pod *corev1.Pod, containerName string) (string, error) {
+func GetPodLogsContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, pod *corev1.Pod, containerName string) (string, error) {
 	var (
 		output string
 		err    error
 	)
 
 	if containerName == "" {
-		output, err = RunKubectlAndGetOutputE(t, options, "logs", pod.Name)
+		output, err = RunKubectlAndGetOutputContextE(t, ctx, options, "logs", pod.Name)
 	} else {
-		output, err = RunKubectlAndGetOutputE(t, options, "logs", pod.Name, "-c"+containerName)
+		output, err = RunKubectlAndGetOutputContextE(t, ctx, options, "logs", pod.Name, "-c"+containerName)
 	}
 
 	if err != nil {
@@ -198,26 +306,40 @@ func GetPodLogsE(t testing.TestingT, options *KubectlOptions, pod *corev1.Pod, c
 	return output, nil
 }
 
-// GetPodLogs returns the logs of a Pod at the time when the function was called.  Pass container name if there are more containers in the Pod or set to "" if there is only one.
-func GetPodLogs(t testing.TestingT, options *KubectlOptions, pod *corev1.Pod, containerName string) string {
-	logs, err := GetPodLogsE(t, options, pod, containerName)
+// GetPodLogsContext returns the logs of a Pod at the time when the function was called.
+// The ctx parameter supports cancellation and timeouts.
+// Pass container name if there are more containers in the Pod or set to "" if there is only one.
+// This will fail the test if there is an error.
+func GetPodLogsContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, pod *corev1.Pod, containerName string) string {
+	t.Helper()
+	logs, err := GetPodLogsContextE(t, ctx, options, pod, containerName)
 	require.NoError(t, err)
 
 	return logs
 }
 
-// ExecPod executes a command in a container within a Kubernetes pod and returns the output. This will fail the test if
-// there is an error. Set containerName to "" if there is only one container in the pod.
-func ExecPod(t testing.TestingT, options *KubectlOptions, podName string, containerName string, command ...string) string {
-	o, err := ExecPodE(t, options, podName, containerName, command...)
-	require.NoError(t, err)
+// GetPodLogs returns the logs of a Pod at the time when the function was called.  Pass container name if there are more containers in the Pod or set to "" if there is only one.
+//
+// Deprecated: Use [GetPodLogsContext] instead.
+func GetPodLogs(t testing.TestingT, options *KubectlOptions, pod *corev1.Pod, containerName string) string {
+	t.Helper()
 
-	return o
+	return GetPodLogsContext(t, context.Background(), options, pod, containerName)
 }
 
-// ExecPodE executes a command in a container within a Kubernetes pod and returns the output. Set containerName to "" if
-// there is only one container in the pod.
-func ExecPodE(t testing.TestingT, options *KubectlOptions, podName string, containerName string, command ...string) (string, error) {
+// GetPodLogsE returns the logs of a Pod at the time when the function was called. Pass container name if there are more containers in the Pod or set to "" if there is only one.
+// If the Pod is not running an Error is returned.
+// If the provided containerName is not the name of a container in the Pod an Error is returned.
+//
+// Deprecated: Use [GetPodLogsContextE] instead.
+func GetPodLogsE(t testing.TestingT, options *KubectlOptions, pod *corev1.Pod, containerName string) (string, error) {
+	return GetPodLogsContextE(t, context.Background(), options, pod, containerName)
+}
+
+// ExecPodContextE executes a command in a container within a Kubernetes pod and returns the output.
+// The ctx parameter supports cancellation and timeouts.
+// Set containerName to "" if there is only one container in the pod.
+func ExecPodContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, podName string, containerName string, command ...string) (string, error) {
 	var args []string
 	if containerName == "" {
 		args = append([]string{"exec", podName, "--"}, command...)
@@ -225,5 +347,34 @@ func ExecPodE(t testing.TestingT, options *KubectlOptions, podName string, conta
 		args = append([]string{"exec", podName, "-c" + containerName, "--"}, command...)
 	}
 
-	return RunKubectlAndGetOutputE(t, options, args...)
+	return RunKubectlAndGetOutputContextE(t, ctx, options, args...)
+}
+
+// ExecPodContext executes a command in a container within a Kubernetes pod and returns the output.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error. Set containerName to "" if there is only one container in the pod.
+func ExecPodContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, podName string, containerName string, command ...string) string {
+	t.Helper()
+	o, err := ExecPodContextE(t, ctx, options, podName, containerName, command...)
+	require.NoError(t, err)
+
+	return o
+}
+
+// ExecPod executes a command in a container within a Kubernetes pod and returns the output. This will fail the test if
+// there is an error. Set containerName to "" if there is only one container in the pod.
+//
+// Deprecated: Use [ExecPodContext] instead.
+func ExecPod(t testing.TestingT, options *KubectlOptions, podName string, containerName string, command ...string) string {
+	t.Helper()
+
+	return ExecPodContext(t, context.Background(), options, podName, containerName, command...)
+}
+
+// ExecPodE executes a command in a container within a Kubernetes pod and returns the output. Set containerName to "" if
+// there is only one container in the pod.
+//
+// Deprecated: Use [ExecPodContextE] instead.
+func ExecPodE(t testing.TestingT, options *KubectlOptions, podName string, containerName string, command ...string) (string, error) {
+	return ExecPodContextE(t, context.Background(), options, podName, containerName, command...)
 }
