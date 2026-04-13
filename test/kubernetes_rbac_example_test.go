@@ -43,13 +43,13 @@ func TestKubernetesRBACExample(t *testing.T) {
 	options := k8s.NewKubectlOptions("", tmpConfigPath, namespaceName)
 
 	// At the end of the test, run `kubectl delete -f RESOURCE_CONFIG` to clean up any resources that were created.
-	defer k8s.KubectlDelete(t, options, kubeResourcePath)
+	defer k8s.KubectlDeleteContext(t, t.Context(), options, kubeResourcePath)
 
 	// This will run `kubectl apply -f RESOURCE_CONFIG` and fail the test if there are any errors
-	k8s.KubectlApply(t, options, kubeResourcePath)
+	k8s.KubectlApplyContext(t, t.Context(), options, kubeResourcePath)
 
 	// Retrieve authentication token for the newly created ServiceAccount
-	token := k8s.GetServiceAccountAuthToken(t, options, serviceAccountName)
+	token := k8s.GetServiceAccountAuthTokenContext(t, t.Context(), options, serviceAccountName)
 
 	// Now update the configuration to add a new context that can be used to make requests as that service account
 	require.NoError(t, k8s.AddConfigContextForServiceAccountE(
@@ -69,12 +69,12 @@ func TestKubernetesRBACExample(t *testing.T) {
 		Verb:      "list",
 		Resource:  "pod",
 	}
-	require.False(t, k8s.CanIDo(t, serviceAccountKubectlOptions, adminListPodAction))
+	require.False(t, k8s.CanIDoContext(t, t.Context(), serviceAccountKubectlOptions, adminListPodAction))
 	// - we can access the namespace the service account is in
 	namespaceListPodAction := authv1.ResourceAttributes{
 		Namespace: namespaceName,
 		Verb:      "list",
 		Resource:  "pod",
 	}
-	require.True(t, k8s.CanIDo(t, serviceAccountKubectlOptions, namespaceListPodAction))
+	require.True(t, k8s.CanIDoContext(t, t.Context(), serviceAccountKubectlOptions, namespaceListPodAction))
 }

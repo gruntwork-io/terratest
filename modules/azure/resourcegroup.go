@@ -90,7 +90,7 @@ func GetAResourceGroupContext(t testing.TestingT, ctx context.Context, resourceG
 // GetAResourceGroupContextE gets a resource group within a subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetAResourceGroupContextE(ctx context.Context, resourceGroupName, subscriptionID string) (*resources.Group, error) {
-	client, err := CreateResourceGroupClientE(subscriptionID)
+	client, err := CreateResourceGroupClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func ListResourceGroupsByTagContext(t testing.TestingT, ctx context.Context, tag
 // ListResourceGroupsByTagContextE returns a resource group list within a subscription based on a tag key.
 // The ctx parameter supports cancellation and timeouts.
 func ListResourceGroupsByTagContextE(ctx context.Context, tag string, subscriptionID string) ([]resources.Group, error) {
-	client, err := CreateResourceGroupClientE(subscriptionID)
+	client, err := CreateResourceGroupClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

@@ -85,7 +85,7 @@ func RunTerraformCommandContextE(t testing.TestingT, ctx context.Context, additi
 	cmd := generateCommand(options, args...)
 	description := fmt.Sprintf("%s %v", options.TerraformBinary, args)
 
-	return retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
+	return retry.DoWithRetryableErrorsContextE(t, ctx, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
 		s, err := shell.RunCommandContextAndGetOutputE(t, ctx, &cmd)
 		if err != nil {
 			return s, err
@@ -165,7 +165,7 @@ func RunTerraformCommandAndGetStdOutErrCodeContextE(t testing.TestingT, ctx cont
 
 	exit = DefaultErrorExitCode
 
-	_, err = retry.DoWithRetryableErrorsE(t, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
+	_, err = retry.DoWithRetryableErrorsContextE(t, ctx, description, options.RetryableTerraformErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
 		stdout, stderr, err = shell.RunCommandContextAndGetStdOutErrE(t, ctx, &cmd)
 		if err != nil {
 			exitCode, getExitCodeErr := shell.GetExitCodeForRunCommandError(err)

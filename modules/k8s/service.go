@@ -22,7 +22,7 @@ import (
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
 func ListServicesContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Service, error) {
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func ListServicesE(t testing.TestingT, options *KubectlOptions, filters metav1.L
 // GetServiceContextE returns a Kubernetes service resource in the provided namespace with the given name.
 // The ctx parameter supports cancellation and timeouts.
 func GetServiceContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string) (*corev1.Service, error) {
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
 	if err != nil {
 		return nil, err
 	}
@@ -113,16 +113,13 @@ func GetServiceE(t testing.TestingT, options *KubectlOptions, serviceName string
 func WaitUntilServiceAvailableContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for service %s to be provisioned.", serviceName)
 
-	message, err := retry.DoWithRetryE(
+	message, err := retry.DoWithRetryContextE(
 		t,
+		ctx,
 		statusMsg,
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			if err := ctx.Err(); err != nil {
-				return "", err
-			}
-
 			service, err := GetServiceContextE(t, ctx, options, serviceName)
 			if err != nil {
 				return "", err
@@ -269,7 +266,7 @@ func findEndpointForNodePortServiceContext(
 	service *corev1.Service,
 	servicePort int32,
 ) (string, error) {
-	nodePort, err := FindNodePortE(service, servicePort)
+	nodePort, err := FindNodePortContextE(ctx, service, servicePort)
 	if err != nil {
 		return "", err
 	}
@@ -287,8 +284,9 @@ func findEndpointForNodePortServiceContext(
 	return fmt.Sprintf("%s:%d", nodeHostname, nodePort), nil
 }
 
-// FindNodePortE returns the allocated NodePort for the given servicePort from the service definition.
-func FindNodePortE(service *corev1.Service, servicePort int32) (int32, error) {
+// FindNodePortContextE returns the allocated NodePort for the given servicePort from the service definition.
+// The ctx parameter is accepted for API consistency but is not used since this is a local struct lookup.
+func FindNodePortContextE(_ context.Context, service *corev1.Service, servicePort int32) (int32, error) {
 	for _, port := range service.Spec.Ports {
 		if port.Port == servicePort {
 			return port.NodePort, nil
@@ -296,6 +294,25 @@ func FindNodePortE(service *corev1.Service, servicePort int32) (int32, error) {
 	}
 
 	return -1, NewUnknownServicePortError(service, servicePort)
+}
+
+// FindNodePortContext returns the allocated NodePort for the given servicePort from the service definition.
+// The ctx parameter is accepted for API consistency but is not used since this is a local struct lookup.
+// This will fail the test if there is an error.
+func FindNodePortContext(t testing.TestingT, ctx context.Context, service *corev1.Service, servicePort int32) int32 {
+	t.Helper()
+
+	nodePort, err := FindNodePortContextE(ctx, service, servicePort)
+	require.NoError(t, err)
+
+	return nodePort
+}
+
+// FindNodePortE returns the allocated NodePort for the given servicePort from the service definition.
+//
+// Deprecated: Use [FindNodePortContextE] instead.
+func FindNodePortE(service *corev1.Service, servicePort int32) (int32, error) {
+	return FindNodePortContextE(context.Background(), service, servicePort)
 }
 
 // pickRandomNode will pick a random node in the kubernetes cluster

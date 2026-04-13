@@ -192,7 +192,7 @@ func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscri
 	}
 
 	// Setup Subscription client
-	subscriptionClient, err := GetSubscriptionClientE()
+	subscriptionClient, err := GetSubscriptionClientContextE(ctx)
 	if err != nil {
 		return nil, err
 	}

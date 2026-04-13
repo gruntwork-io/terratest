@@ -12,33 +12,54 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-// GetNodes queries Kubernetes for information about the worker nodes registered to the cluster. If anything goes wrong,
-// the function will automatically fail the test.
-func GetNodes(t testing.TestingT, options *KubectlOptions) []corev1.Node {
-	nodes, err := GetNodesE(t, options)
+// GetNodesContextE queries Kubernetes for information about the worker nodes registered to the cluster.
+// The ctx parameter supports cancellation and timeouts.
+func GetNodesContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions) ([]corev1.Node, error) {
+	return GetNodesByFilterContextE(t, ctx, options, metav1.ListOptions{})
+}
+
+// GetNodesContext queries Kubernetes for information about the worker nodes registered to the cluster.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func GetNodesContext(t testing.TestingT, ctx context.Context, options *KubectlOptions) []corev1.Node {
+	t.Helper()
+	nodes, err := GetNodesContextE(t, ctx, options)
 	require.NoError(t, err)
 
 	return nodes
 }
 
-// GetNodesE queries Kubernetes for information about the worker nodes registered to the cluster.
-func GetNodesE(t testing.TestingT, options *KubectlOptions) ([]corev1.Node, error) {
-	return GetNodesByFilterE(t, options, metav1.ListOptions{})
+// GetNodes queries Kubernetes for information about the worker nodes registered to the cluster. If anything goes wrong,
+// the function will automatically fail the test.
+//
+// Deprecated: Use [GetNodesContext] instead.
+func GetNodes(t testing.TestingT, options *KubectlOptions) []corev1.Node {
+	t.Helper()
+
+	return GetNodesContext(t, context.Background(), options)
 }
 
-// GetNodesByFilterE queries Kubernetes for information about the worker nodes registered to the cluster, filtering the
-// list of nodes using the provided ListOptions.
+// GetNodesE queries Kubernetes for information about the worker nodes registered to the cluster.
+//
+// Deprecated: Use [GetNodesContextE] instead.
+func GetNodesE(t testing.TestingT, options *KubectlOptions) ([]corev1.Node, error) {
+	return GetNodesContextE(t, context.Background(), options)
+}
+
+// GetNodesByFilterContextE queries Kubernetes for information about the worker nodes registered to the cluster,
+// filtering the list of nodes using the provided ListOptions.
+// The ctx parameter supports cancellation and timeouts.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
-func GetNodesByFilterE(t testing.TestingT, options *KubectlOptions, filter metav1.ListOptions) ([]corev1.Node, error) {
+func GetNodesByFilterContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, filter metav1.ListOptions) ([]corev1.Node, error) {
 	options.Logger.Logf(t, "Getting list of nodes from Kubernetes")
 
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
 	if err != nil {
 		return nil, err
 	}
 
-	nodes, err := clientset.CoreV1().Nodes().List(context.Background(), filter)
+	nodes, err := clientset.CoreV1().Nodes().List(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -46,19 +67,35 @@ func GetNodesByFilterE(t testing.TestingT, options *KubectlOptions, filter metav
 	return nodes.Items, err
 }
 
-// GetReadyNodes queries Kubernetes for information about the worker nodes registered to the cluster and only returns
-// those that are in the ready state. If anything goes wrong, the function will automatically fail the test.
-func GetReadyNodes(t testing.TestingT, options *KubectlOptions) []corev1.Node {
-	nodes, err := GetReadyNodesE(t, options)
+// GetNodesByFilterContext queries Kubernetes for information about the worker nodes registered to the cluster,
+// filtering the list of nodes using the provided ListOptions.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func GetNodesByFilterContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, filter metav1.ListOptions) []corev1.Node {
+	t.Helper()
+	nodes, err := GetNodesByFilterContextE(t, ctx, options, filter)
 	require.NoError(t, err)
 
 	return nodes
 }
 
-// GetReadyNodesE queries Kubernetes for information about the worker nodes registered to the cluster and only returns
-// those that are in the ready state.
-func GetReadyNodesE(t testing.TestingT, options *KubectlOptions) ([]corev1.Node, error) {
-	nodes, err := GetNodesE(t, options)
+// GetNodesByFilterE queries Kubernetes for information about the worker nodes registered to the cluster, filtering the
+// list of nodes using the provided ListOptions.
+//
+// Deprecated: Use [GetNodesByFilterContextE] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func GetNodesByFilterE(t testing.TestingT, options *KubectlOptions, filter metav1.ListOptions) ([]corev1.Node, error) {
+	return GetNodesByFilterContextE(t, context.Background(), options, filter)
+}
+
+// GetReadyNodesContextE queries Kubernetes for information about the worker nodes registered to the cluster and only
+// returns those that are in the ready state.
+// The ctx parameter supports cancellation and timeouts.
+func GetReadyNodesContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions) ([]corev1.Node, error) {
+	nodes, err := GetNodesContextE(t, ctx, options)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +113,36 @@ func GetReadyNodesE(t testing.TestingT, options *KubectlOptions) ([]corev1.Node,
 	return nodesFiltered, nil
 }
 
+// GetReadyNodesContext queries Kubernetes for information about the worker nodes registered to the cluster and only
+// returns those that are in the ready state.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func GetReadyNodesContext(t testing.TestingT, ctx context.Context, options *KubectlOptions) []corev1.Node {
+	t.Helper()
+	nodes, err := GetReadyNodesContextE(t, ctx, options)
+	require.NoError(t, err)
+
+	return nodes
+}
+
+// GetReadyNodes queries Kubernetes for information about the worker nodes registered to the cluster and only returns
+// those that are in the ready state. If anything goes wrong, the function will automatically fail the test.
+//
+// Deprecated: Use [GetReadyNodesContext] instead.
+func GetReadyNodes(t testing.TestingT, options *KubectlOptions) []corev1.Node {
+	t.Helper()
+
+	return GetReadyNodesContext(t, context.Background(), options)
+}
+
+// GetReadyNodesE queries Kubernetes for information about the worker nodes registered to the cluster and only returns
+// those that are in the ready state.
+//
+// Deprecated: Use [GetReadyNodesContextE] instead.
+func GetReadyNodesE(t testing.TestingT, options *KubectlOptions) ([]corev1.Node, error) {
+	return GetReadyNodesContextE(t, context.Background(), options)
+}
+
 // IsNodeReady takes a Kubernetes Node information object and checks if the Node is in the ready state.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
@@ -89,23 +156,18 @@ func IsNodeReady(node corev1.Node) bool {
 	return false
 }
 
-// WaitUntilAllNodesReady continuously polls the Kubernetes cluster until all nodes in the cluster reach the ready
-// state, or runs out of retries. Will fail the test immediately if it times out.
-func WaitUntilAllNodesReady(t testing.TestingT, options *KubectlOptions, retries int, sleepBetweenRetries time.Duration) {
-	err := WaitUntilAllNodesReadyE(t, options, retries, sleepBetweenRetries)
-	require.NoError(t, err)
-}
-
-// WaitUntilAllNodesReadyE continuously polls the Kubernetes cluster until all nodes in the cluster reach the ready
-// state, or runs out of retries.
-func WaitUntilAllNodesReadyE(t testing.TestingT, options *KubectlOptions, retries int, sleepBetweenRetries time.Duration) error {
-	message, err := retry.DoWithRetryE(
+// WaitUntilAllNodesReadyContextE continuously polls the Kubernetes cluster until all nodes in the cluster reach the
+// ready state, or runs out of retries.
+// The ctx parameter supports cancellation and timeouts.
+func WaitUntilAllNodesReadyContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, retries int, sleepBetweenRetries time.Duration) error {
+	message, err := retry.DoWithRetryContextE(
 		t,
+		ctx,
 		"Wait for all Kube Nodes to be ready",
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			_, err := AreAllNodesReadyE(t, options)
+			_, err := AreAllNodesReadyContextE(t, ctx, options)
 			if err != nil {
 				return "", err
 			}
@@ -118,16 +180,38 @@ func WaitUntilAllNodesReadyE(t testing.TestingT, options *KubectlOptions, retrie
 	return err
 }
 
-// AreAllNodesReady checks if all nodes are ready in the Kubernetes cluster targeted by the current config context
-func AreAllNodesReady(t testing.TestingT, options *KubectlOptions) bool {
-	nodesReady, _ := AreAllNodesReadyE(t, options)
-	return nodesReady
+// WaitUntilAllNodesReadyContext continuously polls the Kubernetes cluster until all nodes in the cluster reach the
+// ready state, or runs out of retries.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func WaitUntilAllNodesReadyContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	err := WaitUntilAllNodesReadyContextE(t, ctx, options, retries, sleepBetweenRetries)
+	require.NoError(t, err)
 }
 
-// AreAllNodesReadyE checks if all nodes are ready in the Kubernetes cluster targeted by the current config context. If
-// false, returns an error indicating the reason.
-func AreAllNodesReadyE(t testing.TestingT, options *KubectlOptions) (bool, error) {
-	nodes, err := GetNodesE(t, options)
+// WaitUntilAllNodesReady continuously polls the Kubernetes cluster until all nodes in the cluster reach the ready
+// state, or runs out of retries. Will fail the test immediately if it times out.
+//
+// Deprecated: Use [WaitUntilAllNodesReadyContext] instead.
+func WaitUntilAllNodesReady(t testing.TestingT, options *KubectlOptions, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	WaitUntilAllNodesReadyContext(t, context.Background(), options, retries, sleepBetweenRetries)
+}
+
+// WaitUntilAllNodesReadyE continuously polls the Kubernetes cluster until all nodes in the cluster reach the ready
+// state, or runs out of retries.
+//
+// Deprecated: Use [WaitUntilAllNodesReadyContextE] instead.
+func WaitUntilAllNodesReadyE(t testing.TestingT, options *KubectlOptions, retries int, sleepBetweenRetries time.Duration) error {
+	return WaitUntilAllNodesReadyContextE(t, context.Background(), options, retries, sleepBetweenRetries)
+}
+
+// AreAllNodesReadyContextE checks if all nodes are ready in the Kubernetes cluster targeted by the current config
+// context. The ctx parameter supports cancellation and timeouts.
+// If false, returns an error indicating the reason.
+func AreAllNodesReadyContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions) (bool, error) {
+	nodes, err := GetNodesContextE(t, ctx, options)
 	if err != nil {
 		return false, err
 	}
@@ -143,4 +227,20 @@ func AreAllNodesReadyE(t testing.TestingT, options *KubectlOptions) (bool, error
 	}
 
 	return true, nil
+}
+
+// AreAllNodesReady checks if all nodes are ready in the Kubernetes cluster targeted by the current config context
+//
+// Deprecated: Use [AreAllNodesReadyContextE] instead.
+func AreAllNodesReady(t testing.TestingT, options *KubectlOptions) bool {
+	nodesReady, _ := AreAllNodesReadyE(t, options)
+	return nodesReady
+}
+
+// AreAllNodesReadyE checks if all nodes are ready in the Kubernetes cluster targeted by the current config context. If
+// false, returns an error indicating the reason.
+//
+// Deprecated: Use [AreAllNodesReadyContextE] instead.
+func AreAllNodesReadyE(t testing.TestingT, options *KubectlOptions) (bool, error) {
+	return AreAllNodesReadyContextE(t, context.Background(), options)
 }

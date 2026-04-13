@@ -9,21 +9,21 @@ import (
 )
 
 func serviceBusNamespaceClientE(subscriptionID string) (*armservicebus.NamespacesClient, error) {
-	return CreateServiceBusNamespacesClientE(subscriptionID)
+	return CreateServiceBusNamespacesClientE(subscriptionID) //nolint:contextcheck
 }
 
 func serviceBusTopicClientE(subscriptionID string) (*armservicebus.TopicsClient, error) {
-	return CreateServiceBusTopicsClientE(subscriptionID)
+	return CreateServiceBusTopicsClientE(subscriptionID) //nolint:contextcheck
 }
 
 func serviceBusSubscriptionsClientE(subscriptionID string) (*armservicebus.SubscriptionsClient, error) {
-	return CreateServiceBusSubscriptionsClientE(subscriptionID)
+	return CreateServiceBusSubscriptionsClientE(subscriptionID) //nolint:contextcheck
 }
 
 // ListServiceBusNamespaceContextE lists all SB namespaces in all resource groups in the given subscription ID.
 // The ctx parameter supports cancellation and timeouts.
 func ListServiceBusNamespaceContextE(ctx context.Context, subscriptionID string) ([]*armservicebus.SBNamespace, error) {
-	nsClient, err := serviceBusNamespaceClientE(subscriptionID)
+	nsClient, err := serviceBusNamespaceClientE(subscriptionID) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func ListServiceBusNamespaceIDsContext(t testing.TestingT, ctx context.Context, 
 // ListServiceBusNamespaceByResourceGroupContextE lists all SB namespaces in the given resource group.
 // The ctx parameter supports cancellation and timeouts.
 func ListServiceBusNamespaceByResourceGroupContextE(ctx context.Context, subscriptionID string, resourceGroup string) ([]*armservicebus.SBNamespace, error) {
-	nsClient, err := serviceBusNamespaceClientE(subscriptionID)
+	nsClient, err := serviceBusNamespaceClientE(subscriptionID) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func ListServiceBusNamespaceIDsByResourceGroupContext(t testing.TestingT, ctx co
 // of authorization rules for the given namespace name, automatically crossing page boundaries as required.
 // The ctx parameter supports cancellation and timeouts.
 func ListNamespaceAuthRulesContextE(ctx context.Context, subscriptionID string, namespace string, resourceGroup string) ([]string, error) {
-	nsClient, err := serviceBusNamespaceClientE(subscriptionID)
+	nsClient, err := serviceBusNamespaceClientE(subscriptionID) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func ListNamespaceAuthRulesContext(t testing.TestingT, ctx context.Context, subs
 // automatically crossing page boundaries as required.
 // The ctx parameter supports cancellation and timeouts.
 func ListNamespaceTopicsContextE(ctx context.Context, subscriptionID string, namespace string, resourceGroup string) ([]*armservicebus.SBTopic, error) {
-	tClient, err := serviceBusTopicClientE(subscriptionID)
+	tClient, err := serviceBusTopicClientE(subscriptionID) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +296,7 @@ func ListNamespaceTopicsContext(t testing.TestingT, ctx context.Context, subscri
 // automatically crossing page boundaries as required.
 // The ctx parameter supports cancellation and timeouts.
 func ListTopicSubscriptionsContextE(ctx context.Context, subscriptionID string, namespace string, resourceGroup string, topicName string) ([]*armservicebus.SBSubscription, error) {
-	sClient, err := serviceBusSubscriptionsClientE(subscriptionID)
+	sClient, err := serviceBusSubscriptionsClientE(subscriptionID) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func ListTopicSubscriptionsContext(t testing.TestingT, ctx context.Context, subs
 // a list of subscriptions for the given topic name, automatically crossing page boundaries as required.
 // The ctx parameter supports cancellation and timeouts.
 func ListTopicSubscriptionsNameContextE(ctx context.Context, subscriptionID string, namespace string, resourceGroup string, topicName string) ([]string, error) {
-	sClient, err := serviceBusSubscriptionsClientE(subscriptionID)
+	sClient, err := serviceBusSubscriptionsClientE(subscriptionID) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -374,7 +374,7 @@ func ListTopicSubscriptionsNameContext(t testing.TestingT, ctx context.Context, 
 // of authorization rules for the given topic name, automatically crossing page boundaries as required.
 // The ctx parameter supports cancellation and timeouts.
 func ListTopicAuthRulesContextE(ctx context.Context, subscriptionID string, namespace string, resourceGroup string, topicName string) ([]string, error) {
-	tClient, err := serviceBusTopicClientE(subscriptionID)
+	tClient, err := serviceBusTopicClientE(subscriptionID) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}

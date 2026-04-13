@@ -81,7 +81,7 @@ func CheckPublicDNSNameAvailabilityContext(t testing.TestingT, ctx context.Conte
 // is available for use.
 // The ctx parameter supports cancellation and timeouts.
 func CheckPublicDNSNameAvailabilityContextE(ctx context.Context, location string, domainNameLabel string, subscriptionID string) (bool, error) {
-	client, err := CreateNetworkManagementClientE(subscriptionID)
+	client, err := CreateNetworkManagementClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return false, err
 	}
@@ -102,7 +102,7 @@ func GetPublicIPAddressContextE(ctx context.Context, publicIPAddressName string,
 		return nil, err
 	}
 
-	client, err := GetPublicIPAddressClientE(subscriptionID)
+	client, err := GetPublicIPAddressClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,15 @@ func GetPublicIPAddressContextE(ctx context.Context, publicIPAddressName string,
 	return &resp.PublicIPAddress, nil
 }
 
+// GetPublicIPAddressClientContextE creates a Public IP Addresses client in the specified Azure Subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetPublicIPAddressClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.PublicIPAddressesClient, error) {
+	return CreatePublicIPAddressesClientContextE(ctx, subscriptionID)
+}
+
 // GetPublicIPAddressClientE creates a Public IP Addresses client in the specified Azure Subscription.
+//
+// Deprecated: Use [GetPublicIPAddressClientContextE] instead.
 func GetPublicIPAddressClientE(subscriptionID string) (*armnetwork.PublicIPAddressesClient, error) {
-	return CreatePublicIPAddressesClientE(subscriptionID)
+	return GetPublicIPAddressClientContextE(context.Background(), subscriptionID)
 }

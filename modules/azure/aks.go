@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetManagedClustersClientE is a helper function that will setup an Azure ManagedClusters client on your behalf.
-func GetManagedClustersClientE(subscriptionID string) (*containerservice.ManagedClustersClient, error) {
+// GetManagedClustersClientContextE is a helper function that will setup an Azure ManagedClusters client on your behalf.
+// The ctx parameter supports cancellation and timeouts.
+func GetManagedClustersClientContextE(ctx context.Context, subscriptionID string) (*containerservice.ManagedClustersClient, error) {
 	// Create a cluster client
-	client, err := CreateManagedClustersClientE(subscriptionID)
+	client, err := CreateManagedClustersClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -27,6 +28,13 @@ func GetManagedClustersClientE(subscriptionID string) (*containerservice.Managed
 	return &client, nil
 }
 
+// GetManagedClustersClientE is a helper function that will setup an Azure ManagedClusters client on your behalf.
+//
+// Deprecated: Use [GetManagedClustersClientContextE] instead.
+func GetManagedClustersClientE(subscriptionID string) (*containerservice.ManagedClustersClient, error) {
+	return GetManagedClustersClientContextE(context.Background(), subscriptionID)
+}
+
 // GetManagedClusterContextE returns a ManagedCluster for the specified cluster in the given resource group.
 // The ctx parameter supports cancellation and timeouts.
 func GetManagedClusterContextE(t testing.TestingT, ctx context.Context, resourceGroupName, clusterName, subscriptionID string) (*containerservice.ManagedCluster, error) {
@@ -35,7 +43,7 @@ func GetManagedClusterContextE(t testing.TestingT, ctx context.Context, resource
 		return nil, err
 	}
 
-	client, err := GetManagedClustersClientE(subscriptionID)
+	client, err := GetManagedClustersClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

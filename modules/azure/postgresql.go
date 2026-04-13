@@ -9,14 +9,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetPostgreSQLServerClientE is a helper function that will setup a postgresql server client.
-func GetPostgreSQLServerClientE(subscriptionID string) (*armpostgresql.ServersClient, error) {
+// GetPostgreSQLServerClientContextE is a helper function that will setup a postgresql server client.
+// The ctx parameter supports cancellation and timeouts.
+func GetPostgreSQLServerClientContextE(_ context.Context, subscriptionID string) (*armpostgresql.ServersClient, error) {
 	clientFactory, err := getArmPostgreSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewServersClient(), nil
+}
+
+// GetPostgreSQLServerClientE is a helper function that will setup a postgresql server client.
+//
+// Deprecated: Use [GetPostgreSQLServerClientContextE] instead.
+func GetPostgreSQLServerClientE(subscriptionID string) (*armpostgresql.ServersClient, error) {
+	return GetPostgreSQLServerClientContextE(context.Background(), subscriptionID)
 }
 
 // GetPostgreSQLServerContext is a helper function that gets the server.
@@ -45,7 +53,7 @@ func GetPostgreSQLServer(t testing.TestingT, resGroupName string, serverName str
 // The ctx parameter supports cancellation and timeouts.
 func GetPostgreSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armpostgresql.Server, error) {
 	// Create a postgresql Server client
-	postgresqlClient, err := GetPostgreSQLServerClientE(subscriptionID)
+	postgresqlClient, err := GetPostgreSQLServerClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -66,14 +74,22 @@ func GetPostgreSQLServerE(t testing.TestingT, subscriptionID string, resGroupNam
 	return GetPostgreSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }
 
-// GetPostgreSQLDBClientE is a helper function that will setup a postgresql DB client.
-func GetPostgreSQLDBClientE(subscriptionID string) (*armpostgresql.DatabasesClient, error) {
+// GetPostgreSQLDBClientContextE is a helper function that will setup a postgresql DB client.
+// The ctx parameter supports cancellation and timeouts.
+func GetPostgreSQLDBClientContextE(_ context.Context, subscriptionID string) (*armpostgresql.DatabasesClient, error) {
 	clientFactory, err := getArmPostgreSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewDatabasesClient(), nil
+}
+
+// GetPostgreSQLDBClientE is a helper function that will setup a postgresql DB client.
+//
+// Deprecated: Use [GetPostgreSQLDBClientContextE] instead.
+func GetPostgreSQLDBClientE(subscriptionID string) (*armpostgresql.DatabasesClient, error) {
+	return GetPostgreSQLDBClientContextE(context.Background(), subscriptionID)
 }
 
 // GetPostgreSQLDBContext is a helper function that gets the database.
@@ -102,7 +118,7 @@ func GetPostgreSQLDB(t testing.TestingT, resGroupName string, serverName string,
 // The ctx parameter supports cancellation and timeouts.
 func GetPostgreSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) (*armpostgresql.Database, error) {
 	// Create a postgresql db client
-	postgresqldbClient, err := GetPostgreSQLDBClientE(subscriptionID)
+	postgresqldbClient, err := GetPostgreSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +165,7 @@ func ListPostgreSQLDB(t testing.TestingT, subscriptionID string, resGroupName st
 // The ctx parameter supports cancellation and timeouts.
 func ListPostgreSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) ([]*armpostgresql.Database, error) {
 	// Create a postgresql db client
-	postgresqldbClient, err := GetPostgreSQLDBClientE(subscriptionID)
+	postgresqldbClient, err := GetPostgreSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

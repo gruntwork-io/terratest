@@ -143,7 +143,7 @@ func FrontDoorFrontendEndpointExistsE(endpointName string, frontDoorName string,
 // GetFrontDoorContextE gets the specified Front Door if it exists.
 // The ctx parameter supports cancellation and timeouts.
 func GetFrontDoorContextE(ctx context.Context, frontDoorName, resourceGroupName, subscriptionID string) (*frontdoor.FrontDoor, error) {
-	client, err := GetFrontDoorClientE(subscriptionID)
+	client, err := GetFrontDoorClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func GetFrontDoorE(frontDoorName, resourceGroupName, subscriptionID string) (*fr
 // GetFrontDoorFrontendEndpointContextE gets the specified Frontend Endpoint for the provided Front Door if it exists.
 // The ctx parameter supports cancellation and timeouts.
 func GetFrontDoorFrontendEndpointContextE(ctx context.Context, endpointName, frontDoorName, resourceGroupName, subscriptionID string) (*frontdoor.FrontendEndpoint, error) {
-	client, err := GetFrontDoorFrontendEndpointClientE(subscriptionID)
+	client, err := GetFrontDoorFrontendEndpointClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -186,9 +186,35 @@ func GetFrontDoorFrontendEndpointE(endpointName, frontDoorName, resourceGroupNam
 	return GetFrontDoorFrontendEndpointContextE(context.Background(), endpointName, frontDoorName, resourceGroupName, subscriptionID)
 }
 
+// GetFrontDoorClientContextE returns a front door client; otherwise error.
+// The ctx parameter supports cancellation and timeouts.
+func GetFrontDoorClientContextE(ctx context.Context, subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
+	client, err := CreateFrontDoorClientContextE(ctx, subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	authorizer, err := NewAuthorizer()
+	if err != nil {
+		return nil, err
+	}
+
+	client.Authorizer = *authorizer
+
+	return client, nil
+}
+
 // GetFrontDoorClientE returns a front door client; otherwise error.
+//
+// Deprecated: Use [GetFrontDoorClientContextE] instead.
 func GetFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
-	client, err := CreateFrontDoorClientE(subscriptionID)
+	return GetFrontDoorClientContextE(context.Background(), subscriptionID)
+}
+
+// GetFrontDoorFrontendEndpointClientContextE returns a front door frontend endpoints client; otherwise error.
+// The ctx parameter supports cancellation and timeouts.
+func GetFrontDoorFrontendEndpointClientContextE(ctx context.Context, subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
+	client, err := CreateFrontDoorFrontendEndpointClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -204,18 +230,8 @@ func GetFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient, er
 }
 
 // GetFrontDoorFrontendEndpointClientE returns a front door frontend endpoints client; otherwise error.
+//
+// Deprecated: Use [GetFrontDoorFrontendEndpointClientContextE] instead.
 func GetFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
-	client, err := CreateFrontDoorFrontendEndpointClientE(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return client, nil
+	return GetFrontDoorFrontendEndpointClientContextE(context.Background(), subscriptionID)
 }

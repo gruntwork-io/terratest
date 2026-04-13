@@ -311,6 +311,13 @@ func GetAzDefaultSubnetsForVpc(t testing.TestingT, vpcID string, region string) 
 	return GetAzDefaultSubnetsForVpcContext(t, context.Background(), vpcID, region)
 }
 
+// GetAzDefaultSubnetsForVpcE gets the default az subnets in the specified VPC.
+//
+// Deprecated: Use [GetAzDefaultSubnetsForVpcContextE] instead.
+func GetAzDefaultSubnetsForVpcE(t testing.TestingT, vpcID string, region string) ([]Subnet, error) {
+	return GetAzDefaultSubnetsForVpcContextE(t, context.Background(), vpcID, region)
+}
+
 // generateVpcIDFilter is a helper method to generate vpc id filter
 func generateVpcIDFilter(vpcID string) types.Filter {
 	return types.Filter{Name: aws.String(vpcIDFilterName), Values: []string{vpcID}}

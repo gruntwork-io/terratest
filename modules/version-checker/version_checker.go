@@ -77,7 +77,7 @@ func CheckVersionContextE(
 func CheckVersion(
 	t testing.TestingT,
 	params CheckVersionParams) {
-	require.NoError(t, CheckVersionE(t, params))
+	CheckVersionContext(t, context.Background(), params)
 }
 
 // CheckVersionContext is like CheckVersion but includes a context.

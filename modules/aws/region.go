@@ -89,6 +89,16 @@ func GetRandomStableRegion(t testing.TestingT, approvedRegions []string, forbidd
 	return GetRandomStableRegionContext(t, context.Background(), approvedRegions, forbiddenRegions)
 }
 
+// GetRandomStableRegionE gets a randomly chosen AWS region that is considered stable. Like GetRandomRegion, you can
+// further restrict the stable region list using approvedRegions and forbiddenRegions. We consider stable regions to be
+// those that have been around for at least 1 year.
+// Note that regions in the approvedRegions list that are not considered stable are ignored.
+//
+// Deprecated: Use [GetRandomStableRegionContextE] instead.
+func GetRandomStableRegionE(t testing.TestingT, approvedRegions []string, forbiddenRegions []string) (string, error) {
+	return GetRandomStableRegionContextE(t, context.Background(), approvedRegions, forbiddenRegions)
+}
+
 // GetRandomRegionContextE gets a randomly chosen AWS region. If approvedRegions is not empty, this will be a region from the approvedRegions
 // list; otherwise, this method will fetch the latest list of regions from the AWS APIs and pick one of those. If
 // forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
@@ -347,4 +357,12 @@ func GetRandomRegionForService(t testing.TestingT, serviceName string) string {
 	t.Helper()
 
 	return GetRandomRegionForServiceContext(t, context.Background(), serviceName)
+}
+
+// GetRandomRegionForServiceE retrieves a list of AWS regions in which a service is available
+// Then returns one region randomly from the list and returns errors.
+//
+// Deprecated: Use [GetRandomRegionForServiceContextE] instead.
+func GetRandomRegionForServiceE(t testing.TestingT, serviceName string) (string, error) {
+	return GetRandomRegionForServiceContextE(t, context.Background(), serviceName)
 }

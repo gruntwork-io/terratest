@@ -70,7 +70,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDump(t *testing.T) { //n
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
 
 	// write chart manifest to a local filesystem directory
-	helm.UpdateSnapshot(t, options, output, releaseName)
+	helm.UpdateSnapshotContext(t, t.Context(), options, output, releaseName)
 }
 
 // An example of how to verify the rendered template object of a Helm Chart given various inputs.
@@ -113,7 +113,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedDeploymentDiff(t *testing.T) { //n
 	require.Equal(t, expectedMetricsServerReplica, deploymentMetricsServerReplica)
 
 	// run the diff and assert the number of diffs
-	require.Equal(t, 4, helm.DiffAgainstSnapshot(t, options, output, releaseName))
+	require.Equal(t, 4, helm.DiffAgainstSnapshotContext(t, t.Context(), options, output, releaseName))
 }
 
 // An example of how to store a snapshot of the current manaifest for future comparison
@@ -142,7 +142,7 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDump(t *testing.T) { //noli
 	output := helm.RenderRemoteTemplateContext(t, t.Context(), options, "https://kedacore.github.io/charts", releaseName, []string{})
 
 	// write chart manifest to a local filesystem directory
-	helm.UpdateSnapshot(t, options, output, releaseName)
+	helm.UpdateSnapshotContext(t, t.Context(), options, output, releaseName)
 }
 
 // An example of how to verify the current helm k8s manifest against a previous snapshot
@@ -172,5 +172,5 @@ func TestHelmKedaRemoteExampleTemplateRenderedPackageDiff(t *testing.T) { //noli
 
 	// run the diff and assert the number of diffs matches the number of diffs in the snapshot
 	// (namespace diffs + intentional value changes for replicas/memory)
-	require.Equal(t, 27, helm.DiffAgainstSnapshot(t, options, output, releaseName))
+	require.Equal(t, 27, helm.DiffAgainstSnapshotContext(t, t.Context(), options, output, releaseName))
 }

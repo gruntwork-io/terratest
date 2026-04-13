@@ -55,7 +55,7 @@ func GetDiskContextE(ctx context.Context, diskName string, resGroupName string, 
 		return nil, err
 	}
 
-	client, err := CreateDisksClientE(subscriptionID)
+	client, err := CreateDisksClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

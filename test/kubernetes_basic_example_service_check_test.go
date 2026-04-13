@@ -41,15 +41,15 @@ func TestKubernetesBasicExampleServiceCheck(t *testing.T) {
 	// - Current context of the kubectl config file
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 
-	k8s.CreateNamespace(t, options, namespaceName)
+	k8s.CreateNamespaceContext(t, t.Context(), options, namespaceName)
 	// ... and make sure to delete the namespace at the end of the test
-	defer k8s.DeleteNamespace(t, options, namespaceName)
+	defer k8s.DeleteNamespaceContext(t, t.Context(), options, namespaceName)
 
 	// At the end of the test, run `kubectl delete -f RESOURCE_CONFIG` to clean up any resources that were created.
-	defer k8s.KubectlDelete(t, options, kubeResourcePath)
+	defer k8s.KubectlDeleteContext(t, t.Context(), options, kubeResourcePath)
 
 	// This will run `kubectl apply -f RESOURCE_CONFIG` and fail the test if there are any errors
-	k8s.KubectlApply(t, options, kubeResourcePath)
+	k8s.KubectlApplyContext(t, t.Context(), options, kubeResourcePath)
 
 	// This will wait up to 10 seconds for the service to become available, to ensure that we can access it.
 	k8s.WaitUntilServiceAvailableContext(t, t.Context(), options, "nginx-service", 10, 1*time.Second)

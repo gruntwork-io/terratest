@@ -11,6 +11,7 @@ package azure
 // snippet-tag-start::client_factory_example.imports
 
 import (
+	"context"
 	"errors"
 	"os"
 	"reflect"
@@ -196,9 +197,10 @@ func getArmServiceBusClientFactory(subscriptionID string) (*armservicebus.Client
 
 // ---- Public client creator functions ----
 
-// CreateSubscriptionsClientE returns a virtual machines client instance configured with the correct BaseURI depending on
+// CreateSubscriptionsClientContextE returns a subscriptions client instance configured with the correct BaseURI depending on
 // the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateSubscriptionsClientE() (subscriptions.Client, error) {
+// The ctx parameter supports cancellation and timeouts.
+func CreateSubscriptionsClientContextE(_ context.Context) (subscriptions.Client, error) {
 	// Lookup environment URI
 	baseURI, err := getBaseURI()
 	if err != nil {
@@ -209,8 +211,17 @@ func CreateSubscriptionsClientE() (subscriptions.Client, error) {
 	return subscriptions.NewClientWithBaseURI(baseURI), nil
 }
 
-// CreateVirtualMachinesClientE returns a virtual machines client.
-func CreateVirtualMachinesClientE(subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
+// CreateSubscriptionsClientE returns a subscriptions client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+//
+// Deprecated: Use [CreateSubscriptionsClientContextE] instead.
+func CreateSubscriptionsClientE() (subscriptions.Client, error) {
+	return CreateSubscriptionsClientContextE(context.Background())
+}
+
+// CreateVirtualMachinesClientContextE returns a virtual machines client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateVirtualMachinesClientContextE(_ context.Context, subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
 	clientFactory, err := getArmComputeClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -219,9 +230,17 @@ func CreateVirtualMachinesClientE(subscriptionID string) (*armcompute.VirtualMac
 	return clientFactory.NewVirtualMachinesClient(), nil
 }
 
-// CreateManagedClustersClientE returns a virtual machines client instance configured with the correct BaseURI depending on
+// CreateVirtualMachinesClientE returns a virtual machines client.
+//
+// Deprecated: Use [CreateVirtualMachinesClientContextE] instead.
+func CreateVirtualMachinesClientE(subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
+	return CreateVirtualMachinesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateManagedClustersClientContextE returns a managed clusters client instance configured with the correct BaseURI depending on
 // the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateManagedClustersClientE(subscriptionID string) (containerservice.ManagedClustersClient, error) {
+// The ctx parameter supports cancellation and timeouts.
+func CreateManagedClustersClientContextE(_ context.Context, subscriptionID string) (containerservice.ManagedClustersClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -238,8 +257,17 @@ func CreateManagedClustersClientE(subscriptionID string) (containerservice.Manag
 	return containerservice.NewManagedClustersClientWithBaseURI(baseURI, subscriptionID), nil
 }
 
-// CreateCosmosDBAccountClientE returns a Cosmos DB database accounts client.
-func CreateCosmosDBAccountClientE(subscriptionID string) (*armcosmos.DatabaseAccountsClient, error) {
+// CreateManagedClustersClientE returns a managed clusters client instance configured with the correct BaseURI depending on
+// the Azure environment that is currently setup (or "Public", if none is setup).
+//
+// Deprecated: Use [CreateManagedClustersClientContextE] instead.
+func CreateManagedClustersClientE(subscriptionID string) (containerservice.ManagedClustersClient, error) {
+	return CreateManagedClustersClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateCosmosDBAccountClientContextE returns a Cosmos DB database accounts client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateCosmosDBAccountClientContextE(_ context.Context, subscriptionID string) (*armcosmos.DatabaseAccountsClient, error) {
 	clientFactory, err := getArmCosmosClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -248,14 +276,29 @@ func CreateCosmosDBAccountClientE(subscriptionID string) (*armcosmos.DatabaseAcc
 	return clientFactory.NewDatabaseAccountsClient(), nil
 }
 
-// CreateCosmosDBSQLClientE returns a Cosmos DB SQL resources client.
-func CreateCosmosDBSQLClientE(subscriptionID string) (*armcosmos.SQLResourcesClient, error) {
+// CreateCosmosDBAccountClientE returns a Cosmos DB database accounts client.
+//
+// Deprecated: Use [CreateCosmosDBAccountClientContextE] instead.
+func CreateCosmosDBAccountClientE(subscriptionID string) (*armcosmos.DatabaseAccountsClient, error) {
+	return CreateCosmosDBAccountClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateCosmosDBSQLClientContextE returns a Cosmos DB SQL resources client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateCosmosDBSQLClientContextE(_ context.Context, subscriptionID string) (*armcosmos.SQLResourcesClient, error) {
 	clientFactory, err := getArmCosmosClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewSQLResourcesClient(), nil
+}
+
+// CreateCosmosDBSQLClientE returns a Cosmos DB SQL resources client.
+//
+// Deprecated: Use [CreateCosmosDBSQLClientContextE] instead.
+func CreateCosmosDBSQLClientE(subscriptionID string) (*armcosmos.SQLResourcesClient, error) {
+	return CreateCosmosDBSQLClientContextE(context.Background(), subscriptionID)
 }
 
 // getArmKeyVaultClientFactory gets an arm keyvault client factory
@@ -314,8 +357,9 @@ func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresql.Client
 	})
 }
 
-// CreateStorageAccountClientE creates a storage account client.
-func CreateStorageAccountClientE(subscriptionID string) (*armstorage.AccountsClient, error) {
+// CreateStorageAccountClientContextE creates a storage account client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateStorageAccountClientContextE(_ context.Context, subscriptionID string) (*armstorage.AccountsClient, error) {
 	clientFactory, err := getArmStorageClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -324,8 +368,16 @@ func CreateStorageAccountClientE(subscriptionID string) (*armstorage.AccountsCli
 	return clientFactory.NewAccountsClient(), nil
 }
 
-// CreateStorageBlobContainerClientE creates a storage blob container client.
-func CreateStorageBlobContainerClientE(subscriptionID string) (*armstorage.BlobContainersClient, error) {
+// CreateStorageAccountClientE creates a storage account client.
+//
+// Deprecated: Use [CreateStorageAccountClientContextE] instead.
+func CreateStorageAccountClientE(subscriptionID string) (*armstorage.AccountsClient, error) {
+	return CreateStorageAccountClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateStorageBlobContainerClientContextE creates a storage blob container client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateStorageBlobContainerClientContextE(_ context.Context, subscriptionID string) (*armstorage.BlobContainersClient, error) {
 	clientFactory, err := getArmStorageClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -334,8 +386,16 @@ func CreateStorageBlobContainerClientE(subscriptionID string) (*armstorage.BlobC
 	return clientFactory.NewBlobContainersClient(), nil
 }
 
-// CreateStorageFileSharesClientE creates a storage file shares client.
-func CreateStorageFileSharesClientE(subscriptionID string) (*armstorage.FileSharesClient, error) {
+// CreateStorageBlobContainerClientE creates a storage blob container client.
+//
+// Deprecated: Use [CreateStorageBlobContainerClientContextE] instead.
+func CreateStorageBlobContainerClientE(subscriptionID string) (*armstorage.BlobContainersClient, error) {
+	return CreateStorageBlobContainerClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateStorageFileSharesClientContextE creates a storage file shares client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateStorageFileSharesClientContextE(_ context.Context, subscriptionID string) (*armstorage.FileSharesClient, error) {
 	clientFactory, err := getArmStorageClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -344,8 +404,16 @@ func CreateStorageFileSharesClientE(subscriptionID string) (*armstorage.FileShar
 	return clientFactory.NewFileSharesClient(), nil
 }
 
-// CreateServiceBusNamespacesClientE returns a service bus namespaces client.
-func CreateServiceBusNamespacesClientE(subscriptionID string) (*armservicebus.NamespacesClient, error) {
+// CreateStorageFileSharesClientE creates a storage file shares client.
+//
+// Deprecated: Use [CreateStorageFileSharesClientContextE] instead.
+func CreateStorageFileSharesClientE(subscriptionID string) (*armstorage.FileSharesClient, error) {
+	return CreateStorageFileSharesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateServiceBusNamespacesClientContextE returns a service bus namespaces client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateServiceBusNamespacesClientContextE(_ context.Context, subscriptionID string) (*armservicebus.NamespacesClient, error) {
 	clientFactory, err := getArmServiceBusClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -354,8 +422,16 @@ func CreateServiceBusNamespacesClientE(subscriptionID string) (*armservicebus.Na
 	return clientFactory.NewNamespacesClient(), nil
 }
 
-// CreateServiceBusTopicsClientE returns a service bus topics client.
-func CreateServiceBusTopicsClientE(subscriptionID string) (*armservicebus.TopicsClient, error) {
+// CreateServiceBusNamespacesClientE returns a service bus namespaces client.
+//
+// Deprecated: Use [CreateServiceBusNamespacesClientContextE] instead.
+func CreateServiceBusNamespacesClientE(subscriptionID string) (*armservicebus.NamespacesClient, error) {
+	return CreateServiceBusNamespacesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateServiceBusTopicsClientContextE returns a service bus topics client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateServiceBusTopicsClientContextE(_ context.Context, subscriptionID string) (*armservicebus.TopicsClient, error) {
 	clientFactory, err := getArmServiceBusClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -364,8 +440,16 @@ func CreateServiceBusTopicsClientE(subscriptionID string) (*armservicebus.Topics
 	return clientFactory.NewTopicsClient(), nil
 }
 
-// CreateServiceBusSubscriptionsClientE returns a service bus subscriptions client.
-func CreateServiceBusSubscriptionsClientE(subscriptionID string) (*armservicebus.SubscriptionsClient, error) {
+// CreateServiceBusTopicsClientE returns a service bus topics client.
+//
+// Deprecated: Use [CreateServiceBusTopicsClientContextE] instead.
+func CreateServiceBusTopicsClientE(subscriptionID string) (*armservicebus.TopicsClient, error) {
+	return CreateServiceBusTopicsClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateServiceBusSubscriptionsClientContextE returns a service bus subscriptions client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateServiceBusSubscriptionsClientContextE(_ context.Context, subscriptionID string) (*armservicebus.SubscriptionsClient, error) {
 	clientFactory, err := getArmServiceBusClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -374,8 +458,16 @@ func CreateServiceBusSubscriptionsClientE(subscriptionID string) (*armservicebus
 	return clientFactory.NewSubscriptionsClient(), nil
 }
 
-// CreateAvailabilitySetClientE creates a new Availability Set client.
-func CreateAvailabilitySetClientE(subscriptionID string) (*armcompute.AvailabilitySetsClient, error) {
+// CreateServiceBusSubscriptionsClientE returns a service bus subscriptions client.
+//
+// Deprecated: Use [CreateServiceBusSubscriptionsClientContextE] instead.
+func CreateServiceBusSubscriptionsClientE(subscriptionID string) (*armservicebus.SubscriptionsClient, error) {
+	return CreateServiceBusSubscriptionsClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateAvailabilitySetClientContextE creates a new Availability Set client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateAvailabilitySetClientContextE(_ context.Context, subscriptionID string) (*armcompute.AvailabilitySetsClient, error) {
 	clientFactory, err := getArmComputeClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -384,8 +476,16 @@ func CreateAvailabilitySetClientE(subscriptionID string) (*armcompute.Availabili
 	return clientFactory.NewAvailabilitySetsClient(), nil
 }
 
-// CreateResourceGroupClientE gets a resource group client in a subscription
-func CreateResourceGroupClientE(subscriptionID string) (*resources.GroupsClient, error) {
+// CreateAvailabilitySetClientE creates a new Availability Set client.
+//
+// Deprecated: Use [CreateAvailabilitySetClientContextE] instead.
+func CreateAvailabilitySetClientE(subscriptionID string) (*armcompute.AvailabilitySetsClient, error) {
+	return CreateAvailabilitySetClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateResourceGroupClientContextE gets a resource group client in a subscription.
+// The ctx parameter supports cancellation and timeouts.
+func CreateResourceGroupClientContextE(_ context.Context, subscriptionID string) (*resources.GroupsClient, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -409,8 +509,16 @@ func CreateResourceGroupClientE(subscriptionID string) (*resources.GroupsClient,
 	return &resourceGroupClient, nil
 }
 
-// CreateSQLServerClient is a helper function that will create and setup a sql server client
-func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error) {
+// CreateResourceGroupClientE gets a resource group client in a subscription.
+//
+// Deprecated: Use [CreateResourceGroupClientContextE] instead.
+func CreateResourceGroupClientE(subscriptionID string) (*resources.GroupsClient, error) {
+	return CreateResourceGroupClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateSQLServerClientContext is a helper function that will create and setup a sql server client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateSQLServerClientContext(_ context.Context, subscriptionID string) (*armsql.ServersClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -419,8 +527,16 @@ func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error)
 	return clientFactory.NewServersClient(), nil
 }
 
-// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql managed instance client
-func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) {
+// CreateSQLServerClient is a helper function that will create and setup a sql server client.
+//
+// Deprecated: Use [CreateSQLServerClientContext] instead.
+func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error) {
+	return CreateSQLServerClientContext(context.Background(), subscriptionID)
+}
+
+// CreateSQLMangedInstanceClientContext is a helper function that will create and setup a sql managed instance client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateSQLMangedInstanceClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -429,14 +545,29 @@ func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstan
 	return clientFactory.NewManagedInstancesClient(), nil
 }
 
-// CreateSQLMangedDatabasesClient is a helper function that will create and setup a sql managed databases client
-func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
+// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql managed instance client.
+//
+// Deprecated: Use [CreateSQLMangedInstanceClientContext] instead.
+func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) {
+	return CreateSQLMangedInstanceClientContext(context.Background(), subscriptionID)
+}
+
+// CreateSQLMangedDatabasesClientContext is a helper function that will create and setup a sql managed databases client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateSQLMangedDatabasesClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewManagedDatabasesClient(), nil
+}
+
+// CreateSQLMangedDatabasesClient is a helper function that will create and setup a sql managed databases client.
+//
+// Deprecated: Use [CreateSQLMangedDatabasesClientContext] instead.
+func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
+	return CreateSQLMangedDatabasesClientContext(context.Background(), subscriptionID)
 }
 
 // getArmSQLClientFactory gets an arm sql client factory
@@ -467,8 +598,9 @@ func getArmSQLClientFactory(subscriptionID string) (*armsql.ClientFactory, error
 	})
 }
 
-// CreateDatabaseClient is a helper function that will create and setup a SQL DB client
-func CreateDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error) {
+// CreateDatabaseClientContext is a helper function that will create and setup a SQL DB client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateDatabaseClientContext(_ context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -477,14 +609,29 @@ func CreateDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error
 	return clientFactory.NewDatabasesClient(), nil
 }
 
-// CreateMySQLServerClientE is a helper function that will setup a mysql server client.
-func CreateMySQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
+// CreateDatabaseClient is a helper function that will create and setup a SQL DB client.
+//
+// Deprecated: Use [CreateDatabaseClientContext] instead.
+func CreateDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error) {
+	return CreateDatabaseClientContext(context.Background(), subscriptionID)
+}
+
+// CreateMySQLServerClientContextE is a helper function that will setup a mysql server client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateMySQLServerClientContextE(_ context.Context, subscriptionID string) (*armmysql.ServersClient, error) {
 	clientFactory, err := getArmMySQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewServersClient(), nil
+}
+
+// CreateMySQLServerClientE is a helper function that will setup a mysql server client.
+//
+// Deprecated: Use [CreateMySQLServerClientContextE] instead.
+func CreateMySQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
+	return CreateMySQLServerClientContextE(context.Background(), subscriptionID)
 }
 
 // getArmMySQLClientFactory gets an arm mysql client factory
@@ -515,8 +662,9 @@ func getArmMySQLClientFactory(subscriptionID string) (*armmysql.ClientFactory, e
 	})
 }
 
-// CreateDisksClientE returns a disks client.
-func CreateDisksClientE(subscriptionID string) (*armcompute.DisksClient, error) {
+// CreateDisksClientContextE returns a disks client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateDisksClientContextE(_ context.Context, subscriptionID string) (*armcompute.DisksClient, error) {
 	clientFactory, err := getArmComputeClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -525,8 +673,16 @@ func CreateDisksClientE(subscriptionID string) (*armcompute.DisksClient, error) 
 	return clientFactory.NewDisksClient(), nil
 }
 
-// CreateActionGroupClient creates an Action Groups client for Azure Monitor.
-func CreateActionGroupClient(subscriptionID string) (*insights.ActionGroupsClient, error) {
+// CreateDisksClientE returns a disks client.
+//
+// Deprecated: Use [CreateDisksClientContextE] instead.
+func CreateDisksClientE(subscriptionID string) (*armcompute.DisksClient, error) {
+	return CreateDisksClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateActionGroupClientContext creates an Action Groups client for Azure Monitor.
+// The ctx parameter supports cancellation and timeouts.
+func CreateActionGroupClientContext(_ context.Context, subscriptionID string) (*insights.ActionGroupsClient, error) {
 	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -550,8 +706,16 @@ func CreateActionGroupClient(subscriptionID string) (*insights.ActionGroupsClien
 	return &metricAlertsClient, nil
 }
 
-// CreateVMInsightsClientE gets a VM Insights client
-func CreateVMInsightsClientE(subscriptionID string) (*insights.VMInsightsClient, error) {
+// CreateActionGroupClient creates an Action Groups client for Azure Monitor.
+//
+// Deprecated: Use [CreateActionGroupClientContext] instead.
+func CreateActionGroupClient(subscriptionID string) (*insights.ActionGroupsClient, error) {
+	return CreateActionGroupClientContext(context.Background(), subscriptionID)
+}
+
+// CreateVMInsightsClientContextE gets a VM Insights client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateVMInsightsClientContextE(_ context.Context, subscriptionID string) (*insights.VMInsightsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -576,8 +740,16 @@ func CreateVMInsightsClientE(subscriptionID string) (*insights.VMInsightsClient,
 	return &client, nil
 }
 
-// CreateActivityLogAlertsClientE gets an Action Groups client in the specified Azure Subscription
-func CreateActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
+// CreateVMInsightsClientE gets a VM Insights client.
+//
+// Deprecated: Use [CreateVMInsightsClientContextE] instead.
+func CreateVMInsightsClientE(subscriptionID string) (*insights.VMInsightsClient, error) {
+	return CreateVMInsightsClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateActivityLogAlertsClientContextE gets an Activity Log Alerts client in the specified Azure Subscription.
+// The ctx parameter supports cancellation and timeouts.
+func CreateActivityLogAlertsClientContextE(_ context.Context, subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -590,7 +762,7 @@ func CreateActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLo
 		return nil, err
 	}
 
-	// Get the Action Groups client
+	// Get the Activity Log Alerts client
 	client := insights.NewActivityLogAlertsClientWithBaseURI(baseURI, subscriptionID)
 
 	// Create an authorizer
@@ -604,8 +776,16 @@ func CreateActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLo
 	return &client, nil
 }
 
-// CreateDiagnosticsSettingsClientE returns a diagnostics settings client
-func CreateDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
+// CreateActivityLogAlertsClientE gets an Activity Log Alerts client in the specified Azure Subscription.
+//
+// Deprecated: Use [CreateActivityLogAlertsClientContextE] instead.
+func CreateActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
+	return CreateActivityLogAlertsClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateDiagnosticsSettingsClientContextE returns a diagnostics settings client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateDiagnosticsSettingsClientContextE(_ context.Context, subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -630,8 +810,16 @@ func CreateDiagnosticsSettingsClientE(subscriptionID string) (*insights.Diagnost
 	return &client, nil
 }
 
-// CreateNsgDefaultRulesClientE returns an NSG default (platform) rules client.
-func CreateNsgDefaultRulesClientE(subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
+// CreateDiagnosticsSettingsClientE returns a diagnostics settings client.
+//
+// Deprecated: Use [CreateDiagnosticsSettingsClientContextE] instead.
+func CreateDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
+	return CreateDiagnosticsSettingsClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNsgDefaultRulesClientContextE returns an NSG default (platform) rules client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateNsgDefaultRulesClientContextE(_ context.Context, subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -640,8 +828,16 @@ func CreateNsgDefaultRulesClientE(subscriptionID string) (*armnetwork.DefaultSec
 	return clientFactory.NewDefaultSecurityRulesClient(), nil
 }
 
-// CreateNsgCustomRulesClientE returns an NSG custom (user) rules client.
-func CreateNsgCustomRulesClientE(subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
+// CreateNsgDefaultRulesClientE returns an NSG default (platform) rules client.
+//
+// Deprecated: Use [CreateNsgDefaultRulesClientContextE] instead.
+func CreateNsgDefaultRulesClientE(subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
+	return CreateNsgDefaultRulesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNsgCustomRulesClientContextE returns an NSG custom (user) rules client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateNsgCustomRulesClientContextE(_ context.Context, subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -650,8 +846,16 @@ func CreateNsgCustomRulesClientE(subscriptionID string) (*armnetwork.SecurityRul
 	return clientFactory.NewSecurityRulesClient(), nil
 }
 
-// CreateNewNetworkInterfacesClientE returns a network interfaces client.
-func CreateNewNetworkInterfacesClientE(subscriptionID string) (*armnetwork.InterfacesClient, error) {
+// CreateNsgCustomRulesClientE returns an NSG custom (user) rules client.
+//
+// Deprecated: Use [CreateNsgCustomRulesClientContextE] instead.
+func CreateNsgCustomRulesClientE(subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
+	return CreateNsgCustomRulesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNewNetworkInterfacesClientContextE returns a network interfaces client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateNewNetworkInterfacesClientContextE(_ context.Context, subscriptionID string) (*armnetwork.InterfacesClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -660,8 +864,16 @@ func CreateNewNetworkInterfacesClientE(subscriptionID string) (*armnetwork.Inter
 	return clientFactory.NewInterfacesClient(), nil
 }
 
-// CreateNewNetworkInterfaceIPConfigurationClientE returns a NIC IP configuration client.
-func CreateNewNetworkInterfaceIPConfigurationClientE(subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
+// CreateNewNetworkInterfacesClientE returns a network interfaces client.
+//
+// Deprecated: Use [CreateNewNetworkInterfacesClientContextE] instead.
+func CreateNewNetworkInterfacesClientE(subscriptionID string) (*armnetwork.InterfacesClient, error) {
+	return CreateNewNetworkInterfacesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNewNetworkInterfaceIPConfigurationClientContextE returns a NIC IP configuration client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateNewNetworkInterfaceIPConfigurationClientContextE(_ context.Context, subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -670,8 +882,16 @@ func CreateNewNetworkInterfaceIPConfigurationClientE(subscriptionID string) (*ar
 	return clientFactory.NewInterfaceIPConfigurationsClient(), nil
 }
 
-// CreatePublicIPAddressesClientE returns a public IP addresses client.
-func CreatePublicIPAddressesClientE(subscriptionID string) (*armnetwork.PublicIPAddressesClient, error) {
+// CreateNewNetworkInterfaceIPConfigurationClientE returns a NIC IP configuration client.
+//
+// Deprecated: Use [CreateNewNetworkInterfaceIPConfigurationClientContextE] instead.
+func CreateNewNetworkInterfaceIPConfigurationClientE(subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
+	return CreateNewNetworkInterfaceIPConfigurationClientContextE(context.Background(), subscriptionID)
+}
+
+// CreatePublicIPAddressesClientContextE returns a public IP addresses client.
+// The ctx parameter supports cancellation and timeouts.
+func CreatePublicIPAddressesClientContextE(_ context.Context, subscriptionID string) (*armnetwork.PublicIPAddressesClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -680,8 +900,16 @@ func CreatePublicIPAddressesClientE(subscriptionID string) (*armnetwork.PublicIP
 	return clientFactory.NewPublicIPAddressesClient(), nil
 }
 
-// CreateLoadBalancerClientE returns a load balancer client.
-func CreateLoadBalancerClientE(subscriptionID string) (*armnetwork.LoadBalancersClient, error) {
+// CreatePublicIPAddressesClientE returns a public IP addresses client.
+//
+// Deprecated: Use [CreatePublicIPAddressesClientContextE] instead.
+func CreatePublicIPAddressesClientE(subscriptionID string) (*armnetwork.PublicIPAddressesClient, error) {
+	return CreatePublicIPAddressesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateLoadBalancerClientContextE returns a load balancer client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateLoadBalancerClientContextE(_ context.Context, subscriptionID string) (*armnetwork.LoadBalancersClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -690,8 +918,16 @@ func CreateLoadBalancerClientE(subscriptionID string) (*armnetwork.LoadBalancers
 	return clientFactory.NewLoadBalancersClient(), nil
 }
 
-// CreateLoadBalancerFrontendIPConfigClientE returns a load balancer frontend IP configuration client.
-func CreateLoadBalancerFrontendIPConfigClientE(subscriptionID string) (*armnetwork.LoadBalancerFrontendIPConfigurationsClient, error) {
+// CreateLoadBalancerClientE returns a load balancer client.
+//
+// Deprecated: Use [CreateLoadBalancerClientContextE] instead.
+func CreateLoadBalancerClientE(subscriptionID string) (*armnetwork.LoadBalancersClient, error) {
+	return CreateLoadBalancerClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateLoadBalancerFrontendIPConfigClientContextE returns a load balancer frontend IP configuration client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateLoadBalancerFrontendIPConfigClientContextE(_ context.Context, subscriptionID string) (*armnetwork.LoadBalancerFrontendIPConfigurationsClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -700,8 +936,16 @@ func CreateLoadBalancerFrontendIPConfigClientE(subscriptionID string) (*armnetwo
 	return clientFactory.NewLoadBalancerFrontendIPConfigurationsClient(), nil
 }
 
-// CreateNewSubnetClientE returns a subnet client.
-func CreateNewSubnetClientE(subscriptionID string) (*armnetwork.SubnetsClient, error) {
+// CreateLoadBalancerFrontendIPConfigClientE returns a load balancer frontend IP configuration client.
+//
+// Deprecated: Use [CreateLoadBalancerFrontendIPConfigClientContextE] instead.
+func CreateLoadBalancerFrontendIPConfigClientE(subscriptionID string) (*armnetwork.LoadBalancerFrontendIPConfigurationsClient, error) {
+	return CreateLoadBalancerFrontendIPConfigClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNewSubnetClientContextE returns a subnet client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateNewSubnetClientContextE(_ context.Context, subscriptionID string) (*armnetwork.SubnetsClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -710,8 +954,16 @@ func CreateNewSubnetClientE(subscriptionID string) (*armnetwork.SubnetsClient, e
 	return clientFactory.NewSubnetsClient(), nil
 }
 
-// CreateNetworkManagementClientE returns a network management client.
-func CreateNetworkManagementClientE(subscriptionID string) (*armnetwork.ManagementClient, error) {
+// CreateNewSubnetClientE returns a subnet client.
+//
+// Deprecated: Use [CreateNewSubnetClientContextE] instead.
+func CreateNewSubnetClientE(subscriptionID string) (*armnetwork.SubnetsClient, error) {
+	return CreateNewSubnetClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNetworkManagementClientContextE returns a network management client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateNetworkManagementClientContextE(_ context.Context, subscriptionID string) (*armnetwork.ManagementClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -720,8 +972,16 @@ func CreateNetworkManagementClientE(subscriptionID string) (*armnetwork.Manageme
 	return clientFactory.NewManagementClient(), nil
 }
 
-// CreateNewVirtualNetworkClientE returns a virtual network client.
-func CreateNewVirtualNetworkClientE(subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+// CreateNetworkManagementClientE returns a network management client.
+//
+// Deprecated: Use [CreateNetworkManagementClientContextE] instead.
+func CreateNetworkManagementClientE(subscriptionID string) (*armnetwork.ManagementClient, error) {
+	return CreateNetworkManagementClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNewVirtualNetworkClientContextE returns a virtual network client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateNewVirtualNetworkClientContextE(_ context.Context, subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -730,15 +990,31 @@ func CreateNewVirtualNetworkClientE(subscriptionID string) (*armnetwork.VirtualN
 	return clientFactory.NewVirtualNetworksClient(), nil
 }
 
-// CreateAppServiceClientE returns an App service client instance configured with the
+// CreateNewVirtualNetworkClientE returns a virtual network client.
+//
+// Deprecated: Use [CreateNewVirtualNetworkClientContextE] instead.
+func CreateNewVirtualNetworkClientE(subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+	return CreateNewVirtualNetworkClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateAppServiceClientContextE returns an App service client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
+// The ctx parameter supports cancellation and timeouts.
+func CreateAppServiceClientContextE(_ context.Context, subscriptionID string) (*armappservice.WebAppsClient, error) {
 	clientFactory, err := getArmAppServiceClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewWebAppsClient(), nil
+}
+
+// CreateAppServiceClientE returns an App service client instance configured with the
+// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+//
+// Deprecated: Use [CreateAppServiceClientContextE] instead.
+func CreateAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
+	return CreateAppServiceClientContextE(context.Background(), subscriptionID)
 }
 
 // getArmAppServiceClientFactory gets an arm app service client factory
@@ -769,9 +1045,10 @@ func getArmAppServiceClientFactory(subscriptionID string) (*armappservice.Client
 	})
 }
 
-// CreateContainerRegistryClientE returns an ACR client instance configured with the
+// CreateContainerRegistryClientContextE returns an ACR client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
+// The ctx parameter supports cancellation and timeouts.
+func CreateContainerRegistryClientContextE(_ context.Context, subscriptionID string) (*containerregistry.RegistriesClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -790,9 +1067,18 @@ func CreateContainerRegistryClientE(subscriptionID string) (*containerregistry.R
 	return &registryClient, nil
 }
 
-// CreateContainerInstanceClientE returns an ACI client instance configured with the
+// CreateContainerRegistryClientE returns an ACR client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateContainerInstanceClientE(subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
+//
+// Deprecated: Use [CreateContainerRegistryClientContextE] instead.
+func CreateContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
+	return CreateContainerRegistryClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateContainerInstanceClientContextE returns an ACI client instance configured with the
+// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// The ctx parameter supports cancellation and timeouts.
+func CreateContainerInstanceClientContextE(_ context.Context, subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -811,9 +1097,18 @@ func CreateContainerInstanceClientE(subscriptionID string) (*containerinstance.C
 	return &instanceClient, nil
 }
 
-// CreateFrontDoorClientE returns an AFD client instance configured with the
+// CreateContainerInstanceClientE returns an ACI client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
+//
+// Deprecated: Use [CreateContainerInstanceClientContextE] instead.
+func CreateContainerInstanceClientE(subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
+	return CreateContainerInstanceClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateFrontDoorClientContextE returns an AFD client instance configured with the
+// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// The ctx parameter supports cancellation and timeouts.
+func CreateFrontDoorClientContextE(_ context.Context, subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -832,9 +1127,18 @@ func CreateFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient,
 	return &client, nil
 }
 
-// CreateFrontDoorFrontendEndpointClientE returns an AFD Frontend Endpoints client instance configured with the
+// CreateFrontDoorClientE returns an AFD client instance configured with the
 // correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
+//
+// Deprecated: Use [CreateFrontDoorClientContextE] instead.
+func CreateFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
+	return CreateFrontDoorClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateFrontDoorFrontendEndpointClientContextE returns an AFD Frontend Endpoints client instance configured with the
+// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// The ctx parameter supports cancellation and timeouts.
+func CreateFrontDoorFrontendEndpointClientContextE(_ context.Context, subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
 	// Validate Azure subscription ID
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
@@ -853,8 +1157,17 @@ func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.F
 	return &client, nil
 }
 
-// CreateSynapseWorkspaceClientE is a helper function that will setup a synapse workspace client.
-func CreateSynapseWorkspaceClientE(subscriptionID string) (*armsynapse.WorkspacesClient, error) {
+// CreateFrontDoorFrontendEndpointClientE returns an AFD Frontend Endpoints client instance configured with the
+// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+//
+// Deprecated: Use [CreateFrontDoorFrontendEndpointClientContextE] instead.
+func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
+	return CreateFrontDoorFrontendEndpointClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateSynapseWorkspaceClientContextE is a helper function that will setup a synapse workspace client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateSynapseWorkspaceClientContextE(_ context.Context, subscriptionID string) (*armsynapse.WorkspacesClient, error) {
 	clientFactory, err := getArmSynapseClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -863,8 +1176,16 @@ func CreateSynapseWorkspaceClientE(subscriptionID string) (*armsynapse.Workspace
 	return clientFactory.NewWorkspacesClient(), nil
 }
 
-// CreateSynapseSQLPoolClientE is a helper function that will setup a Synapse SQL pool client.
-func CreateSynapseSQLPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
+// CreateSynapseWorkspaceClientE is a helper function that will setup a synapse workspace client.
+//
+// Deprecated: Use [CreateSynapseWorkspaceClientContextE] instead.
+func CreateSynapseWorkspaceClientE(subscriptionID string) (*armsynapse.WorkspacesClient, error) {
+	return CreateSynapseWorkspaceClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateSynapseSQLPoolClientContextE is a helper function that will setup a Synapse SQL pool client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateSynapseSQLPoolClientContextE(_ context.Context, subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
 	clientFactory, err := getArmSynapseClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -873,13 +1194,30 @@ func CreateSynapseSQLPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsCli
 	return clientFactory.NewSQLPoolsClient(), nil
 }
 
+// CreateSynapseSQLPoolClientE is a helper function that will setup a Synapse SQL pool client.
+//
+// Deprecated: Use [CreateSynapseSQLPoolClientContextE] instead.
+func CreateSynapseSQLPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
+	return CreateSynapseSQLPoolClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateSynapseSqlPoolClientContextE is a helper function that will setup a Synapse SQL pool client.
+// The ctx parameter supports cancellation and timeouts.
+//
+// Deprecated: Use [CreateSynapseSQLPoolClientContextE] instead.
+//
+//nolint:staticcheck,revive // preserving existing function name
+func CreateSynapseSqlPoolClientContextE(ctx context.Context, subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
+	return CreateSynapseSQLPoolClientContextE(ctx, subscriptionID)
+}
+
 // CreateSynapseSqlPoolClientE is a helper function that will setup a Synapse SQL pool client.
 //
-// Deprecated: Use [CreateSynapseSQLPoolClientE] instead.
+// Deprecated: Use [CreateSynapseSQLPoolClientContextE] instead.
 //
 //nolint:staticcheck,revive // preserving existing function name
 func CreateSynapseSqlPoolClientE(subscriptionID string) (*armsynapse.SQLPoolsClient, error) {
-	return CreateSynapseSQLPoolClientE(subscriptionID)
+	return CreateSynapseSQLPoolClientContextE(context.Background(), subscriptionID)
 }
 
 // getArmSynapseClientFactory gets an arm synapse client factory
@@ -910,8 +1248,9 @@ func getArmSynapseClientFactory(subscriptionID string) (*armsynapse.ClientFactor
 	})
 }
 
-// CreateDataFactoriesClientE is a helper function that will setup a data factory client.
-func CreateDataFactoriesClientE(subscriptionID string) (*armdatafactory.FactoriesClient, error) {
+// CreateDataFactoriesClientContextE is a helper function that will setup a data factory client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateDataFactoriesClientContextE(_ context.Context, subscriptionID string) (*armdatafactory.FactoriesClient, error) {
 	clientFactory, err := getArmDataFactoryClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -920,8 +1259,16 @@ func CreateDataFactoriesClientE(subscriptionID string) (*armdatafactory.Factorie
 	return clientFactory.NewFactoriesClient(), nil
 }
 
-// CreateManagedEnvironmentsClientE creates a managed environments client for Azure Container Apps.
-func CreateManagedEnvironmentsClientE(subscriptionID string) (*armappcontainers.ManagedEnvironmentsClient, error) {
+// CreateDataFactoriesClientE is a helper function that will setup a data factory client.
+//
+// Deprecated: Use [CreateDataFactoriesClientContextE] instead.
+func CreateDataFactoriesClientE(subscriptionID string) (*armdatafactory.FactoriesClient, error) {
+	return CreateDataFactoriesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateManagedEnvironmentsClientContextE creates a managed environments client for Azure Container Apps.
+// The ctx parameter supports cancellation and timeouts.
+func CreateManagedEnvironmentsClientContextE(_ context.Context, subscriptionID string) (*armappcontainers.ManagedEnvironmentsClient, error) {
 	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -932,8 +1279,16 @@ func CreateManagedEnvironmentsClientE(subscriptionID string) (*armappcontainers.
 	return client, nil
 }
 
-// CreateResourceGroupClientV2E creates a v2 resource group client using the ARM SDK.
-func CreateResourceGroupClientV2E(subscriptionID string) (*armresources.ResourceGroupsClient, error) {
+// CreateManagedEnvironmentsClientE creates a managed environments client for Azure Container Apps.
+//
+// Deprecated: Use [CreateManagedEnvironmentsClientContextE] instead.
+func CreateManagedEnvironmentsClientE(subscriptionID string) (*armappcontainers.ManagedEnvironmentsClient, error) {
+	return CreateManagedEnvironmentsClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateResourceGroupClientV2ContextE creates a v2 resource group client using the ARM SDK.
+// The ctx parameter supports cancellation and timeouts.
+func CreateResourceGroupClientV2ContextE(_ context.Context, subscriptionID string) (*armresources.ResourceGroupsClient, error) {
 	clientFactory, err := getArmResourcesClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -942,8 +1297,16 @@ func CreateResourceGroupClientV2E(subscriptionID string) (*armresources.Resource
 	return clientFactory.NewResourceGroupsClient(), nil
 }
 
-// CreateContainerAppsClientE creates a Container Apps client for Azure Container Apps.
-func CreateContainerAppsClientE(subscriptionID string) (*armappcontainers.ContainerAppsClient, error) {
+// CreateResourceGroupClientV2E creates a v2 resource group client using the ARM SDK.
+//
+// Deprecated: Use [CreateResourceGroupClientV2ContextE] instead.
+func CreateResourceGroupClientV2E(subscriptionID string) (*armresources.ResourceGroupsClient, error) {
+	return CreateResourceGroupClientV2ContextE(context.Background(), subscriptionID)
+}
+
+// CreateContainerAppsClientContextE creates a Container Apps client for Azure Container Apps.
+// The ctx parameter supports cancellation and timeouts.
+func CreateContainerAppsClientContextE(_ context.Context, subscriptionID string) (*armappcontainers.ContainerAppsClient, error) {
 	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -954,8 +1317,16 @@ func CreateContainerAppsClientE(subscriptionID string) (*armappcontainers.Contai
 	return client, nil
 }
 
-// CreateContainerAppJobsClientE creates a Container App Jobs client for Azure Container Apps.
-func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.JobsClient, error) {
+// CreateContainerAppsClientE creates a Container Apps client for Azure Container Apps.
+//
+// Deprecated: Use [CreateContainerAppsClientContextE] instead.
+func CreateContainerAppsClientE(subscriptionID string) (*armappcontainers.ContainerAppsClient, error) {
+	return CreateContainerAppsClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateContainerAppJobsClientContextE creates a Container App Jobs client for Azure Container Apps.
+// The ctx parameter supports cancellation and timeouts.
+func CreateContainerAppJobsClientContextE(_ context.Context, subscriptionID string) (*armappcontainers.JobsClient, error) {
 	clientFactory, err := getArmAppContainersClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -966,8 +1337,16 @@ func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.Job
 	return client, nil
 }
 
-// GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
-func GetKeyVaultURISuffixE() (string, error) {
+// CreateContainerAppJobsClientE creates a Container App Jobs client for Azure Container Apps.
+//
+// Deprecated: Use [CreateContainerAppJobsClientContextE] instead.
+func CreateContainerAppJobsClientE(subscriptionID string) (*armappcontainers.JobsClient, error) {
+	return CreateContainerAppJobsClientContextE(context.Background(), subscriptionID)
+}
+
+// GetKeyVaultURISuffixContextE returns the proper KeyVault URI suffix for the configured Azure environment.
+// The ctx parameter supports cancellation and timeouts.
+func GetKeyVaultURISuffixContextE(_ context.Context) (string, error) {
 	envName := getDefaultEnvironmentName()
 
 	switch strings.ToUpper(envName) {
@@ -982,8 +1361,16 @@ func GetKeyVaultURISuffixE() (string, error) {
 	}
 }
 
-// GetStorageURISuffixE returns the proper storage URI suffix for the configured Azure environment.
-func GetStorageURISuffixE() (string, error) {
+// GetKeyVaultURISuffixE returns the proper KeyVault URI suffix for the configured Azure environment.
+//
+// Deprecated: Use [GetKeyVaultURISuffixContextE] instead.
+func GetKeyVaultURISuffixE() (string, error) {
+	return GetKeyVaultURISuffixContextE(context.Background())
+}
+
+// GetStorageURISuffixContextE returns the proper storage URI suffix for the configured Azure environment.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageURISuffixContextE(_ context.Context) (string, error) {
 	envName := getDefaultEnvironmentName()
 
 	switch strings.ToUpper(envName) {
@@ -996,6 +1383,13 @@ func GetStorageURISuffixE() (string, error) {
 	default:
 		return "", &UnknownEnvironmentError{EnvironmentName: envName}
 	}
+}
+
+// GetStorageURISuffixE returns the proper storage URI suffix for the configured Azure environment.
+//
+// Deprecated: Use [GetStorageURISuffixContextE] instead.
+func GetStorageURISuffixE() (string, error) {
+	return GetStorageURISuffixContextE(context.Background())
 }
 
 // getDefaultEnvironmentName returns either a configured Azure environment name, or the public default.

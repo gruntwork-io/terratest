@@ -145,7 +145,7 @@ func testSSHCertificateToPublicHost(t *testing.T, terraformOptions *terraform.Op
 	command := fmt.Sprintf("echo -n '%s'", expectedTextSSHCert)
 
 	// Verify that we can SSH to the instance and run commands.
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err != nil {
 			return "", err
@@ -163,7 +163,7 @@ func testSSHCertificateToPublicHost(t *testing.T, terraformOptions *terraform.Op
 	description = "SSH to public host " + publicInstanceIP + " with error command"
 
 	// Verify that we can SSH to the instance, run the command which forces an error, and see the output.
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err == nil {
 			return "", errors.New("Expected SSH command to return an error but got none")

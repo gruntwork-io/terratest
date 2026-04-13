@@ -51,7 +51,7 @@ func CheckAvailabilitySetContainsVMContext(t testing.TestingT, ctx context.Conte
 // CheckAvailabilitySetContainsVMContextE checks if the Virtual Machine is contained in the Availability Set VMs.
 // The ctx parameter supports cancellation and timeouts.
 func CheckAvailabilitySetContainsVMContextE(t testing.TestingT, ctx context.Context, vmName string, avsName string, resGroupName string, subscriptionID string) (bool, error) {
-	client, err := CreateAvailabilitySetClientE(subscriptionID)
+	client, err := CreateAvailabilitySetClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return false, err
 	}
@@ -86,7 +86,7 @@ func GetAvailabilitySetVMNamesInCapsContext(t testing.TestingT, ctx context.Cont
 // GetAvailabilitySetVMNamesInCapsContextE gets a list of VM names in the specified Azure Availability Set.
 // The ctx parameter supports cancellation and timeouts.
 func GetAvailabilitySetVMNamesInCapsContextE(t testing.TestingT, ctx context.Context, avsName string, resGroupName string, subscriptionID string) ([]string, error) {
-	client, err := CreateAvailabilitySetClientE(subscriptionID)
+	client, err := CreateAvailabilitySetClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func GetAvailabilitySetContextE(t testing.TestingT, ctx context.Context, avsName
 		return nil, err
 	}
 
-	client, err := CreateAvailabilitySetClientE(subscriptionID)
+	client, err := CreateAvailabilitySetClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

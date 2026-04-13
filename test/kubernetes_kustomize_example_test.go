@@ -40,16 +40,16 @@ func TestKubernetesKustomizeExample(t *testing.T) {
 	// - Random namespace
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 
-	k8s.CreateNamespace(t, options, namespaceName)
+	k8s.CreateNamespaceContext(t, t.Context(), options, namespaceName)
 	// website::tag::5::Make sure to delete the namespace at the end of the test
-	defer k8s.DeleteNamespace(t, options, namespaceName)
+	defer k8s.DeleteNamespaceContext(t, t.Context(), options, namespaceName)
 
 	// website::tag::6::At the end of the test, run `kubectl delete -f RESOURCE_CONFIG` to clean up any resources that were created.
-	defer k8s.KubectlDeleteFromKustomize(t, options, kubeResourcePath)
+	defer k8s.KubectlDeleteFromKustomizeContext(t, t.Context(), options, kubeResourcePath)
 
 	// website::tag::3::Apply kubectl with 'kubectl apply -f RESOURCE_CONFIG' command.
 	// This will run `kubectl apply -f RESOURCE_CONFIG` and fail the test if there are any errors
-	k8s.KubectlApplyFromKustomize(t, options, kubeResourcePath)
+	k8s.KubectlApplyFromKustomizeContext(t, t.Context(), options, kubeResourcePath)
 
 	// website::tag::4::Check if NGINX service was deployed successfully.
 	// This will get the service resource and verify that it exists and was retrieved successfully. This function will

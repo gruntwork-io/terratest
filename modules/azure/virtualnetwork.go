@@ -112,7 +112,7 @@ func GetVirtualNetworkSubnetsContext(t testing.TestingT, ctx context.Context, vn
 func GetVirtualNetworkSubnetsContextE(ctx context.Context, vnetName string, resGroupName string, subscriptionID string) (map[string]string, error) {
 	subNetDetails := map[string]string{}
 
-	client, err := GetSubnetClientE(subscriptionID)
+	client, err := GetSubnetClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return subNetDetails, err
 	}
@@ -175,7 +175,7 @@ func GetSubnetContextE(ctx context.Context, subnetName string, vnetName string, 
 	}
 
 	// Get the client reference
-	client, err := GetSubnetClientE(subscriptionID)
+	client, err := GetSubnetClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -189,9 +189,17 @@ func GetSubnetContextE(ctx context.Context, subnetName string, vnetName string, 
 	return &resp.Subnet, nil
 }
 
+// GetSubnetClientContextE creates a subnet client.
+// The ctx parameter supports cancellation and timeouts.
+func GetSubnetClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.SubnetsClient, error) {
+	return CreateNewSubnetClientContextE(ctx, subscriptionID)
+}
+
 // GetSubnetClientE creates a subnet client.
+//
+// Deprecated: Use [GetSubnetClientContextE] instead.
 func GetSubnetClientE(subscriptionID string) (*armnetwork.SubnetsClient, error) {
-	return CreateNewSubnetClientE(subscriptionID)
+	return GetSubnetClientContextE(context.Background(), subscriptionID)
 }
 
 // GetVirtualNetworkContextE gets Virtual Network in the specified Azure Resource Group.
@@ -204,7 +212,7 @@ func GetVirtualNetworkContextE(ctx context.Context, vnetName string, resGroupNam
 	}
 
 	// Get the client reference
-	client, err := GetVirtualNetworksClientE(subscriptionID)
+	client, err := GetVirtualNetworksClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +226,15 @@ func GetVirtualNetworkContextE(ctx context.Context, vnetName string, resGroupNam
 	return &resp.VirtualNetwork, nil
 }
 
+// GetVirtualNetworksClientContextE creates a virtual network client in the specified Azure Subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualNetworksClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+	return CreateNewVirtualNetworkClientContextE(ctx, subscriptionID)
+}
+
 // GetVirtualNetworksClientE creates a virtual network client in the specified Azure Subscription.
+//
+// Deprecated: Use [GetVirtualNetworksClientContextE] instead.
 func GetVirtualNetworksClientE(subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
-	return CreateNewVirtualNetworkClientE(subscriptionID)
+	return GetVirtualNetworksClientContextE(context.Background(), subscriptionID)
 }

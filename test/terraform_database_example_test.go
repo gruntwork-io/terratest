@@ -43,7 +43,7 @@ func TestTerraformDatabaseExample(t *testing.T) {
 	description := "Executing commands on database " + dbConfig.Host
 
 	// Verify that we can connect to the database and run SQL commands
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		// Connect to specific database, i.e. postgres
 		db, err := database.DBConnectionWithContextE(t, t.Context(), "postgres", &dbConfig)
 		if err != nil {

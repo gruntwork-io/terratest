@@ -10,27 +10,46 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetVirtualMachineClient is a helper function that will setup an Azure Virtual Machine client on your behalf.
+// GetVirtualMachineClientContext is a helper function that will setup an Azure Virtual Machine client on your behalf.
 // This function would fail the test if there is an error.
-func GetVirtualMachineClient(t testing.TestingT, subscriptionID string) *armcompute.VirtualMachinesClient {
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineClientContext(t testing.TestingT, ctx context.Context, subscriptionID string) *armcompute.VirtualMachinesClient {
 	t.Helper()
 
-	vmClient, err := GetVirtualMachineClientE(subscriptionID)
+	vmClient, err := GetVirtualMachineClientContextE(ctx, subscriptionID)
 	require.NoError(t, err)
 
 	return vmClient
 }
 
-// GetVirtualMachineClientE is a helper function that will setup an Azure Virtual Machine client on your behalf.
-func GetVirtualMachineClientE(subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
+// GetVirtualMachineClient is a helper function that will setup an Azure Virtual Machine client on your behalf.
+// This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetVirtualMachineClientContext] instead.
+func GetVirtualMachineClient(t testing.TestingT, subscriptionID string) *armcompute.VirtualMachinesClient {
+	t.Helper()
+
+	return GetVirtualMachineClientContext(t, context.Background(), subscriptionID) //nolint:staticcheck
+}
+
+// GetVirtualMachineClientContextE is a helper function that will setup an Azure Virtual Machine client on your behalf.
+// The ctx parameter supports cancellation and timeouts.
+func GetVirtualMachineClientContextE(ctx context.Context, subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
 	// snippet-tag-start::client_factory_example.helper
-	vmClient, err := CreateVirtualMachinesClientE(subscriptionID)
+	vmClient, err := CreateVirtualMachinesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 	// snippet-tag-end::client_factory_example.helper
 
 	return vmClient, nil
+}
+
+// GetVirtualMachineClientE is a helper function that will setup an Azure Virtual Machine client on your behalf.
+//
+// Deprecated: Use [GetVirtualMachineClientContextE] instead.
+func GetVirtualMachineClientE(subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
+	return GetVirtualMachineClientContextE(context.Background(), subscriptionID)
 }
 
 // VirtualMachineExistsContext indicates whether the specified Azure Virtual Machine exists.
@@ -347,7 +366,7 @@ func ListVirtualMachinesForResourceGroupContext(t testing.TestingT, ctx context.
 // ListVirtualMachinesForResourceGroupContextE gets a list of all Virtual Machine names in the specified Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func ListVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGroupName string, subscriptionID string) ([]string, error) {
-	vmClient, err := GetVirtualMachineClientE(subscriptionID)
+	vmClient, err := GetVirtualMachineClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +410,7 @@ func GetVirtualMachinesForResourceGroupContext(t testing.TestingT, ctx context.C
 // VM Object represents the entire set of VM compute properties accessible by using the VM name as the map key.
 // The ctx parameter supports cancellation and timeouts.
 func GetVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGroupName string, subscriptionID string) (map[string]armcompute.VirtualMachineProperties, error) {
-	vmClient, err := GetVirtualMachineClientE(subscriptionID)
+	vmClient, err := GetVirtualMachineClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +475,7 @@ func GetVirtualMachineContextE(ctx context.Context, vmName string, resGroupName 
 		return nil, err
 	}
 
-	client, err := GetVirtualMachineClientE(subscriptionID)
+	client, err := GetVirtualMachineClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

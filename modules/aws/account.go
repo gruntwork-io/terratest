@@ -95,6 +95,15 @@ func NewStsClientContext(t testing.TestingT, ctx context.Context, region string)
 	return client
 }
 
+// NewStsClient creates a new STS client.
+//
+// Deprecated: Use [NewStsClientContext] instead.
+func NewStsClient(t testing.TestingT, region string) *sts.Client {
+	t.Helper()
+
+	return NewStsClientContext(t, context.Background(), region)
+}
+
 // NewStsClientE creates a new STS client.
 //
 // Deprecated: Use [NewStsClientContextE] instead.

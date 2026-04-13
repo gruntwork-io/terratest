@@ -124,7 +124,7 @@ func testSSHToPublicHost(t *testing.T, terraformOptions *terraform.Options, keyP
 	command := fmt.Sprintf("echo -n '%s'", expectedTextSSH)
 
 	// Verify that we can SSH to the Instance and run commands
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err != nil {
 			return "", err
@@ -142,7 +142,7 @@ func testSSHToPublicHost(t *testing.T, terraformOptions *terraform.Options, keyP
 	description = "SSH to public host " + publicInstanceIP + " with error command"
 
 	// Verify that we can SSH to the Instance, run the command and see the output
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err == nil {
 			return "", errors.New("Expected SSH command to return an error but got none")
@@ -196,7 +196,7 @@ func sshToPrivateHost(t *testing.T, publicInstanceIP string, privateInstanceIP s
 	command := fmt.Sprintf("echo -n '%s'", expectedTextSSH)
 
 	// Verify that we can SSH to the Instance and run commands
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		actualText, err := ssh.CheckPrivateSSHConnectionContextE(t, t.Context(), &publicHost, &privateHost, command)
 		if err != nil {
 			return "", err
@@ -230,7 +230,7 @@ func testSCPToPublicHost(t *testing.T, terraformOptions *terraform.Options, keyP
 	description := "SCP file to public host " + publicInstanceIP
 
 	// Verify that we can SSH to the Instance and run commands
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		err := ssh.SCPFileToContextE(t, t.Context(), &publicHost, os.FileMode(0644), "/tmp/test.txt", expectedTextSSH)
 		if err != nil {
 			return "", err
@@ -278,7 +278,7 @@ func testSSHAgentToPublicHost(t *testing.T, terraformOptions *terraform.Options,
 	command := fmt.Sprintf("echo -n '%s'", expectedTextSSH)
 
 	// Verify that we can SSH to the Instance and run commands
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		actualText, err := ssh.CheckSSHCommandContextE(t, t.Context(), &publicHost, command)
 		if err != nil {
 			return "", err
@@ -327,7 +327,7 @@ func testSSHAgentToPrivateHost(t *testing.T, terraformOptions *terraform.Options
 	command := fmt.Sprintf("echo -n '%s'", expectedTextSSH)
 
 	// Verify that we can SSH to the Instance and run commands
-	retry.DoWithRetry(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), description, maxRetries, timeBetweenRetries, func() (string, error) {
 		actualText, err := ssh.CheckPrivateSSHConnectionContextE(t, t.Context(), &publicHost, &privateHost, command)
 		if err != nil {
 			return "", err
