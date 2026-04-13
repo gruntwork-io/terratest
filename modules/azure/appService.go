@@ -82,7 +82,7 @@ func GetAppServiceContextE(ctx context.Context, appName string, resGroupName str
 		return nil, err
 	}
 
-	client, err := GetAppServiceClientE(subscriptionID)
+	client, err := GetAppServiceClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +102,20 @@ func GetAppServiceE(appName string, resGroupName string, subscriptionID string) 
 	return GetAppServiceContextE(context.Background(), appName, resGroupName, subscriptionID)
 }
 
-// GetAppServiceClientE creates and returns an App Service web apps client.
-func GetAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
+// GetAppServiceClientContextE creates and returns an App Service web apps client.
+// The ctx parameter supports cancellation and timeouts.
+func GetAppServiceClientContextE(_ context.Context, subscriptionID string) (*armappservice.WebAppsClient, error) {
 	clientFactory, err := getArmAppServiceClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewWebAppsClient(), nil
+}
+
+// GetAppServiceClientE creates and returns an App Service web apps client.
+//
+// Deprecated: Use [GetAppServiceClientContextE] instead.
+func GetAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
+	return GetAppServiceClientContextE(context.Background(), subscriptionID)
 }

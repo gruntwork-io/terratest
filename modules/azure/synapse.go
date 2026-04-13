@@ -23,7 +23,7 @@ func GetSynapseWorkspaceContext(t testing.TestingT, ctx context.Context, resGrou
 // GetSynapseWorkspaceContextE retrieves the synapse workspace for the given subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetSynapseWorkspaceContextE(ctx context.Context, subscriptionID string, resGroupName string, workspaceName string) (*armsynapse.Workspace, error) {
-	synapseClient, err := CreateSynapseWorkspaceClientE(subscriptionID)
+	synapseClient, err := CreateSynapseWorkspaceClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func GetSynapseSQLPoolContext(t testing.TestingT, ctx context.Context, resGroupN
 // GetSynapseSQLPoolContextE retrieves the synapse SQL pool for the given subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetSynapseSQLPoolContextE(ctx context.Context, subscriptionID string, resGroupName string, workspaceName string, sqlPoolName string) (*armsynapse.SQLPool, error) {
-	synapseSQLPoolClient, err := CreateSynapseSqlPoolClientE(subscriptionID)
+	synapseSQLPoolClient, err := CreateSynapseSqlPoolClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

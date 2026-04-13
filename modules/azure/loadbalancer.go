@@ -137,7 +137,7 @@ func GetLoadBalancerFrontendIPConfigContextE(ctx context.Context, feConfigName s
 	}
 
 	// Get the client reference
-	client, err := GetLoadBalancerFrontendIPConfigClientE(subscriptionID)
+	client, err := GetLoadBalancerFrontendIPConfigClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -151,9 +151,17 @@ func GetLoadBalancerFrontendIPConfigContextE(ctx context.Context, feConfigName s
 	return &resp.FrontendIPConfiguration, nil
 }
 
+// GetLoadBalancerFrontendIPConfigClientContextE gets a new Load Balancer Frontend IP Configuration client in the specified Azure Subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetLoadBalancerFrontendIPConfigClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.LoadBalancerFrontendIPConfigurationsClient, error) {
+	return CreateLoadBalancerFrontendIPConfigClientContextE(ctx, subscriptionID)
+}
+
 // GetLoadBalancerFrontendIPConfigClientE gets a new Load Balancer Frontend IP Configuration client in the specified Azure Subscription.
+//
+// Deprecated: Use [GetLoadBalancerFrontendIPConfigClientContextE] instead.
 func GetLoadBalancerFrontendIPConfigClientE(subscriptionID string) (*armnetwork.LoadBalancerFrontendIPConfigurationsClient, error) {
-	return CreateLoadBalancerFrontendIPConfigClientE(subscriptionID)
+	return GetLoadBalancerFrontendIPConfigClientContextE(context.Background(), subscriptionID)
 }
 
 // GetLoadBalancerContext gets a Load Balancer network resource in the specified Azure Resource Group.
@@ -178,7 +186,7 @@ func GetLoadBalancerContextE(ctx context.Context, loadBalancerName string, resou
 	}
 
 	// Get the client reference
-	client, err := GetLoadBalancerClientE(subscriptionID)
+	client, err := GetLoadBalancerClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +200,15 @@ func GetLoadBalancerContextE(ctx context.Context, loadBalancerName string, resou
 	return &resp.LoadBalancer, nil
 }
 
+// GetLoadBalancerClientContextE gets a new Load Balancer client in the specified Azure Subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetLoadBalancerClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.LoadBalancersClient, error) {
+	return CreateLoadBalancerClientContextE(ctx, subscriptionID)
+}
+
 // GetLoadBalancerClientE gets a new Load Balancer client in the specified Azure Subscription.
+//
+// Deprecated: Use [GetLoadBalancerClientContextE] instead.
 func GetLoadBalancerClientE(subscriptionID string) (*armnetwork.LoadBalancersClient, error) {
-	return CreateLoadBalancerClientE(subscriptionID)
+	return GetLoadBalancerClientContextE(context.Background(), subscriptionID)
 }

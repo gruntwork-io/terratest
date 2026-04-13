@@ -169,7 +169,7 @@ func BuildArtifactContextE(t testing.TestingT, ctx context.Context, options *Opt
 
 	description := fmt.Sprintf("%s %v", cmd.Command, cmd.Args)
 
-	output, err := retry.DoWithRetryableErrorsE(t, description, options.RetryableErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
+	output, err := retry.DoWithRetryableErrorsContextE(t, ctx, description, options.RetryableErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
 		return shell.RunCommandContextAndGetOutputE(t, ctx, &cmd)
 	})
 	if err != nil {
@@ -312,7 +312,7 @@ func packerInit(t testing.TestingT, ctx context.Context, options *Options) error
 
 	description := "Running Packer init"
 
-	_, err = retry.DoWithRetryableErrorsE(t, description, options.RetryableErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
+	_, err = retry.DoWithRetryableErrorsContextE(t, ctx, description, options.RetryableErrors, options.MaxRetries, options.TimeBetweenRetries, func() (string, error) {
 		return shell.RunCommandContextAndGetOutputE(t, ctx, &cmd)
 	})
 

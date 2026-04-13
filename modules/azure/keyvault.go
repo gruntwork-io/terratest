@@ -87,7 +87,7 @@ func KeyVaultCertificateExists(t testing.TestingT, keyVaultName string, certific
 // KeyVaultCertificateExistsContextE indicates whether a certificate exists in key vault; otherwise false.
 // The ctx parameter supports cancellation and timeouts.
 func KeyVaultCertificateExistsContextE(ctx context.Context, keyVaultName, certificateName string) (bool, error) {
-	client, err := GetKeyVaultCertificatesClientE(keyVaultName)
+	client, err := GetKeyVaultCertificatesClientContextE(ctx, keyVaultName)
 	if err != nil {
 		return false, err
 	}
@@ -120,7 +120,7 @@ func KeyVaultCertificateExistsE(keyVaultName, certificateName string) (bool, err
 // KeyVaultKeyExistsContextE indicates whether a key exists in the key vault; otherwise false.
 // The ctx parameter supports cancellation and timeouts.
 func KeyVaultKeyExistsContextE(ctx context.Context, keyVaultName, keyName string) (bool, error) {
-	client, err := GetKeyVaultKeysClientE(keyVaultName)
+	client, err := GetKeyVaultKeysClientContextE(ctx, keyVaultName)
 	if err != nil {
 		return false, err
 	}
@@ -153,7 +153,7 @@ func KeyVaultKeyExistsE(keyVaultName, keyName string) (bool, error) {
 // KeyVaultSecretExistsContextE indicates whether a secret exists in the key vault; otherwise false.
 // The ctx parameter supports cancellation and timeouts.
 func KeyVaultSecretExistsContextE(ctx context.Context, keyVaultName, secretName string) (bool, error) {
-	client, err := GetKeyVaultSecretsClientE(keyVaultName)
+	client, err := GetKeyVaultSecretsClientContextE(ctx, keyVaultName)
 	if err != nil {
 		return false, err
 	}
@@ -183,9 +183,10 @@ func KeyVaultSecretExistsE(keyVaultName, secretName string) (bool, error) {
 	return KeyVaultSecretExistsContextE(context.Background(), keyVaultName, secretName)
 }
 
-// GetKeyVaultSecretsClientE creates a KeyVault secrets client.
-func GetKeyVaultSecretsClientE(keyVaultName string) (*azsecrets.Client, error) {
-	keyVaultSuffix, err := GetKeyVaultURISuffixE()
+// GetKeyVaultSecretsClientContextE creates a KeyVault secrets client.
+// The ctx parameter supports cancellation and timeouts.
+func GetKeyVaultSecretsClientContextE(_ context.Context, keyVaultName string) (*azsecrets.Client, error) {
+	keyVaultSuffix, err := GetKeyVaultURISuffixE() //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -200,9 +201,17 @@ func GetKeyVaultSecretsClientE(keyVaultName string) (*azsecrets.Client, error) {
 	return azsecrets.NewClient(vaultURL, cred, nil)
 }
 
-// GetKeyVaultKeysClientE creates a KeyVault keys client.
-func GetKeyVaultKeysClientE(keyVaultName string) (*azkeys.Client, error) {
-	keyVaultSuffix, err := GetKeyVaultURISuffixE()
+// GetKeyVaultSecretsClientE creates a KeyVault secrets client.
+//
+// Deprecated: Use [GetKeyVaultSecretsClientContextE] instead.
+func GetKeyVaultSecretsClientE(keyVaultName string) (*azsecrets.Client, error) {
+	return GetKeyVaultSecretsClientContextE(context.Background(), keyVaultName)
+}
+
+// GetKeyVaultKeysClientContextE creates a KeyVault keys client.
+// The ctx parameter supports cancellation and timeouts.
+func GetKeyVaultKeysClientContextE(_ context.Context, keyVaultName string) (*azkeys.Client, error) {
+	keyVaultSuffix, err := GetKeyVaultURISuffixE() //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -217,9 +226,17 @@ func GetKeyVaultKeysClientE(keyVaultName string) (*azkeys.Client, error) {
 	return azkeys.NewClient(vaultURL, cred, nil)
 }
 
-// GetKeyVaultCertificatesClientE creates a KeyVault certificates client.
-func GetKeyVaultCertificatesClientE(keyVaultName string) (*azcertificates.Client, error) {
-	keyVaultSuffix, err := GetKeyVaultURISuffixE()
+// GetKeyVaultKeysClientE creates a KeyVault keys client.
+//
+// Deprecated: Use [GetKeyVaultKeysClientContextE] instead.
+func GetKeyVaultKeysClientE(keyVaultName string) (*azkeys.Client, error) {
+	return GetKeyVaultKeysClientContextE(context.Background(), keyVaultName)
+}
+
+// GetKeyVaultCertificatesClientContextE creates a KeyVault certificates client.
+// The ctx parameter supports cancellation and timeouts.
+func GetKeyVaultCertificatesClientContextE(_ context.Context, keyVaultName string) (*azcertificates.Client, error) {
+	keyVaultSuffix, err := GetKeyVaultURISuffixE() //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -232,6 +249,13 @@ func GetKeyVaultCertificatesClientE(keyVaultName string) (*azcertificates.Client
 	}
 
 	return azcertificates.NewClient(vaultURL, cred, nil)
+}
+
+// GetKeyVaultCertificatesClientE creates a KeyVault certificates client.
+//
+// Deprecated: Use [GetKeyVaultCertificatesClientContextE] instead.
+func GetKeyVaultCertificatesClientE(keyVaultName string) (*azcertificates.Client, error) {
+	return GetKeyVaultCertificatesClientContextE(context.Background(), keyVaultName)
 }
 
 // GetKeyVaultContext is a helper function that gets the keyvault management object.
@@ -262,7 +286,7 @@ func GetKeyVaultContextE(t testing.TestingT, ctx context.Context, resGroupName s
 	t.Helper()
 
 	// Create a key vault management client
-	vaultClient, err := GetKeyVaultManagementClientE(subscriptionID)
+	vaultClient, err := GetKeyVaultManagementClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -285,12 +309,20 @@ func GetKeyVaultE(t testing.TestingT, resGroupName string, keyVaultName string, 
 	return GetKeyVaultContextE(t, context.Background(), resGroupName, keyVaultName, subscriptionID)
 }
 
-// GetKeyVaultManagementClientE is a helper function that will setup a key vault management client.
-func GetKeyVaultManagementClientE(subscriptionID string) (*armkeyvault.VaultsClient, error) {
+// GetKeyVaultManagementClientContextE is a helper function that will setup a key vault management client.
+// The ctx parameter supports cancellation and timeouts.
+func GetKeyVaultManagementClientContextE(_ context.Context, subscriptionID string) (*armkeyvault.VaultsClient, error) {
 	clientFactory, err := getArmKeyVaultClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewVaultsClient(), nil
+}
+
+// GetKeyVaultManagementClientE is a helper function that will setup a key vault management client.
+//
+// Deprecated: Use [GetKeyVaultManagementClientContextE] instead.
+func GetKeyVaultManagementClientE(subscriptionID string) (*armkeyvault.VaultsClient, error) {
+	return GetKeyVaultManagementClientContextE(context.Background(), subscriptionID)
 }

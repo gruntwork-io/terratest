@@ -33,7 +33,7 @@ func ManagedEnvironmentExists(t testing.TestingT, environmentName string, resour
 // ManagedEnvironmentExistsContextE indicates whether the specified Managed Environment exists.
 // The ctx parameter supports cancellation and timeouts.
 func ManagedEnvironmentExistsContextE(ctx context.Context, environmentName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	client, err := CreateManagedEnvironmentsClientE(subscriptionID)
+	client, err := CreateManagedEnvironmentsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return false, err
 	}
@@ -78,7 +78,7 @@ func GetManagedEnvironment(t testing.TestingT, environmentName string, resourceG
 // GetManagedEnvironmentContextE returns the Managed Environment object.
 // The ctx parameter supports cancellation and timeouts.
 func GetManagedEnvironmentContextE(ctx context.Context, environmentName string, resourceGroupName string, subscriptionID string) (*armappcontainers.ManagedEnvironment, error) {
-	client, err := CreateManagedEnvironmentsClientE(subscriptionID)
+	client, err := CreateManagedEnvironmentsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func ContainerAppExists(t testing.TestingT, containerAppName string, resourceGro
 // ContainerAppExistsContextE indicates whether the Container App exists for the subscription.
 // The ctx parameter supports cancellation and timeouts.
 func ContainerAppExistsContextE(ctx context.Context, containerAppName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	client, err := CreateContainerAppsClientE(subscriptionID)
+	client, err := CreateContainerAppsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return false, err
 	}
@@ -168,7 +168,7 @@ func GetContainerApp(t testing.TestingT, containerAppName string, resourceGroupN
 // GetContainerAppContextE returns the Container App object.
 // The ctx parameter supports cancellation and timeouts.
 func GetContainerAppContextE(ctx context.Context, containerAppName string, resourceGroupName string, subscriptionID string) (*armappcontainers.ContainerApp, error) {
-	client, err := CreateContainerAppsClientE(subscriptionID)
+	client, err := CreateContainerAppsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func ContainerAppJobExists(t testing.TestingT, containerAppName string, resource
 // ContainerAppJobExistsContextE indicates whether the Container App Job exists for the subscription.
 // The ctx parameter supports cancellation and timeouts.
 func ContainerAppJobExistsContextE(ctx context.Context, containerAppName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	client, err := CreateContainerAppJobsClientE(subscriptionID)
+	client, err := CreateContainerAppJobsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return false, err
 	}
@@ -258,7 +258,7 @@ func GetContainerAppJob(t testing.TestingT, containerAppName string, resourceGro
 // GetContainerAppJobContextE returns the Container App Job object.
 // The ctx parameter supports cancellation and timeouts.
 func GetContainerAppJobContextE(ctx context.Context, containerAppName string, resourceGroupName string, subscriptionID string) (*armappcontainers.Job, error) {
-	client, err := CreateContainerAppJobsClientE(subscriptionID)
+	client, err := CreateContainerAppJobsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

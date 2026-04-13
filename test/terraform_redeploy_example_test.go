@@ -172,7 +172,7 @@ func validateAsgRedeploy(t *testing.T, workingDir string) {
 	tlsConfig := tls.Config{}
 
 	// Check once per second that the ELB returns a proper response to make sure there is no downtime during deployment
-	elbChecks := retry.DoInBackgroundUntilStopped(t, "Check URL "+url, 1*time.Second, func() {
+	elbChecks := retry.DoInBackgroundUntilStoppedContext(t, t.Context(), "Check URL "+url, 1*time.Second, func() {
 		http_helper.HTTPGetWithCustomValidationContext(t, t.Context(), url, &tlsConfig, func(statusCode int, body string) bool {
 			return statusCode == 200 && (body == originalText || body == newText)
 		})

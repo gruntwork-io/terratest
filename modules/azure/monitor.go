@@ -83,7 +83,7 @@ func GetDiagnosticsSettingsResourceContextE(ctx context.Context, name string, re
 		return nil, err
 	}
 
-	client, err := CreateDiagnosticsSettingsClientE(subscriptionID)
+	client, err := CreateDiagnosticsSettingsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func GetVMInsightsOnboardingStatus(t testing.TestingT, resourceURI string, subsc
 // GetVMInsightsOnboardingStatusContextE gets diagnostics VM onboarding status.
 // The ctx parameter supports cancellation and timeouts.
 func GetVMInsightsOnboardingStatusContextE(t testing.TestingT, ctx context.Context, resourceURI string, subscriptionID string) (*insights.VMInsightsOnboardingStatus, error) {
-	client, err := CreateVMInsightsClientE(subscriptionID)
+	client, err := CreateVMInsightsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func GetActivityLogAlertResourceContextE(ctx context.Context, activityLogAlertNa
 	}
 
 	// Get the client reference
-	client, err := CreateActivityLogAlertsClientE(subscriptionID)
+	client, err := CreateActivityLogAlertsClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

@@ -62,7 +62,7 @@ func UpgradeContextE(t testing.TestingT, ctx context.Context, options *Options, 
 		}
 	}
 
-	args, err = getValuesArgsE(options, args...)
+	args, err = getValuesArgsE(options, args...) //nolint:contextcheck // getValuesArgsE is a local helper without context
 	if err != nil {
 		return err
 	}

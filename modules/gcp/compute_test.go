@@ -41,7 +41,7 @@ func TestGetPublicIPOfInstance(t *testing.T) {
 	maxRetries := 10
 	sleepBetweenRetries := 3 * time.Second
 
-	ip := retry.DoWithRetry(t, "Read IP address of Compute Instance", maxRetries, sleepBetweenRetries, func() (string, error) {
+	ip := retry.DoWithRetryContext(t, t.Context(), "Read IP address of Compute Instance", maxRetries, sleepBetweenRetries, func() (string, error) {
 		// Consider attempting to connect to the Compute Instance at this IP in the future, but for now, we just call the
 		// the function to ensure we don't have errors
 		instance := gcp.FetchInstance(t, projectID, instanceName)
@@ -98,7 +98,7 @@ func TestGetAndSetLabels(t *testing.T) {
 	maxRetries := 30
 	sleepBetweenRetries := 3 * time.Second
 
-	retry.DoWithRetry(t, "Read newly set labels", maxRetries, sleepBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), "Read newly set labels", maxRetries, sleepBetweenRetries, func() (string, error) {
 		instance := gcp.FetchInstance(t, projectID, instanceName)
 
 		labelsFromRead := instance.GetLabels(t)
@@ -135,7 +135,7 @@ func TestGetAndSetMetadata(t *testing.T) {
 	maxRetries := 30
 	sleepBetweenRetries := 3 * time.Second
 
-	retry.DoWithRetry(t, "Read newly set metadata", maxRetries, sleepBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), "Read newly set metadata", maxRetries, sleepBetweenRetries, func() (string, error) {
 		instance := gcp.FetchInstance(t, projectID, instanceName)
 
 		metadataFromRead := instance.GetMetadata(t)

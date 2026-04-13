@@ -108,7 +108,7 @@ func getRenderArgs(t testing.TestingT, ctx context.Context, options *Options, ch
 		args = append(args, "--namespace", options.KubectlOptions.Namespace)
 	}
 
-	args, err = getValuesArgsE(options, args...)
+	args, err = getValuesArgsE(options, args...) //nolint:contextcheck // getValuesArgsE is a local helper without context
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func RenderRemoteTemplateContextE(t testing.TestingT, ctx context.Context, optio
 		args = append(args, "--namespace", options.KubectlOptions.Namespace)
 	}
 
-	args, err := getValuesArgsE(options, args...)
+	args, err := getValuesArgsE(options, args...) //nolint:contextcheck // getValuesArgsE is a local helper without context
 	if err != nil {
 		return "", err
 	}
@@ -332,8 +332,20 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj inter
 // see https://github.com/gruntwork-io/terratest/issues/1377
 // A snapshot is used to compare the current manifests of a chart with the previous manifests.
 // A global diff is run against the two snapshots and the number of differences is returned.
+//
+// Deprecated: Use [UpdateSnapshotContext] instead.
 func UpdateSnapshot(t testing.TestingT, options *Options, yamlData string, releaseName string) {
-	require.NoError(t, UpdateSnapshotE(t, options, yamlData, releaseName))
+	UpdateSnapshotContext(t, context.Background(), options, yamlData, releaseName)
+}
+
+// UpdateSnapshotContext creates or updates the k8s manifest snapshot of a chart (e.g bitnami/nginx).
+// It is one of the two functions needed to implement snapshot based testing for helm.
+// see https://github.com/gruntwork-io/terratest/issues/1377
+// A snapshot is used to compare the current manifests of a chart with the previous manifests.
+// A global diff is run against the two snapshots and the number of differences is returned.
+// The ctx parameter is accepted for API consistency with other Context-aware helpers.
+func UpdateSnapshotContext(t testing.TestingT, ctx context.Context, options *Options, yamlData string, releaseName string) {
+	require.NoError(t, UpdateSnapshotContextE(t, ctx, options, yamlData, releaseName))
 }
 
 // UpdateSnapshotE creates or updates the k8s manifest snapshot of a chart (e.g bitnami/nginx).
@@ -342,7 +354,20 @@ func UpdateSnapshot(t testing.TestingT, options *Options, yamlData string, relea
 // A snapshot is used to compare the current manifests of a chart with the previous manifests.
 // A global diff is run against the two snapshots and the number of differences is returned.
 // It will fail the test if there is an error while writing the manifests' snapshot in the file system.
+//
+// Deprecated: Use [UpdateSnapshotContextE] instead.
 func UpdateSnapshotE(t testing.TestingT, options *Options, yamlData string, releaseName string) error {
+	return UpdateSnapshotContextE(t, context.Background(), options, yamlData, releaseName)
+}
+
+// UpdateSnapshotContextE creates or updates the k8s manifest snapshot of a chart (e.g bitnami/nginx).
+// It is one of the two functions needed to implement snapshot based testing for helm.
+// see https://github.com/gruntwork-io/terratest/issues/1377
+// A snapshot is used to compare the current manifests of a chart with the previous manifests.
+// A global diff is run against the two snapshots and the number of differences is returned.
+// The ctx parameter is accepted for API consistency with other Context-aware helpers.
+// It will return an error if there is an issue while writing the manifests' snapshot in the file system.
+func UpdateSnapshotContextE(t testing.TestingT, ctx context.Context, options *Options, yamlData string, releaseName string) error {
 	snapshotDir := "__snapshot__"
 	if options.SnapshotPath != "" {
 		snapshotDir = options.SnapshotPath
@@ -381,8 +406,20 @@ func UpdateSnapshotE(t testing.TestingT, options *Options, yamlData string, rele
 // see https://github.com/gruntwork-io/terratest/issues/1377
 // It returns the number of differences between the two manifests or -1 in case of error.
 // It will fail the test if there is an error while reading or writing the two manifests in the file system.
+//
+// Deprecated: Use [DiffAgainstSnapshotContext] instead.
 func DiffAgainstSnapshot(t testing.TestingT, options *Options, yamlData string, releaseName string) int {
-	numberOfDiffs, err := DiffAgainstSnapshotE(t, options, yamlData, releaseName)
+	return DiffAgainstSnapshotContext(t, context.Background(), options, yamlData, releaseName)
+}
+
+// DiffAgainstSnapshotContext compares the current manifests of a chart (e.g bitnami/nginx)
+// with the previous manifests stored in the snapshot.
+// see https://github.com/gruntwork-io/terratest/issues/1377
+// It returns the number of differences between the two manifests or -1 in case of error.
+// The ctx parameter is accepted for API consistency with other Context-aware helpers.
+// It will fail the test if there is an error while reading or writing the two manifests in the file system.
+func DiffAgainstSnapshotContext(t testing.TestingT, ctx context.Context, options *Options, yamlData string, releaseName string) int {
+	numberOfDiffs, err := DiffAgainstSnapshotContextE(t, ctx, options, yamlData, releaseName)
 	require.NoError(t, err)
 
 	return numberOfDiffs
@@ -392,7 +429,18 @@ func DiffAgainstSnapshot(t testing.TestingT, options *Options, yamlData string, 
 // with the previous manifests stored in the snapshot.
 // see https://github.com/gruntwork-io/terratest/issues/1377
 // It returns the number of differences between the manifests or -1 in case of error.
+//
+// Deprecated: Use [DiffAgainstSnapshotContextE] instead.
 func DiffAgainstSnapshotE(t testing.TestingT, options *Options, yamlData string, releaseName string) (int, error) {
+	return DiffAgainstSnapshotContextE(t, context.Background(), options, yamlData, releaseName)
+}
+
+// DiffAgainstSnapshotContextE compares the current manifests of a chart (e.g bitnami/nginx)
+// with the previous manifests stored in the snapshot.
+// see https://github.com/gruntwork-io/terratest/issues/1377
+// The ctx parameter is accepted for API consistency with other Context-aware helpers.
+// It returns the number of differences between the manifests or -1 in case of error.
+func DiffAgainstSnapshotContextE(t testing.TestingT, ctx context.Context, options *Options, yamlData string, releaseName string) (int, error) {
 	snapshotDir := "__snapshot__"
 	if options.SnapshotPath != "" {
 		snapshotDir = options.SnapshotPath

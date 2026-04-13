@@ -84,7 +84,7 @@ func GetContainerRegistryContextE(ctx context.Context, registryName string, resG
 		return nil, err
 	}
 
-	client, err := GetContainerRegistryClientE(subscriptionID)
+	client, err := GetContainerRegistryClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -104,10 +104,11 @@ func GetContainerRegistryE(registryName string, resGroupName string, subscriptio
 	return GetContainerRegistryContextE(context.Background(), registryName, resGroupName, subscriptionID)
 }
 
-// GetContainerRegistryClientE is a helper function that will setup an Azure Container Registry client on your behalf.
-func GetContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
+// GetContainerRegistryClientContextE is a helper function that will setup an Azure Container Registry client on your behalf.
+// The ctx parameter supports cancellation and timeouts.
+func GetContainerRegistryClientContextE(ctx context.Context, subscriptionID string) (*containerregistry.RegistriesClient, error) {
 	// Create an ACR client
-	registryClient, err := CreateContainerRegistryClientE(subscriptionID)
+	registryClient, err := CreateContainerRegistryClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -122,6 +123,13 @@ func GetContainerRegistryClientE(subscriptionID string) (*containerregistry.Regi
 	registryClient.Authorizer = *authorizer
 
 	return registryClient, nil
+}
+
+// GetContainerRegistryClientE is a helper function that will setup an Azure Container Registry client on your behalf.
+//
+// Deprecated: Use [GetContainerRegistryClientContextE] instead.
+func GetContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
+	return GetContainerRegistryClientContextE(context.Background(), subscriptionID)
 }
 
 // ContainerInstanceExistsContext indicates whether the specified container instance exists.
@@ -198,7 +206,7 @@ func GetContainerInstanceContextE(ctx context.Context, instanceName string, resG
 		return nil, err
 	}
 
-	client, err := GetContainerInstanceClientE(subscriptionID)
+	client, err := GetContainerInstanceClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -218,10 +226,11 @@ func GetContainerInstanceE(instanceName string, resGroupName string, subscriptio
 	return GetContainerInstanceContextE(context.Background(), instanceName, resGroupName, subscriptionID)
 }
 
-// GetContainerInstanceClientE is a helper function that will setup an Azure Container Instance client on your behalf.
-func GetContainerInstanceClientE(subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
+// GetContainerInstanceClientContextE is a helper function that will setup an Azure Container Instance client on your behalf.
+// The ctx parameter supports cancellation and timeouts.
+func GetContainerInstanceClientContextE(ctx context.Context, subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
 	// Create an ACI client
-	instanceClient, err := CreateContainerInstanceClientE(subscriptionID)
+	instanceClient, err := CreateContainerInstanceClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -236,4 +245,11 @@ func GetContainerInstanceClientE(subscriptionID string) (*containerinstance.Cont
 	instanceClient.Authorizer = *authorizer
 
 	return instanceClient, nil
+}
+
+// GetContainerInstanceClientE is a helper function that will setup an Azure Container Instance client on your behalf.
+//
+// Deprecated: Use [GetContainerInstanceClientContextE] instead.
+func GetContainerInstanceClientE(subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
+	return GetContainerInstanceClientContextE(context.Background(), subscriptionID)
 }

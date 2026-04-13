@@ -210,7 +210,7 @@ func GetStorageBlobContainerContextE(ctx context.Context, containerName, storage
 		return nil, err2
 	}
 
-	client, err := CreateStorageBlobContainerClientE(subscriptionID)
+	client, err := CreateStorageBlobContainerClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +231,7 @@ func GetStorageAccountPropertyContextE(ctx context.Context, storageAccountName, 
 		return nil, err2
 	}
 
-	client, err := CreateStorageAccountClientE(subscriptionID)
+	client, err := CreateStorageAccountClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func GetStorageFileShareContextE(ctx context.Context, fileShareName, storageAcco
 		return nil, err2
 	}
 
-	client, err := CreateStorageFileSharesClientE(subscriptionID)
+	client, err := CreateStorageFileSharesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +348,7 @@ func GetStorageDNSStringContextE(ctx context.Context, storageAccountName, resour
 	}
 
 	if retval {
-		storageSuffix, err2 := GetStorageURISuffixE()
+		storageSuffix, err2 := GetStorageURISuffixE() //nolint:contextcheck
 		if err2 != nil {
 			return "", err2
 		}

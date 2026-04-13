@@ -56,7 +56,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 	maxRetries := 100
 	sleepBetweenRetries := 3 * time.Second
 
-	retry.DoWithRetry(t, "Attempting to fetch Instances from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), "Attempting to fetch Instances from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
 		instances, err := instanceGroup.GetInstancesContextE(t, t.Context(), projectID)
 		if err != nil {
 			return "", fmt.Errorf("Failed to get Instances: %w", err)
@@ -70,7 +70,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 	})
 
 	// Validate that we get the right number of IP addresses
-	retry.DoWithRetry(t, "Attempting to fetch Public IP addresses from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
+	retry.DoWithRetryContext(t, t.Context(), "Attempting to fetch Public IP addresses from Instance Group", maxRetries, sleepBetweenRetries, func() (string, error) {
 		ips, err := instanceGroup.GetPublicIPsContextE(t, t.Context(), projectID)
 		if err != nil {
 			return "", errors.New("Failed to get public IPs from Instance Group")

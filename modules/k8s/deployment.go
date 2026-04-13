@@ -14,27 +14,17 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
-// ListDeployments will look for deployments in the given namespace that match the given filters and return them. This will
-// fail the test if there is an error.
+// ListDeploymentsContextE looks up deployments in the given namespace that match the given filters and return them.
+// The ctx parameter supports cancellation and timeouts.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
-func ListDeployments(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []appsv1.Deployment {
-	deployment, err := ListDeploymentsE(t, options, filters)
-	require.NoError(t, err)
-
-	return deployment
-}
-
-// ListDeploymentsE will look for deployments in the given namespace that match the given filters and return them.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListDeploymentsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]appsv1.Deployment, error) {
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+func ListDeploymentsContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, filters metav1.ListOptions) ([]appsv1.Deployment, error) {
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
 	if err != nil {
 		return nil, err
 	}
 
-	deployments, err := clientset.AppsV1().Deployments(options.Namespace).List(context.Background(), filters)
+	deployments, err := clientset.AppsV1().Deployments(options.Namespace).List(ctx, filters)
 	if err != nil {
 		return nil, err
 	}
@@ -42,38 +32,85 @@ func ListDeploymentsE(t testing.TestingT, options *KubectlOptions, filters metav
 	return deployments.Items, nil
 }
 
-// GetDeployment returns a Kubernetes deployment resource in the provided namespace with the given name. This will
-// fail the test if there is an error.
-func GetDeployment(t testing.TestingT, options *KubectlOptions, deploymentName string) *appsv1.Deployment {
-	deployment, err := GetDeploymentE(t, options, deploymentName)
+// ListDeploymentsContext looks up deployments in the given namespace that match the given filters and return them.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListDeploymentsContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, filters metav1.ListOptions) []appsv1.Deployment {
+	t.Helper()
+	deployment, err := ListDeploymentsContextE(t, ctx, options, filters)
 	require.NoError(t, err)
 
 	return deployment
 }
 
-// GetDeploymentE returns a Kubernetes deployment resource in the provided namespace with the given name.
-func GetDeploymentE(t testing.TestingT, options *KubectlOptions, deploymentName string) (*appsv1.Deployment, error) {
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
+// ListDeployments will look for deployments in the given namespace that match the given filters and return them. This will
+// fail the test if there is an error.
+//
+// Deprecated: Use [ListDeploymentsContext] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListDeployments(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []appsv1.Deployment {
+	t.Helper()
+
+	return ListDeploymentsContext(t, context.Background(), options, filters)
+}
+
+// ListDeploymentsE will look for deployments in the given namespace that match the given filters and return them.
+//
+// Deprecated: Use [ListDeploymentsContextE] instead.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func ListDeploymentsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]appsv1.Deployment, error) {
+	return ListDeploymentsContextE(t, context.Background(), options, filters)
+}
+
+// GetDeploymentContextE returns a Kubernetes deployment resource in the provided namespace with the given name.
+// The ctx parameter supports cancellation and timeouts.
+func GetDeploymentContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, deploymentName string) (*appsv1.Deployment, error) {
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
 	if err != nil {
 		return nil, err
 	}
 
-	return clientset.AppsV1().Deployments(options.Namespace).Get(context.Background(), deploymentName, metav1.GetOptions{})
+	return clientset.AppsV1().Deployments(options.Namespace).Get(ctx, deploymentName, metav1.GetOptions{})
 }
 
-// WaitUntilDeploymentAvailable waits until all pods within the deployment are ready and started,
-// retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try.
+// GetDeploymentContext returns a Kubernetes deployment resource in the provided namespace with the given name.
+// The ctx parameter supports cancellation and timeouts.
 // This will fail the test if there is an error.
-func WaitUntilDeploymentAvailable(t testing.TestingT, options *KubectlOptions, deploymentName string, retries int, sleepBetweenRetries time.Duration) {
-	require.NoError(t, WaitUntilDeploymentAvailableE(t, options, deploymentName, retries, sleepBetweenRetries))
+func GetDeploymentContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, deploymentName string) *appsv1.Deployment {
+	t.Helper()
+	deployment, err := GetDeploymentContextE(t, ctx, options, deploymentName)
+	require.NoError(t, err)
+
+	return deployment
 }
 
-// WaitUntilDeploymentAvailableE waits until all pods within the deployment are ready and started,
-// retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try.
-func WaitUntilDeploymentAvailableE(
+// GetDeployment returns a Kubernetes deployment resource in the provided namespace with the given name. This will
+// fail the test if there is an error.
+//
+// Deprecated: Use [GetDeploymentContext] instead.
+func GetDeployment(t testing.TestingT, options *KubectlOptions, deploymentName string) *appsv1.Deployment {
+	t.Helper()
+
+	return GetDeploymentContext(t, context.Background(), options, deploymentName)
+}
+
+// GetDeploymentE returns a Kubernetes deployment resource in the provided namespace with the given name.
+//
+// Deprecated: Use [GetDeploymentContextE] instead.
+func GetDeploymentE(t testing.TestingT, options *KubectlOptions, deploymentName string) (*appsv1.Deployment, error) {
+	return GetDeploymentContextE(t, context.Background(), options, deploymentName)
+}
+
+// WaitUntilDeploymentAvailableContextE waits until all pods within the deployment are ready and started,
+// retrying the check for the specified amount of times, sleeping for the provided duration between each try.
+// The ctx parameter supports cancellation and timeouts.
+func WaitUntilDeploymentAvailableContextE( //nolint:dupl // similar retry pattern across resource types is intentional
 	t testing.TestingT,
+	ctx context.Context,
 	options *KubectlOptions,
 	deploymentName string,
 	retries int,
@@ -81,13 +118,14 @@ func WaitUntilDeploymentAvailableE(
 ) error {
 	statusMsg := fmt.Sprintf("Wait for deployment %s to be provisioned.", deploymentName)
 
-	message, err := retry.DoWithRetryE(
+	message, err := retry.DoWithRetryContextE(
 		t,
+		ctx,
 		statusMsg,
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			deployment, err := GetDeploymentE(t, options, deploymentName)
+			deployment, err := GetDeploymentContextE(t, ctx, options, deploymentName)
 			if err != nil {
 				return "", err
 			}
@@ -107,6 +145,41 @@ func WaitUntilDeploymentAvailableE(
 	options.Logger.Logf(t, "%s", message)
 
 	return nil
+}
+
+// WaitUntilDeploymentAvailableContext waits until all pods within the deployment are ready and started,
+// retrying the check for the specified amount of times, sleeping for the provided duration between each try.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func WaitUntilDeploymentAvailableContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, deploymentName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	require.NoError(t, WaitUntilDeploymentAvailableContextE(t, ctx, options, deploymentName, retries, sleepBetweenRetries))
+}
+
+// WaitUntilDeploymentAvailable waits until all pods within the deployment are ready and started,
+// retrying the check for the specified amount of times, sleeping
+// for the provided duration between each try.
+// This will fail the test if there is an error.
+//
+// Deprecated: Use [WaitUntilDeploymentAvailableContext] instead.
+func WaitUntilDeploymentAvailable(t testing.TestingT, options *KubectlOptions, deploymentName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	WaitUntilDeploymentAvailableContext(t, context.Background(), options, deploymentName, retries, sleepBetweenRetries)
+}
+
+// WaitUntilDeploymentAvailableE waits until all pods within the deployment are ready and started,
+// retrying the check for the specified amount of times, sleeping
+// for the provided duration between each try.
+//
+// Deprecated: Use [WaitUntilDeploymentAvailableContextE] instead.
+func WaitUntilDeploymentAvailableE(
+	t testing.TestingT,
+	options *KubectlOptions,
+	deploymentName string,
+	retries int,
+	sleepBetweenRetries time.Duration,
+) error {
+	return WaitUntilDeploymentAvailableContextE(t, context.Background(), options, deploymentName, retries, sleepBetweenRetries)
 }
 
 // IsDeploymentAvailable returns true if all pods within the deployment are ready and started

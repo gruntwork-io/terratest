@@ -13,37 +13,62 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetConfigMap returns a Kubernetes configmap resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions. This will fail the test if there is an error.
-func GetConfigMap(t testing.TestingT, options *KubectlOptions, configMapName string) *corev1.ConfigMap {
-	configMap, err := GetConfigMapE(t, options, configMapName)
+// GetConfigMapContextE returns a Kubernetes configmap resource in the provided namespace with the given name. The
+// namespace used is the one provided in the KubectlOptions.
+// The ctx parameter supports cancellation and timeouts.
+func GetConfigMapContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, configMapName string) (*corev1.ConfigMap, error) {
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientset.CoreV1().ConfigMaps(options.Namespace).Get(ctx, configMapName, metav1.GetOptions{})
+}
+
+// GetConfigMapContext returns a Kubernetes configmap resource in the provided namespace with the given name. The
+// namespace used is the one provided in the KubectlOptions.
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func GetConfigMapContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, configMapName string) *corev1.ConfigMap {
+	t.Helper()
+	configMap, err := GetConfigMapContextE(t, ctx, options, configMapName)
 	require.NoError(t, err)
 
 	return configMap
 }
 
-// GetConfigMapE returns a Kubernetes configmap resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions.
-func GetConfigMapE(t testing.TestingT, options *KubectlOptions, configMapName string) (*corev1.ConfigMap, error) {
-	clientset, err := GetKubernetesClientFromOptionsE(t, options)
-	if err != nil {
-		return nil, err
-	}
+// GetConfigMap returns a Kubernetes configmap resource in the provided namespace with the given name. The namespace used
+// is the one provided in the KubectlOptions. This will fail the test if there is an error.
+//
+// Deprecated: Use [GetConfigMapContext] instead.
+func GetConfigMap(t testing.TestingT, options *KubectlOptions, configMapName string) *corev1.ConfigMap {
+	t.Helper()
 
-	return clientset.CoreV1().ConfigMaps(options.Namespace).Get(context.Background(), configMapName, metav1.GetOptions{})
+	return GetConfigMapContext(t, context.Background(), options, configMapName)
 }
 
-// WaitUntilConfigMapAvailable waits until the configmap is present on the cluster in cases where it is not immediately
-// available (for example, when using ClusterIssuer to request a certificate).
-func WaitUntilConfigMapAvailable(t testing.TestingT, options *KubectlOptions, configMapName string, retries int, sleepBetweenRetries time.Duration) {
+// GetConfigMapE returns a Kubernetes configmap resource in the provided namespace with the given name. The namespace used
+// is the one provided in the KubectlOptions.
+//
+// Deprecated: Use [GetConfigMapContextE] instead.
+func GetConfigMapE(t testing.TestingT, options *KubectlOptions, configMapName string) (*corev1.ConfigMap, error) {
+	return GetConfigMapContextE(t, context.Background(), options, configMapName)
+}
+
+// WaitUntilConfigMapAvailableContextE waits until the configmap is present on the cluster in cases where it is not
+// immediately available (for example, when using ClusterIssuer to request a certificate).
+// The ctx parameter supports cancellation and timeouts.
+func WaitUntilConfigMapAvailableContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, configMapName string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for configmap %s to be provisioned.", configMapName)
-	message := retry.DoWithRetry(
+
+	message, err := retry.DoWithRetryContextE(
 		t,
+		ctx,
 		statusMsg,
 		retries,
 		sleepBetweenRetries,
 		func() (string, error) {
-			_, err := GetConfigMapE(t, options, configMapName)
+			_, err := GetConfigMapContextE(t, ctx, options, configMapName)
 			if err != nil {
 				return "", err
 			}
@@ -51,5 +76,30 @@ func WaitUntilConfigMapAvailable(t testing.TestingT, options *KubectlOptions, co
 			return "configmap is now available", nil
 		},
 	)
+	if err != nil {
+		return err
+	}
+
 	options.Logger.Logf(t, "%s", message)
+
+	return nil
+}
+
+// WaitUntilConfigMapAvailableContext waits until the configmap is present on the cluster in cases where it is not
+// immediately available (for example, when using ClusterIssuer to request a certificate).
+// The ctx parameter supports cancellation and timeouts.
+// This will fail the test if there is an error.
+func WaitUntilConfigMapAvailableContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, configMapName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	err := WaitUntilConfigMapAvailableContextE(t, ctx, options, configMapName, retries, sleepBetweenRetries)
+	require.NoError(t, err)
+}
+
+// WaitUntilConfigMapAvailable waits until the configmap is present on the cluster in cases where it is not immediately
+// available (for example, when using ClusterIssuer to request a certificate).
+//
+// Deprecated: Use [WaitUntilConfigMapAvailableContext] instead.
+func WaitUntilConfigMapAvailable(t testing.TestingT, options *KubectlOptions, configMapName string, retries int, sleepBetweenRetries time.Duration) {
+	t.Helper()
+	WaitUntilConfigMapAvailableContext(t, context.Background(), options, configMapName, retries, sleepBetweenRetries)
 }

@@ -242,8 +242,8 @@ func DNSLookupAuthoritativeWithRetryContext(t testing.TestingT, ctx context.Cont
 // or until max retries has been exceeded.
 // If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
 func DNSLookupAuthoritativeWithRetryContextE(t testing.TestingT, ctx context.Context, query DNSQuery, resolvers []string, maxRetries int, sleepBetweenRetries time.Duration) (DNSAnswers, error) {
-	res, err := retry.DoWithRetryInterfaceE(
-		t, fmt.Sprintf("DNSLookupAuthoritativeContextE %s record for %s using authoritative nameservers", query.Type, query.Name),
+	res, err := retry.DoWithRetryInterfaceContextE(
+		t, ctx, fmt.Sprintf("DNSLookupAuthoritativeContextE %s record for %s using authoritative nameservers", query.Type, query.Name),
 		maxRetries, sleepBetweenRetries,
 		func() (any, error) {
 			return DNSLookupAuthoritativeContextE(t, ctx, query, resolvers)
@@ -349,8 +349,8 @@ func DNSLookupAuthoritativeAllWithRetryContext(t testing.TestingT, ctx context.C
 // until ALL authoritative nameservers reply with the exact same non-empty answers or until max retries has been exceeded.
 // If defined, uses the given resolvers instead of the default system ones to find the authoritative nameservers.
 func DNSLookupAuthoritativeAllWithRetryContextE(t testing.TestingT, ctx context.Context, query DNSQuery, resolvers []string, maxRetries int, sleepBetweenRetries time.Duration) (DNSAnswers, error) {
-	res, err := retry.DoWithRetryInterfaceE(
-		t, fmt.Sprintf("DNSLookupAuthoritativeAllContextE %s record for %s using authoritative nameservers", query.Type, query.Name),
+	res, err := retry.DoWithRetryInterfaceContextE(
+		t, ctx, fmt.Sprintf("DNSLookupAuthoritativeAllContextE %s record for %s using authoritative nameservers", query.Type, query.Name),
 		maxRetries, sleepBetweenRetries,
 		func() (any, error) {
 			return DNSLookupAuthoritativeAllContextE(t, ctx, query, resolvers)
@@ -443,8 +443,8 @@ func DNSLookupAuthoritativeAllWithValidationRetryContext(t testing.TestingT, ctx
 // or until max retries has been exceeded.
 // If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
 func DNSLookupAuthoritativeAllWithValidationRetryContextE(t testing.TestingT, ctx context.Context, query DNSQuery, resolvers []string, expectedAnswers DNSAnswers, maxRetries int, sleepBetweenRetries time.Duration) error {
-	_, err := retry.DoWithRetryInterfaceE(
-		t, fmt.Sprintf("DNSLookupAuthoritativeAllWithValidationRetryContextE %s record for %s using authoritative nameservers", query.Type, query.Name),
+	_, err := retry.DoWithRetryInterfaceContextE(
+		t, ctx, fmt.Sprintf("DNSLookupAuthoritativeAllWithValidationRetryContextE %s record for %s using authoritative nameservers", query.Type, query.Name),
 		maxRetries, sleepBetweenRetries,
 		func() (any, error) {
 			return nil, DNSLookupAuthoritativeAllWithValidationContextE(t, ctx, query, resolvers, expectedAnswers)

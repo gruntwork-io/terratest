@@ -272,7 +272,7 @@ func WaitForSsmInstanceWithClientContextE(t testing.TestingT, ctx context.Contex
 		},
 	}
 
-	_, err := retry.DoWithRetryE(t, description, maxRetries, timeBetweenRetries, func() (string, error) {
+	_, err := retry.DoWithRetryContextE(t, ctx, description, maxRetries, timeBetweenRetries, func() (string, error) {
 		resp, err := client.GetInventory(ctx, input)
 		if err != nil {
 			return "", err
@@ -414,7 +414,7 @@ func CheckSSMCommandWithClientWithDocumentContextE(t testing.TestingT, ctx conte
 
 	result := &CommandOutput{}
 
-	_, err = retry.DoWithRetryableErrorsE(t, description, retryableErrors, maxRetries, timeBetweenRetries, func() (string, error) {
+	_, err = retry.DoWithRetryableErrorsContextE(t, ctx, description, retryableErrors, maxRetries, timeBetweenRetries, func() (string, error) {
 		resp, err := client.GetCommandInvocation(ctx, &ssm.GetCommandInvocationInput{
 			CommandId:  resp.Command.CommandId,
 			InstanceId: &instanceID,

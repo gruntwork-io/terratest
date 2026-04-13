@@ -1,12 +1,14 @@
 package k8s
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"sort"
 
 	gwErrors "github.com/gruntwork-io/go-commons/errors"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/stretchr/testify/require"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -142,8 +144,9 @@ func RemoveOrphanedClusterAndAuthInfoConfig(config *api.Config) {
 	config.Clusters = newClusters
 }
 
-// GetKubeConfigPathE determines which file path to use as the kubectl config path
-func GetKubeConfigPathE(t testing.TestingT) (string, error) {
+// GetKubeConfigPathContextE determines which file path to use as the kubectl config path.
+// The ctx parameter is accepted for API consistency.
+func GetKubeConfigPathContextE(t testing.TestingT, ctx context.Context) (string, error) {
 	kubeConfigPath := environment.GetFirstNonEmptyEnvVarOrEmptyString(t, []string{"KUBECONFIG"})
 	if kubeConfigPath == "" {
 		configPath, err := KubeConfigPathFromHomeDirE()
@@ -155,6 +158,24 @@ func GetKubeConfigPathE(t testing.TestingT) (string, error) {
 	}
 
 	return kubeConfigPath, nil
+}
+
+// GetKubeConfigPathContext determines which file path to use as the kubectl config path.
+// The ctx parameter is accepted for API consistency.
+// This will fail the test if there is an error.
+func GetKubeConfigPathContext(t testing.TestingT, ctx context.Context) string {
+	t.Helper()
+	path, err := GetKubeConfigPathContextE(t, ctx)
+	require.NoError(t, err)
+
+	return path
+}
+
+// GetKubeConfigPathE determines which file path to use as the kubectl config path
+//
+// Deprecated: Use [GetKubeConfigPathContextE] instead.
+func GetKubeConfigPathE(t testing.TestingT) (string, error) {
+	return GetKubeConfigPathContextE(t, context.Background())
 }
 
 // KubeConfigPathFromHomeDirE returns a string to the default Kubernetes config path in the home directory. This will

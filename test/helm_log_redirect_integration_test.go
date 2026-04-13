@@ -41,8 +41,8 @@ func TestHelmLogsRedirect(t *testing.T) {
 	// - Current context of the kubectl config file
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
 
-	k8s.CreateNamespace(t, kubectlOptions, namespaceName)
-	defer k8s.DeleteNamespace(t, kubectlOptions, namespaceName)
+	k8s.CreateNamespaceContext(t, t.Context(), kubectlOptions, namespaceName)
+	defer k8s.DeleteNamespaceContext(t, t.Context(), kubectlOptions, namespaceName)
 
 	customLogger := helmLogger{}
 

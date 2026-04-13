@@ -8,18 +8,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// GetCosmosDBAccountClientContextE is a helper function that will setup a CosmosDB account client.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBAccountClientContextE(ctx context.Context, subscriptionID string) (*armcosmos.DatabaseAccountsClient, error) {
+	return CreateCosmosDBAccountClientContextE(ctx, subscriptionID)
+}
+
 // GetCosmosDBAccountClientE is a helper function that will setup a CosmosDB account client.
+//
+// Deprecated: Use [GetCosmosDBAccountClientContextE] instead.
 func GetCosmosDBAccountClientE(subscriptionID string) (*armcosmos.DatabaseAccountsClient, error) {
-	return CreateCosmosDBAccountClientE(subscriptionID)
+	return GetCosmosDBAccountClientContextE(context.Background(), subscriptionID)
+}
+
+// GetCosmosDBAccountClientContext is a helper function that will setup a CosmosDB account client.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBAccountClientContext(t testing.TestingT, ctx context.Context, subscriptionID string) *armcosmos.DatabaseAccountsClient {
+	cosmosDBAccount, err := GetCosmosDBAccountClientContextE(ctx, subscriptionID)
+	require.NoError(t, err)
+
+	return cosmosDBAccount
 }
 
 // GetCosmosDBAccountClient is a helper function that will setup a CosmosDB account client.
 // This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCosmosDBAccountClientContext] instead.
 func GetCosmosDBAccountClient(t testing.TestingT, subscriptionID string) *armcosmos.DatabaseAccountsClient {
-	cosmosDBAccount, err := GetCosmosDBAccountClientE(subscriptionID)
-	require.NoError(t, err)
-
-	return cosmosDBAccount
+	return GetCosmosDBAccountClientContext(t, context.Background(), subscriptionID) //nolint:staticcheck
 }
 
 // GetCosmosDBAccountContext is a helper function that gets the database account.
@@ -36,7 +53,7 @@ func GetCosmosDBAccountContext(t testing.TestingT, ctx context.Context, subscrip
 // The ctx parameter supports cancellation and timeouts.
 func GetCosmosDBAccountContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string) (*armcosmos.DatabaseAccountGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBAccountClientE(subscriptionID)
+	cosmosClient, err := GetCosmosDBAccountClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -51,18 +68,35 @@ func GetCosmosDBAccountContextE(ctx context.Context, subscriptionID string, reso
 	return &resp.DatabaseAccountGetResults, nil
 }
 
+// GetCosmosDBSQLClientContextE is a helper function that will setup a CosmosDB SQL client.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLClientContextE(ctx context.Context, subscriptionID string) (*armcosmos.SQLResourcesClient, error) {
+	return CreateCosmosDBSQLClientContextE(ctx, subscriptionID)
+}
+
 // GetCosmosDBSQLClientE is a helper function that will setup a CosmosDB SQL client.
+//
+// Deprecated: Use [GetCosmosDBSQLClientContextE] instead.
 func GetCosmosDBSQLClientE(subscriptionID string) (*armcosmos.SQLResourcesClient, error) {
-	return CreateCosmosDBSQLClientE(subscriptionID)
+	return GetCosmosDBSQLClientContextE(context.Background(), subscriptionID)
+}
+
+// GetCosmosDBSQLClientContext is a helper function that will setup a CosmosDB SQL client.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCosmosDBSQLClientContext(t testing.TestingT, ctx context.Context, subscriptionID string) *armcosmos.SQLResourcesClient {
+	cosmosClient, err := GetCosmosDBSQLClientContextE(ctx, subscriptionID)
+	require.NoError(t, err)
+
+	return cosmosClient
 }
 
 // GetCosmosDBSQLClient is a helper function that will setup a CosmosDB SQL client.
 // This function would fail the test if there is an error.
+//
+// Deprecated: Use [GetCosmosDBSQLClientContext] instead.
 func GetCosmosDBSQLClient(t testing.TestingT, subscriptionID string) *armcosmos.SQLResourcesClient {
-	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
-	require.NoError(t, err)
-
-	return cosmosClient
+	return GetCosmosDBSQLClientContext(t, context.Background(), subscriptionID) //nolint:staticcheck
 }
 
 // GetCosmosDBSQLDatabaseContext is a helper function that gets a SQL database.
@@ -79,7 +113,7 @@ func GetCosmosDBSQLDatabaseContext(t testing.TestingT, ctx context.Context, subs
 // The ctx parameter supports cancellation and timeouts.
 func GetCosmosDBSQLDatabaseContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*armcosmos.SQLDatabaseGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +142,7 @@ func GetCosmosDBSQLContainerContext(t testing.TestingT, ctx context.Context, sub
 // The ctx parameter supports cancellation and timeouts.
 func GetCosmosDBSQLContainerContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*armcosmos.SQLContainerGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +171,7 @@ func GetCosmosDBSQLDatabaseThroughputContext(t testing.TestingT, ctx context.Con
 // The ctx parameter supports cancellation and timeouts.
 func GetCosmosDBSQLDatabaseThroughputContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string) (*armcosmos.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +200,7 @@ func GetCosmosDBSQLContainerThroughputContext(t testing.TestingT, ctx context.Co
 // The ctx parameter supports cancellation and timeouts.
 func GetCosmosDBSQLContainerThroughputContextE(ctx context.Context, subscriptionID string, resourceGroupName string, accountName string, databaseName string, containerName string) (*armcosmos.ThroughputSettingsGetResults, error) {
 	// Create a CosmosDB client
-	cosmosClient, err := GetCosmosDBSQLClientE(subscriptionID)
+	cosmosClient, err := GetCosmosDBSQLClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

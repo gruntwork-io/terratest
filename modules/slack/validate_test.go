@@ -39,8 +39,9 @@ func TestValidateSlackMessage(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	retry.DoWithRetry(
+	retry.DoWithRetryContext(
 		t,
+		t.Context(),
 		"wait for slack message",
 		10, 10*time.Second,
 		func() (string, error) {

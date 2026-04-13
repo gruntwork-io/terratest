@@ -9,14 +9,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetMYSQLServerClientE is a helper function that will setup a mysql server client.
-func GetMYSQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
+// GetMYSQLServerClientContextE is a helper function that will setup a mysql server client.
+// The ctx parameter supports cancellation and timeouts.
+func GetMYSQLServerClientContextE(_ context.Context, subscriptionID string) (*armmysql.ServersClient, error) {
 	clientFactory, err := getArmMySQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewServersClient(), nil
+}
+
+// GetMYSQLServerClientE is a helper function that will setup a mysql server client.
+//
+// Deprecated: Use [GetMYSQLServerClientContextE] instead.
+func GetMYSQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
+	return GetMYSQLServerClientContextE(context.Background(), subscriptionID)
 }
 
 // GetMYSQLServerContext is a helper function that gets the server.
@@ -45,7 +53,7 @@ func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, 
 // The ctx parameter supports cancellation and timeouts.
 func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armmysql.Server, error) {
 	// Create a MySQL Server client
-	mysqlClient, err := CreateMySQLServerClientE(subscriptionID)
+	mysqlClient, err := CreateMySQLServerClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -66,14 +74,22 @@ func GetMYSQLServerE(t testing.TestingT, subscriptionID string, resGroupName str
 	return GetMYSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }
 
-// GetMYSQLDBClientE is a helper function that will setup a mysql DB client.
-func GetMYSQLDBClientE(subscriptionID string) (*armmysql.DatabasesClient, error) {
+// GetMYSQLDBClientContextE is a helper function that will setup a mysql DB client.
+// The ctx parameter supports cancellation and timeouts.
+func GetMYSQLDBClientContextE(_ context.Context, subscriptionID string) (*armmysql.DatabasesClient, error) {
 	clientFactory, err := getArmMySQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
 	return clientFactory.NewDatabasesClient(), nil
+}
+
+// GetMYSQLDBClientE is a helper function that will setup a mysql DB client.
+//
+// Deprecated: Use [GetMYSQLDBClientContextE] instead.
+func GetMYSQLDBClientE(subscriptionID string) (*armmysql.DatabasesClient, error) {
+	return GetMYSQLDBClientContextE(context.Background(), subscriptionID)
 }
 
 // GetMYSQLDBContext is a helper function that gets the database.
@@ -102,7 +118,7 @@ func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbNa
 // The ctx parameter supports cancellation and timeouts.
 func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
 	// Create a MySQL db client
-	mysqldbClient, err := GetMYSQLDBClientE(subscriptionID)
+	mysqldbClient, err := GetMYSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +165,7 @@ func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, sub
 // The ctx parameter supports cancellation and timeouts.
 func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) ([]*armmysql.Database, error) {
 	// Create a MySQL db client
-	mysqldbClient, err := GetMYSQLDBClientE(subscriptionID)
+	mysqldbClient, err := GetMYSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

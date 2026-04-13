@@ -59,8 +59,9 @@ func executeTerragruntCommand(t testing.TestingT, ctx context.Context, opts *Opt
 	commandDescription := fmt.Sprintf("%s %v", opts.TerragruntBinary, finalArgs)
 
 	// Execute the command with retry logic and error handling
-	return retry.DoWithRetryableErrorsE(
+	return retry.DoWithRetryableErrorsContextE(
 		t,
+		ctx,
 		commandDescription,
 		opts.RetryableTerraformErrors,
 		opts.MaxRetries,
