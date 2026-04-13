@@ -1,0 +1,73 @@
+name: Terragrunt Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  terragrunt-tests:
+    name: Terragrunt Tests (${{ matrix.iac }})
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        iac: [terraform, tofu]
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v3
+        with:
+          version: 2025.12.10
+          experimental: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Go module cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go modules
+        run: go mod download
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::087285199408:role/terratest-gha
+          aws-region: us-east-1
+
+      - name: Switch to OpenTofu
+        if: matrix.iac == 'tofu'
+        run: |
+          # Remove terraform binary so terratest auto-detects tofu
+          sudo rm -f "$(which terraform 2>/dev/null)" || true
+          tofu version
+
+      - name: Run terragrunt module tests
+        run: |
+          mkdir -p /tmp/logs
+          go test -v -p 1 -count=1 -timeout 30m ./modules/terragrunt/... 2>&1 | tee /tmp/logs/test_output.log
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terragrunt-test-logs-${{ matrix.iac }}
+          path: /tmp/logs/
+          retention-days: 14
