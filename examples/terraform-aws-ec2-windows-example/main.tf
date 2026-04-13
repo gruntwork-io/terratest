@@ -20,6 +20,13 @@ terraform {
 provider "aws" {
   # The AWS region in which all resources will be created
   region = var.region
+
+  default_tags {
+    tags = {
+      "gw:repo"    = "https://github.com/gruntwork-io/terratest"
+      "gw:example" = "terraform-aws-ec2-windows-example"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
