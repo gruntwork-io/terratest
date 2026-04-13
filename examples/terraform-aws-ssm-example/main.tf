@@ -12,6 +12,13 @@ terraform {
 
 provider "aws" {
   region = var.region
+
+  default_tags {
+    tags = {
+      "gw:repo"    = "https://github.com/gruntwork-io/terratest"
+      "gw:example" = "terraform-aws-ssm-example"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
