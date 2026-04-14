@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2016-06-01/recoveryservices"
-	"github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2020-02-02/backup"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservices"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/recoveryservices/armrecoveryservicesbackup/v4"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +35,7 @@ func RecoveryServicesVaultExists(t testing.TestingT, vaultName, resourceGroupNam
 // GetRecoveryServicesVaultBackupPolicyListContext returns a list of backup policies for the given vault.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetRecoveryServicesVaultBackupPolicyListContext(t testing.TestingT, ctx context.Context, vaultName, resourceGroupName, subscriptionID string) map[string]backup.ProtectionPolicyResource {
+func GetRecoveryServicesVaultBackupPolicyListContext(t testing.TestingT, ctx context.Context, vaultName, resourceGroupName, subscriptionID string) map[string]armrecoveryservicesbackup.ProtectionPolicyResource {
 	t.Helper()
 
 	list, err := GetRecoveryServicesVaultBackupPolicyListContextE(ctx, vaultName, resourceGroupName, subscriptionID)
@@ -48,7 +48,7 @@ func GetRecoveryServicesVaultBackupPolicyListContext(t testing.TestingT, ctx con
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetRecoveryServicesVaultBackupPolicyListContext] instead.
-func GetRecoveryServicesVaultBackupPolicyList(t testing.TestingT, vaultName, resourceGroupName, subscriptionID string) map[string]backup.ProtectionPolicyResource {
+func GetRecoveryServicesVaultBackupPolicyList(t testing.TestingT, vaultName, resourceGroupName, subscriptionID string) map[string]armrecoveryservicesbackup.ProtectionPolicyResource {
 	t.Helper()
 
 	return GetRecoveryServicesVaultBackupPolicyListContext(t, context.Background(), vaultName, resourceGroupName, subscriptionID)
@@ -57,7 +57,7 @@ func GetRecoveryServicesVaultBackupPolicyList(t testing.TestingT, vaultName, res
 // GetRecoveryServicesVaultBackupProtectedVMListContext returns a list of protected VMs on the given vault and policy.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetRecoveryServicesVaultBackupProtectedVMListContext(t testing.TestingT, ctx context.Context, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]backup.AzureIaaSComputeVMProtectedItem {
+func GetRecoveryServicesVaultBackupProtectedVMListContext(t testing.TestingT, ctx context.Context, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem {
 	t.Helper()
 
 	list, err := GetRecoveryServicesVaultBackupProtectedVMListContextE(ctx, policyName, vaultName, resourceGroupName, subscriptionID)
@@ -70,7 +70,7 @@ func GetRecoveryServicesVaultBackupProtectedVMListContext(t testing.TestingT, ct
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetRecoveryServicesVaultBackupProtectedVMListContext] instead.
-func GetRecoveryServicesVaultBackupProtectedVMList(t testing.TestingT, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]backup.AzureIaaSComputeVMProtectedItem {
+func GetRecoveryServicesVaultBackupProtectedVMList(t testing.TestingT, policyName, vaultName, resourceGroupName, subscriptionID string) map[string]armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem {
 	t.Helper()
 
 	return GetRecoveryServicesVaultBackupProtectedVMListContext(t, context.Background(), policyName, vaultName, resourceGroupName, subscriptionID)
@@ -100,7 +100,7 @@ func RecoveryServicesVaultExistsE(vaultName, resourceGroupName, subscriptionID s
 
 // GetRecoveryServicesVaultContextE returns a recovery services vault instance.
 // The ctx parameter supports cancellation and timeouts.
-func GetRecoveryServicesVaultContextE(ctx context.Context, vaultName, resourceGroupName, subscriptionID string) (*recoveryservices.Vault, error) {
+func GetRecoveryServicesVaultContextE(ctx context.Context, vaultName, resourceGroupName, subscriptionID string) (*armrecoveryservices.Vault, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -111,33 +111,34 @@ func GetRecoveryServicesVaultContextE(ctx context.Context, vaultName, resourceGr
 		return nil, err
 	}
 
-	client := recoveryservices.NewVaultsClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client.Authorizer = *authorizer
-
-	vault, err := client.Get(ctx, resourceGroupName, vaultName)
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	return &vault, nil
+	client, err := armrecoveryservices.NewVaultsClient(subscriptionID, cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetRecoveryServicesVaultWithClient(ctx, client, resourceGroupName, vaultName)
 }
 
 // GetRecoveryServicesVaultE returns a vault instance.
 //
 // Deprecated: Use [GetRecoveryServicesVaultContextE] instead.
-func GetRecoveryServicesVaultE(vaultName, resourceGroupName, subscriptionID string) (*recoveryservices.Vault, error) {
+func GetRecoveryServicesVaultE(vaultName, resourceGroupName, subscriptionID string) (*armrecoveryservices.Vault, error) {
 	return GetRecoveryServicesVaultContextE(context.Background(), vaultName, resourceGroupName, subscriptionID)
 }
 
 // GetRecoveryServicesVaultBackupPolicyListContextE returns a list of backup policies for the given vault.
 // The ctx parameter supports cancellation and timeouts.
-func GetRecoveryServicesVaultBackupPolicyListContextE(ctx context.Context, vaultName, resourceGroupName, subscriptionID string) (map[string]backup.ProtectionPolicyResource, error) {
+func GetRecoveryServicesVaultBackupPolicyListContextE(ctx context.Context, vaultName, resourceGroupName, subscriptionID string) (map[string]armrecoveryservicesbackup.ProtectionPolicyResource, error) {
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -148,89 +149,124 @@ func GetRecoveryServicesVaultBackupPolicyListContextE(ctx context.Context, vault
 		return nil, err
 	}
 
-	client := backup.NewPoliciesClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client.Authorizer = *authorizer
-
-	listIter, err := client.ListComplete(ctx, vaultName, resourceGroupName, "")
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	policyMap := make(map[string]backup.ProtectionPolicyResource)
+	client, err := armrecoveryservicesbackup.NewBackupPoliciesClient(subscriptionID, cred, opts)
+	if err != nil {
+		return nil, err
+	}
 
-	for listIter.NotDone() {
-		v := listIter.Value()
-		policyMap[*v.Name] = v
+	return GetBackupPolicyListWithClient(ctx, client, vaultName, resourceGroupName)
+}
 
-		err := listIter.NextWithContext(ctx)
+// GetRecoveryServicesVaultBackupPolicyListE returns a list of backup policies for the given vault.
+//
+// Deprecated: Use [GetRecoveryServicesVaultBackupPolicyListContextE] instead.
+func GetRecoveryServicesVaultBackupPolicyListE(vaultName, resourceGroupName, subscriptionID string) (map[string]armrecoveryservicesbackup.ProtectionPolicyResource, error) {
+	return GetRecoveryServicesVaultBackupPolicyListContextE(context.Background(), vaultName, resourceGroupName, subscriptionID)
+}
+
+// GetRecoveryServicesVaultBackupProtectedVMListContextE returns a list of protected VMs on the given vault and policy.
+// The ctx parameter supports cancellation and timeouts.
+func GetRecoveryServicesVaultBackupProtectedVMListContextE(ctx context.Context, policyName, vaultName, resourceGroupName, subscriptionID string) (map[string]armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem, error) {
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	resourceGroupName, err = getTargetAzureResourceGroupName(resourceGroupName)
+	if err != nil {
+		return nil, err
+	}
+
+	cred, err := newArmCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := armrecoveryservicesbackup.NewBackupProtectedItemsClient(subscriptionID, cred, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBackupProtectedVMListWithClient(ctx, client, vaultName, resourceGroupName, policyName)
+}
+
+// GetRecoveryServicesVaultBackupProtectedVMListE returns a list of protected VM's on the given vault/policy.
+//
+// Deprecated: Use [GetRecoveryServicesVaultBackupProtectedVMListContextE] instead.
+func GetRecoveryServicesVaultBackupProtectedVMListE(policyName, vaultName, resourceGroupName, subscriptionID string) (map[string]armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem, error) {
+	return GetRecoveryServicesVaultBackupProtectedVMListContextE(context.Background(), policyName, vaultName, resourceGroupName, subscriptionID)
+}
+
+// GetRecoveryServicesVaultWithClient retrieves a recovery services vault using the provided client.
+func GetRecoveryServicesVaultWithClient(ctx context.Context, client *armrecoveryservices.VaultsClient, resourceGroupName, vaultName string) (*armrecoveryservices.Vault, error) {
+	resp, err := client.Get(ctx, resourceGroupName, vaultName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Vault, nil
+}
+
+// GetBackupPolicyListWithClient retrieves all backup policies for a vault using the provided client.
+func GetBackupPolicyListWithClient(ctx context.Context, client *armrecoveryservicesbackup.BackupPoliciesClient, vaultName, resourceGroupName string) (map[string]armrecoveryservicesbackup.ProtectionPolicyResource, error) {
+	pager := client.NewListPager(vaultName, resourceGroupName, nil)
+	policyMap := make(map[string]armrecoveryservicesbackup.ProtectionPolicyResource)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
+		}
+
+		for _, v := range page.Value {
+			if v.Name == nil {
+				continue
+			}
+
+			policyMap[*v.Name] = *v
 		}
 	}
 
 	return policyMap, nil
 }
 
-// GetRecoveryServicesVaultBackupPolicyListE returns a list of backup policies for the given vault.
-//
-// Deprecated: Use [GetRecoveryServicesVaultBackupPolicyListContextE] instead.
-func GetRecoveryServicesVaultBackupPolicyListE(vaultName, resourceGroupName, subscriptionID string) (map[string]backup.ProtectionPolicyResource, error) {
-	return GetRecoveryServicesVaultBackupPolicyListContextE(context.Background(), vaultName, resourceGroupName, subscriptionID)
-}
-
-// GetRecoveryServicesVaultBackupProtectedVMListContextE returns a list of protected VMs on the given vault and policy.
-// The ctx parameter supports cancellation and timeouts.
-func GetRecoveryServicesVaultBackupProtectedVMListContextE(ctx context.Context, policyName, vaultName, resourceGroupName, subscriptionID string) (map[string]backup.AzureIaaSComputeVMProtectedItem, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	resourceGroupName, err = getTargetAzureResourceGroupName(resourceGroupName)
-	if err != nil {
-		return nil, err
-	}
-
-	client := backup.NewProtectedItemsGroupClient(subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
+// GetBackupProtectedVMListWithClient retrieves all protected VMs matching the given policy using the provided client.
+func GetBackupProtectedVMListWithClient(ctx context.Context, client *armrecoveryservicesbackup.BackupProtectedItemsClient, vaultName, resourceGroupName, policyName string) (map[string]armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem, error) {
 	filter := fmt.Sprintf("backupManagementType eq 'AzureIaasVM' and itemType eq 'VM' and policyName eq '%s'", policyName)
 
-	listIter, err := client.ListComplete(ctx, vaultName, resourceGroupName, filter, "")
-	if err != nil {
-		return nil, err
-	}
+	pager := client.NewListPager(vaultName, resourceGroupName, &armrecoveryservicesbackup.BackupProtectedItemsClientListOptions{
+		Filter: &filter,
+	})
 
-	vmList := make(map[string]backup.AzureIaaSComputeVMProtectedItem)
+	vmList := make(map[string]armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem)
 
-	for listIter.NotDone() {
-		currentVM, _ := listIter.Value().Properties.AsAzureIaaSComputeVMProtectedItem()
-		vmList[*currentVM.FriendlyName] = *currentVM
-
-		err := listIter.NextWithContext(ctx)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
 		if err != nil {
 			return nil, err
+		}
+
+		for _, item := range page.Value {
+			if vmItem, ok := item.Properties.(*armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem); ok {
+				vmList[*vmItem.FriendlyName] = *vmItem
+			}
 		}
 	}
 
 	return vmList, nil
-}
-
-// GetRecoveryServicesVaultBackupProtectedVMListE returns a list of protected VM's on the given vault/policy.
-//
-// Deprecated: Use [GetRecoveryServicesVaultBackupProtectedVMListContextE] instead.
-func GetRecoveryServicesVaultBackupProtectedVMListE(policyName, vaultName, resourceGroupName, subscriptionID string) (map[string]backup.AzureIaaSComputeVMProtectedItem, error) {
-	return GetRecoveryServicesVaultBackupProtectedVMListContextE(context.Background(), policyName, vaultName, resourceGroupName, subscriptionID)
 }

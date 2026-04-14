@@ -1,55 +1,82 @@
-//go:build azure
-// +build azure
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure_test
 
 import (
+	"context"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
+	monitorfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor/fake"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when methods to create and delete network resources are added, these tests can be extended.
-*/
+func newFakeActionGroupsClient(t *testing.T, srv *monitorfake.ActionGroupsServer) *armmonitor.ActionGroupsClient {
+	t.Helper()
 
-func TestGetActionGroupResourceEWithMissingResourceGroupName(t *testing.T) {
-	t.Parallel()
-
-	ruleName := "Hello"
-	resGroupName := ""
-	subscriptionID := ""
-
-	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
-
-	require.Error(t, err)
-}
-
-func TestGetActionGroupResourceEWithInvalidResourceGroupName(t *testing.T) {
-	t.Parallel()
-
-	ruleName := ""
-	resGroupName := "Hello"
-	subscriptionID := ""
-
-	_, err := azure.GetActionGroupResourceE(ruleName, resGroupName, subscriptionID)
-
-	require.Error(t, err)
-}
-
-func TestGetActionGroupClient(t *testing.T) {
-	t.Parallel()
-
-	subscriptionID := ""
-
-	client, err := azure.CreateActionGroupClient(subscriptionID)
-
+	transport := monitorfake.NewActionGroupsServerTransport(srv)
+	client, err := armmonitor.NewActionGroupsClient("fake-sub", &azfake.TokenCredential{}, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{Transport: transport},
+	})
 	require.NoError(t, err)
-	assert.NotEmpty(t, *client)
+
+	return client
+}
+
+func TestGetActionGroupResourceWithClient(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		server  monitorfake.ActionGroupsServer
+		name    string
+		wantErr bool
+	}{
+		{
+			name: "Success",
+			server: monitorfake.ActionGroupsServer{
+				Get: func(_ context.Context, _ string, actionGroupName string, _ *armmonitor.ActionGroupsClientGetOptions) (resp azfake.Responder[armmonitor.ActionGroupsClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armmonitor.ActionGroupsClientGetResponse{
+						ActionGroupResource: armmonitor.ActionGroupResource{
+							Name: to.Ptr(actionGroupName),
+						},
+					}, nil)
+
+					return
+				},
+			},
+		},
+		{
+			name: "NotFound",
+			server: monitorfake.ActionGroupsServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armmonitor.ActionGroupsClientGetOptions) (resp azfake.Responder[armmonitor.ActionGroupsClientGetResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+					return
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			srv := tc.server
+			client := newFakeActionGroupsClient(t, &srv)
+
+			resource, err := azure.GetActionGroupResourceWithClient(t.Context(), client, "rg", "my-action-group")
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, "my-action-group", *resource.Name)
+		})
+	}
 }
