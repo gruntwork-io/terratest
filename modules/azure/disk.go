@@ -40,16 +40,17 @@ func DiskExistsContext(t testing.TestingT, ctx context.Context, diskName string,
 // DiskExistsContextE indicates whether the specified Azure Managed Disk exists in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func DiskExistsContextE(ctx context.Context, diskName string, resGroupName string, subscriptionID string) (bool, error) {
-	_, err := GetDiskContextE(ctx, diskName, resGroupName, subscriptionID)
+	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
-		if ResourceNotFoundErrorExists(err) {
-			return false, nil
-		}
-
 		return false, err
 	}
 
-	return true, nil
+	client, err := CreateDisksClientContextE(ctx, subscriptionID)
+	if err != nil {
+		return false, err
+	}
+
+	return DiskExistsWithClient(ctx, client, resGroupName, diskName)
 }
 
 // GetDisk returns a Disk in the specified Azure Resource Group.
@@ -94,10 +95,29 @@ func GetDiskContextE(ctx context.Context, diskName string, resGroupName string, 
 		return nil, err
 	}
 
+	return GetDiskWithClient(ctx, client, resGroupName, diskName)
+}
+
+// GetDiskWithClient returns a Disk using the provided DisksClient.
+func GetDiskWithClient(ctx context.Context, client *armcompute.DisksClient, resGroupName string, diskName string) (*armcompute.Disk, error) {
 	resp, err := client.Get(ctx, resGroupName, diskName, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &resp.Disk, nil
+}
+
+// DiskExistsWithClient checks if a Disk exists using the provided DisksClient.
+func DiskExistsWithClient(ctx context.Context, client *armcompute.DisksClient, resGroupName string, diskName string) (bool, error) {
+	_, err := GetDiskWithClient(ctx, client, resGroupName, diskName)
+	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
