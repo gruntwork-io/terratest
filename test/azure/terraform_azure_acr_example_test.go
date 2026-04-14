@@ -48,7 +48,7 @@ func TestTerraformAzureACRExample(t *testing.T) {
 
 	actualACR := azure.GetContainerRegistryContext(t, t.Context(), acrName, resourceGroupName, "")
 
-	assert.Equal(t, loginServer, *actualACR.LoginServer)
-	assert.True(t, *actualACR.AdminUserEnabled)
-	assert.Equal(t, acrSKU, string(actualACR.Sku.Name))
+	assert.Equal(t, loginServer, *actualACR.Properties.LoginServer)
+	assert.True(t, *actualACR.Properties.AdminUserEnabled)
+	assert.Equal(t, acrSKU, string(*actualACR.SKU.Name))
 }

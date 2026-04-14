@@ -40,12 +40,12 @@ func TestGetContainerRegistryE(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestGetContainerRegistryClientE(t *testing.T) {
+func TestCreateContainerRegistryClientE(t *testing.T) {
 	t.Parallel()
 
 	subscriptionID := ""
 
-	_, err := azure.GetContainerRegistryClientE(subscriptionID)
+	_, err := azure.CreateContainerRegistryClientE(subscriptionID)
 	require.NoError(t, err)
 }
 
@@ -71,11 +71,11 @@ func TestGetContainerInstanceE(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestGetContainerInstanceClientE(t *testing.T) {
+func TestCreateContainerInstanceClientE(t *testing.T) {
 	t.Parallel()
 
 	subscriptionID := ""
 
-	_, err := azure.GetContainerInstanceClientE(subscriptionID)
+	_, err := azure.CreateContainerInstanceClientE(subscriptionID)
 	require.NoError(t, err)
 }
