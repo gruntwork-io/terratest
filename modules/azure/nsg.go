@@ -169,30 +169,36 @@ func GetAllNSGRulesContextE(ctx context.Context, resourceGroupName, nsgName, sub
 		return NsgRuleSummaryList{}, err
 	}
 
-	// Get a client instance
 	customRulesClient, err := GetCustomNsgRulesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
-	// Read all default (platform) rules using the pager pattern.
-	boundDefaultRules, err := collectDefaultSecurityRules(ctx, defaultRulesClient, resourceGroupName, nsgName)
+	boundDefaultRules, err := GetDefaultNSGRulesWithClient(ctx, defaultRulesClient, resourceGroupName, nsgName)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
-	// Read any custom (user provided) rules using the pager pattern.
-	boundCustomRules, err := collectCustomSecurityRules(ctx, customRulesClient, resourceGroupName, nsgName)
+	boundCustomRules, err := GetCustomNSGRulesWithClient(ctx, customRulesClient, resourceGroupName, nsgName)
 	if err != nil {
 		return NsgRuleSummaryList{}, err
 	}
 
-	// Join the summarized lists and wrap in NsgRuleSummaryList struct
 	allRules := make([]NsgRuleSummary, 0, len(boundDefaultRules)+len(boundCustomRules))
 	allRules = append(allRules, boundDefaultRules...)
 	allRules = append(allRules, boundCustomRules...)
 
 	return NsgRuleSummaryList{SummarizedRules: allRules}, nil
+}
+
+// GetDefaultNSGRulesWithClient returns default (platform) NSG rules using the provided DefaultSecurityRulesClient.
+func GetDefaultNSGRulesWithClient(ctx context.Context, client *armnetwork.DefaultSecurityRulesClient, resourceGroupName, nsgName string) ([]NsgRuleSummary, error) {
+	return collectDefaultSecurityRules(ctx, client, resourceGroupName, nsgName)
+}
+
+// GetCustomNSGRulesWithClient returns custom (user-defined) NSG rules using the provided SecurityRulesClient.
+func GetCustomNSGRulesWithClient(ctx context.Context, client *armnetwork.SecurityRulesClient, resourceGroupName, nsgName string) ([]NsgRuleSummary, error) {
+	return collectCustomSecurityRules(ctx, client, resourceGroupName, nsgName)
 }
 
 // collectDefaultSecurityRules uses the pager pattern to iterate over all default security rules and

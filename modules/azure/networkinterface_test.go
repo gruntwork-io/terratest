@@ -1,52 +1,101 @@
-//go:build azure || (azureslim && network)
-// +build azure azureslim,network
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	networkfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6/fake"
 	"github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when methods can be mocked or Create/Delete APIs are added, these tests can be extended.
-*/
+func newFakeInterfacesClient(t *testing.T, srv *networkfake.InterfacesServer) *armnetwork.InterfacesClient {
+	t.Helper()
 
-func TestGetNetworkInterfaceE(t *testing.T) {
-	t.Parallel()
+	transport := networkfake.NewInterfacesServerTransport(srv)
+	client, err := armnetwork.NewInterfacesClient("fake-sub", &azfake.TokenCredential{}, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{Transport: transport},
+	})
+	require.NoError(t, err)
 
-	_, err := azure.GetNetworkInterfaceContextE(context.Background(), "", "", "")
-
-	require.Error(t, err)
+	return client
 }
 
-func TestGetNetworkInterfacePrivateIPsE(t *testing.T) {
+func TestGetNetworkInterfaceWithClient(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetNetworkInterfacePrivateIPsContextE(context.Background(), "", "", "")
+	srv := &networkfake.InterfacesServer{
+		Get: func(_ context.Context, _ string, nicName string, _ *armnetwork.InterfacesClientGetOptions) (resp azfake.Responder[armnetwork.InterfacesClientGetResponse], errResp azfake.ErrorResponder) {
+			resp.SetResponse(http.StatusOK, armnetwork.InterfacesClientGetResponse{
+				Interface: armnetwork.Interface{
+					Name: to.Ptr(nicName),
+					Properties: &armnetwork.InterfacePropertiesFormat{
+						IPConfigurations: []*armnetwork.InterfaceIPConfiguration{
+							{
+								Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{
+									PrivateIPAddress: to.Ptr("10.0.0.4"),
+								},
+							},
+						},
+					},
+				},
+			}, nil)
 
-	require.Error(t, err)
+			return
+		},
+	}
+	client := newFakeInterfacesClient(t, srv)
+
+	nic, err := azure.GetNetworkInterfaceWithClient(t.Context(), client, "rg", "my-nic")
+	require.NoError(t, err)
+	assert.Equal(t, "my-nic", *nic.Name)
 }
 
-func TestGetNetworkInterfacePublicIPsE(t *testing.T) {
+func TestExtractNetworkInterfacePrivateIPs(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetNetworkInterfacePublicIPsContextE(context.Background(), "", "", "")
+	tests := []struct {
+		name     string
+		configs  []*armnetwork.InterfaceIPConfiguration
+		expected []string
+	}{
+		{
+			name: "single IP",
+			configs: []*armnetwork.InterfaceIPConfiguration{
+				{Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{PrivateIPAddress: to.Ptr("10.0.0.4")}},
+			},
+			expected: []string{"10.0.0.4"},
+		},
+		{
+			name: "multiple IPs",
+			configs: []*armnetwork.InterfaceIPConfiguration{
+				{Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{PrivateIPAddress: to.Ptr("10.0.0.4")}},
+				{Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{PrivateIPAddress: to.Ptr("10.0.0.5")}},
+				{Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{PrivateIPAddress: to.Ptr("10.0.0.6")}},
+			},
+			expected: []string{"10.0.0.4", "10.0.0.5", "10.0.0.6"},
+		},
+	}
 
-	require.Error(t, err)
-}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-func TestNetworkInterfaceExistsE(t *testing.T) {
-	t.Parallel()
+			nic := &armnetwork.Interface{
+				Properties: &armnetwork.InterfacePropertiesFormat{
+					IPConfigurations: tc.configs,
+				},
+			}
 
-	_, err := azure.NetworkInterfaceExistsContextE(context.Background(), "", "", "")
-
-	require.Error(t, err)
+			ips := azure.ExtractNetworkInterfacePrivateIPs(nic)
+			assert.Equal(t, tc.expected, ips)
+		})
+	}
 }

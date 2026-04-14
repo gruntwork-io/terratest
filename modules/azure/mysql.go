@@ -58,8 +58,12 @@ func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptio
 		return nil, err
 	}
 
-	// Get the corresponding server
-	resp, err := mysqlClient.Get(ctx, resGroupName, serverName, nil)
+	return GetMYSQLServerWithClient(ctx, mysqlClient, resGroupName, serverName)
+}
+
+// GetMYSQLServerWithClient gets the server using the provided ServersClient.
+func GetMYSQLServerWithClient(ctx context.Context, client *armmysql.ServersClient, resGroupName string, serverName string) (*armmysql.Server, error) {
+	resp, err := client.Get(ctx, resGroupName, serverName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +127,12 @@ func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID 
 		return nil, err
 	}
 
-	// Get the corresponding db
-	resp, err := mysqldbClient.Get(ctx, resGroupName, serverName, dbName, nil)
+	return GetMYSQLDBWithClient(ctx, mysqldbClient, resGroupName, serverName, dbName)
+}
+
+// GetMYSQLDBWithClient gets the database using the provided DatabasesClient.
+func GetMYSQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
+	resp, err := client.Get(ctx, resGroupName, serverName, dbName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +178,12 @@ func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID
 		return nil, err
 	}
 
-	// Get the databases using pager
-	pager := mysqldbClient.NewListByServerPager(resGroupName, serverName, nil)
+	return ListMySQLDBWithClient(ctx, mysqldbClient, resGroupName, serverName)
+}
+
+// ListMySQLDBWithClient lists all databases per server using the provided DatabasesClient.
+func ListMySQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient, resGroupName string, serverName string) ([]*armmysql.Database, error) {
+	pager := client.NewListByServerPager(resGroupName, serverName, nil)
 
 	var databases []*armmysql.Database
 

@@ -197,6 +197,70 @@ func TestSafeDerefString(t *testing.T) {
 	assert.Equal(t, "hello", safeDerefString(&s))
 }
 
+// GetDefaultNSGRulesWithClient / GetCustomNSGRulesWithClient
+
+func TestGetDefaultNSGRulesWithClient(t *testing.T) {
+	t.Parallel()
+
+	protocol := armnetwork.SecurityRuleProtocolTCP
+	access := armnetwork.SecurityRuleAccessAllow
+	direction := armnetwork.SecurityRuleDirectionInbound
+	srv := networkfake.DefaultSecurityRulesServer{
+		NewListPager: func(_, _ string, _ *armnetwork.DefaultSecurityRulesClientListOptions) (resp azfake.PagerResponder[armnetwork.DefaultSecurityRulesClientListResponse]) {
+			resp.AddPage(http.StatusOK, armnetwork.DefaultSecurityRulesClientListResponse{
+				SecurityRuleListResult: armnetwork.SecurityRuleListResult{
+					Value: []*armnetwork.SecurityRule{{
+						Name: to.Ptr("AllowVnetInBound"),
+						Properties: &armnetwork.SecurityRulePropertiesFormat{
+							Protocol: &protocol, Access: &access, Direction: &direction,
+							Priority: to.Ptr[int32](65000),
+						},
+					}},
+				},
+			}, nil)
+
+			return
+		},
+	}
+	client := newFakeDefaultSecurityRulesClient(t, srv)
+	rules, err := GetDefaultNSGRulesWithClient(context.Background(), client, "rg", "nsg")
+
+	require.NoError(t, err)
+	require.Len(t, rules, 1)
+	assert.Equal(t, "AllowVnetInBound", rules[0].Name)
+}
+
+func TestGetCustomNSGRulesWithClient(t *testing.T) {
+	t.Parallel()
+
+	protocol := armnetwork.SecurityRuleProtocolUDP
+	access := armnetwork.SecurityRuleAccessDeny
+	direction := armnetwork.SecurityRuleDirectionOutbound
+	srv := networkfake.SecurityRulesServer{
+		NewListPager: func(_, _ string, _ *armnetwork.SecurityRulesClientListOptions) (resp azfake.PagerResponder[armnetwork.SecurityRulesClientListResponse]) {
+			resp.AddPage(http.StatusOK, armnetwork.SecurityRulesClientListResponse{
+				SecurityRuleListResult: armnetwork.SecurityRuleListResult{
+					Value: []*armnetwork.SecurityRule{{
+						Name: to.Ptr("DenyUDPOut"),
+						Properties: &armnetwork.SecurityRulePropertiesFormat{
+							Protocol: &protocol, Access: &access, Direction: &direction,
+							Priority: to.Ptr[int32](500), DestinationPortRange: to.Ptr("53"),
+						},
+					}},
+				},
+			}, nil)
+
+			return
+		},
+	}
+	client := newFakeSecurityRulesClient(t, srv)
+	rules, err := GetCustomNSGRulesWithClient(context.Background(), client, "rg", "nsg")
+
+	require.NoError(t, err)
+	require.Len(t, rules, 1)
+	assert.Equal(t, "DenyUDPOut", rules[0].Name)
+}
+
 // Collect security rules with fake servers
 
 func TestCollectDefaultSecurityRules(t *testing.T) {

@@ -87,7 +87,13 @@ func GetAppServiceContextE(ctx context.Context, appName string, resGroupName str
 		return nil, err
 	}
 
-	resp, err := client.Get(ctx, rgName, appName, nil)
+	return GetAppServiceWithClient(ctx, client, rgName, appName)
+}
+
+// GetAppServiceWithClient gets the App service object using the provided client.
+// This variant is useful for testing with fake clients.
+func GetAppServiceWithClient(ctx context.Context, client *armappservice.WebAppsClient, resourceGroupName string, appName string) (*armappservice.Site, error) {
+	resp, err := client.Get(ctx, resourceGroupName, appName, nil)
 	if err != nil {
 		return nil, err
 	}
