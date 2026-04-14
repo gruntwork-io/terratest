@@ -18,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
@@ -28,6 +27,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerinstance/armcontainerinstance/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerregistry/armcontainerregistry"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
@@ -39,10 +41,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse"
-	"github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-10-01/containerinstance"
-	"github.com/Azure/azure-sdk-for-go/services/containerregistry/mgmt/2019-05-01/containerregistry"
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-06-01/subscriptions"
 	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -197,28 +195,6 @@ func getArmServiceBusClientFactory(subscriptionID string) (*armservicebus.Client
 
 // ---- Public client creator functions ----
 
-// CreateSubscriptionsClientContextE returns a subscriptions client instance configured with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
-// The ctx parameter supports cancellation and timeouts.
-func CreateSubscriptionsClientContextE(_ context.Context) (subscriptions.Client, error) {
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return subscriptions.Client{}, err
-	}
-
-	// Create correct client based on type passed
-	return subscriptions.NewClientWithBaseURI(baseURI), nil
-}
-
-// CreateSubscriptionsClientE returns a subscriptions client instance configured with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
-//
-// Deprecated: Use [CreateSubscriptionsClientContextE] instead.
-func CreateSubscriptionsClientE() (subscriptions.Client, error) {
-	return CreateSubscriptionsClientContextE(context.Background())
-}
-
 // CreateVirtualMachinesClientContextE returns a virtual machines client.
 // The ctx parameter supports cancellation and timeouts.
 func CreateVirtualMachinesClientContextE(_ context.Context, subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
@@ -237,31 +213,41 @@ func CreateVirtualMachinesClientE(subscriptionID string) (*armcompute.VirtualMac
 	return CreateVirtualMachinesClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateManagedClustersClientContextE returns a managed clusters client instance configured with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
-// The ctx parameter supports cancellation and timeouts.
-func CreateManagedClustersClientContextE(_ context.Context, subscriptionID string) (containerservice.ManagedClustersClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// getArmContainerServiceClientFactory creates an ARM container service client factory.
+func getArmContainerServiceClientFactory(subscriptionID string) (*armcontainerservice.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
-		return containerservice.ManagedClustersClient{}, err
+		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	cred, err := newArmCredential()
 	if err != nil {
-		return containerservice.ManagedClustersClient{}, err
+		return nil, err
 	}
 
-	// Create correct client based on type passed
-	return containerservice.NewManagedClustersClientWithBaseURI(baseURI, subscriptionID), nil
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	return armcontainerservice.NewClientFactory(targetSubscriptionID, cred, opts)
 }
 
-// CreateManagedClustersClientE returns a managed clusters client instance configured with the correct BaseURI depending on
-// the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateManagedClustersClientContextE returns a managed clusters client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateManagedClustersClientContextE(_ context.Context, subscriptionID string) (*armcontainerservice.ManagedClustersClient, error) {
+	clientFactory, err := getArmContainerServiceClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientFactory.NewManagedClustersClient(), nil
+}
+
+// CreateManagedClustersClientE returns a managed clusters client.
 //
 // Deprecated: Use [CreateManagedClustersClientContextE] instead.
-func CreateManagedClustersClientE(subscriptionID string) (containerservice.ManagedClustersClient, error) {
+func CreateManagedClustersClientE(subscriptionID string) (*armcontainerservice.ManagedClustersClient, error) {
 	return CreateManagedClustersClientContextE(context.Background(), subscriptionID)
 }
 
@@ -485,34 +471,14 @@ func CreateAvailabilitySetClientE(subscriptionID string) (*armcompute.Availabili
 
 // CreateResourceGroupClientContextE gets a resource group client in a subscription.
 // The ctx parameter supports cancellation and timeouts.
-func CreateResourceGroupClientContextE(_ context.Context, subscriptionID string) (*resources.GroupsClient, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
-	if err != nil {
-		return nil, err
-	}
-
-	resourceGroupClient := resources.NewGroupsClientWithBaseURI(baseURI, subscriptionID)
-
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	resourceGroupClient.Authorizer = *authorizer
-
-	return &resourceGroupClient, nil
+func CreateResourceGroupClientContextE(ctx context.Context, subscriptionID string) (*armresources.ResourceGroupsClient, error) {
+	return CreateResourceGroupClientV2ContextE(ctx, subscriptionID)
 }
 
 // CreateResourceGroupClientE gets a resource group client in a subscription.
 //
 // Deprecated: Use [CreateResourceGroupClientContextE] instead.
-func CreateResourceGroupClientE(subscriptionID string) (*resources.GroupsClient, error) {
+func CreateResourceGroupClientE(subscriptionID string) (*armresources.ResourceGroupsClient, error) {
 	return CreateResourceGroupClientContextE(context.Background(), subscriptionID)
 }
 
@@ -1045,63 +1011,79 @@ func getArmAppServiceClientFactory(subscriptionID string) (*armappservice.Client
 	})
 }
 
-// CreateContainerRegistryClientContextE returns an ACR client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-// The ctx parameter supports cancellation and timeouts.
-func CreateContainerRegistryClientContextE(_ context.Context, subscriptionID string) (*containerregistry.RegistriesClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// getArmContainerRegistryClientFactory creates an ARM container registry client factory.
+func getArmContainerRegistryClientFactory(subscriptionID string) (*armcontainerregistry.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	// create client
-	registryClient := containerregistry.NewRegistriesClientWithBaseURI(baseURI, subscriptionID)
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
 
-	return &registryClient, nil
+	return armcontainerregistry.NewClientFactory(targetSubscriptionID, cred, opts)
 }
 
-// CreateContainerRegistryClientE returns an ACR client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateContainerRegistryClientContextE returns an ACR registries client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateContainerRegistryClientContextE(_ context.Context, subscriptionID string) (*armcontainerregistry.RegistriesClient, error) {
+	clientFactory, err := getArmContainerRegistryClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientFactory.NewRegistriesClient(), nil
+}
+
+// CreateContainerRegistryClientE returns an ACR registries client.
 //
 // Deprecated: Use [CreateContainerRegistryClientContextE] instead.
-func CreateContainerRegistryClientE(subscriptionID string) (*containerregistry.RegistriesClient, error) {
+func CreateContainerRegistryClientE(subscriptionID string) (*armcontainerregistry.RegistriesClient, error) {
 	return CreateContainerRegistryClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateContainerInstanceClientContextE returns an ACI client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
-// The ctx parameter supports cancellation and timeouts.
-func CreateContainerInstanceClientContextE(_ context.Context, subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+// getArmContainerInstanceClientFactory creates an ARM container instance client factory.
+func getArmContainerInstanceClientFactory(subscriptionID string) (*armcontainerinstance.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	// create client
-	instanceClient := containerinstance.NewContainerGroupsClientWithBaseURI(baseURI, subscriptionID)
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
 
-	return &instanceClient, nil
+	return armcontainerinstance.NewClientFactory(targetSubscriptionID, cred, opts)
 }
 
-// CreateContainerInstanceClientE returns an ACI client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateContainerInstanceClientContextE returns an ACI container groups client.
+// The ctx parameter supports cancellation and timeouts.
+func CreateContainerInstanceClientContextE(_ context.Context, subscriptionID string) (*armcontainerinstance.ContainerGroupsClient, error) {
+	clientFactory, err := getArmContainerInstanceClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientFactory.NewContainerGroupsClient(), nil
+}
+
+// CreateContainerInstanceClientE returns an ACI container groups client.
 //
 // Deprecated: Use [CreateContainerInstanceClientContextE] instead.
-func CreateContainerInstanceClientE(subscriptionID string) (*containerinstance.ContainerGroupsClient, error) {
+func CreateContainerInstanceClientE(subscriptionID string) (*armcontainerinstance.ContainerGroupsClient, error) {
 	return CreateContainerInstanceClientContextE(context.Background(), subscriptionID)
 }
 

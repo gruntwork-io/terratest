@@ -3,63 +3,15 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v6"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
-// GetManagedClustersClientContextE is a helper function that will setup an Azure ManagedClusters client on your behalf.
-// The ctx parameter supports cancellation and timeouts.
-func GetManagedClustersClientContextE(ctx context.Context, subscriptionID string) (*containerservice.ManagedClustersClient, error) {
-	// Create a cluster client
-	client, err := CreateManagedClustersClientContextE(ctx, subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// setup authorizer
-	authorizer, err := NewAuthorizer()
-	if err != nil {
-		return nil, err
-	}
-
-	client.Authorizer = *authorizer
-
-	return &client, nil
-}
-
-// GetManagedClustersClientE is a helper function that will setup an Azure ManagedClusters client on your behalf.
-//
-// Deprecated: Use [GetManagedClustersClientContextE] instead.
-func GetManagedClustersClientE(subscriptionID string) (*containerservice.ManagedClustersClient, error) {
-	return GetManagedClustersClientContextE(context.Background(), subscriptionID)
-}
-
-// GetManagedClusterContextE returns a ManagedCluster for the specified cluster in the given resource group.
-// The ctx parameter supports cancellation and timeouts.
-func GetManagedClusterContextE(t testing.TestingT, ctx context.Context, resourceGroupName, clusterName, subscriptionID string) (*containerservice.ManagedCluster, error) {
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := GetManagedClustersClientContextE(ctx, subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	managedCluster, err := client.Get(ctx, resourceGroupName, clusterName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &managedCluster, nil
-}
-
 // GetManagedClusterContext returns a ManagedCluster for the specified cluster in the given resource group.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetManagedClusterContext(t testing.TestingT, ctx context.Context, resourceGroupName, clusterName, subscriptionID string) *containerservice.ManagedCluster {
+func GetManagedClusterContext(t testing.TestingT, ctx context.Context, resourceGroupName, clusterName, subscriptionID string) *armcontainerservice.ManagedCluster {
 	t.Helper()
 
 	cluster, err := GetManagedClusterContextE(t, ctx, resourceGroupName, clusterName, subscriptionID)
@@ -71,6 +23,32 @@ func GetManagedClusterContext(t testing.TestingT, ctx context.Context, resourceG
 // GetManagedClusterE returns a ManagedCluster for the specified cluster in the given resource group.
 //
 // Deprecated: Use [GetManagedClusterContextE] instead.
-func GetManagedClusterE(t testing.TestingT, resourceGroupName, clusterName, subscriptionID string) (*containerservice.ManagedCluster, error) {
+func GetManagedClusterE(t testing.TestingT, resourceGroupName, clusterName, subscriptionID string) (*armcontainerservice.ManagedCluster, error) {
 	return GetManagedClusterContextE(t, context.Background(), resourceGroupName, clusterName, subscriptionID)
+}
+
+// GetManagedClusterContextE returns a ManagedCluster for the specified cluster in the given resource group.
+// The ctx parameter supports cancellation and timeouts.
+func GetManagedClusterContextE(t testing.TestingT, ctx context.Context, resourceGroupName, clusterName, subscriptionID string) (*armcontainerservice.ManagedCluster, error) {
+	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := CreateManagedClustersClientContextE(ctx, subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetManagedClusterWithClient(ctx, client, resourceGroupName, clusterName)
+}
+
+// GetManagedClusterWithClient returns a ManagedCluster using the provided ManagedClustersClient.
+func GetManagedClusterWithClient(ctx context.Context, client *armcontainerservice.ManagedClustersClient, resourceGroupName string, clusterName string) (*armcontainerservice.ManagedCluster, error) {
+	resp, err := client.Get(ctx, resourceGroupName, clusterName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.ManagedCluster, nil
 }

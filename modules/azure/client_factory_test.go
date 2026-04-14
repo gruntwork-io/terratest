@@ -43,34 +43,12 @@ func TestDefaultEnvSetToGov(t *testing.T) {
 	assert.Equal(t, govCloudEnvName, env)
 }
 
-func TestSubscriptionClientBaseURISetCorrectly(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		EnvironmentName string
-		ExpectedBaseURI string
-	}{
-		{"GovCloud/SubscriptionClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/SubscriptionClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/SubscriptionClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/SubscriptionClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
-	}
+func TestSubscriptionClientCreation(t *testing.T) {
+	t.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
-	for _, tt := range cases {
-		// The following is necessary to make sure testCase's values don't
-		// get updated due to concurrency within the scope of t.Run(..) below
-		tt := tt
-		t.Run(tt.CaseName, func(t *testing.T) {
-			// Override env setting
-			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
-
-			// Get a VM client
-			client, err := CreateSubscriptionsClientE()
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
-		})
-	}
+	client, err := CreateSubscriptionsClientContextE(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestGetClientCloudConfig(t *testing.T) {
@@ -109,34 +87,12 @@ func TestCreateVirtualMachinesClientE(t *testing.T) {
 	require.NotNil(t, client)
 }
 
-func TestManagedClustersClientBaseURISetCorrectly(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		EnvironmentName string
-		ExpectedBaseURI string
-	}{
-		{"GovCloud/ManagedClustersClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/ManagedClustersClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/ManagedClustersClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/ManagedClustersClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
-	}
+func TestManagedClustersClientCreation(t *testing.T) {
+	t.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
-	for _, tt := range cases {
-		// The following is necessary to make sure testCase's values don't
-		// get updated due to concurrency within the scope of t.Run(..) below
-		tt := tt
-		t.Run(tt.CaseName, func(t *testing.T) {
-			// Override env setting
-			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
-
-			// Get a VM client
-			client, err := CreateManagedClustersClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
-		})
-	}
+	client, err := CreateManagedClustersClientE("")
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestCosmosDBAccountClientCreation(t *testing.T) {
