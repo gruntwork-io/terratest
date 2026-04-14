@@ -38,7 +38,7 @@ func TestGetTargetAzureSubscription(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := GetTargetAzureSubscription(tt.args.subID)
+			got, err := getTargetAzureSubscription(tt.args.subID)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -70,7 +70,7 @@ func TestGetTargetAzureResourceGroupName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := GetTargetAzureResourceGroupName(tt.args.rgName)
+			got, err := getTargetAzureResourceGroupName(tt.args.rgName)
 
 			if tt.wantErr {
 				require.Error(t, err)

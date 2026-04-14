@@ -14,11 +14,8 @@ import (
 	"context"
 	"errors"
 	"os"
-	"reflect"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
-	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
@@ -32,7 +29,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/datafactory/armdatafactory/v9"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
@@ -41,7 +40,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse"
-	autorestAzure "github.com/Azure/go-autorest/autorest/azure"
 )
 
 // snippet-tag-end::client_factory_example.imports
@@ -55,9 +53,6 @@ const (
 	// "AzureUSGovernmentCloud": USGovernmentCloud
 	// "AzureStackCloud":		 Azure stack
 	AzureEnvironmentEnvName = "AZURE_ENVIRONMENT"
-
-	// ResourceManagerEndpointName is the name of the ResourceManagerEndpoint field in the Environment struct.
-	ResourceManagerEndpointName = "ResourceManagerEndpoint"
 
 	// Azure environment name constants (upper-cased for case-insensitive switch matching).
 	azurePublicCloud = "AZUREPUBLICCLOUD"
@@ -471,8 +466,13 @@ func CreateAvailabilitySetClientE(subscriptionID string) (*armcompute.Availabili
 
 // CreateResourceGroupClientContextE gets a resource group client in a subscription.
 // The ctx parameter supports cancellation and timeouts.
-func CreateResourceGroupClientContextE(ctx context.Context, subscriptionID string) (*armresources.ResourceGroupsClient, error) {
-	return CreateResourceGroupClientV2ContextE(ctx, subscriptionID)
+func CreateResourceGroupClientContextE(_ context.Context, subscriptionID string) (*armresources.ResourceGroupsClient, error) {
+	clientFactory, err := getArmResourcesClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientFactory.NewResourceGroupsClient(), nil
 }
 
 // CreateResourceGroupClientE gets a resource group client in a subscription.
@@ -648,138 +648,117 @@ func CreateDisksClientE(subscriptionID string) (*armcompute.DisksClient, error) 
 
 // CreateActionGroupClientContext creates an Action Groups client for Azure Monitor.
 // The ctx parameter supports cancellation and timeouts.
-func CreateActionGroupClientContext(_ context.Context, subscriptionID string) (*insights.ActionGroupsClient, error) {
+func CreateActionGroupClientContext(_ context.Context, subscriptionID string) (*armmonitor.ActionGroupsClient, error) {
 	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	metricAlertsClient := insights.NewActionGroupsClientWithBaseURI(baseURI, subID)
-
-	authorizer, err := NewAuthorizer()
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	metricAlertsClient.Authorizer = *authorizer
-
-	return &metricAlertsClient, nil
+	return armmonitor.NewActionGroupsClient(subID, cred, opts)
 }
 
 // CreateActionGroupClient creates an Action Groups client for Azure Monitor.
 //
 // Deprecated: Use [CreateActionGroupClientContext] instead.
-func CreateActionGroupClient(subscriptionID string) (*insights.ActionGroupsClient, error) {
+func CreateActionGroupClient(subscriptionID string) (*armmonitor.ActionGroupsClient, error) {
 	return CreateActionGroupClientContext(context.Background(), subscriptionID)
 }
 
 // CreateVMInsightsClientContextE gets a VM Insights client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateVMInsightsClientContextE(_ context.Context, subscriptionID string) (*insights.VMInsightsClient, error) {
+func CreateVMInsightsClientContextE(_ context.Context, subscriptionID string) (*armmonitor.VMInsightsClient, error) {
 	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	_, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := insights.NewVMInsightsClientWithBaseURI(baseURI, subscriptionID)
-
-	authorizer, err := NewAuthorizer()
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	client.Authorizer = *authorizer
-
-	return &client, nil
+	return armmonitor.NewVMInsightsClient(cred, opts)
 }
 
 // CreateVMInsightsClientE gets a VM Insights client.
 //
 // Deprecated: Use [CreateVMInsightsClientContextE] instead.
-func CreateVMInsightsClientE(subscriptionID string) (*insights.VMInsightsClient, error) {
+func CreateVMInsightsClientE(subscriptionID string) (*armmonitor.VMInsightsClient, error) {
 	return CreateVMInsightsClientContextE(context.Background(), subscriptionID)
 }
 
 // CreateActivityLogAlertsClientContextE gets an Activity Log Alerts client in the specified Azure Subscription.
 // The ctx parameter supports cancellation and timeouts.
-func CreateActivityLogAlertsClientContextE(_ context.Context, subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
+func CreateActivityLogAlertsClientContextE(_ context.Context, subscriptionID string) (*armmonitor.ActivityLogAlertsClient, error) {
 	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the Activity Log Alerts client
-	client := insights.NewActivityLogAlertsClientWithBaseURI(baseURI, subscriptionID)
-
-	// Create an authorizer
-	authorizer, err := NewAuthorizer()
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	client.Authorizer = *authorizer
-
-	return &client, nil
+	return armmonitor.NewActivityLogAlertsClient(subID, cred, opts)
 }
 
 // CreateActivityLogAlertsClientE gets an Activity Log Alerts client in the specified Azure Subscription.
 //
 // Deprecated: Use [CreateActivityLogAlertsClientContextE] instead.
-func CreateActivityLogAlertsClientE(subscriptionID string) (*insights.ActivityLogAlertsClient, error) {
+func CreateActivityLogAlertsClientE(subscriptionID string) (*armmonitor.ActivityLogAlertsClient, error) {
 	return CreateActivityLogAlertsClientContextE(context.Background(), subscriptionID)
 }
 
 // CreateDiagnosticsSettingsClientContextE returns a diagnostics settings client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateDiagnosticsSettingsClientContextE(_ context.Context, subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
+func CreateDiagnosticsSettingsClientContextE(_ context.Context, subscriptionID string) (*armmonitor.DiagnosticSettingsClient, error) {
 	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	_, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getBaseURI()
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	client := insights.NewDiagnosticSettingsClientWithBaseURI(baseURI, subscriptionID)
-
-	authorizer, err := NewAuthorizer()
+	opts, err := newArmClientOptions()
 	if err != nil {
 		return nil, err
 	}
 
-	client.Authorizer = *authorizer
-
-	return &client, nil
+	// DiagnosticSettingsClient does not take a subscriptionID — it operates on resourceURIs.
+	return armmonitor.NewDiagnosticSettingsClient(cred, opts)
 }
 
 // CreateDiagnosticsSettingsClientE returns a diagnostics settings client.
 //
 // Deprecated: Use [CreateDiagnosticsSettingsClientContextE] instead.
-func CreateDiagnosticsSettingsClientE(subscriptionID string) (*insights.DiagnosticSettingsClient, error) {
+func CreateDiagnosticsSettingsClientE(subscriptionID string) (*armmonitor.DiagnosticSettingsClient, error) {
 	return CreateDiagnosticsSettingsClientContextE(context.Background(), subscriptionID)
 }
 
@@ -1087,63 +1066,59 @@ func CreateContainerInstanceClientE(subscriptionID string) (*armcontainerinstanc
 	return CreateContainerInstanceClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateFrontDoorClientContextE returns an AFD client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateFrontDoorClientContextE returns a Front Door client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateFrontDoorClientContextE(_ context.Context, subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+func CreateFrontDoorClientContextE(_ context.Context, subscriptionID string) (*armfrontdoor.FrontDoorsClient, error) {
+	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	// create client
-	client := frontdoor.NewFrontDoorsClientWithBaseURI(baseURI, subscriptionID)
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
 
-	return &client, nil
+	return armfrontdoor.NewFrontDoorsClient(subID, cred, opts)
 }
 
-// CreateFrontDoorClientE returns an AFD client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateFrontDoorClientE returns a Front Door client.
 //
 // Deprecated: Use [CreateFrontDoorClientContextE] instead.
-func CreateFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
+func CreateFrontDoorClientE(subscriptionID string) (*armfrontdoor.FrontDoorsClient, error) {
 	return CreateFrontDoorClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateFrontDoorFrontendEndpointClientContextE returns an AFD Frontend Endpoints client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateFrontDoorFrontendEndpointClientContextE returns a Front Door Frontend Endpoints client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateFrontDoorFrontendEndpointClientContextE(_ context.Context, subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
-	// Validate Azure subscription ID
-	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
+func CreateFrontDoorFrontendEndpointClientContextE(_ context.Context, subscriptionID string) (*armfrontdoor.FrontendEndpointsClient, error) {
+	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
+	cred, err := newArmCredential()
 	if err != nil {
 		return nil, err
 	}
 
-	// create client
-	client := frontdoor.NewFrontendEndpointsClientWithBaseURI(baseURI, subscriptionID)
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
 
-	return &client, nil
+	return armfrontdoor.NewFrontendEndpointsClient(subID, cred, opts)
 }
 
-// CreateFrontDoorFrontendEndpointClientE returns an AFD Frontend Endpoints client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateFrontDoorFrontendEndpointClientE returns a Front Door Frontend Endpoints client.
 //
 // Deprecated: Use [CreateFrontDoorFrontendEndpointClientContextE] instead.
-func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
+func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*armfrontdoor.FrontendEndpointsClient, error) {
 	return CreateFrontDoorFrontendEndpointClientContextE(context.Background(), subscriptionID)
 }
 
@@ -1268,24 +1243,6 @@ func CreateManagedEnvironmentsClientE(subscriptionID string) (*armappcontainers.
 	return CreateManagedEnvironmentsClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateResourceGroupClientV2ContextE creates a v2 resource group client using the ARM SDK.
-// The ctx parameter supports cancellation and timeouts.
-func CreateResourceGroupClientV2ContextE(_ context.Context, subscriptionID string) (*armresources.ResourceGroupsClient, error) {
-	clientFactory, err := getArmResourcesClientFactory(subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	return clientFactory.NewResourceGroupsClient(), nil
-}
-
-// CreateResourceGroupClientV2E creates a v2 resource group client using the ARM SDK.
-//
-// Deprecated: Use [CreateResourceGroupClientV2ContextE] instead.
-func CreateResourceGroupClientV2E(subscriptionID string) (*armresources.ResourceGroupsClient, error) {
-	return CreateResourceGroupClientV2ContextE(context.Background(), subscriptionID)
-}
-
 // CreateContainerAppsClientContextE creates a Container Apps client for Azure Container Apps.
 // The ctx parameter supports cancellation and timeouts.
 func CreateContainerAppsClientContextE(_ context.Context, subscriptionID string) (*armappcontainers.ContainerAppsClient, error) {
@@ -1382,39 +1339,6 @@ func getDefaultEnvironmentName() string {
 	}
 
 	return "AzurePublicCloud"
-}
-
-// getEnvironmentEndpointE returns the endpoint identified by the endpoint name parameter.
-//
-//nolint:unparam // endpointName kept as parameter for flexibility
-func getEnvironmentEndpointE(endpointName string) (string, error) {
-	envName := getDefaultEnvironmentName()
-
-	env, err := autorestAzure.EnvironmentFromName(envName)
-	if err != nil {
-		return "", err
-	}
-
-	return getFieldValue(&env, endpointName), nil
-}
-
-// getFieldValue gets the field identified by the field parameter from the passed Environment struct
-func getFieldValue(env *autorestAzure.Environment, field string) string {
-	structValue := reflect.ValueOf(env)
-	fieldVal := reflect.Indirect(structValue).FieldByName(field)
-
-	return fieldVal.String()
-}
-
-// getBaseURI gets the base URI endpoint.
-func getBaseURI() (string, error) {
-	// Lookup environment URI
-	baseURI, err := getEnvironmentEndpointE(ResourceManagerEndpointName)
-	if err != nil {
-		return "", err
-	}
-
-	return baseURI, nil
 }
 
 // getArmResourcesClientFactory gets an arm resources client factory

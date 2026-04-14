@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/preview/preview/monitor/mgmt/insights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +14,7 @@ import (
 // ruleName - required to find the ActionGroupResource.
 // resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
-func GetActionGroupResourceContext(t testing.TestingT, ctx context.Context, ruleName string, resGroupName string, subscriptionID string) *insights.ActionGroupResource {
+func GetActionGroupResourceContext(t testing.TestingT, ctx context.Context, ruleName string, resGroupName string, subscriptionID string) *armmonitor.ActionGroupResource {
 	actionGroupResource, err := GetActionGroupResourceContextE(ctx, ruleName, resGroupName, subscriptionID)
 	require.NoError(t, err)
 
@@ -26,7 +26,7 @@ func GetActionGroupResourceContext(t testing.TestingT, ctx context.Context, rule
 // ruleName - required to find the ActionGroupResource.
 // resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
-func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGroupName string, subscriptionID string) (*insights.ActionGroupResource, error) {
+func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGroupName string, subscriptionID string) (*armmonitor.ActionGroupResource, error) {
 	rgName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
@@ -37,12 +37,7 @@ func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGro
 		return nil, err
 	}
 
-	actionGroup, err := client.Get(ctx, rgName, ruleName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &actionGroup, nil
+	return GetActionGroupResourceWithClient(ctx, client, rgName, ruleName)
 }
 
 // GetActionGroupResource gets the ActionGroupResource.
@@ -52,8 +47,8 @@ func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGro
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
 //
 // Deprecated: Use [GetActionGroupResourceContext] instead.
-func GetActionGroupResource(t testing.TestingT, ruleName string, resGroupName string, subscriptionID string) *insights.ActionGroupResource {
-	return GetActionGroupResourceContext(t, context.Background(), ruleName, resGroupName, subscriptionID) //nolint:staticcheck
+func GetActionGroupResource(t testing.TestingT, ruleName string, resGroupName string, subscriptionID string) *armmonitor.ActionGroupResource {
+	return GetActionGroupResourceContext(t, context.Background(), ruleName, resGroupName, subscriptionID)
 }
 
 // GetActionGroupResourceE gets the ActionGroupResource.
@@ -62,6 +57,16 @@ func GetActionGroupResource(t testing.TestingT, ruleName string, resGroupName st
 // subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
 //
 // Deprecated: Use [GetActionGroupResourceContextE] instead.
-func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionID string) (*insights.ActionGroupResource, error) {
+func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionID string) (*armmonitor.ActionGroupResource, error) {
 	return GetActionGroupResourceContextE(context.Background(), ruleName, resGroupName, subscriptionID)
+}
+
+// GetActionGroupResourceWithClient gets the ActionGroupResource using the provided client.
+func GetActionGroupResourceWithClient(ctx context.Context, client *armmonitor.ActionGroupsClient, resGroupName string, ruleName string) (*armmonitor.ActionGroupResource, error) {
+	resp, err := client.Get(ctx, resGroupName, ruleName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.ActionGroupResource, nil
 }

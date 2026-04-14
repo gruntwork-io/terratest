@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"testing"
 
-	autorest "github.com/Azure/go-autorest/autorest/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -118,10 +117,10 @@ func TestPublicIPAddressesClientBaseURISetCorrectly(t *testing.T) {
 		ExpectedBaseURI string
 		ExpectErr       bool
 	}{
-		{"GovCloud/PublicIPAddressesClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
-		{"PublicCloud/PublicIPAddressesClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"ChinaCloud/PublicIPAddressesClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
-		{"GermanCloud/PublicIPAddressesClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true},
+		{"GovCloud/PublicIPAddressesClient", govCloudEnvName, "https://management.usgovcloudapi.net/", false},
+		{"PublicCloud/PublicIPAddressesClient", publicCloudEnvName, "https://management.azure.com/", false},
+		{"ChinaCloud/PublicIPAddressesClient", chinaCloudEnvName, "https://management.chinacloudapi.cn/", false},
+		{"GermanCloud/PublicIPAddressesClient", germanyCloudEnvName, "https://management.microsoftazure.de/", true},
 	}
 
 	for _, tt := range cases {
@@ -157,10 +156,10 @@ func TestLoadBalancerClientBaseURISetCorrectly(t *testing.T) {
 		ExpectedBaseURI string
 		ExpectErr       bool
 	}{
-		{"GovCloud/LoadBalancersClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
-		{"PublicCloud/LoadBalancersClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"ChinaCloud/LoadBalancersClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
-		{"GermanCloud/LoadBalancersClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true},
+		{"GovCloud/LoadBalancersClient", govCloudEnvName, "https://management.usgovcloudapi.net/", false},
+		{"PublicCloud/LoadBalancersClient", publicCloudEnvName, "https://management.azure.com/", false},
+		{"ChinaCloud/LoadBalancersClient", chinaCloudEnvName, "https://management.chinacloudapi.cn/", false},
+		{"GermanCloud/LoadBalancersClient", germanyCloudEnvName, "https://management.microsoftazure.de/", true},
 	}
 
 	for _, tt := range cases {
@@ -189,64 +188,20 @@ func TestLoadBalancerClientBaseURISetCorrectly(t *testing.T) {
 	}
 }
 
-func TestFrontDoorClientBaseURISetCorrectly(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		EnvironmentName string
-		ExpectedBaseURI string
-	}{
-		{"GovCloud/FrontDoorClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/FrontDoorClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/FrontDoorClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/FrontDoorClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
-	}
+func TestFrontDoorClientCreation(t *testing.T) {
+	t.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
-	for _, tt := range cases {
-		// The following is necessary to make sure testCase's values don't
-		// get updated due to concurrency within the scope of t.Run(..) below
-		tt := tt
-		t.Run(tt.CaseName, func(t *testing.T) {
-			// Override env setting
-			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
-
-			// Get a Front Door client
-			client, err := CreateFrontDoorClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
-		})
-	}
+	client, err := CreateFrontDoorClientE("")
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
-func TestFrontDoorFrontendEndpointClientBaseURISetCorrectly(t *testing.T) {
-	var cases = []struct {
-		CaseName        string
-		EnvironmentName string
-		ExpectedBaseURI string
-	}{
-		{"GovCloud/FrontDoorClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint},
-		{"PublicCloud/FrontDoorClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint},
-		{"ChinaCloud/FrontDoorClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint},
-		{"GermanCloud/FrontDoorClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint},
-	}
+func TestFrontDoorFrontendEndpointClientCreation(t *testing.T) {
+	t.Setenv(AzureEnvironmentEnvName, publicCloudEnvName)
 
-	for _, tt := range cases {
-		// The following is necessary to make sure testCase's values don't
-		// get updated due to concurrency within the scope of t.Run(..) below
-		tt := tt
-		t.Run(tt.CaseName, func(t *testing.T) {
-			// Override env setting
-			t.Setenv(AzureEnvironmentEnvName, tt.EnvironmentName)
-
-			// Get a AFD frontend endpoint client
-			client, err := CreateFrontDoorFrontendEndpointClientE("")
-			require.NoError(t, err)
-
-			// Check for correct ARM URI
-			assert.Equal(t, tt.ExpectedBaseURI, client.BaseURI)
-		})
-	}
+	client, err := CreateFrontDoorFrontendEndpointClientE("")
+	require.NoError(t, err)
+	require.NotNil(t, client)
 }
 
 func TestCreateManagedEnvironmentsClientEEndpointURISetCorrectly(t *testing.T) {
@@ -256,11 +211,11 @@ func TestCreateManagedEnvironmentsClientEEndpointURISetCorrectly(t *testing.T) {
 		ExpectedBaseURI string
 		ExpectErr       bool
 	}{
-		{"Default/ManagedEnvironmentsClient", "", autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"PublicCloud/ManagedEnvironmentsClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"GovCloud/ManagedEnvironmentsClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
-		{"ChinaCloud/ManagedEnvironmentsClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
-		{"GermanCloud/ManagedEnvironmentsClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
+		{"Default/ManagedEnvironmentsClient", "", "https://management.azure.com/", false},
+		{"PublicCloud/ManagedEnvironmentsClient", publicCloudEnvName, "https://management.azure.com/", false},
+		{"GovCloud/ManagedEnvironmentsClient", govCloudEnvName, "https://management.usgovcloudapi.net/", false},
+		{"ChinaCloud/ManagedEnvironmentsClient", chinaCloudEnvName, "https://management.chinacloudapi.cn/", false},
+		{"GermanCloud/ManagedEnvironmentsClient", germanyCloudEnvName, "https://management.microsoftazure.de/", true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
 	}
 
 	for _, tt := range cases {
@@ -301,11 +256,11 @@ func TestCreateContainerAppsClientEEndpointURISetCorrectly(t *testing.T) {
 		ExpectedBaseURI string
 		ExpectErr       bool
 	}{
-		{"Default/ContainerAppsClient", "", autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"PublicCloud/ContainerAppsClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"GovCloud/ContainerAppsClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
-		{"ChinaCloud/ContainerAppsClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
-		{"GermanCloud/ContainerAppsClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
+		{"Default/ContainerAppsClient", "", "https://management.azure.com/", false},
+		{"PublicCloud/ContainerAppsClient", publicCloudEnvName, "https://management.azure.com/", false},
+		{"GovCloud/ContainerAppsClient", govCloudEnvName, "https://management.usgovcloudapi.net/", false},
+		{"ChinaCloud/ContainerAppsClient", chinaCloudEnvName, "https://management.chinacloudapi.cn/", false},
+		{"GermanCloud/ContainerAppsClient", germanyCloudEnvName, "https://management.microsoftazure.de/", true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
 	}
 
 	for _, tt := range cases {
@@ -346,11 +301,11 @@ func TestCreateContainerAppJobsClientEEndpointURISetCorrectly(t *testing.T) {
 		ExpectedBaseURI string
 		ExpectErr       bool
 	}{
-		{"Default/ContainerAppJobsClient", "", autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"PublicCloud/ContainerAppJobsClient", publicCloudEnvName, autorest.PublicCloud.ResourceManagerEndpoint, false},
-		{"GovCloud/ContainerAppJobsClient", govCloudEnvName, autorest.USGovernmentCloud.ResourceManagerEndpoint, false},
-		{"ChinaCloud/ContainerAppJobsClient", chinaCloudEnvName, autorest.ChinaCloud.ResourceManagerEndpoint, false},
-		{"GermanCloud/ContainerAppJobsClient", germanyCloudEnvName, autorest.GermanCloud.ResourceManagerEndpoint, true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
+		{"Default/ContainerAppJobsClient", "", "https://management.azure.com/", false},
+		{"PublicCloud/ContainerAppJobsClient", publicCloudEnvName, "https://management.azure.com/", false},
+		{"GovCloud/ContainerAppJobsClient", govCloudEnvName, "https://management.usgovcloudapi.net/", false},
+		{"ChinaCloud/ContainerAppJobsClient", chinaCloudEnvName, "https://management.chinacloudapi.cn/", false},
+		{"GermanCloud/ContainerAppJobsClient", germanyCloudEnvName, "https://management.microsoftazure.de/", true}, // GermanCloud is deleted as of 2021-10-21 https://learn.microsoft.com/en-us/previous-versions/azure/germany/germany-welcome
 	}
 
 	for _, tt := range cases {

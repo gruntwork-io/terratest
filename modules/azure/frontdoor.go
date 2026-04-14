@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/frontdoor/mgmt/frontdoor"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +33,7 @@ func FrontDoorExists(t testing.TestingT, frontDoorName string, resourceGroupName
 // GetFrontDoorContext gets a Front Door by name if it exists for the subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetFrontDoorContext(t testing.TestingT, ctx context.Context, frontDoorName string, resourceGroupName string, subscriptionID string) *frontdoor.FrontDoor {
+func GetFrontDoorContext(t testing.TestingT, ctx context.Context, frontDoorName string, resourceGroupName string, subscriptionID string) *armfrontdoor.FrontDoor {
 	t.Helper()
 
 	fd, err := GetFrontDoorContextE(ctx, frontDoorName, resourceGroupName, subscriptionID)
@@ -46,7 +46,7 @@ func GetFrontDoorContext(t testing.TestingT, ctx context.Context, frontDoorName 
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetFrontDoorContext] instead.
-func GetFrontDoor(t testing.TestingT, frontDoorName string, resourceGroupName string, subscriptionID string) *frontdoor.FrontDoor {
+func GetFrontDoor(t testing.TestingT, frontDoorName string, resourceGroupName string, subscriptionID string) *armfrontdoor.FrontDoor {
 	t.Helper()
 
 	return GetFrontDoorContext(t, context.Background(), frontDoorName, resourceGroupName, subscriptionID)
@@ -77,7 +77,7 @@ func FrontDoorFrontendEndpointExists(t testing.TestingT, endpointName string, fr
 // GetFrontDoorFrontendEndpointContext gets a frontend endpoint by name for the provided Front Door if it exists for the subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetFrontDoorFrontendEndpointContext(t testing.TestingT, ctx context.Context, endpointName string, frontDoorName string, resourceGroupName string, subscriptionID string) *frontdoor.FrontendEndpoint {
+func GetFrontDoorFrontendEndpointContext(t testing.TestingT, ctx context.Context, endpointName string, frontDoorName string, resourceGroupName string, subscriptionID string) *armfrontdoor.FrontendEndpoint {
 	t.Helper()
 
 	ep, err := GetFrontDoorFrontendEndpointContextE(ctx, endpointName, frontDoorName, resourceGroupName, subscriptionID)
@@ -90,7 +90,7 @@ func GetFrontDoorFrontendEndpointContext(t testing.TestingT, ctx context.Context
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetFrontDoorFrontendEndpointContext] instead.
-func GetFrontDoorFrontendEndpoint(t testing.TestingT, endpointName string, frontDoorName string, resourceGroupName string, subscriptionID string) *frontdoor.FrontendEndpoint {
+func GetFrontDoorFrontendEndpoint(t testing.TestingT, endpointName string, frontDoorName string, resourceGroupName string, subscriptionID string) *armfrontdoor.FrontendEndpoint {
 	t.Helper()
 
 	return GetFrontDoorFrontendEndpointContext(t, context.Background(), endpointName, frontDoorName, resourceGroupName, subscriptionID)
@@ -142,96 +142,72 @@ func FrontDoorFrontendEndpointExistsE(endpointName string, frontDoorName string,
 
 // GetFrontDoorContextE gets the specified Front Door if it exists.
 // The ctx parameter supports cancellation and timeouts.
-func GetFrontDoorContextE(ctx context.Context, frontDoorName, resourceGroupName, subscriptionID string) (*frontdoor.FrontDoor, error) {
-	client, err := GetFrontDoorClientContextE(ctx, subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	fd, err := client.Get(ctx, resourceGroupName, frontDoorName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &fd, nil
-}
-
-// GetFrontDoorE gets the specified Front Door if it exists.
-//
-// Deprecated: Use [GetFrontDoorContextE] instead.
-func GetFrontDoorE(frontDoorName, resourceGroupName, subscriptionID string) (*frontdoor.FrontDoor, error) {
-	return GetFrontDoorContextE(context.Background(), frontDoorName, resourceGroupName, subscriptionID)
-}
-
-// GetFrontDoorFrontendEndpointContextE gets the specified Frontend Endpoint for the provided Front Door if it exists.
-// The ctx parameter supports cancellation and timeouts.
-func GetFrontDoorFrontendEndpointContextE(ctx context.Context, endpointName, frontDoorName, resourceGroupName, subscriptionID string) (*frontdoor.FrontendEndpoint, error) {
-	client, err := GetFrontDoorFrontendEndpointClientContextE(ctx, subscriptionID)
-	if err != nil {
-		return nil, err
-	}
-
-	endpoint, err := client.Get(ctx, resourceGroupName, frontDoorName, endpointName)
-	if err != nil {
-		return nil, err
-	}
-
-	return &endpoint, nil
-}
-
-// GetFrontDoorFrontendEndpointE gets the specified Frontend Endpoint for the provided Front Door if it exists.
-//
-// Deprecated: Use [GetFrontDoorFrontendEndpointContextE] instead.
-func GetFrontDoorFrontendEndpointE(endpointName, frontDoorName, resourceGroupName, subscriptionID string) (*frontdoor.FrontendEndpoint, error) {
-	return GetFrontDoorFrontendEndpointContextE(context.Background(), endpointName, frontDoorName, resourceGroupName, subscriptionID)
-}
-
-// GetFrontDoorClientContextE returns a front door client; otherwise error.
-// The ctx parameter supports cancellation and timeouts.
-func GetFrontDoorClientContextE(ctx context.Context, subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
+func GetFrontDoorContextE(ctx context.Context, frontDoorName, resourceGroupName, subscriptionID string) (*armfrontdoor.FrontDoor, error) {
 	client, err := CreateFrontDoorClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	authorizer, err := NewAuthorizer()
+	return GetFrontDoorWithClient(ctx, client, resourceGroupName, frontDoorName)
+}
+
+// GetFrontDoorE gets the specified Front Door if it exists.
+//
+// Deprecated: Use [GetFrontDoorContextE] instead.
+func GetFrontDoorE(frontDoorName, resourceGroupName, subscriptionID string) (*armfrontdoor.FrontDoor, error) {
+	return GetFrontDoorContextE(context.Background(), frontDoorName, resourceGroupName, subscriptionID)
+}
+
+// GetFrontDoorWithClient gets the specified Front Door using the provided client.
+// This variant is useful for testing with fake clients.
+func GetFrontDoorWithClient(ctx context.Context, client *armfrontdoor.FrontDoorsClient, resourceGroupName, frontDoorName string) (*armfrontdoor.FrontDoor, error) {
+	resp, err := client.Get(ctx, resourceGroupName, frontDoorName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	client.Authorizer = *authorizer
-
-	return client, nil
+	return &resp.FrontDoor, nil
 }
 
-// GetFrontDoorClientE returns a front door client; otherwise error.
-//
-// Deprecated: Use [GetFrontDoorClientContextE] instead.
-func GetFrontDoorClientE(subscriptionID string) (*frontdoor.FrontDoorsClient, error) {
-	return GetFrontDoorClientContextE(context.Background(), subscriptionID)
-}
-
-// GetFrontDoorFrontendEndpointClientContextE returns a front door frontend endpoints client; otherwise error.
+// GetFrontDoorFrontendEndpointContextE gets the specified Frontend Endpoint for the provided Front Door if it exists.
 // The ctx parameter supports cancellation and timeouts.
-func GetFrontDoorFrontendEndpointClientContextE(ctx context.Context, subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
+func GetFrontDoorFrontendEndpointContextE(ctx context.Context, endpointName, frontDoorName, resourceGroupName, subscriptionID string) (*armfrontdoor.FrontendEndpoint, error) {
 	client, err := CreateFrontDoorFrontendEndpointClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	authorizer, err := NewAuthorizer()
+	return GetFrontDoorFrontendEndpointWithClient(ctx, client, resourceGroupName, frontDoorName, endpointName)
+}
+
+// GetFrontDoorFrontendEndpointE gets the specified Frontend Endpoint for the provided Front Door if it exists.
+//
+// Deprecated: Use [GetFrontDoorFrontendEndpointContextE] instead.
+func GetFrontDoorFrontendEndpointE(endpointName, frontDoorName, resourceGroupName, subscriptionID string) (*armfrontdoor.FrontendEndpoint, error) {
+	return GetFrontDoorFrontendEndpointContextE(context.Background(), endpointName, frontDoorName, resourceGroupName, subscriptionID)
+}
+
+// GetFrontDoorFrontendEndpointWithClient gets the specified Frontend Endpoint using the provided client.
+// This variant is useful for testing with fake clients.
+func GetFrontDoorFrontendEndpointWithClient(ctx context.Context, client *armfrontdoor.FrontendEndpointsClient, resourceGroupName, frontDoorName, endpointName string) (*armfrontdoor.FrontendEndpoint, error) {
+	resp, err := client.Get(ctx, resourceGroupName, frontDoorName, endpointName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	client.Authorizer = *authorizer
-
-	return client, nil
+	return &resp.FrontendEndpoint, nil
 }
 
-// GetFrontDoorFrontendEndpointClientE returns a front door frontend endpoints client; otherwise error.
+// GetFrontDoorClientE returns a Front Door client; otherwise error.
 //
-// Deprecated: Use [GetFrontDoorFrontendEndpointClientContextE] instead.
-func GetFrontDoorFrontendEndpointClientE(subscriptionID string) (*frontdoor.FrontendEndpointsClient, error) {
-	return GetFrontDoorFrontendEndpointClientContextE(context.Background(), subscriptionID)
+// Deprecated: Use [CreateFrontDoorClientContextE] instead.
+func GetFrontDoorClientE(subscriptionID string) (*armfrontdoor.FrontDoorsClient, error) {
+	return CreateFrontDoorClientContextE(context.Background(), subscriptionID)
+}
+
+// GetFrontDoorFrontendEndpointClientE returns a Front Door frontend endpoints client; otherwise error.
+//
+// Deprecated: Use [CreateFrontDoorFrontendEndpointClientContextE] instead.
+func GetFrontDoorFrontendEndpointClientE(subscriptionID string) (*armfrontdoor.FrontendEndpointsClient, error) {
+	return CreateFrontDoorFrontendEndpointClientContextE(context.Background(), subscriptionID)
 }
