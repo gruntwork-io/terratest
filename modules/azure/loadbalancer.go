@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -89,22 +90,7 @@ func GetLoadBalancerFrontendIPConfigNamesContextE(ctx context.Context, loadBalan
 		return nil, err
 	}
 
-	// Get the Frontend IP Configurations
-	feConfigs := lb.Properties.FrontendIPConfigurations
-
-	if len(feConfigs) == 0 {
-		// No Frontend IP Configuration present
-		return nil, nil
-	}
-
-	// Get the names of the Frontend IP Configurations present
-	configNames := make([]string, len(feConfigs))
-
-	for i, config := range feConfigs {
-		configNames[i] = *config.Name
-	}
-
-	return configNames, nil
+	return ExtractLoadBalancerFrontendIPConfigNames(lb), nil
 }
 
 // GetIPOfLoadBalancerFrontendIPConfig gets the IP and LoadBalancerIPType for the specified Load Balancer Frontend IP Configuration.
@@ -145,25 +131,13 @@ func GetIPOfLoadBalancerFrontendIPConfigContextE(ctx context.Context, feConfigNa
 		return "", NoIP, err
 	}
 
-	// Get the Properties of the Frontend Configuration
-	feProps := feConfig.Properties
-
-	// Check for the Public Type Frontend Config
-	if feProps.PublicIPAddress != nil {
-		// Get PublicIPAddress resource name from the Load Balancer Frontend Configuration
-		pipName := GetNameFromResourceID(*feProps.PublicIPAddress.ID)
-
-		// Get the Public IP of the PublicIPAddress
-		ipValue, err := GetIPOfPublicIPAddressByNameContextE(ctx, pipName, resourceGroupName, subscriptionID)
-		if err != nil {
-			return "", NoIP, err
-		}
-
-		return ipValue, PublicIP, nil
+	// Resolve the IP using a PIP client for public address lookups
+	pipClient, err := GetPublicIPAddressClientContextE(ctx, subscriptionID)
+	if err != nil {
+		return "", NoIP, err
 	}
 
-	// Return the Private IP as there are no other option available
-	return *feProps.PrivateIPAddress, PrivateIP, nil
+	return GetIPOfLoadBalancerFrontendIPConfigWithClient(ctx, feConfig, pipClient, resourceGroupName)
 }
 
 // GetLoadBalancerFrontendIPConfig gets the specified Load Balancer Frontend IP Configuration network resource.
@@ -210,7 +184,12 @@ func GetLoadBalancerFrontendIPConfigContextE(ctx context.Context, feConfigName s
 		return nil, err
 	}
 
-	// Get the Load Balancer Frontend IP Configuration
+	return GetLoadBalancerFrontendIPConfigWithClient(ctx, client, resourceGroupName, loadBalancerName, feConfigName)
+}
+
+// GetLoadBalancerFrontendIPConfigWithClient gets the specified Load Balancer Frontend IP Configuration
+// using the provided LoadBalancerFrontendIPConfigurationsClient.
+func GetLoadBalancerFrontendIPConfigWithClient(ctx context.Context, client *armnetwork.LoadBalancerFrontendIPConfigurationsClient, resourceGroupName string, loadBalancerName string, feConfigName string) (*armnetwork.FrontendIPConfiguration, error) {
 	resp, err := client.Get(ctx, resourceGroupName, loadBalancerName, feConfigName, nil)
 	if err != nil {
 		return nil, err
@@ -276,13 +255,74 @@ func GetLoadBalancerContextE(ctx context.Context, loadBalancerName string, resou
 		return nil, err
 	}
 
-	// Get the Load Balancer
+	return GetLoadBalancerWithClient(ctx, client, resourceGroupName, loadBalancerName)
+}
+
+// GetLoadBalancerWithClient gets a Load Balancer using the provided LoadBalancersClient.
+func GetLoadBalancerWithClient(ctx context.Context, client *armnetwork.LoadBalancersClient, resourceGroupName string, loadBalancerName string) (*armnetwork.LoadBalancer, error) {
 	resp, err := client.Get(ctx, resourceGroupName, loadBalancerName, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &resp.LoadBalancer, nil
+}
+
+// ExtractLoadBalancerFrontendIPConfigNames gets a list of the Frontend IP Configuration Names
+// from a Load Balancer.
+func ExtractLoadBalancerFrontendIPConfigNames(lb *armnetwork.LoadBalancer) []string {
+	if lb.Properties == nil {
+		return nil
+	}
+
+	feConfigs := lb.Properties.FrontendIPConfigurations
+
+	if len(feConfigs) == 0 {
+		return nil
+	}
+
+	configNames := make([]string, 0, len(feConfigs))
+
+	for _, config := range feConfigs {
+		if config.Name != nil {
+			configNames = append(configNames, *config.Name)
+		}
+	}
+
+	return configNames
+}
+
+// GetIPOfLoadBalancerFrontendIPConfigWithClient gets the IP and LoadBalancerIPType for the
+// specified Frontend IP Configuration. For public IPs it requires a PublicIPAddressesClient
+// to resolve the public IP address.
+func GetIPOfLoadBalancerFrontendIPConfigWithClient(ctx context.Context, feConfig *armnetwork.FrontendIPConfiguration, pipClient *armnetwork.PublicIPAddressesClient, resourceGroupName string) (string, LoadBalancerIPType, error) {
+	if feConfig.Properties == nil {
+		return "", NoIP, errors.New("frontend IP configuration has nil properties")
+	}
+
+	feProps := feConfig.Properties
+
+	if feProps.PublicIPAddress != nil && feProps.PublicIPAddress.ID != nil {
+		pipName := GetNameFromResourceID(*feProps.PublicIPAddress.ID)
+
+		ipValue, err := GetPublicIPAddressWithClient(ctx, pipClient, resourceGroupName, pipName)
+		if err != nil {
+			return "", NoIP, err
+		}
+
+		ip, err := ExtractIPOfPublicIPAddress(ipValue)
+		if err != nil {
+			return "", NoIP, err
+		}
+
+		return ip, PublicIP, nil
+	}
+
+	if feProps.PrivateIPAddress == nil {
+		return "", NoIP, errors.New("frontend IP configuration has no private or public IP address assigned")
+	}
+
+	return *feProps.PrivateIPAddress, PrivateIP, nil
 }
 
 // GetLoadBalancerClientContextE gets a new Load Balancer client in the specified Azure Subscription.

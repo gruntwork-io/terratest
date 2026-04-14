@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
@@ -94,12 +95,21 @@ func CheckAvailabilitySetContainsVMContextE(t testing.TestingT, ctx context.Cont
 		return false, err
 	}
 
+	return CheckAvailabilitySetContainsVMWithClient(ctx, client, resGroupName, avsName, vmName)
+}
+
+// CheckAvailabilitySetContainsVMWithClient checks if the Virtual Machine is contained in the Availability Set VMs
+// using the provided AvailabilitySetsClient.
+func CheckAvailabilitySetContainsVMWithClient(ctx context.Context, client *armcompute.AvailabilitySetsClient, resGroupName string, avsName string, vmName string) (bool, error) {
 	resp, err := client.Get(ctx, resGroupName, avsName, nil)
 	if err != nil {
 		return false, err
 	}
 
 	for _, vm := range resp.Properties.VirtualMachines {
+		if vm.ID == nil {
+			continue
+		}
 		// VM IDs are always ALL CAPS in this property so ignoring case
 		if strings.EqualFold(vmName, GetNameFromResourceID(*vm.ID)) {
 			return true, nil
@@ -148,6 +158,12 @@ func GetAvailabilitySetVMNamesInCapsContextE(t testing.TestingT, ctx context.Con
 		return nil, err
 	}
 
+	return GetAvailabilitySetVMNamesInCapsWithClient(ctx, client, resGroupName, avsName)
+}
+
+// GetAvailabilitySetVMNamesInCapsWithClient gets a list of VM names in the specified Azure Availability Set
+// using the provided AvailabilitySetsClient.
+func GetAvailabilitySetVMNamesInCapsWithClient(ctx context.Context, client *armcompute.AvailabilitySetsClient, resGroupName string, avsName string) ([]string, error) {
 	resp, err := client.Get(ctx, resGroupName, avsName, nil)
 	if err != nil {
 		return nil, err
@@ -156,6 +172,9 @@ func GetAvailabilitySetVMNamesInCapsContextE(t testing.TestingT, ctx context.Con
 	vms := []string{}
 
 	for _, vm := range resp.Properties.VirtualMachines {
+		if vm.ID == nil {
+			continue
+		}
 		// IDs are returned in ALL CAPS for this property
 		if vmName := GetNameFromResourceID(*vm.ID); len(vmName) > 0 {
 			vms = append(vms, vmName)
@@ -204,6 +223,15 @@ func GetAvailabilitySetFaultDomainCountContextE(t testing.TestingT, ctx context.
 		return -1, err
 	}
 
+	return ExtractAvailabilitySetFaultDomainCount(avs)
+}
+
+// ExtractAvailabilitySetFaultDomainCount gets the Fault Domain Count from the provided AvailabilitySet.
+func ExtractAvailabilitySetFaultDomainCount(avs *armcompute.AvailabilitySet) (int32, error) {
+	if avs.Properties == nil || avs.Properties.PlatformFaultDomainCount == nil {
+		return -1, errors.New("availability set has no fault domain count")
+	}
+
 	return *avs.Properties.PlatformFaultDomainCount, nil
 }
 
@@ -229,6 +257,11 @@ func GetAvailabilitySetContextE(t testing.TestingT, ctx context.Context, avsName
 		return nil, err
 	}
 
+	return GetAvailabilitySetWithClient(ctx, client, resGroupName, avsName)
+}
+
+// GetAvailabilitySetWithClient gets an Availability Set using the provided AvailabilitySetsClient.
+func GetAvailabilitySetWithClient(ctx context.Context, client *armcompute.AvailabilitySetsClient, resGroupName string, avsName string) (*armcompute.AvailabilitySet, error) {
 	resp, err := client.Get(ctx, resGroupName, avsName, nil)
 	if err != nil {
 		return nil, err

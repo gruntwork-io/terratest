@@ -28,7 +28,12 @@ func ListServiceBusNamespaceContextE(ctx context.Context, subscriptionID string)
 		return nil, err
 	}
 
-	pager := nsClient.NewListPager(nil)
+	return ListServiceBusNamespaceWithClient(ctx, nsClient)
+}
+
+// ListServiceBusNamespaceWithClient lists all SB namespaces using the provided NamespacesClient.
+func ListServiceBusNamespaceWithClient(ctx context.Context, client *armservicebus.NamespacesClient) ([]*armservicebus.SBNamespace, error) {
+	pager := client.NewListPager(nil)
 
 	var results []*armservicebus.SBNamespace
 
