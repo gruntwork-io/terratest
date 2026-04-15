@@ -22,6 +22,13 @@ const (
 	CentOsAccountID = "679593333241"
 	// AmazonAccountID is the AWS account ID (or alias) for Amazon.
 	AmazonAccountID = "amazon"
+
+	// Deprecated: Use [CanonicalAccountID] instead.
+	CanonicalAccountId = CanonicalAccountID //nolint:staticcheck,revive // preserving deprecated constant name
+	// Deprecated: Use [CentOsAccountID] instead.
+	CentOsAccountId = CentOsAccountID //nolint:staticcheck,revive // preserving deprecated constant name
+	// Deprecated: Use [AmazonAccountID] instead.
+	AmazonAccountId = AmazonAccountID //nolint:staticcheck,revive // preserving deprecated constant name
 )
 
 // DeleteAmiAndAllSnapshotsContextE will delete the given AMI along with all EBS snapshots that backed that AMI.
@@ -200,6 +207,20 @@ func GetMostRecentAmiID(t testing.TestingT, region string, ownerID string, filte
 // Deprecated: Use [GetMostRecentAmiIDContextE] instead.
 func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filters map[string][]string) (string, error) {
 	return GetMostRecentAmiIDContextE(t, context.Background(), region, ownerID, filters)
+}
+
+// Deprecated: Use [GetMostRecentAmiID] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filters map[string][]string) string {
+	return GetMostRecentAmiID(t, region, ownerId, filters)
+}
+
+// Deprecated: Use [GetMostRecentAmiIDE] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filters map[string][]string) (string, error) {
+	return GetMostRecentAmiIDE(t, region, ownerId, filters)
 }
 
 // Image sorting code borrowed from: https://github.com/hashicorp/packer/blob/7f4112ba229309cfc0ebaa10ded2abdfaf1b22c8/builder/amazon/common/step_source_ami_info.go

@@ -56,6 +56,24 @@ func GetPrivateIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion
 	return GetPrivateIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
 }
 
+// GetPrivateIpOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPrivateIPOfEc2Instance] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPrivateIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
+	return GetPrivateIPOfEc2Instance(t, instanceID, awsRegion)
+}
+
+// GetPrivateIpOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPrivateIPOfEc2InstanceE] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPrivateIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
+	return GetPrivateIPOfEc2InstanceE(t, instanceID, awsRegion)
+}
+
 // GetPrivateIpsOfEc2InstancesContextE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 // The ctx parameter supports cancellation and timeouts.
 func GetPrivateIpsOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) {
@@ -210,6 +228,24 @@ func GetPublicIPOfEc2Instance(t testing.TestingT, instanceID string, awsRegion s
 // Deprecated: Use [GetPublicIPOfEc2InstanceContextE] instead.
 func GetPublicIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
 	return GetPublicIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
+}
+
+// GetPublicIpOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPublicIPOfEc2Instance] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPublicIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
+	return GetPublicIPOfEc2Instance(t, instanceID, awsRegion)
+}
+
+// GetPublicIpOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
+//
+// Deprecated: Use [GetPublicIPOfEc2InstanceE] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetPublicIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
+	return GetPublicIPOfEc2InstanceE(t, instanceID, awsRegion)
 }
 
 // GetPublicIpsOfEc2InstancesContextE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.

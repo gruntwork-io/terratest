@@ -236,6 +236,11 @@ type CtyJSONOutput struct {
 	Type  any            `json:"type"`
 }
 
+// CtyJsonOutput is a backwards-compatible alias for [CtyJSONOutput].
+//
+// Deprecated: Use [CtyJSONOutput] instead.
+type CtyJsonOutput = CtyJSONOutput //nolint:revive,staticcheck // preserving deprecated type name
+
 // convertValuesMapToCtyVal takes a map of name - cty.Value pairs and converts to a single cty.Value object that can
 // then be converted to other go types.
 func convertValuesMapToCtyVal(valMap map[string]cty.Value) (cty.Value, error) {
