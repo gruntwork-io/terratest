@@ -187,7 +187,7 @@ func GetNetworkInterfaceConfigurationContextE(ctx context.Context, nicName strin
 // GetNetworkInterfaceConfigurationClientContextE creates a new Network Interface Configuration client in the specified Azure Subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetNetworkInterfaceConfigurationClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
-	return CreateNewNetworkInterfaceIPConfigurationClientContextE(ctx, subscriptionID)
+	return CreateNetworkInterfaceIPConfigurationClientContextE(ctx, subscriptionID)
 }
 
 // GetNetworkInterfaceConfigurationClientE creates a new Network Interface Configuration client in the specified Azure Subscription.
@@ -252,7 +252,7 @@ func ExtractNetworkInterfacePrivateIPs(nic *armnetwork.Interface) []string {
 // GetNetworkInterfaceClientContextE creates a new Network Interface client in the specified Azure Subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetNetworkInterfaceClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.InterfacesClient, error) {
-	return CreateNewNetworkInterfacesClientContextE(ctx, subscriptionID)
+	return CreateNetworkInterfacesClientContextE(ctx, subscriptionID)
 }
 
 // GetNetworkInterfaceClientE creates a new Network Interface client in the specified Azure Subscription.

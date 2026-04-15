@@ -315,7 +315,7 @@ func GetSubnetWithClient(ctx context.Context, client *armnetwork.SubnetsClient, 
 // GetSubnetClientContextE creates a subnet client.
 // The ctx parameter supports cancellation and timeouts.
 func GetSubnetClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.SubnetsClient, error) {
-	return CreateNewSubnetClientContextE(ctx, subscriptionID)
+	return CreateSubnetClientContextE(ctx, subscriptionID)
 }
 
 // GetSubnetClientE creates a subnet client.
@@ -363,7 +363,7 @@ func GetVirtualNetworkWithClient(ctx context.Context, client *armnetwork.Virtual
 // GetVirtualNetworksClientContextE creates a virtual network client in the specified Azure Subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetVirtualNetworksClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
-	return CreateNewVirtualNetworkClientContextE(ctx, subscriptionID)
+	return CreateVirtualNetworkClientContextE(ctx, subscriptionID)
 }
 
 // GetVirtualNetworksClientE creates a virtual network client in the specified Azure Subscription.

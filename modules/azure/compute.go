@@ -35,12 +35,10 @@ func GetVirtualMachineClient(t testing.TestingT, subscriptionID string) *armcomp
 // GetVirtualMachineClientContextE is a helper function that will setup an Azure Virtual Machine client on your behalf.
 // The ctx parameter supports cancellation and timeouts.
 func GetVirtualMachineClientContextE(ctx context.Context, subscriptionID string) (*armcompute.VirtualMachinesClient, error) {
-	// snippet-tag-start::client_factory_example.helper
 	vmClient, err := CreateVirtualMachinesClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
-	// snippet-tag-end::client_factory_example.helper
 
 	return vmClient, nil
 }
@@ -321,7 +319,7 @@ type VMImage struct {
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetVirtualMachineImageContext] instead.
-func GetVirtualMachineImage(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) VMImage {
+func GetVirtualMachineImage(t testing.TestingT, vmName string, resGroupName string, subscriptionID string) *VMImage {
 	t.Helper()
 
 	return GetVirtualMachineImageContext(t, context.Background(), vmName, resGroupName, subscriptionID)
@@ -330,14 +328,14 @@ func GetVirtualMachineImage(t testing.TestingT, vmName string, resGroupName stri
 // GetVirtualMachineImageE gets the Image of the specified Azure Virtual Machine.
 //
 // Deprecated: Use [GetVirtualMachineImageContextE] instead.
-func GetVirtualMachineImageE(vmName string, resGroupName string, subscriptionID string) (VMImage, error) {
+func GetVirtualMachineImageE(vmName string, resGroupName string, subscriptionID string) (*VMImage, error) {
 	return GetVirtualMachineImageContextE(context.Background(), vmName, resGroupName, subscriptionID)
 }
 
 // GetVirtualMachineImageContext gets the Image of the specified Azure Virtual Machine.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetVirtualMachineImageContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) VMImage {
+func GetVirtualMachineImageContext(t testing.TestingT, ctx context.Context, vmName string, resGroupName string, subscriptionID string) *VMImage {
 	t.Helper()
 
 	vmImage, err := GetVirtualMachineImageContextE(ctx, vmName, resGroupName, subscriptionID)
@@ -348,10 +346,10 @@ func GetVirtualMachineImageContext(t testing.TestingT, ctx context.Context, vmNa
 
 // GetVirtualMachineImageContextE gets the Image of the specified Azure Virtual Machine.
 // The ctx parameter supports cancellation and timeouts.
-func GetVirtualMachineImageContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (VMImage, error) {
+func GetVirtualMachineImageContextE(ctx context.Context, vmName string, resGroupName string, subscriptionID string) (*VMImage, error) {
 	vm, err := GetVirtualMachineContextE(ctx, vmName, resGroupName, subscriptionID)
 	if err != nil {
-		return VMImage{}, err
+		return nil, err
 	}
 
 	return extractVMImage(vm), nil
@@ -359,10 +357,10 @@ func GetVirtualMachineImageContextE(ctx context.Context, vmName string, resGroup
 
 // extractVMImage extracts the Image reference from a Virtual Machine object.
 // For custom images where Publisher/Offer/SKU/Version may be nil, empty strings are returned.
-func extractVMImage(vm *armcompute.VirtualMachine) VMImage {
+func extractVMImage(vm *armcompute.VirtualMachine) *VMImage {
 	ref := vm.Properties.StorageProfile.ImageReference
 
-	var img VMImage
+	img := &VMImage{}
 
 	if ref.Publisher != nil {
 		img.Publisher = *ref.Publisher
