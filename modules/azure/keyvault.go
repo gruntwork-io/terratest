@@ -291,8 +291,13 @@ func GetKeyVaultContextE(t testing.TestingT, ctx context.Context, resGroupName s
 		return nil, err
 	}
 
-	// Get the corresponding vault
-	resp, err := vaultClient.Get(ctx, resGroupName, keyVaultName, nil)
+	return GetKeyVaultWithClient(ctx, vaultClient, resGroupName, keyVaultName)
+}
+
+// GetKeyVaultWithClient gets the specified Key Vault using the provided VaultsClient.
+// This variant is useful for testing with fake clients.
+func GetKeyVaultWithClient(ctx context.Context, client *armkeyvault.VaultsClient, resGroupName string, keyVaultName string) (*armkeyvault.Vault, error) {
+	resp, err := client.Get(ctx, resGroupName, keyVaultName, nil)
 	if err != nil {
 		return nil, err
 	}

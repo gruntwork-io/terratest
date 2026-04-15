@@ -1,52 +1,93 @@
 package azure_test
 
 import (
+	"context"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	keyvaultfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/fake"
+	"github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	azure "github.com/gruntwork-io/terratest/modules/azure"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when methods to create and delete key vault resources are added, these tests can be extended.
-*/
+func newFakeKeyVaultVaultsClient(t *testing.T, srv *keyvaultfake.VaultsServer) *armkeyvault.VaultsClient {
+	t.Helper()
 
-func TestKeyVaultSecretExists(t *testing.T) {
-	t.Parallel()
+	client, err := armkeyvault.NewVaultsClient("fake-sub", &azfake.TokenCredential{},
+		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
+			Transport: keyvaultfake.NewVaultsServerTransport(srv),
+		}})
+	require.NoError(t, err)
 
-	testKeyVaultName := "fakeKeyVault"
-	testKeyVaultSecretName := "fakeSecretName"
-	_, err := azure.KeyVaultSecretExistsE(testKeyVaultName, testKeyVaultSecretName)
-	require.Error(t, err)
+	return client
 }
 
-func TestKeyVaultKeyExists(t *testing.T) {
+func TestGetKeyVaultWithClient(t *testing.T) {
 	t.Parallel()
 
-	testKeyVaultName := "fakeKeyVault"
-	testKeyVaultKeyName := "fakeKeyName"
-	_, err := azure.KeyVaultKeyExistsE(testKeyVaultName, testKeyVaultKeyName)
-	require.Error(t, err)
-}
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name      string
+		wantName  string
+		errSubstr string
+		server    keyvaultfake.VaultsServer
+		wantErr   bool
+	}{
+		{
+			name: "Success",
+			server: keyvaultfake.VaultsServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armkeyvault.VaultsClientGetOptions) (resp azfake.Responder[armkeyvault.VaultsClientGetResponse], errResp azfake.ErrorResponder) {
+					result := armkeyvault.VaultsClientGetResponse{
+						Vault: armkeyvault.Vault{
+							Name: to.Ptr("test-vault"),
+						},
+					}
+					resp.SetResponse(http.StatusOK, result, nil)
 
-func TestKeyVaultCertificateExists(t *testing.T) {
-	t.Parallel()
+					return
+				},
+			},
+			wantName: "test-vault",
+		},
+		{
+			name: "NotFound",
+			server: keyvaultfake.VaultsServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armkeyvault.VaultsClientGetOptions) (resp azfake.Responder[armkeyvault.VaultsClientGetResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
 
-	testKeyVaultName := "fakeKeyVault"
-	testKeyVaultCertName := "fakeCertName"
-	_, err := azure.KeyVaultCertificateExistsE(testKeyVaultName, testKeyVaultCertName)
-	require.Error(t, err)
-}
+					return
+				},
+			},
+			wantErr:   true,
+			errSubstr: "ResourceNotFound",
+		},
+	}
 
-func TestGetKeyVault(t *testing.T) {
-	t.Parallel()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	resGroupName := ""
-	keyVaultName := ""
-	subscriptionID := ""
+			client := newFakeKeyVaultVaultsClient(t, &tc.server)
 
-	_, err := azure.GetKeyVaultE(t, resGroupName, keyVaultName, subscriptionID)
-	require.Error(t, err)
+			vault, err := azure.GetKeyVaultWithClient(context.Background(), client, "rg", "test-vault")
+			if tc.wantErr {
+				require.Error(t, err)
+
+				var respErr *azcore.ResponseError
+				require.ErrorAs(t, err, &respErr)
+				assert.Equal(t, tc.errSubstr, respErr.ErrorCode)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantName, *vault.Name)
+		})
+	}
 }

@@ -72,7 +72,12 @@ func GetManagedInstanceContextE(ctx context.Context, subscriptionID string, resG
 		return nil, err
 	}
 
-	resp, err := sqlmiClient.Get(ctx, resGroupName, managedInstanceName, nil)
+	return GetManagedInstanceWithClient(ctx, sqlmiClient, resGroupName, managedInstanceName)
+}
+
+// GetManagedInstanceWithClient retrieves the SQL managed instance using the provided ManagedInstancesClient.
+func GetManagedInstanceWithClient(ctx context.Context, client *armsql.ManagedInstancesClient, resGroupName string, managedInstanceName string) (*armsql.ManagedInstance, error) {
+	resp, err := client.Get(ctx, resGroupName, managedInstanceName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +122,12 @@ func GetManagedInstanceDatabaseContextE(ctx context.Context, subscriptionID stri
 		return nil, err
 	}
 
-	resp, err := sqlmiDBClient.Get(ctx, resGroupName, managedInstanceName, databaseName, nil)
+	return GetManagedInstanceDatabaseWithClient(ctx, sqlmiDBClient, resGroupName, managedInstanceName, databaseName)
+}
+
+// GetManagedInstanceDatabaseWithClient retrieves the SQL managed database using the provided ManagedDatabasesClient.
+func GetManagedInstanceDatabaseWithClient(ctx context.Context, client *armsql.ManagedDatabasesClient, resGroupName string, managedInstanceName string, databaseName string) (*armsql.ManagedDatabase, error) {
+	resp, err := client.Get(ctx, resGroupName, managedInstanceName, databaseName, nil)
 	if err != nil {
 		return nil, err
 	}

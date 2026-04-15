@@ -1,52 +1,92 @@
-//go:build azure || (azureslim && network)
-// +build azure azureslim,network
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	networkfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6/fake"
 	"github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when methods can be mocked or Create/Delete APIs are added, these tests can be extended.
-*/
-
-func TestGetPublicIPAddressE(t *testing.T) {
+func TestGetPublicIPAddressWithClient(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.GetPublicIPAddressContextE(context.Background(), "", "", "")
+	srv := &networkfake.PublicIPAddressesServer{
+		Get: func(_ context.Context, _ string, pipName string, _ *armnetwork.PublicIPAddressesClientGetOptions) (resp azfake.Responder[armnetwork.PublicIPAddressesClientGetResponse], errResp azfake.ErrorResponder) {
+			resp.SetResponse(http.StatusOK, armnetwork.PublicIPAddressesClientGetResponse{
+				PublicIPAddress: armnetwork.PublicIPAddress{
+					Name: to.Ptr(pipName),
+					Properties: &armnetwork.PublicIPAddressPropertiesFormat{
+						IPAddress: to.Ptr("52.168.1.1"),
+					},
+				},
+			}, nil)
 
-	require.Error(t, err)
+			return
+		},
+	}
+	client := newFakePublicIPAddressesClient(t, srv)
+
+	pip, err := azure.GetPublicIPAddressWithClient(t.Context(), client, "rg", "my-pip")
+	require.NoError(t, err)
+	assert.Equal(t, "my-pip", *pip.Name)
+	assert.Equal(t, "52.168.1.1", *pip.Properties.IPAddress)
 }
 
-func TestCheckPublicDNSNameAvailabilityE(t *testing.T) {
+func TestExtractIPOfPublicIPAddress(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.CheckPublicDNSNameAvailabilityContextE(context.Background(), "", "", "")
+	tests := []struct {
+		name    string
+		pip     *armnetwork.PublicIPAddress
+		wantIP  string
+		wantErr bool
+	}{
+		{
+			name: "has IP",
+			pip: &armnetwork.PublicIPAddress{
+				Name: to.Ptr("pip-1"),
+				Properties: &armnetwork.PublicIPAddressPropertiesFormat{
+					IPAddress: to.Ptr("52.168.1.1"),
+				},
+			},
+			wantIP: "52.168.1.1",
+		},
+		{
+			name: "nil properties",
+			pip: &armnetwork.PublicIPAddress{
+				Name: to.Ptr("pip-nil"),
+			},
+			wantErr: true,
+		},
+		{
+			name: "nil IP address",
+			pip: &armnetwork.PublicIPAddress{
+				Name:       to.Ptr("pip-no-ip"),
+				Properties: &armnetwork.PublicIPAddressPropertiesFormat{},
+			},
+			wantErr: true,
+		},
+	}
 
-	require.Error(t, err)
-}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-func TestGetIPOfPublicIPAddressByNameE(t *testing.T) {
-	t.Parallel()
+			ip, err := azure.ExtractIPOfPublicIPAddress(tc.pip)
 
-	_, err := azure.GetIPOfPublicIPAddressByNameContextE(context.Background(), "", "", "")
-
-	require.Error(t, err)
-}
-
-func TestPublicAddressExistsE(t *testing.T) {
-	t.Parallel()
-
-	_, err := azure.PublicAddressExistsContextE(context.Background(), "", "", "")
-
-	require.Error(t, err)
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tc.wantIP, ip)
+			}
+		})
+	}
 }

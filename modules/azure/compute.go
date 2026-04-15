@@ -524,7 +524,14 @@ func ListVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGr
 		return nil, err
 	}
 
-	return listVirtualMachineNames(ctx, vmClient, resourceGroupName)
+	return ListVirtualMachinesForResourceGroupWithClient(ctx, vmClient, resourceGroupName)
+}
+
+// ListVirtualMachinesForResourceGroupWithClient gets a list of all Virtual Machine names
+// in the specified Resource Group using the provided client.
+// This variant is useful for testing with fake clients.
+func ListVirtualMachinesForResourceGroupWithClient(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName string) ([]string, error) {
+	return listVirtualMachineNames(ctx, client, resourceGroupName)
 }
 
 // listVirtualMachineNames pages through VMs in a resource group and returns their names.
@@ -587,7 +594,15 @@ func GetVirtualMachinesForResourceGroupContextE(ctx context.Context, resourceGro
 		return nil, err
 	}
 
-	return listVirtualMachineProperties(ctx, vmClient, resourceGroupName)
+	return GetVirtualMachinesForResourceGroupWithClient(ctx, vmClient, resourceGroupName)
+}
+
+// GetVirtualMachinesForResourceGroupWithClient gets all Virtual Machine objects in the specified Resource Group
+// using the provided client. Each VM Object represents the entire set of VM compute properties accessible by
+// using the VM name as the map key.
+// This variant is useful for testing with fake clients.
+func GetVirtualMachinesForResourceGroupWithClient(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName string) (map[string]armcompute.VirtualMachineProperties, error) {
+	return listVirtualMachineProperties(ctx, client, resourceGroupName)
 }
 
 // listVirtualMachineProperties pages through VMs in a resource group and returns a map of VM name to properties.
@@ -669,6 +684,12 @@ func GetVirtualMachineContextE(ctx context.Context, vmName string, resGroupName 
 		return nil, err
 	}
 
+	return GetVirtualMachineWithClient(ctx, client, resGroupName, vmName)
+}
+
+// GetVirtualMachineWithClient gets a Virtual Machine using the provided client.
+// This variant is useful for testing with fake clients.
+func GetVirtualMachineWithClient(ctx context.Context, client *armcompute.VirtualMachinesClient, resGroupName string, vmName string) (*armcompute.VirtualMachine, error) {
 	return fetchVirtualMachine(ctx, client, resGroupName, vmName)
 }
 

@@ -28,7 +28,12 @@ func GetSynapseWorkspaceContextE(ctx context.Context, subscriptionID string, res
 		return nil, err
 	}
 
-	resp, err := synapseClient.Get(ctx, resGroupName, workspaceName, nil)
+	return GetSynapseWorkspaceWithClient(ctx, synapseClient, resGroupName, workspaceName)
+}
+
+// GetSynapseWorkspaceWithClient retrieves the synapse workspace using the provided WorkspacesClient.
+func GetSynapseWorkspaceWithClient(ctx context.Context, client *armsynapse.WorkspacesClient, resGroupName string, workspaceName string) (*armsynapse.Workspace, error) {
+	resp, err := client.Get(ctx, resGroupName, workspaceName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +78,12 @@ func GetSynapseSQLPoolContextE(ctx context.Context, subscriptionID string, resGr
 		return nil, err
 	}
 
-	resp, err := synapseSQLPoolClient.Get(ctx, resGroupName, workspaceName, sqlPoolName, nil)
+	return GetSynapseSQLPoolWithClient(ctx, synapseSQLPoolClient, resGroupName, workspaceName, sqlPoolName)
+}
+
+// GetSynapseSQLPoolWithClient retrieves the synapse SQL pool using the provided SQLPoolsClient.
+func GetSynapseSQLPoolWithClient(ctx context.Context, client *armsynapse.SQLPoolsClient, resGroupName string, workspaceName string, sqlPoolName string) (*armsynapse.SQLPool, error) {
+	resp, err := client.Get(ctx, resGroupName, workspaceName, sqlPoolName, nil)
 	if err != nil {
 		return nil, err
 	}

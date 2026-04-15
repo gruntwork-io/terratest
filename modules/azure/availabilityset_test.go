@@ -1,93 +1,149 @@
-//go:build azure
-// +build azure
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure_test
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	computefake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6/fake"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors.
-If/when methods to create and delete network resources are added, these tests can be extended.
-*/
+func newFakeAvailabilitySetsClient(t *testing.T, srv *computefake.AvailabilitySetsServer) *armcompute.AvailabilitySetsClient {
+	t.Helper()
 
-func TestCreateAvailabilitySetClientE(t *testing.T) {
-	t.Parallel()
-
-	subscriptionID := ""
-
-	client, err := azure.CreateAvailabilitySetClientE(subscriptionID)
-
+	transport := computefake.NewAvailabilitySetsServerTransport(srv)
+	client, err := armcompute.NewAvailabilitySetsClient("fake-sub", &azfake.TokenCredential{}, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{Transport: transport},
+	})
 	require.NoError(t, err)
-	assert.NotEmpty(t, *client)
+
+	return client
 }
 
-func TestGetAvailabilitySetE(t *testing.T) {
-	t.Parallel()
+func fakeAvsGetHandler(avsName string, vmIDs []string, faultDomainCount int32) func(context.Context, string, string, *armcompute.AvailabilitySetsClientGetOptions) (azfake.Responder[armcompute.AvailabilitySetsClientGetResponse], azfake.ErrorResponder) {
+	return func(_ context.Context, _ string, _ string, _ *armcompute.AvailabilitySetsClientGetOptions) (resp azfake.Responder[armcompute.AvailabilitySetsClientGetResponse], errResp azfake.ErrorResponder) {
+		vms := make([]*armcompute.SubResource, len(vmIDs))
+		for i, id := range vmIDs {
+			vms[i] = &armcompute.SubResource{ID: to.Ptr(id)}
+		}
 
-	avsName := ""
-	rgName := ""
-	subscriptionID := ""
+		resp.SetResponse(http.StatusOK, armcompute.AvailabilitySetsClientGetResponse{
+			AvailabilitySet: armcompute.AvailabilitySet{
+				Name: to.Ptr(avsName),
+				Properties: &armcompute.AvailabilitySetProperties{
+					VirtualMachines:          vms,
+					PlatformFaultDomainCount: to.Ptr(faultDomainCount),
+				},
+			},
+		}, nil)
 
-	_, err := azure.GetAvailabilitySetContextE(t, context.Background(), avsName, rgName, subscriptionID)
-
-	require.Error(t, err)
+		return
+	}
 }
 
-func TestCheckAvailabilitySetContainsVME(t *testing.T) {
+func TestGetAvailabilitySetWithClient(t *testing.T) {
 	t.Parallel()
 
-	vmName := ""
-	avsName := ""
-	rgName := ""
-	subscriptionID := ""
+	srv := &computefake.AvailabilitySetsServer{
+		Get: fakeAvsGetHandler("my-avs", nil, 2),
+	}
+	client := newFakeAvailabilitySetsClient(t, srv)
 
-	_, err := azure.CheckAvailabilitySetContainsVMContextE(t, context.Background(), vmName, avsName, rgName, subscriptionID)
-
-	require.Error(t, err)
+	avs, err := azure.GetAvailabilitySetWithClient(t.Context(), client, "rg", "my-avs")
+	require.NoError(t, err)
+	assert.Equal(t, "my-avs", *avs.Name)
 }
 
-func TestGetAvailabilitySetVMNamesInCapsE(t *testing.T) {
+func TestCheckAvailabilitySetContainsVMWithClient(t *testing.T) {
 	t.Parallel()
 
-	avsName := ""
-	rgName := ""
-	subscriptionID := ""
+	vmIDs := []string{
+		"/subscriptions/sub/resourceGroups/RG/providers/Microsoft.Compute/virtualMachines/VM-ONE",
+		"/subscriptions/sub/resourceGroups/RG/providers/Microsoft.Compute/virtualMachines/VM-TWO",
+	}
 
-	_, err := azure.GetAvailabilitySetVMNamesInCapsContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	tests := []struct {
+		name    string
+		vmName  string
+		found   bool
+		wantErr bool
+	}{
+		{name: "exact case match", vmName: "VM-ONE", found: true},
+		{name: "case insensitive match", vmName: "vm-one", found: true},
+		{name: "not found", vmName: "vm-three", found: false, wantErr: true},
+	}
 
-	require.Error(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			srv := &computefake.AvailabilitySetsServer{
+				Get: fakeAvsGetHandler("avs", vmIDs, 2),
+			}
+			client := newFakeAvailabilitySetsClient(t, srv)
+
+			found, err := azure.CheckAvailabilitySetContainsVMWithClient(t.Context(), client, "rg", "avs", tc.vmName)
+
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			assert.Equal(t, tc.found, found)
+		})
+	}
 }
 
-func TestGetAvailabilitySetFaultDomainCountE(t *testing.T) {
+func TestGetAvailabilitySetVMNamesInCapsWithClient(t *testing.T) {
 	t.Parallel()
 
-	avsName := ""
-	rgName := ""
-	subscriptionID := ""
+	vmIDs := []string{
+		"/subscriptions/sub/resourceGroups/RG/providers/Microsoft.Compute/virtualMachines/VM-ALPHA",
+		"/subscriptions/sub/resourceGroups/RG/providers/Microsoft.Compute/virtualMachines/VM-BETA",
+	}
 
-	_, err := azure.GetAvailabilitySetFaultDomainCountContextE(t, context.Background(), avsName, rgName, subscriptionID)
+	srv := &computefake.AvailabilitySetsServer{
+		Get: fakeAvsGetHandler("avs", vmIDs, 3),
+	}
+	client := newFakeAvailabilitySetsClient(t, srv)
 
-	require.Error(t, err)
+	names, err := azure.GetAvailabilitySetVMNamesInCapsWithClient(t.Context(), client, "rg", "avs")
+	require.NoError(t, err)
+	assert.Equal(t, []string{"VM-ALPHA", "VM-BETA"}, names)
 }
 
-func TestAvailabilitySetExistsE(t *testing.T) {
+func TestExtractAvailabilitySetFaultDomainCount(t *testing.T) {
 	t.Parallel()
 
-	avsName := ""
-	rgName := ""
-	subscriptionID := ""
+	t.Run("valid", func(t *testing.T) {
+		t.Parallel()
 
-	_, err := azure.AvailabilitySetExistsContextE(t, context.Background(), avsName, rgName, subscriptionID)
+		avs := &armcompute.AvailabilitySet{
+			Properties: &armcompute.AvailabilitySetProperties{
+				PlatformFaultDomainCount: to.Ptr[int32](3),
+			},
+		}
 
-	require.Error(t, err)
+		count, err := azure.ExtractAvailabilitySetFaultDomainCount(avs)
+		require.NoError(t, err)
+		assert.Equal(t, int32(3), count)
+	})
+
+	t.Run("nil properties", func(t *testing.T) {
+		t.Parallel()
+
+		avs := &armcompute.AvailabilitySet{}
+
+		_, err := azure.ExtractAvailabilitySetFaultDomainCount(avs)
+		require.Error(t, err)
+	})
 }

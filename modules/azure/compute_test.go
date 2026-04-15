@@ -2,6 +2,7 @@ package azure //nolint:testpackage // tests access unexported functions
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 
@@ -439,4 +440,217 @@ func TestListVirtualMachineProperties(t *testing.T) {
 	require.Len(t, props, 2)
 	assert.Equal(t, armcompute.VirtualMachineSizeTypesStandardDS1V2, *props["vm1"].HardwareProfile.VMSize)
 	assert.Equal(t, armcompute.VirtualMachineSizeTypesStandardD2SV3, *props["vm2"].HardwareProfile.VMSize)
+}
+
+// ---------------------------------------------------------------------------
+// GetVirtualMachineWithClient tests
+// ---------------------------------------------------------------------------
+
+func TestGetVirtualMachineWithClient(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name      string
+		wantName  string
+		errSubstr string
+		server    computefake.VirtualMachinesServer
+		wantErr   bool
+	}{
+		{
+			name: "Success",
+			server: computefake.VirtualMachinesServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
+					result := armcompute.VirtualMachinesClientGetResponse{
+						VirtualMachine: armcompute.VirtualMachine{
+							Name: to.Ptr("test-vm"),
+							Properties: &armcompute.VirtualMachineProperties{
+								HardwareProfile: &armcompute.HardwareProfile{
+									VMSize: to.Ptr(armcompute.VirtualMachineSizeTypesStandardDS1V2),
+								},
+							},
+						},
+					}
+					resp.SetResponse(http.StatusOK, result, nil)
+
+					return
+				},
+			},
+			wantName: "test-vm",
+		},
+		{
+			name: "NotFound",
+			server: computefake.VirtualMachinesServer{
+				Get: func(_ context.Context, _ string, _ string, _ *armcompute.VirtualMachinesClientGetOptions) (resp azfake.Responder[armcompute.VirtualMachinesClientGetResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+
+					return
+				},
+			},
+			wantErr:   true,
+			errSubstr: "ResourceNotFound",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			client := newFakeVMClient(t, &tc.server)
+
+			vm, err := GetVirtualMachineWithClient(context.Background(), client, "rg", "vm")
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errSubstr)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantName, *vm.Name)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ListVirtualMachinesForResourceGroupWithClient tests
+// ---------------------------------------------------------------------------
+
+func TestListVirtualMachinesForResourceGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name    string
+		server  computefake.VirtualMachinesServer
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "Success",
+			server: computefake.VirtualMachinesServer{
+				NewListPager: func(_ string, _ *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
+					resp.AddPage(http.StatusOK, armcompute.VirtualMachinesClientListResponse{
+						VirtualMachineListResult: armcompute.VirtualMachineListResult{
+							Value: []*armcompute.VirtualMachine{
+								{Name: to.Ptr("vm1")},
+								{Name: to.Ptr("vm2")},
+							},
+						},
+					}, nil)
+
+					return
+				},
+			},
+			want: []string{"vm1", "vm2"},
+		},
+		{
+			name: "NotFound",
+			server: computefake.VirtualMachinesServer{
+				NewListPager: func(_ string, _ *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
+					resp.AddError(errors.New("resource group not found"))
+
+					return
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			client := newFakeVMClient(t, &tc.server)
+
+			names, err := ListVirtualMachinesForResourceGroupWithClient(context.Background(), client, "rg")
+			if tc.wantErr {
+				require.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, names)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// GetVirtualMachinesForResourceGroupWithClient tests
+// ---------------------------------------------------------------------------
+
+func TestGetVirtualMachinesForResourceGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name    string
+		server  computefake.VirtualMachinesServer
+		want    map[string]armcompute.VirtualMachineProperties
+		wantErr bool
+	}{
+		{
+			name: "Success",
+			server: computefake.VirtualMachinesServer{
+				NewListPager: func(_ string, _ *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
+					resp.AddPage(http.StatusOK, armcompute.VirtualMachinesClientListResponse{
+						VirtualMachineListResult: armcompute.VirtualMachineListResult{
+							Value: []*armcompute.VirtualMachine{
+								{
+									Name: to.Ptr("vm1"),
+									Properties: &armcompute.VirtualMachineProperties{
+										HardwareProfile: &armcompute.HardwareProfile{
+											VMSize: to.Ptr(armcompute.VirtualMachineSizeTypesStandardDS1V2),
+										},
+									},
+								},
+							},
+						},
+					}, nil)
+
+					return
+				},
+			},
+			want: map[string]armcompute.VirtualMachineProperties{
+				"vm1": {
+					HardwareProfile: &armcompute.HardwareProfile{
+						VMSize: to.Ptr(armcompute.VirtualMachineSizeTypesStandardDS1V2),
+					},
+				},
+			},
+		},
+		{
+			name: "NotFound",
+			server: computefake.VirtualMachinesServer{
+				NewListPager: func(_ string, _ *armcompute.VirtualMachinesClientListOptions) (resp azfake.PagerResponder[armcompute.VirtualMachinesClientListResponse]) {
+					resp.AddError(errors.New("resource group not found"))
+
+					return
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			client := newFakeVMClient(t, &tc.server)
+
+			props, err := GetVirtualMachinesForResourceGroupWithClient(context.Background(), client, "rg")
+			if tc.wantErr {
+				require.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			require.Len(t, props, len(tc.want))
+
+			for name, wantProps := range tc.want {
+				gotProps, ok := props[name]
+				require.True(t, ok, "expected VM %q in results", name)
+				assert.Equal(t, *wantProps.HardwareProfile.VMSize, *gotProps.HardwareProfile.VMSize)
+			}
+		})
+	}
 }

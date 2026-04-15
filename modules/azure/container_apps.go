@@ -83,12 +83,18 @@ func GetManagedEnvironmentContextE(ctx context.Context, environmentName string, 
 		return nil, err
 	}
 
-	env, err := client.Get(ctx, resourceGroupName, environmentName, nil)
+	return GetManagedEnvironmentWithClient(ctx, client, resourceGroupName, environmentName)
+}
+
+// GetManagedEnvironmentWithClient returns a Managed Environment using the provided ManagedEnvironmentsClient.
+// This variant is useful for testing with fake clients.
+func GetManagedEnvironmentWithClient(ctx context.Context, client *armappcontainers.ManagedEnvironmentsClient, resourceGroupName string, environmentName string) (*armappcontainers.ManagedEnvironment, error) {
+	resp, err := client.Get(ctx, resourceGroupName, environmentName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &env.ManagedEnvironment, nil
+	return &resp.ManagedEnvironment, nil
 }
 
 // GetManagedEnvironmentE gets the Managed Environment object.
@@ -173,12 +179,18 @@ func GetContainerAppContextE(ctx context.Context, containerAppName string, resou
 		return nil, err
 	}
 
-	app, err := client.Get(ctx, resourceGroupName, containerAppName, nil)
+	return GetContainerAppWithClient(ctx, client, resourceGroupName, containerAppName)
+}
+
+// GetContainerAppWithClient returns a Container App using the provided ContainerAppsClient.
+// This variant is useful for testing with fake clients.
+func GetContainerAppWithClient(ctx context.Context, client *armappcontainers.ContainerAppsClient, resourceGroupName string, containerAppName string) (*armappcontainers.ContainerApp, error) {
+	resp, err := client.Get(ctx, resourceGroupName, containerAppName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &app.ContainerApp, nil
+	return &resp.ContainerApp, nil
 }
 
 // GetContainerAppE gets the Container App object.
@@ -263,12 +275,18 @@ func GetContainerAppJobContextE(ctx context.Context, containerAppName string, re
 		return nil, err
 	}
 
-	app, err := client.Get(ctx, resourceGroupName, containerAppName, nil)
+	return GetContainerAppJobWithClient(ctx, client, resourceGroupName, containerAppName)
+}
+
+// GetContainerAppJobWithClient returns a Container App Job using the provided JobsClient.
+// This variant is useful for testing with fake clients.
+func GetContainerAppJobWithClient(ctx context.Context, client *armappcontainers.JobsClient, resourceGroupName string, containerAppName string) (*armappcontainers.Job, error) {
+	resp, err := client.Get(ctx, resourceGroupName, containerAppName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &app.Job, nil
+	return &resp.Job, nil
 }
 
 // GetContainerAppJobE gets the Container App Job object.

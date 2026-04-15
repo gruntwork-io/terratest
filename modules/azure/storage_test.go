@@ -174,6 +174,212 @@ func TestExtractStorageAccountSkuTier(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// FetchStorageAccountProperties tests
+// ---------------------------------------------------------------------------
+
+func TestFetchStorageAccountProperties(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name      string
+		wantName  string
+		errSubstr string
+		server    storagefake.AccountsServer
+		wantErr   bool
+	}{
+		{
+			name: "Success",
+			server: storagefake.AccountsServer{
+				GetProperties: func(_ context.Context, _, _ string, _ *armstorage.AccountsClientGetPropertiesOptions) (resp azfake.Responder[armstorage.AccountsClientGetPropertiesResponse], errResp azfake.ErrorResponder) {
+					result := armstorage.AccountsClientGetPropertiesResponse{
+						Account: armstorage.Account{
+							Name: to.Ptr("teststorage"),
+							Kind: to.Ptr(armstorage.KindStorageV2),
+							SKU:  &armstorage.SKU{Tier: to.Ptr(armstorage.SKUTierStandard)},
+						},
+					}
+					resp.SetResponse(http.StatusOK, result, nil)
+
+					return
+				},
+			},
+			wantName: "teststorage",
+		},
+		{
+			name: "NotFound",
+			server: storagefake.AccountsServer{
+				GetProperties: func(_ context.Context, _, _ string, _ *armstorage.AccountsClientGetPropertiesOptions) (resp azfake.Responder[armstorage.AccountsClientGetPropertiesResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+
+					return
+				},
+			},
+			wantErr:   true,
+			errSubstr: "ResourceNotFound",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			srv := tc.server
+			client := newFakeStorageAccountsClient(t, &srv)
+
+			account, err := azure.FetchStorageAccountProperties(t.Context(), client, "rg", "teststorage")
+			if tc.wantErr {
+				require.Error(t, err)
+
+				var respErr *azcore.ResponseError
+				require.ErrorAs(t, err, &respErr)
+				assert.Equal(t, tc.errSubstr, respErr.ErrorCode)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantName, *account.Name)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// FetchBlobContainer tests
+// ---------------------------------------------------------------------------
+
+func TestFetchBlobContainer(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name      string
+		wantName  string
+		errSubstr string
+		server    storagefake.BlobContainersServer
+		wantErr   bool
+	}{
+		{
+			name: "Success",
+			server: storagefake.BlobContainersServer{
+				Get: func(_ context.Context, _, _, _ string, _ *armstorage.BlobContainersClientGetOptions) (resp azfake.Responder[armstorage.BlobContainersClientGetResponse], errResp azfake.ErrorResponder) {
+					result := armstorage.BlobContainersClientGetResponse{
+						BlobContainer: armstorage.BlobContainer{
+							Name: to.Ptr("testcontainer"),
+						},
+					}
+					resp.SetResponse(http.StatusOK, result, nil)
+
+					return
+				},
+			},
+			wantName: "testcontainer",
+		},
+		{
+			name: "NotFound",
+			server: storagefake.BlobContainersServer{
+				Get: func(_ context.Context, _, _, _ string, _ *armstorage.BlobContainersClientGetOptions) (resp azfake.Responder[armstorage.BlobContainersClientGetResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+
+					return
+				},
+			},
+			wantErr:   true,
+			errSubstr: "ResourceNotFound",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			srv := tc.server
+			client := newFakeBlobContainersClient(t, &srv)
+
+			container, err := azure.FetchBlobContainer(t.Context(), client, "rg", "teststorage", "testcontainer")
+			if tc.wantErr {
+				require.Error(t, err)
+
+				var respErr *azcore.ResponseError
+				require.ErrorAs(t, err, &respErr)
+				assert.Equal(t, tc.errSubstr, respErr.ErrorCode)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantName, *container.Name)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// FetchFileShare tests
+// ---------------------------------------------------------------------------
+
+func TestFetchFileShare(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
+		name      string
+		wantName  string
+		errSubstr string
+		server    storagefake.FileSharesServer
+		wantErr   bool
+	}{
+		{
+			name: "Success",
+			server: storagefake.FileSharesServer{
+				Get: func(_ context.Context, _, _, _ string, _ *armstorage.FileSharesClientGetOptions) (resp azfake.Responder[armstorage.FileSharesClientGetResponse], errResp azfake.ErrorResponder) {
+					result := armstorage.FileSharesClientGetResponse{
+						FileShare: armstorage.FileShare{
+							Name: to.Ptr("testshare"),
+						},
+					}
+					resp.SetResponse(http.StatusOK, result, nil)
+
+					return
+				},
+			},
+			wantName: "testshare",
+		},
+		{
+			name: "NotFound",
+			server: storagefake.FileSharesServer{
+				Get: func(_ context.Context, _, _, _ string, _ *armstorage.FileSharesClientGetOptions) (resp azfake.Responder[armstorage.FileSharesClientGetResponse], errResp azfake.ErrorResponder) {
+					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
+
+					return
+				},
+			},
+			wantErr:   true,
+			errSubstr: "ResourceNotFound",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			srv := tc.server
+			client := newFakeFileSharesClient(t, &srv)
+
+			share, err := azure.FetchFileShare(t.Context(), client, "rg", "teststorage", "testshare")
+			if tc.wantErr {
+				require.Error(t, err)
+
+				var respErr *azcore.ResponseError
+				require.ErrorAs(t, err, &respErr)
+				assert.Equal(t, tc.errSubstr, respErr.ErrorCode)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantName, *share.Name)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Fake client helpers
 // ---------------------------------------------------------------------------
 

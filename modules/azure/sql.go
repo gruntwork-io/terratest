@@ -52,8 +52,12 @@ func GetSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionI
 		return nil, err
 	}
 
-	// Get the corresponding server
-	resp, err := sqlClient.Get(ctx, resGroupName, serverName, nil)
+	return GetSQLServerWithClient(ctx, sqlClient, resGroupName, serverName)
+}
+
+// GetSQLServerWithClient gets the sql server object using the provided ServersClient.
+func GetSQLServerWithClient(ctx context.Context, client *armsql.ServersClient, resGroupName string, serverName string) (*armsql.Server, error) {
+	resp, err := client.Get(ctx, resGroupName, serverName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +116,12 @@ func ListSQLServerDatabasesContextE(t testing.TestingT, ctx context.Context, res
 		return nil, err
 	}
 
-	// Get the databases using pager
-	pager := sqlClient.NewListByServerPager(resGroupName, serverName, nil)
+	return ListSQLServerDatabasesWithClient(ctx, sqlClient, resGroupName, serverName)
+}
+
+// ListSQLServerDatabasesWithClient lists databases on a sql server using the provided DatabasesClient.
+func ListSQLServerDatabasesWithClient(ctx context.Context, client *armsql.DatabasesClient, resGroupName string, serverName string) ([]*armsql.Database, error) {
+	pager := client.NewListByServerPager(resGroupName, serverName, nil)
 
 	var databases []*armsql.Database
 
@@ -167,8 +175,12 @@ func GetSQLDatabaseContextE(t testing.TestingT, ctx context.Context, subscriptio
 		return nil, err
 	}
 
-	// Get the corresponding DB
-	resp, err := sqlClient.Get(ctx, resGroupName, serverName, dbName, nil)
+	return GetSQLDatabaseWithClient(ctx, sqlClient, resGroupName, serverName, dbName)
+}
+
+// GetSQLDatabaseWithClient gets the sql db using the provided DatabasesClient.
+func GetSQLDatabaseWithClient(ctx context.Context, client *armsql.DatabasesClient, resGroupName string, serverName string, dbName string) (*armsql.Database, error) {
+	resp, err := client.Get(ctx, resGroupName, serverName, dbName, nil)
 	if err != nil {
 		return nil, err
 	}

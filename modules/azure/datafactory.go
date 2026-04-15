@@ -83,13 +83,17 @@ func GetDataFactoryContextE(ctx context.Context, subscriptionID string, resGroup
 		return nil, err
 	}
 
-	// Get the corresponding data factory
-	resp, err := datafactoryClient.Get(ctx, resGroupName, factoryName, nil)
+	return GetDataFactoryWithClient(ctx, datafactoryClient, resGroupName, factoryName)
+}
+
+// GetDataFactoryWithClient returns a Data Factory using the provided FactoriesClient.
+// This variant is useful for testing with fake clients.
+func GetDataFactoryWithClient(ctx context.Context, client *armdatafactory.FactoriesClient, resGroupName string, factoryName string) (*armdatafactory.Factory, error) {
+	resp, err := client.Get(ctx, resGroupName, factoryName, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return data factory
 	return &resp.Factory, nil
 }
 

@@ -1,66 +1,124 @@
-//go:build azure
-// +build azure
-
-// NOTE: We use build tags to differentiate azure testing because we currently do not have azure access setup for
-// CircleCI.
-
 package azure_test
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/servicebus/armservicebus/v2"
 	"github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-/*
-The below tests are currently stubbed out, with the expectation that they will throw errors. These tests can be extended.
-*/
-
-func TestListServiceBusNamespaceNamesE(t *testing.T) {
+func TestListServiceBusNamespaceWithClient(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.ListServiceBusNamespaceNamesContextE(t.Context(), "")
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		resp := armservicebus.SBNamespaceListResult{
+			Value: []*armservicebus.SBNamespace{
+				{Name: to.Ptr("ns-alpha"), ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/ns-alpha")},
+				{Name: to.Ptr("ns-beta"), ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/ns-beta")},
+			},
+		}
 
-	require.Error(t, err)
+		// httptest used because the servicebus beta SDK (v2.0.0-beta.3) doesn't include azfake support
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	}))
+	defer srv.Close()
+
+	client, err := armservicebus.NewNamespacesClient("fake-sub", &azfake.TokenCredential{}, &arm.ClientOptions{
+		ClientOptions: policy.ClientOptions{
+			Transport: srv.Client(),
+			Cloud: cloud.Configuration{
+				Services: map[cloud.ServiceName]cloud.ServiceConfiguration{
+					cloud.ResourceManager: {Endpoint: srv.URL, Audience: srv.URL},
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	results, err := azure.ListServiceBusNamespaceWithClient(t.Context(), client)
+	require.NoError(t, err)
+	assert.Len(t, results, 2)
+	assert.Equal(t, "ns-alpha", *results[0].Name)
+	assert.Equal(t, "ns-beta", *results[1].Name)
 }
 
-func TestListServiceBusNamespaceIDsByResourceGroupE(t *testing.T) {
+func TestBuildNamespaceNamesList(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.ListServiceBusNamespaceIDsByResourceGroupContextE(t.Context(), "", "")
+	tests := []struct {
+		name       string
+		namespaces []*armservicebus.SBNamespace
+		expected   []string
+	}{
+		{
+			name:       "empty list",
+			namespaces: []*armservicebus.SBNamespace{},
+			expected:   []string{},
+		},
+		{
+			name: "multiple namespaces",
+			namespaces: []*armservicebus.SBNamespace{
+				{Name: to.Ptr("ns-alpha")},
+				{Name: to.Ptr("ns-beta")},
+				{Name: to.Ptr("ns-gamma")},
+			},
+			expected: []string{"ns-alpha", "ns-beta", "ns-gamma"},
+		},
+	}
 
-	require.Error(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := azure.BuildNamespaceNamesList(tc.namespaces)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
 }
 
-func TestListNamespaceAuthRulesE(t *testing.T) {
+func TestBuildNamespaceIdsList(t *testing.T) {
 	t.Parallel()
 
-	_, err := azure.ListNamespaceAuthRulesContextE(t.Context(), "", "", "")
+	tests := []struct {
+		name       string
+		namespaces []*armservicebus.SBNamespace
+		expected   []string
+	}{
+		{
+			name:       "empty list",
+			namespaces: []*armservicebus.SBNamespace{},
+			expected:   []string{},
+		},
+		{
+			name: "multiple namespaces",
+			namespaces: []*armservicebus.SBNamespace{
+				{ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/ns-1")},
+				{ID: to.Ptr("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/ns-2")},
+			},
+			expected: []string{
+				"/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/ns-1",
+				"/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ServiceBus/namespaces/ns-2",
+			},
+		},
+	}
 
-	require.Error(t, err)
-}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-func TestListNamespaceTopicsE(t *testing.T) {
-	t.Parallel()
-
-	_, err := azure.ListNamespaceTopicsContextE(t.Context(), "", "", "")
-
-	require.Error(t, err)
-}
-
-func TestListTopicAuthRulesE(t *testing.T) {
-	t.Parallel()
-
-	_, err := azure.ListTopicAuthRulesContextE(t.Context(), "", "", "", "")
-
-	require.Error(t, err)
-}
-
-func TestListTopicSubscriptionsNameE(t *testing.T) {
-	t.Parallel()
-
-	_, err := azure.ListTopicSubscriptionsNameContextE(t.Context(), "", "", "", "")
-
-	require.Error(t, err)
+			result := azure.BuildNamespaceIdsList(tc.namespaces)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
 }

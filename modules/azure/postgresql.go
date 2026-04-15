@@ -58,8 +58,12 @@ func GetPostgreSQLServerContextE(t testing.TestingT, ctx context.Context, subscr
 		return nil, err
 	}
 
-	// Get the corresponding server
-	resp, err := postgresqlClient.Get(ctx, resGroupName, serverName, nil)
+	return GetPostgreSQLServerWithClient(ctx, postgresqlClient, resGroupName, serverName)
+}
+
+// GetPostgreSQLServerWithClient gets the server using the provided ServersClient.
+func GetPostgreSQLServerWithClient(ctx context.Context, client *armpostgresql.ServersClient, resGroupName string, serverName string) (*armpostgresql.Server, error) {
+	resp, err := client.Get(ctx, resGroupName, serverName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +127,12 @@ func GetPostgreSQLDBContextE(t testing.TestingT, ctx context.Context, subscripti
 		return nil, err
 	}
 
-	// Get the corresponding db
-	resp, err := postgresqldbClient.Get(ctx, resGroupName, serverName, dbName, nil)
+	return GetPostgreSQLDBWithClient(ctx, postgresqldbClient, resGroupName, serverName, dbName)
+}
+
+// GetPostgreSQLDBWithClient gets the database using the provided DatabasesClient.
+func GetPostgreSQLDBWithClient(ctx context.Context, client *armpostgresql.DatabasesClient, resGroupName string, serverName string, dbName string) (*armpostgresql.Database, error) {
+	resp, err := client.Get(ctx, resGroupName, serverName, dbName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +178,12 @@ func ListPostgreSQLDBContextE(t testing.TestingT, ctx context.Context, subscript
 		return nil, err
 	}
 
-	// Get the databases using pager
-	pager := postgresqldbClient.NewListByServerPager(resGroupName, serverName, nil)
+	return ListPostgreSQLDBWithClient(ctx, postgresqldbClient, resGroupName, serverName)
+}
+
+// ListPostgreSQLDBWithClient lists all databases per server using the provided DatabasesClient.
+func ListPostgreSQLDBWithClient(ctx context.Context, client *armpostgresql.DatabasesClient, resGroupName string, serverName string) ([]*armpostgresql.Database, error) {
+	pager := client.NewListByServerPager(resGroupName, serverName, nil)
 
 	var databases []*armpostgresql.Database
 

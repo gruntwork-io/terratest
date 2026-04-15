@@ -49,7 +49,13 @@ func GetPrivateDNSZoneContextE(ctx context.Context, zoneName string, resGroupNam
 		return nil, err
 	}
 
-	resp, err := client.Get(ctx, rgName, zoneName, nil)
+	return GetPrivateDNSZoneWithClient(ctx, client, rgName, zoneName)
+}
+
+// GetPrivateDNSZoneWithClient gets the specified private DNS zone using the provided PrivateZonesClient.
+// This variant is useful for testing with fake clients.
+func GetPrivateDNSZoneWithClient(ctx context.Context, client *armprivatedns.PrivateZonesClient, resGroupName string, zoneName string) (*armprivatedns.PrivateZone, error) {
+	resp, err := client.Get(ctx, resGroupName, zoneName, nil)
 	if err != nil {
 		return nil, err
 	}
