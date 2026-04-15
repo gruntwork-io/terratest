@@ -1,8 +1,6 @@
 // Package azure allows users to interact with resources on the Microsoft Azure platform.
 package azure
 
-// snippet-tag-start::client_factory_example.imports
-
 import (
 	"context"
 	"errors"
@@ -34,8 +32,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/synapse/armsynapse"
 )
-
-// snippet-tag-end::client_factory_example.imports
 
 const (
 	// AzureEnvironmentEnvName is the name of the Azure environment to use. Set to one of the following:
@@ -791,9 +787,9 @@ func CreateNsgCustomRulesClientE(subscriptionID string) (*armnetwork.SecurityRul
 	return CreateNsgCustomRulesClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateNewNetworkInterfacesClientContextE returns a network interfaces client.
+// CreateNetworkInterfacesClientContextE returns a network interfaces client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateNewNetworkInterfacesClientContextE(_ context.Context, subscriptionID string) (*armnetwork.InterfacesClient, error) {
+func CreateNetworkInterfacesClientContextE(_ context.Context, subscriptionID string) (*armnetwork.InterfacesClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -802,16 +798,30 @@ func CreateNewNetworkInterfacesClientContextE(_ context.Context, subscriptionID 
 	return clientFactory.NewInterfacesClient(), nil
 }
 
-// CreateNewNetworkInterfacesClientE returns a network interfaces client.
+// CreateNetworkInterfacesClientE returns a network interfaces client.
 //
-// Deprecated: Use [CreateNewNetworkInterfacesClientContextE] instead.
-func CreateNewNetworkInterfacesClientE(subscriptionID string) (*armnetwork.InterfacesClient, error) {
-	return CreateNewNetworkInterfacesClientContextE(context.Background(), subscriptionID)
+// Deprecated: Use [CreateNetworkInterfacesClientContextE] instead.
+func CreateNetworkInterfacesClientE(subscriptionID string) (*armnetwork.InterfacesClient, error) {
+	return CreateNetworkInterfacesClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateNewNetworkInterfaceIPConfigurationClientContextE returns a NIC IP configuration client.
+// CreateNewNetworkInterfacesClientContextE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateNetworkInterfacesClientContextE] instead.
+func CreateNewNetworkInterfacesClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.InterfacesClient, error) {
+	return CreateNetworkInterfacesClientContextE(ctx, subscriptionID)
+}
+
+// CreateNewNetworkInterfacesClientE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateNetworkInterfacesClientContextE] instead.
+func CreateNewNetworkInterfacesClientE(subscriptionID string) (*armnetwork.InterfacesClient, error) {
+	return CreateNetworkInterfacesClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNetworkInterfaceIPConfigurationClientContextE returns a NIC IP configuration client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateNewNetworkInterfaceIPConfigurationClientContextE(_ context.Context, subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
+func CreateNetworkInterfaceIPConfigurationClientContextE(_ context.Context, subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -820,11 +830,25 @@ func CreateNewNetworkInterfaceIPConfigurationClientContextE(_ context.Context, s
 	return clientFactory.NewInterfaceIPConfigurationsClient(), nil
 }
 
-// CreateNewNetworkInterfaceIPConfigurationClientE returns a NIC IP configuration client.
+// CreateNetworkInterfaceIPConfigurationClientE returns a NIC IP configuration client.
 //
-// Deprecated: Use [CreateNewNetworkInterfaceIPConfigurationClientContextE] instead.
+// Deprecated: Use [CreateNetworkInterfaceIPConfigurationClientContextE] instead.
+func CreateNetworkInterfaceIPConfigurationClientE(subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
+	return CreateNetworkInterfaceIPConfigurationClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNewNetworkInterfaceIPConfigurationClientContextE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateNetworkInterfaceIPConfigurationClientContextE] instead.
+func CreateNewNetworkInterfaceIPConfigurationClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
+	return CreateNetworkInterfaceIPConfigurationClientContextE(ctx, subscriptionID)
+}
+
+// CreateNewNetworkInterfaceIPConfigurationClientE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateNetworkInterfaceIPConfigurationClientContextE] instead.
 func CreateNewNetworkInterfaceIPConfigurationClientE(subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
-	return CreateNewNetworkInterfaceIPConfigurationClientContextE(context.Background(), subscriptionID)
+	return CreateNetworkInterfaceIPConfigurationClientContextE(context.Background(), subscriptionID)
 }
 
 // CreatePublicIPAddressesClientContextE returns a public IP addresses client.
@@ -881,9 +905,9 @@ func CreateLoadBalancerFrontendIPConfigClientE(subscriptionID string) (*armnetwo
 	return CreateLoadBalancerFrontendIPConfigClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateNewSubnetClientContextE returns a subnet client.
+// CreateSubnetClientContextE returns a subnet client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateNewSubnetClientContextE(_ context.Context, subscriptionID string) (*armnetwork.SubnetsClient, error) {
+func CreateSubnetClientContextE(_ context.Context, subscriptionID string) (*armnetwork.SubnetsClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -892,11 +916,25 @@ func CreateNewSubnetClientContextE(_ context.Context, subscriptionID string) (*a
 	return clientFactory.NewSubnetsClient(), nil
 }
 
-// CreateNewSubnetClientE returns a subnet client.
+// CreateSubnetClientE returns a subnet client.
 //
-// Deprecated: Use [CreateNewSubnetClientContextE] instead.
+// Deprecated: Use [CreateSubnetClientContextE] instead.
+func CreateSubnetClientE(subscriptionID string) (*armnetwork.SubnetsClient, error) {
+	return CreateSubnetClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateNewSubnetClientContextE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateSubnetClientContextE] instead.
+func CreateNewSubnetClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.SubnetsClient, error) {
+	return CreateSubnetClientContextE(ctx, subscriptionID)
+}
+
+// CreateNewSubnetClientE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateSubnetClientContextE] instead.
 func CreateNewSubnetClientE(subscriptionID string) (*armnetwork.SubnetsClient, error) {
-	return CreateNewSubnetClientContextE(context.Background(), subscriptionID)
+	return CreateSubnetClientContextE(context.Background(), subscriptionID)
 }
 
 // CreateNetworkManagementClientContextE returns a network management client.
@@ -917,9 +955,9 @@ func CreateNetworkManagementClientE(subscriptionID string) (*armnetwork.Manageme
 	return CreateNetworkManagementClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateNewVirtualNetworkClientContextE returns a virtual network client.
+// CreateVirtualNetworkClientContextE returns a virtual network client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateNewVirtualNetworkClientContextE(_ context.Context, subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+func CreateVirtualNetworkClientContextE(_ context.Context, subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
 	clientFactory, err := getArmNetworkClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -928,15 +966,28 @@ func CreateNewVirtualNetworkClientContextE(_ context.Context, subscriptionID str
 	return clientFactory.NewVirtualNetworksClient(), nil
 }
 
-// CreateNewVirtualNetworkClientE returns a virtual network client.
+// CreateVirtualNetworkClientE returns a virtual network client.
 //
-// Deprecated: Use [CreateNewVirtualNetworkClientContextE] instead.
-func CreateNewVirtualNetworkClientE(subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
-	return CreateNewVirtualNetworkClientContextE(context.Background(), subscriptionID)
+// Deprecated: Use [CreateVirtualNetworkClientContextE] instead.
+func CreateVirtualNetworkClientE(subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+	return CreateVirtualNetworkClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateAppServiceClientContextE returns an App service client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateNewVirtualNetworkClientContextE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateVirtualNetworkClientContextE] instead.
+func CreateNewVirtualNetworkClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+	return CreateVirtualNetworkClientContextE(ctx, subscriptionID)
+}
+
+// CreateNewVirtualNetworkClientE is an alias for backward compatibility.
+//
+// Deprecated: Use [CreateVirtualNetworkClientContextE] instead.
+func CreateNewVirtualNetworkClientE(subscriptionID string) (*armnetwork.VirtualNetworksClient, error) {
+	return CreateVirtualNetworkClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateAppServiceClientContextE returns an App Service client.
 // The ctx parameter supports cancellation and timeouts.
 func CreateAppServiceClientContextE(_ context.Context, subscriptionID string) (*armappservice.WebAppsClient, error) {
 	clientFactory, err := getArmAppServiceClientFactory(subscriptionID)
@@ -947,8 +998,7 @@ func CreateAppServiceClientContextE(_ context.Context, subscriptionID string) (*
 	return clientFactory.NewWebAppsClient(), nil
 }
 
-// CreateAppServiceClientE returns an App service client instance configured with the
-// correct BaseURI depending on the Azure environment that is currently setup (or "Public", if none is setup).
+// CreateAppServiceClientE returns an App Service client.
 //
 // Deprecated: Use [CreateAppServiceClientContextE] instead.
 func CreateAppServiceClientE(subscriptionID string) (*armappservice.WebAppsClient, error) {
