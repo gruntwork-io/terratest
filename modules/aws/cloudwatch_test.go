@@ -1,17 +1,19 @@
-package aws
+package aws_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/stretchr/testify/require"
+
+	aws "github.com/gruntwork-io/terratest/modules/aws"
 )
 
-// mockCloudWatchLogsClient is a test double for CloudWatchLogsAPI that returns canned responses.
+// mockCloudWatchLogsClient is a test double for aws.CloudWatchLogsAPI that returns canned responses.
 type mockCloudWatchLogsClient struct {
 	GetLogEventsOutput *cloudwatchlogs.GetLogEventsOutput
 	GetLogEventsErr    error
@@ -21,6 +23,7 @@ func (m *mockCloudWatchLogsClient) GetLogEvents(_ context.Context, _ *cloudwatch
 	if m.GetLogEventsErr != nil {
 		return nil, m.GetLogEventsErr
 	}
+
 	return m.GetLogEventsOutput, nil
 }
 
@@ -36,9 +39,9 @@ func TestGetCloudWatchLogEntriesWithClientContextE(t *testing.T) {
 			client: &mockCloudWatchLogsClient{
 				GetLogEventsOutput: &cloudwatchlogs.GetLogEventsOutput{
 					Events: []types.OutputLogEvent{
-						{Message: aws.String("first line")},
-						{Message: aws.String("second line")},
-						{Message: aws.String("third line")},
+						{Message: awsSDK.String("first line")},
+						{Message: awsSDK.String("second line")},
+						{Message: awsSDK.String("third line")},
 					},
 				},
 			},
@@ -60,11 +63,13 @@ func TestGetCloudWatchLogEntriesWithClientContextE(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := GetCloudWatchLogEntriesWithClientContextE(t, context.Background(), tc.client, "stream", "group")
+			got, err := aws.GetCloudWatchLogEntriesWithClientContextE(t, context.Background(), tc.client, "stream", "group")
 			if tc.wantErr {
 				require.Error(t, err)
+
 				return
 			}
+
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, got)
 		})

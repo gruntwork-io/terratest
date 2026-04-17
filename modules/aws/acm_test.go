@@ -1,17 +1,19 @@
-package aws
+package aws_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/stretchr/testify/require"
+
+	aws "github.com/gruntwork-io/terratest/modules/aws"
 )
 
-// mockAcmClient is a test double for AcmAPI that returns canned responses.
+// mockAcmClient is a test double for aws.AcmAPI that returns canned responses.
 type mockAcmClient struct {
 	ListCertificatesOutput *acm.ListCertificatesOutput
 	ListCertificatesErr    error
@@ -21,6 +23,7 @@ func (m *mockAcmClient) ListCertificates(_ context.Context, _ *acm.ListCertifica
 	if m.ListCertificatesErr != nil {
 		return nil, m.ListCertificatesErr
 	}
+
 	return m.ListCertificatesOutput, nil
 }
 
@@ -36,8 +39,8 @@ func TestGetAcmCertificateArnWithClientContextE(t *testing.T) {
 
 	twoCerts := &acm.ListCertificatesOutput{
 		CertificateSummaryList: []types.CertificateSummary{
-			{DomainName: aws.String(domain1), CertificateArn: aws.String(arn1)},
-			{DomainName: aws.String(domain2), CertificateArn: aws.String(arn2)},
+			{DomainName: awsSDK.String(domain1), CertificateArn: awsSDK.String(arn1)},
+			{DomainName: awsSDK.String(domain2), CertificateArn: awsSDK.String(arn2)},
 		},
 	}
 
@@ -78,14 +81,15 @@ func TestGetAcmCertificateArnWithClientContextE(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			arn, err := GetAcmCertificateArnWithClientContextE(t, context.Background(), tc.client, tc.query)
+			arn, err := aws.GetAcmCertificateArnWithClientContextE(t, context.Background(), tc.client, tc.query)
 			if tc.expectErr {
 				require.Error(t, err)
+
 				return
 			}
+
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedArn, arn)
 		})
 	}
 }
-

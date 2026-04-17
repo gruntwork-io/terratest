@@ -1,17 +1,19 @@
-package aws
+package aws_test
 
 import (
 	"context"
 	"errors"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/require"
+
+	aws "github.com/gruntwork-io/terratest/modules/aws"
 )
 
-// mockDynamoDBClient is a test double for DynamoDBAPI.
+// mockDynamoDBClient is a test double for aws.DynamoDBAPI.
 type mockDynamoDBClient struct {
 	DescribeTableOutput      *dynamodb.DescribeTableOutput
 	DescribeTableErr         error
@@ -24,10 +26,12 @@ type mockDynamoDBClient struct {
 }
 
 func (m *mockDynamoDBClient) DescribeTable(_ context.Context, params *dynamodb.DescribeTableInput, _ ...func(*dynamodb.Options)) (*dynamodb.DescribeTableOutput, error) {
-	m.lastDescribeTableName = aws.ToString(params.TableName)
+	m.lastDescribeTableName = awsSDK.ToString(params.TableName)
+
 	if m.DescribeTableErr != nil {
 		return nil, m.DescribeTableErr
 	}
+
 	return m.DescribeTableOutput, nil
 }
 
@@ -35,14 +39,17 @@ func (m *mockDynamoDBClient) DescribeTimeToLive(_ context.Context, _ *dynamodb.D
 	if m.DescribeTimeToLiveErr != nil {
 		return nil, m.DescribeTimeToLiveErr
 	}
+
 	return m.DescribeTimeToLiveOutput, nil
 }
 
 func (m *mockDynamoDBClient) ListTagsOfResource(_ context.Context, params *dynamodb.ListTagsOfResourceInput, _ ...func(*dynamodb.Options)) (*dynamodb.ListTagsOfResourceOutput, error) {
-	m.lastListTagsResourceArn = aws.ToString(params.ResourceArn)
+	m.lastListTagsResourceArn = awsSDK.ToString(params.ResourceArn)
+
 	if m.ListTagsOfResourceErr != nil {
 		return nil, m.ListTagsOfResourceErr
 	}
+
 	return m.ListTagsOfResourceOutput, nil
 }
 
@@ -60,14 +67,15 @@ func TestGetDynamoDBTableWithClientContextE(t *testing.T) {
 		client := &mockDynamoDBClient{
 			DescribeTableOutput: &dynamodb.DescribeTableOutput{
 				Table: &types.TableDescription{
-					TableArn:  aws.String(testTableArn),
-					TableName: aws.String(testTableName),
+					TableArn:  awsSDK.String(testTableArn),
+					TableName: awsSDK.String(testTableName),
 				},
 			},
 		}
-		got, err := GetDynamoDBTableWithClientContextE(t, context.Background(), client, testTableName)
+
+		got, err := aws.GetDynamoDBTableWithClientContextE(t, context.Background(), client, testTableName)
 		require.NoError(t, err)
-		require.Equal(t, testTableArn, aws.ToString(got.TableArn))
+		require.Equal(t, testTableArn, awsSDK.ToString(got.TableArn))
 		require.Equal(t, testTableName, client.lastDescribeTableName)
 	})
 
@@ -75,7 +83,8 @@ func TestGetDynamoDBTableWithClientContextE(t *testing.T) {
 		t.Parallel()
 
 		client := &mockDynamoDBClient{DescribeTableErr: errors.New("ResourceNotFoundException")}
-		_, err := GetDynamoDBTableWithClientContextE(t, context.Background(), client, testTableName)
+
+		_, err := aws.GetDynamoDBTableWithClientContextE(t, context.Background(), client, testTableName)
 		require.Error(t, err)
 	})
 }
@@ -90,21 +99,23 @@ func TestGetDynamoDBTableTimeToLiveWithClientContextE(t *testing.T) {
 			DescribeTimeToLiveOutput: &dynamodb.DescribeTimeToLiveOutput{
 				TimeToLiveDescription: &types.TimeToLiveDescription{
 					TimeToLiveStatus: types.TimeToLiveStatusEnabled,
-					AttributeName:    aws.String("expiresAt"),
+					AttributeName:    awsSDK.String("expiresAt"),
 				},
 			},
 		}
-		got, err := GetDynamoDBTableTimeToLiveWithClientContextE(t, context.Background(), client, testTableName)
+
+		got, err := aws.GetDynamoDBTableTimeToLiveWithClientContextE(t, context.Background(), client, testTableName)
 		require.NoError(t, err)
 		require.Equal(t, types.TimeToLiveStatusEnabled, got.TimeToLiveStatus)
-		require.Equal(t, "expiresAt", aws.ToString(got.AttributeName))
+		require.Equal(t, "expiresAt", awsSDK.ToString(got.AttributeName))
 	})
 
 	t.Run("propagates api error", func(t *testing.T) {
 		t.Parallel()
 
 		client := &mockDynamoDBClient{DescribeTimeToLiveErr: errors.New("InternalServerError")}
-		_, err := GetDynamoDBTableTimeToLiveWithClientContextE(t, context.Background(), client, testTableName)
+
+		_, err := aws.GetDynamoDBTableTimeToLiveWithClientContextE(t, context.Background(), client, testTableName)
 		require.Error(t, err)
 	})
 }
@@ -114,8 +125,8 @@ func TestGetDynamoDBTableTagsWithClientContextE(t *testing.T) {
 
 	describeOK := &dynamodb.DescribeTableOutput{
 		Table: &types.TableDescription{
-			TableArn:  aws.String(testTableArn),
-			TableName: aws.String(testTableName),
+			TableArn:  awsSDK.String(testTableArn),
+			TableName: awsSDK.String(testTableName),
 		},
 	}
 
@@ -126,12 +137,13 @@ func TestGetDynamoDBTableTagsWithClientContextE(t *testing.T) {
 			DescribeTableOutput: describeOK,
 			ListTagsOfResourceOutput: &dynamodb.ListTagsOfResourceOutput{
 				Tags: []types.Tag{
-					{Key: aws.String("env"), Value: aws.String("prod")},
-					{Key: aws.String("team"), Value: aws.String("platform")},
+					{Key: awsSDK.String("env"), Value: awsSDK.String("prod")},
+					{Key: awsSDK.String("team"), Value: awsSDK.String("platform")},
 				},
 			},
 		}
-		got, err := GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
+
+		got, err := aws.GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
 		require.NoError(t, err)
 		require.Len(t, got, 2)
 		require.Equal(t, testTableArn, client.lastListTagsResourceArn)
@@ -144,7 +156,8 @@ func TestGetDynamoDBTableTagsWithClientContextE(t *testing.T) {
 			DescribeTableOutput:      describeOK,
 			ListTagsOfResourceOutput: &dynamodb.ListTagsOfResourceOutput{},
 		}
-		got, err := GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
+
+		got, err := aws.GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
 		require.NoError(t, err)
 		require.Empty(t, got)
 	})
@@ -153,7 +166,8 @@ func TestGetDynamoDBTableTagsWithClientContextE(t *testing.T) {
 		t.Parallel()
 
 		client := &mockDynamoDBClient{DescribeTableErr: errors.New("ResourceNotFoundException")}
-		_, err := GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
+
+		_, err := aws.GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
 		require.Error(t, err)
 		require.Empty(t, client.lastListTagsResourceArn, "ListTagsOfResource must not be called when describe fails")
 	})
@@ -165,7 +179,8 @@ func TestGetDynamoDBTableTagsWithClientContextE(t *testing.T) {
 			DescribeTableOutput:   describeOK,
 			ListTagsOfResourceErr: errors.New("AccessDeniedException"),
 		}
-		_, err := GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
+
+		_, err := aws.GetDynamoDBTableTagsWithClientContextE(t, context.Background(), client, testTableName)
 		require.Error(t, err)
 	})
 }
