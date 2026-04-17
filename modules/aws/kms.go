@@ -62,7 +62,7 @@ func GetCmkArnE(t testing.TestingT, region string, cmkID string) (string, error)
 // NewKmsClientContextE creates a KMS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewKmsClientContextE(t testing.TestingT, ctx context.Context, region string) (*kms.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

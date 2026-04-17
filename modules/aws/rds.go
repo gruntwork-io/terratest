@@ -494,7 +494,7 @@ func GetRdsInstanceDetailsE(t testing.TestingT, dbInstanceID string, awsRegion s
 // NewRdsClientContextE creates an RDS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewRdsClientContextE(t testing.TestingT, ctx context.Context, region string) (*rds.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

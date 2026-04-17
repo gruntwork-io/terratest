@@ -232,7 +232,7 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 		return err
 	}
 
-	authCode1, err := GetTimeBasedOneTimePassword(mfaDevice)
+	authCode1, err := GenerateMfaTokenE(t, mfaDevice)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 	logger.Default.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
 	time.Sleep(mfaEnableWait)
 
-	authCode2, err := GetTimeBasedOneTimePassword(mfaDevice)
+	authCode2, err := GenerateMfaTokenE(t, mfaDevice)
 	if err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.Client, mfaDevice *type
 // NewIamClientContextE creates a new IAM client.
 // The ctx parameter supports cancellation and timeouts.
 func NewIamClientContextE(t testing.TestingT, ctx context.Context, region string) (*iam.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

@@ -920,7 +920,7 @@ func getInstanceFieldMapContextE(t testing.TestingT, ctx context.Context, instan
 // NewEc2ClientContextE creates an EC2 client.
 // The ctx parameter supports cancellation and timeouts.
 func NewEc2ClientContextE(t testing.TestingT, ctx context.Context, region string) (*ec2.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

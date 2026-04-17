@@ -65,7 +65,7 @@ func GetCloudWatchLogEntriesE(t testing.TestingT, awsRegion string, logStreamNam
 // NewCloudWatchLogsClientContextE creates a new CloudWatch Logs client.
 // The ctx parameter supports cancellation and timeouts.
 func NewCloudWatchLogsClientContextE(t testing.TestingT, ctx context.Context, region string) (*cloudwatchlogs.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

@@ -188,7 +188,7 @@ func DeleteParameterWithClientE(t testing.TestingT, client *ssm.Client, keyName 
 // NewSsmClientContextE creates an SSM client.
 // The ctx parameter supports cancellation and timeouts.
 func NewSsmClientContextE(t testing.TestingT, ctx context.Context, region string) (*ssm.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
