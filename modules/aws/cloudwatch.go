@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// CloudWatchLogsAPI is the subset of *cloudwatchlogs.Client operations used by the helpers in this
+// file. Declared as an interface so tests can substitute a mock; a real *cloudwatchlogs.Client
+// satisfies it automatically.
+type CloudWatchLogsAPI interface {
+	GetLogEvents(ctx context.Context, params *cloudwatchlogs.GetLogEventsInput, optFns ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.GetLogEventsOutput, error)
+}
+
 // GetCloudWatchLogEntriesContextE returns the CloudWatch log messages in the given region for the given log stream and log group.
 // The ctx parameter supports cancellation and timeouts.
 func GetCloudWatchLogEntriesContextE(t testing.TestingT, ctx context.Context, awsRegion string, logStreamName string, logGroupName string) ([]string, error) {
@@ -17,6 +24,13 @@ func GetCloudWatchLogEntriesContextE(t testing.TestingT, ctx context.Context, aw
 		return nil, err
 	}
 
+	return GetCloudWatchLogEntriesWithClientContextE(t, ctx, client, logStreamName, logGroupName)
+}
+
+// GetCloudWatchLogEntriesWithClientContextE returns the CloudWatch log messages for the given log
+// stream and log group using the provided CloudWatch Logs client.
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudWatchLogEntriesWithClientContextE(t testing.TestingT, ctx context.Context, client CloudWatchLogsAPI, logStreamName string, logGroupName string) ([]string, error) {
 	output, err := client.GetLogEvents(ctx, &cloudwatchlogs.GetLogEventsInput{
 		LogGroupName:  aws.String(logGroupName),
 		LogStreamName: aws.String(logStreamName),
