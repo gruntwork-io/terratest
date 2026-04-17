@@ -232,7 +232,7 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 		return err
 	}
 
-	authCode1, err := GenerateMfaTokenE(t, mfaDevice)
+	authCode1, err := GetTimeBasedOneTimePasswordE(t, mfaDevice)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 	logger.Default.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
 	time.Sleep(mfaEnableWait)
 
-	authCode2, err := GenerateMfaTokenE(t, mfaDevice)
+	authCode2, err := GetTimeBasedOneTimePasswordE(t, mfaDevice)
 	if err != nil {
 		return err
 	}

@@ -138,30 +138,22 @@ func NewAuthConfigFromRole(t testing.TestingT, region string, roleARN string) *a
 	return NewAuthConfigFromRoleContext(t, context.Background(), region, roleARN)
 }
 
-// NewAuthConfigWithCredsE creates a new AWS Config using explicit static credentials. Useful for
-// authenticating as a dynamically-created IAM User. No context variant is provided because this
-// function performs no I/O — it only constructs an aws.Config.
-func NewAuthConfigWithCredsE(t testing.TestingT, region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
+// CreateAwsSessionWithCredsE creates a new AWS Config using explicit static credentials. Useful
+// for authenticating as a dynamically-created IAM User. No context variant is provided because
+// this function performs no I/O — it only constructs an aws.Config. No panic variant is provided
+// because CreateAwsSessionWithCreds is already taken by the deprecated error-returning shim.
+func CreateAwsSessionWithCredsE(t testing.TestingT, region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
 	return &aws.Config{
 		Region:      region,
 		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
 	}, nil
 }
 
-// NewAuthConfigWithCreds creates a new AWS Config using explicit static credentials.
-// This function will fail the test if there is an error.
-func NewAuthConfigWithCreds(t testing.TestingT, region string, accessKeyID string, secretAccessKey string) *aws.Config {
-	t.Helper()
-	cfg, err := NewAuthConfigWithCredsE(t, region, accessKeyID, secretAccessKey)
-	require.NoError(t, err)
-	return cfg
-}
-
-// NewAuthConfigWithMfaContextE creates a new AWS Config authenticated with an MFA session token
-// obtained via the given STS client and MFA device.
+// CreateAwsSessionWithMfaContextE creates a new AWS Config authenticated with an MFA session
+// token obtained via the given STS client and MFA device.
 // The ctx parameter supports cancellation and timeouts.
-func NewAuthConfigWithMfaContextE(t testing.TestingT, ctx context.Context, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
-	tokenCode, err := GenerateMfaTokenE(t, mfaDevice)
+func CreateAwsSessionWithMfaContextE(t testing.TestingT, ctx context.Context, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
+	tokenCode, err := GetTimeBasedOneTimePasswordE(t, mfaDevice)
 	if err != nil {
 		return nil, err
 	}
@@ -184,31 +176,15 @@ func NewAuthConfigWithMfaContextE(t testing.TestingT, ctx context.Context, regio
 	}, nil
 }
 
-// NewAuthConfigWithMfaContext creates a new AWS Config authenticated with an MFA session token.
-// This function will fail the test if there is an error.
-// The ctx parameter supports cancellation and timeouts.
-func NewAuthConfigWithMfaContext(t testing.TestingT, ctx context.Context, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) *aws.Config {
-	t.Helper()
-	cfg, err := NewAuthConfigWithMfaContextE(t, ctx, region, stsClient, mfaDevice)
-	require.NoError(t, err)
-	return cfg
+// CreateAwsSessionWithMfaE creates a new AWS Config authenticated with an MFA session token.
+func CreateAwsSessionWithMfaE(t testing.TestingT, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
+	return CreateAwsSessionWithMfaContextE(t, context.Background(), region, stsClient, mfaDevice)
 }
 
-// NewAuthConfigWithMfaE creates a new AWS Config authenticated with an MFA session token.
-func NewAuthConfigWithMfaE(t testing.TestingT, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
-	return NewAuthConfigWithMfaContextE(t, context.Background(), region, stsClient, mfaDevice)
-}
-
-// NewAuthConfigWithMfa creates a new AWS Config authenticated with an MFA session token.
-// This function will fail the test if there is an error.
-func NewAuthConfigWithMfa(t testing.TestingT, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) *aws.Config {
-	t.Helper()
-	return NewAuthConfigWithMfaContext(t, context.Background(), region, stsClient, mfaDevice)
-}
-
-// GenerateMfaTokenE returns a time-based one-time password for the given MFA device, per RFC 6238.
-// The returned value changes every 30 seconds.
-func GenerateMfaTokenE(t testing.TestingT, mfaDevice *types.VirtualMFADevice) (string, error) {
+// GetTimeBasedOneTimePasswordE returns a time-based one-time password for the given MFA device,
+// per RFC 6238. The returned value changes every 30 seconds. No context variant is provided
+// because this function performs no I/O — it is a local HMAC-based computation.
+func GetTimeBasedOneTimePasswordE(t testing.TestingT, mfaDevice *types.VirtualMFADevice) (string, error) {
 	base32StringSeed := string(mfaDevice.Base32StringSeed)
 
 	otp, err := totp.GenerateCode(base32StringSeed, time.Now())
@@ -219,19 +195,10 @@ func GenerateMfaTokenE(t testing.TestingT, mfaDevice *types.VirtualMFADevice) (s
 	return otp, nil
 }
 
-// GenerateMfaToken returns a time-based one-time password for the given MFA device, per RFC 6238.
-// This function will fail the test if there is an error.
-func GenerateMfaToken(t testing.TestingT, mfaDevice *types.VirtualMFADevice) string {
-	t.Helper()
-	token, err := GenerateMfaTokenE(t, mfaDevice)
-	require.NoError(t, err)
-	return token
-}
-
-// GetPasswordPolicyMinLengthContextE returns the minimum password length from the account's
-// IAM password policy.
+// ReadPasswordPolicyMinPasswordLengthContextE returns the minimum password length from the
+// account's IAM password policy.
 // The ctx parameter supports cancellation and timeouts.
-func GetPasswordPolicyMinLengthContextE(t testing.TestingT, ctx context.Context, iamClient *iam.Client) (int, error) {
+func ReadPasswordPolicyMinPasswordLengthContextE(t testing.TestingT, ctx context.Context, iamClient *iam.Client) (int, error) {
 	output, err := iamClient.GetAccountPasswordPolicy(ctx, &iam.GetAccountPasswordPolicyInput{})
 	if err != nil {
 		return -1, err
@@ -240,26 +207,10 @@ func GetPasswordPolicyMinLengthContextE(t testing.TestingT, ctx context.Context,
 	return int(*output.PasswordPolicy.MinimumPasswordLength), nil
 }
 
-// GetPasswordPolicyMinLengthContext returns the minimum password length from the account's IAM password policy.
-// This function will fail the test if there is an error.
-// The ctx parameter supports cancellation and timeouts.
-func GetPasswordPolicyMinLengthContext(t testing.TestingT, ctx context.Context, iamClient *iam.Client) int {
-	t.Helper()
-	n, err := GetPasswordPolicyMinLengthContextE(t, ctx, iamClient)
-	require.NoError(t, err)
-	return n
-}
-
-// GetPasswordPolicyMinLengthE returns the minimum password length from the account's IAM password policy.
-func GetPasswordPolicyMinLengthE(t testing.TestingT, iamClient *iam.Client) (int, error) {
-	return GetPasswordPolicyMinLengthContextE(t, context.Background(), iamClient)
-}
-
-// GetPasswordPolicyMinLength returns the minimum password length from the account's IAM password policy.
-// This function will fail the test if there is an error.
-func GetPasswordPolicyMinLength(t testing.TestingT, iamClient *iam.Client) int {
-	t.Helper()
-	return GetPasswordPolicyMinLengthContext(t, context.Background(), iamClient)
+// ReadPasswordPolicyMinPasswordLengthE returns the minimum password length from the account's
+// IAM password policy.
+func ReadPasswordPolicyMinPasswordLengthE(t testing.TestingT, iamClient *iam.Client) (int, error) {
+	return ReadPasswordPolicyMinPasswordLengthContextE(t, context.Background(), iamClient)
 }
 
 // CredentialsError is an error that occurs because AWS credentials can't be found.
@@ -275,8 +226,9 @@ func (err CredentialsError) Error() string {
 // Deprecated: legacy surface preserved for backwards compatibility.
 //
 // These functions predate the package's testing.TestingT + Context[E] convention.
-// New callers should use the NewAuthConfig* / GenerateMfaToken / GetPasswordPolicyMinLength
-// families above. The shims below will be removed in a future major release.
+// New callers should use the NewAuthConfig* family (or the *E variants of the original names
+// for MFA / credentials / password-policy helpers) defined above.
+// The shims below will be removed in a future major release.
 // -----------------------------------------------------------------------------
 
 // NewAuthenticatedSessionContext creates an AWS Config following to standard AWS authentication workflow.
@@ -357,7 +309,7 @@ func NewAuthenticatedSessionFromRole(region string, roleARN string) (*aws.Config
 
 // CreateAwsSessionWithCredsContext creates a new AWS Config using explicit credentials.
 //
-// Deprecated: Use [NewAuthConfigWithCredsE] instead. The Context variant was a placeholder
+// Deprecated: Use [CreateAwsSessionWithCredsE] instead. The Context variant was a placeholder
 // for API symmetry — the underlying operation performs no I/O, so no context is needed.
 func CreateAwsSessionWithCredsContext(ctx context.Context, region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
 	return &aws.Config{
@@ -368,14 +320,14 @@ func CreateAwsSessionWithCredsContext(ctx context.Context, region string, access
 
 // CreateAwsSessionWithCreds creates a new AWS Config using explicit credentials.
 //
-// Deprecated: Use [NewAuthConfigWithCredsE] instead.
+// Deprecated: Use [CreateAwsSessionWithCredsE] instead.
 func CreateAwsSessionWithCreds(region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
 	return CreateAwsSessionWithCredsContext(context.Background(), region, accessKeyID, secretAccessKey)
 }
 
 // CreateAwsSessionWithMfaContext creates a new AWS Config authenticated using an MFA token retrieved using the given STS client and MFA Device.
 //
-// Deprecated: Use [NewAuthConfigWithMfaContextE] instead.
+// Deprecated: Use [CreateAwsSessionWithMfaContextE] instead.
 func CreateAwsSessionWithMfaContext(ctx context.Context, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
 	tokenCode, err := GetTimeBasedOneTimePassword(mfaDevice)
 	if err != nil {
@@ -402,14 +354,14 @@ func CreateAwsSessionWithMfaContext(ctx context.Context, region string, stsClien
 
 // CreateAwsSessionWithMfa creates a new AWS Config authenticated using an MFA token retrieved using the given STS client and MFA Device.
 //
-// Deprecated: Use [NewAuthConfigWithMfaE] instead.
+// Deprecated: Use [CreateAwsSessionWithMfaE] instead.
 func CreateAwsSessionWithMfa(region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
 	return CreateAwsSessionWithMfaContext(context.Background(), region, stsClient, mfaDevice)
 }
 
 // GetTimeBasedOneTimePassword gets a One-Time Password from the given mfaDevice. Per the RFC 6238 standard, this value will be different every 30 seconds.
 //
-// Deprecated: Use [GenerateMfaTokenE] instead.
+// Deprecated: Use [GetTimeBasedOneTimePasswordE] instead.
 func GetTimeBasedOneTimePassword(mfaDevice *types.VirtualMFADevice) (string, error) {
 	base32StringSeed := string(mfaDevice.Base32StringSeed)
 
@@ -423,7 +375,7 @@ func GetTimeBasedOneTimePassword(mfaDevice *types.VirtualMFADevice) (string, err
 
 // ReadPasswordPolicyMinPasswordLengthContext returns the minimal password length.
 //
-// Deprecated: Use [GetPasswordPolicyMinLengthContextE] instead.
+// Deprecated: Use [ReadPasswordPolicyMinPasswordLengthContextE] instead.
 func ReadPasswordPolicyMinPasswordLengthContext(ctx context.Context, iamClient *iam.Client) (int, error) {
 	output, err := iamClient.GetAccountPasswordPolicy(ctx, &iam.GetAccountPasswordPolicyInput{})
 	if err != nil {
@@ -435,7 +387,7 @@ func ReadPasswordPolicyMinPasswordLengthContext(ctx context.Context, iamClient *
 
 // ReadPasswordPolicyMinPasswordLength returns the minimal password length.
 //
-// Deprecated: Use [GetPasswordPolicyMinLengthE] instead.
+// Deprecated: Use [ReadPasswordPolicyMinPasswordLengthE] instead.
 func ReadPasswordPolicyMinPasswordLength(iamClient *iam.Client) (int, error) {
 	return ReadPasswordPolicyMinPasswordLengthContext(context.Background(), iamClient)
 }
