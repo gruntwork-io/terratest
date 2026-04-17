@@ -913,7 +913,7 @@ func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName s
 // NewS3ClientContextE creates an S3 client.
 // The ctx parameter supports cancellation and timeouts.
 func NewS3ClientContextE(t testing.TestingT, ctx context.Context, region string) (*s3.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
@@ -952,7 +952,7 @@ func NewS3ClientE(t testing.TestingT, region string) (*s3.Client, error) {
 // NewS3UploaderContextE creates an S3 Uploader.
 // The ctx parameter supports cancellation and timeouts.
 func NewS3UploaderContextE(t testing.TestingT, ctx context.Context, region string) (*manager.Uploader, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

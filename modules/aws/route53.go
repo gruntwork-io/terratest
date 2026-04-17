@@ -73,7 +73,7 @@ func GetRoute53RecordE(t ttesting.TestingT, hostedZoneID, recordName, recordType
 func NewRoute53ClientContextE(t ttesting.TestingT, ctx context.Context, region string) (*route53.Client, error) {
 	t.Helper()
 
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

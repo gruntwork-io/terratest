@@ -191,7 +191,7 @@ func DeleteSecretE(t testing.TestingT, awsRegion, id string, forceDelete bool) e
 // NewSecretsManagerClientContextE creates a new SecretsManager client.
 // The ctx parameter supports cancellation and timeouts.
 func NewSecretsManagerClientContextE(t testing.TestingT, ctx context.Context, region string) (*secretsmanager.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

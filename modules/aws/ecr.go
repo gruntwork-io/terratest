@@ -172,7 +172,7 @@ func DeleteECRRepoE(t testing.TestingT, region string, repo *types.Repository) e
 // NewECRClientContextE returns a client for the Elastic Container Registry.
 // The ctx parameter supports cancellation and timeouts.
 func NewECRClientContextE(t testing.TestingT, ctx context.Context, region string) (*ecr.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}

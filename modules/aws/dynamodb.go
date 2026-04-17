@@ -162,7 +162,7 @@ func GetDynamoDBTableE(t testing.TestingT, region string, tableName string) (*ty
 // NewDynamoDBClientContextE creates a DynamoDB client.
 // The ctx parameter supports cancellation and timeouts.
 func NewDynamoDBClientContextE(t testing.TestingT, ctx context.Context, region string) (*dynamodb.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthConfigContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
 	}
