@@ -271,7 +271,7 @@ func GetLoadBalancerWithClient(ctx context.Context, client *armnetwork.LoadBalan
 // ExtractLoadBalancerFrontendIPConfigNames gets a list of the Frontend IP Configuration Names
 // from a Load Balancer.
 func ExtractLoadBalancerFrontendIPConfigNames(lb *armnetwork.LoadBalancer) []string {
-	if lb.Properties == nil {
+	if lb == nil || lb.Properties == nil {
 		return nil
 	}
 
@@ -284,9 +284,11 @@ func ExtractLoadBalancerFrontendIPConfigNames(lb *armnetwork.LoadBalancer) []str
 	configNames := make([]string, 0, len(feConfigs))
 
 	for _, config := range feConfigs {
-		if config.Name != nil {
-			configNames = append(configNames, *config.Name)
+		if config == nil || config.Name == nil {
+			continue
 		}
+
+		configNames = append(configNames, *config.Name)
 	}
 
 	return configNames
@@ -296,7 +298,7 @@ func ExtractLoadBalancerFrontendIPConfigNames(lb *armnetwork.LoadBalancer) []str
 // specified Frontend IP Configuration. For public IPs it requires a PublicIPAddressesClient
 // to resolve the public IP address.
 func GetIPOfLoadBalancerFrontendIPConfigWithClient(ctx context.Context, feConfig *armnetwork.FrontendIPConfiguration, pipClient *armnetwork.PublicIPAddressesClient, resourceGroupName string) (string, LoadBalancerIPType, error) {
-	if feConfig.Properties == nil {
+	if feConfig == nil || feConfig.Properties == nil {
 		return "", NoIP, errors.New("frontend IP configuration has nil properties")
 	}
 

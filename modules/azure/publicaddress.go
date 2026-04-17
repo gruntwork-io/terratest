@@ -137,6 +137,10 @@ func CheckPublicDNSNameAvailabilityContextE(ctx context.Context, location string
 		return false, err
 	}
 
+	if res.Available == nil {
+		return false, nil
+	}
+
 	return *res.Available, nil
 }
 
@@ -175,9 +179,9 @@ func GetPublicIPAddressWithClient(ctx context.Context, client *armnetwork.Public
 
 // ExtractIPOfPublicIPAddress gets the IP string from a PublicIPAddress.
 func ExtractIPOfPublicIPAddress(pip *armnetwork.PublicIPAddress) (string, error) {
-	if pip.Properties == nil || pip.Properties.IPAddress == nil {
+	if pip == nil || pip.Properties == nil || pip.Properties.IPAddress == nil {
 		name := "<unknown>"
-		if pip.Name != nil {
+		if pip != nil && pip.Name != nil {
 			name = *pip.Name
 		}
 

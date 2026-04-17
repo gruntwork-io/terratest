@@ -228,7 +228,7 @@ func GetAvailabilitySetFaultDomainCountContextE(t testing.TestingT, ctx context.
 
 // ExtractAvailabilitySetFaultDomainCount gets the Fault Domain Count from the provided AvailabilitySet.
 func ExtractAvailabilitySetFaultDomainCount(avs *armcompute.AvailabilitySet) (int32, error) {
-	if avs.Properties == nil || avs.Properties.PlatformFaultDomainCount == nil {
+	if avs == nil || avs.Properties == nil || avs.Properties.PlatformFaultDomainCount == nil {
 		return -1, errors.New("availability set has no fault domain count")
 	}
 

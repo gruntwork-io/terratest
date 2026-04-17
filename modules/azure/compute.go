@@ -136,7 +136,7 @@ func GetVirtualMachineNicsContextE(ctx context.Context, vmName string, resGroupN
 
 // extractVMNics extracts the Network Interface names from a Virtual Machine object.
 func extractVMNics(vm *armcompute.VirtualMachine) ([]string, error) {
-	if vm.Properties == nil || vm.Properties.NetworkProfile == nil {
+	if vm == nil || vm.Properties == nil || vm.Properties.NetworkProfile == nil {
 		return nil, nil
 	}
 
@@ -145,6 +145,10 @@ func extractVMNics(vm *armcompute.VirtualMachine) ([]string, error) {
 	var nics []string
 
 	for _, nic := range vmNICs {
+		if nic == nil || nic.ID == nil {
+			continue
+		}
+
 		nicName, err := GetNameFromResourceIDE(*nic.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse NIC resource ID %q: %w", *nic.ID, err)
@@ -198,11 +202,20 @@ func GetVirtualMachineManagedDisksContextE(ctx context.Context, vmName string, r
 
 // extractVMManagedDisks extracts the Managed Disk names from a Virtual Machine object.
 func extractVMManagedDisks(vm *armcompute.VirtualMachine) []string {
+	if vm == nil || vm.Properties == nil || vm.Properties.StorageProfile == nil {
+		return nil
+	}
+
 	vmDisks := vm.Properties.StorageProfile.DataDisks
 
-	diskNames := make([]string, len(vmDisks))
-	for i, v := range vmDisks {
-		diskNames[i] = *v.Name
+	diskNames := make([]string, 0, len(vmDisks))
+
+	for _, v := range vmDisks {
+		if v == nil || v.Name == nil {
+			continue
+		}
+
+		diskNames = append(diskNames, *v.Name)
 	}
 
 	return diskNames
@@ -250,6 +263,11 @@ func GetVirtualMachineOSDiskNameContextE(ctx context.Context, vmName string, res
 
 // extractVMOSDiskName extracts the OS Disk name from a Virtual Machine object.
 func extractVMOSDiskName(vm *armcompute.VirtualMachine) string {
+	if vm == nil || vm.Properties == nil || vm.Properties.StorageProfile == nil ||
+		vm.Properties.StorageProfile.OSDisk == nil || vm.Properties.StorageProfile.OSDisk.Name == nil {
+		return ""
+	}
+
 	return *vm.Properties.StorageProfile.OSDisk.Name
 }
 
@@ -295,7 +313,8 @@ func GetVirtualMachineAvailabilitySetIDContextE(ctx context.Context, vmName stri
 
 // extractVMAvailabilitySetID extracts the Availability Set ID from a Virtual Machine object.
 func extractVMAvailabilitySetID(vm *armcompute.VirtualMachine) (string, error) {
-	if vm.Properties.AvailabilitySet == nil {
+	if vm == nil || vm.Properties == nil || vm.Properties.AvailabilitySet == nil ||
+		vm.Properties.AvailabilitySet.ID == nil {
 		return "", nil
 	}
 
@@ -358,9 +377,14 @@ func GetVirtualMachineImageContextE(ctx context.Context, vmName string, resGroup
 // extractVMImage extracts the Image reference from a Virtual Machine object.
 // For custom images where Publisher/Offer/SKU/Version may be nil, empty strings are returned.
 func extractVMImage(vm *armcompute.VirtualMachine) *VMImage {
-	ref := vm.Properties.StorageProfile.ImageReference
-
 	img := &VMImage{}
+
+	if vm == nil || vm.Properties == nil || vm.Properties.StorageProfile == nil ||
+		vm.Properties.StorageProfile.ImageReference == nil {
+		return img
+	}
+
+	ref := vm.Properties.StorageProfile.ImageReference
 
 	if ref.Publisher != nil {
 		img.Publisher = *ref.Publisher
@@ -423,6 +447,11 @@ func GetSizeOfVirtualMachineContextE(ctx context.Context, vmName string, resGrou
 
 // extractVMSize extracts the VM size from a Virtual Machine object.
 func extractVMSize(vm *armcompute.VirtualMachine) armcompute.VirtualMachineSizeTypes {
+	if vm == nil || vm.Properties == nil || vm.Properties.HardwareProfile == nil ||
+		vm.Properties.HardwareProfile.VMSize == nil {
+		return ""
+	}
+
 	return *vm.Properties.HardwareProfile.VMSize
 }
 
@@ -470,11 +499,15 @@ func GetVirtualMachineTagsContextE(ctx context.Context, vmName string, resGroupN
 func extractVMTags(vm *armcompute.VirtualMachine) map[string]string {
 	tags := make(map[string]string)
 
-	if vm.Tags == nil {
+	if vm == nil || vm.Tags == nil {
 		return tags
 	}
 
 	for k, v := range vm.Tags {
+		if v == nil {
+			continue
+		}
+
 		tags[k] = *v
 	}
 
@@ -544,6 +577,10 @@ func listVirtualMachineNames(ctx context.Context, client *armcompute.VirtualMach
 		}
 
 		for _, v := range page.Value {
+			if v == nil || v.Name == nil {
+				continue
+			}
+
 			vmDetails = append(vmDetails, *v.Name)
 		}
 	}
@@ -615,6 +652,10 @@ func listVirtualMachineProperties(ctx context.Context, client *armcompute.Virtua
 		}
 
 		for _, v := range page.Value {
+			if v == nil || v.Name == nil || v.Properties == nil {
+				continue
+			}
+
 			vmDetails[*v.Name] = *v.Properties
 		}
 	}
@@ -633,6 +674,11 @@ type Instance struct {
 
 // GetVirtualMachineInstanceSize gets the size of the Virtual Machine.
 func (vm *Instance) GetVirtualMachineInstanceSize() armcompute.VirtualMachineSizeTypes {
+	if vm == nil || vm.VirtualMachine == nil || vm.Properties == nil ||
+		vm.Properties.HardwareProfile == nil || vm.Properties.HardwareProfile.VMSize == nil {
+		return ""
+	}
+
 	return *vm.Properties.HardwareProfile.VMSize
 }
 
