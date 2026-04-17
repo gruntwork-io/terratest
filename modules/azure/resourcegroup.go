@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
@@ -56,6 +57,7 @@ func ResourceGroupExistsE(resourceGroupName, subscriptionID string) (bool, error
 }
 
 // GetResourceGroupContextE checks whether a resource group name matches the one retrieved from the subscription.
+// Azure resource group names are case-insensitive, so the comparison is performed with EqualFold.
 // The ctx parameter supports cancellation and timeouts.
 func GetResourceGroupContextE(ctx context.Context, resourceGroupName, subscriptionID string) (bool, error) {
 	rg, err := GetAResourceGroupContextE(ctx, resourceGroupName, subscriptionID)
@@ -63,7 +65,11 @@ func GetResourceGroupContextE(ctx context.Context, resourceGroupName, subscripti
 		return false, err
 	}
 
-	return (resourceGroupName == *rg.Name), nil
+	if rg == nil || rg.Name == nil {
+		return false, nil
+	}
+
+	return strings.EqualFold(resourceGroupName, *rg.Name), nil
 }
 
 // GetResourceGroupE checks whether a resource group name matches the one retrieved from the subscription.

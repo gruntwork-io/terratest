@@ -40,6 +40,10 @@ func ManagedEnvironmentExistsContextE(ctx context.Context, environmentName strin
 
 	_, err = client.Get(ctx, resourceGroupName, environmentName, nil)
 	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
 		return false, err
 	}
 
@@ -136,6 +140,10 @@ func ContainerAppExistsContextE(ctx context.Context, containerAppName string, re
 
 	_, err = client.Get(ctx, resourceGroupName, containerAppName, nil)
 	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
 		return false, err
 	}
 
@@ -232,6 +240,10 @@ func ContainerAppJobExistsContextE(ctx context.Context, containerAppName string,
 
 	_, err = client.Get(ctx, resourceGroupName, containerAppName, nil)
 	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
 		return false, err
 	}
 

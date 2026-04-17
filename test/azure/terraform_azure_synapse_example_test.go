@@ -51,8 +51,8 @@ func TestTerraformAzureSynapseExample(t *testing.T) {
 	expectedSQLPoolName := terraform.OutputContext(t, t.Context(), terraformOptions, "synapse_sqlpool_name")
 
 	// website::tag::4:: Get synapse details and assert them against the terraform output
-	actualSynapseWorkspace := azure.GetSynapseWorkspaceContext(t, t.Context(), expectedResourceGroupName, expectedSyWorkspaceName, "")
-	actualSynapseSQLPool := azure.GetSynapseSQLPoolContext(t, t.Context(), expectedResourceGroupName, expectedSyWorkspaceName, expectedSQLPoolName, "")
+	actualSynapseWorkspace := azure.GetSynapseWorkspaceContext(t, t.Context(), "", expectedResourceGroupName, expectedSyWorkspaceName)
+	actualSynapseSQLPool := azure.GetSynapseSQLPoolContext(t, t.Context(), "", expectedResourceGroupName, expectedSyWorkspaceName, expectedSQLPoolName)
 
 	assert.Equal(t, expectedSyWorkspaceName, *actualSynapseWorkspace.Name)
 	assert.Equal(t, expectedSynapseSQLUser, *actualSynapseWorkspace.Properties.SQLAdministratorLogin)

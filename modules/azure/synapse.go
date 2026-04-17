@@ -11,7 +11,7 @@ import (
 // GetSynapseWorkspaceContext retrieves the synapse workspace for the given subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetSynapseWorkspaceContext(t testing.TestingT, ctx context.Context, resGroupName string, workspaceName string, subscriptionID string) *armsynapse.Workspace {
+func GetSynapseWorkspaceContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, workspaceName string) *armsynapse.Workspace {
 	t.Helper()
 
 	workspace, err := GetSynapseWorkspaceContextE(ctx, subscriptionID, resGroupName, workspaceName)
@@ -48,7 +48,7 @@ func GetSynapseWorkspaceWithClient(ctx context.Context, client *armsynapse.Works
 func GetSynapseWorkspace(t testing.TestingT, resGroupName string, workspaceName string, subscriptionID string) *armsynapse.Workspace {
 	t.Helper()
 
-	return GetSynapseWorkspaceContext(t, context.Background(), resGroupName, workspaceName, subscriptionID)
+	return GetSynapseWorkspaceContext(t, context.Background(), subscriptionID, resGroupName, workspaceName)
 }
 
 // GetSynapseWorkspaceE retrieves the synapse workspace for the given subscription.
@@ -61,7 +61,7 @@ func GetSynapseWorkspaceE(t testing.TestingT, subscriptionID string, resGroupNam
 // GetSynapseSQLPoolContext retrieves the synapse SQL pool for the given subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetSynapseSQLPoolContext(t testing.TestingT, ctx context.Context, resGroupName string, workspaceName string, sqlPoolName string, subscriptionID string) *armsynapse.SQLPool {
+func GetSynapseSQLPoolContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, workspaceName string, sqlPoolName string) *armsynapse.SQLPool {
 	t.Helper()
 
 	sqlPool, err := GetSynapseSQLPoolContextE(ctx, subscriptionID, resGroupName, workspaceName, sqlPoolName)
@@ -98,7 +98,7 @@ func GetSynapseSQLPoolWithClient(ctx context.Context, client *armsynapse.SQLPool
 func GetSynapseSQLPool(t testing.TestingT, resGroupName string, workspaceName string, sqlPoolName string, subscriptionID string) *armsynapse.SQLPool {
 	t.Helper()
 
-	return GetSynapseSQLPoolContext(t, context.Background(), resGroupName, workspaceName, sqlPoolName, subscriptionID)
+	return GetSynapseSQLPoolContext(t, context.Background(), subscriptionID, resGroupName, workspaceName, sqlPoolName)
 }
 
 // GetSynapseSQLPoolE retrieves the synapse SQL pool for the given subscription.
@@ -115,7 +115,7 @@ func GetSynapseSQLPoolE(subscriptionID string, resGroupName string, workspaceNam
 func GetSynapseSqlPool(t testing.TestingT, resGroupName string, workspaceName string, sqlPoolName string, subscriptionID string) *armsynapse.SQLPool {
 	t.Helper()
 
-	return GetSynapseSQLPoolContext(t, context.Background(), resGroupName, workspaceName, sqlPoolName, subscriptionID)
+	return GetSynapseSQLPoolContext(t, context.Background(), subscriptionID, resGroupName, workspaceName, sqlPoolName)
 }
 
 // GetSynapseSqlPoolE retrieves the synapse SQL pool for the given subscription.

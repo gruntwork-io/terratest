@@ -105,7 +105,7 @@ func TestFetchVirtualMachine(t *testing.T) {
 func TestExtractVMNics(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
 		name    string
 		vm      *armcompute.VirtualMachine
 		want    []string
@@ -278,10 +278,10 @@ func TestExtractVMAvailabilitySetID(t *testing.T) {
 func TestExtractVMImage(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	tests := []struct { //nolint:govet // fieldalignment not worth optimizing in test structs
 		name string
 		vm   *armcompute.VirtualMachine
-		want VMImage
+		want *VMImage
 	}{
 		{
 			name: "MarketplaceImage",
@@ -297,7 +297,7 @@ func TestExtractVMImage(t *testing.T) {
 					},
 				},
 			},
-			want: VMImage{
+			want: &VMImage{
 				Publisher: "Canonical",
 				Offer:     "UbuntuServer",
 				SKU:       "18.04-LTS",
@@ -315,7 +315,7 @@ func TestExtractVMImage(t *testing.T) {
 					},
 				},
 			},
-			want: VMImage{},
+			want: &VMImage{},
 		},
 	}
 

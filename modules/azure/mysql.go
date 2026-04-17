@@ -30,7 +30,7 @@ func GetMYSQLServerClientE(subscriptionID string) (*armmysql.ServersClient, erro
 // GetMYSQLServerContext is a helper function that gets the server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, subscriptionID string) *armmysql.Server {
+func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) *armmysql.Server {
 	t.Helper()
 
 	mysqlServer, err := GetMYSQLServerContextE(t, ctx, subscriptionID, resGroupName, serverName)
@@ -46,7 +46,7 @@ func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, resGroupName
 func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armmysql.Server {
 	t.Helper()
 
-	return GetMYSQLServerContext(t, context.Background(), resGroupName, serverName, subscriptionID) //nolint:staticcheck
+	return GetMYSQLServerContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
 }
 
 // GetMYSQLServerContextE is a helper function that gets the server.
@@ -99,7 +99,7 @@ func GetMYSQLDBClientE(subscriptionID string) (*armmysql.DatabasesClient, error)
 // GetMYSQLDBContext is a helper function that gets the database.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, dbName string, subscriptionID string) *armmysql.Database {
+func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) *armmysql.Database {
 	t.Helper()
 
 	database, err := GetMYSQLDBContextE(t, ctx, subscriptionID, resGroupName, serverName, dbName)
@@ -115,7 +115,7 @@ func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, resGroupName str
 func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armmysql.Database {
 	t.Helper()
 
-	return GetMYSQLDBContext(t, context.Background(), resGroupName, serverName, dbName, subscriptionID) //nolint:staticcheck
+	return GetMYSQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName, dbName) //nolint:staticcheck
 }
 
 // GetMYSQLDBContextE is a helper function that gets the database.
@@ -150,7 +150,7 @@ func GetMYSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string,
 // ListMySQLDBContext is a helper function that gets all databases per server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func ListMySQLDBContext(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, subscriptionID string) []*armmysql.Database {
+func ListMySQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) []*armmysql.Database {
 	t.Helper()
 
 	dblist, err := ListMySQLDBContextE(t, ctx, subscriptionID, resGroupName, serverName)
@@ -166,7 +166,7 @@ func ListMySQLDBContext(t testing.TestingT, ctx context.Context, resGroupName st
 func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) []*armmysql.Database {
 	t.Helper()
 
-	return ListMySQLDBContext(t, context.Background(), resGroupName, serverName, subscriptionID) //nolint:staticcheck
+	return ListMySQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
 }
 
 // ListMySQLDBContextE is a helper function that gets all databases per server.

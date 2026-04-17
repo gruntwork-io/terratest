@@ -45,7 +45,7 @@ func TestPostgreSQLDatabase(t *testing.T) {
 	expectedSkuName := terraform.OutputContext(t, t.Context(), terraformOptions, "sku_name")
 
 	// website::tag::4:: Get the Server details and assert them against the terraform output
-	actualServer := azure.GetPostgreSQLServerContext(t, t.Context(), rgName, actualServername, subscriptionID)
+	actualServer := azure.GetPostgreSQLServerContext(t, t.Context(), subscriptionID, rgName, actualServername)
 	// Verify
 	assert.NotNil(t, actualServer)
 	assert.Equal(t, expectedServername, actualServername)

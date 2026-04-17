@@ -55,7 +55,7 @@ func DataFactoryExistsE(dataFactoryName string, resourceGroupName string, subscr
 // GetDataFactoryContext returns the Data Factory object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetDataFactoryContext(t testing.TestingT, ctx context.Context, resGroupName string, factoryName string, subscriptionID string) *armdatafactory.Factory {
+func GetDataFactoryContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, factoryName string) *armdatafactory.Factory {
 	t.Helper()
 
 	factory, err := GetDataFactoryContextE(ctx, subscriptionID, resGroupName, factoryName)
@@ -71,7 +71,7 @@ func GetDataFactoryContext(t testing.TestingT, ctx context.Context, resGroupName
 func GetDataFactory(t testing.TestingT, resGroupName string, factoryName string, subscriptionID string) *armdatafactory.Factory {
 	t.Helper()
 
-	return GetDataFactoryContext(t, context.Background(), resGroupName, factoryName, subscriptionID) //nolint:staticcheck
+	return GetDataFactoryContext(t, context.Background(), subscriptionID, resGroupName, factoryName) //nolint:staticcheck
 }
 
 // GetDataFactoryContextE returns the Data Factory object.
