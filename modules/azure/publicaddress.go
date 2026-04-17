@@ -118,9 +118,7 @@ func CheckPublicDNSNameAvailabilityContext(t testing.TestingT, ctx context.Conte
 	t.Helper()
 
 	available, err := CheckPublicDNSNameAvailabilityContextE(ctx, location, domainNameLabel, subscriptionID)
-	if err != nil {
-		return false
-	}
+	require.NoError(t, err)
 
 	return available
 }
