@@ -179,9 +179,13 @@ func GetPublicIPAddressWithClient(ctx context.Context, client *armnetwork.Public
 
 // ExtractIPOfPublicIPAddress gets the IP string from a PublicIPAddress.
 func ExtractIPOfPublicIPAddress(pip *armnetwork.PublicIPAddress) (string, error) {
-	if pip == nil || pip.Properties == nil || pip.Properties.IPAddress == nil {
+	if pip == nil {
+		return "", fmt.Errorf("public IP address is nil")
+	}
+
+	if pip.Properties == nil || pip.Properties.IPAddress == nil {
 		name := "<unknown>"
-		if pip != nil && pip.Name != nil {
+		if pip.Name != nil {
 			name = *pip.Name
 		}
 

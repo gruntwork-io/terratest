@@ -304,27 +304,28 @@ func GetIPOfLoadBalancerFrontendIPConfigWithClient(ctx context.Context, feConfig
 
 	feProps := feConfig.Properties
 
-	if feProps.PublicIPAddress != nil && feProps.PublicIPAddress.ID != nil {
-		pipName := GetNameFromResourceID(*feProps.PublicIPAddress.ID)
-
-		ipValue, err := GetPublicIPAddressWithClient(ctx, pipClient, resourceGroupName, pipName)
-		if err != nil {
-			return "", NoIP, err
+	pip := feProps.PublicIPAddress
+	if pip == nil || pip.ID == nil {
+		if feProps.PrivateIPAddress == nil {
+			return "", NoIP, errors.New("frontend IP configuration has no private or public IP address assigned")
 		}
 
-		ip, err := ExtractIPOfPublicIPAddress(ipValue)
-		if err != nil {
-			return "", NoIP, err
-		}
-
-		return ip, PublicIP, nil
+		return *feProps.PrivateIPAddress, PrivateIP, nil
 	}
 
-	if feProps.PrivateIPAddress == nil {
-		return "", NoIP, errors.New("frontend IP configuration has no private or public IP address assigned")
+	pipName := GetNameFromResourceID(*pip.ID)
+
+	ipValue, err := GetPublicIPAddressWithClient(ctx, pipClient, resourceGroupName, pipName)
+	if err != nil {
+		return "", NoIP, err
 	}
 
-	return *feProps.PrivateIPAddress, PrivateIP, nil
+	ip, err := ExtractIPOfPublicIPAddress(ipValue)
+	if err != nil {
+		return "", NoIP, err
+	}
+
+	return ip, PublicIP, nil
 }
 
 // GetLoadBalancerClientContextE gets a new Load Balancer client in the specified Azure Subscription.

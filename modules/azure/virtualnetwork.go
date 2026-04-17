@@ -269,9 +269,11 @@ func ExtractVirtualNetworkDNSServerIPs(vnet *armnetwork.VirtualNetwork) []string
 
 	dnsServers := make([]string, 0, len(vnet.Properties.DhcpOptions.DNSServers))
 	for _, s := range vnet.Properties.DhcpOptions.DNSServers {
-		if s != nil {
-			dnsServers = append(dnsServers, *s)
+		if s == nil {
+			continue
 		}
+
+		dnsServers = append(dnsServers, *s)
 	}
 
 	return dnsServers

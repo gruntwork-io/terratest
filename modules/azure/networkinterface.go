@@ -158,9 +158,11 @@ func GetNetworkInterfacePublicIPsContextE(ctx context.Context, nicName string, r
 		publicAddressID := GetNameFromResourceID(*nicConfig.Properties.PublicIPAddress.ID)
 
 		publicIP, err := GetIPOfPublicIPAddressByNameContextE(ctx, publicAddressID, resGroupName, subscriptionID)
-		if err == nil {
-			publicIPs = append(publicIPs, publicIP)
+		if err != nil {
+			continue
 		}
+
+		publicIPs = append(publicIPs, publicIP)
 	}
 
 	return publicIPs, nil
