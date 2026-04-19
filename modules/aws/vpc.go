@@ -191,6 +191,18 @@ func GetVpcsContextE(t testing.TestingT, ctx context.Context, filters []types.Fi
 	return retVal, nil
 }
 
+// GetVpcsContext fetches information about VPCs from given regions limited by filters.
+// This function will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetVpcsContext(t testing.TestingT, ctx context.Context, filters []types.Filter, region string) []*Vpc {
+	t.Helper()
+
+	vpcs, err := GetVpcsContextE(t, ctx, filters, region)
+	require.NoError(t, err)
+
+	return vpcs
+}
+
 // GetVpcsE fetches information about VPCs from given regions limited by filters
 //
 // Deprecated: Use [GetVpcsContextE] instead.
