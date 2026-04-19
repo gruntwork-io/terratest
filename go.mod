@@ -96,7 +96,7 @@ require (
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/homeport/dyff v1.6.0
-	github.com/jackc/pgx/v5 v5.7.1
+	github.com/jackc/pgx/v5 v5.9.0
 	github.com/lib/pq v1.10.9
 	github.com/slack-go/slack v0.15.0
 	gopkg.in/yaml.v3 v3.0.1
