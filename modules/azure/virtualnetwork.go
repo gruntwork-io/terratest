@@ -212,7 +212,7 @@ func GetVirtualNetworkSubnetsWithClient(ctx context.Context, client *armnetwork.
 		}
 
 		for _, v := range page.Value {
-			if v.Name == nil || v.Properties == nil || v.Properties.AddressPrefix == nil {
+			if v == nil || v.Name == nil || v.Properties == nil || v.Properties.AddressPrefix == nil {
 				continue
 			}
 
@@ -263,15 +263,17 @@ func GetVirtualNetworkDNSServerIPsContextE(ctx context.Context, vnetName string,
 
 // ExtractVirtualNetworkDNSServerIPs gets a list of all DNS server IPs from a VirtualNetwork.
 func ExtractVirtualNetworkDNSServerIPs(vnet *armnetwork.VirtualNetwork) []string {
-	if vnet.Properties == nil || vnet.Properties.DhcpOptions == nil {
+	if vnet == nil || vnet.Properties == nil || vnet.Properties.DhcpOptions == nil {
 		return nil
 	}
 
 	dnsServers := make([]string, 0, len(vnet.Properties.DhcpOptions.DNSServers))
 	for _, s := range vnet.Properties.DhcpOptions.DNSServers {
-		if s != nil {
-			dnsServers = append(dnsServers, *s)
+		if s == nil {
+			continue
 		}
+
+		dnsServers = append(dnsServers, *s)
 	}
 
 	return dnsServers

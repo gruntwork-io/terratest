@@ -214,6 +214,10 @@ func collectDefaultSecurityRules(ctx context.Context, client *armnetwork.Default
 		}
 
 		for _, rule := range page.Value {
+			if rule == nil {
+				continue
+			}
+
 			rules = append(rules, convertToNsgRuleSummary(rule.Name, rule.Properties))
 		}
 	}
@@ -234,6 +238,10 @@ func collectCustomSecurityRules(ctx context.Context, client *armnetwork.Security
 		}
 
 		for _, rule := range page.Value {
+			if rule == nil {
+				continue
+			}
+
 			rules = append(rules, convertToNsgRuleSummary(rule.Name, rule.Properties))
 		}
 	}
