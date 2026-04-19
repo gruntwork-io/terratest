@@ -241,8 +241,10 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 
 	logger.Default.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
 
-	if err := sleepWithContext(ctx, mfaEnableWait); err != nil {
-		return err
+	select {
+	case <-time.After(mfaEnableWait):
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 
 	authCode2, err := GetTimeBasedOneTimePassword(mfaDevice)
@@ -264,36 +266,13 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 
 	logger.Log(t, "Waiting for MFA Device enablement to propagate.")
 
-	if err := sleepWithContext(ctx, mfaTokenWait); err != nil {
-		return err
+	select {
+	case <-time.After(mfaTokenWait):
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 
 	return nil
-}
-
-// sleepWithContext sleeps for the given duration or returns ctx.Err() if the ctx is canceled or times out first.
-// If ctx is already canceled at entry, it returns ctx.Err() without starting the timer. When the timer and
-// ctx.Done() are both ready at the same time, cancellation wins so callers see the cancellation error
-// rather than silently proceeding.
-func sleepWithContext(ctx context.Context, d time.Duration) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-timer.C:
-		// Double-check: if ctx fired concurrently with the timer, prefer the cancellation error.
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-
-		return nil
-	}
 }
 
 // EnableMfaDeviceContext enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
