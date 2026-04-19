@@ -79,6 +79,10 @@ func BuildNamespaceNamesList(sbNamespace []*armservicebus.SBNamespace) []string 
 	results := make([]string, 0, len(sbNamespace))
 
 	for _, namespace := range sbNamespace {
+		if namespace == nil || namespace.Name == nil {
+			continue
+		}
+
 		results = append(results, *namespace.Name)
 	}
 
@@ -90,6 +94,10 @@ func BuildNamespaceIdsList(sbNamespace []*armservicebus.SBNamespace) []string {
 	results := make([]string, 0, len(sbNamespace))
 
 	for _, namespace := range sbNamespace {
+		if namespace == nil || namespace.ID == nil {
+			continue
+		}
+
 		results = append(results, *namespace.ID)
 	}
 
@@ -239,6 +247,10 @@ func ListNamespaceAuthRulesContextE(ctx context.Context, subscriptionID string, 
 		}
 
 		for _, rule := range page.Value {
+			if rule == nil || rule.Name == nil {
+				continue
+			}
+
 			results = append(results, *rule.Name)
 		}
 	}
@@ -355,6 +367,10 @@ func ListTopicSubscriptionsNameContextE(ctx context.Context, subscriptionID stri
 		}
 
 		for _, sub := range page.Value {
+			if sub == nil || sub.Name == nil {
+				continue
+			}
+
 			results = append(results, *sub.Name)
 		}
 	}
@@ -395,6 +411,10 @@ func ListTopicAuthRulesContextE(ctx context.Context, subscriptionID string, name
 		}
 
 		for _, rule := range page.Value {
+			if rule == nil || rule.Name == nil {
+				continue
+			}
+
 			results = append(results, *rule.Name)
 		}
 	}

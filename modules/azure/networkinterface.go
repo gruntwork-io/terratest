@@ -133,21 +133,36 @@ func GetNetworkInterfacePublicIPsContextE(ctx context.Context, nicName string, r
 		return publicIPs, err
 	}
 
-	// Get the Public IPs from each configuration available
-	for _, IPConfiguration := range nic.Properties.IPConfigurations {
-		// Iterate each config, for successful configurations check for a Public Address reference.
-		// Not failing on errors as this is an optimistic accumulator.
-		nicConfig, err := GetNetworkInterfaceConfigurationContextE(ctx, nicName, *IPConfiguration.Name, resGroupName, subscriptionID)
-		if err == nil {
-			if nicConfig.Properties.PublicIPAddress != nil {
-				publicAddressID := GetNameFromResourceID(*nicConfig.Properties.PublicIPAddress.ID)
+	if nic == nil || nic.Properties == nil {
+		return publicIPs, nil
+	}
 
-				publicIP, err := GetIPOfPublicIPAddressByNameContextE(ctx, publicAddressID, resGroupName, subscriptionID)
-				if err == nil {
-					publicIPs = append(publicIPs, publicIP)
-				}
-			}
+	// Get the Public IPs from each configuration available.
+	// Not failing on individual errors as this is an optimistic accumulator —
+	// it collects what it can and skips configurations that fail.
+	for _, IPConfiguration := range nic.Properties.IPConfigurations {
+		if IPConfiguration == nil || IPConfiguration.Name == nil {
+			continue
 		}
+
+		nicConfig, err := GetNetworkInterfaceConfigurationContextE(ctx, nicName, *IPConfiguration.Name, resGroupName, subscriptionID)
+		if err != nil {
+			continue
+		}
+
+		if nicConfig == nil || nicConfig.Properties == nil || nicConfig.Properties.PublicIPAddress == nil ||
+			nicConfig.Properties.PublicIPAddress.ID == nil {
+			continue
+		}
+
+		publicAddressID := GetNameFromResourceID(*nicConfig.Properties.PublicIPAddress.ID)
+
+		publicIP, err := GetIPOfPublicIPAddressByNameContextE(ctx, publicAddressID, resGroupName, subscriptionID)
+		if err != nil {
+			continue
+		}
+
+		publicIPs = append(publicIPs, publicIP)
 	}
 
 	return publicIPs, nil
@@ -234,16 +249,18 @@ func GetNetworkInterfaceWithClient(ctx context.Context, client *armnetwork.Inter
 
 // ExtractNetworkInterfacePrivateIPs gets a list of the Private IPs from a Network Interface.
 func ExtractNetworkInterfacePrivateIPs(nic *armnetwork.Interface) []string {
-	if nic.Properties == nil {
+	if nic == nil || nic.Properties == nil {
 		return nil
 	}
 
 	privateIPs := make([]string, 0, len(nic.Properties.IPConfigurations))
 
 	for _, ipConfig := range nic.Properties.IPConfigurations {
-		if ipConfig.Properties != nil && ipConfig.Properties.PrivateIPAddress != nil {
-			privateIPs = append(privateIPs, *ipConfig.Properties.PrivateIPAddress)
+		if ipConfig == nil || ipConfig.Properties == nil || ipConfig.Properties.PrivateIPAddress == nil {
+			continue
 		}
+
+		privateIPs = append(privateIPs, *ipConfig.Properties.PrivateIPAddress)
 	}
 
 	return privateIPs

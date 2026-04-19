@@ -234,7 +234,7 @@ func GetBackupPolicyListWithClient(ctx context.Context, client *armrecoveryservi
 		}
 
 		for _, v := range page.Value {
-			if v.Name == nil {
+			if v == nil || v.Name == nil {
 				continue
 			}
 
@@ -262,9 +262,16 @@ func GetBackupProtectedVMListWithClient(ctx context.Context, client *armrecovery
 		}
 
 		for _, item := range page.Value {
-			if vmItem, ok := item.Properties.(*armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem); ok {
-				vmList[*vmItem.FriendlyName] = *vmItem
+			if item == nil || item.Properties == nil {
+				continue
 			}
+
+			vmItem, ok := item.Properties.(*armrecoveryservicesbackup.AzureIaaSComputeVMProtectedItem)
+			if !ok || vmItem == nil || vmItem.FriendlyName == nil {
+				continue
+			}
+
+			vmList[*vmItem.FriendlyName] = *vmItem
 		}
 	}
 
