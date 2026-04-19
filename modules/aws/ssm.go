@@ -18,6 +18,15 @@ import (
 // ssmRetryInterval is the time between retries when waiting for SSM operations.
 const ssmRetryInterval = 2 * time.Second
 
+// SsmAPI is the subset of *ssm.Client operations used by the retry-heavy helpers in this file.
+// It is declared as an interface so tests can substitute a mock without an AWS account.
+// A real *ssm.Client satisfies this interface automatically.
+type SsmAPI interface {
+	GetInventory(ctx context.Context, params *ssm.GetInventoryInput, optFns ...func(*ssm.Options)) (*ssm.GetInventoryOutput, error)
+	SendCommand(ctx context.Context, params *ssm.SendCommandInput, optFns ...func(*ssm.Options)) (*ssm.SendCommandOutput, error)
+	GetCommandInvocation(ctx context.Context, params *ssm.GetCommandInvocationInput, optFns ...func(*ssm.Options)) (*ssm.GetCommandInvocationOutput, error)
+}
+
 // GetParameterContextE retrieves the latest version of SSM Parameter at keyName with decryption.
 // The ctx parameter supports cancellation and timeouts.
 func GetParameterContextE(t testing.TestingT, ctx context.Context, awsRegion string, keyName string) (string, error) {
@@ -257,7 +266,11 @@ func WaitForSsmInstanceE(t testing.TestingT, awsRegion, instanceID string, timeo
 
 // WaitForSsmInstanceWithClientContextE waits until the instance get registered to the SSM inventory with the ability to provide the SSM client.
 // The ctx parameter supports cancellation and timeouts.
-func WaitForSsmInstanceWithClientContextE(t testing.TestingT, ctx context.Context, client *ssm.Client, instanceID string, timeout time.Duration) error {
+func WaitForSsmInstanceWithClientContextE(t testing.TestingT, ctx context.Context, client SsmAPI, instanceID string, timeout time.Duration) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
 	timeBetweenRetries := ssmRetryInterval
 	maxRetries := int(timeout.Seconds() / timeBetweenRetries.Seconds())
 	description := fmt.Sprintf("Waiting for %s to appear in the SSM inventory", instanceID)
@@ -273,6 +286,10 @@ func WaitForSsmInstanceWithClientContextE(t testing.TestingT, ctx context.Contex
 	}
 
 	_, err := retry.DoWithRetryContextE(t, ctx, description, maxRetries, timeBetweenRetries, func() (string, error) {
+		if err := ctx.Err(); err != nil {
+			return "", retry.FatalError{Underlying: err}
+		}
+
 		resp, err := client.GetInventory(ctx, input)
 		if err != nil {
 			return "", err
@@ -284,8 +301,16 @@ func WaitForSsmInstanceWithClientContextE(t testing.TestingT, ctx context.Contex
 
 		return "", nil
 	})
+	if err != nil {
+		var fatalErr retry.FatalError
+		if errors.As(err, &fatalErr) {
+			return fatalErr.Underlying
+		}
 
-	return err
+		return err
+	}
+
+	return nil
 }
 
 // WaitForSsmInstanceWithClientE waits until the instance get registered to the SSM inventory with the ability to provide the SSM client.
@@ -384,7 +409,11 @@ func CheckSsmCommandWithDocumentE(t testing.TestingT, awsRegion, instanceID, com
 
 // CheckSSMCommandWithClientWithDocumentContextE checks that you can run the given command on the given instance through AWS SSM with the ability to provide the SSM client with specified Command Doc type. Returns the result and an error if one occurs.
 // The ctx parameter supports cancellation and timeouts.
-func CheckSSMCommandWithClientWithDocumentContextE(t testing.TestingT, ctx context.Context, client *ssm.Client, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
+func CheckSSMCommandWithClientWithDocumentContextE(t testing.TestingT, ctx context.Context, client SsmAPI, instanceID, command string, commandDocName string, timeout time.Duration) (*CommandOutput, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	timeBetweenRetries := ssmRetryInterval
 	maxRetries := int(timeout.Seconds() / timeBetweenRetries.Seconds())
 
@@ -415,6 +444,10 @@ func CheckSSMCommandWithClientWithDocumentContextE(t testing.TestingT, ctx conte
 	result := &CommandOutput{}
 
 	_, err = retry.DoWithRetryableErrorsContextE(t, ctx, description, retryableErrors, maxRetries, timeBetweenRetries, func() (string, error) {
+		if err := ctx.Err(); err != nil {
+			return "", retry.FatalError{Underlying: err}
+		}
+
 		resp, err := client.GetCommandInvocation(ctx, &ssm.GetCommandInvocationInput{
 			CommandId:  resp.Command.CommandId,
 			InstanceId: &instanceID,
