@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -219,7 +218,13 @@ type CredentialsError struct {
 }
 
 func (err CredentialsError) Error() string {
-	return fmt.Sprintf("Error finding AWS credentials. Did you set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables or configure an AWS profile? Underlying error: %v", err.UnderlyingErr)
+	return "Error finding AWS credentials. Did you set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables or configure an AWS profile?"
+}
+
+// Unwrap returns the underlying error so callers can inspect it via errors.As / errors.Is
+// without it being embedded in the user-facing message (which otherwise leaks into CI logs).
+func (err CredentialsError) Unwrap() error {
+	return err.UnderlyingErr
 }
 
 // -----------------------------------------------------------------------------
