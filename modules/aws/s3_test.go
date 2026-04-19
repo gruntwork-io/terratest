@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	terraaws "github.com/gruntwork-io/terratest/modules/aws"
@@ -204,7 +205,7 @@ func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketN
 		key := "test-" + strconv.Itoa(i)
 		body := strings.NewReader("This is the body")
 
-		params := &s3.PutObjectInput{
+		params := &transfermanager.UploadObjectInput{
 			Bucket: aws.String(s3BucketName),
 			Key:    &key,
 			Body:   body,
@@ -212,7 +213,7 @@ func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketN
 
 		uploader := terraaws.NewS3Uploader(t, region)
 
-		_, err := uploader.Upload(context.Background(), params)
+		_, err := uploader.UploadObject(context.Background(), params)
 		if err != nil {
 			t.Fatal(err)
 		}
