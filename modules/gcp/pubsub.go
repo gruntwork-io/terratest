@@ -43,13 +43,21 @@ func AssertTopicExistsContextE(t testing.TestingT, ctx context.Context, projectI
 
 	defer func() { _ = client.Close() }()
 
+	return AssertTopicExistsWithClient(ctx, client, topicName)
+}
+
+// AssertTopicExistsWithClient checks if the given Pub/Sub topic exists using the supplied *pubsub.Client.
+// Prefer this variant in unit tests where the client is backed by a pstest in-memory fake server
+// (see pubsub_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func AssertTopicExistsWithClient(ctx context.Context, client *pubsub.Client, topicName string) error {
 	exists, err := client.Topic(topicName).Exists(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to check if Pub/Sub topic %s exists in project %s: %w", topicName, projectID, err)
+		return fmt.Errorf("failed to check if Pub/Sub topic %s exists in project %s: %w", topicName, client.Project(), err)
 	}
 
 	if !exists {
-		return fmt.Errorf("Pub/Sub topic %s does not exist in project %s", topicName, projectID)
+		return fmt.Errorf("Pub/Sub topic %s does not exist in project %s", topicName, client.Project())
 	}
 
 	return nil
@@ -88,13 +96,21 @@ func AssertSubscriptionExistsContextE(t testing.TestingT, ctx context.Context, p
 
 	defer func() { _ = client.Close() }()
 
+	return AssertSubscriptionExistsWithClient(ctx, client, subscriptionName)
+}
+
+// AssertSubscriptionExistsWithClient checks if the given Pub/Sub subscription exists using the supplied *pubsub.Client.
+// Prefer this variant in unit tests where the client is backed by a pstest in-memory fake server
+// (see pubsub_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func AssertSubscriptionExistsWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string) error {
 	exists, err := client.Subscription(subscriptionName).Exists(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to check if Pub/Sub subscription %s exists in project %s: %w", subscriptionName, projectID, err)
+		return fmt.Errorf("failed to check if Pub/Sub subscription %s exists in project %s: %w", subscriptionName, client.Project(), err)
 	}
 
 	if !exists {
-		return fmt.Errorf("Pub/Sub subscription %s does not exist in project %s", subscriptionName, projectID)
+		return fmt.Errorf("Pub/Sub subscription %s does not exist in project %s", subscriptionName, client.Project())
 	}
 
 	return nil
@@ -133,9 +149,16 @@ func CreateTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 
 	defer func() { _ = client.Close() }()
 
-	_, err = client.CreateTopic(ctx, topicName)
-	if err != nil {
-		return fmt.Errorf("failed to create Pub/Sub topic %s in project %s: %w", topicName, projectID, err)
+	return CreateTopicWithClient(ctx, client, topicName)
+}
+
+// CreateTopicWithClient creates a new Pub/Sub topic using the supplied *pubsub.Client.
+// Prefer this variant in unit tests where the client is backed by a pstest in-memory fake server
+// (see pubsub_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func CreateTopicWithClient(ctx context.Context, client *pubsub.Client, topicName string) error {
+	if _, err := client.CreateTopic(ctx, topicName); err != nil {
+		return fmt.Errorf("failed to create Pub/Sub topic %s in project %s: %w", topicName, client.Project(), err)
 	}
 
 	return nil
@@ -174,8 +197,16 @@ func DeleteTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 
 	defer func() { _ = client.Close() }()
 
+	return DeleteTopicWithClient(ctx, client, topicName)
+}
+
+// DeleteTopicWithClient deletes the given Pub/Sub topic using the supplied *pubsub.Client.
+// Prefer this variant in unit tests where the client is backed by a pstest in-memory fake server
+// (see pubsub_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func DeleteTopicWithClient(ctx context.Context, client *pubsub.Client, topicName string) error {
 	if err := client.Topic(topicName).Delete(ctx); err != nil {
-		return fmt.Errorf("failed to delete Pub/Sub topic %s in project %s: %w", topicName, projectID, err)
+		return fmt.Errorf("failed to delete Pub/Sub topic %s in project %s: %w", topicName, client.Project(), err)
 	}
 
 	return nil
@@ -214,11 +245,18 @@ func CreateSubscriptionContextE(t testing.TestingT, ctx context.Context, project
 
 	defer func() { _ = client.Close() }()
 
-	_, err = client.CreateSubscription(ctx, subscriptionName, pubsub.SubscriptionConfig{
+	return CreateSubscriptionWithClient(ctx, client, subscriptionName, topicName)
+}
+
+// CreateSubscriptionWithClient creates a new Pub/Sub subscription on the given topic using the supplied *pubsub.Client.
+// Prefer this variant in unit tests where the client is backed by a pstest in-memory fake server
+// (see pubsub_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func CreateSubscriptionWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string, topicName string) error {
+	if _, err := client.CreateSubscription(ctx, subscriptionName, pubsub.SubscriptionConfig{
 		Topic: client.Topic(topicName),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create Pub/Sub subscription %s in project %s: %w", subscriptionName, projectID, err)
+	}); err != nil {
+		return fmt.Errorf("failed to create Pub/Sub subscription %s on topic %s in project %s: %w", subscriptionName, topicName, client.Project(), err)
 	}
 
 	return nil
@@ -257,8 +295,16 @@ func DeleteSubscriptionContextE(t testing.TestingT, ctx context.Context, project
 
 	defer func() { _ = client.Close() }()
 
+	return DeleteSubscriptionWithClient(ctx, client, subscriptionName)
+}
+
+// DeleteSubscriptionWithClient deletes the given Pub/Sub subscription using the supplied *pubsub.Client.
+// Prefer this variant in unit tests where the client is backed by a pstest in-memory fake server
+// (see pubsub_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func DeleteSubscriptionWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string) error {
 	if err := client.Subscription(subscriptionName).Delete(ctx); err != nil {
-		return fmt.Errorf("failed to delete Pub/Sub subscription %s in project %s: %w", subscriptionName, projectID, err)
+		return fmt.Errorf("failed to delete Pub/Sub subscription %s in project %s: %w", subscriptionName, client.Project(), err)
 	}
 
 	return nil

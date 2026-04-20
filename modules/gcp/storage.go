@@ -46,7 +46,6 @@ func CreateStorageBucketE(t testing.TestingT, projectID string, name string, att
 func CreateStorageBucketContextE(t testing.TestingT, ctx context.Context, projectID string, name string, attr *storage.BucketAttrs) error {
 	logger.Default.Logf(t, "Creating bucket %s", name)
 
-	// Creates a client.
 	client, err := newStorageClient(ctx)
 	if err != nil {
 		return err
@@ -54,11 +53,15 @@ func CreateStorageBucketContextE(t testing.TestingT, ctx context.Context, projec
 
 	defer func() { _ = client.Close() }()
 
-	// Creates a Bucket instance.
-	bucket := client.Bucket(name)
+	return CreateStorageBucketWithClient(ctx, client, projectID, name, attr)
+}
 
-	// Creates the new bucket.
-	return bucket.Create(ctx, projectID, attr)
+// CreateStorageBucketWithClient creates a Google Cloud bucket with the given BucketAttrs using the
+// supplied *storage.Client. Prefer this variant in unit tests where the client is backed by an
+// httptest fake server (see storage_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func CreateStorageBucketWithClient(ctx context.Context, client *storage.Client, projectID string, name string, attr *storage.BucketAttrs) error {
+	return client.Bucket(name).Create(ctx, projectID, attr)
 }
 
 // DeleteStorageBucket destroys the Google Storage bucket.
@@ -96,6 +99,14 @@ func DeleteStorageBucketContextE(t testing.TestingT, ctx context.Context, name s
 
 	defer func() { _ = client.Close() }()
 
+	return DeleteStorageBucketWithClient(ctx, client, name)
+}
+
+// DeleteStorageBucketWithClient destroys the Google Cloud Storage bucket with the given name using
+// the supplied *storage.Client. Prefer this variant in unit tests where the client is backed by an
+// httptest fake server (see storage_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func DeleteStorageBucketWithClient(ctx context.Context, client *storage.Client, name string) error {
 	return client.Bucket(name).Delete(ctx)
 }
 
@@ -136,9 +147,15 @@ func ReadBucketObjectContextE(t testing.TestingT, ctx context.Context, bucketNam
 
 	defer func() { _ = client.Close() }()
 
-	bucket := client.Bucket(bucketName)
+	return ReadBucketObjectWithClient(ctx, client, bucketName, filePath)
+}
 
-	r, err := bucket.Object(filePath).NewReader(ctx)
+// ReadBucketObjectWithClient reads an object from the given Storage Bucket and returns its contents
+// using the supplied *storage.Client. Prefer this variant in unit tests where the client is backed
+// by an httptest fake server (see storage_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func ReadBucketObjectWithClient(ctx context.Context, client *storage.Client, bucketName string, filePath string) (io.Reader, error) {
+	r, err := client.Bucket(bucketName).Object(filePath).NewReader(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +211,19 @@ func WriteBucketObjectContextE(t testing.TestingT, ctx context.Context, bucketNa
 	}
 
 	defer func() { _ = client.Close() }()
+
+	return WriteBucketObjectWithClient(ctx, client, bucketName, filePath, body, contentType)
+}
+
+// WriteBucketObjectWithClient writes an object to the given Storage Bucket and returns its URL
+// using the supplied *storage.Client. Prefer this variant in unit tests where the client is backed
+// by an httptest fake server (see storage_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func WriteBucketObjectWithClient(ctx context.Context, client *storage.Client, bucketName string, filePath string, body io.Reader, contentType string) (string, error) {
+	// set a default content type
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
 
 	w := client.Bucket(bucketName).Object(filePath).NewWriter(ctx)
 	w.ContentType = contentType
@@ -281,6 +311,34 @@ func EmptyStorageBucketContextE(t testing.TestingT, ctx context.Context, name st
 	return nil
 }
 
+// EmptyStorageBucketWithClient removes the contents of a storage bucket with the given name using
+// the supplied *storage.Client. Prefer this variant in unit tests where the client is backed by an
+// httptest fake server (see storage_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func EmptyStorageBucketWithClient(ctx context.Context, client *storage.Client, name string) error {
+	bucket := client.Bucket(name)
+
+	it := bucket.Objects(ctx, nil)
+
+	for {
+		objectAttrs, err := it.Next()
+
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if err := bucket.Object(objectAttrs.Name).Delete(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // AssertStorageBucketExists checks if the given storage bucket exists and fails the test if it does not.
 //
 // Deprecated: Use [AssertStorageBucketExistsContext] instead.
@@ -307,7 +365,6 @@ func AssertStorageBucketExistsE(t testing.TestingT, name string) error {
 func AssertStorageBucketExistsContextE(t testing.TestingT, ctx context.Context, name string) error {
 	logger.Default.Logf(t, "Finding bucket %s", name)
 
-	// Creates a client.
 	client, err := newStorageClient(ctx)
 	if err != nil {
 		return err
@@ -315,7 +372,14 @@ func AssertStorageBucketExistsContextE(t testing.TestingT, ctx context.Context, 
 
 	defer func() { _ = client.Close() }()
 
-	// Creates a Bucket instance.
+	return AssertStorageBucketExistsWithClient(ctx, client, name)
+}
+
+// AssertStorageBucketExistsWithClient checks if the given storage bucket exists and returns an error
+// if it does not, using the supplied *storage.Client. Prefer this variant in unit tests where the
+// client is backed by an httptest fake server (see storage_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func AssertStorageBucketExistsWithClient(ctx context.Context, client *storage.Client, name string) error {
 	bucket := client.Bucket(name)
 
 	// TODO - the code below attempts to determine whether the storage bucket
