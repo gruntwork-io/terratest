@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
@@ -180,7 +181,7 @@ func GetPublicIPAddressWithClient(ctx context.Context, client *armnetwork.Public
 // ExtractIPOfPublicIPAddress gets the IP string from a PublicIPAddress.
 func ExtractIPOfPublicIPAddress(pip *armnetwork.PublicIPAddress) (string, error) {
 	if pip == nil {
-		return "", fmt.Errorf("public IP address is nil")
+		return "", errors.New("public IP address is nil")
 	}
 
 	if pip.Properties == nil || pip.Properties.IPAddress == nil {

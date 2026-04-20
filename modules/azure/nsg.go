@@ -40,7 +40,7 @@ type NsgRuleSummary struct {
 	SourcePortRanges           []string
 	DestinationPortRanges      []string
 	DestinationAddressPrefixes []string
-	SourceAdresssPrefixes      []string
+	SourceAddressPrefixes      []string
 	Priority                   int32
 }
 
@@ -265,7 +265,7 @@ func convertToNsgRuleSummary(name *string, rule *armnetwork.SecurityRuleProperti
 	summary.DestinationPortRange = safePtrToString(rule.DestinationPortRange)
 	summary.DestinationPortRanges = safePtrToList(rule.DestinationPortRanges)
 	summary.SourceAddressPrefix = safePtrToString(rule.SourceAddressPrefix)
-	summary.SourceAdresssPrefixes = safePtrToList(rule.SourceAddressPrefixes)
+	summary.SourceAddressPrefixes = safePtrToList(rule.SourceAddressPrefixes)
 	summary.DestinationAddressPrefix = safePtrToString(rule.DestinationAddressPrefix)
 	summary.DestinationAddressPrefixes = safePtrToList(rule.DestinationAddressPrefixes)
 	summary.Access = safeDerefString((*string)(rule.Access))
