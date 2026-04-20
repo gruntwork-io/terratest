@@ -30,7 +30,7 @@ func GetPostgreSQLServerClientE(subscriptionID string) (*armpostgresql.ServersCl
 // GetPostgreSQLServerContext is a helper function that gets the server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetPostgreSQLServerContext(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, subscriptionID string) *armpostgresql.Server {
+func GetPostgreSQLServerContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) *armpostgresql.Server {
 	t.Helper()
 
 	postgresqlServer, err := GetPostgreSQLServerContextE(t, ctx, subscriptionID, resGroupName, serverName)
@@ -46,7 +46,7 @@ func GetPostgreSQLServerContext(t testing.TestingT, ctx context.Context, resGrou
 func GetPostgreSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armpostgresql.Server {
 	t.Helper()
 
-	return GetPostgreSQLServerContext(t, context.Background(), resGroupName, serverName, subscriptionID) //nolint:staticcheck
+	return GetPostgreSQLServerContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
 }
 
 // GetPostgreSQLServerContextE is a helper function that gets the server.
@@ -99,7 +99,7 @@ func GetPostgreSQLDBClientE(subscriptionID string) (*armpostgresql.DatabasesClie
 // GetPostgreSQLDBContext is a helper function that gets the database.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetPostgreSQLDBContext(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, dbName string, subscriptionID string) *armpostgresql.Database {
+func GetPostgreSQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) *armpostgresql.Database {
 	t.Helper()
 
 	database, err := GetPostgreSQLDBContextE(t, ctx, subscriptionID, resGroupName, serverName, dbName)
@@ -115,7 +115,7 @@ func GetPostgreSQLDBContext(t testing.TestingT, ctx context.Context, resGroupNam
 func GetPostgreSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armpostgresql.Database {
 	t.Helper()
 
-	return GetPostgreSQLDBContext(t, context.Background(), resGroupName, serverName, dbName, subscriptionID) //nolint:staticcheck
+	return GetPostgreSQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName, dbName) //nolint:staticcheck
 }
 
 // GetPostgreSQLDBContextE is a helper function that gets the database.

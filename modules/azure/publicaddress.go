@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
@@ -118,9 +119,7 @@ func CheckPublicDNSNameAvailabilityContext(t testing.TestingT, ctx context.Conte
 	t.Helper()
 
 	available, err := CheckPublicDNSNameAvailabilityContextE(ctx, location, domainNameLabel, subscriptionID)
-	if err != nil {
-		return false
-	}
+	require.NoError(t, err)
 
 	return available
 }
@@ -137,6 +136,10 @@ func CheckPublicDNSNameAvailabilityContextE(ctx context.Context, location string
 	res, err := client.CheckDNSNameAvailability(ctx, location, domainNameLabel, nil)
 	if err != nil {
 		return false, err
+	}
+
+	if res.Available == nil {
+		return false, nil
 	}
 
 	return *res.Available, nil
@@ -177,6 +180,10 @@ func GetPublicIPAddressWithClient(ctx context.Context, client *armnetwork.Public
 
 // ExtractIPOfPublicIPAddress gets the IP string from a PublicIPAddress.
 func ExtractIPOfPublicIPAddress(pip *armnetwork.PublicIPAddress) (string, error) {
+	if pip == nil {
+		return "", errors.New("public IP address is nil")
+	}
+
 	if pip.Properties == nil || pip.Properties.IPAddress == nil {
 		name := "<unknown>"
 		if pip.Name != nil {

@@ -208,9 +208,11 @@ func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscri
 		}
 
 		for _, region := range page.Value {
-			if region.Name != nil {
-				regions = append(regions, *region.Name)
+			if region == nil || region.Name == nil {
+				continue
 			}
+
+			regions = append(regions, *region.Name)
 		}
 	}
 

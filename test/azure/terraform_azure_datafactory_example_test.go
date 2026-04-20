@@ -45,7 +45,7 @@ func TestTerraformAzureDataFactoryExample(t *testing.T) {
 	assert.True(t, actualDataFactoryExits)
 
 	// Get data factory details and assert them against the terraform output
-	actualDataFactory := azure.GetDataFactoryContext(t, t.Context(), expectedResourceGroupName, expectedDataFactoryName, "")
+	actualDataFactory := azure.GetDataFactoryContext(t, t.Context(), "", expectedResourceGroupName, expectedDataFactoryName)
 	assert.Equal(t, expectedDataFactoryName, *actualDataFactory.Name)
 	assert.Equal(t, expectedDataFactoryProvisioningState, *actualDataFactory.Properties.ProvisioningState)
 }

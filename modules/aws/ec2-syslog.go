@@ -16,6 +16,13 @@ import (
 
 const syslogRetryInterval = 5 * time.Second
 
+// Ec2SyslogAPI is the subset of *ec2.Client operations used by the syslog helpers in this file.
+// Declared as an interface so tests can substitute a mock; a real *ec2.Client satisfies it
+// automatically.
+type Ec2SyslogAPI interface {
+	GetConsoleOutput(ctx context.Context, params *ec2.GetConsoleOutputInput, optFns ...func(*ec2.Options)) (*ec2.GetConsoleOutputOutput, error)
+}
+
 // GetSyslogForInstanceContextE gets the syslog for the Instance with the given ID in the given region. This should be available ~1 minute after an
 // Instance boots and is very useful for debugging boot-time issues, such as an error in User Data.
 // The ctx parameter supports cancellation and timeouts.
@@ -32,25 +39,36 @@ func GetSyslogForInstanceContextE(t testing.TestingT, ctx context.Context, insta
 
 	client := ec2.NewFromConfig(*sess)
 
-	input := ec2.GetConsoleOutputInput{
-		InstanceId: aws.String(instanceID),
-	}
-
-	syslogB64, err := retry.DoWithRetryContextE(t, ctx, description, maxRetries, syslogRetryInterval, func() (string, error) {
-		out, err := client.GetConsoleOutput(ctx, &input)
+	return retry.DoWithRetryContextE(t, ctx, description, maxRetries, syslogRetryInterval, func() (string, error) {
+		syslog, err := GetSyslogForInstanceWithClientContextE(t, ctx, client, instanceID)
 		if err != nil {
 			return "", err
 		}
 
-		syslog := aws.ToString(out.Output)
 		if syslog == "" {
 			return "", fmt.Errorf("syslog is not yet available for instance %s in %s", instanceID, region)
 		}
 
 		return syslog, nil
 	})
+}
+
+// GetSyslogForInstanceWithClientContextE fetches the base64-decoded console output for the given
+// instance using the provided EC2 client. Returns an empty string without error when the syslog
+// is not yet available — callers that want retry-until-available semantics should wrap this call
+// in retry logic (see [GetSyslogForInstanceContextE] for the canonical usage).
+// The ctx parameter supports cancellation and timeouts.
+func GetSyslogForInstanceWithClientContextE(t testing.TestingT, ctx context.Context, client Ec2SyslogAPI, instanceID string) (string, error) {
+	out, err := client.GetConsoleOutput(ctx, &ec2.GetConsoleOutputInput{
+		InstanceId: aws.String(instanceID),
+	})
 	if err != nil {
 		return "", err
+	}
+
+	syslogB64 := aws.ToString(out.Output)
+	if syslogB64 == "" {
+		return "", nil
 	}
 
 	syslogBytes, err := base64.StdEncoding.DecodeString(syslogB64)

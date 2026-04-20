@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// KmsAPI is the subset of *kms.Client operations used by the helpers in this file. Declared as an
+// interface so tests can substitute a mock; a real *kms.Client satisfies it automatically.
+type KmsAPI interface {
+	DescribeKey(ctx context.Context, params *kms.DescribeKeyInput, optFns ...func(*kms.Options)) (*kms.DescribeKeyOutput, error)
+}
+
 // GetCmkArnContextE gets the ARN of a KMS Customer Master Key (CMK) in the given region with the given ID. The ID can be an alias, such
 // as "alias/my-cmk".
 // The ctx parameter supports cancellation and timeouts.
@@ -18,7 +24,14 @@ func GetCmkArnContextE(t testing.TestingT, ctx context.Context, region string, c
 		return "", err
 	}
 
-	result, err := kmsClient.DescribeKey(ctx, &kms.DescribeKeyInput{
+	return GetCmkArnWithClientContextE(t, ctx, kmsClient, cmkID)
+}
+
+// GetCmkArnWithClientContextE gets the ARN of a KMS Customer Master Key (CMK) with the given ID
+// using the provided KMS client. The ID can be an alias, such as "alias/my-cmk".
+// The ctx parameter supports cancellation and timeouts.
+func GetCmkArnWithClientContextE(t testing.TestingT, ctx context.Context, client KmsAPI, cmkID string) (string, error) {
+	result, err := client.DescribeKey(ctx, &kms.DescribeKeyInput{
 		KeyId: aws.String(cmkID),
 	})
 	if err != nil {

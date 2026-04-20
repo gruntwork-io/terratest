@@ -24,7 +24,7 @@ func GetSQLServerClient(subscriptionID string) (*armsql.ServersClient, error) {
 // GetSQLServerContext is a helper function that gets the sql server object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetSQLServerContext(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, subscriptionID string) *armsql.Server {
+func GetSQLServerContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) *armsql.Server {
 	t.Helper()
 
 	sqlServer, err := GetSQLServerContextE(t, ctx, subscriptionID, resGroupName, serverName)
@@ -40,7 +40,7 @@ func GetSQLServerContext(t testing.TestingT, ctx context.Context, resGroupName s
 func GetSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armsql.Server {
 	t.Helper()
 
-	return GetSQLServerContext(t, context.Background(), resGroupName, serverName, subscriptionID)
+	return GetSQLServerContext(t, context.Background(), subscriptionID, resGroupName, serverName)
 }
 
 // GetSQLServerContextE is a helper function that gets the sql server object.
@@ -147,7 +147,7 @@ func ListSQLServerDatabasesE(t testing.TestingT, resGroupName string, serverName
 // GetSQLDatabaseContext is a helper function that gets the sql db.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetSQLDatabaseContext(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, dbName string, subscriptionID string) *armsql.Database {
+func GetSQLDatabaseContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) *armsql.Database {
 	t.Helper()
 
 	database, err := GetSQLDatabaseContextE(t, ctx, subscriptionID, resGroupName, serverName, dbName)
@@ -163,7 +163,7 @@ func GetSQLDatabaseContext(t testing.TestingT, ctx context.Context, resGroupName
 func GetSQLDatabase(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armsql.Database {
 	t.Helper()
 
-	return GetSQLDatabaseContext(t, context.Background(), resGroupName, serverName, dbName, subscriptionID)
+	return GetSQLDatabaseContext(t, context.Background(), subscriptionID, resGroupName, serverName, dbName)
 }
 
 // GetSQLDatabaseContextE is a helper function that gets the sql db.

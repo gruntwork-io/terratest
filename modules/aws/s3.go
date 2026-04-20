@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/gruntwork-io/terratest/modules/logger"
@@ -469,7 +469,8 @@ func EmptyS3BucketContextE(t testing.TestingT, ctx context.Context, region strin
 		// creating an array of pointers of ObjectIdentifier
 		objectsToDelete := make([]types.ObjectIdentifier, 0, s3DeleteBatchSize)
 
-		for _, object := range bucketObjects.Versions {
+		for i := range bucketObjects.Versions {
+			object := &bucketObjects.Versions[i]
 			obj := types.ObjectIdentifier{
 				Key:       object.Key,
 				VersionId: object.VersionId,
@@ -477,7 +478,8 @@ func EmptyS3BucketContextE(t testing.TestingT, ctx context.Context, region strin
 			objectsToDelete = append(objectsToDelete, obj)
 		}
 
-		for _, object := range bucketObjects.DeleteMarkers {
+		for i := range bucketObjects.DeleteMarkers {
+			object := &bucketObjects.DeleteMarkers[i]
 			obj := types.ObjectIdentifier{
 				Key:       object.Key,
 				VersionId: object.VersionId,
@@ -949,21 +951,21 @@ func NewS3ClientE(t testing.TestingT, region string) (*s3.Client, error) {
 	return NewS3ClientContextE(t, context.Background(), region)
 }
 
-// NewS3UploaderContextE creates an S3 Uploader.
+// NewS3UploaderContextE creates an S3 transfer manager client for uploading objects.
 // The ctx parameter supports cancellation and timeouts.
-func NewS3UploaderContextE(t testing.TestingT, ctx context.Context, region string) (*manager.Uploader, error) {
+func NewS3UploaderContextE(t testing.TestingT, ctx context.Context, region string) (*transfermanager.Client, error) {
 	sess, err := NewAuthenticatedSessionContext(ctx, region)
 	if err != nil {
 		return nil, err
 	}
 
-	return manager.NewUploader(s3.NewFromConfig(*sess)), nil
+	return transfermanager.New(s3.NewFromConfig(*sess)), nil
 }
 
-// NewS3UploaderContext creates an S3 Uploader.
+// NewS3UploaderContext creates an S3 transfer manager client for uploading objects.
 // This function will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func NewS3UploaderContext(t testing.TestingT, ctx context.Context, region string) *manager.Uploader {
+func NewS3UploaderContext(t testing.TestingT, ctx context.Context, region string) *transfermanager.Client {
 	t.Helper()
 
 	uploader, err := NewS3UploaderContextE(t, ctx, region)
@@ -972,19 +974,19 @@ func NewS3UploaderContext(t testing.TestingT, ctx context.Context, region string
 	return uploader
 }
 
-// NewS3Uploader creates an S3 Uploader.
+// NewS3Uploader creates an S3 transfer manager client for uploading objects.
 //
 // Deprecated: Use [NewS3UploaderContext] instead.
-func NewS3Uploader(t testing.TestingT, region string) *manager.Uploader {
+func NewS3Uploader(t testing.TestingT, region string) *transfermanager.Client {
 	t.Helper()
 
 	return NewS3UploaderContext(t, context.Background(), region)
 }
 
-// NewS3UploaderE creates an S3 Uploader.
+// NewS3UploaderE creates an S3 transfer manager client for uploading objects.
 //
 // Deprecated: Use [NewS3UploaderContextE] instead.
-func NewS3UploaderE(t testing.TestingT, region string) (*manager.Uploader, error) {
+func NewS3UploaderE(t testing.TestingT, region string) (*transfermanager.Client, error) {
 	return NewS3UploaderContextE(t, context.Background(), region)
 }
 

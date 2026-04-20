@@ -52,7 +52,7 @@ func TestTerraformAzureMySQLDBExample(t *testing.T) {
 	expectedMYSQLDBName := terraform.OutputContext(t, t.Context(), terraformOptions, "mysql_database_name")
 
 	// website::tag::4:: Get mySQL server details and assert them against the terraform output
-	actualMYSQLServer := azure.GetMYSQLServerContext(t, t.Context(), expectedResourceGroupName, expectedMYSQLServerName, "")
+	actualMYSQLServer := azure.GetMYSQLServerContext(t, t.Context(), "", expectedResourceGroupName, expectedMYSQLServerName)
 
 	assert.Equal(t, expectedServerSkuName, *actualMYSQLServer.SKU.Name)
 	assert.Equal(t, expectedServerStoragemMb, strconv.Itoa(int(*actualMYSQLServer.Properties.StorageProfile.StorageMB)))
@@ -60,7 +60,7 @@ func TestTerraformAzureMySQLDBExample(t *testing.T) {
 	assert.Equal(t, armmysql.ServerStateReady, *actualMYSQLServer.Properties.UserVisibleState)
 
 	// website::tag::5:: Get  mySQL server DB details and assert them against the terraform output
-	actualDatabase := azure.GetMYSQLDBContext(t, t.Context(), expectedResourceGroupName, expectedMYSQLServerName, expectedMYSQLDBName, "")
+	actualDatabase := azure.GetMYSQLDBContext(t, t.Context(), "", expectedResourceGroupName, expectedMYSQLServerName, expectedMYSQLDBName)
 
 	assert.Equal(t, expectedDatabaseCharSet, *actualDatabase.Properties.Charset)
 	assert.Equal(t, expectedDatabaseCollation, *actualDatabase.Properties.Collation)

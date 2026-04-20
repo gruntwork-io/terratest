@@ -500,6 +500,12 @@ func GetStorageAccountPrimaryBlobEndpointContextE(ctx context.Context, storageAc
 		return "", err
 	}
 
+	if storageAccount == nil || storageAccount.Properties == nil ||
+		storageAccount.Properties.PrimaryEndpoints == nil ||
+		storageAccount.Properties.PrimaryEndpoints.Blob == nil {
+		return "", NewNotFoundError("primary blob endpoint", storageAccountName, "")
+	}
+
 	return *storageAccount.Properties.PrimaryEndpoints.Blob, nil
 }
 
