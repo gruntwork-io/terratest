@@ -646,11 +646,18 @@ func FetchContentsOfFileContext(t testing.TestingT, ctx context.Context, host *H
 	return out
 }
 
+// shellQuote returns s wrapped in single quotes, with any embedded single quote
+// replaced by the four-character sequence quote-backslash-quote-quote.
+// Safe for POSIX sh, bash, zsh.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 // FetchContentsOfFileContextE connects to the given host via SSH and fetches the contents of the file at the given filePath.
 // If useSudo is true, then the contents will be retrieved using sudo. Returns the contents of that file.
 // The ctx parameter supports cancellation and timeouts.
 func FetchContentsOfFileContextE(t testing.TestingT, ctx context.Context, host *Host, useSudo bool, filePath string) (string, error) {
-	command := "cat " + filePath
+	command := "cat " + shellQuote(filePath)
 	if useSudo {
 		command = "sudo " + command
 	}
@@ -703,7 +710,9 @@ func listFileInRemoteDir(ctx context.Context, t testing.TestingT, sshSession *SS
 	// The last character returned is `\n` this results in an extra "" array
 	// member when we do the split below. Cut off the last character to avoid
 	// having to remove the blank entry in the array.
-	resultString = resultString[:len(resultString)-1]
+	if len(resultString) > 0 {
+		resultString = resultString[:len(resultString)-1]
+	}
 
 	return strings.Split(resultString, "\n"), nil
 }
@@ -726,12 +735,12 @@ func copyFileFromRemote(ctx context.Context, t testing.TestingT, sshSession *SSH
 
 	logger.Default.Logf(t, "Running command %s on %s@%s", command, sshSession.Options.Username, sshSession.Options.Address)
 
+	defer func() { _ = sshSession.Session.Close() }()
+
 	r, err := sshSession.Session.Output(command)
 	if err != nil {
-		logger.Default.Logf(t, "error reading from remote stdout: %s", err)
+		return fmt.Errorf("error reading from remote stdout: %w", err)
 	}
-
-	defer func() { _ = sshSession.Session.Close() }()
 
 	// Write to local file.
 	_, err = file.Write(r)
