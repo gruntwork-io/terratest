@@ -74,14 +74,7 @@ func GetKubernetesClientFromOptionsContextE(t testing.TestingT, ctx context.Cont
 		// Load API config (instead of more low level ClientConfig)
 		config, err = LoadAPIClientConfigE(kubeConfigPath, options.ContextName)
 		if err != nil {
-			options.Logger.Logf(t, "Error loading api client config, falling back to in-cluster authentication via serviceaccount token: %s", err)
-
-			config, err = rest.InClusterConfig()
-			if err != nil {
-				return nil, err
-			}
-
-			options.Logger.Logf(t, "Configuring Kubernetes client to use the in-cluster serviceaccount token")
+			return nil, err
 		}
 	}
 
