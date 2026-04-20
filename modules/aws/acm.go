@@ -9,6 +9,13 @@ import (
 	"github.com/gruntwork-io/terratest/modules/testing"
 )
 
+// AcmAPI is the subset of *acm.Client operations used by the helpers in this file.
+// It is declared as an interface so tests can substitute a mock without an AWS
+// account. A real *acm.Client satisfies this interface automatically.
+type AcmAPI interface {
+	ListCertificates(ctx context.Context, params *acm.ListCertificatesInput, optFns ...func(*acm.Options)) (*acm.ListCertificatesOutput, error)
+}
+
 // GetAcmCertificateArnContextE gets the ACM certificate for the given domain name in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func GetAcmCertificateArnContextE(t testing.TestingT, ctx context.Context, awsRegion string, certDomainName string) (string, error) {
@@ -17,7 +24,15 @@ func GetAcmCertificateArnContextE(t testing.TestingT, ctx context.Context, awsRe
 		return "", err
 	}
 
-	result, err := acmClient.ListCertificates(ctx, &acm.ListCertificatesInput{})
+	return GetAcmCertificateArnWithClientContextE(t, ctx, acmClient, certDomainName)
+}
+
+// GetAcmCertificateArnWithClientContextE gets the ACM certificate for the given domain name using
+// the provided ACM client. Useful when a pre-configured client is available or in unit tests with
+// a mock.
+// The ctx parameter supports cancellation and timeouts.
+func GetAcmCertificateArnWithClientContextE(t testing.TestingT, ctx context.Context, client AcmAPI, certDomainName string) (string, error) {
+	result, err := client.ListCertificates(ctx, &acm.ListCertificatesInput{})
 	if err != nil {
 		return "", err
 	}

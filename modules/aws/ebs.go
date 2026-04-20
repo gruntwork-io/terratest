@@ -10,6 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// EbsAPI is the subset of *ec2.Client operations used by the EBS helpers in this file. Declared
+// as an interface so tests can substitute a mock; a real *ec2.Client satisfies it automatically.
+type EbsAPI interface {
+	DeleteSnapshot(ctx context.Context, params *ec2.DeleteSnapshotInput, optFns ...func(*ec2.Options)) (*ec2.DeleteSnapshotOutput, error)
+}
+
 // DeleteEbsSnapshotContextE deletes the given EBS snapshot.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteEbsSnapshotContextE(t testing.TestingT, ctx context.Context, region string, snapshot string) error {
@@ -20,9 +26,13 @@ func DeleteEbsSnapshotContextE(t testing.TestingT, ctx context.Context, region s
 		return err
 	}
 
-	ec2Client := ec2.NewFromConfig(*sess)
+	return DeleteEbsSnapshotWithClientContextE(t, ctx, ec2.NewFromConfig(*sess), snapshot)
+}
 
-	_, err = ec2Client.DeleteSnapshot(ctx, &ec2.DeleteSnapshotInput{
+// DeleteEbsSnapshotWithClientContextE deletes the given EBS snapshot using the provided EC2 client.
+// The ctx parameter supports cancellation and timeouts.
+func DeleteEbsSnapshotWithClientContextE(t testing.TestingT, ctx context.Context, client EbsAPI, snapshot string) error {
+	_, err := client.DeleteSnapshot(ctx, &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(snapshot),
 	})
 
