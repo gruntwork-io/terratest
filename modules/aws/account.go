@@ -59,6 +59,20 @@ func GetAccountIDE(t testing.TestingT) (string, error) {
 	return GetAccountIDContextE(t, context.Background())
 }
 
+// Deprecated: Use [GetAccountID] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetAccountId(t testing.TestingT) string {
+	return GetAccountID(t)
+}
+
+// Deprecated: Use [GetAccountIDE] instead.
+//
+//nolint:staticcheck,revive // preserving deprecated function name
+func GetAccountIdE(t testing.TestingT) (string, error) {
+	return GetAccountIDE(t)
+}
+
 // ExtractAccountIDFromARN extracts the AWS account ID from an IAM ARN.
 // An IAM ARN is of the format arn:aws:iam::123456789012:user/test. The account ID is the number after arn:aws:iam::,
 // so we split on a colon and return the 5th item.

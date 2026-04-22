@@ -41,6 +41,15 @@ func UniqueID() string {
 	return out.String()
 }
 
+// UniqueId is deprecated, use UniqueID instead.
+//
+// Deprecated: Use UniqueID.
+//
+//nolint:staticcheck,revive
+func UniqueId() string {
+	return UniqueID()
+}
+
 // newRand creates a new random number generator, seeding it with the current system time.
 func newRand() *rand.Rand {
 	return rand.New(rand.NewSource(time.Now().UnixNano()))
