@@ -9,8 +9,8 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 
-	// Microsoft SQL Database Driver
-	_ "github.com/denisenkom/go-mssqldb"
+	// Microsoft SQL Database Driver (Microsoft-maintained fork of denisenkom/go-mssqldb)
+	_ "github.com/microsoft/go-mssqldb"
 
 	// PostgreSQL Database Driver
 	_ "github.com/lib/pq"
