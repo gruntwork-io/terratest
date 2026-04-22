@@ -55,6 +55,7 @@ func AssertTopicExistsContextE(t testing.TestingT, ctx context.Context, projectI
 // The ctx parameter supports cancellation and timeouts.
 func AssertTopicExistsWithClient(ctx context.Context, client *pubsub.Client, topicName string) error {
 	projectID := client.Project()
+
 	_, err := client.TopicAdminClient.GetTopic(ctx, &pubsubpb.GetTopicRequest{
 		Topic: topicResource(projectID, topicName),
 	})
@@ -62,6 +63,7 @@ func AssertTopicExistsWithClient(ctx context.Context, client *pubsub.Client, top
 		if status.Code(err) == codes.NotFound {
 			return fmt.Errorf("Pub/Sub topic %s does not exist in project %s", topicName, projectID)
 		}
+
 		return fmt.Errorf("failed to check if Pub/Sub topic %s exists in project %s: %w", topicName, projectID, err)
 	}
 
@@ -110,6 +112,7 @@ func AssertSubscriptionExistsContextE(t testing.TestingT, ctx context.Context, p
 // The ctx parameter supports cancellation and timeouts.
 func AssertSubscriptionExistsWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string) error {
 	projectID := client.Project()
+
 	_, err := client.SubscriptionAdminClient.GetSubscription(ctx, &pubsubpb.GetSubscriptionRequest{
 		Subscription: subscriptionResource(projectID, subscriptionName),
 	})
@@ -117,6 +120,7 @@ func AssertSubscriptionExistsWithClient(ctx context.Context, client *pubsub.Clie
 		if status.Code(err) == codes.NotFound {
 			return fmt.Errorf("Pub/Sub subscription %s does not exist in project %s", subscriptionName, projectID)
 		}
+
 		return fmt.Errorf("failed to check if Pub/Sub subscription %s exists in project %s: %w", subscriptionName, projectID, err)
 	}
 
