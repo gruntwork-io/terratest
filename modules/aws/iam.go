@@ -120,9 +120,13 @@ func GetIamPolicyDocumentContextE(t testing.TestingT, ctx context.Context, regio
 	var defaultVersion string
 
 	for _, version := range versions.Versions {
-		if version.IsDefaultVersion {
+		if version.IsDefaultVersion && version.VersionId != nil {
 			defaultVersion = *version.VersionId
 		}
+	}
+
+	if defaultVersion == "" {
+		return "", fmt.Errorf("no default version found for IAM policy %s", policyARN)
 	}
 
 	document, err := iamClient.GetPolicyVersion(ctx, &iam.GetPolicyVersionInput{

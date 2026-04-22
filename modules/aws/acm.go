@@ -32,20 +32,28 @@ func GetAcmCertificateArnContextE(t testing.TestingT, ctx context.Context, awsRe
 // a mock.
 // The ctx parameter supports cancellation and timeouts.
 func GetAcmCertificateArnWithClientContextE(t testing.TestingT, ctx context.Context, client AcmAPI, certDomainName string) (string, error) {
-	result, err := client.ListCertificates(ctx, &acm.ListCertificatesInput{})
-	if err != nil {
-		return "", err
-	}
+	input := &acm.ListCertificatesInput{}
 
-	for i := range result.CertificateSummaryList {
-		summary := &result.CertificateSummaryList[i]
-
-		if *summary.DomainName == certDomainName {
-			return *summary.CertificateArn, nil
+	for {
+		result, err := client.ListCertificates(ctx, input)
+		if err != nil {
+			return "", err
 		}
-	}
 
-	return "", nil
+		for i := range result.CertificateSummaryList {
+			summary := &result.CertificateSummaryList[i]
+
+			if *summary.DomainName == certDomainName {
+				return *summary.CertificateArn, nil
+			}
+		}
+
+		if result.NextToken == nil || *result.NextToken == "" {
+			return "", nil
+		}
+
+		input.NextToken = result.NextToken
+	}
 }
 
 // GetAcmCertificateArnContext gets the ACM certificate for the given domain name in the given region.
