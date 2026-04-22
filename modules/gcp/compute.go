@@ -99,6 +99,14 @@ func FetchInstanceContextE(t testing.TestingT, ctx context.Context, projectID st
 		return nil, err
 	}
 
+	return FetchInstanceWithClient(ctx, service, projectID, name)
+}
+
+// FetchInstanceWithClient queries GCP to return an instance of the Compute Instance type
+// using the supplied *compute.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*Instance, error) {
 	// If we want to fetch an Instance without knowing its Zone, we have to query GCP for all Instances in the project
 	// and match on name.
 	instanceAggregatedList, err := service.Instances.AggregatedList(projectID).Context(ctx).Do()
@@ -152,9 +160,15 @@ func FetchImageContextE(t testing.TestingT, ctx context.Context, projectID strin
 		return nil, err
 	}
 
-	req := service.Images.Get(projectID, name)
+	return FetchImageWithClient(ctx, service, projectID, name)
+}
 
-	image, err := req.Context(ctx).Do()
+// FetchImageWithClient queries GCP to return a new instance of the Compute Image type
+// using the supplied *compute.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchImageWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*Image, error) {
+	image, err := service.Images.Get(projectID, name).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -197,9 +211,15 @@ func FetchRegionalInstanceGroupContextE(t testing.TestingT, ctx context.Context,
 		return nil, err
 	}
 
-	req := service.RegionInstanceGroups.Get(projectID, region, name)
+	return FetchRegionalInstanceGroupWithClient(ctx, service, projectID, region, name)
+}
 
-	instanceGroup, err := req.Context(ctx).Do()
+// FetchRegionalInstanceGroupWithClient queries GCP to return a new instance of the Regional Instance
+// Group type using the supplied *compute.Service. Prefer this variant in unit tests where the service
+// is backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionalInstanceGroupWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*RegionalInstanceGroup, error) {
+	instanceGroup, err := service.RegionInstanceGroups.Get(projectID, region, name).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -242,9 +262,15 @@ func FetchZonalInstanceGroupContextE(t testing.TestingT, ctx context.Context, pr
 		return nil, err
 	}
 
-	req := service.InstanceGroups.Get(projectID, zone, name)
+	return FetchZonalInstanceGroupWithClient(ctx, service, projectID, zone, name)
+}
 
-	instanceGroup, err := req.Context(ctx).Do()
+// FetchZonalInstanceGroupWithClient queries GCP to return a new instance of the Zonal Instance Group
+// type using the supplied *compute.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchZonalInstanceGroupWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, name string) (*ZonalInstanceGroup, error) {
+	instanceGroup, err := service.InstanceGroups.Get(projectID, zone, name).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -294,16 +320,15 @@ func (i *Instance) GetPublicIpE(t testing.TestingT) (string, error) { //nolint:s
 
 // GetPublicIPContextE gets the public IP address of the given Compute Instance.
 // The ctx parameter supports cancellation and timeouts.
+// Returns an error (rather than panicking) when the instance has no network interfaces
+// or the first interface has no accessConfigs — both indicate the instance has no
+// external internet access (https://cloud.google.com/compute/docs/reference/rest/v1/instances).
 func (i *Instance) GetPublicIPContextE(t testing.TestingT, ctx context.Context) (string, error) {
-	// If there are no accessConfigs specified, then this instance will have no external internet access:
-	// https://cloud.google.com/compute/docs/reference/rest/v1/instances.
-	if len(i.NetworkInterfaces[0].AccessConfigs) == 0 {
+	if len(i.NetworkInterfaces) == 0 || len(i.NetworkInterfaces[0].AccessConfigs) == 0 {
 		return "", fmt.Errorf("attempted to get public IP of Compute Instance %s, but that Compute Instance does not have a public IP address", i.Name)
 	}
 
-	ip := i.NetworkInterfaces[0].AccessConfigs[0].NatIP
-
-	return ip, nil
+	return i.NetworkInterfaces[0].AccessConfigs[0].NatIP, nil
 }
 
 // GetLabels returns all the tags for the given Compute Instance.
@@ -397,9 +422,17 @@ func (i *Instance) SetLabelsContextE(t testing.TestingT, ctx context.Context, la
 		return err
 	}
 
+	return i.SetLabelsWithClient(ctx, service, labels)
+}
+
+// SetLabelsWithClient adds the tags to the given Compute Instance using the supplied *compute.Service.
+// Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) SetLabelsWithClient(ctx context.Context, service *compute.Service, labels map[string]string) error {
 	req := compute.InstancesSetLabelsRequest{Labels: labels, LabelFingerprint: i.LabelFingerprint}
 
-	if _, err := service.Instances.SetLabels(i.projectID, i.GetZoneContext(t, ctx), i.Name, &req).Context(ctx).Do(); err != nil {
+	if _, err := service.Instances.SetLabels(i.projectID, ZoneURLToZone(i.Zone), i.Name, &req).Context(ctx).Do(); err != nil {
 		return fmt.Errorf("Instances.SetLabels(%s) got error: %w", i.Name, err)
 	}
 
@@ -463,14 +496,22 @@ func (i *Instance) SetMetadataE(t testing.TestingT, metadata map[string]string) 
 func (i *Instance) SetMetadataContextE(t testing.TestingT, ctx context.Context, metadata map[string]string) error {
 	logger.Default.Logf(t, "Adding metadata to instance %s in zone %s", i.Name, i.Zone)
 
-	service, err := NewInstancesServiceContextE(t, ctx)
+	service, err := NewComputeServiceContextE(t, ctx)
 	if err != nil {
 		return err
 	}
 
+	return i.SetMetadataWithClient(ctx, service, metadata)
+}
+
+// SetMetadataWithClient adds the given metadata map to the existing metadata of the given Compute
+// Instance using the supplied *compute.Service. Prefer this variant in unit tests where the service
+// is backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) SetMetadataWithClient(ctx context.Context, service *compute.Service, metadata map[string]string) error {
 	metadataItems := NewMetadata(i.Metadata, metadata)
 
-	req := service.SetMetadata(i.projectID, i.GetZoneContext(t, ctx), i.Name, metadataItems)
+	req := service.Instances.SetMetadata(i.projectID, ZoneURLToZone(i.Zone), i.Name, metadataItems)
 
 	if _, err := req.Context(ctx).Do(); err != nil {
 		return fmt.Errorf("Instances.SetMetadata(%s) got error: %w", i.Name, err)
@@ -555,6 +596,19 @@ func (i *Instance) AddSshKeyE(t testing.TestingT, username string, publicKey str
 func (i *Instance) AddSSHKeyContextE(t testing.TestingT, ctx context.Context, username string, publicKey string) error {
 	logger.Default.Logf(t, "Adding SSH Key to Compute Instance %s for username %s\n", i.Name, username)
 
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return err
+	}
+
+	return i.AddSSHKeyWithClient(ctx, service, username, publicKey)
+}
+
+// AddSSHKeyWithClient adds the given public SSH key to the Compute Instance using the supplied
+// *compute.Service. Users can SSH in with the given username. Prefer this variant in unit tests
+// where the service is backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func (i *Instance) AddSSHKeyWithClient(ctx context.Context, service *compute.Service, username string, publicKey string) error {
 	// We represent the key in the format required per GCP docs (https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys)
 	publicKeyFormatted := strings.TrimSpace(publicKey)
 	sshKeyFormatted := fmt.Sprintf("%s:%s %s", username, publicKeyFormatted, username)
@@ -563,8 +617,7 @@ func (i *Instance) AddSSHKeyContextE(t testing.TestingT, ctx context.Context, us
 		"ssh-keys": sshKeyFormatted,
 	}
 
-	err := i.SetMetadataContextE(t, ctx, metadata)
-	if err != nil {
+	if err := i.SetMetadataWithClient(ctx, service, metadata); err != nil {
 		return fmt.Errorf("failed to add SSH key to Compute Instance: %w", err)
 	}
 
@@ -604,6 +657,14 @@ func (i *Image) DeleteImageContextE(t testing.TestingT, ctx context.Context) err
 		return err
 	}
 
+	return i.DeleteImageWithClient(ctx, service)
+}
+
+// DeleteImageWithClient deletes the given Compute Image using the supplied *compute.Service.
+// Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func (i *Image) DeleteImageWithClient(ctx context.Context, service *compute.Service) error {
 	if _, err := service.Images.Delete(i.projectID, i.Name).Context(ctx).Do(); err != nil {
 		return fmt.Errorf("Images.Delete(%s) got error: %w", i.Name, err)
 	}
@@ -653,7 +714,7 @@ func (ig *ZonalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, err
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Zonal Instance Group.
 // The ctx parameter supports cancellation and timeouts.
-func (ig *ZonalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx context.Context) ([]string, error) { //nolint:dupl // zonal and regional implementations differ in API types
+func (ig *ZonalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx context.Context) ([]string, error) {
 	logger.Default.Logf(t, "Get instances for Zonal Instance Group %s", ig.Name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -661,6 +722,14 @@ func (ig *ZonalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx con
 		return nil, err
 	}
 
+	return ig.GetInstanceIDsWithClient(ctx, service)
+}
+
+// GetInstanceIDsWithClient gets the IDs of Instances in the given Zonal Instance Group using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func (ig *ZonalInstanceGroup) GetInstanceIDsWithClient(ctx context.Context, service *compute.Service) ([]string, error) { //nolint:dupl // zonal and regional implementations differ in API types
 	requestBody := &compute.InstanceGroupsListInstancesRequest{
 		InstanceState: "ALL",
 	}
@@ -669,7 +738,7 @@ func (ig *ZonalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx con
 	zone := ZoneURLToZone(ig.Zone)
 	req := service.InstanceGroups.ListInstances(ig.projectID, zone, ig.Name, requestBody)
 
-	err = req.Pages(ctx, func(page *compute.InstanceGroupsListInstances) error {
+	err := req.Pages(ctx, func(page *compute.InstanceGroupsListInstances) error {
 		for _, instance := range page.Items {
 			// For some reason service.InstanceGroups.ListInstances returns us a collection
 			// with Instance URLs and we need only the Instance ID for the next call. Use
@@ -729,7 +798,7 @@ func (ig *RegionalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, 
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Regional Instance Group.
 // The ctx parameter supports cancellation and timeouts.
-func (ig *RegionalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx context.Context) ([]string, error) { //nolint:dupl // zonal and regional implementations differ in API types
+func (ig *RegionalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx context.Context) ([]string, error) {
 	logger.Default.Logf(t, "Get instances for Regional Instance Group %s", ig.Name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -737,6 +806,14 @@ func (ig *RegionalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx 
 		return nil, err
 	}
 
+	return ig.GetInstanceIDsWithClient(ctx, service)
+}
+
+// GetInstanceIDsWithClient gets the IDs of Instances in the given Regional Instance Group using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func (ig *RegionalInstanceGroup) GetInstanceIDsWithClient(ctx context.Context, service *compute.Service) ([]string, error) { //nolint:dupl // zonal and regional implementations differ in API types
 	requestBody := &compute.RegionInstanceGroupsListInstancesRequest{
 		InstanceState: "ALL",
 	}
@@ -745,7 +822,7 @@ func (ig *RegionalInstanceGroup) GetInstanceIDsContextE(t testing.TestingT, ctx 
 	region := RegionURLToRegion(ig.Region)
 	req := service.RegionInstanceGroups.ListInstances(ig.projectID, region, ig.Name, requestBody)
 
-	err = req.Pages(ctx, func(page *compute.RegionInstanceGroupsListInstances) error {
+	err := req.Pages(ctx, func(page *compute.RegionInstanceGroupsListInstances) error {
 		for _, instance := range page.Items {
 			// For some reason service.InstanceGroups.ListInstances returns us a collection
 			// with Instance URLs and we need only the Instance ID for the next call. Use

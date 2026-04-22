@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	gwErrors "github.com/gruntwork-io/go-commons/errors"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -181,7 +180,7 @@ func GetKubeConfigPathE(t testing.TestingT) (string, error) {
 // KubeConfigPathFromHomeDirE returns a string to the default Kubernetes config path in the home directory. This will
 // error if the home directory can not be determined.
 func KubeConfigPathFromHomeDirE() (string, error) {
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}

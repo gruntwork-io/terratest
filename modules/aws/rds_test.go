@@ -1,7 +1,6 @@
 package aws_test
 
 import (
-	"fmt"
 	"testing"
 
 	aws "github.com/gruntwork-io/terratest/modules/aws"
@@ -146,7 +145,6 @@ func TestGetRecommendedRdsInstanceTypeErrors(t *testing.T) {
 			t.Parallel()
 
 			_, err := aws.GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, scenerio.databaseEngineVersion, scenerio.instanceTypes)
-			fmt.Println(err)
 			assert.EqualError(t, err, aws.NoRdsInstanceTypeError{InstanceTypeOptions: scenerio.instanceTypes, DatabaseEngine: scenerio.databaseEngine, DatabaseEngineVersion: scenerio.databaseEngineVersion}.Error())
 		})
 	}
