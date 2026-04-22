@@ -23,16 +23,35 @@ func GetAllVcnIDsContextE(t testing.TestingT, ctx context.Context, compartmentID
 
 	request := core.ListVcnsRequest{CompartmentId: &compartmentID}
 
-	response, err := client.ListVcns(ctx, request)
-	if err != nil {
-		return nil, err
+	var allItems []core.Vcn
+
+	for {
+		response, err := client.ListVcns(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+
+		allItems = append(allItems, response.Items...)
+
+		// Stop when no next page, when the server returns an empty token, or
+		// when it returns the same token we just requested (defensive: prevents
+		// an infinite loop on a misbehaving server).
+		if response.OpcNextPage == nil || *response.OpcNextPage == "" {
+			break
+		}
+
+		if request.Page != nil && *request.Page == *response.OpcNextPage {
+			break
+		}
+
+		request.Page = response.OpcNextPage
 	}
 
-	if len(response.Items) == 0 {
+	if len(allItems) == 0 {
 		return nil, NoVCNsFoundError{CompartmentID: compartmentID}
 	}
 
-	return vcnsIDs(response.Items), nil
+	return vcnsIDs(allItems), nil
 }
 
 // GetAllVcnIDsContext gets the list of VCNs available in the given compartment.

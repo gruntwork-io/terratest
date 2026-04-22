@@ -327,6 +327,10 @@ func GetOptionGroupNameOfRdsInstanceContextE(t testing.TestingT, ctx context.Con
 		return "", err
 	}
 
+	if len(dbInstance.OptionGroupMemberships) == 0 {
+		return "", fmt.Errorf("RDS instance %s in region %s has no option group memberships", dbInstanceID, awsRegion)
+	}
+
 	return aws.ToString(dbInstance.OptionGroupMemberships[0].OptionGroupName), nil
 }
 
@@ -372,6 +376,10 @@ func GetOptionsOfOptionGroupContextE(t testing.TestingT, ctx context.Context, op
 		return []types.Option{}, err
 	}
 
+	if len(output.OptionGroupsList) == 0 {
+		return []types.Option{}, fmt.Errorf("no option groups found for name %s in region %s", optionGroupName, awsRegion)
+	}
+
 	return output.OptionGroupsList[0].Options, nil
 }
 
@@ -408,6 +416,10 @@ func GetAllParametersOfRdsInstanceContextE(t testing.TestingT, ctx context.Conte
 	dbInstance, dbInstanceErr := GetRdsInstanceDetailsContextE(t, ctx, dbInstanceID, awsRegion)
 	if dbInstanceErr != nil {
 		return []types.Parameter{}, dbInstanceErr
+	}
+
+	if len(dbInstance.DBParameterGroups) == 0 {
+		return []types.Parameter{}, fmt.Errorf("RDS instance %s in region %s has no parameter groups", dbInstanceID, awsRegion)
 	}
 
 	parameterGroupName := aws.ToString(dbInstance.DBParameterGroups[0].DBParameterGroupName)
@@ -479,6 +491,10 @@ func GetRdsInstanceDetailsContextE(t testing.TestingT, ctx context.Context, dbIn
 	output, err := rdsClient.DescribeDBInstances(ctx, &input)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(output.DBInstances) == 0 {
+		return nil, fmt.Errorf("RDS instance %s not found in region %s", dbInstanceID, awsRegion)
 	}
 
 	return &output.DBInstances[0], nil
