@@ -72,16 +72,35 @@ func GetMostRecentImageIDContextE(t testing.TestingT, ctx context.Context, compa
 		OperatingSystemVersion: &osVersion,
 	}
 
-	response, err := client.ListImages(ctx, request)
-	if err != nil {
-		return "", err
+	var allItems []core.Image
+
+	for {
+		response, err := client.ListImages(ctx, request)
+		if err != nil {
+			return "", err
+		}
+
+		allItems = append(allItems, response.Items...)
+
+		// Stop when no next page, when the server returns an empty token, or
+		// when it returns the same token we just requested (defensive: prevents
+		// an infinite loop on a misbehaving server).
+		if response.OpcNextPage == nil || *response.OpcNextPage == "" {
+			break
+		}
+
+		if request.Page != nil && *request.Page == *response.OpcNextPage {
+			break
+		}
+
+		request.Page = response.OpcNextPage
 	}
 
-	if len(response.Items) == 0 {
+	if len(allItems) == 0 {
 		return "", NoImagesFoundError{OSName: osName, OSVersion: osVersion, CompartmentID: compartmentID}
 	}
 
-	mostRecentImage := mostRecentImage(response.Items)
+	mostRecentImage := mostRecentImage(allItems)
 
 	return *mostRecentImage.Id, nil
 }
@@ -120,10 +139,14 @@ type imageSort []core.Image
 func (a imageSort) Len() int      { return len(a) }
 func (a imageSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a imageSort) Less(i, j int) bool {
-	iTime := a[i].TimeCreated.Unix()
-	jTime := a[j].TimeCreated.Unix()
-
-	return iTime < jTime
+	switch {
+	case a[i].TimeCreated == nil:
+		return true
+	case a[j].TimeCreated == nil:
+		return false
+	default:
+		return a[i].TimeCreated.Unix() < a[j].TimeCreated.Unix()
+	}
 }
 
 // mostRecentImage returns the most recent image out of a slice of images.

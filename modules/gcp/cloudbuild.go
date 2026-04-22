@@ -47,6 +47,14 @@ func CreateBuildContextE(t testing.TestingT, ctx context.Context, projectID stri
 
 	defer func() { _ = service.Close() }()
 
+	return CreateBuildWithClient(ctx, service, projectID, build)
+}
+
+// CreateBuildWithClient creates a new build blocking until the operation is complete using the
+// supplied *cloudbuild.Client. Prefer this variant in unit tests where the client is backed by a
+// mock gRPC server.
+// The ctx parameter supports cancellation and timeouts.
+func CreateBuildWithClient(ctx context.Context, service *cloudbuild.Client, projectID string, build *cloudbuildpb.Build) (*cloudbuildpb.Build, error) {
 	req := &cloudbuildpb.CreateBuildRequest{
 		ProjectId: projectID,
 		Build:     build,
@@ -100,6 +108,13 @@ func GetBuildContextE(t testing.TestingT, ctx context.Context, projectID string,
 
 	defer func() { _ = service.Close() }()
 
+	return GetBuildWithClient(ctx, service, projectID, buildID)
+}
+
+// GetBuildWithClient gets the given build using the supplied *cloudbuild.Client. Prefer this variant
+// in unit tests where the client is backed by a mock gRPC server.
+// The ctx parameter supports cancellation and timeouts.
+func GetBuildWithClient(ctx context.Context, service *cloudbuild.Client, projectID string, buildID string) (*cloudbuildpb.Build, error) {
 	req := &cloudbuildpb.GetBuildRequest{
 		ProjectId: projectID,
 		Id:        buildID,
@@ -148,6 +163,14 @@ func GetBuildsContextE(t testing.TestingT, ctx context.Context, projectID string
 
 	defer func() { _ = service.Close() }()
 
+	return GetBuildsWithClient(ctx, service, projectID)
+}
+
+// GetBuildsWithClient gets the list of builds for a given project using the supplied
+// *cloudbuild.Client. Prefer this variant in unit tests where the client is backed by a mock gRPC
+// server.
+// The ctx parameter supports cancellation and timeouts.
+func GetBuildsWithClient(ctx context.Context, service *cloudbuild.Client, projectID string) ([]*cloudbuildpb.Build, error) {
 	req := &cloudbuildpb.ListBuildsRequest{
 		ProjectId: projectID,
 	}
@@ -205,15 +228,34 @@ func GetBuildsForTriggerContextE(t testing.TestingT, ctx context.Context, projec
 		return nil, fmt.Errorf("GetBuildsForTriggerContextE.ListBuilds(%s) got error: %w", projectID, err)
 	}
 
-	filteredBuilds := []*cloudbuildpb.Build{}
+	return filterBuildsByTrigger(builds, triggerID), nil
+}
+
+// GetBuildsForTriggerWithClient gets a list of builds for a specific cloud build trigger using the
+// supplied *cloudbuild.Client. Prefer this variant in unit tests where the client is backed by a
+// mock gRPC server.
+// The ctx parameter supports cancellation and timeouts.
+func GetBuildsForTriggerWithClient(ctx context.Context, service *cloudbuild.Client, projectID string, triggerID string) ([]*cloudbuildpb.Build, error) {
+	builds, err := GetBuildsWithClient(ctx, service, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("GetBuildsForTriggerContextE.ListBuilds(%s) got error: %w", projectID, err)
+	}
+
+	return filterBuildsByTrigger(builds, triggerID), nil
+}
+
+// filterBuildsByTrigger returns the subset of the given builds that were produced by the trigger
+// with the given ID.
+func filterBuildsByTrigger(builds []*cloudbuildpb.Build, triggerID string) []*cloudbuildpb.Build {
+	filtered := []*cloudbuildpb.Build{}
 
 	for _, build := range builds {
 		if build.GetBuildTriggerId() == triggerID {
-			filteredBuilds = append(filteredBuilds, build)
+			filtered = append(filtered, build)
 		}
 	}
 
-	return filteredBuilds, nil
+	return filtered
 }
 
 // NewCloudBuildService creates a new Cloud Build service, which is used to make Cloud Build API calls.

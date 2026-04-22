@@ -243,10 +243,18 @@ func GetAllGCPRegionsContextE(t testing.TestingT, ctx context.Context, projectID
 		return nil, err
 	}
 
+	return GetAllGCPRegionsWithClient(ctx, service, projectID)
+}
+
+// GetAllGCPRegionsWithClient gets the list of GCP regions available in this account using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see region_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetAllGCPRegionsWithClient(ctx context.Context, service *compute.Service, projectID string) ([]string, error) {
 	req := service.Regions.List(projectID)
 	regions := []string{}
 
-	err = req.Pages(ctx, func(page *compute.RegionList) error {
+	err := req.Pages(ctx, func(page *compute.RegionList) error {
 		for _, region := range page.Items {
 			regions = append(regions, region.Name)
 		}
@@ -293,10 +301,18 @@ func GetAllGCPZonesContextE(t testing.TestingT, ctx context.Context, projectID s
 		return nil, err
 	}
 
+	return GetAllGCPZonesWithClient(ctx, service, projectID)
+}
+
+// GetAllGCPZonesWithClient gets the list of GCP Zones available in this account using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see region_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetAllGCPZonesWithClient(ctx context.Context, service *compute.Service, projectID string) ([]string, error) {
 	req := service.Zones.List(projectID)
 	zones := []string{}
 
-	err = req.Pages(ctx, func(page *compute.ZoneList) error {
+	err := req.Pages(ctx, func(page *compute.ZoneList) error {
 		for _, zone := range page.Items {
 			zones = append(zones, zone.Name)
 		}
