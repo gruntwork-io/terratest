@@ -20,7 +20,7 @@ require (
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
 	github.com/miekg/dns v1.1.62
-	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/oracle/oci-go-sdk v7.1.0+incompatible
 	github.com/pquerna/otp v1.4.0
 	github.com/sirupsen/logrus v1.9.3
@@ -92,12 +92,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.26
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0
-	github.com/denisenkom/go-mssqldb v0.12.3
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/homeport/dyff v1.6.0
 	github.com/jackc/pgx/v5 v5.9.0
 	github.com/lib/pq v1.10.9
+	github.com/microsoft/go-mssqldb v1.9.8
 	github.com/slack-go/slack v0.15.0
 	google.golang.org/grpc v1.80.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -157,8 +157,8 @@ require (
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
-	github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
+	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/gonvenience/bunt v1.3.5 // indirect
 	github.com/gonvenience/neat v1.3.12 // indirect
@@ -201,6 +201,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
