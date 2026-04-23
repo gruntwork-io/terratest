@@ -2,7 +2,7 @@
 go = "1.26.1"
 golangci-lint = "2.11.3"
 terraform = "1.5.7"
-opentofu = "1.8.0"
+opentofu = "1.11.6"
 terragrunt = "1.0.2"
 packer = "1.10.0"
 helm = "3.13.1"
