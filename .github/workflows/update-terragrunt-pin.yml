@@ -6,57 +6,34 @@ on:
     - cron: '0 0 * * 1'
   workflow_dispatch:
 
-concurrency:
-  group: update-terragrunt-pin
-  cancel-in-progress: false
-
 jobs:
   update-terragrunt-pin:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
     - uses: actions/checkout@v5
 
-    - name: Resolve latest Terragrunt release
-      id: resolve
+    - name: Bump Terragrunt pin in mise.toml
+      id: bump
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        set -euo pipefail
         latest=$(gh api repos/gruntwork-io/terragrunt/releases/latest --jq '.tag_name' | sed 's/^v//')
         current=$(sed -nE 's/^terragrunt = "([^"]+)".*/\1/p' mise.toml)
-        if [ -z "${latest}" ] || [ -z "${current}" ]; then
-          echo "Failed to resolve versions (latest='${latest}', current='${current}')" >&2
-          exit 1
-        fi
-        echo "latest=${latest}" >> "$GITHUB_OUTPUT"
-        echo "current=${current}" >> "$GITHUB_OUTPUT"
-        echo "Current: ${current}"
-        echo "Latest:  ${latest}"
-
-    - name: Update mise.toml
-      if: steps.resolve.outputs.latest != steps.resolve.outputs.current
-      env:
-        LATEST: ${{ steps.resolve.outputs.latest }}
-      run: |
-        set -euo pipefail
-        sed -i -E 's/^(terragrunt = ")[^"]+(")/\1'"$LATEST"'\2/' mise.toml
-        grep '^terragrunt' mise.toml
+        echo "latest=$latest" >> "$GITHUB_OUTPUT"
+        echo "current=$current" >> "$GITHUB_OUTPUT"
+        sed -i -E "s/^(terragrunt = \")[^\"]+(\")/\\1${latest}\\2/" mise.toml
 
     - name: Create Pull Request
-      if: steps.resolve.outputs.latest != steps.resolve.outputs.current
       uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "chore: bump Terragrunt pin to ${{ steps.resolve.outputs.latest }}"
-        title: "chore: bump Terragrunt pin to ${{ steps.resolve.outputs.latest }}"
+        commit-message: "chore: bump Terragrunt pin to ${{ steps.bump.outputs.latest }}"
+        title: "chore: bump Terragrunt pin to ${{ steps.bump.outputs.latest }}"
         body: |
-          Bumps the pinned Terragrunt version in `mise.toml` from `${{ steps.resolve.outputs.current }}` to `${{ steps.resolve.outputs.latest }}`.
+          Bumps the pinned Terragrunt version in `mise.toml` from `${{ steps.bump.outputs.current }}` to `${{ steps.bump.outputs.latest }}`.
 
-          Release notes: https://github.com/gruntwork-io/terragrunt/releases/tag/v${{ steps.resolve.outputs.latest }}
+          Release notes: https://github.com/gruntwork-io/terragrunt/releases/tag/v${{ steps.bump.outputs.latest }}
 
           This is an automated PR created by the update-terragrunt-pin workflow.
         branch: update-terragrunt-pin
