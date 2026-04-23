@@ -6,9 +6,16 @@ on:
     - cron: '0 0 * * 1'
   workflow_dispatch:
 
+concurrency:
+  group: update-terragrunt-pin
+  cancel-in-progress: false
+
 jobs:
   update-terragrunt-pin:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
     - uses: actions/checkout@v5
@@ -21,6 +28,10 @@ jobs:
         set -euo pipefail
         latest=$(gh api repos/gruntwork-io/terragrunt/releases/latest --jq '.tag_name' | sed 's/^v//')
         current=$(sed -nE 's/^terragrunt = "([^"]+)".*/\1/p' mise.toml)
+        if [ -z "${latest}" ] || [ -z "${current}" ]; then
+          echo "Failed to resolve versions (latest='${latest}', current='${current}')" >&2
+          exit 1
+        fi
         echo "latest=${latest}" >> "$GITHUB_OUTPUT"
         echo "current=${current}" >> "$GITHUB_OUTPUT"
         echo "Current: ${current}"
@@ -28,9 +39,11 @@ jobs:
 
     - name: Update mise.toml
       if: steps.resolve.outputs.latest != steps.resolve.outputs.current
+      env:
+        LATEST: ${{ steps.resolve.outputs.latest }}
       run: |
         set -euo pipefail
-        sed -i -E 's/^(terragrunt = ")[^"]+(")/\1${{ steps.resolve.outputs.latest }}\2/' mise.toml
+        sed -i -E 's/^(terragrunt = ")[^"]+(")/\1'"$LATEST"'\2/' mise.toml
         grep '^terragrunt' mise.toml
 
     - name: Create Pull Request
