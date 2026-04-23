@@ -115,6 +115,22 @@ func StackOutputJSONE(t testing.TestingT, options *Options, key string) (string,
 	return StackOutputJSONContextE(t, context.Background(), options, key)
 }
 
+// StackOutputJson calls terragrunt stack output for the given variable and returns the result as a JSON string.
+// If key is an empty string, it will return all the output variables.
+//
+// Deprecated: Use [StackOutputJSONContext] instead.
+func StackOutputJson(t testing.TestingT, options *Options, key string) string { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
+	return StackOutputJSONContext(t, context.Background(), options, key)
+}
+
+// StackOutputJsonE calls terragrunt stack output for the given variable and returns the result as a JSON string.
+// If key is an empty string, it will return all the output variables.
+//
+// Deprecated: Use [StackOutputJSONContextE] instead.
+func StackOutputJsonE(t testing.TestingT, options *Options, key string) (string, error) { //nolint:staticcheck // Deprecated wrapper kept for backward compatibility.
+	return StackOutputJSONContextE(t, context.Background(), options, key)
+}
+
 // StackOutputAllContext gets all stack outputs and returns them as a map[string]interface{}.
 // The provided context is passed through to the underlying command execution, allowing for timeout
 // and cancellation control.
