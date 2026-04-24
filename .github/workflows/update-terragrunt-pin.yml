@@ -11,21 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Bump Terragrunt pin in mise.toml
       id: bump
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        latest=$(gh api repos/gruntwork-io/terragrunt/releases/latest --jq '.tag_name' | sed 's/^v//')
-        current=$(sed -nE 's/^terragrunt = "([^"]+)".*/\1/p' mise.toml)
-        echo "latest=$latest" >> "$GITHUB_OUTPUT"
-        echo "current=$current" >> "$GITHUB_OUTPUT"
-        sed -i -E "s/^(terragrunt = \")[^\"]+(\")/\\1${latest}\\2/" mise.toml
+      run: .github/scripts/update-terragrunt-pin.sh
 
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v7
+      if: steps.bump.outputs.latest != steps.bump.outputs.current
+      uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: "chore: bump Terragrunt pin to ${{ steps.bump.outputs.latest }}"
