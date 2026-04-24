@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"cloud.google.com/go/pubsub"
-	"cloud.google.com/go/pubsub/pstest"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/pstest"
 	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/option"
