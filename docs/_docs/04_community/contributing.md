@@ -47,9 +47,9 @@ We accept different types of contributions for each of these two types of helper
 These are helper functions that integrate with various DevOps tools—e.g., Terraform, Docker, Packer, and
 Kubernetes—that you can use to deploy infrastructure in your automated tests. Examples:
 
-* `terraform.InitAndApply`: run `terraform init` and `terraform apply`.
-* `packer.BuildArtifacts`: run `packer build`.
-* `shell.RunCommandAndGetOutput`: run an arbitrary shell command and return `stdout` and `stderr` as a string.
+* `terraform.InitAndApplyContext`: run `terraform init` and `terraform apply`.
+* `packer.BuildArtifactsContext`: run `packer build`.
+* `shell.RunCommandContextAndGetOutput`: run an arbitrary shell command and return `stdout` and `stderr` as a string.
 
 Here are the guidelines for contributions with external tools:
 
@@ -66,10 +66,10 @@ Here are the guidelines for contributions with external tools:
 These are helper functions for creating, destroying, and validating infrastructure directly via API calls or SDKs.
 Examples:
 
-* `http_helper.HttpGetWithRetry`: make an HTTP request, retrying until you get a certain expected response.
-* `ssh.CheckSshCommand`: SSH to a server and execute a command.
-* `aws.CreateS3Bucket`: create an S3 bucket.
-* `aws.GetPrivateIpsOfEc2Instances`:  use the AWS APIs to fetch IPs of some EC2 instances.
+* `http_helper.HTTPGetWithRetryContext`: make an HTTP request, retrying until you get a certain expected response.
+* `ssh.CheckSSHCommandContext`: SSH to a server and execute a command.
+* `aws.CreateS3BucketContext`: create an S3 bucket.
+* `aws.GetPrivateIpsOfEc2InstancesContext`: use the AWS APIs to fetch IPs of some EC2 instances.
 
 The number of possible such helpers is nearly infinite, so to avoid Terratest becoming a gigantic, sprawling library
 we ask that contributions for new infrastructure helpers are limited to:
@@ -81,8 +81,8 @@ we ask that contributions for new infrastructure helpers are limited to:
 1. **Complexity**: we ask that you only contribute infrastructure and validation helpers for code that is relatively
    complex to do from scratch. For example, a helper that merely wraps an existing function in the AWS or GCP SDK is
    not a great choice, as the wrapper isn't contributing much value, but is bloating the Terratest API. On the other
-   hand, helpers that expose simple APIs for complex logic are great contributions: `ssh.CheckSshCommand` is a great
-   example of this, as it provides a simple one-line interface for dozens of lines of complicated SSH logic.
+   hand, helpers that expose simple APIs for complex logic are great contributions: `ssh.CheckSSHCommandContext` is a
+   great example of this, as it provides a simple one-line interface for dozens of lines of complicated SSH logic.
 
 1. **Popularity**: Terratest should only contain helpers for common use cases that come up again and again in the
    course of testing. We don't want to bloat the library with lots of esoteric helpers for rarely used tools, so
@@ -262,7 +262,7 @@ MINOR, and PATCH versions on each release to indicate any incompatibilities.
 
 ### Developing For Azure
 
-Azure supports multliple cloud environments. In order to properly register the correct environment for you test code, you need to use the Azure SDK Client Factory.
+Azure supports multiple cloud environments. In order to properly register the correct environment for you test code, you need to use the Azure SDK Client Factory.
 
 #### Azure SDK Client Factory
 

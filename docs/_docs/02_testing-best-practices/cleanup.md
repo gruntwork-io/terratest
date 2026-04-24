@@ -18,11 +18,13 @@ always cleanup after themselves so you don't leave a bunch of resources lying ar
 For example, if your test runs `terraform apply`, you should run `terraform destroy` at the end to clean up:
 
 ```go
+ctx := t.Context()
+
 // Ensure cleanup always runs
-defer terraform.Destroy(t, options)
+defer terraform.DestroyContext(t, ctx, options)
 
 // Deploy
-terraform.Apply(t, options)
+terraform.ApplyContext(t, ctx, options)
 
 // Validate
 checkServerWorks(t, options)

@@ -69,13 +69,12 @@ You can install any binary using one of the following methods:
 
 ### Manual installation
 
-To install the binary manually, download the version that matches your platform and place it somewhere on your `PATH`.
-For example to install version 0.13.13 of `terratest_log_parser`:
+To install the binary manually, download the version that matches your platform and place it somewhere on your `PATH`:
 
 ```bash
-# This example assumes a linux 64bit machine
+# This example assumes a linux 64bit machine and installs the latest release.
 # Use curl to download the binary
-curl --location --silent --fail --show-error -o terratest_log_parser https://github.com/gruntwork-io/terratest/releases/download/v0.13.13/terratest_log_parser_linux_amd64
+curl --location --silent --fail --show-error -o terratest_log_parser https://github.com/gruntwork-io/terratest/releases/latest/download/terratest_log_parser_linux_amd64
 # Make the downloaded binary executable
 chmod +x terratest_log_parser
 # Finally, we place the downloaded binary to a place in the PATH
@@ -89,13 +88,13 @@ install](https://pkg.go.dev/cmd/go#hdr-Compile_and_install_packages_and_dependen
 with `go install`, point `go install` to the repo and path where the main code for each relevant command lives. For
 example, you can install the terratest log parser binary with:
 
-```
+```bash
 go install github.com/gruntwork-io/terratest/cmd/terratest_log_parser@latest
 ```
 
 Similarly, to install `pick-instance-type`, you can run:
 
-```
+```bash
 go install github.com/gruntwork-io/terratest/cmd/pick-instance-type@latest
 ```
 
@@ -105,5 +104,5 @@ You can also use [the gruntwork-installer utility](https://github.com/gruntwork-
 binaries, which will do the above steps and automatically select the right binary for your platform:
 
 ```bash
-gruntwork-install --binary-name 'terratest_log_parser' --repo 'https://github.com/gruntwork-io/terratest' --tag 'v0.13.13'
+gruntwork-install --binary-name 'terratest_log_parser' --repo 'https://github.com/gruntwork-io/terratest' --tag 'v1.0.0'
 ```

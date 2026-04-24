@@ -16,15 +16,17 @@ import (
 //
 // Example:
 //
+//	ctx := t.Context()
+//
 //	// For init with OpenTofu/Terraform flags
-//	InitE(t, &Options{
+//	InitContextE(t, ctx, &Options{
 //	    TerragruntDir: "/path/to/config",
 //	    TerragruntArgs: []string{"--log-level", "info"},
 //	    TerraformArgs: []string{"-upgrade=true"},
 //	})
 //
 //	// For run-all with global flags
-//	ApplyAllE(t, &Options{
+//	ApplyAllContextE(t, ctx, &Options{
 //	    TerragruntDir: "/path/to/config",
 //	    TerragruntArgs: []string{"--no-color"},
 //	})

@@ -20,12 +20,12 @@ a unique name to ensure that:
 For example, when deploying AWS infrastructure with Terraform, that typically means exposing variables that allow you
 to configure auto scaling group names, security group names, IAM role names, and any other names that must be unique.
 
-You can use Terratest's `random.UniqueId()` function to generate identifiers that are short enough to use in resource
+You can use Terratest's `random.UniqueID()` function to generate identifiers that are short enough to use in resource
 names (just 6 characters) but random enough to make it unlikely that you'll have a conflict.
 
 ```go
-uniqueId := random.UniqueId()
-instanceName := fmt.Sprintf("terratest-http-example-%s", uniqueId)
+uniqueID := random.UniqueID()
+instanceName := fmt.Sprintf("terratest-http-example-%s", uniqueID)
 
 terraformOptions := &terraform.Options {
   TerraformDir: "../examples/terraform-http-example",
@@ -34,5 +34,5 @@ terraformOptions := &terraform.Options {
   },
 }
 
-terraform.Apply(t, terraformOptions)
+terraform.ApplyContext(t, t.Context(), terraformOptions)
 ```
