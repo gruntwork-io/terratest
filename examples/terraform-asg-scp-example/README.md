@@ -22,12 +22,14 @@ When a test fails, it is often important to be able to quickly get to logs and c
 You can use terratest to help with this task by specifying `RemoteFileSpecification` structs that describe which files you want to copy from your instances:
 
 ```go
+ctx := t.Context()
+
 logstashSpec := aws.RemoteFileSpecification{
 	SshUser:sshUserName,
 	UseSudo:true,
 	KeyPair:keyPair,
 	LocalDestinationDir:filepath.Join("/tmp", "logs", t.Name(), "logstash"),
-	AsgNames: strings.Split(strings.Replace(terraform.OutputRequired(t, terraformOptions, "logstash_server_asg_names"), "\n", "", -1), ","),
+	AsgNames: strings.Split(strings.Replace(terraform.OutputRequiredContext(t, ctx, terraformOptions, "logstash_server_asg_names"), "\n", "", -1), ","),
 	RemotePathToFileFilter: map[string][]string {
 		"/var/log/logstash":{"*"},
 		"/etc/logstash/conf.d" : {"*"},
@@ -37,12 +39,12 @@ logstashSpec := aws.RemoteFileSpecification{
 
 Once you've described what files you want, grabbing them from ASGs is simple with:
 ```go
-aws.FetchFilesFromAllAsgsE(t, awsRegion, logstashSpec)
+aws.FetchFilesFromAsgsPContextE(t, ctx, awsRegion, &logstashSpec)
 ```
 
 or directly from EC2 instances with:
 ```go
-aws.FetchFilesFromInstance(t, awsRegion, sshUserName, keyPair, appServerInstanceId, true, appServerConfig, filepath.Join("/tmp", "logs", t.Name(), "app_server"), []string{"*.yml", "caFile", "*.key", "*.pem"})
+aws.FetchFilesFromInstanceContext(t, ctx, awsRegion, sshUserName, keyPair, appServerInstanceId, true, appServerConfig, filepath.Join("/tmp", "logs", t.Name(), "app_server"), []string{"*.yml", "caFile", "*.key", "*.pem"})
 ```
 
 Finally, to put all of this together, in your go test you could do something like:

@@ -88,6 +88,8 @@ func TestTerragruntMultiModuleExample(t *testing.T) {
 		"../../examples/terragrunt-multi-module-example", t.Name())
 	require.NoError(t, err)
 
+	ctx := t.Context()
+
 	options := &terragrunt.Options{
 		// Run from the live subfolder where the terragrunt configs are
 		TerragruntDir: filepath.Join(testFolder, "live"),
@@ -96,13 +98,13 @@ func TestTerragruntMultiModuleExample(t *testing.T) {
 	}
 
 	// Clean up all modules with "terragrunt destroy --all" at the end of the test.
-	// DestroyAll respects the reverse dependency order.
-	defer terragrunt.DestroyAll(t, options)
+	// DestroyAllContext respects the reverse dependency order.
+	defer terragrunt.DestroyAllContext(t, ctx, options)
 
 	// Run "terragrunt apply --all". This applies all modules in dependency order.
-	terragrunt.ApplyAll(t, options)
+	terragrunt.ApplyAllContext(t, ctx, options)
 
 	// Verify the plan shows no changes (infrastructure is up-to-date)
-	exitCode := terragrunt.PlanAllExitCode(t, options)
+	exitCode := terragrunt.PlanAllExitCodeContext(t, ctx, options)
 	assert.Equal(t, 0, exitCode, "Plan should show no changes after apply")
 }

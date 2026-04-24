@@ -5,7 +5,7 @@ category: getting-started
 excerpt: >-
   Learn how to test Terragrunt configurations with Terratest.
 tags: ["terragrunt", "testing", "quick-start"]
-order: 104
+order: 105
 nav_title: Documentation
 nav_title_link: /docs/
 ---
@@ -27,15 +27,17 @@ For testing a single Terragrunt unit, use the `terraform` package with `Terrafor
 func TestTerragruntModule(t *testing.T) {
     t.Parallel()
 
+    ctx := t.Context()
+
     terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
         TerraformDir:    "../examples/my-module",
         TerraformBinary: "terragrunt",
     })
 
-    defer terraform.Destroy(t, terraformOptions)
-    terraform.Apply(t, terraformOptions)
+    defer terraform.DestroyContext(t, ctx, terraformOptions)
+    terraform.ApplyContext(t, ctx, terraformOptions)
 
-    output := terraform.Output(t, terraformOptions, "my_output")
+    output := terraform.OutputContext(t, ctx, terraformOptions, "my_output")
     assert.Equal(t, "expected_value", output)
 }
 ```
@@ -48,6 +50,8 @@ For testing a stack of units with dependencies, use the dedicated `terragrunt` p
 func TestStack(t *testing.T) {
     t.Parallel()
 
+    ctx := t.Context()
+
     testFolder, err := files.CopyTerragruntFolderToTemp("../live/prod", t.Name())
     require.NoError(t, err)
 
@@ -55,10 +59,10 @@ func TestStack(t *testing.T) {
         TerragruntDir: testFolder,
     }
 
-    defer terragrunt.DestroyAll(t, options)
-    terragrunt.ApplyAll(t, options)
+    defer terragrunt.DestroyAllContext(t, ctx, options)
+    terragrunt.ApplyAllContext(t, ctx, options)
 
-    exitCode := terragrunt.PlanAllExitCode(t, options)
+    exitCode := terragrunt.PlanAllExitCodeContext(t, ctx, options)
     require.Equal(t, 0, exitCode)
 }
 ```

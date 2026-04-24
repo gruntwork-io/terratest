@@ -38,15 +38,17 @@ import (
 func TestSingleUnit(t *testing.T) {
     t.Parallel()
 
+    ctx := t.Context()
+
     options := &terragrunt.Options{
         TerragruntDir: "../path/to/terragrunt/unit",
     }
 
-    defer terragrunt.Destroy(t, options)
-    terragrunt.InitAndApply(t, options)
+    defer terragrunt.DestroyContext(t, ctx, options)
+    terragrunt.InitAndApplyContext(t, ctx, options)
 
     // Get a specific output as JSON
-    vpcOutput := terragrunt.OutputJson(t, options, "vpc_id")
+    vpcOutput := terragrunt.OutputJSONContext(t, ctx, options, "vpc_id")
     assert.Contains(t, vpcOutput, "vpc-")
 }
 ```
@@ -57,12 +59,14 @@ func TestSingleUnit(t *testing.T) {
 func TestTerragruntApply(t *testing.T) {
     t.Parallel()
 
+    ctx := t.Context()
+
     options := &terragrunt.Options{
         TerragruntDir: "../path/to/terragrunt/config",
     }
 
-    defer terragrunt.DestroyAll(t, options)
-    terragrunt.ApplyAll(t, options)
+    defer terragrunt.DestroyAllContext(t, ctx, options)
+    terragrunt.ApplyAllContext(t, ctx, options)
 }
 ```
 
@@ -92,19 +96,19 @@ The `Options` struct has two distinct parts:
 
 Every function has an `E`-suffix variant that returns an error instead of calling `t.Fatal` on failure. For example:
 
-- `Apply(t, options)` calls `t.Fatal` on error
-- `ApplyE(t, options)` returns `(string, error)` for custom error handling
+- `ApplyContext(t, ctx, options)` calls `t.Fatal` on error
+- `ApplyContextE(t, ctx, options)` returns `(string, error)` for custom error handling
 
 Use `E` variants when you need to test error cases or handle failures gracefully:
 ```go
-_, err := terragrunt.ApplyE(t, options)
+_, err := terragrunt.ApplyContextE(t, t.Context(), options)
 require.Error(t, err)
 ```
 
 ### TerragruntArgs vs TerraformArgs
 
 Arguments are passed in this order:
-```
+```text
 terragrunt [TerragruntArgs] --non-interactive run -- <command> [TerraformArgs]
 ```
 
@@ -124,25 +128,25 @@ options := &terragrunt.Options{
 
 Run terragrunt commands against a single unit (one `terragrunt.hcl` directory):
 
-- `Init(t, options)` - Initialize configuration
-- `Apply(t, options)` - Apply changes
-- `Destroy(t, options)` - Destroy resources
-- `Plan(t, options)` - Generate and show execution plan
-- `PlanExitCode(t, options)` - Plan and return exit code (0=no changes, 2=changes, other=error)
-- `Validate(t, options)` - Validate configuration
-- `OutputJson(t, options, key)` - Get output as JSON (specific key or all outputs)
+- `InitContext(t, ctx, options)` - Initialize configuration
+- `ApplyContext(t, ctx, options)` - Apply changes
+- `DestroyContext(t, ctx, options)` - Destroy resources
+- `PlanContext(t, ctx, options)` - Generate and show execution plan
+- `PlanExitCodeContext(t, ctx, options)` - Plan and return exit code (0=no changes, 2=changes, other=error)
+- `ValidateContext(t, ctx, options)` - Validate configuration
+- `OutputJSONContext(t, ctx, options, key)` - Get output as JSON (specific key or all outputs)
 
 ### Convenience Wrappers
 
 Run init + command in a single call:
 
-- `InitAndApply(t, options)` - Init then apply
-- `InitAndPlan(t, options)` - Init then plan
-- `InitAndValidate(t, options)` - Init then validate
+- `InitAndApplyContext(t, ctx, options)` - Init then apply
+- `InitAndPlanContext(t, ctx, options)` - Init then plan
+- `InitAndValidateContext(t, ctx, options)` - Init then validate
 
 ### Run Command
 
-- `Run(t, options, tgArgs, tfArgs)` - Run any OpenTofu/Terraform command via `terragrunt run [tgArgs...] -- [tfArgs...]`
+- `RunContext(t, ctx, options, tgArgs, tfArgs)` - Run any OpenTofu/Terraform command via `terragrunt run [tgArgs...] -- [tfArgs...]`
 
 The `--` separator disambiguates Terragrunt flags (like `--all`) from OpenTofu/Terraform flags. The OpenTofu/Terraform command (e.g. `"apply"`) should be the first element of `tfArgs`.
 
@@ -150,37 +154,37 @@ The `--` separator disambiguates Terragrunt flags (like `--all`) from OpenTofu/T
 
 Work with [implicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks/#implicit-stacks) (multiple units in a directory):
 
-- `ApplyAll(t, options)` - Apply all modules with dependencies
-- `DestroyAll(t, options)` - Destroy all modules with dependencies
-- `PlanAllExitCode(t, options)` - Plan all and return exit code (0=no changes, 2=changes, other=error)
-- `ValidateAll(t, options)` - Validate all modules
-- `RunAll(t, options, command)` - *Deprecated: use `Run` with `--all` in tgArgs instead.* Run any OpenTofu/Terraform command with --all flag
-- `OutputAllJson(t, options)` - Get all outputs as raw JSON string (note: returns separate JSON objects per module)
+- `ApplyAllContext(t, ctx, options)` - Apply all modules with dependencies
+- `DestroyAllContext(t, ctx, options)` - Destroy all modules with dependencies
+- `PlanAllExitCodeContext(t, ctx, options)` - Plan all and return exit code (0=no changes, 2=changes, other=error)
+- `ValidateAllContext(t, ctx, options)` - Validate all modules
+- `RunAllContext(t, ctx, options, command)` - *Deprecated: use `RunContext` with `--all` in tgArgs instead.* Run any OpenTofu/Terraform command with --all flag
+- `OutputAllJSONContext(t, ctx, options)` - Get all outputs as raw JSON string (note: returns separate JSON objects per module)
 
 ### HCL Commands
 
 Terragrunt HCL tooling commands:
 
-- `FormatAll(t, options)` - Format all terragrunt.hcl files (`terragrunt hcl format`)
-- `HclValidate(t, options)` - Validate terragrunt.hcl syntax and configuration (`terragrunt hcl validate`)
+- `FormatAllContext(t, ctx, options)` - Format all terragrunt.hcl files (`terragrunt hcl format`)
+- `HclValidateContext(t, ctx, options)` - Validate terragrunt.hcl syntax and configuration (`terragrunt hcl validate`)
 
 ### Configuration Commands
 
-- `Render(t, options)` - Render resolved terragrunt configuration as HCL
-- `RenderJson(t, options)` - Render resolved terragrunt configuration as JSON
-- `Graph(t, options)` - Output dependency graph in DOT format
+- `RenderContext(t, ctx, options)` - Render resolved terragrunt configuration as HCL
+- `RenderJSONContext(t, ctx, options)` - Render resolved terragrunt configuration as JSON
+- `GraphContext(t, ctx, options)` - Output dependency graph in DOT format
 
 ### Stack Commands
 
 Work with [explicit stacks](https://terragrunt.gruntwork.io/docs/features/stacks/#explicit-stacks) (a directory with a `terragrunt.stack.hcl` file):
 
-- `StackGenerate(t, options)` - Generate stack from stack.hcl
-- `StackRun(t, options)` - Run command on generated stack
-- `StackClean(t, options)` - Remove .terragrunt-stack directory
-- `StackOutput(t, options, key)` - Get stack output value
-- `StackOutputJson(t, options, key)` - Get stack output as JSON
-- `StackOutputAll(t, options)` - Get all stack outputs as map
-- `StackOutputListAll(t, options)` - Get list of all output variable names
+- `StackGenerateContext(t, ctx, options)` - Generate stack from stack.hcl
+- `StackRunContext(t, ctx, options)` - Run command on generated stack
+- `StackCleanContext(t, ctx, options)` - Remove .terragrunt-stack directory
+- `StackOutputContext(t, ctx, options, key)` - Get stack output value
+- `StackOutputJSONContext(t, ctx, options, key)` - Get stack output as JSON
+- `StackOutputAllContext(t, ctx, options)` - Get all stack outputs as map
+- `StackOutputListAllContext(t, ctx, options)` - Get list of all output variable names
 
 ## Examples
 
@@ -195,13 +199,15 @@ See the [examples directory](../../examples/) for complete working examples:
 func TestStack(t *testing.T) {
     t.Parallel()
 
+    ctx := t.Context()
+
     options := &terragrunt.Options{
         TerragruntDir: "../live/prod",
     }
 
     // Apply respects dependency order
-    terragrunt.ApplyAll(t, options)
-    defer terragrunt.DestroyAll(t, options)
+    terragrunt.ApplyAllContext(t, ctx, options)
+    defer terragrunt.DestroyAllContext(t, ctx, options)
 
     // Verify infrastructure
     // ... your assertions here
@@ -220,7 +226,7 @@ func TestWithCustomArgs(t *testing.T) {
         TerraformArgs:  []string{"-upgrade"},
     }
 
-    terragrunt.Init(t, options)
+    terragrunt.InitContext(t, t.Context(), options)
 }
 ```
 
@@ -229,6 +235,8 @@ func TestWithCustomArgs(t *testing.T) {
 ```go
 func TestStackOutput(t *testing.T) {
     t.Parallel()
+
+    ctx := t.Context()
 
     options := &terragrunt.Options{
         TerragruntDir: "../stack",
@@ -243,15 +251,15 @@ func TestStackOutput(t *testing.T) {
         TerraformArgs: []string{"destroy"},
     }
 
-    terragrunt.StackRun(t, applyOpts)
-    defer terragrunt.StackRun(t, destroyOpts)
+    terragrunt.StackRunContext(t, ctx, applyOpts)
+    defer terragrunt.StackRunContext(t, ctx, destroyOpts)
 
     // Get specific output
-    vpcID := terragrunt.StackOutput(t, options, "vpc_id")
+    vpcID := terragrunt.StackOutputContext(t, ctx, options, "vpc_id")
     assert.NotEmpty(t, vpcID)
 
     // Get all outputs
-    outputs := terragrunt.StackOutputAll(t, options)
+    outputs := terragrunt.StackOutputAllContext(t, ctx, options)
     assert.Contains(t, outputs, "vpc_id")
 }
 ```
@@ -262,16 +270,18 @@ func TestStackOutput(t *testing.T) {
 func TestInfrastructureUpToDate(t *testing.T) {
     t.Parallel()
 
+    ctx := t.Context()
+
     options := &terragrunt.Options{
         TerragruntDir: "../prod",
     }
 
     // First apply
-    terragrunt.ApplyAll(t, options)
-    defer terragrunt.DestroyAll(t, options)
+    terragrunt.ApplyAllContext(t, ctx, options)
+    defer terragrunt.DestroyAllContext(t, ctx, options)
 
     // Plan should show no changes (exit code 0)
-    exitCode := terragrunt.PlanAllExitCode(t, options)
+    exitCode := terragrunt.PlanAllExitCodeContext(t, ctx, options)
     assert.Equal(t, 0, exitCode, "No changes expected")
 }
 ```
@@ -282,15 +292,17 @@ func TestInfrastructureUpToDate(t *testing.T) {
 func TestCustomCommand(t *testing.T) {
     t.Parallel()
 
+    ctx := t.Context()
+
     options := &terragrunt.Options{
         TerragruntDir: "../modules",
     }
 
     // Run any OpenTofu/Terraform command with --all
-    terragrunt.Run(t, options, []string{"--all"}, []string{"refresh"})
+    terragrunt.RunContext(t, ctx, options, []string{"--all"}, []string{"refresh"})
 
     // Verify state is current
-    output := terragrunt.Run(t, options, []string{"--all"}, []string{"show"})
+    output := terragrunt.RunContext(t, ctx, options, []string{"--all"}, []string{"show"})
     assert.Contains(t, output, "expected-resource")
 }
 ```
@@ -300,6 +312,8 @@ func TestCustomCommand(t *testing.T) {
 ```go
 func TestStackOutputKeys(t *testing.T) {
     t.Parallel()
+
+    ctx := t.Context()
 
     options := &terragrunt.Options{
         TerragruntDir: "../stack",
@@ -314,11 +328,11 @@ func TestStackOutputKeys(t *testing.T) {
         TerraformArgs: []string{"destroy"},
     }
 
-    terragrunt.StackRun(t, applyOpts)
-    defer terragrunt.StackRun(t, destroyOpts)
+    terragrunt.StackRunContext(t, ctx, applyOpts)
+    defer terragrunt.StackRunContext(t, ctx, destroyOpts)
 
     // Get list of all output keys
-    keys := terragrunt.StackOutputListAll(t, options)
+    keys := terragrunt.StackOutputListAllContext(t, ctx, options)
 
     // Verify required outputs exist
     assert.Contains(t, keys, "vpc_id")
@@ -326,14 +340,14 @@ func TestStackOutputKeys(t *testing.T) {
 }
 ```
 
-### Using Filters (v0.97.0+)
+### Using Filters (Terragrunt v0.97.0+)
 
 ```go
 options := &terragrunt.Options{
     TerragruntDir:  "../live/prod",
     TerragruntArgs: []string{"--filter", "{./vpc}"},  // Only apply vpc
 }
-terragrunt.ApplyAll(t, options)
+terragrunt.ApplyAllContext(t, t.Context(), options)
 ```
 
 ## Not Supported
@@ -344,11 +358,11 @@ This module does **NOT** have dedicated helpers for:
 - Discovery commands (`find`, `list`)
 - Configuration commands (`info`)
 
-For these commands, use `Run`/`RunE` or run terragrunt directly via the `shell` module.
+For these commands, use `RunContext` / `RunContextE` or run terragrunt directly via the `shell` module.
 
 ## Compatibility
 
-Tested with Terragrunt v0.80.4+, v0.93.5+, and v0.99.x. Earlier versions may work but are not guaranteed.
+Tested with Terragrunt v1.0.x. Earlier v0.x versions may work but are not guaranteed.
 
 ### Migration from terraform Module
 
