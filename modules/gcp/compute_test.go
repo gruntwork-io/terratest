@@ -1,236 +1,274 @@
-//go:build gcp
-// +build gcp
-
-// NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
-
 package gcp_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"reflect"
-	"regexp"
+	"net/http"
+	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gruntwork-io/terratest/modules/gcp"
-	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
 )
 
-const defaultMachineType = "f1-micro"
-const defaultImageFamilyProjectName = "ubuntu-os-cloud"
-const defaultImageFamilyName = "family/ubuntu-2204-lts"
+// newFakeComputeService points a *compute.Service at a local httptest server. Gives unit tests a
+// credential-free way to exercise *WithClient variants, analogous to the Azure azfake pattern.
+func newFakeComputeService(t *testing.T, handler http.Handler) *compute.Service {
+	t.Helper()
 
-// zonesThatSupportF1Micro lists zones that support running f1-micro instances
-var zonesThatSupportF1Micro = []string{"us-central1-a", "us-east1-b", "us-west1-a", "europe-north1-a", "europe-west1-b", "europe-central2-a"}
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
 
-func TestGetPublicIPOfInstance(t *testing.T) {
-	t.Parallel()
+	svc, err := compute.NewService(context.Background(),
+		option.WithEndpoint(server.URL+"/"), option.WithoutAuthentication())
+	require.NoError(t, err)
 
-	instanceName := gcp.RandomValidGCPName()
-	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
-	zone := gcp.GetRandomZone(t, projectID, zonesThatSupportF1Micro, nil, nil)
-
-	createComputeInstance(t, projectID, zone, instanceName)
-	defer deleteComputeInstance(t, projectID, zone, instanceName)
-
-	// Now that our Instance is launched, attempt to query the public IP
-	maxRetries := 10
-	sleepBetweenRetries := 3 * time.Second
-
-	ip := retry.DoWithRetryContext(t, t.Context(), "Read IP address of Compute Instance", maxRetries, sleepBetweenRetries, func() (string, error) {
-		// Consider attempting to connect to the Compute Instance at this IP in the future, but for now, we just call the
-		// the function to ensure we don't have errors
-		instance := gcp.FetchInstance(t, projectID, instanceName)
-		ip := instance.GetPublicIP(t)
-
-		if ip == "" {
-			return "", errors.New("Got blank IP. Retrying.\n")
-		}
-
-		return ip, nil
-	})
-
-	fmt.Printf("Public IP of Compute Instance %s = %s\n", instanceName, ip)
+	return svc
 }
 
-func TestZoneURLToZone(t *testing.T) {
+// respond returns a handler that asserts the HTTP method (when non-empty) and path substring,
+// then writes body with the given status. Cuts per-test boilerplate.
+func respond(t *testing.T, method, pathContains string, status int, body string) http.HandlerFunc {
+	t.Helper()
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if method != "" {
+			assert.Equal(t, method, r.Method, "unexpected HTTP method")
+		}
+
+		assert.Contains(t, r.URL.Path, pathContains, "unexpected API path")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(body))
+	}
+}
+
+// fetchInstanceForTest resolves a gcp.Instance via the aggregated-list endpoint so that its
+// unexported projectID is populated — required for methods on *Instance.
+func fetchInstanceForTest(t *testing.T, projectID, name, zoneURL string) *gcp.Instance {
+	t.Helper()
+
+	body := fmt.Sprintf(`{"items":{"zones/us-central1-a":{"instances":[{"name":%q,"zone":%q}]}}}`, name, zoneURL)
+	svc := newFakeComputeService(t, respond(t, "", "aggregated/instances", http.StatusOK, body))
+
+	inst, err := gcp.FetchInstanceWithClient(context.Background(), svc, projectID, name)
+	require.NoError(t, err)
+
+	return inst
+}
+
+// TestNewMetadataPreservesExisting — regression test for issue #1655.
+func TestNewMetadataPreservesExisting(t *testing.T) {
 	t.Parallel()
 
-	testCases := []struct {
-		zoneURL      string
-		expectedZone string
+	v := "old"
+	old := &compute.Metadata{Fingerprint: "fp", Items: []*compute.MetadataItems{{Key: "k1", Value: &v}}}
+
+	result := gcp.NewMetadata(old, map[string]string{"k2": "new"})
+
+	got := make(map[string]string)
+	for _, item := range result.Items {
+		got[item.Key] = *item.Value
+	}
+
+	assert.Equal(t, "fp", result.Fingerprint)
+	assert.Equal(t, "old", got["k1"])
+	assert.Equal(t, "new", got["k2"])
+}
+
+func TestGetPublicIPContextE(t *testing.T) {
+	t.Parallel()
+
+	cases := map[string]struct {
+		wantIP  string
+		nics    []*compute.NetworkInterface
+		wantErr bool
 	}{
-		{"https://www.googleapis.com/compute/v1/projects/terratest-123456/zones/asia-east1-b", "asia-east1-b"},
-		{"https://www.googleapis.com/compute/v1/projects/terratest-123456/zones/us-east1-a", "us-east1-a"},
+		"returns external IP": {
+			wantIP: "1.2.3.4",
+			nics:   []*compute.NetworkInterface{{AccessConfigs: []*compute.AccessConfig{{NatIP: "1.2.3.4"}}}},
+		},
+		"no network interfaces": {wantErr: true},
+		"no access configs":     {wantErr: true, nics: []*compute.NetworkInterface{{}}},
 	}
 
-	for _, tc := range testCases {
-		zone := gcp.ZoneURLToZone(tc.zoneURL)
-		assert.Equal(t, tc.expectedZone, zone, "Zone not extracted successfully from Zone URL")
-	}
-}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-func TestGetAndSetLabels(t *testing.T) {
-	t.Parallel()
+			inst := &gcp.Instance{Instance: &compute.Instance{Name: "x", NetworkInterfaces: tc.nics}}
 
-	instanceName := gcp.RandomValidGCPName()
-	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
+			ip, err := inst.GetPublicIPContextE(t, context.Background())
+			if tc.wantErr {
+				require.Error(t, err)
 
-	zone := gcp.GetRandomZone(t, projectID, zonesThatSupportF1Micro, nil, nil)
-
-	createComputeInstance(t, projectID, zone, instanceName)
-	defer deleteComputeInstance(t, projectID, zone, instanceName)
-
-	// Now that our Instance is launched, set the labels. Note that in GCP label keys and values can only contain
-	// lowercase letters, numeric characters, underscores and dashes.
-	instance := gcp.FetchInstance(t, projectID, instanceName)
-
-	labelsToWrite := map[string]string{
-		"context": "terratest",
-	}
-	instance.SetLabels(t, labelsToWrite)
-
-	// Now attempt to read the labels we just set.
-	maxRetries := 30
-	sleepBetweenRetries := 3 * time.Second
-
-	retry.DoWithRetryContext(t, t.Context(), "Read newly set labels", maxRetries, sleepBetweenRetries, func() (string, error) {
-		instance := gcp.FetchInstance(t, projectID, instanceName)
-
-		labelsFromRead := instance.GetLabels(t)
-		if !reflect.DeepEqual(labelsFromRead, labelsToWrite) {
-			return "", errors.New("Labels that were written did not match labels that were read. Retrying.\n")
-		}
-
-		return "", nil
-	})
-}
-
-// Set custom metadata on a Compute Instance, and then verify it was set as expected
-func TestGetAndSetMetadata(t *testing.T) {
-	t.Parallel()
-
-	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
-	instanceName := gcp.RandomValidGCPName()
-
-	zone := gcp.GetRandomZone(t, projectID, zonesThatSupportF1Micro, nil, nil)
-
-	// Create a new Compute Instance
-	createComputeInstance(t, projectID, zone, instanceName)
-	defer deleteComputeInstance(t, projectID, zone, instanceName)
-
-	// Set the metadata
-	instance := gcp.FetchInstance(t, projectID, instanceName)
-
-	metadataToWrite := map[string]string{
-		"foo": "bar",
-	}
-	instance.SetMetadata(t, metadataToWrite)
-
-	// Now attempt to read the metadata we just set
-	maxRetries := 30
-	sleepBetweenRetries := 3 * time.Second
-
-	retry.DoWithRetryContext(t, t.Context(), "Read newly set metadata", maxRetries, sleepBetweenRetries, func() (string, error) {
-		instance := gcp.FetchInstance(t, projectID, instanceName)
-
-		metadataFromRead := instance.GetMetadata(t)
-		for _, metadataItem := range metadataFromRead {
-			for key, val := range metadataToWrite {
-				if metadataItem.Key == key && *metadataItem.Value == val {
-					return "", nil
-				}
+				return
 			}
-		}
 
-		fmt.Printf("Metadata to write: %+v\nMetadata from read: %+v\n", metadataToWrite, metadataFromRead)
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantIP, ip)
+		})
+	}
+}
 
-		return "", errors.New("Metadata that was written was not found in metadata that was read. Retrying.\n")
+func TestFetchInstanceWithClient(t *testing.T) {
+	t.Parallel()
+
+	t.Run("found", func(t *testing.T) {
+		t.Parallel()
+
+		body := `{"items":{"zones/us-central1-a":{"instances":[{"name":"x"}]}}}`
+		svc := newFakeComputeService(t, respond(t, http.MethodGet, "aggregated/instances", http.StatusOK, body))
+
+		inst, err := gcp.FetchInstanceWithClient(context.Background(), svc, "p", "x")
+		require.NoError(t, err)
+		assert.Equal(t, "x", inst.Name)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		t.Parallel()
+
+		svc := newFakeComputeService(t, respond(t, "", "aggregated/instances", http.StatusOK, `{"items":{}}`))
+
+		_, err := gcp.FetchInstanceWithClient(context.Background(), svc, "p", "x")
+		require.ErrorContains(t, err, "could not be found")
 	})
 }
 
-// Helper function to launch a Compute Instance. This function is useful for quickly iterating on automated tests. But
-// if you're writing a test that resembles real-world code that Terratest users may write, you should create a Compute
-// Instance using a Terraform apply, similar to the tests in /test.
-func createComputeInstance(t *testing.T, projectID string, zone string, name string) {
-	t.Helper()
-	t.Logf("Launching new Compute Instance %s\n", name)
+func TestFetchImageWithClient(t *testing.T) {
+	t.Parallel()
 
-	// This RegEx was pulled straight from the GCP API error messages that complained when it's not honored
-	validNameExp := `^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$`
-	regEx := regexp.MustCompile(validNameExp)
+	t.Run("found", func(t *testing.T) {
+		t.Parallel()
 
-	if !regEx.MatchString(name) {
-		t.Fatalf("Invalid Compute Instance name: %s. Must match RegEx %s\n", name, validNameExp)
-	}
+		svc := newFakeComputeService(t, respond(t, http.MethodGet, "/global/images/my-image", http.StatusOK, `{"name":"my-image"}`))
 
-	machineType := defaultMachineType
-	sourceImageFamilyProjectName := defaultImageFamilyProjectName
-	sourceImageFamilyName := defaultImageFamilyName
+		img, err := gcp.FetchImageWithClient(context.Background(), svc, "p", "my-image")
+		require.NoError(t, err)
+		assert.Equal(t, "my-image", img.Name)
+	})
 
-	// Per GCP docs (https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMachineType), the MachineType
-	// is actually specified as a partial URL
-	machineTypeURL := fmt.Sprintf("zones/%s/machineTypes/%s", zone, machineType)
-	sourceImageURL := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/%s", sourceImageFamilyProjectName, sourceImageFamilyName)
+	t.Run("404 error propagates", func(t *testing.T) {
+		t.Parallel()
 
-	// Based on the properties listed as required at https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
-	// plus a somewhat painful cycle of add-next-property-try-fix-error-message-repeat.
-	instanceConfig := &compute.Instance{
-		Name:        name,
-		MachineType: machineTypeURL,
-		NetworkInterfaces: []*compute.NetworkInterface{
-			&compute.NetworkInterface{
-				AccessConfigs: []*compute.AccessConfig{
-					&compute.AccessConfig{},
-				},
-			},
-		},
-		Disks: []*compute.AttachedDisk{
-			&compute.AttachedDisk{
-				AutoDelete: true,
-				Boot:       true,
-				InitializeParams: &compute.AttachedDiskInitializeParams{
-					SourceImage: sourceImageURL,
-				},
-			},
-		},
-	}
+		svc := newFakeComputeService(t, respond(t, "", "/global/images/", http.StatusNotFound, `{"error":{"code":404,"message":"image not found"}}`))
 
-	service, err := gcp.NewComputeServiceE(t)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Create the Compute Instance
-	ctx := context.Background()
-
-	_, err = service.Instances.Insert(projectID, zone, instanceConfig).Context(ctx).Do()
-	if err != nil {
-		t.Fatalf("Error launching new Compute Instance: %s", err)
-	}
+		_, err := gcp.FetchImageWithClient(context.Background(), svc, "p", "missing")
+		require.ErrorContains(t, err, "image not found")
+	})
 }
 
-// Helper function that destroys the given Compute Instance and all of its attached disks.
-func deleteComputeInstance(t *testing.T, projectID string, zone string, name string) {
-	t.Helper()
-	t.Logf("Deleting Compute Instance %s\n", name)
+func TestFetchZonalInstanceGroupWithClient(t *testing.T) {
+	t.Parallel()
 
-	service, err := gcp.NewComputeServiceE(t)
-	if err != nil {
-		t.Fatal(err)
-	}
+	body := `{"name":"zig","zone":"https://www.googleapis.com/compute/v1/projects/p/zones/us-central1-a"}`
+	svc := newFakeComputeService(t, respond(t, http.MethodGet, "/zones/us-central1-a/instanceGroups/zig", http.StatusOK, body))
 
-	// Delete the Compute Instance
-	ctx := context.Background()
-
-	_, err = service.Instances.Delete(projectID, zone, name).Context(ctx).Do()
-	if err != nil {
-		t.Fatalf("Error deleting Compute Instance: %s", err)
-	}
+	ig, err := gcp.FetchZonalInstanceGroupWithClient(context.Background(), svc, "p", "us-central1-a", "zig")
+	require.NoError(t, err)
+	assert.Equal(t, "zig", ig.Name)
 }
 
-// TODO: Add additional automated tests to cover remaining functions in compute.go
+func TestFetchRegionalInstanceGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	body := `{"name":"rig","region":"https://www.googleapis.com/compute/v1/projects/p/regions/us-central1"}`
+	svc := newFakeComputeService(t, respond(t, http.MethodGet, "/regions/us-central1/instanceGroups/rig", http.StatusOK, body))
+
+	ig, err := gcp.FetchRegionalInstanceGroupWithClient(context.Background(), svc, "p", "us-central1", "rig")
+	require.NoError(t, err)
+	assert.Equal(t, "rig", ig.Name)
+}
+
+func TestSetLabelsWithClient(t *testing.T) {
+	t.Parallel()
+
+	zoneURL := "https://www.googleapis.com/compute/v1/projects/p/zones/us-central1-a"
+	inst := fetchInstanceForTest(t, "p", "i", zoneURL)
+
+	svc := newFakeComputeService(t, respond(t, http.MethodPost, "/instances/i/setLabels", http.StatusOK, `{"name":"op","status":"DONE"}`))
+
+	require.NoError(t, inst.SetLabelsWithClient(context.Background(), svc, map[string]string{"env": "unit"}))
+}
+
+func TestSetMetadataWithClient(t *testing.T) {
+	t.Parallel()
+
+	zoneURL := "https://www.googleapis.com/compute/v1/projects/p/zones/us-central1-a"
+	inst := fetchInstanceForTest(t, "p", "i", zoneURL)
+
+	svc := newFakeComputeService(t, respond(t, http.MethodPost, "/instances/i/setMetadata", http.StatusOK, `{"name":"op","status":"DONE"}`))
+
+	require.NoError(t, inst.SetMetadataWithClient(context.Background(), svc, map[string]string{"k": "v"}))
+}
+
+func TestAddSSHKeyWithClient(t *testing.T) {
+	t.Parallel()
+
+	zoneURL := "https://www.googleapis.com/compute/v1/projects/p/zones/us-central1-a"
+	inst := fetchInstanceForTest(t, "p", "i", zoneURL)
+
+	t.Run("happy", func(t *testing.T) {
+		t.Parallel()
+
+		svc := newFakeComputeService(t, respond(t, http.MethodPost, "/instances/i/setMetadata", http.StatusOK, `{"name":"op","status":"DONE"}`))
+
+		require.NoError(t, inst.AddSSHKeyWithClient(context.Background(), svc, "alice", "ssh-rsa A alice@h"))
+	})
+
+	t.Run("SDK error is wrapped", func(t *testing.T) {
+		t.Parallel()
+
+		svc := newFakeComputeService(t, respond(t, "", "/instances/i/setMetadata", http.StatusBadRequest, `{"error":{"code":400,"message":"bad"}}`))
+
+		err := inst.AddSSHKeyWithClient(context.Background(), svc, "alice", "ssh-rsa A alice@h")
+		require.ErrorContains(t, err, "failed to add SSH key")
+	})
+}
+
+func TestDeleteImageWithClient(t *testing.T) {
+	t.Parallel()
+
+	imgSvc := newFakeComputeService(t, respond(t, http.MethodGet, "/global/images/img", http.StatusOK, `{"name":"img"}`))
+	img, err := gcp.FetchImageWithClient(context.Background(), imgSvc, "p", "img")
+	require.NoError(t, err)
+
+	svc := newFakeComputeService(t, respond(t, http.MethodDelete, "/global/images/img", http.StatusOK, `{"name":"op"}`))
+
+	require.NoError(t, img.DeleteImageWithClient(context.Background(), svc))
+}
+
+func TestZonalInstanceGroupGetInstanceIDsWithClient(t *testing.T) {
+	t.Parallel()
+
+	igBody := `{"name":"zig","zone":"https://www.googleapis.com/compute/v1/projects/p/zones/us-central1-a"}`
+	svc := newFakeComputeService(t, respond(t, "", "zig", http.StatusOK, igBody))
+	ig, err := gcp.FetchZonalInstanceGroupWithClient(context.Background(), svc, "p", "us-central1-a", "zig")
+	require.NoError(t, err)
+
+	listBody := `{"items":[{"instance":"https://.../instances/a"},{"instance":"https://.../instances/b"}]}`
+	svc2 := newFakeComputeService(t, respond(t, http.MethodPost, "/instanceGroups/zig/listInstances", http.StatusOK, listBody))
+
+	ids, err := ig.GetInstanceIDsWithClient(context.Background(), svc2)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"a", "b"}, ids)
+}
+
+func TestRegionalInstanceGroupGetInstanceIDsWithClient(t *testing.T) {
+	t.Parallel()
+
+	igBody := `{"name":"rig","region":"https://www.googleapis.com/compute/v1/projects/p/regions/us-central1"}`
+	svc := newFakeComputeService(t, respond(t, "", "rig", http.StatusOK, igBody))
+	ig, err := gcp.FetchRegionalInstanceGroupWithClient(context.Background(), svc, "p", "us-central1", "rig")
+	require.NoError(t, err)
+
+	listBody := `{"items":[{"instance":"https://.../instances/c"},{"instance":"https://.../instances/d"}]}`
+	svc2 := newFakeComputeService(t, respond(t, http.MethodPost, "/instanceGroups/rig/listInstances", http.StatusOK, listBody))
+
+	ids, err := ig.GetInstanceIDsWithClient(context.Background(), svc2)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"c", "d"}, ids)
+}
