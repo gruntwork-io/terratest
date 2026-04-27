@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	getter "github.com/hashicorp/go-getter/v2"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -16,6 +17,10 @@ import (
 var (
 	// A map that maps the go-getter base URL to the temporary directory where it is downloaded.
 	policyDirCache sync.Map
+
+	// downloadGroup deduplicates concurrent downloads for the same baseDir so that N parallel callers requesting the
+	// same rulePath result in a single underlying download rather than N separate downloads racing into N temp dirs.
+	downloadGroup singleflight.Group
 )
 
 // DownloadPolicyE takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
@@ -52,13 +57,35 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 	// First, check if we had already downloaded the source and it is in our cache.
 	baseDir, subDir := getter.SourceDirSubdir(rulePath)
 
-	downloadPath, hasDownloaded := policyDirCache.Load(baseDir)
-	if hasDownloaded {
+	if downloadPath, hasDownloaded := policyDirCache.Load(baseDir); hasDownloaded {
 		logger.Default.Logf(t, "Previously downloaded %s: returning cached path", baseDir)
 		return filepath.Join(downloadPath.(string), subDir), nil
 	}
 
-	// Not downloaded, so use go-getter to download the remote source to a temp dir.
+	// Cache miss. Use singleflight to ensure that only one goroutine actually performs the download for a given
+	// baseDir; any concurrent callers block on the same call and reuse its result.
+	v, err, _ := downloadGroup.Do(baseDir, func() (any, error) {
+		// Re-check the cache in case another goroutine populated it while we were waiting to enter the singleflight.
+		if downloadPath, hasDownloaded := policyDirCache.Load(baseDir); hasDownloaded {
+			return downloadPath.(string), nil
+		}
+		tempDir, err := downloadPolicyToTempDir(t, rulePath, baseDir)
+		if err != nil {
+			return "", err
+		}
+		policyDirCache.Store(baseDir, tempDir)
+		return tempDir, nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(v.(string), subDir), nil
+}
+
+// downloadPolicyToTempDir downloads the given baseDir using go-getter into a fresh temp directory and returns the path
+// to the directory containing the downloaded source.
+func downloadPolicyToTempDir(t testing.TestingT, rulePath, baseDir string) (string, error) {
 	tempDir, err := os.MkdirTemp("", "terratest-opa-policy-*")
 	if err != nil {
 		return "", fmt.Errorf("creating temp directory for policy download: %w", err)
@@ -74,7 +101,5 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 		return "", fmt.Errorf("downloading policy from %s: %w", baseDir, err)
 	}
 
-	policyDirCache.Store(baseDir, tempDir)
-
-	return filepath.Join(tempDir, subDir), nil
+	return tempDir, nil
 }
