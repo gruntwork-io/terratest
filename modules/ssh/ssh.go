@@ -655,9 +655,9 @@ func FetchContentsOfFileContext(t testing.TestingT, ctx context.Context, host *H
 	return out
 }
 
-// shellQuote returns s wrapped in single quotes, with any embedded single quote
-// replaced by the four-character sequence quote-backslash-quote-quote.
-// Safe for POSIX sh, bash, zsh.
+// shellQuote wraps a path in single quotes, escaping any embedded single quotes,
+// so that paths containing spaces or shell metacharacters work correctly when
+// passed to commands like `cat` and `dd if=`.
 func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }

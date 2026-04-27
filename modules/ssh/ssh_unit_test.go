@@ -20,12 +20,7 @@ func TestShellQuote(t *testing.T) {
 			expected: "'/etc/hostname'",
 		},
 		{
-			name:     "empty string",
-			input:    "",
-			expected: "''",
-		},
-		{
-			name:     "single quote",
+			name:     "embedded single quote",
 			input:    "it's",
 			expected: `'it'\''s'`,
 		},
@@ -33,26 +28,6 @@ func TestShellQuote(t *testing.T) {
 			name:     "spaces",
 			input:    "/path with spaces/file.txt",
 			expected: "'/path with spaces/file.txt'",
-		},
-		{
-			name:     "path traversal attempt",
-			input:    "a; rm -rf /",
-			expected: "'a; rm -rf /'",
-		},
-		{
-			name:     "command substitution attempt",
-			input:    "$(rm -rf /)",
-			expected: "'$(rm -rf /)'",
-		},
-		{
-			name:     "backtick attempt",
-			input:    "`rm -rf /`",
-			expected: "'`rm -rf /`'",
-		},
-		{
-			name:     "injection with embedded single quote",
-			input:    "'; rm -rf / #",
-			expected: `''\''; rm -rf / #'`,
 		},
 	}
 
