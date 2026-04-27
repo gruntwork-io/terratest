@@ -276,6 +276,10 @@ func SCPDirFromContextE(t testing.TestingT, ctx context.Context, options *SCPDow
 		logger.Default.Logf(t, "Copying remote file: %s to local path %s", fullRemoteFilePath, localFilePath)
 
 		err = copyFileFromRemote(ctx, t, sshSession, localFile, fullRemoteFilePath, useSudo)
+		// Close the local file regardless of copy outcome so we do not leak file handles.
+		if closeErr := localFile.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
 		errorsOccurred = multierror.Append(errorsOccurred, err)
 	}
 
@@ -651,11 +655,18 @@ func FetchContentsOfFileContext(t testing.TestingT, ctx context.Context, host *H
 	return out
 }
 
+// shellQuote wraps a path in single quotes, escaping any embedded single quotes,
+// so that paths containing spaces or shell metacharacters work correctly when
+// passed to commands like `cat` and `dd if=`.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 // FetchContentsOfFileContextE connects to the given host via SSH and fetches the contents of the file at the given filePath.
 // If useSudo is true, then the contents will be retrieved using sudo. Returns the contents of that file.
 // The ctx parameter supports cancellation and timeouts.
 func FetchContentsOfFileContextE(t testing.TestingT, ctx context.Context, host *Host, useSudo bool, filePath string) (string, error) {
-	command := "cat " + filePath
+	command := "cat " + shellQuote(filePath)
 	if useSudo {
 		command = "sudo " + command
 	}
@@ -707,8 +718,11 @@ func listFileInRemoteDir(ctx context.Context, t testing.TestingT, sshSession *SS
 
 	// The last character returned is `\n` this results in an extra "" array
 	// member when we do the split below. Cut off the last character to avoid
-	// having to remove the blank entry in the array.
-	resultString = resultString[:len(resultString)-1]
+	// having to remove the blank entry in the array. Guard against empty output
+	// so we do not panic with index out of range.
+	if len(resultString) > 0 {
+		resultString = resultString[:len(resultString)-1]
+	}
 
 	return strings.Split(resultString, "\n"), nil
 }
@@ -716,6 +730,10 @@ func listFileInRemoteDir(ctx context.Context, t testing.TestingT, sshSession *SS
 // copyFileFromRemote copies a file from a remote host to a local file.
 // Based on code: https://github.com/bramvdbogaerde/go-scp/pull/6/files
 func copyFileFromRemote(ctx context.Context, t testing.TestingT, sshSession *SSHSession, file *os.File, remotePath string, useSudo bool) error {
+	// Ensure the local file handle is always closed; the caller passes us an
+	// open *os.File and we own its lifetime from here.
+	defer func() { _ = file.Close() }()
+
 	if err := setUpSSHClient(ctx, sshSession); err != nil {
 		return err
 	}
@@ -724,19 +742,19 @@ func copyFileFromRemote(ctx context.Context, t testing.TestingT, sshSession *SSH
 		return err
 	}
 
-	command := "dd if=" + remotePath
+	command := "dd if=" + shellQuote(remotePath)
 	if useSudo {
 		command = "sudo " + command
 	}
 
 	logger.Default.Logf(t, "Running command %s on %s@%s", command, sshSession.Options.Username, sshSession.Options.Address)
 
+	defer func() { _ = sshSession.Session.Close() }()
+
 	r, err := sshSession.Session.Output(command)
 	if err != nil {
-		logger.Default.Logf(t, "error reading from remote stdout: %s", err)
+		return fmt.Errorf("error reading from remote stdout: %w", err)
 	}
-
-	defer func() { _ = sshSession.Session.Close() }()
 
 	// Write to local file.
 	_, err = file.Write(r)
