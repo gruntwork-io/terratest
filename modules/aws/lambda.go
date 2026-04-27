@@ -12,13 +12,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// InvocationTypeOption identifies the invocation mode passed to AWS Lambda
+// when calling [InvokeFunctionWithParamsContextE]. See the
+// InvocationType-prefixed constants for the supported values.
 type InvocationTypeOption string
 
+// Supported [InvocationTypeOption] values for Lambda invocation modes.
 const (
+	// InvocationTypeRequestResponse invokes the function synchronously, keeping
+	// the connection open until the function returns a response or times out.
 	InvocationTypeRequestResponse InvocationTypeOption = "RequestResponse"
-	InvocationTypeDryRun          InvocationTypeOption = "DryRun"
+	// InvocationTypeDryRun validates parameter values and verifies that the user
+	// or role has permission to invoke the function, without actually invoking it.
+	InvocationTypeDryRun InvocationTypeOption = "DryRun"
 )
 
+// Value returns the string form of the [InvocationTypeOption], defaulting to
+// [InvocationTypeRequestResponse] when itype is nil. It returns an error if
+// itype is set to a value that is not one of the supported invocation types.
 func (itype *InvocationTypeOption) Value() (string, error) {
 	if itype != nil {
 		switch *itype {
@@ -212,6 +223,9 @@ func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, 
 	return InvokeFunctionWithParamsContextE(t, context.Background(), region, functionName, input)
 }
 
+// FunctionError is returned when an AWS Lambda invocation reports a function
+// error in its response. It carries the error message, the HTTP status code,
+// and the raw payload returned by the function.
 type FunctionError struct {
 	Message    string
 	Payload    []byte

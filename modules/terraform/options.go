@@ -13,6 +13,10 @@ import (
 
 const defaultTimeBetweenRetries = 5 * time.Second
 
+// DefaultRetryableTerraformErrors is the default set of error patterns that
+// [Options.RetryableTerraformErrors] will be initialized with. The keys are
+// regular expressions matched against Terraform output, and the values are
+// human-friendly messages displayed when the matching error triggers a retry.
 var (
 	DefaultRetryableTerraformErrors = map[string]string{
 		// Helm related terraform calls may fail when too many tests run in parallel. While the exact cause is unknown,
@@ -80,6 +84,9 @@ type Options struct {
 	Lock                     bool              // The lock option to pass to the terraform command with -lock
 }
 
+// ExtraArgs holds additional command-line arguments to pass to specific
+// Terraform subcommands. Each field is appended to the corresponding
+// subcommand invocation (e.g. Apply args are appended to `terraform apply`).
 type ExtraArgs struct {
 	Apply           []string
 	Destroy         []string
