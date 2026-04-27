@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // AssertTopicExists checks if the given Pub/Sub topic exists and fails the test if it does not.
@@ -51,13 +54,17 @@ func AssertTopicExistsContextE(t testing.TestingT, ctx context.Context, projectI
 // (see pubsub_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func AssertTopicExistsWithClient(ctx context.Context, client *pubsub.Client, topicName string) error {
-	exists, err := client.Topic(topicName).Exists(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to check if Pub/Sub topic %s exists in project %s: %w", topicName, client.Project(), err)
-	}
+	projectID := client.Project()
 
-	if !exists {
-		return fmt.Errorf("Pub/Sub topic %s does not exist in project %s", topicName, client.Project())
+	_, err := client.TopicAdminClient.GetTopic(ctx, &pubsubpb.GetTopicRequest{
+		Topic: topicResource(projectID, topicName),
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return fmt.Errorf("Pub/Sub topic %s does not exist in project %s", topicName, projectID)
+		}
+
+		return fmt.Errorf("failed to check if Pub/Sub topic %s exists in project %s: %w", topicName, projectID, err)
 	}
 
 	return nil
@@ -104,13 +111,17 @@ func AssertSubscriptionExistsContextE(t testing.TestingT, ctx context.Context, p
 // (see pubsub_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func AssertSubscriptionExistsWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string) error {
-	exists, err := client.Subscription(subscriptionName).Exists(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to check if Pub/Sub subscription %s exists in project %s: %w", subscriptionName, client.Project(), err)
-	}
+	projectID := client.Project()
 
-	if !exists {
-		return fmt.Errorf("Pub/Sub subscription %s does not exist in project %s", subscriptionName, client.Project())
+	_, err := client.SubscriptionAdminClient.GetSubscription(ctx, &pubsubpb.GetSubscriptionRequest{
+		Subscription: subscriptionResource(projectID, subscriptionName),
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return fmt.Errorf("Pub/Sub subscription %s does not exist in project %s", subscriptionName, projectID)
+		}
+
+		return fmt.Errorf("failed to check if Pub/Sub subscription %s exists in project %s: %w", subscriptionName, projectID, err)
 	}
 
 	return nil
@@ -157,8 +168,11 @@ func CreateTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 // (see pubsub_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func CreateTopicWithClient(ctx context.Context, client *pubsub.Client, topicName string) error {
-	if _, err := client.CreateTopic(ctx, topicName); err != nil {
-		return fmt.Errorf("failed to create Pub/Sub topic %s in project %s: %w", topicName, client.Project(), err)
+	projectID := client.Project()
+	if _, err := client.TopicAdminClient.CreateTopic(ctx, &pubsubpb.Topic{
+		Name: topicResource(projectID, topicName),
+	}); err != nil {
+		return fmt.Errorf("failed to create Pub/Sub topic %s in project %s: %w", topicName, projectID, err)
 	}
 
 	return nil
@@ -205,8 +219,11 @@ func DeleteTopicContextE(t testing.TestingT, ctx context.Context, projectID stri
 // (see pubsub_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func DeleteTopicWithClient(ctx context.Context, client *pubsub.Client, topicName string) error {
-	if err := client.Topic(topicName).Delete(ctx); err != nil {
-		return fmt.Errorf("failed to delete Pub/Sub topic %s in project %s: %w", topicName, client.Project(), err)
+	projectID := client.Project()
+	if err := client.TopicAdminClient.DeleteTopic(ctx, &pubsubpb.DeleteTopicRequest{
+		Topic: topicResource(projectID, topicName),
+	}); err != nil {
+		return fmt.Errorf("failed to delete Pub/Sub topic %s in project %s: %w", topicName, projectID, err)
 	}
 
 	return nil
@@ -253,10 +270,12 @@ func CreateSubscriptionContextE(t testing.TestingT, ctx context.Context, project
 // (see pubsub_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func CreateSubscriptionWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string, topicName string) error {
-	if _, err := client.CreateSubscription(ctx, subscriptionName, pubsub.SubscriptionConfig{
-		Topic: client.Topic(topicName),
+	projectID := client.Project()
+	if _, err := client.SubscriptionAdminClient.CreateSubscription(ctx, &pubsubpb.Subscription{
+		Name:  subscriptionResource(projectID, subscriptionName),
+		Topic: topicResource(projectID, topicName),
 	}); err != nil {
-		return fmt.Errorf("failed to create Pub/Sub subscription %s on topic %s in project %s: %w", subscriptionName, topicName, client.Project(), err)
+		return fmt.Errorf("failed to create Pub/Sub subscription %s on topic %s in project %s: %w", subscriptionName, topicName, projectID, err)
 	}
 
 	return nil
@@ -303,8 +322,11 @@ func DeleteSubscriptionContextE(t testing.TestingT, ctx context.Context, project
 // (see pubsub_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func DeleteSubscriptionWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string) error {
-	if err := client.Subscription(subscriptionName).Delete(ctx); err != nil {
-		return fmt.Errorf("failed to delete Pub/Sub subscription %s in project %s: %w", subscriptionName, client.Project(), err)
+	projectID := client.Project()
+	if err := client.SubscriptionAdminClient.DeleteSubscription(ctx, &pubsubpb.DeleteSubscriptionRequest{
+		Subscription: subscriptionResource(projectID, subscriptionName),
+	}); err != nil {
+		return fmt.Errorf("failed to delete Pub/Sub subscription %s in project %s: %w", subscriptionName, projectID, err)
 	}
 
 	return nil
@@ -318,4 +340,16 @@ func newPubSubClient(ctx context.Context, projectID string) (*pubsub.Client, err
 	}
 
 	return client, nil
+}
+
+// topicResource returns the fully-qualified Pub/Sub topic resource name ("projects/<p>/topics/<t>"),
+// required by the v2 admin client APIs.
+func topicResource(projectID, topicName string) string {
+	return fmt.Sprintf("projects/%s/topics/%s", projectID, topicName)
+}
+
+// subscriptionResource returns the fully-qualified Pub/Sub subscription resource name
+// ("projects/<p>/subscriptions/<s>"), required by the v2 admin client APIs.
+func subscriptionResource(projectID, subscriptionName string) string {
+	return fmt.Sprintf("projects/%s/subscriptions/%s", projectID, subscriptionName)
 }

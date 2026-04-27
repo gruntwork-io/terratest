@@ -8,9 +8,9 @@ package gcp
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
@@ -92,7 +92,9 @@ func TestAssertTopicAndSubscriptionExist(t *testing.T) {
 
 	defer func() { _ = client.Close() }()
 
-	cfg, err := client.Subscription(subscriptionName).Config(context.Background())
+	sub, err := client.SubscriptionAdminClient.GetSubscription(context.Background(), &pubsubpb.GetSubscriptionRequest{
+		Subscription: subscriptionResource(projectID, subscriptionName),
+	})
 	require.NoError(t, err)
-	assert.Equal(t, fmt.Sprintf("projects/%s/topics/%s", projectID, topicName), cfg.Topic.String())
+	assert.Equal(t, topicResource(projectID, topicName), sub.GetTopic())
 }

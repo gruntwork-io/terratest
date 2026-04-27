@@ -27,11 +27,12 @@ func TestWindowsInstance(t *testing.T) {
 	testBasePath := test_structure.CopyTerraformFolderToTemp(t, "..", "examples/terraform-aws-ec2-windows-example")
 
 	test_structure.RunTestStage(t, "setup", func() {
+		ctx := t.Context()
 		uniqueID := random.UniqueID()
-		region := aws.GetRandomRegion(t, []string{}, []string{})
+		region := aws.GetRandomRegionContext(t, ctx, []string{}, []string{})
 		roleName := uniqueID + "-test-role"
 
-		instanceType := aws.GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
+		instanceType := aws.GetRecommendedInstanceTypeContext(t, ctx, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 		test_structure.SaveString(t, workingDir, "region", region)
 		test_structure.SaveString(t, workingDir, "uniqueID", uniqueID)
 		test_structure.SaveString(t, workingDir, "instanceType", instanceType)
@@ -52,7 +53,7 @@ func TestWindowsInstance(t *testing.T) {
 			Vars:     varsMap,
 		}
 
-		amiID := packer.BuildArtifact(t, packerOptions)
+		amiID := packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
 		test_structure.SaveString(t, workingDir, "amiID", amiID)
 
