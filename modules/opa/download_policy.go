@@ -16,7 +16,20 @@ import (
 var (
 	// A map that maps the go-getter base URL to the temporary directory where it is downloaded.
 	policyDirCache sync.Map
+
+	// A map of in-flight downloads keyed by baseDir. Used to deduplicate concurrent downloads of the same source so
+	// that N parallel callers requesting the same rulePath result in a single actual download rather than N separate
+	// downloads racing into N separate temp directories.
+	inFlightDownloads sync.Map
 )
+
+// inFlightDownload represents a download operation that may currently be in progress. The first goroutine to request a
+// given baseDir performs the download; all subsequent goroutines block on done and reuse its result.
+type inFlightDownload struct {
+	done   chan struct{}
+	result string
+	err    error
+}
 
 // DownloadPolicyE takes in a rule path written in go-getter syntax and downloads it to a temporary directory so that it
 // can be passed to opa. The temporary directory that is used is cached based on the go-getter base path, and reused
@@ -58,7 +71,47 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 		return filepath.Join(downloadPath.(string), subDir), nil
 	}
 
-	// Not downloaded, so use go-getter to download the remote source to a temp dir.
+	// Cache miss. Coordinate with any other goroutines that may also be downloading this same baseDir so that we don't
+	// end up with N parallel downloads racing into N separate temp directories. The first arrival performs the
+	// download; everyone else waits on the in-flight entry and reuses the result.
+	entry := &inFlightDownload{done: make(chan struct{})}
+
+	actual, loaded := inFlightDownloads.LoadOrStore(baseDir, entry)
+	if loaded {
+		existing := actual.(*inFlightDownload)
+		logger.Default.Logf(t, "Download of %s already in flight: waiting for it to complete", baseDir)
+		<-existing.done
+		if existing.err != nil {
+			return "", existing.err
+		}
+		return filepath.Join(existing.result, subDir), nil
+	}
+
+	// We are the first arrival; perform the download and signal completion to any waiters.
+	tempDir, err := downloadPolicyToTempDirFn(t, rulePath, baseDir)
+
+	entry.result = tempDir
+	entry.err = err
+	close(entry.done)
+	inFlightDownloads.Delete(baseDir)
+
+	if err != nil {
+		return "", err
+	}
+
+	policyDirCache.Store(baseDir, tempDir)
+
+	return filepath.Join(tempDir, subDir), nil
+}
+
+// downloadPolicyToTempDirFn is the slow path of DownloadPolicyE: it actually downloads the given baseDir using
+// go-getter into a fresh temp directory and returns the path to that directory. It is held as a package-level variable
+// so that tests can swap it out with a stub to avoid hitting the network and to count invocations.
+var downloadPolicyToTempDirFn = downloadPolicyToTempDir
+
+// downloadPolicyToTempDir downloads the given baseDir using go-getter into a fresh temp directory and returns the path
+// to the directory containing the downloaded source.
+func downloadPolicyToTempDir(t testing.TestingT, rulePath, baseDir string) (string, error) {
 	tempDir, err := os.MkdirTemp("", "terratest-opa-policy-*")
 	if err != nil {
 		return "", fmt.Errorf("creating temp directory for policy download: %w", err)
@@ -74,7 +127,5 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 		return "", fmt.Errorf("downloading policy from %s: %w", baseDir, err)
 	}
 
-	policyDirCache.Store(baseDir, tempDir)
-
-	return filepath.Join(tempDir, subDir), nil
+	return tempDir, nil
 }

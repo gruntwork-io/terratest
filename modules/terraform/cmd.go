@@ -43,6 +43,11 @@ const (
 
 // DefaultExecutable is the default terraform executable to use. It is set to "terraform" if the terraform binary
 // is available, otherwise it falls back to "tofu".
+//
+// Concurrency: this var is initialized exactly once during package initialization, which the Go runtime guarantees is
+// performed serially before any goroutines that import this package can run. Subsequent reads from any number of
+// goroutines are safe because this value is never written to after init. Callers that wish to override the executable
+// should set Options.TerraformBinary on a per-invocation basis rather than mutating this global.
 var DefaultExecutable = defaultTerraformExecutable()
 
 // GetCommonOptions extracts commons terraform options

@@ -4,7 +4,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -62,6 +65,66 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 	remoteContents, err := os.ReadFile(path)
 	require.NoError(t, err)
 	assert.Equal(t, localContents, remoteContents)
+}
+
+// TestDownloadPolicyDeduplicatesConcurrentDownloads makes sure that when many goroutines simultaneously request the
+// same rulePath, only a single underlying download is performed. Without the in-flight deduplication this would
+// trigger one download per goroutine, each into its own temp directory.
+func TestDownloadPolicyDeduplicatesConcurrentDownloads(t *testing.T) {
+	// Not Parallel: this test mutates the package-level downloader and caches.
+	opa.ResetCachesForTest()
+	defer opa.ResetCachesForTest()
+
+	// Use a temp directory as a stand-in for a downloaded source so we don't need network access.
+	fakeDownloadDir := t.TempDir()
+
+	// Block the first arrival inside the slow path until all goroutines have had a chance to enter DownloadPolicyE.
+	// This maximizes the chance that the in-flight dedup path is exercised on the other 49 goroutines.
+	releaseDownload := make(chan struct{})
+
+	callCount, restore := opa.SetDownloadPolicyToTempDirForTest(func() (string, error) {
+		<-releaseDownload
+		return fakeDownloadDir, nil
+	})
+	defer restore()
+
+	const numGoroutines = 50
+	rulePath := "git::https://example.invalid/repo.git//policy.rego?ref=test"
+
+	var wg sync.WaitGroup
+	results := make([]string, numGoroutines)
+	errs := make([]error, numGoroutines)
+	started := make(chan struct{}, numGoroutines)
+
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			started <- struct{}{}
+			path, err := opa.DownloadPolicyE(t, rulePath)
+			results[idx] = path
+			errs[idx] = err
+		}(i)
+	}
+
+	// Wait until every goroutine has at least entered DownloadPolicyE before releasing the slow path.
+	for i := 0; i < numGoroutines; i++ {
+		<-started
+	}
+	// Give the goroutines a moment to actually progress to the LoadOrStore call before unblocking the first arrival.
+	time.Sleep(50 * time.Millisecond)
+	close(releaseDownload)
+
+	wg.Wait()
+
+	expectedPath := filepath.Join(fakeDownloadDir, "policy.rego")
+	for i := 0; i < numGoroutines; i++ {
+		require.NoError(t, errs[i], "goroutine %d failed", i)
+		assert.Equal(t, expectedPath, results[i], "goroutine %d got unexpected path", i)
+	}
+
+	assert.Equal(t, int64(1), atomic.LoadInt64(callCount),
+		"expected exactly one underlying download, got %d", atomic.LoadInt64(callCount))
 }
 
 // TestDownloadPolicyReusesCachedDir makes sure the DownloadPolicyE function uses the cache if it has already downloaded
