@@ -244,7 +244,9 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 	const mfaEnableWait = 30 * time.Second
 
 	logger.Default.Logf(t, "Waiting 30 seconds for a new MFA Token to be generated...")
-	time.Sleep(mfaEnableWait)
+	if err := sleepContext(ctx, mfaEnableWait); err != nil {
+		return err
+	}
 
 	authCode2, err := GetTimeBasedOneTimePassword(mfaDevice)
 	if err != nil {
@@ -264,9 +266,22 @@ func EnableMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient 
 	const mfaTokenWait = 10 * time.Second
 
 	logger.Log(t, "Waiting for MFA Device enablement to propagate.")
-	time.Sleep(mfaTokenWait)
+	if err := sleepContext(ctx, mfaTokenWait); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+// sleepContext blocks for the given duration or until ctx is cancelled.
+// Returns ctx.Err() if the context is cancelled before the duration elapses; otherwise nil.
+func sleepContext(ctx context.Context, d time.Duration) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(d):
+		return nil
+	}
 }
 
 // EnableMfaDeviceContext enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
