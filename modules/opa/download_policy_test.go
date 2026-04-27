@@ -82,6 +82,9 @@ func TestDownloadPolicyDeduplicatesConcurrentDownloads(t *testing.T) {
 		}
 	}()
 
+	tempDirGlob := filepath.Join(os.TempDir(), "terratest-opa-policy-*")
+	before, _ := filepath.Glob(tempDirGlob)
+
 	const numGoroutines = 5
 	var wg sync.WaitGroup
 	results := make([]string, numGoroutines)
@@ -96,10 +99,12 @@ func TestDownloadPolicyDeduplicatesConcurrentDownloads(t *testing.T) {
 	}
 	wg.Wait()
 
-	// All goroutines must resolve to the same cached path; without dedup each would have created its own temp dir.
 	for i := 1; i < numGoroutines; i++ {
 		assert.Equal(t, results[0], results[i])
 	}
+
+	after, _ := filepath.Glob(tempDirGlob)
+	assert.Equal(t, len(before)+1, len(after), "expected exactly one new temp dir; dedup may have failed")
 }
 
 // TestDownloadPolicyReusesCachedDir makes sure the DownloadPolicyE function uses the cache if it has already downloaded
