@@ -1,13 +1,12 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# PIN TERRAFORM VERSION TO >= 0.12
-# The examples have been upgraded to 0.12 syntax
-# ---------------------------------------------------------------------------------------------------------------------
-
 terraform {
-  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
-  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
-  # forwards compatible with 0.13.x code.
-  required_version = ">= 0.12.26"
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -71,7 +70,10 @@ resource "aws_launch_configuration" "web_servers" {
   image_id        = data.aws_ami.ubuntu.id
   instance_type   = var.instance_type
   security_groups = [aws_security_group.web_server.id]
-  user_data       = data.template_file.user_data.rendered
+  user_data = templatefile("${path.module}/user-data/user-data.sh", {
+    instance_text = var.instance_text
+    instance_port = var.instance_port
+  })
   key_name        = var.key_pair_name
 
   # When used with an aws_autoscaling_group resource, the aws_launch_configuration must set create_before_destroy to
@@ -79,19 +81,6 @@ resource "aws_launch_configuration" "web_servers" {
   # that it depends on, or you'll get an error about cyclic dependencies (especially when removing resources).
   lifecycle {
     create_before_destroy = true
-  }
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# CREATE THE USER DATA SCRIPT THAT WILL RUN DURING BOOT ON THE EC2 INSTANCE
-# ---------------------------------------------------------------------------------------------------------------------
-
-data "template_file" "user_data" {
-  template = file("${path.module}/user-data/user-data.sh")
-
-  vars = {
-    instance_text = var.instance_text
-    instance_port = var.instance_port
   }
 }
 
