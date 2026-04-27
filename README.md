@@ -22,7 +22,24 @@ variety of helper functions and patterns for common infrastructure testing tasks
 - Running shell commands
 - And much more
 
-Please see the following for more info:
+## Install
+
+```bash
+go get github.com/gruntwork-io/terratest@latest
+```
+
+Requires Go 1.26 or later.
+
+## Stability and versioning
+
+Starting with v1.0.0, Terratest follows [semantic versioning](https://semver.org/). Breaking changes to the public API
+only happen in major releases (e.g. v2.0.0).
+
+Symbols renamed or replaced in v1 are kept with `// Deprecated:` annotations pointing at the new name; removals happen
+in v2. Migrating from v0.x: see the [v1 release notes and migration guide](https://terratest.gruntwork.io/docs/) on the
+Terratest docs site.
+
+## More info
 
 - [Terratest Website](https://terratest.gruntwork.io)
 - [Getting started with Terratest](https://terratest.gruntwork.io/docs/getting-started/quick-start/)
