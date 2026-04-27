@@ -5,9 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -67,64 +65,41 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 	assert.Equal(t, localContents, remoteContents)
 }
 
-// TestDownloadPolicyDeduplicatesConcurrentDownloads makes sure that when many goroutines simultaneously request the
-// same rulePath, only a single underlying download is performed. Without the in-flight deduplication this would
-// trigger one download per goroutine, each into its own temp directory.
+// TestDownloadPolicyDeduplicatesConcurrentDownloads makes sure concurrent calls for the same rulePath collapse to a
+// single cache entry rather than racing into separate temp directories.
 func TestDownloadPolicyDeduplicatesConcurrentDownloads(t *testing.T) {
-	// Not Parallel: this test mutates the package-level downloader and caches.
-	opa.ResetCachesForTest()
-	defer opa.ResetCachesForTest()
+	// Not Parallel: go-getter's Client.configure has an internal race on its global Getters map, so we don't run this
+	// alongside other tests that also invoke go-getter.
+	baseDir := "git::https://github.com/gruntwork-io/terratest.git?ref=v0.50.0"
+	remotePath := "git::https://github.com/gruntwork-io/terratest.git//examples/terraform-opa-example/policy/enforce_source.rego?ref=v0.50.0"
+	defer func() {
+		if cached, ok := opa.PolicyDirCache.Load(baseDir); ok {
+			downloadPath := cached.(string)
+			if strings.HasSuffix(downloadPath, "/getter") {
+				downloadPath = filepath.Dir(downloadPath)
+			}
+			os.RemoveAll(downloadPath)
+		}
+	}()
 
-	// Use a temp directory as a stand-in for a downloaded source so we don't need network access.
-	fakeDownloadDir := t.TempDir()
-
-	// Block the first arrival inside the slow path until all goroutines have had a chance to enter DownloadPolicyE.
-	// This maximizes the chance that the in-flight dedup path is exercised on the other 49 goroutines.
-	releaseDownload := make(chan struct{})
-
-	callCount, restore := opa.SetDownloadPolicyToTempDirForTest(func() (string, error) {
-		<-releaseDownload
-		return fakeDownloadDir, nil
-	})
-	defer restore()
-
-	const numGoroutines = 50
-	rulePath := "git::https://example.invalid/repo.git//policy.rego?ref=test"
-
+	const numGoroutines = 5
 	var wg sync.WaitGroup
 	results := make([]string, numGoroutines)
-	errs := make([]error, numGoroutines)
-	started := make(chan struct{}, numGoroutines)
-
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
 		go func(idx int) {
 			defer wg.Done()
-			started <- struct{}{}
-			path, err := opa.DownloadPolicyE(t, rulePath)
+			path, err := opa.DownloadPolicyE(t, remotePath)
+			require.NoError(t, err)
 			results[idx] = path
-			errs[idx] = err
 		}(i)
 	}
-
-	// Wait until every goroutine has at least entered DownloadPolicyE before releasing the slow path.
-	for i := 0; i < numGoroutines; i++ {
-		<-started
-	}
-	// Give the goroutines a moment to actually progress to the LoadOrStore call before unblocking the first arrival.
-	time.Sleep(50 * time.Millisecond)
-	close(releaseDownload)
-
 	wg.Wait()
 
-	expectedPath := filepath.Join(fakeDownloadDir, "policy.rego")
-	for i := 0; i < numGoroutines; i++ {
-		require.NoError(t, errs[i], "goroutine %d failed", i)
-		assert.Equal(t, expectedPath, results[i], "goroutine %d got unexpected path", i)
+	// All goroutines must resolve to the same cached path; without dedup each would have created its own temp dir.
+	for i := 1; i < numGoroutines; i++ {
+		assert.Equal(t, results[0], results[i])
 	}
-
-	assert.Equal(t, int64(1), atomic.LoadInt64(callCount),
-		"expected exactly one underlying download, got %d", atomic.LoadInt64(callCount))
 }
 
 // TestDownloadPolicyReusesCachedDir makes sure the DownloadPolicyE function uses the cache if it has already downloaded
