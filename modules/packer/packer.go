@@ -367,7 +367,7 @@ type packerManifestBuild struct {
 	BuilderType   string                    `json:"builder_type"`
 	ArtifactID    string                    `json:"artifact_id"`
 	PackerRunUUID string                    `json:"packer_run_uuid"`
-	CustomData    map[string]interface{}    `json:"custom_data"`
+	CustomData    map[string]any            `json:"custom_data"`
 	Files         []packerManifestBuildFile `json:"files"`
 	BuildTime     int64                     `json:"build_time"`
 }

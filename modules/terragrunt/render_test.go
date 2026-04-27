@@ -40,7 +40,7 @@ func TestRenderJSON(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	})
 
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	require.NoError(t, json.Unmarshal([]byte(output), &parsed), "output should be valid JSON")
 	require.Contains(t, parsed, "terraform")
 }
