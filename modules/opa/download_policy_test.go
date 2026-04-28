@@ -67,17 +67,19 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 
 // TestDownloadPolicyDeduplicatesConcurrentDownloads makes sure concurrent calls for the same rulePath collapse to a
 // single cache entry rather than racing into separate temp directories.
+//
+//nolint:paralleltest // go-getter's Client.configure has an internal race on its global Getters map, so we cannot run alongside other go-getter tests.
 func TestDownloadPolicyDeduplicatesConcurrentDownloads(t *testing.T) {
-	// Not Parallel: go-getter's Client.configure has an internal race on its global Getters map, so we don't run this
-	// alongside other tests that also invoke go-getter.
 	baseDir := "git::https://github.com/gruntwork-io/terratest.git?ref=v0.50.0"
 	remotePath := "git::https://github.com/gruntwork-io/terratest.git//examples/terraform-opa-example/policy/enforce_source.rego?ref=v0.50.0"
+
 	defer func() {
 		if cached, ok := opa.PolicyDirCache.Load(baseDir); ok {
 			downloadPath := cached.(string)
 			if strings.HasSuffix(downloadPath, "/getter") {
 				downloadPath = filepath.Dir(downloadPath)
 			}
+
 			os.RemoveAll(downloadPath)
 		}
 	}()
@@ -86,25 +88,37 @@ func TestDownloadPolicyDeduplicatesConcurrentDownloads(t *testing.T) {
 	before, _ := filepath.Glob(tempDirGlob)
 
 	const numGoroutines = 5
+
 	var wg sync.WaitGroup
+
 	results := make([]string, numGoroutines)
+	errs := make([]error, numGoroutines)
+
 	for i := 0; i < numGoroutines; i++ {
 		wg.Add(1)
+
 		go func(idx int) {
 			defer wg.Done()
+
 			path, err := opa.DownloadPolicyE(t, remotePath)
-			require.NoError(t, err)
+
+			errs[idx] = err
 			results[idx] = path
 		}(i)
 	}
+
 	wg.Wait()
+
+	for i := 0; i < numGoroutines; i++ {
+		require.NoError(t, errs[i])
+	}
 
 	for i := 1; i < numGoroutines; i++ {
 		assert.Equal(t, results[0], results[i])
 	}
 
 	after, _ := filepath.Glob(tempDirGlob)
-	assert.Equal(t, len(before)+1, len(after), "expected exactly one new temp dir; dedup may have failed")
+	assert.Len(t, after, len(before)+1, "expected exactly one new temp dir; dedup may have failed")
 }
 
 // TestDownloadPolicyReusesCachedDir makes sure the DownloadPolicyE function uses the cache if it has already downloaded

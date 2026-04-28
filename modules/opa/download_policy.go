@@ -69,11 +69,14 @@ func DownloadPolicyE(t testing.TestingT, rulePath string) (string, error) {
 		if downloadPath, hasDownloaded := policyDirCache.Load(baseDir); hasDownloaded {
 			return downloadPath.(string), nil
 		}
+
 		tempDir, err := downloadPolicyToTempDir(t, rulePath, baseDir)
 		if err != nil {
 			return "", err
 		}
+
 		policyDirCache.Store(baseDir, tempDir)
+
 		return tempDir, nil
 	})
 	if err != nil {
