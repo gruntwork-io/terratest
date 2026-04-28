@@ -1,14 +1,20 @@
-# Migrating to Terratest v1.0.0
-
-This guide documents the breaking changes in Terratest v1.0.0 and how to update your tests.
-
-## Azure modules
+---
+layout: collection-browser-doc
+title: Azure modules
+category: migrating-to-v1
+excerpt: >-
+  Migrate Azure tests from Terratest pre-v1 to v1.0.0.
+tags: ["azure", "migration", "v1"]
+order: 300
+nav_title: Documentation
+nav_title_link: /docs/
+---
 
 The `modules/azure` package received the largest set of breaking changes in
 the v1.0.0 release. This guide walks through what changed and how to update
 your tests.
 
-### Why we migrated
+## Why we migrated
 
 The previous version of `modules/azure` was built on
 `github.com/Azure/azure-sdk-for-go/services/...`, the legacy "track 1" Azure
@@ -23,7 +29,7 @@ most fields on a nested `Properties` struct, and pagination uses pagers
 instead of iterators. We took the opportunity to land a few small API
 cleanups at the same time so v1.0.0 ships a coherent, stable surface.
 
-### What changed at a glance
+## What changed at a glance
 
 - All Azure service code now imports `sdk/resourcemanager/<service>/arm<service>` packages instead of `services/<service>/mgmt/<api-version>/<service>`.
 - Resource fields moved under `.Properties` (e.g. `vm.StorageProfile` is now `vm.Properties.StorageProfile`).
@@ -34,7 +40,7 @@ cleanups at the same time so v1.0.0 ships a coherent, stable surface.
 - A new `*WithClient` family of functions was added so tests can inject a fake or pre-built SDK client (useful with the Azure SDK's `azfake` package).
 - `GetVirtualMachineImage` / `GetVirtualMachineImageE` now return `*VMImage` instead of `VMImage`.
 
-### Updating SDK imports
+## Updating SDK imports
 
 Most Terratest users do not import the underlying Azure SDK directly,
 because Terratest wraps it. If you only call `terratest/modules/azure`
@@ -74,7 +80,7 @@ Once imports are updated, expect three follow-on edits per file:
    `iterator.NextWithContext(ctx)` loops with
    `for pager.More() { page, err := pager.NextPage(ctx); ... }`.
 
-### Renamed factory functions
+## Renamed factory functions
 
 Four client factories were renamed to drop the redundant `New` (a
 `Create*New*Client` reads as redundant). The old names remain as deprecated
@@ -91,7 +97,7 @@ aliases for one minor release; please update at your convenience.
 | `CreateNewVirtualNetworkClientE` | `CreateVirtualNetworkClientE` |
 | `CreateNewVirtualNetworkClientContextE` | `CreateVirtualNetworkClientContextE` |
 
-### Removed deprecated functions
+## Removed deprecated functions
 
 The previous release marked eight client-getter functions for removal
 ("`TODO: remove in next version`"). v1.0.0 is that version. Each removed
@@ -113,7 +119,7 @@ The replacements take the same arguments and return the same client type
 that `GetDiskClientE` becomes `CreateDisksClientE` (plural) to match the
 underlying SDK's `DisksClient` type.
 
-### Typo fix on `NsgRuleSummary`
+## Typo fix on `NsgRuleSummary`
 
 `NsgRuleSummary.SourceAdresssPrefixes` (note the three s's) was renamed to
 the correctly-spelled `SourceAddressPrefixes`. The field type
@@ -134,7 +140,7 @@ for _, prefix := range rule.SourceAddressPrefixes {
 The paired `DestinationAddressPrefixes` field was already spelled
 correctly and is unchanged.
 
-### `VMImage` is now a pointer
+## `VMImage` is now a pointer
 
 `GetVirtualMachineImage` and `GetVirtualMachineImageE` now return
 `*VMImage` instead of `VMImage`, matching every other resource getter in
@@ -155,7 +161,7 @@ if img != nil {
 If the resource cannot be loaded the function still fails the test, so
 the `nil` guard is precautionary.
 
-### New `WithClient` variants for testability
+## New `WithClient` variants for testability
 
 v1.0.0 adds a parallel family of `*WithClient` functions across all Azure
 modules. Each one accepts a pre-built SDK client and a
@@ -183,7 +189,7 @@ This is purely additive: the existing `*ContextE` functions still work and
 build their own clients from ambient credentials. Use `WithClient`
 variants only if you need test injection.
 
-### Search-and-replace cheatsheet
+## Search-and-replace cheatsheet
 
 Most projects can do the bulk of the migration with a few find/replace
 passes. The snippets below cover the most common edits:
@@ -214,7 +220,7 @@ time, starting with the import path, then fixing the resulting compile
 errors (type names, `.Properties` access, pager loops). The Go compiler
 is the most reliable migration tool here.
 
-### Need help
+## Need help
 
 Open an issue on the Terratest repo with the `azure` label and a snippet
 of the failing code. If you spot a gap in this guide, please send a PR
