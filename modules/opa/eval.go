@@ -49,9 +49,13 @@ type EvalOptions struct {
 // defined value (FailDefined), or not at all (NoFail).
 type FailMode int
 
+// FailMode values for [EvalOptions.FailMode] that control when `opa eval` should fail.
 const (
+	// FailUndefined causes `opa eval` to fail when the query returns an undefined value.
 	FailUndefined FailMode = iota
+	// FailDefined causes `opa eval` to fail when the query returns a defined value.
 	FailDefined
+	// NoFail causes `opa eval` not to fail based on the query result.
 	NoFail
 )
 

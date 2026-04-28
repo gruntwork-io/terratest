@@ -93,6 +93,7 @@ func checkMessageContainsText(msg *slack.Msg, expectedText string) bool {
 	return false
 }
 
+// MessageNotFoundErr is returned when the expected text cannot be found in any of the messages posted in a Slack channel.
 type MessageNotFoundErr struct{}
 
 func (err MessageNotFoundErr) Error() string {

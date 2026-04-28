@@ -183,6 +183,7 @@ func RunCommandContextAndGetStdOutErrE(t testing.TestingT, ctx context.Context, 
 	return output.Stdout(), output.Stderr(), nil
 }
 
+// ErrWithCmdOutput wraps an underlying error with the captured stdout and stderr from the command that produced it.
 type ErrWithCmdOutput struct {
 	Underlying error
 	Output     *output
