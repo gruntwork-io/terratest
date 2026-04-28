@@ -5,6 +5,8 @@ import (
 )
 
 // IpForEc2InstanceNotFound is an error that occurs when the IP for an EC2 instance is not found.
+//
+// Deprecated: Use [IPForEc2InstanceNotFound] instead.
 type IpForEc2InstanceNotFound struct { //nolint:staticcheck,revive // preserving deprecated type name
 	InstanceId string //nolint:staticcheck,revive // preserving existing field name
 	AwsRegion  string
@@ -40,6 +42,7 @@ func (err NotFoundError) Error() string {
 	return fmt.Sprintf("Object of type %s with id %s not found in region %s", err.objectType, err.objectID, err.region)
 }
 
+// NewNotFoundError returns a [NotFoundError] for the given object type, ID, and region.
 func NewNotFoundError(objectType string, objectID string, region string) NotFoundError {
 	return NotFoundError{objectType, objectID, region}
 }
@@ -60,6 +63,8 @@ func (err AsgCapacityNotMetError) Error() string {
 	)
 }
 
+// NewAsgCapacityNotMetError returns an [AsgCapacityNotMetError] describing
+// the given ASG's desired and current capacities.
 func NewAsgCapacityNotMetError(asgName string, desiredCapacity int64, currentCapacity int64) AsgCapacityNotMetError {
 	return AsgCapacityNotMetError{asgName, desiredCapacity, currentCapacity}
 }
@@ -80,6 +85,8 @@ func (err BucketVersioningNotEnabledError) Error() string {
 	)
 }
 
+// NewBucketVersioningNotEnabledError returns a [BucketVersioningNotEnabledError]
+// for the given S3 bucket, region, and observed versioning status.
 func NewBucketVersioningNotEnabledError(s3BucketName string, awsRegion string, versioningStatus string) BucketVersioningNotEnabledError {
 	return BucketVersioningNotEnabledError{s3BucketName: s3BucketName, awsRegion: awsRegion, versioningStatus: versioningStatus}
 }
@@ -99,6 +106,8 @@ func (err NoBucketPolicyError) Error() string {
 	)
 }
 
+// NewNoBucketPolicyError returns a [NoBucketPolicyError] for the given S3
+// bucket, region, and bucket policy.
 func NewNoBucketPolicyError(s3BucketName string, awsRegion string, bucketPolicy string) NoBucketPolicyError {
 	return NoBucketPolicyError{s3BucketName: s3BucketName, awsRegion: awsRegion, bucketPolicy: bucketPolicy}
 }
