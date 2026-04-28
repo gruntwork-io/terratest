@@ -280,6 +280,7 @@ func SCPDirFromContextE(t testing.TestingT, ctx context.Context, options *SCPDow
 		if closeErr := localFile.Close(); closeErr != nil && err == nil {
 			err = closeErr
 		}
+
 		errorsOccurred = multierror.Append(errorsOccurred, err)
 	}
 
