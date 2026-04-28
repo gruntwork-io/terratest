@@ -74,6 +74,8 @@ func GetDynamoDBTableTagsE(t testing.TestingT, region string, tableName string) 
 	return GetDynamoDBTableTagsContextE(t, context.Background(), region, tableName)
 }
 
+// GetDynamoDbTableTags fetches resource tags of a specified dynamoDB table. This will fail the test if there are any errors.
+//
 // Deprecated: Use [GetDynamoDBTableTagsContext] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name
@@ -82,6 +84,8 @@ func GetDynamoDbTableTags(t testing.TestingT, region string, tableName string) [
 	return GetDynamoDBTableTagsContext(t, context.Background(), region, tableName)
 }
 
+// GetDynamoDbTableTagsE fetches resource tags of a specified dynamoDB table.
+//
 // Deprecated: Use [GetDynamoDBTableTagsContextE] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name
