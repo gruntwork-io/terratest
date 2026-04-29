@@ -394,6 +394,10 @@ func FetchFilesFromAsgsPE(t testing.TestingT, awsRegion string, spec *RemoteFile
 	return FetchFilesFromAsgsPContextE(t, context.Background(), awsRegion, spec)
 }
 
+// FetchFilesFromAsgs looks up the EC2 Instances in all the ASGs given in the
+// RemoteFileSpecification, downloads the matching files from each instance,
+// and stores them locally as described in [FetchFilesFromAsgsPContext].
+//
 // Deprecated: Use [FetchFilesFromAsgsPContext] instead.
 //
 //nolint:staticcheck,revive,gocritic // preserving deprecated function name
@@ -403,6 +407,8 @@ func FetchFilesFromAsgs(t testing.TestingT, awsRegion string, spec RemoteFileSpe
 	FetchFilesFromAsgsPContext(t, context.Background(), awsRegion, &spec)
 }
 
+// FetchFilesFromAsgsE is the error-returning equivalent of [FetchFilesFromAsgs].
+//
 // Deprecated: Use [FetchFilesFromAsgsPContextE] instead.
 //
 //nolint:staticcheck,revive,gocritic // preserving deprecated function name
