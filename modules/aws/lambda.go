@@ -61,7 +61,7 @@ type LambdaOptions struct {
 	InvocationType *InvocationTypeOption
 
 	// Lambda function input; will be converted to JSON.
-	Payload interface{}
+	Payload any
 }
 
 // LambdaOutput contains the output from InvokeFunctionWithParams().  The
@@ -79,7 +79,7 @@ type LambdaOutput struct {
 
 // InvokeFunctionContextE invokes a lambda function.
 // The ctx parameter supports cancellation and timeouts.
-func InvokeFunctionContextE(t testing.TestingT, ctx context.Context, region, functionName string, payload interface{}) ([]byte, error) {
+func InvokeFunctionContextE(t testing.TestingT, ctx context.Context, region, functionName string, payload any) ([]byte, error) {
 	lambdaClient, err := NewLambdaClientContextE(t, ctx, region)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func InvokeFunctionContextE(t testing.TestingT, ctx context.Context, region, fun
 // InvokeFunctionContext invokes a lambda function.
 // This function will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func InvokeFunctionContext(t testing.TestingT, ctx context.Context, region, functionName string, payload interface{}) []byte {
+func InvokeFunctionContext(t testing.TestingT, ctx context.Context, region, functionName string, payload any) []byte {
 	t.Helper()
 	out, err := InvokeFunctionContextE(t, ctx, region, functionName, payload)
 	require.NoError(t, err)
@@ -124,7 +124,7 @@ func InvokeFunctionContext(t testing.TestingT, ctx context.Context, region, func
 // InvokeFunction invokes a lambda function.
 //
 // Deprecated: Use [InvokeFunctionContext] instead.
-func InvokeFunction(t testing.TestingT, region, functionName string, payload interface{}) []byte {
+func InvokeFunction(t testing.TestingT, region, functionName string, payload any) []byte {
 	t.Helper()
 	return InvokeFunctionContext(t, context.Background(), region, functionName, payload)
 }
@@ -132,7 +132,7 @@ func InvokeFunction(t testing.TestingT, region, functionName string, payload int
 // InvokeFunctionE invokes a lambda function.
 //
 // Deprecated: Use [InvokeFunctionContextE] instead.
-func InvokeFunctionE(t testing.TestingT, region, functionName string, payload interface{}) ([]byte, error) {
+func InvokeFunctionE(t testing.TestingT, region, functionName string, payload any) ([]byte, error) {
 	return InvokeFunctionContextE(t, context.Background(), region, functionName, payload)
 }
 

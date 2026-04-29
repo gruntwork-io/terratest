@@ -12,27 +12,27 @@ func TestFormatBackendConfigAsArgs(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		input  map[string]interface{}
+		input  map[string]any
 		expect []string
 	}{
 		{
 			name:   "empty config",
-			input:  map[string]interface{}{},
+			input:  map[string]any{},
 			expect: []string{},
 		},
 		{
 			name:   "string value",
-			input:  map[string]interface{}{"bucket": "my-bucket"},
+			input:  map[string]any{"bucket": "my-bucket"},
 			expect: []string{"-backend-config=bucket=my-bucket"},
 		},
 		{
 			name:   "nil value omitted",
-			input:  map[string]interface{}{"key": nil},
+			input:  map[string]any{"key": nil},
 			expect: []string{"-backend-config=key"},
 		},
 		{
 			name:   "multiple values",
-			input:  map[string]interface{}{"region": "us-east-1", "bucket": "state"},
+			input:  map[string]any{"region": "us-east-1", "bucket": "state"},
 			expect: []string{"-backend-config=bucket=state", "-backend-config=region=us-east-1"},
 		},
 	}
@@ -82,7 +82,7 @@ func TestToHclString(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		input  interface{}
+		input  any
 		expect string
 	}{
 		{"nil", nil, "null"},
@@ -93,7 +93,7 @@ func TestToHclString(t *testing.T) {
 		{"list of strings", []string{"a", "b"}, `["a", "b"]`},
 		{"list of ints", []int{1, 2, 3}, "[1, 2, 3]"},
 		{"map", map[string]string{"key": "value"}, `{"key" = "value"}`},
-		{"nested list", []interface{}{[]int{1, 2}}, "[[1, 2]]"},
+		{"nested list", []any{[]int{1, 2}}, "[[1, 2]]"},
 	}
 
 	for _, tt := range tests {

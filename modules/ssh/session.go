@@ -114,6 +114,6 @@ func Close(t testing.TestingT, closeable Closeable, ignoreErrors ...string) {
 // interfaceIsNil checks whether the given interface value is nil. A direct nil comparison does not work for interface
 // values that wrap a typed nil pointer, so reflection is used.
 // See https://go.dev/doc/faq#nil_error for details.
-func interfaceIsNil(i interface{}) bool {
+func interfaceIsNil(i any) bool {
 	return i == nil || reflect.ValueOf(i).IsNil()
 }
