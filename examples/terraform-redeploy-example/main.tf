@@ -74,7 +74,7 @@ resource "aws_launch_configuration" "web_servers" {
     instance_text = var.instance_text
     instance_port = var.instance_port
   })
-  key_name        = var.key_pair_name
+  key_name = var.key_pair_name
 
   # When used with an aws_autoscaling_group resource, the aws_launch_configuration must set create_before_destroy to
   # true. Note: as soon as you set create_before_destroy = true in one resource, you must also set it in every resource

@@ -23,8 +23,8 @@ provider "aws" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 resource "aws_instance" "example" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
   user_data = templatefile("${path.module}/user-data/user-data.sh", {
     instance_text = var.instance_text
     instance_port = var.instance_port
