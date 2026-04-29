@@ -17,7 +17,9 @@ import (
 )
 
 const (
-	AuthAssumeRoleEnvVar = "TERRATEST_IAM_ROLE" // OS environment variable name through which Assume Role ARN may be passed for authentication
+	// AuthAssumeRoleEnvVar is the OS environment variable name through which an
+	// Assume Role ARN may be passed for authentication.
+	AuthAssumeRoleEnvVar = "TERRATEST_IAM_ROLE"
 )
 
 // NewAuthenticatedSessionContext creates an AWS Config following to standard AWS authentication workflow.
