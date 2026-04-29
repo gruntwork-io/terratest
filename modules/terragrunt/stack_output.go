@@ -131,26 +131,26 @@ func StackOutputJsonE(t testing.TestingT, options *Options, key string) (string,
 	return StackOutputJSONContextE(t, context.Background(), options, key)
 }
 
-// StackOutputAllContext gets all stack outputs and returns them as a map[string]interface{}.
+// StackOutputAllContext gets all stack outputs and returns them as a map[string]any.
 // The provided context is passed through to the underlying command execution, allowing for timeout
 // and cancellation control.
-func StackOutputAllContext(t testing.TestingT, ctx context.Context, options *Options) map[string]interface{} {
+func StackOutputAllContext(t testing.TestingT, ctx context.Context, options *Options) map[string]any {
 	outputs, err := StackOutputAllContextE(t, ctx, options)
 	require.NoError(t, err)
 
 	return outputs
 }
 
-// StackOutputAllContextE gets all stack outputs and returns them as a map[string]interface{}.
+// StackOutputAllContextE gets all stack outputs and returns them as a map[string]any.
 // The provided context is passed through to the underlying command execution, allowing for timeout
 // and cancellation control.
-func StackOutputAllContextE(t testing.TestingT, ctx context.Context, options *Options) (map[string]interface{}, error) {
+func StackOutputAllContextE(t testing.TestingT, ctx context.Context, options *Options) (map[string]any, error) {
 	jsonOutput, err := StackOutputJSONContextE(t, ctx, options, "")
 	if err != nil {
 		return nil, err
 	}
 
-	var outputs map[string]interface{}
+	var outputs map[string]any
 	if err := json.Unmarshal([]byte(jsonOutput), &outputs); err != nil {
 		return nil, err
 	}
@@ -158,17 +158,17 @@ func StackOutputAllContextE(t testing.TestingT, ctx context.Context, options *Op
 	return outputs, nil
 }
 
-// StackOutputAll gets all stack outputs and returns them as a map[string]interface{}.
+// StackOutputAll gets all stack outputs and returns them as a map[string]any.
 //
 // Deprecated: Use [StackOutputAllContext] instead.
-func StackOutputAll(t testing.TestingT, options *Options) map[string]interface{} {
+func StackOutputAll(t testing.TestingT, options *Options) map[string]any {
 	return StackOutputAllContext(t, context.Background(), options)
 }
 
-// StackOutputAllE gets all stack outputs and returns them as a map[string]interface{}.
+// StackOutputAllE gets all stack outputs and returns them as a map[string]any.
 //
 // Deprecated: Use [StackOutputAllContextE] instead.
-func StackOutputAllE(t testing.TestingT, options *Options) (map[string]interface{}, error) {
+func StackOutputAllE(t testing.TestingT, options *Options) (map[string]any, error) {
 	return StackOutputAllContextE(t, context.Background(), options)
 }
 

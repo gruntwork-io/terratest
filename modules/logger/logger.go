@@ -114,7 +114,6 @@ func (terratestLogger) Logf(t testing.TestingT, format string, args ...any) {
 	DoLog(t, callDepthWrapped, os.Stdout, fmt.Sprintf(format, args...))
 }
 
-// Deprecated: use Logger instead, as it provides more flexibility on logging.
 // Logf logs the given format and arguments, formatted using fmt.Sprintf, to stdout, along with a timestamp and information
 // about what test and file is doing the logging. Before Go 1.14, this is an alternative to t.Logf as it logs to stdout
 // immediately, rather than buffering all log output and only displaying it at the very end of the test. This is useful
@@ -132,6 +131,8 @@ func (terratestLogger) Logf(t testing.TestingT, format string, args ...any) {
 //     this log method, you get log output continuously.
 //
 // Although t.Logf now supports streaming output since Go 1.14, this is kept for compatibility purposes.
+//
+// Deprecated: use Logger instead, as it provides more flexibility on logging.
 func Logf(t testing.TestingT, format string, args ...any) {
 	if tt, ok := t.(helper); ok {
 		tt.Helper()
