@@ -1,0 +1,94 @@
+name: Azure Integration Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'modules/azure/**'
+      - 'test/azure/**'
+      - 'examples/azure/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'mise.toml'
+      - '.github/workflows/azure-integration-tests.yml'
+  pull_request:
+    paths:
+      - 'modules/azure/**'
+      - 'test/azure/**'
+      - 'examples/azure/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'mise.toml'
+      - '.github/workflows/azure-integration-tests.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: azure-integration-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  azure-integration-tests:
+    name: Azure Integration Tests
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install mise
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        with:
+          version: 2025.12.10
+          experimental: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Go module cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go modules
+        run: go mod download
+
+      - name: Azure login (OIDC)
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run Azure integration tests
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_USE_OIDC: "true"
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/logs
+          # Scope: tests that opt into OIDC via the `azureoidc` build tag.
+          # AzureRM 2.x examples cannot authenticate via OIDC and are gated
+          # behind a follow-up provider-upgrade effort; they remain on the
+          # default `azure` tag.
+          go test -v -p 1 -tags azureoidc -count=1 -timeout 45m \
+            ./test/azure/... 2>&1 | tee /tmp/logs/azure-integration-tests.log
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: azure-integration-test-logs
+          path: /tmp/logs/
+          retention-days: 14

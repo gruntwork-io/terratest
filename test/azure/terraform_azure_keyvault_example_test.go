@@ -1,5 +1,5 @@
-//go:build azure
-// +build azure
+//go:build azure || azureoidc
+// +build azure azureoidc
 
 package test_test
 
