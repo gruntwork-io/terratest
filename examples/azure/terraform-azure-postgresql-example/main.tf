@@ -1,7 +1,9 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY AN PostgreSQL Database
-# This is an example of how to deploy an Azure PostgreSQL database.
-# See test/terraform_azure_example_test.go for how to write automated tests for this code.
+# This is an example of how to deploy an Azure PostgreSQL Flexible Server.
+# Azure retired PostgreSQL Single Server (azurerm_postgresql_server) on 2025-03-28; this example uses the
+# replacement Flexible Server resources.
+# See test/terraform_azure_postgresql_example_test.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 
 
@@ -15,6 +17,10 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
     }
   }
 }
@@ -32,44 +38,56 @@ resource "azurerm_resource_group" "rg" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY AZURE PostgreSQL SERVER
+# DEPLOY AZURE PostgreSQL FLEXIBLE SERVER
 # ---------------------------------------------------------------------------------------------------------------------
-resource "azurerm_postgresql_server" "postgresqlserver" {
+resource "azurerm_postgresql_flexible_server" "postgresqlserver" {
   name                = "postgresqlserver-${var.postfix}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
-  sku_name = "B_Gen5_2"
+  administrator_login    = "pgsqladmin"
+  administrator_password = random_password.password.result
 
-  storage_mb                   = 5120
-  backup_retention_days        = 7
-  geo_redundant_backup_enabled = false
-  auto_grow_enabled            = true
+  sku_name = var.sku_name
+  version  = var.postgresql_version
 
-  administrator_login          = "pgsqladmin"
-  administrator_login_password = random_password.password.result
-  version                      = "11"
-  ssl_enforcement_enabled      = true
+  storage_mb            = 32768
+  backup_retention_days = 7
+
+  zone = "1"
+
+  # Public access only; no high-availability for cost reasons in this example.
+  public_network_access_enabled = true
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY AZURE PostgreSQL Database
+# DEPLOY AZURE PostgreSQL FLEXIBLE SERVER DATABASE
 # ---------------------------------------------------------------------------------------------------------------------
-resource "azurerm_postgresql_database" "postgresqldb" {
-  name                = "postgresqldb"
-  resource_group_name = azurerm_resource_group.rg.name
-  server_name         = azurerm_postgresql_server.postgresqlserver.name
-  charset             = "UTF8"
-  collation           = "English_United States.1252"
+resource "azurerm_postgresql_flexible_server_database" "postgresqldb" {
+  name      = "postgresqldb"
+  server_id = azurerm_postgresql_flexible_server.postgresqlserver.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Use a random password geneerator
+# DEPLOY A FIREWALL RULE
+# Allow Azure-internal services to reach the server. Adjust ranges to taste.
+# ---------------------------------------------------------------------------------------------------------------------
+resource "azurerm_postgresql_flexible_server_firewall_rule" "allow_azure" {
+  name             = "AllowAllAzureIPs"
+  server_id        = azurerm_postgresql_flexible_server.postgresqlserver.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Use a random password generator
 # ---------------------------------------------------------------------------------------------------------------------
 resource "random_password" "password" {
   length  = 20
   special = true
   upper   = true
   lower   = true
-  number  = true
+  numeric = true
 }

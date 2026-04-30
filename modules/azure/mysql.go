@@ -4,14 +4,14 @@ package azure
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
 )
 
-// GetMYSQLServerClientContextE is a helper function that will setup a mysql server client.
+// GetMYSQLServerClientContextE is a helper function that will setup a mysql flexible server client.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLServerClientContextE(_ context.Context, subscriptionID string) (*armmysql.ServersClient, error) {
+func GetMYSQLServerClientContextE(_ context.Context, subscriptionID string) (*armmysqlflexibleservers.ServersClient, error) {
 	clientFactory, err := getArmMySQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -20,17 +20,17 @@ func GetMYSQLServerClientContextE(_ context.Context, subscriptionID string) (*ar
 	return clientFactory.NewServersClient(), nil
 }
 
-// GetMYSQLServerClientE is a helper function that will setup a mysql server client.
+// GetMYSQLServerClientE is a helper function that will setup a mysql flexible server client.
 //
 // Deprecated: Use [GetMYSQLServerClientContextE] instead.
-func GetMYSQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
+func GetMYSQLServerClientE(subscriptionID string) (*armmysqlflexibleservers.ServersClient, error) {
 	return GetMYSQLServerClientContextE(context.Background(), subscriptionID)
 }
 
 // GetMYSQLServerContext is a helper function that gets the server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) *armmysql.Server {
+func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) *armmysqlflexibleservers.Server {
 	t.Helper()
 
 	mysqlServer, err := GetMYSQLServerContextE(t, ctx, subscriptionID, resGroupName, serverName)
@@ -43,7 +43,7 @@ func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, subscription
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetMYSQLServerContext] instead.
-func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armmysql.Server {
+func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armmysqlflexibleservers.Server {
 	t.Helper()
 
 	return GetMYSQLServerContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
@@ -51,7 +51,7 @@ func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, 
 
 // GetMYSQLServerContextE is a helper function that gets the server.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armmysql.Server, error) {
+func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armmysqlflexibleservers.Server, error) {
 	// Create a MySQL Server client
 	mysqlClient, err := CreateMySQLServerClientContextE(ctx, subscriptionID)
 	if err != nil {
@@ -62,7 +62,7 @@ func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptio
 }
 
 // GetMYSQLServerWithClient gets the server using the provided ServersClient.
-func GetMYSQLServerWithClient(ctx context.Context, client *armmysql.ServersClient, resGroupName string, serverName string) (*armmysql.Server, error) {
+func GetMYSQLServerWithClient(ctx context.Context, client *armmysqlflexibleservers.ServersClient, resGroupName string, serverName string) (*armmysqlflexibleservers.Server, error) {
 	resp, err := client.Get(ctx, resGroupName, serverName, nil)
 	if err != nil {
 		return nil, err
@@ -74,13 +74,13 @@ func GetMYSQLServerWithClient(ctx context.Context, client *armmysql.ServersClien
 // GetMYSQLServerE is a helper function that gets the server.
 //
 // Deprecated: Use [GetMYSQLServerContextE] instead.
-func GetMYSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*armmysql.Server, error) {
+func GetMYSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*armmysqlflexibleservers.Server, error) {
 	return GetMYSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }
 
-// GetMYSQLDBClientContextE is a helper function that will setup a mysql DB client.
+// GetMYSQLDBClientContextE is a helper function that will setup a mysql flexible DB client.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLDBClientContextE(_ context.Context, subscriptionID string) (*armmysql.DatabasesClient, error) {
+func GetMYSQLDBClientContextE(_ context.Context, subscriptionID string) (*armmysqlflexibleservers.DatabasesClient, error) {
 	clientFactory, err := getArmMySQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -89,17 +89,17 @@ func GetMYSQLDBClientContextE(_ context.Context, subscriptionID string) (*armmys
 	return clientFactory.NewDatabasesClient(), nil
 }
 
-// GetMYSQLDBClientE is a helper function that will setup a mysql DB client.
+// GetMYSQLDBClientE is a helper function that will setup a mysql flexible DB client.
 //
 // Deprecated: Use [GetMYSQLDBClientContextE] instead.
-func GetMYSQLDBClientE(subscriptionID string) (*armmysql.DatabasesClient, error) {
+func GetMYSQLDBClientE(subscriptionID string) (*armmysqlflexibleservers.DatabasesClient, error) {
 	return GetMYSQLDBClientContextE(context.Background(), subscriptionID)
 }
 
 // GetMYSQLDBContext is a helper function that gets the database.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) *armmysql.Database {
+func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) *armmysqlflexibleservers.Database {
 	t.Helper()
 
 	database, err := GetMYSQLDBContextE(t, ctx, subscriptionID, resGroupName, serverName, dbName)
@@ -112,7 +112,7 @@ func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID s
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [GetMYSQLDBContext] instead.
-func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armmysql.Database {
+func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armmysqlflexibleservers.Database {
 	t.Helper()
 
 	return GetMYSQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName, dbName) //nolint:staticcheck
@@ -120,7 +120,7 @@ func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbNa
 
 // GetMYSQLDBContextE is a helper function that gets the database.
 // The ctx parameter supports cancellation and timeouts.
-func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
+func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysqlflexibleservers.Database, error) {
 	// Create a MySQL db client
 	mysqldbClient, err := GetMYSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
@@ -131,7 +131,7 @@ func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID 
 }
 
 // GetMYSQLDBWithClient gets the database using the provided DatabasesClient.
-func GetMYSQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
+func GetMYSQLDBWithClient(ctx context.Context, client *armmysqlflexibleservers.DatabasesClient, resGroupName string, serverName string, dbName string) (*armmysqlflexibleservers.Database, error) {
 	resp, err := client.Get(ctx, resGroupName, serverName, dbName, nil)
 	if err != nil {
 		return nil, err
@@ -143,14 +143,14 @@ func GetMYSQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient,
 // GetMYSQLDBE is a helper function that gets the database.
 //
 // Deprecated: Use [GetMYSQLDBContextE] instead.
-func GetMYSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
+func GetMYSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysqlflexibleservers.Database, error) {
 	return GetMYSQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName, dbName)
 }
 
 // ListMySQLDBContext is a helper function that gets all databases per server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func ListMySQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) []*armmysql.Database {
+func ListMySQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) []*armmysqlflexibleservers.Database {
 	t.Helper()
 
 	dblist, err := ListMySQLDBContextE(t, ctx, subscriptionID, resGroupName, serverName)
@@ -163,7 +163,7 @@ func ListMySQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID 
 // This function would fail the test if there is an error.
 //
 // Deprecated: Use [ListMySQLDBContext] instead.
-func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) []*armmysql.Database {
+func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) []*armmysqlflexibleservers.Database {
 	t.Helper()
 
 	return ListMySQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
@@ -171,7 +171,7 @@ func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, sub
 
 // ListMySQLDBContextE is a helper function that gets all databases per server.
 // The ctx parameter supports cancellation and timeouts.
-func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) ([]*armmysql.Database, error) {
+func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) ([]*armmysqlflexibleservers.Database, error) {
 	// Create a MySQL db client
 	mysqldbClient, err := GetMYSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
@@ -182,10 +182,10 @@ func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID
 }
 
 // ListMySQLDBWithClient lists all databases per server using the provided DatabasesClient.
-func ListMySQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient, resGroupName string, serverName string) ([]*armmysql.Database, error) {
+func ListMySQLDBWithClient(ctx context.Context, client *armmysqlflexibleservers.DatabasesClient, resGroupName string, serverName string) ([]*armmysqlflexibleservers.Database, error) {
 	pager := client.NewListByServerPager(resGroupName, serverName, nil)
 
-	var databases []*armmysql.Database
+	var databases []*armmysqlflexibleservers.Database
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -202,6 +202,6 @@ func ListMySQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient
 // ListMySQLDBE is a helper function that gets all databases per server.
 //
 // Deprecated: Use [ListMySQLDBContextE] instead.
-func ListMySQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]*armmysql.Database, error) {
+func ListMySQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]*armmysqlflexibleservers.Database, error) {
 	return ListMySQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }

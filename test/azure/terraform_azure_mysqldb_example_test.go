@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -19,8 +19,8 @@ func TestTerraformAzureMySQLDBExample(t *testing.T) {
 	t.Parallel()
 
 	uniquePostfix := strings.ToLower(random.UniqueID())
-	expectedServerSkuName := "GP_Gen5_2"
-	expectedServerStoragemMb := "5120"
+	expectedServerSkuName := "B_Standard_B1ms"
+	expectedServerStorageSizeGB := "20"
 	expectedDatabaseCharSet := "utf8"
 	expectedDatabaseCollation := "utf8_unicode_ci"
 
@@ -29,10 +29,10 @@ func TestTerraformAzureMySQLDBExample(t *testing.T) {
 		// The path to where our Terraform code is located
 		TerraformDir: "../../examples/azure/terraform-azure-mysqldb-example",
 		Vars: map[string]interface{}{
-			"postfix":                uniquePostfix,
-			"mysqlserver_sku_name":   expectedServerSkuName,
-			"mysqlserver_storage_mb": expectedServerStoragemMb,
-			"mysqldb_charset":        expectedDatabaseCharSet,
+			"postfix":                     uniquePostfix,
+			"mysqlserver_sku_name":        expectedServerSkuName,
+			"mysqlserver_storage_size_gb": expectedServerStorageSizeGB,
+			"mysqldb_charset":             expectedDatabaseCharSet,
 		},
 	}
 
@@ -48,15 +48,17 @@ func TestTerraformAzureMySQLDBExample(t *testing.T) {
 
 	expectedMYSQLDBName := terraform.OutputContext(t, t.Context(), terraformOptions, "mysql_database_name")
 
-	// website::tag::4:: Get mySQL server details and assert them against the terraform output
+	// website::tag::4:: Get mySQL flexible server details and assert them against the terraform output
 	actualMYSQLServer := azure.GetMYSQLServerContext(t, t.Context(), "", expectedResourceGroupName, expectedMYSQLServerName)
 
 	assert.Equal(t, expectedServerSkuName, *actualMYSQLServer.SKU.Name)
-	assert.Equal(t, expectedServerStoragemMb, strconv.Itoa(int(*actualMYSQLServer.Properties.StorageProfile.StorageMB)))
+	// Flexible servers expose storage in GB (StorageSizeGB) rather than the legacy StorageMB.
+	assert.Equal(t, expectedServerStorageSizeGB, strconv.Itoa(int(*actualMYSQLServer.Properties.Storage.StorageSizeGB)))
 
-	assert.Equal(t, armmysql.ServerStateReady, *actualMYSQLServer.Properties.UserVisibleState)
+	// Flexible servers use Properties.State (typed as *ServerState) rather than the legacy UserVisibleState.
+	assert.Equal(t, armmysqlflexibleservers.ServerStateReady, *actualMYSQLServer.Properties.State)
 
-	// website::tag::5:: Get  mySQL server DB details and assert them against the terraform output
+	// website::tag::5:: Get  mySQL flexible server DB details and assert them against the terraform output
 	actualDatabase := azure.GetMYSQLDBContext(t, t.Context(), "", expectedResourceGroupName, expectedMYSQLServerName, expectedMYSQLDBName)
 
 	assert.Equal(t, expectedDatabaseCharSet, *actualDatabase.Properties.Charset)

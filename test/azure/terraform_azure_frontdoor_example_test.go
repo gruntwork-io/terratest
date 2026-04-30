@@ -33,25 +33,30 @@ func TestTerraformAzureFrontDoorExample(t *testing.T) {
 	// website::tag::2:: Run `terraform init` and `terraform apply`. Fail the test if there are any errors.
 	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 
-	// website::tag::3:: Run `terraform output` to get the values of output variables
+	// website::tag::3:: Run `terraform output` to get the values of output variables.
+	// The example deploys a CDN Front Door (azurerm_cdn_frontdoor_*) which supersedes the
+	// retired classic Front Door resource. The output names are kept stable for callers, but
+	// `front_door_name` is now the CDN profile name and `front_door_endpoint_name` is the
+	// CDN endpoint name (a child of the profile).
 	resourceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "resource_group_name")
-	frontDoorName := terraform.OutputContext(t, t.Context(), terraformOptions, "front_door_name")
+	frontDoorProfileName := terraform.OutputContext(t, t.Context(), terraformOptions, "front_door_name")
 	frontDoorURL := terraform.OutputContext(t, t.Context(), terraformOptions, "front_door_url")
-	frontendEndpointName := terraform.OutputContext(t, t.Context(), terraformOptions, "front_door_endpoint_name")
+	frontDoorEndpointName := terraform.OutputContext(t, t.Context(), terraformOptions, "front_door_endpoint_name")
 
-	// website::tag::4:: Get FrontDoor details and assert them against the terraform output
+	// website::tag::4:: Get CDN Front Door details and assert them against the terraform output.
 	// NOTE: the value of subscriptionID can be left blank, it will be replaced by the value
 	//       of the environment variable ARM_SUBSCRIPTION_ID
 
-	frontDoorExists := azure.FrontDoorExistsContext(t, t.Context(), frontDoorName, resourceGroupName, subscriptionID)
-	assert.True(t, frontDoorExists)
+	profileExists := azure.CDNFrontDoorProfileExistsContext(t, t.Context(), frontDoorProfileName, resourceGroupName, subscriptionID)
+	assert.True(t, profileExists)
 
-	actualFrontDoorInstance := azure.GetFrontDoorContext(t, t.Context(), frontDoorName, resourceGroupName, subscriptionID)
-	assert.Equal(t, frontDoorName, *actualFrontDoorInstance.Name)
+	actualProfile := azure.GetCDNFrontDoorProfileContext(t, t.Context(), frontDoorProfileName, resourceGroupName, subscriptionID)
+	assert.Equal(t, frontDoorProfileName, *actualProfile.Name)
 
-	endpointExists := azure.FrontDoorFrontendEndpointExistsContext(t, t.Context(), frontendEndpointName, frontDoorName, resourceGroupName, subscriptionID)
+	endpointExists := azure.CDNFrontDoorEndpointExistsContext(t, t.Context(), frontDoorEndpointName, frontDoorProfileName, resourceGroupName, subscriptionID)
 	assert.True(t, endpointExists)
 
-	actualFrontDoorEndpoint := azure.GetFrontDoorFrontendEndpointContext(t, t.Context(), frontendEndpointName, frontDoorName, resourceGroupName, subscriptionID)
-	assert.Equal(t, frontDoorURL, *actualFrontDoorEndpoint.Properties.HostName)
+	actualEndpoint := azure.GetCDNFrontDoorEndpointContext(t, t.Context(), frontDoorEndpointName, frontDoorProfileName, resourceGroupName, subscriptionID)
+	assert.Equal(t, frontDoorEndpointName, *actualEndpoint.Name)
+	assert.Equal(t, frontDoorURL, *actualEndpoint.Properties.HostName)
 }

@@ -9,8 +9,8 @@ import (
 	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
-	mysqlfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
+	mysqlfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers/fake"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,10 +20,10 @@ import (
 // Fake client helpers
 // ---------------------------------------------------------------------------
 
-func newFakeMySQLServersClient(t *testing.T, srv *mysqlfake.ServersServer) *armmysql.ServersClient {
+func newFakeMySQLServersClient(t *testing.T, srv *mysqlfake.ServersServer) *armmysqlflexibleservers.ServersClient {
 	t.Helper()
 
-	client, err := armmysql.NewServersClient("fake-sub", &azfake.TokenCredential{},
+	client, err := armmysqlflexibleservers.NewServersClient("fake-sub", &azfake.TokenCredential{},
 		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
 			Transport: mysqlfake.NewServersServerTransport(srv),
 		}})
@@ -32,10 +32,10 @@ func newFakeMySQLServersClient(t *testing.T, srv *mysqlfake.ServersServer) *armm
 	return client
 }
 
-func newFakeMySQLDatabasesClient(t *testing.T, srv *mysqlfake.DatabasesServer) *armmysql.DatabasesClient {
+func newFakeMySQLDatabasesClient(t *testing.T, srv *mysqlfake.DatabasesServer) *armmysqlflexibleservers.DatabasesClient {
 	t.Helper()
 
-	client, err := armmysql.NewDatabasesClient("fake-sub", &azfake.TokenCredential{},
+	client, err := armmysqlflexibleservers.NewDatabasesClient("fake-sub", &azfake.TokenCredential{},
 		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
 			Transport: mysqlfake.NewDatabasesServerTransport(srv),
 		}})
@@ -59,9 +59,9 @@ func TestGetMYSQLServerWithClient(t *testing.T) {
 		{
 			name: "Success",
 			server: mysqlfake.ServersServer{
-				Get: func(_ context.Context, _ string, serverName string, _ *armmysql.ServersClientGetOptions) (resp azfake.Responder[armmysql.ServersClientGetResponse], errResp azfake.ErrorResponder) {
-					resp.SetResponse(http.StatusOK, armmysql.ServersClientGetResponse{
-						Server: armmysql.Server{
+				Get: func(_ context.Context, _ string, serverName string, _ *armmysqlflexibleservers.ServersClientGetOptions) (resp azfake.Responder[armmysqlflexibleservers.ServersClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armmysqlflexibleservers.ServersClientGetResponse{
+						Server: armmysqlflexibleservers.Server{
 							Name: to.Ptr(serverName),
 						},
 					}, nil)
@@ -73,7 +73,7 @@ func TestGetMYSQLServerWithClient(t *testing.T) {
 		{
 			name: "NotFound",
 			server: mysqlfake.ServersServer{
-				Get: func(_ context.Context, _ string, _ string, _ *armmysql.ServersClientGetOptions) (resp azfake.Responder[armmysql.ServersClientGetResponse], errResp azfake.ErrorResponder) {
+				Get: func(_ context.Context, _ string, _ string, _ *armmysqlflexibleservers.ServersClientGetOptions) (resp azfake.Responder[armmysqlflexibleservers.ServersClientGetResponse], errResp azfake.ErrorResponder) {
 					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
 					return
 				},
@@ -116,9 +116,9 @@ func TestGetMYSQLDBWithClient(t *testing.T) {
 		{
 			name: "Success",
 			server: mysqlfake.DatabasesServer{
-				Get: func(_ context.Context, _ string, _ string, dbName string, _ *armmysql.DatabasesClientGetOptions) (resp azfake.Responder[armmysql.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
-					resp.SetResponse(http.StatusOK, armmysql.DatabasesClientGetResponse{
-						Database: armmysql.Database{
+				Get: func(_ context.Context, _ string, _ string, dbName string, _ *armmysqlflexibleservers.DatabasesClientGetOptions) (resp azfake.Responder[armmysqlflexibleservers.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armmysqlflexibleservers.DatabasesClientGetResponse{
+						Database: armmysqlflexibleservers.Database{
 							Name: to.Ptr(dbName),
 						},
 					}, nil)
@@ -130,7 +130,7 @@ func TestGetMYSQLDBWithClient(t *testing.T) {
 		{
 			name: "NotFound",
 			server: mysqlfake.DatabasesServer{
-				Get: func(_ context.Context, _ string, _ string, _ string, _ *armmysql.DatabasesClientGetOptions) (resp azfake.Responder[armmysql.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
+				Get: func(_ context.Context, _ string, _ string, _ string, _ *armmysqlflexibleservers.DatabasesClientGetOptions) (resp azfake.Responder[armmysqlflexibleservers.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
 					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
 					return
 				},
@@ -174,10 +174,10 @@ func TestListMySQLDBWithClient(t *testing.T) {
 		{
 			name: "TwoDatabases",
 			server: mysqlfake.DatabasesServer{
-				NewListByServerPager: func(_ string, _ string, _ *armmysql.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armmysql.DatabasesClientListByServerResponse]) {
-					resp.AddPage(http.StatusOK, armmysql.DatabasesClientListByServerResponse{
-						DatabaseListResult: armmysql.DatabaseListResult{
-							Value: []*armmysql.Database{
+				NewListByServerPager: func(_ string, _ string, _ *armmysqlflexibleservers.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armmysqlflexibleservers.DatabasesClientListByServerResponse]) {
+					resp.AddPage(http.StatusOK, armmysqlflexibleservers.DatabasesClientListByServerResponse{
+						DatabaseListResult: armmysqlflexibleservers.DatabaseListResult{
+							Value: []*armmysqlflexibleservers.Database{
 								{Name: to.Ptr("db1")},
 								{Name: to.Ptr("db2")},
 							},
@@ -192,10 +192,10 @@ func TestListMySQLDBWithClient(t *testing.T) {
 		{
 			name: "Empty",
 			server: mysqlfake.DatabasesServer{
-				NewListByServerPager: func(_ string, _ string, _ *armmysql.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armmysql.DatabasesClientListByServerResponse]) {
-					resp.AddPage(http.StatusOK, armmysql.DatabasesClientListByServerResponse{
-						DatabaseListResult: armmysql.DatabaseListResult{
-							Value: []*armmysql.Database{},
+				NewListByServerPager: func(_ string, _ string, _ *armmysqlflexibleservers.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armmysqlflexibleservers.DatabasesClientListByServerResponse]) {
+					resp.AddPage(http.StatusOK, armmysqlflexibleservers.DatabasesClientListByServerResponse{
+						DatabaseListResult: armmysqlflexibleservers.DatabaseListResult{
+							Value: []*armmysqlflexibleservers.Database{},
 						},
 					}, nil)
 

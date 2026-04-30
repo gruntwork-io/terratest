@@ -1,7 +1,10 @@
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY AN AZURE MySQL Database
-# This is an example of how to deploy an Azure Mysql database.
+# DEPLOY AN AZURE MySQL FLEXIBLE SERVER + DATABASE
+# This is an example of how to deploy an Azure MySQL Flexible Server and database.
 # See test/terraform_azure_example_test.go for how to write automated tests for this code.
+#
+# NOTE: The legacy `azurerm_mysql_server` (MySQL Single Server) was retired by Azure on 2024-09-16.
+# This example uses the modern flexible server resources, which are the supported replacement.
 # ---------------------------------------------------------------------------------------------------------------------
 
 
@@ -33,7 +36,7 @@ resource "azurerm_resource_group" "mysql_rg" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY AZURE MySQL SERVER
+# DEPLOY AZURE MySQL FLEXIBLE SERVER
 # ---------------------------------------------------------------------------------------------------------------------
 
 # Random password is used as an example to simplify the deployment and improve the security of the database.
@@ -47,35 +50,46 @@ resource "random_password" "password" {
   min_special      = "1"
 }
 
-resource "azurerm_mysql_server" "mysqlserver" {
+resource "azurerm_mysql_flexible_server" "mysqlserver" {
   name                = "mysqlserver-${var.postfix}"
   location            = azurerm_resource_group.mysql_rg.location
   resource_group_name = azurerm_resource_group.mysql_rg.name
 
-  administrator_login          = var.mysqlserver_admin_login
-  administrator_login_password = random_password.password.result
+  administrator_login    = var.mysqlserver_admin_login
+  administrator_password = random_password.password.result
 
-  sku_name   = var.mysqlserver_sku_name
-  storage_mb = var.mysqlserver_storage_mb
-  version    = "5.7"
+  sku_name = var.mysqlserver_sku_name
+  version  = var.mysqlserver_version
 
-  auto_grow_enabled                 = true
-  geo_redundant_backup_enabled      = false
-  infrastructure_encryption_enabled = true
-  backup_retention_days             = 7
-  public_network_access_enabled     = false
-  ssl_enforcement_enabled           = true
-  ssl_minimal_tls_version_enforced  = "TLS1_2"
+  backup_retention_days = 7
+
+  storage {
+    size_gb           = var.mysqlserver_storage_size_gb
+    auto_grow_enabled = true
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-# DEPLOY AZURE MySQL DATABASE
+# DEPLOY AZURE MySQL FLEXIBLE DATABASE
 # ---------------------------------------------------------------------------------------------------------------------
 
-resource "azurerm_mysql_database" "mysqldb" {
+resource "azurerm_mysql_flexible_database" "mysqldb" {
   name                = "mysqldb-${var.postfix}"
   resource_group_name = azurerm_resource_group.mysql_rg.name
-  server_name         = azurerm_mysql_server.mysqlserver.name
+  server_name         = azurerm_mysql_flexible_server.mysqlserver.name
   charset             = var.mysqldb_charset
   collation           = var.mysqldb_collation
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY AZURE MySQL FLEXIBLE SERVER FIREWALL RULE
+# Allow access from the Azure backbone (0.0.0.0) so the test runner can reach the server.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "azurerm_mysql_flexible_server_firewall_rule" "allow_azure" {
+  name                = "AllowAzureServices"
+  resource_group_name = azurerm_resource_group.mysql_rg.name
+  server_name         = azurerm_mysql_flexible_server.mysqlserver.name
+  start_ip_address    = "0.0.0.0"
+  end_ip_address      = "0.0.0.0"
 }

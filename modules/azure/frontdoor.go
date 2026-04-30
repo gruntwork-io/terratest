@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cdn/armcdn"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -11,6 +12,12 @@ import (
 // FrontDoorExistsContext indicates whether the Front Door exists for the subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
+//
+// Note: this helper targets the legacy classic Front Door API (`armfrontdoor`), which Microsoft
+// deprecated for new resource creation on April 1, 2025. For new deployments use the CDN
+// Front Door helpers (e.g. [CDNFrontDoorProfileExistsContext]). The legacy helpers remain
+// for callers operating against existing classic Front Door resources during the deprecation
+// window (full retirement is March 31, 2027).
 func FrontDoorExistsContext(t testing.TestingT, ctx context.Context, frontDoorName string, resourceGroupName string, subscriptionID string) bool {
 	t.Helper()
 
@@ -210,4 +217,136 @@ func GetFrontDoorClientE(subscriptionID string) (*armfrontdoor.FrontDoorsClient,
 // Deprecated: Use [CreateFrontDoorFrontendEndpointClientContextE] instead.
 func GetFrontDoorFrontendEndpointClientE(subscriptionID string) (*armfrontdoor.FrontendEndpointsClient, error) {
 	return CreateFrontDoorFrontendEndpointClientContextE(context.Background(), subscriptionID)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// CDN Front Door (modern API) helpers
+//
+// These helpers wrap the `armcdn` SDK and target the modern CDN Front Door resource family
+// (`azurerm_cdn_frontdoor_profile`, `azurerm_cdn_frontdoor_endpoint`, ...) that supersedes
+// the classic `azurerm_frontdoor` resource. Profiles are referred to interchangeably as
+// "Front Door profiles" by the AzureRM provider; the underlying ARM resource type is
+// `Microsoft.Cdn/profiles` with an AFD-specific SKU.
+// ---------------------------------------------------------------------------------------------------------------------
+
+// CDNFrontDoorProfileExistsContext indicates whether the specified CDN Front Door profile exists.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func CDNFrontDoorProfileExistsContext(t testing.TestingT, ctx context.Context, profileName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	exists, err := CDNFrontDoorProfileExistsContextE(ctx, profileName, resourceGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return exists
+}
+
+// CDNFrontDoorProfileExistsContextE indicates whether the specified CDN Front Door profile exists.
+// The ctx parameter supports cancellation and timeouts.
+func CDNFrontDoorProfileExistsContextE(ctx context.Context, profileName string, resourceGroupName string, subscriptionID string) (bool, error) {
+	_, err := GetCDNFrontDoorProfileContextE(ctx, profileName, resourceGroupName, subscriptionID)
+	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+// GetCDNFrontDoorProfileContext returns the specified CDN Front Door profile.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCDNFrontDoorProfileContext(t testing.TestingT, ctx context.Context, profileName string, resourceGroupName string, subscriptionID string) *armcdn.Profile {
+	t.Helper()
+
+	profile, err := GetCDNFrontDoorProfileContextE(ctx, profileName, resourceGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return profile
+}
+
+// GetCDNFrontDoorProfileContextE returns the specified CDN Front Door profile if it exists.
+// The ctx parameter supports cancellation and timeouts.
+func GetCDNFrontDoorProfileContextE(ctx context.Context, profileName, resourceGroupName, subscriptionID string) (*armcdn.Profile, error) {
+	client, err := CreateCDNProfilesClientContextE(ctx, subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCDNFrontDoorProfileWithClient(ctx, client, resourceGroupName, profileName)
+}
+
+// GetCDNFrontDoorProfileWithClient gets the specified CDN Front Door profile using the provided client.
+// This variant is useful for testing with fake clients.
+func GetCDNFrontDoorProfileWithClient(ctx context.Context, client *armcdn.ProfilesClient, resourceGroupName, profileName string) (*armcdn.Profile, error) {
+	resp, err := client.Get(ctx, resourceGroupName, profileName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Profile, nil
+}
+
+// CDNFrontDoorEndpointExistsContext indicates whether the specified CDN Front Door endpoint exists for the given profile.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func CDNFrontDoorEndpointExistsContext(t testing.TestingT, ctx context.Context, endpointName string, profileName string, resourceGroupName string, subscriptionID string) bool {
+	t.Helper()
+
+	exists, err := CDNFrontDoorEndpointExistsContextE(ctx, endpointName, profileName, resourceGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return exists
+}
+
+// CDNFrontDoorEndpointExistsContextE indicates whether the specified CDN Front Door endpoint exists for the given profile.
+// The ctx parameter supports cancellation and timeouts.
+func CDNFrontDoorEndpointExistsContextE(ctx context.Context, endpointName, profileName, resourceGroupName, subscriptionID string) (bool, error) {
+	_, err := GetCDNFrontDoorEndpointContextE(ctx, endpointName, profileName, resourceGroupName, subscriptionID)
+	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+// GetCDNFrontDoorEndpointContext returns the specified CDN Front Door endpoint for the given profile.
+// This function would fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCDNFrontDoorEndpointContext(t testing.TestingT, ctx context.Context, endpointName string, profileName string, resourceGroupName string, subscriptionID string) *armcdn.AFDEndpoint {
+	t.Helper()
+
+	ep, err := GetCDNFrontDoorEndpointContextE(ctx, endpointName, profileName, resourceGroupName, subscriptionID)
+	require.NoError(t, err)
+
+	return ep
+}
+
+// GetCDNFrontDoorEndpointContextE returns the specified CDN Front Door endpoint for the given profile if it exists.
+// The ctx parameter supports cancellation and timeouts.
+func GetCDNFrontDoorEndpointContextE(ctx context.Context, endpointName, profileName, resourceGroupName, subscriptionID string) (*armcdn.AFDEndpoint, error) {
+	client, err := CreateCDNAFDEndpointsClientContextE(ctx, subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCDNFrontDoorEndpointWithClient(ctx, client, resourceGroupName, profileName, endpointName)
+}
+
+// GetCDNFrontDoorEndpointWithClient gets the specified CDN Front Door endpoint using the provided client.
+// This variant is useful for testing with fake clients.
+func GetCDNFrontDoorEndpointWithClient(ctx context.Context, client *armcdn.AFDEndpointsClient, resourceGroupName, profileName, endpointName string) (*armcdn.AFDEndpoint, error) {
+	resp, err := client.Get(ctx, resourceGroupName, profileName, endpointName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.AFDEndpoint, nil
 }

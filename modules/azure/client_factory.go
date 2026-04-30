@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cdn/armcdn"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerinstance/armcontainerinstance/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerregistry/armcontainerregistry"
@@ -23,9 +24,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/frontdoor/armfrontdoor"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/monitor/armmonitor"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/mysql/armmysqlflexibleservers"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/servicebus/armservicebus/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
@@ -299,8 +300,8 @@ func getArmKeyVaultClientFactory(subscriptionID string) (*armkeyvault.ClientFact
 	})
 }
 
-// getArmPostgreSQLClientFactory gets an arm postgresql client factory
-func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresql.ClientFactory, error) {
+// getArmPostgreSQLClientFactory gets an arm postgresql flexible-servers client factory
+func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresqlflexibleservers.ClientFactory, error) {
 	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -320,7 +321,7 @@ func getArmPostgreSQLClientFactory(subscriptionID string) (*armpostgresql.Client
 		return nil, err
 	}
 
-	return armpostgresql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+	return armpostgresqlflexibleservers.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
 		},
@@ -571,9 +572,9 @@ func CreateDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error
 	return CreateDatabaseClientContext(context.Background(), subscriptionID)
 }
 
-// CreateMySQLServerClientContextE is a helper function that will setup a mysql server client.
+// CreateMySQLServerClientContextE is a helper function that will setup a mysql flexible server client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateMySQLServerClientContextE(_ context.Context, subscriptionID string) (*armmysql.ServersClient, error) {
+func CreateMySQLServerClientContextE(_ context.Context, subscriptionID string) (*armmysqlflexibleservers.ServersClient, error) {
 	clientFactory, err := getArmMySQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -582,15 +583,18 @@ func CreateMySQLServerClientContextE(_ context.Context, subscriptionID string) (
 	return clientFactory.NewServersClient(), nil
 }
 
-// CreateMySQLServerClientE is a helper function that will setup a mysql server client.
+// CreateMySQLServerClientE is a helper function that will setup a mysql flexible server client.
 //
 // Deprecated: Use [CreateMySQLServerClientContextE] instead.
-func CreateMySQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
+func CreateMySQLServerClientE(subscriptionID string) (*armmysqlflexibleservers.ServersClient, error) {
 	return CreateMySQLServerClientContextE(context.Background(), subscriptionID)
 }
 
-// getArmMySQLClientFactory gets an arm mysql client factory
-func getArmMySQLClientFactory(subscriptionID string) (*armmysql.ClientFactory, error) {
+// getArmMySQLClientFactory gets an arm mysql flexible servers client factory.
+//
+// NOTE: The legacy MySQL Single Server API (armmysql) was retired by Azure on 2024-09-16. This factory
+// now creates clients for the modern flexible server API (armmysqlflexibleservers).
+func getArmMySQLClientFactory(subscriptionID string) (*armmysqlflexibleservers.ClientFactory, error) {
 	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -610,7 +614,7 @@ func getArmMySQLClientFactory(subscriptionID string) (*armmysql.ClientFactory, e
 		return nil, err
 	}
 
-	return armmysql.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
+	return armmysqlflexibleservers.NewClientFactory(targetSubscriptionID, cred, &arm.ClientOptions{
 		ClientOptions: policy.ClientOptions{
 			Cloud: clientCloudConfig,
 		},
@@ -1163,6 +1167,50 @@ func CreateFrontDoorFrontendEndpointClientContextE(_ context.Context, subscripti
 // Deprecated: Use [CreateFrontDoorFrontendEndpointClientContextE] instead.
 func CreateFrontDoorFrontendEndpointClientE(subscriptionID string) (*armfrontdoor.FrontendEndpointsClient, error) {
 	return CreateFrontDoorFrontendEndpointClientContextE(context.Background(), subscriptionID)
+}
+
+// getArmCDNClientFactory creates an ARM CDN client factory used by the modern (CDN) Front Door clients.
+func getArmCDNClientFactory(subscriptionID string) (*armcdn.ClientFactory, error) {
+	targetSubscriptionID, err := getTargetAzureSubscription(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	cred, err := newArmCredential()
+	if err != nil {
+		return nil, err
+	}
+
+	opts, err := newArmClientOptions()
+	if err != nil {
+		return nil, err
+	}
+
+	return armcdn.NewClientFactory(targetSubscriptionID, cred, opts)
+}
+
+// CreateCDNProfilesClientContextE returns a CDN profiles client. Use this for the modern
+// `azurerm_cdn_frontdoor_profile` (Microsoft.Cdn/profiles) resource.
+// The ctx parameter supports cancellation and timeouts.
+func CreateCDNProfilesClientContextE(_ context.Context, subscriptionID string) (*armcdn.ProfilesClient, error) {
+	clientFactory, err := getArmCDNClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientFactory.NewProfilesClient(), nil
+}
+
+// CreateCDNAFDEndpointsClientContextE returns a CDN AFD endpoints client. Use this for the modern
+// `azurerm_cdn_frontdoor_endpoint` resource.
+// The ctx parameter supports cancellation and timeouts.
+func CreateCDNAFDEndpointsClientContextE(_ context.Context, subscriptionID string) (*armcdn.AFDEndpointsClient, error) {
+	clientFactory, err := getArmCDNClientFactory(subscriptionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientFactory.NewAFDEndpointsClient(), nil
 }
 
 // CreateSynapseWorkspaceClientContextE is a helper function that will setup a synapse workspace client.

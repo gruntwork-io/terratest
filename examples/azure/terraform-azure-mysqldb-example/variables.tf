@@ -25,31 +25,37 @@ variable "location" {
 }
 
 variable "mysqlserver_admin_login" {
-  description = "The administrator login name for the mysql server."
+  description = "The administrator login name for the mysql flexible server."
   type        = string
   default     = "mysqladmin"
 }
 
 variable "mysqlserver_sku_name" {
-  description = "The SKU name for the mysql server."
+  description = "The SKU name for the mysql flexible server (Burstable / GeneralPurpose / MemoryOptimized)."
   type        = string
-  default     = "GP_Gen5_2"
+  default     = "B_Standard_B1ms"
 }
 
-variable "mysqlserver_storage_mb" {
-  description = "The Max storage allowed for mysql server."
+variable "mysqlserver_storage_size_gb" {
+  description = "The max storage allowed (in GB) for the mysql flexible server."
+  type        = number
+  default     = 20
+}
+
+variable "mysqlserver_version" {
+  description = "The MySQL engine version for the flexible server."
   type        = string
-  default     = "5120"
+  default     = "8.0.21"
 }
 
 variable "mysqldb_charset" {
-  description = "The charset for mysql data base."
+  description = "The charset for the mysql database."
   type        = string
   default     = "utf8"
 }
 
 variable "mysqldb_collation" {
-  description = "The collation for mysql data base."
+  description = "The collation for the mysql database."
   type        = string
   default     = "utf8_unicode_ci"
 }

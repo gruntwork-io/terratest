@@ -9,8 +9,8 @@ import (
 	azfake "github.com/Azure/azure-sdk-for-go/sdk/azcore/fake"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql"
-	postgresqlfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresql/fake"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
+	postgresqlfake "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5/fake"
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,10 +20,10 @@ import (
 // Fake client helpers
 // ---------------------------------------------------------------------------
 
-func newFakePostgreSQLServersClient(t *testing.T, srv *postgresqlfake.ServersServer) *armpostgresql.ServersClient {
+func newFakePostgreSQLServersClient(t *testing.T, srv *postgresqlfake.ServersServer) *armpostgresqlflexibleservers.ServersClient {
 	t.Helper()
 
-	client, err := armpostgresql.NewServersClient("fake-sub", &azfake.TokenCredential{},
+	client, err := armpostgresqlflexibleservers.NewServersClient("fake-sub", &azfake.TokenCredential{},
 		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
 			Transport: postgresqlfake.NewServersServerTransport(srv),
 		}})
@@ -32,10 +32,10 @@ func newFakePostgreSQLServersClient(t *testing.T, srv *postgresqlfake.ServersSer
 	return client
 }
 
-func newFakePostgreSQLDatabasesClient(t *testing.T, srv *postgresqlfake.DatabasesServer) *armpostgresql.DatabasesClient {
+func newFakePostgreSQLDatabasesClient(t *testing.T, srv *postgresqlfake.DatabasesServer) *armpostgresqlflexibleservers.DatabasesClient {
 	t.Helper()
 
-	client, err := armpostgresql.NewDatabasesClient("fake-sub", &azfake.TokenCredential{},
+	client, err := armpostgresqlflexibleservers.NewDatabasesClient("fake-sub", &azfake.TokenCredential{},
 		&arm.ClientOptions{ClientOptions: policy.ClientOptions{
 			Transport: postgresqlfake.NewDatabasesServerTransport(srv),
 		}})
@@ -59,9 +59,9 @@ func TestGetPostgreSQLServerWithClient(t *testing.T) {
 		{
 			name: "Success",
 			server: postgresqlfake.ServersServer{
-				Get: func(_ context.Context, _ string, serverName string, _ *armpostgresql.ServersClientGetOptions) (resp azfake.Responder[armpostgresql.ServersClientGetResponse], errResp azfake.ErrorResponder) {
-					resp.SetResponse(http.StatusOK, armpostgresql.ServersClientGetResponse{
-						Server: armpostgresql.Server{
+				Get: func(_ context.Context, _ string, serverName string, _ *armpostgresqlflexibleservers.ServersClientGetOptions) (resp azfake.Responder[armpostgresqlflexibleservers.ServersClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armpostgresqlflexibleservers.ServersClientGetResponse{
+						Server: armpostgresqlflexibleservers.Server{
 							Name: to.Ptr(serverName),
 						},
 					}, nil)
@@ -73,7 +73,7 @@ func TestGetPostgreSQLServerWithClient(t *testing.T) {
 		{
 			name: "NotFound",
 			server: postgresqlfake.ServersServer{
-				Get: func(_ context.Context, _ string, _ string, _ *armpostgresql.ServersClientGetOptions) (resp azfake.Responder[armpostgresql.ServersClientGetResponse], errResp azfake.ErrorResponder) {
+				Get: func(_ context.Context, _ string, _ string, _ *armpostgresqlflexibleservers.ServersClientGetOptions) (resp azfake.Responder[armpostgresqlflexibleservers.ServersClientGetResponse], errResp azfake.ErrorResponder) {
 					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
 					return
 				},
@@ -116,9 +116,9 @@ func TestGetPostgreSQLDBWithClient(t *testing.T) {
 		{
 			name: "Success",
 			server: postgresqlfake.DatabasesServer{
-				Get: func(_ context.Context, _ string, _ string, dbName string, _ *armpostgresql.DatabasesClientGetOptions) (resp azfake.Responder[armpostgresql.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
-					resp.SetResponse(http.StatusOK, armpostgresql.DatabasesClientGetResponse{
-						Database: armpostgresql.Database{
+				Get: func(_ context.Context, _ string, _ string, dbName string, _ *armpostgresqlflexibleservers.DatabasesClientGetOptions) (resp azfake.Responder[armpostgresqlflexibleservers.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
+					resp.SetResponse(http.StatusOK, armpostgresqlflexibleservers.DatabasesClientGetResponse{
+						Database: armpostgresqlflexibleservers.Database{
 							Name: to.Ptr(dbName),
 						},
 					}, nil)
@@ -130,7 +130,7 @@ func TestGetPostgreSQLDBWithClient(t *testing.T) {
 		{
 			name: "NotFound",
 			server: postgresqlfake.DatabasesServer{
-				Get: func(_ context.Context, _ string, _ string, _ string, _ *armpostgresql.DatabasesClientGetOptions) (resp azfake.Responder[armpostgresql.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
+				Get: func(_ context.Context, _ string, _ string, _ string, _ *armpostgresqlflexibleservers.DatabasesClientGetOptions) (resp azfake.Responder[armpostgresqlflexibleservers.DatabasesClientGetResponse], errResp azfake.ErrorResponder) {
 					errResp.SetResponseError(http.StatusNotFound, "ResourceNotFound")
 					return
 				},
@@ -174,10 +174,10 @@ func TestListPostgreSQLDBWithClient(t *testing.T) {
 		{
 			name: "TwoDatabases",
 			server: postgresqlfake.DatabasesServer{
-				NewListByServerPager: func(_ string, _ string, _ *armpostgresql.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armpostgresql.DatabasesClientListByServerResponse]) {
-					resp.AddPage(http.StatusOK, armpostgresql.DatabasesClientListByServerResponse{
-						DatabaseListResult: armpostgresql.DatabaseListResult{
-							Value: []*armpostgresql.Database{
+				NewListByServerPager: func(_ string, _ string, _ *armpostgresqlflexibleservers.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armpostgresqlflexibleservers.DatabasesClientListByServerResponse]) {
+					resp.AddPage(http.StatusOK, armpostgresqlflexibleservers.DatabasesClientListByServerResponse{
+						DatabaseList: armpostgresqlflexibleservers.DatabaseList{
+							Value: []*armpostgresqlflexibleservers.Database{
 								{Name: to.Ptr("db1")},
 								{Name: to.Ptr("db2")},
 							},
@@ -192,10 +192,10 @@ func TestListPostgreSQLDBWithClient(t *testing.T) {
 		{
 			name: "Empty",
 			server: postgresqlfake.DatabasesServer{
-				NewListByServerPager: func(_ string, _ string, _ *armpostgresql.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armpostgresql.DatabasesClientListByServerResponse]) {
-					resp.AddPage(http.StatusOK, armpostgresql.DatabasesClientListByServerResponse{
-						DatabaseListResult: armpostgresql.DatabaseListResult{
-							Value: []*armpostgresql.Database{},
+				NewListByServerPager: func(_ string, _ string, _ *armpostgresqlflexibleservers.DatabasesClientListByServerOptions) (resp azfake.PagerResponder[armpostgresqlflexibleservers.DatabasesClientListByServerResponse]) {
+					resp.AddPage(http.StatusOK, armpostgresqlflexibleservers.DatabasesClientListByServerResponse{
+						DatabaseList: armpostgresqlflexibleservers.DatabaseList{
+							Value: []*armpostgresqlflexibleservers.Database{},
 						},
 					}, nil)
 

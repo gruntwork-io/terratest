@@ -35,3 +35,15 @@ variable "postfix" {
   type        = string
   default     = "resource"
 }
+
+variable "sku_name" {
+  description = "SKU name for the Flexible Server (e.g. B_Standard_B1ms, GP_Standard_D2s_v3)."
+  type        = string
+  default     = "B_Standard_B1ms"
+}
+
+variable "postgresql_version" {
+  description = "PostgreSQL major version supported by Flexible Server."
+  type        = string
+  default     = "14"
+}
