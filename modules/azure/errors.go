@@ -72,7 +72,10 @@ func (e *UnknownEnvironmentError) Error() string {
 		e.EnvironmentName)
 }
 
-// ResourceNotFoundErrorExists checks the Service Error Code for the 'Resource Not Found' error.
+// ResourceNotFoundErrorExists checks whether the error indicates a missing
+// Azure resource. Matches the generic ResourceNotFound/ResourceGroupNotFound
+// codes as well as any HTTP 404 response, which Azure returns with
+// resource-specific error codes (e.g. LoadBalancerNotFound, VaultNotFound).
 func ResourceNotFoundErrorExists(err error) bool {
 	if err == nil {
 		return false
@@ -80,7 +83,12 @@ func ResourceNotFoundErrorExists(err error) bool {
 
 	var respErr *azcore.ResponseError
 	if errors.As(err, &respErr) {
-		return respErr.ErrorCode == "ResourceNotFound" || respErr.ErrorCode == "ResourceGroupNotFound"
+		if respErr.ErrorCode == "ResourceNotFound" || respErr.ErrorCode == "ResourceGroupNotFound" {
+			return true
+		}
+		if respErr.StatusCode == 404 {
+			return true
+		}
 	}
 
 	return false
