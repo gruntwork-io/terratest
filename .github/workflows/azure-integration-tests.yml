@@ -24,7 +24,9 @@ on:
 
 concurrency:
   group: azure-integration-tests-${{ github.ref }}
-  cancel-in-progress: true
+  # Don't cancel in-flight runs; tests provision real resources and rely
+  # on `defer terraform.Destroy` for cleanup.
+  cancel-in-progress: false
 
 jobs:
   azure-integration-tests:
@@ -33,7 +35,7 @@ jobs:
       github.event_name != 'pull_request' ||
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     permissions:
       id-token: write
       contents: read
@@ -78,11 +80,9 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p /tmp/logs
-          # Scope: OIDC-compatible examples only (AzureRM provider >= 3.7).
-          # Examples on AzureRM 2.x cannot authenticate via OIDC and are
-          # gated behind a follow-up provider-upgrade effort.
-          go test -v -p 1 -tags azure -count=1 -timeout 45m \
-            -run '^(TestTerraformAzureContainerAppExample|TestTerraformAzureKeyVaultExample)$' \
+          # Run the full Azure integration suite. All examples are pinned to
+          # AzureRM >= 3.x and authenticate via OIDC.
+          go test -v -p 1 -tags azure -count=1 -timeout 120m \
             ./test/azure/... 2>&1 | tee /tmp/logs/azure-integration-tests.log
 
       - name: Upload test logs
