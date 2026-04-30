@@ -9,20 +9,19 @@
 # CONFIGURE OUR AZURE CONNECTION
 # ---------------------------------------------------------------------------------------------------------------------
 
-provider "azurerm" {
-  features {}
-}
-
 terraform {
-  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
-  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
-  # forwards compatible with 0.13.x code.
+  required_version = ">= 1.0"
+
   required_providers {
     azurerm = {
-      version = "~>2.29"
       source  = "hashicorp/azurerm"
+      version = "~> 4.0"
     }
   }
+}
+
+provider "azurerm" {
+  features {}
 }
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY A RESOURCE GROUP
@@ -88,9 +87,8 @@ resource "azurerm_servicebus_namespace" "servicebus" {
 resource "azurerm_servicebus_namespace_authorization_rule" "sbnamespaceauth" {
   count = length(var.namespace_authorization_rules)
 
-  name                = var.namespace_authorization_rules[count.index].policy_name
-  namespace_name      = azurerm_servicebus_namespace.servicebus.name
-  resource_group_name = azurerm_resource_group.servicebus_rg.name
+  name         = var.namespace_authorization_rules[count.index].policy_name
+  namespace_id = azurerm_servicebus_namespace.servicebus.id
 
   listen = var.namespace_authorization_rules[count.index].claims.listen
   send   = var.namespace_authorization_rules[count.index].claims.send
@@ -103,13 +101,12 @@ resource "azurerm_servicebus_namespace_authorization_rule" "sbnamespaceauth" {
 resource "azurerm_servicebus_topic" "sptopic" {
   count = length(var.topics)
 
-  name                = var.topics[count.index].name
-  resource_group_name = azurerm_resource_group.servicebus_rg.name
-  namespace_name      = azurerm_servicebus_namespace.servicebus.name
+  name         = var.topics[count.index].name
+  namespace_id = azurerm_servicebus_namespace.servicebus.id
 
   requires_duplicate_detection = var.topics[count.index].requires_duplicate_detection
   default_message_ttl          = var.topics[count.index].default_message_ttl
-  enable_partitioning          = var.topics[count.index].enable_partitioning
+  partitioning_enabled         = var.topics[count.index].enable_partitioning
   support_ordering             = var.topics[count.index].support_ordering
 }
 
@@ -119,10 +116,9 @@ resource "azurerm_servicebus_topic" "sptopic" {
 resource "azurerm_servicebus_topic_authorization_rule" "topicaauth" {
   count = length(local.topic_authorization_rules)
 
-  name                = local.topic_authorization_rules[count.index].policy_name
-  resource_group_name = azurerm_resource_group.servicebus_rg.name
-  namespace_name      = azurerm_servicebus_namespace.servicebus.name
-  topic_name          = local.topic_authorization_rules[count.index].topic_name
+  name = local.topic_authorization_rules[count.index].policy_name
+  topic_id = [for t in azurerm_servicebus_topic.sptopic :
+  t.id if t.name == local.topic_authorization_rules[count.index].topic_name][0]
 
   listen = local.topic_authorization_rules[count.index].claims.listen
   send   = local.topic_authorization_rules[count.index].claims.send
@@ -137,10 +133,9 @@ resource "azurerm_servicebus_topic_authorization_rule" "topicaauth" {
 resource "azurerm_servicebus_subscription" "subscription" {
   count = length(local.topic_subscriptions)
 
-  name                = local.topic_subscriptions[count.index].name
-  resource_group_name = azurerm_resource_group.servicebus_rg.name
-  namespace_name      = azurerm_servicebus_namespace.servicebus.name
-  topic_name          = local.topic_subscriptions[count.index].topic_name
+  name = local.topic_subscriptions[count.index].name
+  topic_id = [for t in azurerm_servicebus_topic.sptopic :
+  t.id if t.name == local.topic_subscriptions[count.index].topic_name][0]
 
   max_delivery_count                   = local.topic_subscriptions[count.index].max_delivery_count
   lock_duration                        = local.topic_subscriptions[count.index].lock_duration
@@ -156,14 +151,12 @@ resource "azurerm_servicebus_subscription" "subscription" {
 resource "azurerm_servicebus_subscription_rule" "subrules" {
   count = length(local.topic_subscription_rules)
 
-  name                = local.topic_subscription_rules[count.index].name
-  resource_group_name = azurerm_resource_group.servicebus_rg.name
-  namespace_name      = azurerm_servicebus_namespace.servicebus.name
-  topic_name          = local.topic_subscription_rules[count.index].topic_name
-  subscription_name   = local.topic_subscription_rules[count.index].subscription_name
-  filter_type         = local.topic_subscription_rules[count.index].filter_type != "" ? "SqlFilter" : null
-  sql_filter          = local.topic_subscription_rules[count.index].sql_filter
-  action              = local.topic_subscription_rules[count.index].action
+  name = local.topic_subscription_rules[count.index].name
+  subscription_id = [for s in azurerm_servicebus_subscription.subscription :
+  s.id if s.name == local.topic_subscription_rules[count.index].subscription_name][0]
+  filter_type = local.topic_subscription_rules[count.index].filter_type != "" ? "SqlFilter" : null
+  sql_filter  = local.topic_subscription_rules[count.index].sql_filter
+  action      = local.topic_subscription_rules[count.index].action
 
   depends_on = [azurerm_servicebus_subscription.subscription]
 }
