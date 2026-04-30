@@ -1,10 +1,16 @@
 package terraform
 
+// Var represents a Terraform variable assignment that can be rendered as
+// command-line arguments. Use [VarInline] to pass an inline value with -var,
+// or [VarFile] to reference a -var-file on disk.
 type Var interface {
+	// Args returns the command-line arguments that pass this variable to Terraform.
 	Args() []string
 	internal()
 }
 
+// VarInline returns a [Var] that passes the given name/value pair to Terraform
+// via a -var flag.
 func VarInline(name string, value any) Var {
 	return varInline{name: name, value: value}
 }
@@ -20,6 +26,8 @@ func (vi varInline) Args() []string {
 }
 func (vi varInline) internal() {}
 
+// VarFile returns a [Var] that passes the file at the given path to Terraform
+// via a -var-file flag.
 func VarFile(path string) Var {
 	return varFile(path)
 }

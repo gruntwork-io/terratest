@@ -1,128 +1,111 @@
-//go:build gcp
-// +build gcp
-
-// NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
-
 package gcp_test
 
 import (
-	"archive/tar"
-	"bytes"
-	"compress/gzip"
-	"fmt"
-	"strings"
+	"context"
+	"net"
 	"testing"
 
+	cloudbuild "cloud.google.com/go/cloudbuild/apiv1/v2"
 	cloudbuildpb "cloud.google.com/go/cloudbuild/apiv1/v2/cloudbuildpb"
 	"github.com/gruntwork-io/terratest/modules/gcp"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/test/bufconn"
 )
 
-func TestCreateBuild(t *testing.T) {
-	t.Parallel()
-	// This test performs the following steps:
-	//
-	// 1. Creates a tarball with a single Dockerfile
-	// 2. Creates a GCS bucket
-	// 3. Uploads the tarball to the GCS Bucket
-	// 4. Triggers a build using the Cloud Build API
-	// 5. Attempts to untag and delete all pushed Build images (best-effort cleanup)
-	// 6. Deletes the GCS bucket
+// fakeCloudBuildServer only implements the methods the terratest *WithClient helpers actually
+// call. CreateBuild (long-running op) is left to the build-tagged integration test.
+type fakeCloudBuildServer struct {
+	cloudbuildpb.UnimplementedCloudBuildServer
 
-	// Create and add some files to the archive.
-	tarball := createSampleAppTarball(t)
-
-	// Create GCS bucket
-	projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
-	id := random.UniqueID()
-	gsBucketName := "cloud-build-terratest-" + strings.ToLower(id)
-	sampleAppPath := "docker-example.tar.gz"
-	imagePath := fmt.Sprintf("gcr.io/%s/test-image-%s", projectID, strings.ToLower(id))
-
-	logger.Default.Logf(t, "Random values selected Bucket Name = %s\n", gsBucketName)
-
-	gcp.CreateStorageBucket(t, projectID, gsBucketName, nil)
-	defer gcp.DeleteStorageBucket(t, gsBucketName)
-
-	// Write the compressed archive to the storage bucket
-	objectURL := gcp.WriteBucketObject(t, gsBucketName, sampleAppPath, tarball, "application/gzip")
-	logger.Default.Logf(t, "Got URL: %s", objectURL)
-
-	// Create a new build
-	build := &cloudbuildpb.Build{
-		Source: &cloudbuildpb.Source{
-			Source: &cloudbuildpb.Source_StorageSource{
-				StorageSource: &cloudbuildpb.StorageSource{
-					Bucket: gsBucketName,
-					Object: sampleAppPath,
-				},
-			},
-		},
-		Steps: []*cloudbuildpb.BuildStep{{
-			Name: "gcr.io/cloud-builders/docker",
-			Args: []string{"build", "-t", imagePath, "."},
-		}},
-		Images: []string{imagePath},
-	}
-
-	// CreateBuild blocks until the build is complete
-	b := gcp.CreateBuild(t, projectID, build)
-
-	// Attempt to delete the pushed build images (best-effort cleanup).
-	// Note: GCR (gcr.io) has been deprecated in favor of Artifact Registry.
-	// The cleanup may fail due to permission changes, but this doesn't affect
-	// the validity of the Cloud Build test itself.
-	// We could just use the `b` struct above, but we want to explicitly test
-	// the `GetBuild` method.
-	b2 := gcp.GetBuild(t, projectID, b.GetId())
-	for _, image := range b2.GetImages() {
-		if err := gcp.DeleteGCRRepoE(t, image); err != nil {
-			logger.Default.Logf(t, "Warning: Failed to delete image %s (this may be expected due to GCR deprecation): %v", image, err)
-		}
-	}
-
-	// Empty the storage bucket so we can delete it
-	defer gcp.EmptyStorageBucket(t, gsBucketName)
+	getBuild   func(*cloudbuildpb.GetBuildRequest) *cloudbuildpb.Build
+	listBuilds func(*cloudbuildpb.ListBuildsRequest) *cloudbuildpb.ListBuildsResponse
 }
 
-func createSampleAppTarball(t *testing.T) *bytes.Reader {
+func (f *fakeCloudBuildServer) GetBuild(_ context.Context, req *cloudbuildpb.GetBuildRequest) (*cloudbuildpb.Build, error) {
+	return f.getBuild(req), nil
+}
+
+func (f *fakeCloudBuildServer) ListBuilds(_ context.Context, req *cloudbuildpb.ListBuildsRequest) (*cloudbuildpb.ListBuildsResponse, error) {
+	return f.listBuilds(req), nil
+}
+
+// newFakeCloudBuildClient runs `srv` on an in-memory bufconn gRPC server and returns a client
+// pointed at it. No credentials, no network.
+func newFakeCloudBuildClient(t *testing.T, srv *fakeCloudBuildServer) *cloudbuild.Client {
 	t.Helper()
 
-	var buf bytes.Buffer
+	lis := bufconn.Listen(1024 * 1024)
+	grpcServer := grpc.NewServer()
+	cloudbuildpb.RegisterCloudBuildServer(grpcServer, srv)
 
-	tw := tar.NewWriter(&buf)
+	go func() { _ = grpcServer.Serve(lis) }()
 
-	file := `FROM busybox:latest
-MAINTAINER Rob Morgan (rob@gruntwork.io)
-	`
+	t.Cleanup(func() { grpcServer.Stop(); _ = lis.Close() })
 
-	hdr := &tar.Header{
-		Name: "Dockerfile",
-		Mode: 0600,
-		Size: int64(len(file)),
-	}
-
-	err := tw.WriteHeader(hdr)
+	conn, err := grpc.NewClient("passthrough:///bufnet",
+		grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) { return lis.DialContext(ctx) }),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
 
-	_, werr := tw.Write([]byte(file))
-	require.NoError(t, werr)
+	client, err := cloudbuild.NewClient(context.Background(), option.WithGRPCConn(conn))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = client.Close() })
 
-	cerr := tw.Close()
-	require.NoError(t, cerr)
+	return client
+}
 
-	// gzip the tar archive
-	var zbuf bytes.Buffer
+func TestGetBuildWithClient(t *testing.T) {
+	t.Parallel()
 
-	gzw := gzip.NewWriter(&zbuf)
-	_, gwerr := gzw.Write(buf.Bytes())
-	require.NoError(t, gwerr)
+	client := newFakeCloudBuildClient(t, &fakeCloudBuildServer{
+		getBuild: func(req *cloudbuildpb.GetBuildRequest) *cloudbuildpb.Build {
+			return &cloudbuildpb.Build{Id: req.GetId(), ProjectId: req.GetProjectId(), Status: cloudbuildpb.Build_SUCCESS}
+		},
+	})
 
-	gcerr := gzw.Close()
-	require.NoError(t, gcerr)
+	got, err := gcp.GetBuildWithClient(context.Background(), client, "p", "b1")
+	require.NoError(t, err)
+	assert.Equal(t, "b1", got.GetId())
+	assert.Equal(t, cloudbuildpb.Build_SUCCESS, got.GetStatus())
+}
 
-	// return the compressed buffer
-	return bytes.NewReader(zbuf.Bytes())
+func TestGetBuildsWithClient(t *testing.T) {
+	t.Parallel()
+
+	client := newFakeCloudBuildClient(t, &fakeCloudBuildServer{
+		listBuilds: func(req *cloudbuildpb.ListBuildsRequest) *cloudbuildpb.ListBuildsResponse {
+			assert.Equal(t, "p", req.GetProjectId())
+
+			return &cloudbuildpb.ListBuildsResponse{Builds: []*cloudbuildpb.Build{{Id: "a"}, {Id: "b"}}}
+		},
+	})
+
+	got, err := gcp.GetBuildsWithClient(context.Background(), client, "p")
+	require.NoError(t, err)
+	require.Len(t, got, 2)
+}
+
+func TestGetBuildsForTriggerWithClient(t *testing.T) {
+	t.Parallel()
+
+	client := newFakeCloudBuildClient(t, &fakeCloudBuildServer{
+		listBuilds: func(_ *cloudbuildpb.ListBuildsRequest) *cloudbuildpb.ListBuildsResponse {
+			return &cloudbuildpb.ListBuildsResponse{Builds: []*cloudbuildpb.Build{
+				{Id: "a", BuildTriggerId: "match"},
+				{Id: "b", BuildTriggerId: "other"},
+				{Id: "c", BuildTriggerId: "match"},
+			}}
+		},
+	})
+
+	got, err := gcp.GetBuildsForTriggerWithClient(context.Background(), client, "p", "match")
+	require.NoError(t, err)
+	require.Len(t, got, 2)
+	assert.ElementsMatch(t, []string{"a", "c"}, []string{got[0].GetId(), got[1].GetId()})
 }

@@ -1,100 +1,72 @@
-//go:build gcp
-// +build gcp
-
-// NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
-
-//nolint:testpackage // uses unexported newPubSubClient
-package gcp
+package gcp_test
 
 import (
 	"context"
 	"testing"
 
-	"cloud.google.com/go/pubsub/v2/apiv1/pubsubpb"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/stretchr/testify/assert"
+	"cloud.google.com/go/pubsub/v2"
+	"cloud.google.com/go/pubsub/v2/pstest"
+	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-func TestAssertTopicExistsNoFalseNegative(t *testing.T) {
-	t.Parallel()
+// newFakePubSubClient wires a *pubsub.Client to the pstest in-memory fake Pub/Sub server —
+// credential-free, gRPC-conformant.
+func newFakePubSubClient(t *testing.T) *pubsub.Client {
+	t.Helper()
 
-	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := "pubsub-topic-" + random.UniqueID()
-	logger.Default.Logf(t, "Creating Pub/Sub topic %s to verify existence check works", topicName)
+	srv := pstest.NewServer()
 
-	CreateTopicContext(t, context.Background(), projectID, topicName)
-	defer DeleteTopicContext(t, context.Background(), projectID, topicName)
+	t.Cleanup(func() { _ = srv.Close() })
 
-	AssertTopicExistsContext(t, context.Background(), projectID, topicName)
-}
-
-func TestAssertTopicExistsNoFalsePositive(t *testing.T) {
-	t.Parallel()
-
-	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := "pubsub-topic-" + random.UniqueID()
-	logger.Default.Logf(t, "Checking that non-existent Pub/Sub topic %s returns an error", topicName)
-
-	err := AssertTopicExistsContextE(t, context.Background(), projectID, topicName)
-	require.Error(t, err, "Expected an error for non-existent Pub/Sub topic, but got none")
-}
-
-func TestAssertSubscriptionExistsNoFalseNegative(t *testing.T) {
-	t.Parallel()
-
-	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := "pubsub-topic-" + random.UniqueID()
-	subscriptionName := "pubsub-sub-" + random.UniqueID()
-	logger.Default.Logf(t, "Creating Pub/Sub topic %s and subscription %s to verify existence check works", topicName, subscriptionName)
-
-	CreateTopicContext(t, context.Background(), projectID, topicName)
-	defer DeleteTopicContext(t, context.Background(), projectID, topicName)
-
-	CreateSubscriptionContext(t, context.Background(), projectID, subscriptionName, topicName)
-	defer DeleteSubscriptionContext(t, context.Background(), projectID, subscriptionName)
-
-	AssertSubscriptionExistsContext(t, context.Background(), projectID, subscriptionName)
-}
-
-func TestAssertSubscriptionExistsNoFalsePositive(t *testing.T) {
-	t.Parallel()
-
-	projectID := GetGoogleProjectIDFromEnvVar(t)
-	subscriptionName := "pubsub-sub-" + random.UniqueID()
-	logger.Default.Logf(t, "Checking that non-existent Pub/Sub subscription %s returns an error", subscriptionName)
-
-	err := AssertSubscriptionExistsContextE(t, context.Background(), projectID, subscriptionName)
-	require.Error(t, err, "Expected an error for non-existent Pub/Sub subscription, but got none")
-}
-
-func TestAssertTopicAndSubscriptionExist(t *testing.T) {
-	t.Parallel()
-
-	projectID := GetGoogleProjectIDFromEnvVar(t)
-	topicName := "pubsub-topic-" + random.UniqueID()
-	subscriptionName := "pubsub-sub-" + random.UniqueID()
-	logger.Default.Logf(t, "Creating Pub/Sub topic %s and subscription %s", topicName, subscriptionName)
-
-	CreateTopicContext(t, context.Background(), projectID, topicName)
-	defer DeleteTopicContext(t, context.Background(), projectID, topicName)
-
-	CreateSubscriptionContext(t, context.Background(), projectID, subscriptionName, topicName)
-	defer DeleteSubscriptionContext(t, context.Background(), projectID, subscriptionName)
-
-	AssertTopicExistsContext(t, context.Background(), projectID, topicName)
-	AssertSubscriptionExistsContext(t, context.Background(), projectID, subscriptionName)
-
-	// Verify subscription is linked to the correct topic
-	client, err := newPubSubClient(context.Background(), projectID)
+	conn, err := grpc.NewClient(srv.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
 
-	defer func() { _ = client.Close() }()
-
-	sub, err := client.SubscriptionAdminClient.GetSubscription(context.Background(), &pubsubpb.GetSubscriptionRequest{
-		Subscription: subscriptionResource(projectID, subscriptionName),
-	})
+	client, err := pubsub.NewClient(context.Background(), "test-project", option.WithGRPCConn(conn))
 	require.NoError(t, err)
-	assert.Equal(t, topicResource(projectID, topicName), sub.GetTopic())
+	t.Cleanup(func() { _ = client.Close() })
+
+	return client
+}
+
+func TestPubSubTopicLifecycleWithClient(t *testing.T) {
+	t.Parallel()
+
+	client := newFakePubSubClient(t)
+	ctx := context.Background()
+
+	// Missing topic: AssertTopicExists fails, Delete fails.
+	require.ErrorContains(t, gcp.AssertTopicExistsWithClient(ctx, client, "missing"), "does not exist")
+	require.Error(t, gcp.DeleteTopicWithClient(ctx, client, "missing"))
+
+	// Create / assert / delete roundtrip.
+	require.NoError(t, gcp.CreateTopicWithClient(ctx, client, "t"))
+	require.NoError(t, gcp.AssertTopicExistsWithClient(ctx, client, "t"))
+	require.NoError(t, gcp.DeleteTopicWithClient(ctx, client, "t"))
+	require.ErrorContains(t, gcp.AssertTopicExistsWithClient(ctx, client, "t"), "does not exist")
+
+	// Re-creating the same topic name within the same run is an error on pstest (matches prod).
+	require.NoError(t, gcp.CreateTopicWithClient(ctx, client, "dup"))
+	require.ErrorContains(t, gcp.CreateTopicWithClient(ctx, client, "dup"), "failed to create")
+}
+
+func TestPubSubSubscriptionLifecycleWithClient(t *testing.T) {
+	t.Parallel()
+
+	client := newFakePubSubClient(t)
+	ctx := context.Background()
+
+	// Subscription on a missing topic errors.
+	require.ErrorContains(t, gcp.CreateSubscriptionWithClient(ctx, client, "s", "missing-topic"), "failed to create")
+
+	// Full roundtrip on a real topic.
+	require.NoError(t, gcp.CreateTopicWithClient(ctx, client, "t"))
+	require.NoError(t, gcp.CreateSubscriptionWithClient(ctx, client, "s", "t"))
+	require.NoError(t, gcp.AssertSubscriptionExistsWithClient(ctx, client, "s"))
+	require.NoError(t, gcp.DeleteSubscriptionWithClient(ctx, client, "s"))
+	require.ErrorContains(t, gcp.AssertSubscriptionExistsWithClient(ctx, client, "s"), "does not exist")
 }

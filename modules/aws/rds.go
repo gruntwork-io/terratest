@@ -698,6 +698,8 @@ func GetValidEngineVersionE(t testing.TestingT, region string, engine string, ma
 
 // ParameterForDbInstanceNotFound is an error that occurs when the parameter group specified is not found for the DB instance.
 //
+// Deprecated: Use [ParameterForDBInstanceNotFound] instead.
+//
 //nolint:staticcheck,revive // preserving existing type name
 type ParameterForDbInstanceNotFound struct {
 	ParameterName string
@@ -713,6 +715,8 @@ func (err ParameterForDbInstanceNotFound) Error() string {
 }
 
 // OptionGroupOptionSettingForDbInstanceNotFound is an error that occurs when the option setting specified is not found in the option group of the DB instance.
+//
+// Deprecated: Use [OptionGroupOptionSettingForDBInstanceNotFound] instead.
 //
 //nolint:staticcheck,revive // preserving existing type name
 type OptionGroupOptionSettingForDbInstanceNotFound struct {
