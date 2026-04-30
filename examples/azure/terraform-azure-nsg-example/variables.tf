@@ -87,7 +87,7 @@ variable "vm_name" {
 variable "vm_size" {
   description = "The size of the VM to deploy"
   type        = string
-  default     = "Standard_B1s"
+  default     = "Standard_D2s_v3"
 }
 
 variable "hostname" {

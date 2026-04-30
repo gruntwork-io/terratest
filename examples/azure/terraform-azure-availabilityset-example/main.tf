@@ -82,7 +82,7 @@ resource "azurerm_virtual_machine" "avs" {
   resource_group_name              = azurerm_resource_group.avs.name
   network_interface_ids            = [azurerm_network_interface.avs.id]
   availability_set_id              = azurerm_availability_set.avs.id
-  vm_size                          = "Standard_B1ls"
+  vm_size                          = "Standard_D2s_v3"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 

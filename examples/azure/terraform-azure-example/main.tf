@@ -68,7 +68,7 @@ resource "azurerm_virtual_machine" "main" {
   location                         = azurerm_resource_group.main.location
   resource_group_name              = azurerm_resource_group.main.name
   network_interface_ids            = [azurerm_network_interface.main.id]
-  vm_size                          = "Standard_B1s"
+  vm_size                          = "Standard_D2s_v3"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 

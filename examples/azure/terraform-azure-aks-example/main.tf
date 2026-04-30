@@ -55,12 +55,11 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   default_node_pool {
     name       = "agentpool"
     node_count = var.agent_count
-    vm_size    = "Standard_DS2_v2"
+    vm_size    = "Standard_D2s_v3"
   }
 
-  service_principal {
-    client_id     = var.client_id
-    client_secret = var.client_secret
+  identity {
+    type = "SystemAssigned"
   }
   automatic_upgrade_channel = "stable"
   tags = {

@@ -86,6 +86,10 @@ resource "azurerm_synapse_workspace" "synapse_workspace" {
   sql_administrator_login              = var.synapse_sql_user
   sql_administrator_login_password     = random_password.password.result
   managed_virtual_network_enabled      = true
+
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

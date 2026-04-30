@@ -88,5 +88,5 @@ variable "vm_license_type" {
 variable "vm_size" {
   description = "The Azure VM Size of the VM"
   type        = string
-  default     = "Standard_B2s"
+  default     = "Standard_D2s_v3"
 }

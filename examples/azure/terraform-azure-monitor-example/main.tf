@@ -95,32 +95,32 @@ resource "azurerm_key_vault" "monitor" {
     object_id = data.azurerm_client_config.current.object_id
 
     key_permissions = [
-      "create",
-      "get",
-      "list",
-      "delete",
+      "Create",
+      "Get",
+      "List",
+      "Delete",
     ]
 
     secret_permissions = [
-      "set",
-      "get",
-      "list",
-      "delete",
+      "Set",
+      "Get",
+      "List",
+      "Delete",
     ]
 
     certificate_permissions = [
-      "create",
-      "delete",
-      "deleteissuers",
-      "get",
-      "getissuers",
-      "import",
-      "list",
-      "listissuers",
-      "managecontacts",
-      "manageissuers",
-      "setissuers",
-      "update",
+      "Create",
+      "Delete",
+      "DeleteIssuers",
+      "Get",
+      "GetIssuers",
+      "Import",
+      "List",
+      "ListIssuers",
+      "ManageContacts",
+      "ManageIssuers",
+      "SetIssuers",
+      "Update",
     ]
   }
 
@@ -144,20 +144,7 @@ resource "azurerm_monitor_diagnostic_setting" "monitor" {
   target_resource_id = azurerm_key_vault.monitor.id
   storage_account_id = azurerm_storage_account.monitor.id
 
-  log {
+  enabled_log {
     category = "AuditEvent"
-    enabled  = false
-
-    retention_policy {
-      enabled = false
-    }
-  }
-
-  metric {
-    category = "AllMetrics"
-
-    retention_policy {
-      enabled = false
-    }
   }
 }
