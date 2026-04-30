@@ -57,7 +57,7 @@ resource "azurerm_public_ip" "pip" {
   resource_group_name     = azurerm_resource_group.lb_rg.name
   allocation_method       = "Static"
   ip_version              = "IPv4"
-  sku                     = "Basic"
+  sku                     = "Standard"
   idle_timeout_in_minutes = "4"
 }
 
@@ -65,7 +65,7 @@ resource "azurerm_lb" "public" {
   name                = "lb-public-${var.postfix}"
   location            = azurerm_resource_group.lb_rg.location
   resource_group_name = azurerm_resource_group.lb_rg.name
-  sku                 = "Basic"
+  sku                 = "Standard"
 
   frontend_ip_configuration {
     name                 = "config-public"
@@ -81,7 +81,7 @@ resource "azurerm_lb" "private" {
   name                = "lb-private-${var.postfix}"
   location            = azurerm_resource_group.lb_rg.location
   resource_group_name = azurerm_resource_group.lb_rg.name
-  sku                 = "Basic"
+  sku                 = "Standard"
 
   frontend_ip_configuration {
     name                          = "config-private-static"
@@ -105,5 +105,5 @@ resource "azurerm_lb" "default" {
   name                = "lb-no-frontend-${var.postfix}"
   location            = azurerm_resource_group.lb_rg.location
   resource_group_name = azurerm_resource_group.lb_rg.name
-  sku                 = "Basic"
+  sku                 = "Standard"
 }

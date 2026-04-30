@@ -76,7 +76,7 @@ resource "azurerm_public_ip" "net" {
   location                = azurerm_resource_group.net.location
   allocation_method       = "Static"
   ip_version              = "IPv4"
-  sku                     = "Basic"
+  sku                     = "Standard"
   idle_timeout_in_minutes = "4"
   domain_name_label       = var.domain_name_label
 }
