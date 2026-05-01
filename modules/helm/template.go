@@ -233,7 +233,7 @@ func UnmarshalK8SYamlsE[T any](t testing.TestingT, yamlData string, destinationO
 }
 
 // UnmarshalK8SYaml is the same as UnmarshalK8SYamlE, but will fail the test if there is an error.
-func UnmarshalK8SYaml(t testing.TestingT, yamlData string, destinationObj interface{}) {
+func UnmarshalK8SYaml(t testing.TestingT, yamlData string, destinationObj any) {
 	require.NoError(t, UnmarshalK8SYamlE(t, yamlData, destinationObj))
 }
 
@@ -244,7 +244,7 @@ func UnmarshalK8SYaml(t testing.TestingT, yamlData string, destinationObj interf
 //	UnmarshalK8SYamlE(t, renderedOutput, &deployment)
 //
 // At the end of this, the deployment variable will be populated.
-func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj interface{}) error {
+func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj any) error {
 	decoder := goyaml.NewDecoder(strings.NewReader(yamlData))
 
 	// Ensure destinationObj is a pointer
@@ -258,7 +258,7 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj inter
 	// Handle single object or list as root
 	if destElem.Kind() != reflect.Slice {
 		// Decode only the first document
-		var rawYaml interface{}
+		var rawYaml any
 		if err := decoder.Decode(&rawYaml); err != nil {
 			return goerrors.WithStackTrace(err)
 		}
@@ -285,7 +285,7 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj inter
 	sliceVal := slicePtr.Elem()
 
 	for {
-		var rawYaml interface{}
+		var rawYaml any
 		if err := decoder.Decode(&rawYaml); err != nil {
 			if errors.Is(err, io.EOF) {
 				break // No more documents

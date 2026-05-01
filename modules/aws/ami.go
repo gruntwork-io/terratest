@@ -209,6 +209,9 @@ func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filt
 	return GetMostRecentAmiIDContextE(t, context.Background(), region, ownerID, filters)
 }
 
+// GetMostRecentAmiId gets the ID of the most recent AMI in the given region that has the given owner and matches
+// the given filters.
+//
 // Deprecated: Use [GetMostRecentAmiID] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name
@@ -216,6 +219,9 @@ func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filte
 	return GetMostRecentAmiID(t, region, ownerId, filters)
 }
 
+// GetMostRecentAmiIdE gets the ID of the most recent AMI in the given region that has the given owner and matches
+// the given filters.
+//
 // Deprecated: Use [GetMostRecentAmiIDE] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name

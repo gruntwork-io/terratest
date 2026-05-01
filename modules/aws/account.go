@@ -59,6 +59,8 @@ func GetAccountIDE(t testing.TestingT) (string, error) {
 	return GetAccountIDContextE(t, context.Background())
 }
 
+// GetAccountId gets the Account ID for the currently logged in IAM User.
+//
 // Deprecated: Use [GetAccountID] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name
@@ -66,6 +68,8 @@ func GetAccountId(t testing.TestingT) string {
 	return GetAccountID(t)
 }
 
+// GetAccountIdE gets the Account ID for the currently logged in IAM User.
+//
 // Deprecated: Use [GetAccountIDE] instead.
 //
 //nolint:staticcheck,revive // preserving deprecated function name

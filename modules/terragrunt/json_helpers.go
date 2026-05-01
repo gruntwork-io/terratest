@@ -161,7 +161,7 @@ func CleanTerragruntJSON(input string) (string, error) {
 	}
 
 	// Parse JSON
-	var jsonObj interface{}
+	var jsonObj any
 	if err := json.Unmarshal([]byte(cleaned), &jsonObj); err != nil {
 		return "", err
 	}

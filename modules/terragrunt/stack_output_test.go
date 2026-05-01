@@ -75,7 +75,7 @@ func TestStackOutputIntegration(t *testing.T) {
 	// The JSON structure should be valid and contain our expected data
 	if strings.Contains(allOutputsJSON, "{") {
 		// Parse and validate the JSON structure
-		var allOutputs map[string]interface{}
+		var allOutputs map[string]any
 
 		err = json.Unmarshal([]byte(allOutputsJSON), &allOutputs)
 		require.NoError(t, err)
@@ -87,7 +87,7 @@ func TestStackOutputIntegration(t *testing.T) {
 		require.Contains(t, allOutputs, "chick_2")
 
 		// Verify the structure of outputs
-		motherOutputMap := allOutputs["mother"].(map[string]interface{})
+		motherOutputMap := allOutputs["mother"].(map[string]any)
 		assert.Equal(t, "./test.txt", motherOutputMap["output"])
 	} else {
 		// If not JSON format, at least verify it contains our expected values
@@ -198,7 +198,7 @@ func TestStackOutputAll(t *testing.T) {
 	require.Contains(t, allOutputs, "chick_2")
 
 	// Verify we can access specific output values
-	motherOutput := allOutputs["mother"].(map[string]interface{})
+	motherOutput := allOutputs["mother"].(map[string]any)
 	assert.Equal(t, "./test.txt", motherOutput["output"])
 }
 
