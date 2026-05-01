@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fetch the latest Terragrunt release and update the pin in mise.toml.
 
-set -e
+set -euo pipefail
 
 latest=$(gh api repos/gruntwork-io/terragrunt/releases/latest --jq '.tag_name' | sed 's/^v//')
 current=$(sed -nE 's/^terragrunt = "([^"]+)".*/\1/p' mise.toml)
