@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Fetch the latest Terragrunt release and update the pin in mise.toml.
 
 set -euo pipefail
