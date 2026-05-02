@@ -9,17 +9,19 @@
 # CONFIGURE OUR AZURE CONNECTION
 # ---------------------------------------------------------------------------------------------------------------------
 
-provider "azurerm" {
-  features {}
-}
-
 terraform {
+  required_version = ">= 1.0"
+
   required_providers {
     azurerm = {
-      version = "~>2.29"
       source  = "hashicorp/azurerm"
+      version = "~> 3.0"
     }
   }
+}
+
+provider "azurerm" {
+  features {}
 }
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY A RESOURCE GROUP
