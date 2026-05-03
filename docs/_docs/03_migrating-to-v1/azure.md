@@ -5,7 +5,7 @@ category: migrating-to-v1
 excerpt: >-
   Migrate Azure tests from Terratest pre-v1 to v1.0.0.
 tags: ["azure", "migration", "v1"]
-order: 300
+order: 301
 nav_title: Documentation
 nav_title_link: /docs/
 ---
