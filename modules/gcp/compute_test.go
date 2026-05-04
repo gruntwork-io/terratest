@@ -195,9 +195,6 @@ func TestSetLabelsWithClient(t *testing.T) {
 	require.NoError(t, inst.SetLabelsWithClient(context.Background(), svc, map[string]string{"env": "unit"}))
 }
 
-// TestSetLabelsWithClientMergesExisting — regression test for the SetLabels-clobbers-existing bug.
-// The instance already carries a label; SetLabels should merge the new label in, not drop the
-// existing one.
 func TestSetLabelsWithClientMergesExisting(t *testing.T) {
 	t.Parallel()
 

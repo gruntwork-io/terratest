@@ -442,8 +442,7 @@ func (i *Instance) SetLabelsWithClient(ctx context.Context, service *compute.Ser
 	return nil
 }
 
-// mergeLabels merges new key-value pairs into existing labels, preserving any keys not in the new set.
-// Keys present in newLabels overwrite the existing values.
+// mergeLabels returns a new map with existing labels overlaid by newLabels.
 func mergeLabels(existing, newLabels map[string]string) map[string]string {
 	merged := make(map[string]string, len(existing)+len(newLabels))
 	for k, v := range existing {
