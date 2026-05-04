@@ -33,8 +33,6 @@ func NewAuthenticatedSessionContextE(ctx context.Context, region string) (*aws.C
 	return NewAuthenticatedSessionFromDefaultCredentialsContextE(ctx, region)
 }
 
-// NewAuthenticatedSessionContext is a backwards-compatible alias for [NewAuthenticatedSessionContextE].
-//
 // Deprecated: Use [NewAuthenticatedSessionContextE] instead.
 func NewAuthenticatedSessionContext(ctx context.Context, region string) (*aws.Config, error) {
 	return NewAuthenticatedSessionContextE(ctx, region)
@@ -59,8 +57,6 @@ func NewAuthenticatedSessionFromDefaultCredentialsContextE(ctx context.Context, 
 	return &cfg, nil
 }
 
-// NewAuthenticatedSessionFromDefaultCredentialsContext is a backwards-compatible alias for [NewAuthenticatedSessionFromDefaultCredentialsContextE].
-//
 // Deprecated: Use [NewAuthenticatedSessionFromDefaultCredentialsContextE] instead.
 func NewAuthenticatedSessionFromDefaultCredentialsContext(ctx context.Context, region string) (*aws.Config, error) {
 	return NewAuthenticatedSessionFromDefaultCredentialsContextE(ctx, region)
@@ -100,8 +96,6 @@ func NewAuthenticatedSessionFromRoleContextE(ctx context.Context, region string,
 	}, nil
 }
 
-// NewAuthenticatedSessionFromRoleContext is a backwards-compatible alias for [NewAuthenticatedSessionFromRoleContextE].
-//
 // Deprecated: Use [NewAuthenticatedSessionFromRoleContextE] instead.
 func NewAuthenticatedSessionFromRoleContext(ctx context.Context, region string, roleARN string) (*aws.Config, error) {
 	return NewAuthenticatedSessionFromRoleContextE(ctx, region, roleARN)
@@ -126,8 +120,6 @@ func CreateAwsSessionWithCredsContextE(_ context.Context, region string, accessK
 	}, nil
 }
 
-// CreateAwsSessionWithCredsContext is a backwards-compatible alias for [CreateAwsSessionWithCredsContextE].
-//
 // Deprecated: Use [CreateAwsSessionWithCredsContextE] instead.
 func CreateAwsSessionWithCredsContext(ctx context.Context, region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
 	return CreateAwsSessionWithCredsContextE(ctx, region, accessKeyID, secretAccessKey)
@@ -167,8 +159,6 @@ func CreateAwsSessionWithMfaContextE(ctx context.Context, region string, stsClie
 	}, nil
 }
 
-// CreateAwsSessionWithMfaContext is a backwards-compatible alias for [CreateAwsSessionWithMfaContextE].
-//
 // Deprecated: Use [CreateAwsSessionWithMfaContextE] instead.
 func CreateAwsSessionWithMfaContext(ctx context.Context, region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
 	return CreateAwsSessionWithMfaContextE(ctx, region, stsClient, mfaDevice)
@@ -204,8 +194,6 @@ func ReadPasswordPolicyMinPasswordLengthContextE(ctx context.Context, iamClient 
 	return int(*output.PasswordPolicy.MinimumPasswordLength), nil
 }
 
-// ReadPasswordPolicyMinPasswordLengthContext is a backwards-compatible alias for [ReadPasswordPolicyMinPasswordLengthContextE].
-//
 // Deprecated: Use [ReadPasswordPolicyMinPasswordLengthContextE] instead.
 func ReadPasswordPolicyMinPasswordLengthContext(ctx context.Context, iamClient *iam.Client) (int, error) {
 	return ReadPasswordPolicyMinPasswordLengthContextE(ctx, iamClient)

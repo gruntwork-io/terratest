@@ -21,7 +21,7 @@ type EbsAPI interface {
 func DeleteEbsSnapshotContextE(t testing.TestingT, ctx context.Context, region string, snapshot string) error {
 	logger.Default.Logf(t, "Deleting EBS snapshot %s", snapshot)
 
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return err
 	}

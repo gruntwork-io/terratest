@@ -239,7 +239,7 @@ func (err *FunctionError) Error() string {
 // NewLambdaClientContextE creates a new Lambda client.
 // The ctx parameter supports cancellation and timeouts.
 func NewLambdaClientContextE(t testing.TestingT, ctx context.Context, region string) (*lambda.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}

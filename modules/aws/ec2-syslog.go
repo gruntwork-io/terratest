@@ -32,7 +32,7 @@ func GetSyslogForInstanceContextE(t testing.TestingT, ctx context.Context, insta
 
 	logger.Default.Logf(t, "%s", description)
 
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return "", err
 	}

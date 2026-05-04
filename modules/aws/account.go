@@ -93,7 +93,7 @@ func ExtractAccountIDFromARN(arn string) (string, error) {
 // NewStsClientContextE creates a new STS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewStsClientContextE(t testing.TestingT, ctx context.Context, region string) (*sts.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}

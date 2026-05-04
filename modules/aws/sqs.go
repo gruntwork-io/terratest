@@ -383,7 +383,7 @@ func WaitForQueueMessage(t testing.TestingT, awsRegion string, queueURL string, 
 // NewSqsClientContextE creates a new SQS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewSqsClientContextE(t testing.TestingT, ctx context.Context, region string) (*sqs.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}

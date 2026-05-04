@@ -301,7 +301,7 @@ func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.Client, mfaDevice *type
 // NewIamClientContextE creates a new IAM client.
 // The ctx parameter supports cancellation and timeouts.
 func NewIamClientContextE(t testing.TestingT, ctx context.Context, region string) (*iam.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}

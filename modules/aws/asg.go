@@ -216,7 +216,7 @@ func WaitForCapacityE(
 // NewAsgClientContextE creates an Auto Scaling Group client.
 // The ctx parameter supports cancellation and timeouts.
 func NewAsgClientContextE(t testing.TestingT, ctx context.Context, region string) (*autoscaling.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}

@@ -87,7 +87,7 @@ func GetAcmCertificateArnE(t testing.TestingT, awsRegion string, certDomainName 
 // NewAcmClientContextE creates a new ACM client.
 // The ctx parameter supports cancellation and timeouts.
 func NewAcmClientContextE(t testing.TestingT, ctx context.Context, region string) (*acm.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}

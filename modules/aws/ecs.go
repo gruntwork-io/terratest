@@ -308,7 +308,7 @@ func GetEcsTaskDefinitionE(t testing.TestingT, region string, taskDefinition str
 // NewEcsClientContextE creates an ECS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewEcsClientContextE(t testing.TestingT, ctx context.Context, region string) (*ecs.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}

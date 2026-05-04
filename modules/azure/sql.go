@@ -14,8 +14,6 @@ func GetSQLServerClientContextE(ctx context.Context, subscriptionID string) (*ar
 	return CreateSQLServerClientContextE(ctx, subscriptionID)
 }
 
-// GetSQLServerClientContext is a backwards-compatible alias for [GetSQLServerClientContextE].
-//
 // Deprecated: Use [GetSQLServerClientContextE] instead.
 func GetSQLServerClientContext(ctx context.Context, subscriptionID string) (*armsql.ServersClient, error) {
 	return GetSQLServerClientContextE(ctx, subscriptionID)
@@ -85,8 +83,6 @@ func GetDatabaseClientContextE(ctx context.Context, subscriptionID string) (*arm
 	return CreateDatabaseClientContextE(ctx, subscriptionID)
 }
 
-// GetDatabaseClientContext is a backwards-compatible alias for [GetDatabaseClientContextE].
-//
 // Deprecated: Use [GetDatabaseClientContextE] instead.
 func GetDatabaseClientContext(ctx context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
 	return GetDatabaseClientContextE(ctx, subscriptionID)

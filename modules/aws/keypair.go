@@ -64,7 +64,7 @@ func CreateAndImportEC2KeyPairE(t testing.TestingT, region string, name string) 
 func ImportEC2KeyPairContextE(t testing.TestingT, ctx context.Context, region string, name string, keyPair *ssh.KeyPair) (*Ec2Keypair, error) {
 	logger.Default.Logf(t, "Creating new Key Pair in EC2 region %s named %s", region, name)
 
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func ImportEC2KeyPairE(t testing.TestingT, region string, name string, keyPair *
 func DeleteEC2KeyPairContextE(t testing.TestingT, ctx context.Context, keyPair *Ec2Keypair) error {
 	logger.Default.Logf(t, "Deleting Key Pair in EC2 region %s named %s", keyPair.Region, keyPair.Name)
 
-	sess, err := NewAuthenticatedSessionContext(ctx, keyPair.Region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, keyPair.Region)
 	if err != nil {
 		return err
 	}

@@ -482,8 +482,6 @@ func CreateSQLServerClientContextE(_ context.Context, subscriptionID string) (*a
 	return clientFactory.NewServersClient(), nil
 }
 
-// CreateSQLServerClientContext is a backwards-compatible alias for [CreateSQLServerClientContextE].
-//
 // Deprecated: Use [CreateSQLServerClientContextE] instead.
 func CreateSQLServerClientContext(ctx context.Context, subscriptionID string) (*armsql.ServersClient, error) {
 	return CreateSQLServerClientContextE(ctx, subscriptionID)
@@ -507,8 +505,6 @@ func CreateSQLMangedInstanceClientContextE(_ context.Context, subscriptionID str
 	return clientFactory.NewManagedInstancesClient(), nil
 }
 
-// CreateSQLMangedInstanceClientContext is a backwards-compatible alias for [CreateSQLMangedInstanceClientContextE].
-//
 // Deprecated: Use [CreateSQLMangedInstanceClientContextE] instead.
 func CreateSQLMangedInstanceClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	return CreateSQLMangedInstanceClientContextE(ctx, subscriptionID)
@@ -532,8 +528,6 @@ func CreateSQLMangedDatabasesClientContextE(_ context.Context, subscriptionID st
 	return clientFactory.NewManagedDatabasesClient(), nil
 }
 
-// CreateSQLMangedDatabasesClientContext is a backwards-compatible alias for [CreateSQLMangedDatabasesClientContextE].
-//
 // Deprecated: Use [CreateSQLMangedDatabasesClientContextE] instead.
 func CreateSQLMangedDatabasesClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	return CreateSQLMangedDatabasesClientContextE(ctx, subscriptionID)
@@ -585,8 +579,6 @@ func CreateDatabaseClientContextE(_ context.Context, subscriptionID string) (*ar
 	return clientFactory.NewDatabasesClient(), nil
 }
 
-// CreateDatabaseClientContext is a backwards-compatible alias for [CreateDatabaseClientContextE].
-//
 // Deprecated: Use [CreateDatabaseClientContextE] instead.
 func CreateDatabaseClientContext(ctx context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
 	return CreateDatabaseClientContextE(ctx, subscriptionID)
@@ -684,8 +676,6 @@ func CreateActionGroupClientContextE(_ context.Context, subscriptionID string) (
 	return armmonitor.NewActionGroupsClient(subID, cred, opts)
 }
 
-// CreateActionGroupClientContext is a backwards-compatible alias for [CreateActionGroupClientContextE].
-//
 // Deprecated: Use [CreateActionGroupClientContextE] instead.
 func CreateActionGroupClientContext(ctx context.Context, subscriptionID string) (*armmonitor.ActionGroupsClient, error) {
 	return CreateActionGroupClientContextE(ctx, subscriptionID)

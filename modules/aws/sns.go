@@ -108,7 +108,7 @@ func DeleteSNSTopicE(t testing.TestingT, region string, snsTopicArn string) erro
 // NewSnsClientContextE creates a new SNS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewSnsClientContextE(t testing.TestingT, ctx context.Context, region string) (*sns.Client, error) {
-	sess, err := NewAuthenticatedSessionContext(ctx, region)
+	sess, err := NewAuthenticatedSessionContextE(ctx, region)
 	if err != nil {
 		return nil, err
 	}
