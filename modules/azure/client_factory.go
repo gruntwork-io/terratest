@@ -489,9 +489,9 @@ func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error)
 	return CreateSQLServerClientContext(context.Background(), subscriptionID)
 }
 
-// CreateSQLMangedInstanceClientContext is a helper function that will create and setup a sql managed instance client.
+// CreateSQLManagedInstanceClientContext is a helper function that will create and setup a sql managed instance client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateSQLMangedInstanceClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) {
+func CreateSQLManagedInstanceClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -500,16 +500,30 @@ func CreateSQLMangedInstanceClientContext(_ context.Context, subscriptionID stri
 	return clientFactory.NewManagedInstancesClient(), nil
 }
 
-// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql managed instance client.
+// CreateSQLManagedInstanceClient is a helper function that will create and setup a sql managed instance client.
 //
-// Deprecated: Use [CreateSQLMangedInstanceClientContext] instead.
-func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) {
-	return CreateSQLMangedInstanceClientContext(context.Background(), subscriptionID)
+// Deprecated: Use [CreateSQLManagedInstanceClientContext] instead.
+func CreateSQLManagedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) {
+	return CreateSQLManagedInstanceClientContext(context.Background(), subscriptionID)
 }
 
-// CreateSQLMangedDatabasesClientContext is a helper function that will create and setup a sql managed databases client.
+// CreateSQLMangedInstanceClientContext is a backwards-compatible alias for [CreateSQLManagedInstanceClientContext].
+//
+// Deprecated: Use [CreateSQLManagedInstanceClientContext] instead.
+func CreateSQLMangedInstanceClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLManagedInstanceClientContext(ctx, subscriptionID)
+}
+
+// CreateSQLMangedInstanceClient is a backwards-compatible alias for [CreateSQLManagedInstanceClient].
+//
+// Deprecated: Use [CreateSQLManagedInstanceClient] instead.
+func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLManagedInstanceClient(subscriptionID)
+}
+
+// CreateSQLManagedDatabasesClientContext is a helper function that will create and setup a sql managed databases client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateSQLMangedDatabasesClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
+func CreateSQLManagedDatabasesClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -518,11 +532,25 @@ func CreateSQLMangedDatabasesClientContext(_ context.Context, subscriptionID str
 	return clientFactory.NewManagedDatabasesClient(), nil
 }
 
-// CreateSQLMangedDatabasesClient is a helper function that will create and setup a sql managed databases client.
+// CreateSQLManagedDatabasesClient is a helper function that will create and setup a sql managed databases client.
 //
-// Deprecated: Use [CreateSQLMangedDatabasesClientContext] instead.
-func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
-	return CreateSQLMangedDatabasesClientContext(context.Background(), subscriptionID)
+// Deprecated: Use [CreateSQLManagedDatabasesClientContext] instead.
+func CreateSQLManagedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
+	return CreateSQLManagedDatabasesClientContext(context.Background(), subscriptionID)
+}
+
+// CreateSQLMangedDatabasesClientContext is a backwards-compatible alias for [CreateSQLManagedDatabasesClientContext].
+//
+// Deprecated: Use [CreateSQLManagedDatabasesClientContext] instead.
+func CreateSQLMangedDatabasesClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLManagedDatabasesClientContext(ctx, subscriptionID)
+}
+
+// CreateSQLMangedDatabasesClient is a backwards-compatible alias for [CreateSQLManagedDatabasesClient].
+//
+// Deprecated: Use [CreateSQLManagedDatabasesClient] instead.
+func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLManagedDatabasesClient(subscriptionID)
 }
 
 // getArmSQLClientFactory gets an arm sql client factory
