@@ -209,10 +209,9 @@ func TestSetLabelsWithClientMergesExisting(t *testing.T) {
 		assert.Contains(t, r.URL.Path, "/instances/i/setLabels")
 
 		var req compute.InstancesSetLabelsRequest
-
-		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
-
+		assert.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 		sentLabels = req.Labels
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"name":"op","status":"DONE"}`))
