@@ -8,17 +8,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetSQLServerClientContext is a helper function that will setup a sql server client.
+// GetSQLServerClientContextE is a helper function that will setup a sql server client.
 // The ctx parameter supports cancellation and timeouts.
+func GetSQLServerClientContextE(ctx context.Context, subscriptionID string) (*armsql.ServersClient, error) {
+	return CreateSQLServerClientContextE(ctx, subscriptionID)
+}
+
+// GetSQLServerClientContext is a backwards-compatible alias for [GetSQLServerClientContextE].
+//
+// Deprecated: Use [GetSQLServerClientContextE] instead.
 func GetSQLServerClientContext(ctx context.Context, subscriptionID string) (*armsql.ServersClient, error) {
-	return CreateSQLServerClientContext(ctx, subscriptionID)
+	return GetSQLServerClientContextE(ctx, subscriptionID)
 }
 
 // GetSQLServerClient is a helper function that will setup a sql server client.
 //
-// Deprecated: Use [GetSQLServerClientContext] instead.
+// Deprecated: Use [GetSQLServerClientContextE] instead.
 func GetSQLServerClient(subscriptionID string) (*armsql.ServersClient, error) {
-	return GetSQLServerClientContext(context.Background(), subscriptionID)
+	return GetSQLServerClientContextE(context.Background(), subscriptionID)
 }
 
 // GetSQLServerContext is a helper function that gets the sql server object.
@@ -47,7 +54,7 @@ func GetSQLServer(t testing.TestingT, resGroupName string, serverName string, su
 // The ctx parameter supports cancellation and timeouts.
 func GetSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armsql.Server, error) {
 	// Create a SQL Server client
-	sqlClient, err := CreateSQLServerClientContext(ctx, subscriptionID)
+	sqlClient, err := CreateSQLServerClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,17 +79,24 @@ func GetSQLServerE(t testing.TestingT, subscriptionID string, resGroupName strin
 	return GetSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }
 
-// GetDatabaseClientContext is a helper function that will setup a sql DB client.
+// GetDatabaseClientContextE is a helper function that will setup a sql DB client.
 // The ctx parameter supports cancellation and timeouts.
+func GetDatabaseClientContextE(ctx context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
+	return CreateDatabaseClientContextE(ctx, subscriptionID)
+}
+
+// GetDatabaseClientContext is a backwards-compatible alias for [GetDatabaseClientContextE].
+//
+// Deprecated: Use [GetDatabaseClientContextE] instead.
 func GetDatabaseClientContext(ctx context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
-	return CreateDatabaseClientContext(ctx, subscriptionID)
+	return GetDatabaseClientContextE(ctx, subscriptionID)
 }
 
 // GetDatabaseClient is a helper function that will setup a sql DB client.
 //
-// Deprecated: Use [GetDatabaseClientContext] instead.
+// Deprecated: Use [GetDatabaseClientContextE] instead.
 func GetDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error) {
-	return GetDatabaseClientContext(context.Background(), subscriptionID)
+	return GetDatabaseClientContextE(context.Background(), subscriptionID)
 }
 
 // ListSQLServerDatabasesContext is a helper function that gets a list of databases on a sql server.
@@ -111,7 +125,7 @@ func ListSQLServerDatabases(t testing.TestingT, resGroupName string, serverName 
 // The ctx parameter supports cancellation and timeouts.
 func ListSQLServerDatabasesContextE(t testing.TestingT, ctx context.Context, resGroupName string, serverName string, subscriptionID string) ([]*armsql.Database, error) {
 	// Create a SQL db client
-	sqlClient, err := CreateDatabaseClientContext(ctx, subscriptionID)
+	sqlClient, err := CreateDatabaseClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +184,7 @@ func GetSQLDatabase(t testing.TestingT, resGroupName string, serverName string, 
 // The ctx parameter supports cancellation and timeouts.
 func GetSQLDatabaseContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) (*armsql.Database, error) {
 	// Create a SQL db client
-	sqlClient, err := CreateDatabaseClientContext(ctx, subscriptionID)
+	sqlClient, err := CreateDatabaseClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}

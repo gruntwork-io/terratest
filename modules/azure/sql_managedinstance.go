@@ -67,7 +67,7 @@ func GetManagedInstanceContext(t testing.TestingT, ctx context.Context, resGroup
 // GetManagedInstanceContextE retrieves the SQL managed instance object for the given subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetManagedInstanceContextE(ctx context.Context, subscriptionID string, resGroupName string, managedInstanceName string) (*armsql.ManagedInstance, error) {
-	sqlmiClient, err := CreateSQLMangedInstanceClientContext(ctx, subscriptionID)
+	sqlmiClient, err := CreateSQLMangedInstanceClientContextE(ctx, subscriptionID) //nolint:revive,staticcheck // preserving deprecated function name
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func GetManagedInstanceDatabaseContext(t testing.TestingT, ctx context.Context, 
 // GetManagedInstanceDatabaseContextE retrieves the SQL managed database object for the given subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetManagedInstanceDatabaseContextE(ctx context.Context, subscriptionID string, resGroupName string, managedInstanceName string, databaseName string) (*armsql.ManagedDatabase, error) {
-	sqlmiDBClient, err := CreateSQLMangedDatabasesClientContext(ctx, subscriptionID)
+	sqlmiDBClient, err := CreateSQLMangedDatabasesClientContextE(ctx, subscriptionID) //nolint:revive,staticcheck // preserving deprecated function name
 	if err != nil {
 		return nil, err
 	}

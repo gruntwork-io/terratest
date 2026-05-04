@@ -471,9 +471,9 @@ func CreateResourceGroupClientE(subscriptionID string) (*armresources.ResourceGr
 	return CreateResourceGroupClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateSQLServerClientContext is a helper function that will create and setup a sql server client.
+// CreateSQLServerClientContextE is a helper function that will create and setup a sql server client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateSQLServerClientContext(_ context.Context, subscriptionID string) (*armsql.ServersClient, error) {
+func CreateSQLServerClientContextE(_ context.Context, subscriptionID string) (*armsql.ServersClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -482,16 +482,23 @@ func CreateSQLServerClientContext(_ context.Context, subscriptionID string) (*ar
 	return clientFactory.NewServersClient(), nil
 }
 
-// CreateSQLServerClient is a helper function that will create and setup a sql server client.
+// CreateSQLServerClientContext is a backwards-compatible alias for [CreateSQLServerClientContextE].
 //
-// Deprecated: Use [CreateSQLServerClientContext] instead.
-func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error) {
-	return CreateSQLServerClientContext(context.Background(), subscriptionID)
+// Deprecated: Use [CreateSQLServerClientContextE] instead.
+func CreateSQLServerClientContext(ctx context.Context, subscriptionID string) (*armsql.ServersClient, error) {
+	return CreateSQLServerClientContextE(ctx, subscriptionID)
 }
 
-// CreateSQLMangedInstanceClientContext is a helper function that will create and setup a sql managed instance client.
+// CreateSQLServerClient is a helper function that will create and setup a sql server client.
+//
+// Deprecated: Use [CreateSQLServerClientContextE] instead.
+func CreateSQLServerClient(subscriptionID string) (*armsql.ServersClient, error) {
+	return CreateSQLServerClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateSQLMangedInstanceClientContextE is a helper function that will create and setup a sql managed instance client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateSQLMangedInstanceClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) {
+func CreateSQLMangedInstanceClientContextE(_ context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -500,16 +507,23 @@ func CreateSQLMangedInstanceClientContext(_ context.Context, subscriptionID stri
 	return clientFactory.NewManagedInstancesClient(), nil
 }
 
-// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql managed instance client.
+// CreateSQLMangedInstanceClientContext is a backwards-compatible alias for [CreateSQLMangedInstanceClientContextE].
 //
-// Deprecated: Use [CreateSQLMangedInstanceClientContext] instead.
-func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) {
-	return CreateSQLMangedInstanceClientContext(context.Background(), subscriptionID)
+// Deprecated: Use [CreateSQLMangedInstanceClientContextE] instead.
+func CreateSQLMangedInstanceClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLMangedInstanceClientContextE(ctx, subscriptionID)
 }
 
-// CreateSQLMangedDatabasesClientContext is a helper function that will create and setup a sql managed databases client.
+// CreateSQLMangedInstanceClient is a helper function that will create and setup a sql managed instance client.
+//
+// Deprecated: Use [CreateSQLMangedInstanceClientContextE] instead.
+func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLMangedInstanceClientContextE(context.Background(), subscriptionID)
+}
+
+// CreateSQLMangedDatabasesClientContextE is a helper function that will create and setup a sql managed databases client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateSQLMangedDatabasesClientContext(_ context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
+func CreateSQLMangedDatabasesClientContextE(_ context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -518,11 +532,18 @@ func CreateSQLMangedDatabasesClientContext(_ context.Context, subscriptionID str
 	return clientFactory.NewManagedDatabasesClient(), nil
 }
 
+// CreateSQLMangedDatabasesClientContext is a backwards-compatible alias for [CreateSQLMangedDatabasesClientContextE].
+//
+// Deprecated: Use [CreateSQLMangedDatabasesClientContextE] instead.
+func CreateSQLMangedDatabasesClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLMangedDatabasesClientContextE(ctx, subscriptionID)
+}
+
 // CreateSQLMangedDatabasesClient is a helper function that will create and setup a sql managed databases client.
 //
-// Deprecated: Use [CreateSQLMangedDatabasesClientContext] instead.
-func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) {
-	return CreateSQLMangedDatabasesClientContext(context.Background(), subscriptionID)
+// Deprecated: Use [CreateSQLMangedDatabasesClientContextE] instead.
+func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
+	return CreateSQLMangedDatabasesClientContextE(context.Background(), subscriptionID)
 }
 
 // getArmSQLClientFactory gets an arm sql client factory
@@ -553,9 +574,9 @@ func getArmSQLClientFactory(subscriptionID string) (*armsql.ClientFactory, error
 	})
 }
 
-// CreateDatabaseClientContext is a helper function that will create and setup a SQL DB client.
+// CreateDatabaseClientContextE is a helper function that will create and setup a SQL DB client.
 // The ctx parameter supports cancellation and timeouts.
-func CreateDatabaseClientContext(_ context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
+func CreateDatabaseClientContextE(_ context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
 	clientFactory, err := getArmSQLClientFactory(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -564,11 +585,18 @@ func CreateDatabaseClientContext(_ context.Context, subscriptionID string) (*arm
 	return clientFactory.NewDatabasesClient(), nil
 }
 
+// CreateDatabaseClientContext is a backwards-compatible alias for [CreateDatabaseClientContextE].
+//
+// Deprecated: Use [CreateDatabaseClientContextE] instead.
+func CreateDatabaseClientContext(ctx context.Context, subscriptionID string) (*armsql.DatabasesClient, error) {
+	return CreateDatabaseClientContextE(ctx, subscriptionID)
+}
+
 // CreateDatabaseClient is a helper function that will create and setup a SQL DB client.
 //
-// Deprecated: Use [CreateDatabaseClientContext] instead.
+// Deprecated: Use [CreateDatabaseClientContextE] instead.
 func CreateDatabaseClient(subscriptionID string) (*armsql.DatabasesClient, error) {
-	return CreateDatabaseClientContext(context.Background(), subscriptionID)
+	return CreateDatabaseClientContextE(context.Background(), subscriptionID)
 }
 
 // CreateMySQLServerClientContextE is a helper function that will setup a mysql server client.
@@ -635,9 +663,9 @@ func CreateDisksClientE(subscriptionID string) (*armcompute.DisksClient, error) 
 	return CreateDisksClientContextE(context.Background(), subscriptionID)
 }
 
-// CreateActionGroupClientContext creates an Action Groups client for Azure Monitor.
+// CreateActionGroupClientContextE creates an Action Groups client for Azure Monitor.
 // The ctx parameter supports cancellation and timeouts.
-func CreateActionGroupClientContext(_ context.Context, subscriptionID string) (*armmonitor.ActionGroupsClient, error) {
+func CreateActionGroupClientContextE(_ context.Context, subscriptionID string) (*armmonitor.ActionGroupsClient, error) {
 	subID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
@@ -656,11 +684,18 @@ func CreateActionGroupClientContext(_ context.Context, subscriptionID string) (*
 	return armmonitor.NewActionGroupsClient(subID, cred, opts)
 }
 
+// CreateActionGroupClientContext is a backwards-compatible alias for [CreateActionGroupClientContextE].
+//
+// Deprecated: Use [CreateActionGroupClientContextE] instead.
+func CreateActionGroupClientContext(ctx context.Context, subscriptionID string) (*armmonitor.ActionGroupsClient, error) {
+	return CreateActionGroupClientContextE(ctx, subscriptionID)
+}
+
 // CreateActionGroupClient creates an Action Groups client for Azure Monitor.
 //
-// Deprecated: Use [CreateActionGroupClientContext] instead.
+// Deprecated: Use [CreateActionGroupClientContextE] instead.
 func CreateActionGroupClient(subscriptionID string) (*armmonitor.ActionGroupsClient, error) {
-	return CreateActionGroupClientContext(context.Background(), subscriptionID)
+	return CreateActionGroupClientContextE(context.Background(), subscriptionID)
 }
 
 // CreateVMInsightsClientContextE gets a VM Insights client.
