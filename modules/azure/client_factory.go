@@ -507,15 +507,11 @@ func CreateSQLManagedInstanceClient(subscriptionID string) (*armsql.ManagedInsta
 	return CreateSQLManagedInstanceClientContext(context.Background(), subscriptionID)
 }
 
-// CreateSQLMangedInstanceClientContext is a backwards-compatible alias for [CreateSQLManagedInstanceClientContext].
-//
 // Deprecated: Use [CreateSQLManagedInstanceClientContext] instead.
 func CreateSQLMangedInstanceClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	return CreateSQLManagedInstanceClientContext(ctx, subscriptionID)
 }
 
-// CreateSQLMangedInstanceClient is a backwards-compatible alias for [CreateSQLManagedInstanceClient].
-//
 // Deprecated: Use [CreateSQLManagedInstanceClient] instead.
 func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	return CreateSQLManagedInstanceClient(subscriptionID)
@@ -539,15 +535,11 @@ func CreateSQLManagedDatabasesClient(subscriptionID string) (*armsql.ManagedData
 	return CreateSQLManagedDatabasesClientContext(context.Background(), subscriptionID)
 }
 
-// CreateSQLMangedDatabasesClientContext is a backwards-compatible alias for [CreateSQLManagedDatabasesClientContext].
-//
 // Deprecated: Use [CreateSQLManagedDatabasesClientContext] instead.
 func CreateSQLMangedDatabasesClientContext(ctx context.Context, subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	return CreateSQLManagedDatabasesClientContext(ctx, subscriptionID)
 }
 
-// CreateSQLMangedDatabasesClient is a backwards-compatible alias for [CreateSQLManagedDatabasesClient].
-//
 // Deprecated: Use [CreateSQLManagedDatabasesClient] instead.
 func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
 	return CreateSQLManagedDatabasesClient(subscriptionID)
