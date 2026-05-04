@@ -5,7 +5,7 @@ category: migrating-to-v1
 excerpt: >-
   Migrate Azure tests from Terratest pre-v1 to v1.0.0.
 tags: ["azure", "migration", "v1"]
-order: 300
+order: 301
 nav_title: Documentation
 nav_title_link: /docs/
 ---
@@ -84,7 +84,7 @@ Once imports are updated, expect three follow-on edits per file:
 
 Four client factories were renamed to drop the redundant `New` (a
 `Create*New*Client` reads as redundant). The old names remain as deprecated
-aliases for one minor release; please update at your convenience.
+aliases for the v1 line; please update at your convenience.
 
 | Old name | New name |
 | --- | --- |
