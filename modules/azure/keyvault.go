@@ -92,22 +92,28 @@ func KeyVaultCertificateExistsContextE(ctx context.Context, keyVaultName, certif
 		return false, err
 	}
 
+	return KeyVaultCertificateExistsWithClient(ctx, client, certificateName)
+}
+
+// KeyVaultCertificateExistsWithClient indicates whether a certificate exists in the key vault
+// using the provided azcertificates.Client. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func KeyVaultCertificateExistsWithClient(ctx context.Context, client *azcertificates.Client, certificateName string) (bool, error) {
 	pager := client.NewListCertificatePropertiesVersionsPager(certificateName, nil)
 
-	if pager.More() {
-		_, err := pager.NextPage(ctx)
-		if err != nil {
-			if ResourceNotFoundErrorExists(err) {
-				return false, nil
-			}
-
-			return false, err
-		}
-
-		return true, nil
+	if !pager.More() {
+		return false, nil
 	}
 
-	return false, nil
+	if _, err := pager.NextPage(ctx); err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 // KeyVaultCertificateExistsE indicates whether a certificate exists in key vault; otherwise false.
@@ -125,22 +131,28 @@ func KeyVaultKeyExistsContextE(ctx context.Context, keyVaultName, keyName string
 		return false, err
 	}
 
+	return KeyVaultKeyExistsWithClient(ctx, client, keyName)
+}
+
+// KeyVaultKeyExistsWithClient indicates whether a key exists in the key vault using the
+// provided azkeys.Client. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func KeyVaultKeyExistsWithClient(ctx context.Context, client *azkeys.Client, keyName string) (bool, error) {
 	pager := client.NewListKeyPropertiesVersionsPager(keyName, nil)
 
-	if pager.More() {
-		_, err := pager.NextPage(ctx)
-		if err != nil {
-			if ResourceNotFoundErrorExists(err) {
-				return false, nil
-			}
-
-			return false, err
-		}
-
-		return true, nil
+	if !pager.More() {
+		return false, nil
 	}
 
-	return false, nil
+	if _, err := pager.NextPage(ctx); err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 // KeyVaultKeyExistsE indicates whether a key exists in the key vault; otherwise false.
@@ -158,22 +170,28 @@ func KeyVaultSecretExistsContextE(ctx context.Context, keyVaultName, secretName 
 		return false, err
 	}
 
+	return KeyVaultSecretExistsWithClient(ctx, client, secretName)
+}
+
+// KeyVaultSecretExistsWithClient indicates whether a secret exists in the key vault using
+// the provided azsecrets.Client. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func KeyVaultSecretExistsWithClient(ctx context.Context, client *azsecrets.Client, secretName string) (bool, error) {
 	pager := client.NewListSecretPropertiesVersionsPager(secretName, nil)
 
-	if pager.More() {
-		_, err := pager.NextPage(ctx)
-		if err != nil {
-			if ResourceNotFoundErrorExists(err) {
-				return false, nil
-			}
-
-			return false, err
-		}
-
-		return true, nil
+	if !pager.More() {
+		return false, nil
 	}
 
-	return false, nil
+	if _, err := pager.NextPage(ctx); err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 // KeyVaultSecretExistsE indicates whether a secret exists in the key vault; otherwise false.

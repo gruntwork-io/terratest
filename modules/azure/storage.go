@@ -249,6 +249,22 @@ func StorageAccountExistsContextE(ctx context.Context, storageAccountName, resou
 	return true, nil
 }
 
+// StorageAccountExistsWithClient indicates whether the storage account exists using the provided
+// AccountsClient. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func StorageAccountExistsWithClient(ctx context.Context, client *armstorage.AccountsClient, storageAccountName, resourceGroupName string) (bool, error) {
+	_, err := FetchStorageAccountProperties(ctx, client, resourceGroupName, storageAccountName)
+	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
 // GetStorageAccountContextE gets a storage account; otherwise error.
 // See https://docs.microsoft.com/rest/api/storagerp/storageaccounts/getproperties for more information.
 // The ctx parameter supports cancellation and timeouts.
@@ -286,10 +302,42 @@ func StorageBlobContainerExistsContextE(ctx context.Context, containerName, stor
 	return true, nil
 }
 
+// StorageBlobContainerExistsWithClient returns true if the container name exists using the
+// provided BlobContainersClient. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func StorageBlobContainerExistsWithClient(ctx context.Context, client *armstorage.BlobContainersClient, containerName, storageAccountName, resourceGroupName string) (bool, error) {
+	_, err := FetchBlobContainer(ctx, client, resourceGroupName, storageAccountName, containerName)
+	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
 // GetStorageBlobContainerPublicAccessContextE indicates whether a storage container has public access; otherwise false.
 // The ctx parameter supports cancellation and timeouts.
 func GetStorageBlobContainerPublicAccessContextE(ctx context.Context, containerName, storageAccountName, resourceGroupName, subscriptionID string) (bool, error) {
 	container, err := GetStorageBlobContainerContextE(ctx, containerName, storageAccountName, resourceGroupName, subscriptionID)
+	if err != nil {
+		if ResourceNotFoundErrorExists(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return ExtractBlobContainerPublicAccess(container), nil
+}
+
+// GetStorageBlobContainerPublicAccessWithClient returns whether the container has public access
+// using the provided BlobContainersClient. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageBlobContainerPublicAccessWithClient(ctx context.Context, client *armstorage.BlobContainersClient, containerName, storageAccountName, resourceGroupName string) (bool, error) {
+	container, err := FetchBlobContainer(ctx, client, resourceGroupName, storageAccountName, containerName)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
 			return false, nil
@@ -312,10 +360,34 @@ func GetStorageAccountKindContextE(ctx context.Context, storageAccountName, reso
 	return ExtractStorageAccountKind(storageAccount), nil
 }
 
+// GetStorageAccountKindWithClient returns the storage account kind using the provided AccountsClient.
+// Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageAccountKindWithClient(ctx context.Context, client *armstorage.AccountsClient, storageAccountName, resourceGroupName string) (string, error) {
+	storageAccount, err := FetchStorageAccountProperties(ctx, client, resourceGroupName, storageAccountName)
+	if err != nil {
+		return "", err
+	}
+
+	return ExtractStorageAccountKind(storageAccount), nil
+}
+
 // GetStorageAccountSkuTierContextE returns the storage account sku tier as Standard or Premium.
 // The ctx parameter supports cancellation and timeouts.
 func GetStorageAccountSkuTierContextE(ctx context.Context, storageAccountName, resourceGroupName, subscriptionID string) (string, error) {
 	storageAccount, err := GetStorageAccountPropertyContextE(ctx, storageAccountName, resourceGroupName, subscriptionID)
+	if err != nil {
+		return "", err
+	}
+
+	return ExtractStorageAccountSkuTier(storageAccount), nil
+}
+
+// GetStorageAccountSkuTierWithClient returns the storage account sku tier using the provided
+// AccountsClient. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageAccountSkuTierWithClient(ctx context.Context, client *armstorage.AccountsClient, storageAccountName, resourceGroupName string) (string, error) {
+	storageAccount, err := FetchStorageAccountProperties(ctx, client, resourceGroupName, storageAccountName)
 	if err != nil {
 		return "", err
 	}
@@ -527,4 +599,25 @@ func GetStorageDNSStringContextE(ctx context.Context, storageAccountName, resour
 	}
 
 	return "", NewNotFoundError("storage account", storageAccountName, "")
+}
+
+// GetStorageDNSStringWithClient builds and returns the storage account dns string using the provided
+// AccountsClient. Useful in unit tests with an azfake-backed client.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageDNSStringWithClient(ctx context.Context, client *armstorage.AccountsClient, storageAccountName, resourceGroupName string) (string, error) {
+	exists, err := StorageAccountExistsWithClient(ctx, client, storageAccountName, resourceGroupName)
+	if err != nil {
+		return "", err
+	}
+
+	if !exists {
+		return "", NewNotFoundError("storage account", storageAccountName, "")
+	}
+
+	storageSuffix, err := GetStorageURISuffixE() //nolint:contextcheck
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("https://%s.blob.%s/", storageAccountName, storageSuffix), nil
 }
