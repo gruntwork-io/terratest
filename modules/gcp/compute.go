@@ -425,12 +425,22 @@ func (i *Instance) SetLabelsContextE(t testing.TestingT, ctx context.Context, la
 	return i.SetLabelsWithClient(ctx, service, labels)
 }
 
-// SetLabelsWithClient adds the tags to the given Compute Instance using the supplied *compute.Service.
-// Prefer this variant in unit tests where the service is backed by an httptest fake server
-// (see compute_unit_test.go for the pattern).
+// SetLabelsWithClient merges the given labels into the instance's existing labels using the
+// supplied *compute.Service. Keys present in labels overwrite existing values; other labels
+// are preserved. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see compute_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) SetLabelsWithClient(ctx context.Context, service *compute.Service, labels map[string]string) error {
-	req := compute.InstancesSetLabelsRequest{Labels: labels, LabelFingerprint: i.LabelFingerprint}
+	merged := make(map[string]string, len(i.Labels)+len(labels))
+	for k, v := range i.Labels {
+		merged[k] = v
+	}
+
+	for k, v := range labels {
+		merged[k] = v
+	}
+
+	req := compute.InstancesSetLabelsRequest{Labels: merged, LabelFingerprint: i.LabelFingerprint}
 
 	if _, err := service.Instances.SetLabels(i.projectID, ZoneURLToZone(i.Zone), i.Name, &req).Context(ctx).Do(); err != nil {
 		return fmt.Errorf("Instances.SetLabels(%s) got error: %w", i.Name, err)
