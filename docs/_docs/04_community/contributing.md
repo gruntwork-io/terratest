@@ -256,9 +256,9 @@ go test -timeout 30m -run "<TEST_NAME>"
 This repo follows the principles of [Semantic Versioning](http://semver.org/). You can find each new release,
 along with the changelog, in the [Releases Page](https://github.com/gruntwork-io/terratest/releases).
 
-During initial development, the major version will be 0 (e.g., `0.x.y`), which indicates the code does not yet have a
-stable API. Once we hit `1.0.0`, we will make every effort to maintain a backwards compatible API and use the MAJOR,
-MINOR, and PATCH versions on each release to indicate any incompatibilities.
+Starting with `1.0.0`, breaking changes to the public API only happen in major releases. Symbols renamed or replaced
+inside the v1 line are kept as `// Deprecated:` aliases so test code that compiled against an earlier v1.x.y release
+will keep compiling against later ones; full removal is deferred to v2.
 
 ### Developing For Azure
 
