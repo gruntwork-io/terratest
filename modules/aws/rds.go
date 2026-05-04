@@ -369,18 +369,21 @@ func GetOptionsOfOptionGroupContextE(t testing.TestingT, ctx context.Context, op
 		return []types.Option{}, err
 	}
 
-	input := rds.DescribeOptionGroupsInput{OptionGroupName: aws.String(optionGroupName)}
+	paginator := rds.NewDescribeOptionGroupsPaginator(rdsClient, &rds.DescribeOptionGroupsInput{
+		OptionGroupName: aws.String(optionGroupName),
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return []types.Option{}, err
+		}
 
-	output, err := rdsClient.DescribeOptionGroups(ctx, &input)
-	if err != nil {
-		return []types.Option{}, err
+		if len(page.OptionGroupsList) > 0 {
+			return page.OptionGroupsList[0].Options, nil
+		}
 	}
 
-	if len(output.OptionGroupsList) == 0 {
-		return []types.Option{}, fmt.Errorf("no option groups found for name %s in region %s", optionGroupName, awsRegion)
-	}
-
-	return output.OptionGroupsList[0].Options, nil
+	return []types.Option{}, fmt.Errorf("no option groups found for name %s in region %s", optionGroupName, awsRegion)
 }
 
 // GetOptionsOfOptionGroupContext gets the options of the option group specified.
@@ -624,19 +627,20 @@ func GetRecommendedRdsInstanceTypeWithClientE(t testing.TestingT, rdsClient *rds
 // instanceTypeExistsForEngineAndRegionContextE returns a boolean that represents whether the provided instance type (e.g. db.t2.micro) exists for the given region and db engine type.
 // This function will return an error if the RDS AWS SDK call fails.
 func instanceTypeExistsForEngineAndRegionContextE(ctx context.Context, client *rds.Client, engine string, engineVersion string, instanceType string) (bool, error) {
-	input := rds.DescribeOrderableDBInstanceOptionsInput{
+	paginator := rds.NewDescribeOrderableDBInstanceOptionsPaginator(client, &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String(engine),
 		EngineVersion:   aws.String(engineVersion),
 		DBInstanceClass: aws.String(instanceType),
-	}
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return false, err
+		}
 
-	out, err := client.DescribeOrderableDBInstanceOptions(ctx, &input)
-	if err != nil {
-		return false, err
-	}
-
-	if len(out.OrderableDBInstanceOptions) > 0 {
-		return true, nil
+		if len(page.OrderableDBInstanceOptions) > 0 {
+			return true, nil
+		}
 	}
 
 	return false, nil
