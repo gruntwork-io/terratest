@@ -133,15 +133,17 @@ can inject a pre-built SDK client. This parallels the Azure
 
 ### Kubernetes
 
-`GetKubernetesClientFromOptionsContextE` no longer falls back silently
-to `rest.InClusterConfig()` when an explicit kubeconfig path or
-context fails to load. It now returns the load error.
+`GetKubernetesClientFromOptionsContextE` now logs the kubeconfig load
+error before falling back to `rest.InClusterConfig()`; previously the
+fallback was silent.
 
 This was a silent-failure footgun: a typo in
-`KubectlOptions.ConfigPath` would cause tests to run against the test
-runner's in-cluster identity (potentially a different cluster) with no
-error returned. If you relied on the fallback, set
-`KubectlOptions.InClusterAuth = true` to opt in explicitly.
+`KubectlOptions.ConfigPath` would send tests against the test runner's
+in-cluster identity (potentially a different cluster) with no signal
+that anything had happened. v1 surfaces the error in the test log, and
+adds an explicit `KubectlOptions.InClusterAuth = true` opt-in that
+skips kubeconfig loading entirely for callers who want fully explicit
+auth.
 
 ## Other deprecations you can defer
 

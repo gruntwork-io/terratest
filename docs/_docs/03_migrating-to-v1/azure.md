@@ -84,7 +84,7 @@ Once imports are updated, expect three follow-on edits per file:
 
 Four client factories were renamed to drop the redundant `New` (a
 `Create*New*Client` reads as redundant). The old names remain as deprecated
-aliases for one minor release; please update at your convenience.
+aliases for the v1 line; please update at your convenience.
 
 | Old name | New name |
 | --- | --- |
