@@ -96,7 +96,7 @@ func KeyVaultCertificateExistsContextE(ctx context.Context, keyVaultName, certif
 }
 
 // KeyVaultCertificateExistsWithClient indicates whether a certificate exists in the key vault
-// using the provided azcertificates.Client. Useful in unit tests with an azfake-backed client.
+// using the provided azcertificates.Client.
 // The ctx parameter supports cancellation and timeouts.
 func KeyVaultCertificateExistsWithClient(ctx context.Context, client *azcertificates.Client, certificateName string) (bool, error) {
 	pager := client.NewListCertificatePropertiesVersionsPager(certificateName, nil)
@@ -135,7 +135,7 @@ func KeyVaultKeyExistsContextE(ctx context.Context, keyVaultName, keyName string
 }
 
 // KeyVaultKeyExistsWithClient indicates whether a key exists in the key vault using the
-// provided azkeys.Client. Useful in unit tests with an azfake-backed client.
+// provided azkeys.Client.
 // The ctx parameter supports cancellation and timeouts.
 func KeyVaultKeyExistsWithClient(ctx context.Context, client *azkeys.Client, keyName string) (bool, error) {
 	pager := client.NewListKeyPropertiesVersionsPager(keyName, nil)
@@ -174,7 +174,7 @@ func KeyVaultSecretExistsContextE(ctx context.Context, keyVaultName, secretName 
 }
 
 // KeyVaultSecretExistsWithClient indicates whether a secret exists in the key vault using
-// the provided azsecrets.Client. Useful in unit tests with an azfake-backed client.
+// the provided azsecrets.Client.
 // The ctx parameter supports cancellation and timeouts.
 func KeyVaultSecretExistsWithClient(ctx context.Context, client *azsecrets.Client, secretName string) (bool, error) {
 	pager := client.NewListSecretPropertiesVersionsPager(secretName, nil)
