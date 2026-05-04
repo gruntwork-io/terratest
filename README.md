@@ -35,7 +35,7 @@ Starting with v1.0.0, Terratest follows [semantic versioning](https://semver.org
 only happen in major releases (e.g. v2.0.0).
 
 Symbols renamed or replaced in v1 are kept with `// Deprecated:` annotations pointing at the new name; removals happen
-in v2. Migrating from v0.x: see [`MIGRATION.md`](./MIGRATION.md).
+in v2. Migrating from v0.x: see the [v1 migration guide](https://terratest.gruntwork.io/docs/migrating-to-v1/overview/).
 
 ## More info
 
