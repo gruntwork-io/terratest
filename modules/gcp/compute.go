@@ -426,17 +426,35 @@ func (i *Instance) SetLabelsContextE(t testing.TestingT, ctx context.Context, la
 }
 
 // SetLabelsWithClient adds the tags to the given Compute Instance using the supplied *compute.Service.
+// New labels are merged into the instance's existing labels; passing a key that is already set
+// overwrites it, but other existing labels are preserved.
 // Prefer this variant in unit tests where the service is backed by an httptest fake server
 // (see compute_unit_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func (i *Instance) SetLabelsWithClient(ctx context.Context, service *compute.Service, labels map[string]string) error {
-	req := compute.InstancesSetLabelsRequest{Labels: labels, LabelFingerprint: i.LabelFingerprint}
+	merged := mergeLabels(i.Labels, labels)
+	req := compute.InstancesSetLabelsRequest{Labels: merged, LabelFingerprint: i.LabelFingerprint}
 
 	if _, err := service.Instances.SetLabels(i.projectID, ZoneURLToZone(i.Zone), i.Name, &req).Context(ctx).Do(); err != nil {
 		return fmt.Errorf("Instances.SetLabels(%s) got error: %w", i.Name, err)
 	}
 
 	return nil
+}
+
+// mergeLabels merges new key-value pairs into existing labels, preserving any keys not in the new set.
+// Keys present in newLabels overwrite the existing values.
+func mergeLabels(existing, newLabels map[string]string) map[string]string {
+	merged := make(map[string]string, len(existing)+len(newLabels))
+	for k, v := range existing {
+		merged[k] = v
+	}
+
+	for k, v := range newLabels {
+		merged[k] = v
+	}
+
+	return merged
 }
 
 // GetMetadata gets the given Compute Instance's metadata.

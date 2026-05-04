@@ -2,6 +2,7 @@ package gcp_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -192,6 +193,40 @@ func TestSetLabelsWithClient(t *testing.T) {
 	svc := newFakeComputeService(t, respond(t, http.MethodPost, "/instances/i/setLabels", http.StatusOK, `{"name":"op","status":"DONE"}`))
 
 	require.NoError(t, inst.SetLabelsWithClient(context.Background(), svc, map[string]string{"env": "unit"}))
+}
+
+// TestSetLabelsWithClientMergesExisting — regression test for the SetLabels-clobbers-existing bug.
+// The instance already carries a label; SetLabels should merge the new label in, not drop the
+// existing one.
+func TestSetLabelsWithClientMergesExisting(t *testing.T) {
+	t.Parallel()
+
+	zoneURL := "https://www.googleapis.com/compute/v1/projects/p/zones/us-central1-a"
+	inst := fetchInstanceForTest(t, "p", "i", zoneURL)
+	inst.Labels = map[string]string{"team": "platform"}
+
+	var sentLabels map[string]string
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Contains(t, r.URL.Path, "/instances/i/setLabels")
+
+		var req compute.InstancesSetLabelsRequest
+
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+
+		sentLabels = req.Labels
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"name":"op","status":"DONE"}`))
+	}
+
+	svc := newFakeComputeService(t, http.HandlerFunc(handler))
+
+	require.NoError(t, inst.SetLabelsWithClient(context.Background(), svc, map[string]string{"env": "unit"}))
+
+	assert.Equal(t, "platform", sentLabels["team"], "existing label should be preserved")
+	assert.Equal(t, "unit", sentLabels["env"], "new label should be set")
 }
 
 func TestSetMetadataWithClient(t *testing.T) {
