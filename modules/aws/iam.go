@@ -110,18 +110,21 @@ func GetIamPolicyDocumentContextE(t testing.TestingT, ctx context.Context, regio
 		return "", err
 	}
 
-	versions, err := iamClient.ListPolicyVersions(ctx, &iam.ListPolicyVersionsInput{
-		PolicyArn: &policyARN,
-	})
-	if err != nil {
-		return "", err
-	}
-
 	var defaultVersion string
 
-	for _, version := range versions.Versions {
-		if version.IsDefaultVersion && version.VersionId != nil {
-			defaultVersion = *version.VersionId
+	paginator := iam.NewListPolicyVersionsPaginator(iamClient, &iam.ListPolicyVersionsInput{
+		PolicyArn: &policyARN,
+	})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		for _, version := range page.Versions {
+			if version.IsDefaultVersion && version.VersionId != nil {
+				defaultVersion = *version.VersionId
+			}
 		}
 	}
 

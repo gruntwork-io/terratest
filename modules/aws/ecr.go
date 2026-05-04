@@ -119,23 +119,26 @@ func DeleteECRRepoContextE(t testing.TestingT, ctx context.Context, region strin
 		return err
 	}
 
-	resp, err := client.ListImages(ctx, &ecr.ListImagesInput{RepositoryName: repo.RepositoryName})
-	if err != nil {
-		return err
-	}
-
-	if len(resp.ImageIds) > 0 {
-		_, err = client.BatchDeleteImage(ctx, &ecr.BatchDeleteImageInput{
-			RepositoryName: repo.RepositoryName,
-			ImageIds:       resp.ImageIds,
-		})
+	paginator := ecr.NewListImagesPaginator(client, &ecr.ListImagesInput{RepositoryName: repo.RepositoryName})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
+			return err
+		}
+
+		if len(page.ImageIds) == 0 {
+			continue
+		}
+
+		if _, err := client.BatchDeleteImage(ctx, &ecr.BatchDeleteImageInput{
+			RepositoryName: repo.RepositoryName,
+			ImageIds:       page.ImageIds,
+		}); err != nil {
 			return err
 		}
 	}
 
-	_, err = client.DeleteRepository(ctx, &ecr.DeleteRepositoryInput{RepositoryName: repo.RepositoryName})
-	if err != nil {
+	if _, err := client.DeleteRepository(ctx, &ecr.DeleteRepositoryInput{RepositoryName: repo.RepositoryName}); err != nil {
 		return err
 	}
 
