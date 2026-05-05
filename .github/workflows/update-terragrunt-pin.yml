@@ -1,0 +1,36 @@
+name: Update Terragrunt Pin
+
+on:
+  schedule:
+    # Run every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-terragrunt-pin:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+    - name: Bump Terragrunt pin in mise.toml
+      id: bump
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: .github/scripts/update-terragrunt-pin.sh
+
+    - name: Create Pull Request
+      if: steps.bump.outputs.latest != steps.bump.outputs.current
+      uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: bump Terragrunt pin to ${{ steps.bump.outputs.latest }}"
+        title: "chore: bump Terragrunt pin to ${{ steps.bump.outputs.latest }}"
+        body: |
+          Bumps the pinned Terragrunt version in `mise.toml` from `${{ steps.bump.outputs.current }}` to `${{ steps.bump.outputs.latest }}`.
+
+          Release notes: https://github.com/gruntwork-io/terragrunt/releases/tag/v${{ steps.bump.outputs.latest }}
+
+          This is an automated PR created by the update-terragrunt-pin workflow.
+        branch: update-terragrunt-pin
+        delete-branch: true
