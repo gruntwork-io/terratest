@@ -19,7 +19,7 @@ import (
 )
 
 type testData struct {
-	Baz map[string]interface{}
+	Baz map[string]any
 	Foo string
 	Bar bool
 }
@@ -36,7 +36,7 @@ func TestSaveAndLoadTestData(t *testing.T) {
 	expectedData := testData{
 		Foo: "foo",
 		Bar: true,
-		Baz: map[string]interface{}{"abc": "def", "ghi": 1.0, "klm": false},
+		Baz: map[string]any{"abc": "def", "ghi": 1.0, "klm": false},
 	}
 
 	isTestDataPresent = teststructure.IsTestDataPresent(t, tmpFile)
@@ -55,7 +55,7 @@ func TestSaveAndLoadTestData(t *testing.T) {
 	overwritingData := testData{
 		Foo: "foo",
 		Bar: false,
-		Baz: map[string]interface{}{"123": "456", "789": 1.0, "0": false},
+		Baz: map[string]any{"123": "456", "789": 1.0, "0": false},
 	}
 	teststructure.SaveTestData(t, tmpFile, !overwrite, overwritingData)
 	teststructure.LoadTestData(t, tmpFile, &actualData)
@@ -116,7 +116,7 @@ func TestSaveAndLoadTerraformOptions(t *testing.T) {
 
 	expectedData := &terraform.Options{
 		TerraformDir: "/abc/def/ghi",
-		Vars:         map[string]interface{}{},
+		Vars:         map[string]any{},
 	}
 	teststructure.SaveTerraformOptions(t, tmpFolder, expectedData)
 
@@ -131,13 +131,13 @@ func TestSaveTerraformOptionsIfNotPresent(t *testing.T) {
 
 	expectedData := &terraform.Options{
 		TerraformDir: "/abc/def/ghi",
-		Vars:         map[string]interface{}{},
+		Vars:         map[string]any{},
 	}
 	teststructure.SaveTerraformOptionsIfNotPresent(t, tmpFolder, expectedData)
 
 	overwritingData := &terraform.Options{
 		TerraformDir: "/123/456/789",
-		Vars:         map[string]interface{}{},
+		Vars:         map[string]any{},
 	}
 	teststructure.SaveTerraformOptionsIfNotPresent(t, tmpFolder, overwritingData)
 
@@ -152,13 +152,13 @@ func TestSaveTerraformOptionsOverwrite(t *testing.T) {
 
 	originaData := &terraform.Options{
 		TerraformDir: "/abc/def/ghi",
-		Vars:         map[string]interface{}{},
+		Vars:         map[string]any{},
 	}
 	teststructure.SaveTerraformOptions(t, tmpFolder, originaData)
 
 	overwritingData := &terraform.Options{
 		TerraformDir: "/123/456/789",
-		Vars:         map[string]interface{}{},
+		Vars:         map[string]any{},
 	}
 	teststructure.SaveTerraformOptions(t, tmpFolder, overwritingData)
 
@@ -284,7 +284,7 @@ type tStringLogger struct {
 	sb strings.Builder
 }
 
-func (l *tStringLogger) Logf(t gotesting.TestingT, format string, args ...interface{}) {
+func (l *tStringLogger) Logf(t gotesting.TestingT, format string, args ...any) {
 	t.Helper()
 	fmt.Fprintf(&l.sb, format, args...)
 	l.sb.WriteRune('\n')

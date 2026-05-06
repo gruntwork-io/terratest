@@ -6,6 +6,25 @@
 # See test/azure/terraform_azure_monitor_example_test.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+  }
+}
+
 provider "azurerm" {
   features {
     key_vault {
@@ -14,28 +33,11 @@ provider "azurerm" {
   }
 }
 
-terraform {
-  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
-  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
-  # forwards compatible with 0.13.x code.
-  required_version = ">= 0.12.26"
-  required_providers {
-    azurerm = {
-      version = "~> 2.29"
-      source  = "hashicorp/azurerm"
-    }
-    azuread = {
-      version = "=0.7.0"
-      source  = "hashicorp/azuread"
-    }
-  }
-}
-
 resource "random_string" "short" {
   length  = 3
   lower   = true
   upper   = false
-  number  = false
+  numeric = false
   special = false
 }
 
@@ -43,7 +45,7 @@ resource "random_string" "long" {
   length  = 6
   lower   = true
   upper   = false
-  number  = false
+  numeric = false
   special = false
 }
 
@@ -84,7 +86,6 @@ resource "azurerm_key_vault" "monitor" {
   resource_group_name         = azurerm_resource_group.monitor.name
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
-  soft_delete_enabled         = true
   purge_protection_enabled    = false
 
   sku_name = "standard"

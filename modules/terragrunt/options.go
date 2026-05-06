@@ -71,7 +71,7 @@ type Options struct {
 	Logger *logger.Logger // Logger for command output
 
 	// Complex configuration that requires special formatting (NOT raw command-line args)
-	BackendConfig map[string]interface{} // Backend configuration (formatted specially)
+	BackendConfig map[string]any // Backend configuration (formatted specially)
 
 	// Test framework configuration (NOT passed to tg command line)
 	TerragruntBinary string // The tg binary to use (should be "terragrunt")

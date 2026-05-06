@@ -106,6 +106,10 @@ func CheckAvailabilitySetContainsVMWithClient(ctx context.Context, client *armco
 		return false, err
 	}
 
+	if resp.Properties == nil {
+		return false, NewNotFoundError("Virtual Machine", vmName, avsName)
+	}
+
 	for _, vm := range resp.Properties.VirtualMachines {
 		if vm.ID == nil {
 			continue
@@ -170,6 +174,10 @@ func GetAvailabilitySetVMNamesInCapsWithClient(ctx context.Context, client *armc
 	}
 
 	vms := []string{}
+
+	if resp.Properties == nil {
+		return vms, nil
+	}
 
 	for _, vm := range resp.Properties.VirtualMachines {
 		if vm.ID == nil {

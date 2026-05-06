@@ -1,13 +1,12 @@
-# ---------------------------------------------------------------------------------------------------------------------
-# PIN TERRAFORM VERSION TO >= 0.12
-# The examples have been upgraded to 0.12 syntax
-# ---------------------------------------------------------------------------------------------------------------------
-
 terraform {
-  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
-  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
-  # forwards compatible with 0.13.x code.
-  required_version = ">= 0.12.26"
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -26,7 +25,9 @@ provider "aws" {
 resource "aws_instance" "example_public" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
-  user_data     = data.template_file.user_data.rendered
+  user_data = templatefile("${path.module}/user_data.sh", {
+    terratest_password = var.terratest_password
+  })
 
   vpc_security_group_ids = [
     aws_security_group.example.id,
@@ -62,18 +63,6 @@ resource "aws_security_group" "example" {
     # To keep this example simple, we allow incoming SSH requests from any IP. In real-world usage, you should only
     # allow SSH requests from trusted servers, such as a bastion host or VPN server.
     cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# SET UP A TEMPLATE AROUND THE USER DATA SCRIPT
-# ---------------------------------------------------------------------------------------------------------------------
-
-data "template_file" "user_data" {
-  template = file("${path.module}/user_data.sh")
-
-  vars = {
-    terratest_password = var.terratest_password
   }
 }
 

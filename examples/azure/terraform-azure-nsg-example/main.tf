@@ -6,23 +6,19 @@
 # See test/azure/terraform_azure_nsg_example_test.go for how to write automated tests for this code.
 # ---------------------------------------------------------------------------------------------------------------------
 
-provider "azurerm" {
-  features {}
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# PIN TERRAFORM VERSION TO >= 0.12
-# The examples have been upgraded to 0.12 syntax
-# ---------------------------------------------------------------------------------------------------------------------
-
 terraform {
-  required_version = ">= 0.12"
+  required_version = ">= 1.0"
+
   required_providers {
     azurerm = {
-      version = "~> 2.50"
       source  = "hashicorp/azurerm"
+      version = "~> 4.0"
     }
   }
+}
+
+provider "azurerm" {
+  features {}
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

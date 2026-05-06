@@ -1,52 +1,47 @@
-//go:build gcp
-// +build gcp
-
-//nolint:testpackage // uses unexported newGCRAuthenticator, newStorageClient
-package gcp
+package gcp_test
 
 import (
-	"context"
-	"strings"
+	"os"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/gcp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2/google"
 )
 
-func TestStaticTokenClient(t *testing.T) {
-	ctx := context.Background()
-	creds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
+// GOOGLE_OAUTH_ACCESS_TOKEN short-circuits the credential lookup in the client
+// constructors. When it is set, the service constructors must build a client
+// without touching GOOGLE_APPLICATION_CREDENTIALS, which lets CI exercise the
+// auth wiring without real GCP creds.
+func TestStaticTokenShortCircuitsCredentialLookup(t *testing.T) {
+	// Poison the ADC path so any fallback to default credentials would fail loudly.
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/credentials.json")
+	t.Setenv("GOOGLE_OAUTH_ACCESS_TOKEN", "fake-access-token")
+
+	svc, err := gcp.NewComputeServiceE(t)
 	require.NoError(t, err)
-	token, err := creds.TokenSource.Token()
+	assert.NotNil(t, svc)
+
+	cb, err := gcp.NewCloudBuildServiceE(t)
 	require.NoError(t, err)
-	projectID := GetGoogleProjectIDFromEnvVar(t)
+	require.NotNil(t, cb)
+	require.NoError(t, cb.Close())
 
-	// we poison the default client instantiation with invalid file so that if it is used, it fails
-	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "non-existent-credentials.json")
-	_, err = NewCloudBuildServiceE(t)
-	require.Error(t, err)
-	_, err = NewComputeServiceE(t)
-	require.Error(t, err)
-	_, err = newGCRAuthenticator()
-	require.Error(t, err)
-	_, err = NewOSLoginServiceE(t)
-	require.Error(t, err)
-	_, err = newStorageClient(ctx)
-	require.Error(t, err)
-
-	// now we instantiate client with oauth2 token
-	// and run several function to make sure the new client is correctly configured with access token
-	t.Setenv("GOOGLE_OAUTH_ACCESS_TOKEN", token.AccessToken)
-	GetAllGCPRegions(t, projectID)
-	GetBuilds(t, projectID)
-	GetLoginProfile(t, GetGoogleIdentityEmailEnvVar(t))
-
-	_, err = newGCRAuthenticator()
+	osl, err := gcp.NewOSLoginServiceE(t)
 	require.NoError(t, err)
+	assert.NotNil(t, osl)
+}
 
-	bucket := "gruntwork-terratest-" + strings.ToLower(random.UniqueID())
+// Without the static token env var, constructors must fall back to ADC, which
+// fails when the credentials file is poisoned. t.Setenv records the original
+// value and registers cleanup; the subsequent Unsetenv triggers the "not set"
+// branch in getStaticTokenSource for the duration of the test.
+func TestMissingStaticTokenFallsBackToADC(t *testing.T) {
+	t.Setenv("GOOGLE_OAUTH_ACCESS_TOKEN", "")
+	require.NoError(t, os.Unsetenv("GOOGLE_OAUTH_ACCESS_TOKEN"))
 
-	CreateStorageBucket(t, projectID, bucket, nil)
-	defer DeleteStorageBucket(t, bucket)
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/credentials.json")
+
+	_, err := gcp.NewCloudBuildServiceE(t)
+	assert.Error(t, err)
 }

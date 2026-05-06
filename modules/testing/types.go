@@ -17,13 +17,13 @@ type TestingT interface {
 	// created during the test. Calling FailNow does not stop
 	// those other goroutines.
 	FailNow()
-	Fatal(args ...interface{})
+	Fatal(args ...any)
 	// Fatalf is equivalent to Logf followed by FailNow.
-	Fatalf(format string, args ...interface{})
+	Fatalf(format string, args ...any)
 	// Error is equivalent to Log followed by Fail.
-	Error(args ...interface{})
+	Error(args ...any)
 	// Errorf is equivalent to Logf followed by Fail.
-	Errorf(format string, args ...interface{})
+	Errorf(format string, args ...any)
 	// Name returns the name of the running test or benchmark.
 	Name() string
 	// Helper marks the calling function as a test helper function.

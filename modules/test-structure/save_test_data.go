@@ -215,7 +215,7 @@ func FormatTestDataPath(testFolder string, filename string) string {
 // (e.g., TerraformOptions) during setup and to reuse this data later during validation and teardown. If `overwrite` is `true`,
 // any contents that exist in the file found at `path` will be overwritten. This has the potential for causing duplicated resources
 // and should be used with caution. If `overwrite` is `false`, the save will be skipped and a warning will be logged.
-func SaveTestData(t testing.TestingT, path string, overwrite bool, value interface{}) {
+func SaveTestData(t testing.TestingT, path string, overwrite bool, value any) {
 	saveTestData(t, path, overwrite, value, true)
 }
 
@@ -224,7 +224,7 @@ func SaveTestData(t testing.TestingT, path string, overwrite bool, value interfa
 // any contents that exist in the file found at `path` will be overwritten. This has the potential for causing duplicated resources
 // and should be used with caution. If `overwrite` is `false`, the save will be skipped and a warning will be logged.
 // If `loggedVal` is `true`, the value will be logged as JSON.
-func saveTestData(t testing.TestingT, path string, overwrite bool, value interface{}, loggedVal bool) {
+func saveTestData(t testing.TestingT, path string, overwrite bool, value any, loggedVal bool) {
 	logger.Default.Logf(t, "Storing test data in %s so it can be reused later", path)
 
 	if IsTestDataPresent(t, path) {
@@ -260,7 +260,7 @@ func saveTestData(t testing.TestingT, path string, overwrite bool, value interfa
 // LoadTestData loads and unserializes a value stored at the given path. The value should be a pointer to a struct into which the
 // value will be deserialized. This allows you to reuse some sort of test data (e.g., TerraformOptions) from earlier
 // setup steps in later validation and teardown steps.
-func LoadTestData(t testing.TestingT, path string, value interface{}) {
+func LoadTestData(t testing.TestingT, path string, value any) {
 	logger.Default.Logf(t, "Loading test data from %s", path)
 
 	bytes, err := os.ReadFile(path)
@@ -299,7 +299,7 @@ func IsTestDataPresent(t testing.TestingT, path string) bool {
 // IsEmptyJSON returns true if the given bytes are empty, or in a valid JSON format that can reasonably be considered empty.
 // The types used are based on the type possibilities listed at https://golang.org/src/encoding/json/decode.go?s=4062:4110#L51
 func IsEmptyJSON(t testing.TestingT, bytes []byte) bool {
-	var value interface{}
+	var value any
 
 	if len(bytes) == 0 {
 		return true
@@ -328,12 +328,12 @@ func IsEmptyJSON(t testing.TestingT, bytes []byte) bool {
 		return true
 	}
 
-	valueSlice, ok := value.([]interface{})
+	valueSlice, ok := value.([]any)
 	if ok && len(valueSlice) == 0 {
 		return true
 	}
 
-	valueMap, ok := value.(map[string]interface{})
+	valueMap, ok := value.(map[string]any)
 	if ok && len(valueMap) == 0 {
 		return true
 	}

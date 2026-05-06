@@ -10,7 +10,7 @@ import (
 
 // FormatBackendConfigAsArgs formats backend configuration as Terraform CLI args.
 // Example: {"bucket": "my-bucket"} -> ["-backend-config=bucket=my-bucket"]
-func FormatBackendConfigAsArgs(vars map[string]interface{}) []string {
+func FormatBackendConfigAsArgs(vars map[string]any) []string {
 	return formatTerraformArgs(vars, "-backend-config", false, true)
 }
 
@@ -25,7 +25,7 @@ func FormatPluginDirAsArgs(pluginDir string) []string {
 }
 
 // formatTerraformArgs formats vars as CLI args with the given prefix.
-func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsSeparator bool, omitNil bool) []string {
+func formatTerraformArgs(vars map[string]any, prefix string, useSpaceAsSeparator bool, omitNil bool) []string {
 	var args []string
 
 	for key, value := range vars {
@@ -49,7 +49,7 @@ func formatTerraformArgs(vars map[string]interface{}, prefix string, useSpaceAsS
 
 // ToHCLString converts Go values to HCL-formatted strings for Terraform CLI arguments.
 // Handles primitives, slices, and maps. Example: []int{1,2,3} -> "[1, 2, 3]"
-func ToHCLString(value interface{}, isNested bool) string {
+func ToHCLString(value any, isNested bool) string {
 	if slice, isSlice := tryToConvertToGenericSlice(value); isSlice {
 		return sliceToHclString(slice)
 	} else if m, isMap := tryToConvertToGenericMap(value); isMap {
@@ -59,14 +59,14 @@ func ToHCLString(value interface{}, isNested bool) string {
 	}
 }
 
-// tryToConvertToGenericSlice converts any slice type to []interface{} using reflection.
-func tryToConvertToGenericSlice(value interface{}) ([]interface{}, bool) {
+// tryToConvertToGenericSlice converts any slice type to []any using reflection.
+func tryToConvertToGenericSlice(value any) ([]any, bool) {
 	reflectValue := reflect.ValueOf(value)
 	if reflectValue.Kind() != reflect.Slice {
-		return []interface{}{}, false
+		return []any{}, false
 	}
 
-	genericSlice := make([]interface{}, reflectValue.Len())
+	genericSlice := make([]any, reflectValue.Len())
 
 	for i := 0; i < reflectValue.Len(); i++ {
 		genericSlice[i] = reflectValue.Index(i).Interface()
@@ -75,19 +75,19 @@ func tryToConvertToGenericSlice(value interface{}) ([]interface{}, bool) {
 	return genericSlice, true
 }
 
-// tryToConvertToGenericMap converts any map[string]T to map[string]interface{} using reflection.
-func tryToConvertToGenericMap(value interface{}) (map[string]interface{}, bool) {
+// tryToConvertToGenericMap converts any map[string]T to map[string]any using reflection.
+func tryToConvertToGenericMap(value any) (map[string]any, bool) {
 	reflectValue := reflect.ValueOf(value)
 	if reflectValue.Kind() != reflect.Map {
-		return map[string]interface{}{}, false
+		return map[string]any{}, false
 	}
 
 	reflectType := reflect.TypeOf(value)
 	if reflectType.Key().Kind() != reflect.String {
-		return map[string]interface{}{}, false
+		return map[string]any{}, false
 	}
 
-	genericMap := make(map[string]interface{}, reflectValue.Len())
+	genericMap := make(map[string]any, reflectValue.Len())
 
 	mapKeys := reflectValue.MapKeys()
 	for _, key := range mapKeys {
@@ -97,7 +97,7 @@ func tryToConvertToGenericMap(value interface{}) (map[string]interface{}, bool) 
 	return genericMap, true
 }
 
-func sliceToHclString(slice []interface{}) string {
+func sliceToHclString(slice []any) string {
 	hclValues := make([]string, 0, len(slice))
 
 	for _, value := range slice {
@@ -108,7 +108,7 @@ func sliceToHclString(slice []interface{}) string {
 	return fmt.Sprintf("[%s]", strings.Join(hclValues, ", "))
 }
 
-func mapToHclString(m map[string]interface{}) string {
+func mapToHclString(m map[string]any) string {
 	keyValuePairs := make([]string, 0, len(m))
 
 	for key, value := range m {
@@ -119,7 +119,7 @@ func mapToHclString(m map[string]interface{}) string {
 	return fmt.Sprintf("{%s}", strings.Join(keyValuePairs, ", "))
 }
 
-func primitiveToHclString(value interface{}, isNested bool) string {
+func primitiveToHclString(value any, isNested bool) string {
 	if value == nil {
 		return "null"
 	}

@@ -1,0 +1,91 @@
+name: GCP Integration Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'modules/gcp/**'
+      - 'test/gcp/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/gcp-integration-tests.yml'
+  pull_request:
+    paths:
+      - 'modules/gcp/**'
+      - 'test/gcp/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/gcp-integration-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  gcp-integration-tests:
+    name: GCP Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      # GOOGLE_CLOUD_PROJECT is the env var that the GCP provider helper
+      # (gcp.GetGoogleProjectIDFromEnvVar) actually reads.
+      GOOGLE_CLOUD_PROJECT: ${{ secrets.GCP_PROJECT_ID }}
+      # GOOGLE_COMPUTE_ZONE is optional; only used to set the gcloud CLI default zone.
+      GOOGLE_COMPUTE_ZONE: ${{ vars.GOOGLE_COMPUTE_ZONE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v3
+        with:
+          version: 2025.12.10
+          experimental: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Go module cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go modules
+        run: go mod download
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER_ID }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+          audience: ${{ secrets.GCP_ALLOWED_AUDIENCES }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure gcloud defaults
+        run: |
+          gcloud --quiet config set project "$GOOGLE_CLOUD_PROJECT"
+          if [ -n "$GOOGLE_COMPUTE_ZONE" ]; then
+            gcloud --quiet config set compute/zone "$GOOGLE_COMPUTE_ZONE"
+          fi
+
+      - name: Run GCP integration tests
+        run: |
+          mkdir -p /tmp/logs
+          go test -v -count=1 -timeout 45m -tags gcp ./test/gcp/... 2>&1 | tee /tmp/logs/gcp-integration-tests.log
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcp-integration-test-logs
+          path: /tmp/logs/
+          retention-days: 14

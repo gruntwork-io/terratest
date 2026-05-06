@@ -1,0 +1,71 @@
+name: GCP Unit Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'modules/gcp/**'
+      - 'test/gcp/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/gcp-tests.yml'
+  pull_request:
+    paths:
+      - 'modules/gcp/**'
+      - 'test/gcp/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/gcp-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: GCP Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mise
+        uses: jdx/mise-action@v3
+        with:
+          version: 2025.12.10
+          experimental: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Go module cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Go modules
+        run: go mod download
+
+      - name: Build GCP module
+        run: go build ./modules/gcp/...
+
+      - name: Compile GCP integration tests
+        run: go test -tags gcp -c -o /dev/null ./test/gcp/...
+
+      - name: Run GCP module tests
+        run: |
+          mkdir -p /tmp/logs
+          go test -v -count=1 -timeout 10m ./modules/gcp/... 2>&1 | tee /tmp/logs/gcp-module-tests.log
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcp-unit-test-logs
+          path: /tmp/logs/
+          retention-days: 14

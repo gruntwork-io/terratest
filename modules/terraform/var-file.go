@@ -72,12 +72,13 @@ func GetVariableAsMapFromVarFileE(t testing.TestingT, fileName string, key strin
 		return nil, InputFileKeyNotFound{FilePath: fileName, Key: key}
 	}
 
-	if reflect.TypeOf(variable).String() != "map[string]interface {}" {
-		return nil, UnexpectedOutputType{Key: key, ExpectedType: "map[string]interface {}", ActualType: reflect.TypeOf(variable).String()}
+	mapVariable, ok := variable.(map[string]any)
+	if !ok {
+		return nil, UnexpectedOutputType{Key: key, ExpectedType: "map[string]any", ActualType: reflect.TypeOf(variable).String()}
 	}
 
 	resultMap := make(map[string]string)
-	for mapKey, mapVal := range variable.(map[string]any) {
+	for mapKey, mapVal := range mapVariable {
 		resultMap[mapKey] = fmt.Sprintf("%v", mapVal)
 	}
 
@@ -109,12 +110,13 @@ func GetVariableAsListFromVarFileE(t testing.TestingT, fileName string, key stri
 		return nil, InputFileKeyNotFound{FilePath: fileName, Key: key}
 	}
 
-	if reflect.TypeOf(variable).String() != "[]interface {}" {
-		return nil, UnexpectedOutputType{Key: key, ExpectedType: "[]interface {}", ActualType: reflect.TypeOf(variable).String()}
+	listVariable, ok := variable.([]any)
+	if !ok {
+		return nil, UnexpectedOutputType{Key: key, ExpectedType: "[]any", ActualType: reflect.TypeOf(variable).String()}
 	}
 
 	resultArray := []string{}
-	for _, item := range variable.([]any) {
+	for _, item := range listVariable {
 		resultArray = append(resultArray, fmt.Sprintf("%v", item))
 	}
 

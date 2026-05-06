@@ -1,118 +1,126 @@
-//go:build gcp
-// +build gcp
-
-// NOTE: We use build tags to differentiate GCP testing for better isolation and parallelism when executing our tests.
-
 package gcp_test
 
 import (
-	"fmt"
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/api/option"
+	"google.golang.org/api/oslogin/v1"
 )
 
-// TestOSLogin groups all OS Login tests that mutate SSH keys for the same user.
-// These tests cannot run in parallel with each other because Google's OS Login API
-// returns "409: Multiple concurrent mutations" errors when multiple operations
-// modify the same user's SSH keys simultaneously.
-//
-// By grouping them in a single test function with subtests (without t.Parallel()),
-// we ensure they run sequentially while still allowing other GCP tests to run in parallel.
-//
-//nolint:paralleltest,tparallel // subtests must be sequential to avoid 409 concurrent mutation errors
-func TestOSLogin(t *testing.T) {
-	t.Parallel() // This test can run in parallel with OTHER GCP tests
-
-	// Clean up any stale SSH keys from previous test runs to avoid
-	// "Login profile size exceeds 32 KiB" errors.
-	user := gcp.GetGoogleIdentityEmailEnvVar(t)
-	purgeAllSSHKeys(t, user)
-
-	// Subtests run sequentially (no t.Parallel() on subtests) to avoid 409 conflicts
-	t.Run("ImportSSHKey", func(t *testing.T) {
-		keyPair := ssh.GenerateRSAKeyPair(t, 2048)
-		key := keyPair.PublicKey
-
-		user := gcp.GetGoogleIdentityEmailEnvVar(t)
-
-		defer gcp.DeleteSSHKey(t, user, key)
-
-		gcp.ImportSSHKey(t, user, key)
-	})
-
-	t.Run("ImportProjectSSHKey", func(t *testing.T) {
-		keyPair := ssh.GenerateRSAKeyPair(t, 2048)
-		key := keyPair.PublicKey
-
-		user := gcp.GetGoogleIdentityEmailEnvVar(t)
-		projectID := gcp.GetGoogleProjectIDFromEnvVar(t)
-
-		defer gcp.DeleteSSHKey(t, user, key)
-
-		gcp.ImportProjectSSHKey(t, user, key, projectID)
-	})
-
-	t.Run("GetLoginProfile", func(t *testing.T) {
-		user := gcp.GetGoogleIdentityEmailEnvVar(t)
-		gcp.GetLoginProfile(t, user)
-	})
-
-	t.Run("SetOSLoginKey", func(t *testing.T) {
-		keyPair := ssh.GenerateRSAKeyPair(t, 2048)
-		key := keyPair.PublicKey
-
-		user := gcp.GetGoogleIdentityEmailEnvVar(t)
-
-		defer gcp.DeleteSSHKey(t, user, key)
-
-		gcp.ImportSSHKey(t, user, key)
-		loginProfile := gcp.GetLoginProfile(t, user)
-
-		found := false
-
-		for _, v := range loginProfile.SshPublicKeys {
-			if key == v.Key {
-				found = true
-			}
-		}
-
-		if found != true {
-			t.Fatalf("Did not find key in login profile for user %s", user)
-		}
-	})
-}
-
-// purgeAllSSHKeys deletes all SSH keys from the user's OS Login profile.
-// This prevents "Login profile size exceeds 32 KiB" errors caused by
-// stale keys accumulating from previous test runs.
-func purgeAllSSHKeys(t *testing.T, user string) {
+// newFakeOsLoginService points a *oslogin.Service at a local httptest server.
+func newFakeOsLoginService(t *testing.T, handler http.Handler) *oslogin.Service {
 	t.Helper()
 
-	profile, err := gcp.GetLoginProfileE(t, user)
-	if err != nil {
-		t.Logf("Warning: could not get login profile to purge keys: %v", err)
-		return
-	}
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
 
-	if len(profile.SshPublicKeys) == 0 {
-		return
-	}
+	svc, err := oslogin.NewService(context.Background(),
+		option.WithEndpoint(server.URL+"/"), option.WithoutAuthentication())
+	require.NoError(t, err)
 
-	logger.Default.Logf(t, "Purging %d stale SSH keys from OS Login profile for user %s", len(profile.SshPublicKeys), user)
+	return svc
+}
 
-	service, err := gcp.NewOSLoginServiceContextE(t, t.Context())
-	if err != nil {
-		t.Logf("Warning: could not create OS Login service to purge keys: %v", err)
-		return
-	}
+func TestImportSSHKeyWithClient(t *testing.T) {
+	t.Parallel()
 
-	for fingerprint := range profile.SshPublicKeys {
-		path := fmt.Sprintf("users/%s/sshPublicKeys/%s", user, fingerprint)
-		if _, err := service.Users.SshPublicKeys.Delete(path).Context(t.Context()).Do(); err != nil {
-			t.Logf("Warning: could not delete SSH key %s: %v", fingerprint, err)
-		}
-	}
+	const user = "u@example.com"
+
+	svc := newFakeOsLoginService(t, respond(t, http.MethodPost, "/users/"+user+":importSshPublicKey", http.StatusOK, `{"loginProfile":{"name":"users/`+user+`"}}`))
+
+	require.NoError(t, gcp.ImportSSHKeyWithClient(context.Background(), svc, user, "ssh-rsa A"))
+}
+
+func TestImportProjectSSHKeyWithClient(t *testing.T) {
+	t.Parallel()
+
+	const (
+		user      = "u@example.com"
+		projectID = "my-project"
+	)
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Contains(t, r.URL.Path, "/users/"+user+":importSshPublicKey")
+		assert.Equal(t, projectID, r.URL.Query().Get("projectId"), "expected projectId query param")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"loginProfile":{"name":"users/` + user + `"}}`))
+	})
+
+	svc := newFakeOsLoginService(t, handler)
+
+	require.NoError(t, gcp.ImportProjectSSHKeyWithClient(context.Background(), svc, user, "ssh-rsa A", projectID))
+}
+
+func TestGetLoginProfileWithClient(t *testing.T) {
+	t.Parallel()
+
+	const user = "u@example.com"
+
+	body := `{"name":"users/` + user + `","sshPublicKeys":{"abc":{"key":"ssh-rsa A","fingerprint":"abc"}}}`
+	svc := newFakeOsLoginService(t, respond(t, http.MethodGet, "/users/"+user+"/loginProfile", http.StatusOK, body))
+
+	profile, err := gcp.GetLoginProfileWithClient(context.Background(), svc, user)
+	require.NoError(t, err)
+	assert.Equal(t, "users/"+user, profile.Name)
+	assert.Len(t, profile.SshPublicKeys, 1)
+}
+
+func TestDeleteSSHKeyWithClient(t *testing.T) {
+	t.Parallel()
+
+	const (
+		user        = "u@example.com"
+		key         = "ssh-rsa A matching"
+		fingerprint = "abc123"
+	)
+
+	t.Run("deletes matching key", func(t *testing.T) {
+		t.Parallel()
+
+		var deleteCalled bool
+
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+
+			switch r.Method {
+			case http.MethodGet:
+				_, _ = w.Write([]byte(`{"name":"users/` + user + `","sshPublicKeys":{"` + fingerprint + `":{"key":"` + key + `","fingerprint":"` + fingerprint + `"}}}`))
+			case http.MethodDelete:
+				assert.Contains(t, r.URL.Path, "/sshPublicKeys/"+fingerprint)
+
+				deleteCalled = true
+
+				_, _ = w.Write([]byte(`{}`))
+			}
+		})
+
+		svc := newFakeOsLoginService(t, handler)
+
+		require.NoError(t, gcp.DeleteSSHKeyWithClient(context.Background(), svc, user, key))
+		assert.True(t, deleteCalled, "Delete should fire when the key is present")
+	})
+
+	t.Run("no-op when no matching key", func(t *testing.T) {
+		t.Parallel()
+
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodDelete {
+				t.Fatalf("Delete must not fire when no key matches")
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"name":"users/` + user + `","sshPublicKeys":{"` + fingerprint + `":{"key":"ssh-rsa A other","fingerprint":"` + fingerprint + `"}}}`))
+		})
+
+		svc := newFakeOsLoginService(t, handler)
+
+		require.NoError(t, gcp.DeleteSSHKeyWithClient(context.Background(), svc, user, key))
+	})
 }
