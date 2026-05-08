@@ -118,19 +118,18 @@ type DaemonSetNotAvailable struct {
 
 // Error is a simple function to return a formatted error message as a string
 func (err DaemonSetNotAvailable) Error() string {
-	s := err.daemonSet.Status
 	return fmt.Sprintf(
 		"DaemonSet %s is not available: generation observed %d/%d, updated %d/%d, ready %d/%d, available %d/%d, misscheduled %d",
 		err.daemonSet.Name,
-		s.ObservedGeneration,
+		err.daemonSet.Status.ObservedGeneration,
 		err.daemonSet.Generation,
-		s.UpdatedNumberScheduled,
-		s.DesiredNumberScheduled,
-		s.NumberReady,
-		s.DesiredNumberScheduled,
-		s.NumberAvailable,
-		s.DesiredNumberScheduled,
-		s.NumberMisscheduled,
+		err.daemonSet.Status.UpdatedNumberScheduled,
+		err.daemonSet.Status.DesiredNumberScheduled,
+		err.daemonSet.Status.NumberReady,
+		err.daemonSet.Status.DesiredNumberScheduled,
+		err.daemonSet.Status.NumberAvailable,
+		err.daemonSet.Status.DesiredNumberScheduled,
+		err.daemonSet.Status.NumberMisscheduled,
 	)
 }
 

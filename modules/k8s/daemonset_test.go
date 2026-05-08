@@ -82,8 +82,8 @@ func TestIsDaemonSetAvailable(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		title          string
 		ds             *appsv1.DaemonSet
+		title          string
 		expectedResult bool
 	}{
 		{

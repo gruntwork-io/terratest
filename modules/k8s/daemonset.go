@@ -192,6 +192,7 @@ func IsDaemonSetAvailable(ds *appsv1.DaemonSet) bool {
 	if ds.Status.ObservedGeneration < ds.Generation {
 		return false
 	}
+
 	if ds.Status.UpdatedNumberScheduled < ds.Status.DesiredNumberScheduled {
 		return false
 	}
