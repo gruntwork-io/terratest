@@ -120,37 +120,24 @@ type BucketServerSideEncryptionNotEnabledError struct {
 	s3BucketName      string
 	awsRegion         string
 	expectedAlgorithm s3types.ServerSideEncryption
-	observedAlgorithm s3types.ServerSideEncryption
 }
 
 func (err BucketServerSideEncryptionNotEnabledError) Error() string {
-	if err.observedAlgorithm == "" {
-		return fmt.Sprintf(
-			"Server-side encryption with algorithm %s is not enabled for bucket %s in region %s",
-			err.expectedAlgorithm,
-			err.s3BucketName,
-			err.awsRegion,
-		)
-	}
-
 	return fmt.Sprintf(
-		"Server-side encryption for bucket %s in region %s uses algorithm %s, expected %s",
+		"Server-side encryption with algorithm %s is not enabled for bucket %s in region %s",
+		err.expectedAlgorithm,
 		err.s3BucketName,
 		err.awsRegion,
-		err.observedAlgorithm,
-		err.expectedAlgorithm,
 	)
 }
 
 // NewBucketServerSideEncryptionNotEnabledError returns a [BucketServerSideEncryptionNotEnabledError] for the given S3
-// bucket, region, and expected/observed SSE algorithms. Pass an empty observed algorithm when no default-encryption
-// rule was found.
-func NewBucketServerSideEncryptionNotEnabledError(s3BucketName string, awsRegion string, expectedAlgorithm s3types.ServerSideEncryption, observedAlgorithm s3types.ServerSideEncryption) BucketServerSideEncryptionNotEnabledError {
+// bucket, region, and expected SSE algorithm.
+func NewBucketServerSideEncryptionNotEnabledError(s3BucketName string, awsRegion string, expectedAlgorithm s3types.ServerSideEncryption) BucketServerSideEncryptionNotEnabledError {
 	return BucketServerSideEncryptionNotEnabledError{
 		s3BucketName:      s3BucketName,
 		awsRegion:         awsRegion,
 		expectedAlgorithm: expectedAlgorithm,
-		observedAlgorithm: observedAlgorithm,
 	}
 }
 

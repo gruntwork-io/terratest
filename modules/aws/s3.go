@@ -3,6 +3,7 @@ package aws
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	smithy "github.com/aws/smithy-go"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -914,6 +916,9 @@ func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName s
 
 // AssertS3BucketServerSideEncryptionContextE checks if the given S3 bucket has server-side encryption configured with
 // the given algorithm, and returns an error if it does not. The ctx parameter supports cancellation and timeouts.
+//
+// The algorithm is matched exactly: an expectation of `aws:kms` will not match a bucket configured with
+// `aws:kms:dsse`, and vice versa.
 func AssertS3BucketServerSideEncryptionContextE(t testing.TestingT, ctx context.Context, region string, bucketName string, algorithm types.ServerSideEncryption) error {
 	s3Client, err := NewS3ClientContextE(t, ctx, region)
 	if err != nil {
@@ -924,11 +929,17 @@ func AssertS3BucketServerSideEncryptionContextE(t testing.TestingT, ctx context.
 		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
+		// A bucket with no SSE configuration surfaces as ServerSideEncryptionConfigurationNotFoundError. Translate
+		// that to our typed error so callers can match on the failure mode regardless of SDK version.
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
+			return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm)
+		}
 		return err
 	}
 
 	if out.ServerSideEncryptionConfiguration == nil {
-		return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm, "")
+		return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm)
 	}
 
 	for _, rule := range out.ServerSideEncryptionConfiguration.Rules {
@@ -940,7 +951,7 @@ func AssertS3BucketServerSideEncryptionContextE(t testing.TestingT, ctx context.
 		}
 	}
 
-	return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm, "")
+	return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm)
 }
 
 // AssertS3BucketServerSideEncryptionContext checks if the given S3 bucket has server-side encryption configured with
