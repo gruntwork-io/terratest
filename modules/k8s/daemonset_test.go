@@ -1,5 +1,5 @@
-//go:build kubernetes
-// +build kubernetes
+//go:build kubeall || kubernetes
+// +build kubeall kubernetes
 
 // NOTE: we have build tags to differentiate kubernetes tests from non-kubernetes tests. This is done because minikube
 // is heavy and can interfere with docker related tests in terratest. Specifically, many of the tests start to fail with
@@ -10,9 +10,11 @@ package k8s_test
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
 
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"strings"
@@ -61,6 +63,88 @@ func TestListDaemonSetsReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	daemonSet := daemonSets[0]
 	require.Equal(t, "sample-ds", daemonSet.Name)
 	require.Equal(t, daemonSet.Namespace, uniqueID)
+}
+
+func TestWaitUntilDaemonSetAvailable(t *testing.T) {
+	t.Parallel()
+
+	uniqueID := strings.ToLower(random.UniqueID())
+	options := k8s.NewKubectlOptions("", "", uniqueID)
+	configData := fmt.Sprintf(exampleDaemonSetYAMLTemplate, uniqueID, uniqueID)
+
+	k8s.KubectlApplyFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromString(t, options, configData)
+
+	k8s.WaitUntilDaemonSetAvailable(t, options, "sample-ds", 60, 1*time.Second)
+}
+
+func TestIsDaemonSetAvailable(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		title          string
+		ds             *appsv1.DaemonSet
+		expectedResult bool
+	}{
+		{
+			title: "AvailableWhenDesiredAndAvailableMatch",
+			ds: &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{Generation: 1},
+				Status: appsv1.DaemonSetStatus{
+					ObservedGeneration:     1,
+					DesiredNumberScheduled: 3,
+					NumberAvailable:        3,
+				},
+			},
+			expectedResult: true,
+		},
+		{
+			title: "NotAvailableWhenSomePodsMissing",
+			ds: &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{Generation: 1},
+				Status: appsv1.DaemonSetStatus{
+					ObservedGeneration:     1,
+					DesiredNumberScheduled: 3,
+					NumberAvailable:        2,
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			title: "NotAvailableWhenObservedGenerationStale",
+			ds: &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{Generation: 2},
+				Status: appsv1.DaemonSetStatus{
+					ObservedGeneration:     1,
+					DesiredNumberScheduled: 3,
+					NumberAvailable:        3,
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			title: "NotAvailableWhenDesiredIsZero",
+			ds: &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{Generation: 1},
+				Status: appsv1.DaemonSetStatus{
+					ObservedGeneration:     1,
+					DesiredNumberScheduled: 0,
+					NumberAvailable:        0,
+				},
+			},
+			expectedResult: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.title, func(t *testing.T) {
+			t.Parallel()
+
+			actualResult := k8s.IsDaemonSetAvailable(tc.ds)
+			require.Equal(t, tc.expectedResult, actualResult)
+		})
+	}
 }
 
 const exampleDaemonSetYAMLTemplate = `---

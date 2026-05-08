@@ -111,6 +111,28 @@ func NewDeploymentNotAvailableError(deploy *appsv1.Deployment) DeploymentNotAvai
 	return DeploymentNotAvailable{deploy}
 }
 
+// DaemonSetNotAvailable is returned when a Kubernetes daemonset has not yet rolled out the desired number of pods.
+type DaemonSetNotAvailable struct {
+	ds *appsv1.DaemonSet
+}
+
+// Error is a simple function to return a formatted error message as a string
+func (err DaemonSetNotAvailable) Error() string {
+	return fmt.Sprintf(
+		"DaemonSet %s is not available: observed generation %d/%d, available %d/%d",
+		err.ds.Name,
+		err.ds.Status.ObservedGeneration,
+		err.ds.Generation,
+		err.ds.Status.NumberAvailable,
+		err.ds.Status.DesiredNumberScheduled,
+	)
+}
+
+// NewDaemonSetNotAvailableError returns a DaemonSetNotAvailable struct when Kubernetes deems a daemonset is not available
+func NewDaemonSetNotAvailableError(ds *appsv1.DaemonSet) DaemonSetNotAvailable {
+	return DaemonSetNotAvailable{ds}
+}
+
 // PodNotAvailable is returned when a Kubernetes service is not yet available to accept traffic.
 type PodNotAvailable struct {
 	pod *corev1.Pod
