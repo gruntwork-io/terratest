@@ -935,6 +935,7 @@ func AssertS3BucketServerSideEncryptionContextE(t testing.TestingT, ctx context.
 		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
 			return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm)
 		}
+
 		return err
 	}
 
@@ -946,6 +947,7 @@ func AssertS3BucketServerSideEncryptionContextE(t testing.TestingT, ctx context.
 		if rule.ApplyServerSideEncryptionByDefault == nil {
 			continue
 		}
+
 		if rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm == algorithm {
 			return nil
 		}

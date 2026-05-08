@@ -368,8 +368,10 @@ func TestAssertS3BucketServerSideEncryption(t *testing.T) {
 			if algorithm == types.ServerSideEncryptionAwsKms {
 				otherAlgorithm = types.ServerSideEncryptionAes256
 			}
-			err = terraaws.AssertS3BucketServerSideEncryptionE(t, region, s3BucketName, otherAlgorithm)
+
 			var notEnabled terraaws.BucketServerSideEncryptionNotEnabledError
+
+			err = terraaws.AssertS3BucketServerSideEncryptionE(t, region, s3BucketName, otherAlgorithm)
 			require.ErrorAs(t, err, &notEnabled)
 		})
 	}
