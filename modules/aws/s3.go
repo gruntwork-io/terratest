@@ -912,6 +912,64 @@ func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName s
 	return AssertS3BucketPolicyExistsContextE(t, context.Background(), region, bucketName)
 }
 
+// AssertS3BucketServerSideEncryptionContextE checks if the given S3 bucket has server-side encryption configured with
+// the given algorithm, and returns an error if it does not. The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketServerSideEncryptionContextE(t testing.TestingT, ctx context.Context, region string, bucketName string, algorithm types.ServerSideEncryption) error {
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
+	if err != nil {
+		return err
+	}
+
+	out, err := s3Client.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		return err
+	}
+
+	if out.ServerSideEncryptionConfiguration == nil {
+		return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm, "")
+	}
+
+	for _, rule := range out.ServerSideEncryptionConfiguration.Rules {
+		if rule.ApplyServerSideEncryptionByDefault == nil {
+			continue
+		}
+		if rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm == algorithm {
+			return nil
+		}
+	}
+
+	return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm, "")
+}
+
+// AssertS3BucketServerSideEncryptionContext checks if the given S3 bucket has server-side encryption configured with
+// the given algorithm, and fails the test if it does not. The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketServerSideEncryptionContext(t testing.TestingT, ctx context.Context, region string, bucketName string, algorithm types.ServerSideEncryption) {
+	t.Helper()
+
+	err := AssertS3BucketServerSideEncryptionContextE(t, ctx, region, bucketName, algorithm)
+	require.NoError(t, err)
+}
+
+// AssertS3BucketServerSideEncryption checks if the given S3 bucket has server-side encryption configured with the
+// given algorithm and fails the test if it does not.
+//
+// Deprecated: Use [AssertS3BucketServerSideEncryptionContext] instead.
+func AssertS3BucketServerSideEncryption(t testing.TestingT, region string, bucketName string, algorithm types.ServerSideEncryption) {
+	t.Helper()
+
+	AssertS3BucketServerSideEncryptionContext(t, context.Background(), region, bucketName, algorithm)
+}
+
+// AssertS3BucketServerSideEncryptionE checks if the given S3 bucket has server-side encryption configured with the
+// given algorithm and returns an error if it does not.
+//
+// Deprecated: Use [AssertS3BucketServerSideEncryptionContextE] instead.
+func AssertS3BucketServerSideEncryptionE(t testing.TestingT, region string, bucketName string, algorithm types.ServerSideEncryption) error {
+	return AssertS3BucketServerSideEncryptionContextE(t, context.Background(), region, bucketName, algorithm)
+}
+
 // NewS3ClientContextE creates an S3 client.
 // The ctx parameter supports cancellation and timeouts.
 func NewS3ClientContextE(t testing.TestingT, ctx context.Context, region string) (*s3.Client, error) {

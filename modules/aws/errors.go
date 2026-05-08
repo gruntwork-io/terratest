@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+
+	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 // IpForEc2InstanceNotFound is an error that occurs when the IP for an EC2 instance is not found.
@@ -110,6 +112,46 @@ func (err NoBucketPolicyError) Error() string {
 // bucket, region, and bucket policy.
 func NewNoBucketPolicyError(s3BucketName string, awsRegion string, bucketPolicy string) NoBucketPolicyError {
 	return NoBucketPolicyError{s3BucketName: s3BucketName, awsRegion: awsRegion, bucketPolicy: bucketPolicy}
+}
+
+// BucketServerSideEncryptionNotEnabledError is returned when an S3 bucket that should have server-side encryption with
+// the expected algorithm is not configured to do so.
+type BucketServerSideEncryptionNotEnabledError struct {
+	s3BucketName      string
+	awsRegion         string
+	expectedAlgorithm s3types.ServerSideEncryption
+	observedAlgorithm s3types.ServerSideEncryption
+}
+
+func (err BucketServerSideEncryptionNotEnabledError) Error() string {
+	if err.observedAlgorithm == "" {
+		return fmt.Sprintf(
+			"Server-side encryption with algorithm %s is not enabled for bucket %s in region %s",
+			err.expectedAlgorithm,
+			err.s3BucketName,
+			err.awsRegion,
+		)
+	}
+
+	return fmt.Sprintf(
+		"Server-side encryption for bucket %s in region %s uses algorithm %s, expected %s",
+		err.s3BucketName,
+		err.awsRegion,
+		err.observedAlgorithm,
+		err.expectedAlgorithm,
+	)
+}
+
+// NewBucketServerSideEncryptionNotEnabledError returns a [BucketServerSideEncryptionNotEnabledError] for the given S3
+// bucket, region, and expected/observed SSE algorithms. Pass an empty observed algorithm when no default-encryption
+// rule was found.
+func NewBucketServerSideEncryptionNotEnabledError(s3BucketName string, awsRegion string, expectedAlgorithm s3types.ServerSideEncryption, observedAlgorithm s3types.ServerSideEncryption) BucketServerSideEncryptionNotEnabledError {
+	return BucketServerSideEncryptionNotEnabledError{
+		s3BucketName:      s3BucketName,
+		awsRegion:         awsRegion,
+		expectedAlgorithm: expectedAlgorithm,
+		observedAlgorithm: observedAlgorithm,
+	}
 }
 
 // NoInstanceTypeError is returned when none of the given instance type options are available in all AZs in a region
