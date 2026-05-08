@@ -87,25 +87,53 @@ func TestIsDaemonSetAvailable(t *testing.T) {
 		expectedResult bool
 	}{
 		{
-			title: "AvailableWhenDesiredAndAvailableMatch",
+			title: "AvailableWhenAllPodsUpdatedAndAvailable",
 			ds: &appsv1.DaemonSet{
 				ObjectMeta: metav1.ObjectMeta{Generation: 1},
 				Status: appsv1.DaemonSetStatus{
 					ObservedGeneration:     1,
 					DesiredNumberScheduled: 3,
+					UpdatedNumberScheduled: 3,
 					NumberAvailable:        3,
 				},
 			},
 			expectedResult: true,
 		},
 		{
-			title: "NotAvailableWhenSomePodsMissing",
+			title: "AvailableWhenNoNodesMatchSelector",
+			ds: &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{Generation: 1},
+				Status: appsv1.DaemonSetStatus{
+					ObservedGeneration:     1,
+					DesiredNumberScheduled: 0,
+					UpdatedNumberScheduled: 0,
+					NumberAvailable:        0,
+				},
+			},
+			expectedResult: true,
+		},
+		{
+			title: "NotAvailableWhenSomePodsNotYetAvailable",
 			ds: &appsv1.DaemonSet{
 				ObjectMeta: metav1.ObjectMeta{Generation: 1},
 				Status: appsv1.DaemonSetStatus{
 					ObservedGeneration:     1,
 					DesiredNumberScheduled: 3,
+					UpdatedNumberScheduled: 3,
 					NumberAvailable:        2,
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			title: "NotAvailableMidRollingUpdate",
+			ds: &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{Generation: 2},
+				Status: appsv1.DaemonSetStatus{
+					ObservedGeneration:     2,
+					DesiredNumberScheduled: 3,
+					UpdatedNumberScheduled: 1,
+					NumberAvailable:        3,
 				},
 			},
 			expectedResult: false,
@@ -117,19 +145,8 @@ func TestIsDaemonSetAvailable(t *testing.T) {
 				Status: appsv1.DaemonSetStatus{
 					ObservedGeneration:     1,
 					DesiredNumberScheduled: 3,
+					UpdatedNumberScheduled: 3,
 					NumberAvailable:        3,
-				},
-			},
-			expectedResult: false,
-		},
-		{
-			title: "NotAvailableWhenDesiredIsZero",
-			ds: &appsv1.DaemonSet{
-				ObjectMeta: metav1.ObjectMeta{Generation: 1},
-				Status: appsv1.DaemonSetStatus{
-					ObservedGeneration:     1,
-					DesiredNumberScheduled: 0,
-					NumberAvailable:        0,
 				},
 			},
 			expectedResult: false,
@@ -171,6 +188,8 @@ spec:
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
         effect: NoSchedule
       containers:
       - name: alpine

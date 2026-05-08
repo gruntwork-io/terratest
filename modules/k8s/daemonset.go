@@ -181,16 +181,20 @@ func WaitUntilDaemonSetAvailableE(
 	return WaitUntilDaemonSetAvailableContextE(t, context.Background(), options, daemonSetName, retries, sleepBetweenRetries)
 }
 
-// IsDaemonSetAvailable returns true once the daemonset's controller has scheduled the desired number of pods and they
-// are all reported as available. We compare against DesiredNumberScheduled rather than relying on a status condition
-// because DaemonSetCondition is not always populated by the controller.
+// IsDaemonSetAvailable returns true once the daemonset's rollout is complete. The check mirrors `kubectl rollout
+// status ds`: the controller has observed the latest spec, every scheduled pod has been updated to the current
+// generation, and every desired pod is available. Status fields are used directly rather than DaemonSetCondition
+// because the controller does not always populate that field.
+//
+// A daemonset whose node selector matches zero nodes (DesiredNumberScheduled == 0) is treated as available — this
+// matches the kubectl behavior where such a daemonset is considered "successfully rolled out".
 func IsDaemonSetAvailable(ds *appsv1.DaemonSet) bool {
-	if ds.Generation != ds.Status.ObservedGeneration {
+	if ds.Status.ObservedGeneration < ds.Generation {
 		return false
 	}
-	if ds.Status.DesiredNumberScheduled == 0 {
+	if ds.Status.UpdatedNumberScheduled < ds.Status.DesiredNumberScheduled {
 		return false
 	}
 
-	return ds.Status.NumberAvailable == ds.Status.DesiredNumberScheduled
+	return ds.Status.NumberAvailable >= ds.Status.DesiredNumberScheduled
 }

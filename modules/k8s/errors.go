@@ -113,18 +113,24 @@ func NewDeploymentNotAvailableError(deploy *appsv1.Deployment) DeploymentNotAvai
 
 // DaemonSetNotAvailable is returned when a Kubernetes daemonset has not yet rolled out the desired number of pods.
 type DaemonSetNotAvailable struct {
-	ds *appsv1.DaemonSet
+	daemonSet *appsv1.DaemonSet
 }
 
 // Error is a simple function to return a formatted error message as a string
 func (err DaemonSetNotAvailable) Error() string {
+	s := err.daemonSet.Status
 	return fmt.Sprintf(
-		"DaemonSet %s is not available: observed generation %d/%d, available %d/%d",
-		err.ds.Name,
-		err.ds.Status.ObservedGeneration,
-		err.ds.Generation,
-		err.ds.Status.NumberAvailable,
-		err.ds.Status.DesiredNumberScheduled,
+		"DaemonSet %s is not available: generation observed %d/%d, updated %d/%d, ready %d/%d, available %d/%d, misscheduled %d",
+		err.daemonSet.Name,
+		s.ObservedGeneration,
+		err.daemonSet.Generation,
+		s.UpdatedNumberScheduled,
+		s.DesiredNumberScheduled,
+		s.NumberReady,
+		s.DesiredNumberScheduled,
+		s.NumberAvailable,
+		s.DesiredNumberScheduled,
+		s.NumberMisscheduled,
 	)
 }
 
