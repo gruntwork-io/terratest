@@ -3,6 +3,7 @@ package aws
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	smithy "github.com/aws/smithy-go"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -910,6 +912,75 @@ func AssertS3BucketPolicyExists(t testing.TestingT, region string, bucketName st
 // Deprecated: Use [AssertS3BucketPolicyExistsContextE] instead.
 func AssertS3BucketPolicyExistsE(t testing.TestingT, region string, bucketName string) error {
 	return AssertS3BucketPolicyExistsContextE(t, context.Background(), region, bucketName)
+}
+
+// AssertS3BucketServerSideEncryptionContextE checks if the given S3 bucket has server-side encryption configured with
+// the given algorithm, and returns an error if it does not. The ctx parameter supports cancellation and timeouts.
+//
+// The algorithm is matched exactly: an expectation of `aws:kms` will not match a bucket configured with
+// `aws:kms:dsse`, and vice versa.
+func AssertS3BucketServerSideEncryptionContextE(t testing.TestingT, ctx context.Context, region string, bucketName string, algorithm types.ServerSideEncryption) error {
+	s3Client, err := NewS3ClientContextE(t, ctx, region)
+	if err != nil {
+		return err
+	}
+
+	out, err := s3Client.GetBucketEncryption(ctx, &s3.GetBucketEncryptionInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		// A bucket with no SSE configuration surfaces as ServerSideEncryptionConfigurationNotFoundError. Translate
+		// that to our typed error so callers can match on the failure mode regardless of SDK version.
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "ServerSideEncryptionConfigurationNotFoundError" {
+			return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm)
+		}
+
+		return err
+	}
+
+	if out.ServerSideEncryptionConfiguration == nil {
+		return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm)
+	}
+
+	for _, rule := range out.ServerSideEncryptionConfiguration.Rules {
+		if rule.ApplyServerSideEncryptionByDefault == nil {
+			continue
+		}
+
+		if rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm == algorithm {
+			return nil
+		}
+	}
+
+	return NewBucketServerSideEncryptionNotEnabledError(bucketName, region, algorithm)
+}
+
+// AssertS3BucketServerSideEncryptionContext checks if the given S3 bucket has server-side encryption configured with
+// the given algorithm, and fails the test if it does not. The ctx parameter supports cancellation and timeouts.
+func AssertS3BucketServerSideEncryptionContext(t testing.TestingT, ctx context.Context, region string, bucketName string, algorithm types.ServerSideEncryption) {
+	t.Helper()
+
+	err := AssertS3BucketServerSideEncryptionContextE(t, ctx, region, bucketName, algorithm)
+	require.NoError(t, err)
+}
+
+// AssertS3BucketServerSideEncryption checks if the given S3 bucket has server-side encryption configured with the
+// given algorithm and fails the test if it does not.
+//
+// Deprecated: Use [AssertS3BucketServerSideEncryptionContext] instead.
+func AssertS3BucketServerSideEncryption(t testing.TestingT, region string, bucketName string, algorithm types.ServerSideEncryption) {
+	t.Helper()
+
+	AssertS3BucketServerSideEncryptionContext(t, context.Background(), region, bucketName, algorithm)
+}
+
+// AssertS3BucketServerSideEncryptionE checks if the given S3 bucket has server-side encryption configured with the
+// given algorithm and returns an error if it does not.
+//
+// Deprecated: Use [AssertS3BucketServerSideEncryptionContextE] instead.
+func AssertS3BucketServerSideEncryptionE(t testing.TestingT, region string, bucketName string, algorithm types.ServerSideEncryption) error {
+	return AssertS3BucketServerSideEncryptionContextE(t, context.Background(), region, bucketName, algorithm)
 }
 
 // NewS3ClientContextE creates an S3 client.
