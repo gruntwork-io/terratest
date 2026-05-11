@@ -41,6 +41,8 @@ types of infrastructure code you can test (e.g., Packer, Kubernetes, etc).
     Where `<MODULE_NAME>` is the name of your module, typically in the format
     `github.com/<YOUR_USERNAME>/<YOUR_REPO_NAME>`.
 
+    To lock your tests to a specific Terratest release, see [Pinning a Terratest version]({{ site.baseurl }}/docs/getting-started/version-pinning/).
+
 1. To run the tests:
 
     ```bash
