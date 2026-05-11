@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	cryptorand "crypto/rand"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -325,6 +326,55 @@ func TestGetS3BucketOwnershipControls(t *testing.T) {
 		_, err := terraaws.GetS3BucketOwnershipControlsE(t, region, s3BucketName)
 		assert.Error(t, err)
 	})
+}
+
+func TestAssertS3BucketServerSideEncryption(t *testing.T) {
+	t.Parallel()
+
+	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	logger.Default.Logf(t, "Random values selected. Region = %s\n", region)
+
+	algorithms := []types.ServerSideEncryption{
+		types.ServerSideEncryptionAes256,
+		types.ServerSideEncryptionAwsKms,
+	}
+	for i, algorithm := range algorithms {
+		algorithm := algorithm
+		t.Run(string(algorithm), func(t *testing.T) {
+			t.Parallel()
+
+			s3BucketName := fmt.Sprintf("gruntwork-terratest-sse-%d-%s", i, strings.ToLower(random.UniqueID()))
+			terraaws.CreateS3Bucket(t, region, s3BucketName)
+			t.Cleanup(func() { terraaws.DeleteS3Bucket(t, region, s3BucketName) })
+
+			s3Client := terraaws.NewS3Client(t, region)
+			_, err := s3Client.PutBucketEncryption(context.Background(), &s3.PutBucketEncryptionInput{
+				Bucket: aws.String(s3BucketName),
+				ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
+					Rules: []types.ServerSideEncryptionRule{
+						{
+							ApplyServerSideEncryptionByDefault: &types.ServerSideEncryptionByDefault{
+								SSEAlgorithm: algorithm,
+							},
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			terraaws.AssertS3BucketServerSideEncryption(t, region, s3BucketName, algorithm)
+
+			otherAlgorithm := types.ServerSideEncryptionAwsKms
+			if algorithm == types.ServerSideEncryptionAwsKms {
+				otherAlgorithm = types.ServerSideEncryptionAes256
+			}
+
+			var notEnabled terraaws.BucketServerSideEncryptionNotEnabledError
+
+			err = terraaws.AssertS3BucketServerSideEncryptionE(t, region, s3BucketName, otherAlgorithm)
+			require.ErrorAs(t, err, &notEnabled)
+		})
+	}
 }
 
 func TestS3ObjectContents(t *testing.T) {
