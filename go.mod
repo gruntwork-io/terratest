@@ -99,7 +99,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.0
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/go-mssqldb v1.9.8
-	github.com/slack-go/slack v0.15.0
+	github.com/slack-go/slack v0.23.1
 	golang.org/x/sync v0.20.0
 	google.golang.org/grpc v1.80.0
 	gopkg.in/yaml.v3 v3.0.1
