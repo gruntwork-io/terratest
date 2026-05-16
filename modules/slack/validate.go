@@ -86,7 +86,9 @@ func checkMessageContainsText(msg *slack.Msg, expectedText string) bool {
 				return true
 			}
 		case slack.MBTDivider, slack.MBTImage, slack.MBTAction, slack.MBTContext,
-			slack.MBTFile, slack.MBTInput, slack.MBTRichText, slack.MBTCall, slack.MBTVideo:
+			slack.MBTFile, slack.MBTInput, slack.MBTRichText, slack.MBTCall, slack.MBTVideo,
+			slack.MBTContextActions, slack.MBTMarkdown, slack.MBTTable, slack.MBTTaskCard,
+			slack.MBTPlan, slack.MBTAlert, slack.MBTCard, slack.MBTCarousel:
 		}
 	}
 
