@@ -1,4 +1,4 @@
-FROM ruby:2.6.2-stretch
+FROM ruby:2.6.8-stretch
 MAINTAINER Gruntwork <info@gruntwork.io>
 
 # This project requires bundler 2, but the docker image comes with bundler 1 so we need to upgrade
