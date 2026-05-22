@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 )
 
 func TestKubernetesRestConfigBasicExampleConfig(t *testing.T) {

@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tmccombs/hcl2json/convert"
 
-	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/opa"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 
 // OPAEvalContext runs `opa eval` with the given options on the terraform files identified in the TerraformDir

@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	teststructure "github.com/gruntwork-io/terratest/modules/test-structure"
-	gotesting "github.com/gruntwork-io/terratest/modules/testing"
+	gotesting "github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

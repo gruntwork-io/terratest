@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/docker"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/stretchr/testify/require"
 )

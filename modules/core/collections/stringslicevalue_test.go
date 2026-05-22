@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/collections"
+	"github.com/gruntwork-io/terratest/modules/core/v2/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

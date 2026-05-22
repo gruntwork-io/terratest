@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/git"
+	"github.com/gruntwork-io/terratest/modules/core/v2/git"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -74,7 +74,7 @@ func TestGetRepoRoot(t *testing.T) {
 	cwd, err := os.Getwd()
 	require.NoError(t, err)
 
-	expectedRepoRoot, err := filepath.Abs(filepath.Join(cwd, "..", ".."))
+	expectedRepoRoot, err := filepath.Abs(filepath.Join(cwd, "..", "..", ".."))
 	require.NoError(t, err)
 
 	repoRoot := git.GetRepoRootContext(t, t.Context(), cwd)

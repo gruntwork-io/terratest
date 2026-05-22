@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-const copyFolderContentsFixtureRoot = "../../test/fixtures/copy-folder-contents"
+const copyFolderContentsFixtureRoot = "../../../test/fixtures/copy-folder-contents"
 
 func TestFileExists(t *testing.T) {
 	t.Parallel()

@@ -3,7 +3,7 @@ package terragrunt //nolint:dupl // structural pattern for terragrunt command wr
 import (
 	"context"
 
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
 )
 

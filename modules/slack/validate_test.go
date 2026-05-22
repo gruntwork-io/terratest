@@ -8,9 +8,9 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/environment"
-	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/core/v2/environment"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
+	"github.com/gruntwork-io/terratest/modules/core/v2/retry"
 	terratestslack "github.com/gruntwork-io/terratest/modules/slack"
 )
 

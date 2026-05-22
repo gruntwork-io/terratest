@@ -22,7 +22,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/helm"
 	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 )
 
 // Test that we can install, upgrade, and rollback a remote chart (e.g stable/chartmuseum)

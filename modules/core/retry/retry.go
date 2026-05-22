@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 
 // Either contains a result and potentially an error.

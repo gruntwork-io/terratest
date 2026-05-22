@@ -5,7 +5,7 @@ import (
 	"time"
 
 	dnshelper "github.com/gruntwork-io/terratest/modules/dns-helper"
-	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/core/v2/retry"
 	"github.com/stretchr/testify/require"
 )
 

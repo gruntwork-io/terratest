@@ -16,9 +16,9 @@ require (
 	github.com/hashicorp/hcl/v2 v2.22.0
 	github.com/hashicorp/terraform-json v0.23.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
-	github.com/jstemmer/go-junit-report v1.0.0
+	github.com/jstemmer/go-junit-report v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7
-	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
+	github.com/mattn/go-zglob v0.0.6
 	github.com/miekg/dns v1.1.62
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/oracle/oci-go-sdk v7.1.0+incompatible
@@ -243,3 +243,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+require github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0
+
+replace github.com/gruntwork-io/terratest/modules/core/v2 => ./modules/core

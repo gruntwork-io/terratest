@@ -1,3 +1,9 @@
+//go:build integration_with_shell
+
+// Re-enable this test (and drop the build tag) once OSS-3527 splits
+// modules/shell into its own module; the import below will become
+// modules/shell/v2 at that point.
+
 package parser_test
 
 import (
@@ -10,8 +16,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/files"
-	"github.com/gruntwork-io/terratest/modules/logger/parser"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger/parser"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

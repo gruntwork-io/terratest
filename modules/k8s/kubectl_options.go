@@ -3,8 +3,8 @@ package k8s
 import (
 	"time"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"k8s.io/client-go/rest"
 )
 

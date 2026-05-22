@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/core/v2/retry"
 	"github.com/gruntwork-io/terratest/modules/shell"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 
 // runTerragruntStackCommandE executes terragrunt stack commands.

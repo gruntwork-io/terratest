@@ -3,7 +3,7 @@ package parser_test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/logger/parser"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger/parser"
 	"github.com/stretchr/testify/assert"
 )
 
