@@ -52,15 +52,26 @@ jobs:
 
       - name: Build binaries
         run: |
+          set -e
           mkdir -p cmd/bin
           EXT=""
           if [ "${{ matrix.os }}" = "windows" ]; then EXT=".exe"; fi
-          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
-            go build -o "cmd/bin/terratest_log_parser_${{ matrix.os }}_${{ matrix.arch }}${EXT}" \
-            ./cmd/terratest_log_parser
-          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
-            go build -o "cmd/bin/pick-instance-type_${{ matrix.os }}_${{ matrix.arch }}${EXT}" \
-            ./cmd/pick-instance-type
+          OUT_DIR="$(pwd)/cmd/bin"
+          for cmd_dir in cmd/*/; do
+            cmd_name=$(basename "$cmd_dir")
+            # Skip the output dir itself
+            if [ "$cmd_name" = "bin" ]; then continue; fi
+            echo "Building $cmd_name for ${{ matrix.os }}/${{ matrix.arch }}"
+            if [ -f "$cmd_dir/go.mod" ]; then
+              (cd "$cmd_dir" && \
+                CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
+                go build -o "$OUT_DIR/${cmd_name}_${{ matrix.os }}_${{ matrix.arch }}${EXT}" .)
+            else
+              CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
+                go build -o "$OUT_DIR/${cmd_name}_${{ matrix.os }}_${{ matrix.arch }}${EXT}" \
+                "./$cmd_dir"
+            fi
+          done
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

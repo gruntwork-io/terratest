@@ -19,13 +19,20 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Run go mod tidy
-      run: go mod tidy
+    - name: Run go mod tidy in each module
+      run: |
+        set -e
+        find . -name go.mod -not -path '*/vendor/*' -print0 \
+          | xargs -0 -n1 dirname \
+          | while read -r dir; do
+              echo "Tidying $dir"
+              (cd "$dir" && go mod tidy)
+            done
 
     - name: Check for changes
       run: |
-        if ! git diff --exit-code go.mod go.sum; then
-          echo "::error::go.mod or go.sum are not tidy. Please run 'go mod tidy' locally and commit the changes."
+        if ! git diff --exit-code -- '**/go.mod' '**/go.sum'; then
+          echo "::error::A go.mod or go.sum is not tidy. Run 'go mod tidy' in the affected module(s) and commit."
           exit 1
         fi
-        echo "go.mod and go.sum are tidy"
+        echo "All go.mod and go.sum files are tidy"
