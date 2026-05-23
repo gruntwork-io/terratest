@@ -3,6 +3,7 @@ name: Build and Release
 on:
   push:
     branches: [main]
+    tags: ['v*.*.*']
   pull_request:
   release:
     types: [created]
@@ -71,7 +72,7 @@ jobs:
 
   release:
     name: Release
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -95,6 +96,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if ! gh release view "${{ github.ref_name }}" >/dev/null 2>&1; then
+            gh release create "${{ github.ref_name }}" \
+              --title "${{ github.ref_name }}" \
+              --generate-notes
+          fi
           for f in cmd/bin/*; do
             gh release upload "${{ github.ref_name }}" "$f" --clobber
           done
