@@ -73,7 +73,6 @@ linters:
             - "!**/internal/getter/**"
             - "!**/internal/util/file.go"
             - "!**/internal/cas/stacks.go"
-            - "!**/modules/opa/**"
           deny:
             - pkg: github.com/hashicorp/go-getter
               desc: use github.com/gruntwork-io/terragrunt/internal/getter instead
