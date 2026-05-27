@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/files"
-	"github.com/gruntwork-io/terratest/modules/git"
-	"github.com/gruntwork-io/terratest/modules/opa"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/git"
+	"github.com/gruntwork-io/terratest/modules/opa/v2"
 )
 
 // TestDownloadPolicyReturnsLocalPath makes sure the DownloadPolicyE function returns a local path without processing it.

@@ -8,10 +8,10 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/environment"
-	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/retry"
-	terratestslack "github.com/gruntwork-io/terratest/modules/slack"
+	"github.com/gruntwork-io/terratest/modules/core/v2/environment"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
+	"github.com/gruntwork-io/terratest/modules/core/v2/retry"
+	terratestslack "github.com/gruntwork-io/terratest/modules/slack/v2"
 )
 
 const (

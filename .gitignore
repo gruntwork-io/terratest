@@ -26,3 +26,9 @@ kubeconfig
 
 # environment files
 .env
+
+# v2: compiled cmd binaries (built locally during dev or CI test)
+
+# v2 modularization: compiled cmd binaries (built locally or by CI builds)
+cmd/pick-instance-type/pick-instance-type
+cmd/terratest_log_parser/terratest_log_parser

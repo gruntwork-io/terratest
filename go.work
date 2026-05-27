@@ -1,0 +1,27 @@
+go 1.26.0
+
+use (
+	.
+	./cmd/pick-instance-type
+	./cmd/terratest_log_parser
+	./modules/aws
+	./modules/azure
+	./modules/core
+	./modules/database
+	./modules/dns-helper
+	./modules/docker
+	./modules/gcp
+	./modules/helm
+	./modules/http-helper
+	./modules/k8s
+	./modules/oci
+	./modules/opa
+	./modules/packer
+	./modules/shell
+	./modules/slack
+	./modules/ssh
+	./modules/terraform
+	./modules/terragrunt
+	./modules/test-structure
+	./modules/version-checker
+)

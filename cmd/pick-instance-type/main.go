@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/gruntwork-io/go-commons/entrypoint"
-	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/aws/v2"
 	"github.com/urfave/cli"
 )
 
