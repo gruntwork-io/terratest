@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/gruntwork-io/terratest/modules/shell"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
+	"github.com/gruntwork-io/terratest/modules/shell/v2"
 )
 
 func TestRunCommandAndGetOutput(t *testing.T) {

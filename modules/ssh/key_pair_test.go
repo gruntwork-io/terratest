@@ -3,7 +3,7 @@ package ssh_test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/ssh/v2"
 	"github.com/stretchr/testify/assert"
 )
 

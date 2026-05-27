@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	aws "github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/random"
+	aws "github.com/gruntwork-io/terratest/modules/aws/v2"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 )
 
 func TestEcsCluster(t *testing.T) {

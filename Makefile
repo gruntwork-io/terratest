@@ -9,15 +9,26 @@ update-lint-config:
 	  echo '# It is automatically updated weekly via the update-lint-config workflow. Do not edit manually.' ;\
 	  cat .golangci.yml; } > $${tmpfile} && mv $${tmpfile} .golangci.yml
 
+MODULE_DIRS := $(shell find . -name go.mod -not -path '*/vendor/*' -exec dirname {} \;)
+
 lint:
-	GOFLAGS="-tags=$(LINT_TAGS)" mise x golangci-lint -- golangci-lint run -v --timeout=30m ./...
+	@for dir in $(MODULE_DIRS); do \
+		echo "Linting $$dir"; \
+		(cd $$dir && GOFLAGS="-tags=$(LINT_TAGS)" mise x golangci-lint -- golangci-lint run -v --timeout=30m ./...) || exit 1; \
+	done
 
 lint-incremental:
 	@echo "Incremental lint (new issues only)"
-	GOFLAGS="-tags=$(LINT_TAGS)" mise x golangci-lint -- golangci-lint run -v --timeout=30m --new-from-merge-base=main ./...
+	@for dir in $(MODULE_DIRS); do \
+		echo "Linting $$dir"; \
+		(cd $$dir && GOFLAGS="-tags=$(LINT_TAGS)" mise x golangci-lint -- golangci-lint run -v --timeout=30m --new-from-merge-base=main ./...) || exit 1; \
+	done
 
 lint-fix:
 	@echo "Linting with auto-fix"
-	GOFLAGS="-tags=$(LINT_TAGS)" mise x golangci-lint -- golangci-lint run -v --timeout=30m --fix ./...
+	@for dir in $(MODULE_DIRS); do \
+		echo "Linting $$dir"; \
+		(cd $$dir && GOFLAGS="-tags=$(LINT_TAGS)" mise x golangci-lint -- golangci-lint run -v --timeout=30m --fix ./...) || exit 1; \
+	done
 
 .PHONY: lint lint-incremental lint-fix update-lint-config

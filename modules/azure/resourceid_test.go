@@ -3,7 +3,7 @@ package azure_test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/azure"
+	"github.com/gruntwork-io/terratest/modules/azure/v2"
 	"github.com/stretchr/testify/assert"
 )
 

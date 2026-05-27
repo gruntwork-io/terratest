@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/stretchr/testify/require"
 
-	aws "github.com/gruntwork-io/terratest/modules/aws"
+	aws "github.com/gruntwork-io/terratest/modules/aws/v2"
 )
 
 // mockKmsClient is a test double for aws.KmsAPI that returns canned responses.

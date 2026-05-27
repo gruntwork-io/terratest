@@ -23,6 +23,18 @@ variety of helper functions and patterns for common infrastructure testing tasks
 
 ## Install
 
+**v2 (recommended for new code):**
+
+```bash
+go get github.com/gruntwork-io/terratest/modules/<name>/v2@latest
+```
+
+Each module is installed independently — pull only what you need. See the
+[v2 migration guide](https://terratest.gruntwork.io/docs/migrating-to-v2/overview/)
+for the full path mapping and a codemod.
+
+**v1 (still supported in maintenance):**
+
 ```bash
 go get github.com/gruntwork-io/terratest@latest
 ```
@@ -32,10 +44,13 @@ Requires Go 1.26 or later. To lock to a specific release instead of `@latest`, s
 ## Stability and versioning
 
 Starting with v1.0.0, Terratest follows [semantic versioning](https://semver.org/). Breaking changes to the public API
-only happen in major releases (e.g. v2.0.0).
+only happen in major releases.
 
-Symbols renamed or replaced in v1 are kept with `// Deprecated:` annotations pointing at the new name; removals happen
-in v2. Migrating from v0.x: see the [v1 migration guide](https://terratest.gruntwork.io/docs/migrating-to-v1/overview/).
+v2.0.0 split the library into per-domain Go submodules; runtime API is unchanged, only import paths move. v1 is frozen
+at its last tag and remains served from `proxy.golang.org` for pinned consumers. Security backports land on the
+`v1-maintenance` branch. See the [v2 migration guide](https://terratest.gruntwork.io/docs/migrating-to-v2/overview/).
+
+Migrating from v0.x: see the [v1 migration guide](https://terratest.gruntwork.io/docs/migrating-to-v1/overview/).
 
 ## More info
 
