@@ -8,7 +8,7 @@
 Terratest is a Go library that makes it easier to write automated tests for your infrastructure code. It provides a
 variety of helper functions and patterns for common infrastructure testing tasks, including:
 
-- Testing Terraform code
+- Testing OpenTofu and Terraform code
 - Testing Packer templates
 - Testing Docker images
 - Executing commands on servers over SSH
@@ -26,12 +26,12 @@ variety of helper functions and patterns for common infrastructure testing tasks
 Terratest is a Go library for writing automated tests of infrastructure code. It covers five workflows that, together,
 let you test infrastructure end to end:
 
-- **Deploy** Terraform, Terragrunt, Packer, or Docker from Go and capture their output.
+- **Deploy** OpenTofu, Terragrunt, Packer, or Docker from Go and capture their output.
 - **Inspect** what got deployed by calling cloud provider APIs (AWS, Azure, GCP, Kubernetes).
 - **Interact** with it over the network: SSH, HTTP, DNS, and database checks that cloud SDKs alone can't do.
-- **Validate** behavior and policy: OPA against Terraform plans, test-stage orchestration, retry-with-backoff for
+- **Validate** behavior and policy: OPA against OpenTofu plans, test-stage orchestration, retry-with-backoff for
   eventual consistency.
-- **Tear down** with `terraform destroy` and cleanup helpers.
+- **Tear down** with `tofu destroy` and cleanup helpers.
 
 Terratest is deliberately scoped. It is not a unit-testing framework (Go's standard `testing` covers that), a mocking
 library, a general-purpose utility collection, or a CI/notification tool. Helpers that fall outside the five workflows

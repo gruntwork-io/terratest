@@ -11,7 +11,7 @@ nav_title: Documentation
 nav_title_link: /docs/
 ---
 
-Terratest is a Go library for writing automated tests of infrastructure code. You write ordinary `go test` files, and
+Terratest is a Go library for writing automated tests of infrastructure code. You write ordinary `_test.go` files, and
 Terratest gives you the helpers that make infrastructure-as-code (IaC) testing practical. Once you know what the library
 is for, it is easier to decide which helpers to reach for, and to understand why some packages are being trimmed over
 time.
@@ -20,14 +20,14 @@ time.
 
 Terratest covers five workflows. Together, they let you test infrastructure from end to end.
 
-- **Deploy.** Run `terraform`, `terragrunt`, `packer`, or `docker` from Go and capture their output.
+- **Deploy.** Run `tofu`, `terragrunt`, `packer`, or `docker` from Go and capture their output.
 - **Inspect.** Call cloud provider APIs (AWS, Azure, GCP, and Kubernetes) to verify that resources were created as
   expected.
 - **Interact.** Run the post-deploy connectivity checks that cloud SDKs alone can't do: SSH into instances, hit HTTP
   endpoints, resolve DNS records, and query databases.
-- **Validate.** Check Terraform plans against policy with OPA, orchestrate test stages with `test-structure`, and retry
+- **Validate.** Check OpenTofu plans against policy with OPA, orchestrate test stages with `test-structure`, and retry
   with backoff to handle eventual consistency.
-- **Tear down.** Run `terraform destroy` and clean up with related helpers.
+- **Tear down.** Run `tofu destroy` and clean up with related helpers.
 
 ## The primitives underneath
 
@@ -35,9 +35,6 @@ Every IaC test leans on a handful of generic building blocks: unique IDs for res
 shell execution, the `TestingT` interface, retry with backoff, and a small logging wrapper around the `Logf` method on
 `*testing.T`. None of these are specific to infrastructure, but every Terratest test depends on them, so they ship with
 the library in the `random`, `files`, `shell`, `testing`, `retry`, and `logger` packages.
-
-Think of them as conveniences for people who are already writing IaC tests. They are not, on their own, a reason to
-adopt Terratest.
 
 ## What Terratest is not
 
