@@ -3,7 +3,7 @@ layout: collection-browser-doc
 title: Package by package overview
 category: getting-started
 excerpt: >-
-  Learn more about Terratest modules and how they can help you test different types infrastructure.
+  Learn more about Terratest modules and how they can help you test different types of infrastructure.
 tags: ["packages"]
 order: 104
 nav_title: Documentation
@@ -11,7 +11,7 @@ nav_title_link: /docs/
 ---
 
 Now that you've had a chance to browse the examples and their tests, here's an overview of the packages you'll find in
-Terratest's [modules folder](https://github.com/gruntwork-io/terratest/tree/main/modules) and how they can help you test different types infrastructure:
+Terratest's [modules folder](https://github.com/gruntwork-io/terratest/tree/main/modules) and how they can help you test different types of infrastructure:
 
 Some packages are **deprecated** and scheduled for removal in v2 because they fall outside [what Terratest is for]({{ site.baseurl }}/docs/getting-started/what-terratest-is-for/) (for example, helpers the Go standard library already covers). They keep working for the rest of v1; their GoDoc points at the recommended replacement.
 
@@ -38,7 +38,7 @@ Some packages are **deprecated** and scheduled for removal in v2 because they fa
 | **shell**          | Functions to run shell commands. Examples: run a shell command and return its `stdout` and `stderr`.                                                                                                                                                                                                 |
 | **slack**          | _Deprecated (removed in v2): use the slack-go client directly._ Functions for validating Slack messages posted during a test.                                                                                                                                                                        |
 | **ssh**            | Functions to SSH to servers. Examples: SSH to a server, execute a command, and return `stdout` and `stderr`.                                                                                                                                                                                         |
-| **terraform**      | Functions for working with Terraform. Examples: run `terraform init`, `terraform apply`, `terraform destroy`.                                                                                                                                                                                        |
+| **terraform**      | Functions for working with OpenTofu and Terraform. Examples: run `init`, `apply`, and `destroy`.                                                                                                                                                                                        |
 | **terragrunt**     | Functions for working with Terragrunt. Examples: run `terragrunt apply --all`, `terragrunt destroy --all`, test stack configurations with dependencies, and work with Terragrunt stacks.                                                                                                      |
 | **test_structure** | Functions for structuring your tests to speed up local iteration. Examples: break up your tests into stages so that any stage can be skipped by setting an environment variable.                                                                                                                     |
 | **version-checker** | _Deprecated (removed in v2): shell out to check a binary's version yourself._ Functions for checking a binary's version against a constraint.                                                                                                                                                       |

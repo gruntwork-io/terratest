@@ -25,7 +25,7 @@ Terratest covers five workflows. Together, they let you test infrastructure from
   expected.
 - **Interact.** Run the post-deploy connectivity checks that cloud SDKs alone can't do: SSH into instances, hit HTTP
   endpoints, resolve DNS records, and query databases.
-- **Validate.** Check OpenTofu plans against policy with OPA, orchestrate test stages with `test-structure`, and retry
+- **Validate.** Check OpenTofu plans against policy with OPA, orchestrate test stages with `test_structure`, and retry
   with backoff to handle eventual consistency.
 - **Tear down.** Run `tofu destroy` and clean up with related helpers.
 
