@@ -1,0 +1,27 @@
+name: 'Close stale issues and PRs'
+on:
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  stale:
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10
+        with:
+          stale-issue-message: 'This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for raising this issue.'
+          stale-pr-message: |
+            Thanks for this contribution, and apologies it sat open so long. This pull request has been automatically marked as stale because it has not had recent activity, and the codebase has since undergone significant refactoring that may make these changes substantially out of date. It will be closed in 7 days if no further activity occurs.
+
+            This is not a reflection on the quality of the work. You are always welcome to reopen this pull request (or open a fresh one) if you would like to rebase and continue. We genuinely appreciate the time you put in.
+          days-before-stale: 90
+          days-before-close: 7
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'rfc,preserved'
+          exempt-pr-labels: 'preserved'
+          exempt-draft-pr: true
