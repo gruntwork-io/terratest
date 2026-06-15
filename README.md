@@ -21,6 +21,23 @@ variety of helper functions and patterns for common infrastructure testing tasks
 - Running shell commands
 - And much more
 
+## What Terratest is for
+
+Terratest is a Go library for writing automated tests of infrastructure code. It covers five workflows that, together,
+let you test infrastructure end to end:
+
+- **Deploy** Terraform, Terragrunt, Packer, or Docker from Go and capture their output.
+- **Inspect** what got deployed by calling cloud provider APIs (AWS, Azure, GCP, Kubernetes).
+- **Interact** with it over the network: SSH, HTTP, DNS, and database checks that cloud SDKs alone can't do.
+- **Validate** behavior and policy: OPA against Terraform plans, test-stage orchestration, retry-with-backoff for
+  eventual consistency.
+- **Tear down** with `terraform destroy` and cleanup helpers.
+
+Terratest is deliberately scoped. It is not a unit-testing framework (Go's standard `testing` covers that), a mocking
+library, a general-purpose utility collection, or a CI/notification tool. Helpers that fall outside the five workflows
+above, including ones the standard library already covers, are being deprecated and removed in v2. See
+[What Terratest is for](https://terratest.gruntwork.io/docs/getting-started/what-terratest-is-for/) for the full picture.
+
 ## Install
 
 ```bash
