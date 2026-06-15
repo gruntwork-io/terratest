@@ -5,6 +5,9 @@ import (
 )
 
 // GetSliceLastValueE will take a source string and returns the last value when split by the separator char.
+//
+// Deprecated: scheduled for removal in Terratest v2. Use strings.Split and index
+// the result at the call site.
 func GetSliceLastValueE(source string, separator string) (string, error) {
 	if len(source) > 0 && len(separator) > 0 && strings.Contains(source, separator) {
 		tmp := strings.Split(source, separator)
@@ -17,6 +20,9 @@ func GetSliceLastValueE(source string, separator string) (string, error) {
 
 // GetSliceIndexValueE will take a source string and returns the value at the given index when split by
 // the separator char.
+//
+// Deprecated: scheduled for removal in Terratest v2. Use strings.Split and index
+// the result at the call site.
 func GetSliceIndexValueE(source string, separator string, index int) (string, error) {
 	if len(source) > 0 && len(separator) > 0 && strings.Contains(source, separator) && index >= 0 {
 		tmp := strings.Split(source, separator)

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -53,11 +53,11 @@ func GetRandomStableRegionContextE(t testing.TestingT, ctx context.Context, appr
 	regionsToPickFrom := stableRegions
 
 	if len(approvedRegions) > 0 {
-		regionsToPickFrom = collections.ListIntersection(regionsToPickFrom, approvedRegions)
+		regionsToPickFrom = listIntersection(regionsToPickFrom, approvedRegions)
 	}
 
 	if len(forbiddenRegions) > 0 {
-		regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+		regionsToPickFrom = listSubtract(regionsToPickFrom, forbiddenRegions)
 	}
 
 	return GetRandomRegionContextE(t, ctx, regionsToPickFrom, nil)
@@ -122,7 +122,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRe
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = listSubtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	logger.Default.Logf(t, "Using region %s", region)
@@ -365,4 +365,30 @@ func GetRandomRegionForService(t testing.TestingT, serviceName string) string {
 // Deprecated: Use [GetRandomRegionForServiceContextE] instead.
 func GetRandomRegionForServiceE(t testing.TestingT, serviceName string) (string, error) {
 	return GetRandomRegionForServiceContextE(t, context.Background(), serviceName)
+}
+
+// listIntersection returns the items present in both lists, de-duplicated.
+func listIntersection(list1, list2 []string) []string {
+	out := []string{}
+
+	for _, item := range list1 {
+		if slices.Contains(list2, item) && !slices.Contains(out, item) {
+			out = append(out, item)
+		}
+	}
+
+	return out
+}
+
+// listSubtract returns the items in list1 that are not in list2.
+func listSubtract(list1, list2 []string) []string {
+	out := []string{}
+
+	for _, item := range list1 {
+		if !slices.Contains(list2, item) {
+			out = append(out, item)
+		}
+	}
+
+	return out
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"slices"
 
 	go_commons_collections "github.com/gruntwork-io/go-commons/collections"
-	"github.com/gruntwork-io/terratest/modules/collections"
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/mattn/go-zglob"
 )
@@ -178,11 +178,11 @@ func FindTerraformModulePathsInRootE(opts *ValidationOptions) ([]string, error) 
 	terraformDirs := go_commons_collections.Keys(terraformDirSet)
 
 	if len(opts.IncludeDirs) > 0 {
-		terraformDirs = collections.ListIntersection(terraformDirs, opts.IncludeDirs)
+		terraformDirs = listIntersection(terraformDirs, opts.IncludeDirs)
 	}
 
 	if len(opts.ExcludeDirs) > 0 {
-		terraformDirs = collections.ListSubtract(terraformDirs, opts.ExcludeDirs)
+		terraformDirs = listSubtract(terraformDirs, opts.ExcludeDirs)
 	}
 
 	// Filter out any filepaths that were explicitly included in opts.ExcludeDirs
@@ -206,4 +206,30 @@ type ValidationUndefinedRootDirErr struct{}
 
 func (e ValidationUndefinedRootDirErr) Error() string {
 	return "RootDir must be defined in ValidationOptions passed to ValidateAllTerraformModules"
+}
+
+// listIntersection returns the items present in both lists, de-duplicated.
+func listIntersection(list1, list2 []string) []string {
+	out := []string{}
+
+	for _, item := range list1 {
+		if slices.Contains(list2, item) && !slices.Contains(out, item) {
+			out = append(out, item)
+		}
+	}
+
+	return out
+}
+
+// listSubtract returns the items in list1 that are not in list2.
+func listSubtract(list1, list2 []string) []string {
+	out := []string{}
+
+	for _, item := range list1 {
+		if !slices.Contains(list2, item) {
+			out = append(out, item)
+		}
+	}
+
+	return out
 }
