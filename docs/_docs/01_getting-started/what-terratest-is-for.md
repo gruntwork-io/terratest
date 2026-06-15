@@ -11,47 +11,52 @@ nav_title: Documentation
 nav_title_link: /docs/
 ---
 
-Terratest is a Go library for writing automated tests of infrastructure code. You write standard `go test` files;
-Terratest gives you the helpers that make infrastructure-as-code (IaC) tests practical. Knowing what the library is for
-helps you decide which helpers to reach for, and explains why some packages are being trimmed over time.
+Terratest is a Go library for writing automated tests of infrastructure code. You write ordinary `go test` files, and
+Terratest gives you the helpers that make infrastructure-as-code (IaC) testing practical. Once you know what the library
+is for, it is easier to decide which helpers to reach for, and to understand why some packages are being trimmed over
+time.
 
 ## The five workflows
 
-Terratest covers five workflows that, together, let you test infrastructure end to end:
+Terratest covers five workflows. Together, they let you test infrastructure from end to end.
 
 - **Deploy.** Run `terraform`, `terragrunt`, `packer`, or `docker` from Go and capture their output.
-- **Inspect.** Call cloud provider APIs (AWS, Azure, GCP, Kubernetes) to verify resources were created as expected.
-- **Interact.** SSH into instances, hit HTTP endpoints, resolve DNS records, query databases: the post-deploy
-  connectivity checks that cloud SDKs alone can't do.
-- **Validate.** Policy validation against Terraform plans (OPA), test-stage orchestration (`test-structure`), and
-  retry-with-backoff for eventual consistency.
-- **Tear down.** `terraform destroy` and cleanup helpers.
+- **Inspect.** Call cloud provider APIs (AWS, Azure, GCP, and Kubernetes) to verify that resources were created as
+  expected.
+- **Interact.** Run the post-deploy connectivity checks that cloud SDKs alone can't do: SSH into instances, hit HTTP
+  endpoints, resolve DNS records, and query databases.
+- **Validate.** Check Terraform plans against policy with OPA, orchestrate test stages with `test-structure`, and retry
+  with backoff to handle eventual consistency.
+- **Tear down.** Run `terraform destroy` and clean up with related helpers.
 
-### Underpinning all five: generic test primitives
+## The primitives underneath
 
-Every IaC test reaches for a handful of generic test primitives: unique IDs for resource names, file and fixture
-helpers, shell execution, the `TestingT` interface, retry-with-backoff, and a small logging wrapper around
-`*testing.T`'s `Logf`. None of these are IaC-specific, but every Terratest test depends on them, so they ship as part of
-the library (`random`, `files`, `shell`, `testing`, `retry`, `logger`). They are convenience utilities for people
-already writing IaC tests, not a reason to adopt Terratest on their own.
+Every IaC test leans on a handful of generic building blocks: unique IDs for resource names, file and fixture helpers,
+shell execution, the `TestingT` interface, retry with backoff, and a small logging wrapper around the `Logf` method on
+`*testing.T`. None of these are specific to infrastructure, but every Terratest test depends on them, so they ship with
+the library in the `random`, `files`, `shell`, `testing`, `retry`, and `logger` packages.
+
+Think of them as conveniences for people who are already writing IaC tests. They are not, on their own, a reason to
+adopt Terratest.
 
 ## What Terratest is not
 
-Terratest is deliberately scoped. It is **not**:
+Terratest is deliberately narrow in scope. It is not:
 
-- A unit-testing framework. Go's standard `testing` package covers that.
+- A unit-testing framework. Go's standard `testing` package already covers that.
 - A mocking library.
-- A general-purpose utility collection. Helpers that the standard library already covers (for example, slice and map
-  helpers, environment-variable lookups, or thin wrappers around `git`) don't belong here.
+- A general-purpose utility collection. Anything the standard library already handles (slice and map helpers,
+  environment-variable lookups, thin wrappers around `git`, and the like) does not belong here.
 - A CI or notification tool.
 
-Everything in Terratest should serve one of the five workflows above or directly support them. Helpers that don't
-(standard-library wrappers, standalone CLI tools, and helpers unrelated to IaC testing) are candidates for removal.
+The rule of thumb: everything in Terratest should serve one of the five workflows above, or directly support them.
+Helpers that don't (standard-library wrappers, standalone CLI tools, and anything unrelated to IaC testing) are
+candidates for removal.
 
 ## Scope and deprecations
 
-As Terratest moves toward v2, packages that fall outside the scope above are being deprecated and will be removed.
-Deprecated packages carry a `// Deprecated:` note in their GoDoc that points at the recommended replacement (usually the
-standard library). They keep working for the rest of v1, so you have a full release cycle to migrate. See
-[Pinning a Terratest version]({{ site.baseurl }}/docs/getting-started/version-pinning/) if you need to stay on a
-specific release while you do.
+As Terratest moves toward v2, packages that fall outside this scope are being deprecated and will eventually be removed.
+A deprecated package carries a `// Deprecated:` note in its GoDoc that points to the recommended replacement, which is
+usually the standard library. These packages keep working for the rest of v1, so you get a full release cycle to
+migrate. If you need to stay on a specific release while you do, see
+[Pinning a Terratest version]({{ site.baseurl }}/docs/getting-started/version-pinning/).
