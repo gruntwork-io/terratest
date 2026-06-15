@@ -2,8 +2,8 @@ package azure
 
 import (
 	"context"
-	"slices"
 
+	"github.com/gruntwork-io/terratest/internal/collections"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -72,11 +72,11 @@ func GetRandomStableRegionContext(t testing.TestingT, ctx context.Context, appro
 	regionsToPickFrom := stableRegions
 
 	if len(approvedRegions) > 0 {
-		regionsToPickFrom = listIntersection(regionsToPickFrom, approvedRegions)
+		regionsToPickFrom = collections.Intersection(regionsToPickFrom, approvedRegions)
 	}
 
 	if len(forbiddenRegions) > 0 {
-		regionsToPickFrom = listSubtract(regionsToPickFrom, forbiddenRegions)
+		regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	}
 
 	return GetRandomRegionContext(t, ctx, regionsToPickFrom, nil, subscriptionID) //nolint:staticcheck
@@ -145,7 +145,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRe
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = listSubtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	return region, nil
@@ -224,30 +224,4 @@ func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscri
 // Deprecated: Use [GetAllAzureRegionsContextE] instead.
 func GetAllAzureRegionsE(t testing.TestingT, subscriptionID string) ([]string, error) {
 	return GetAllAzureRegionsContextE(t, context.Background(), subscriptionID)
-}
-
-// listIntersection returns the items present in both lists, de-duplicated.
-func listIntersection(list1, list2 []string) []string {
-	out := []string{}
-
-	for _, item := range list1 {
-		if slices.Contains(list2, item) && !slices.Contains(out, item) {
-			out = append(out, item)
-		}
-	}
-
-	return out
-}
-
-// listSubtract returns the items in list1 that are not in list2.
-func listSubtract(list1, list2 []string) []string {
-	out := []string{}
-
-	for _, item := range list1 {
-		if !slices.Contains(list2, item) {
-			out = append(out, item)
-		}
-	}
-
-	return out
 }

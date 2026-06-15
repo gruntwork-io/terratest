@@ -3,9 +3,9 @@ package gcp
 import (
 	"context"
 	"os"
-	"slices"
 	"strings"
 
+	"github.com/gruntwork-io/terratest/internal/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -76,7 +76,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, projectID 
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = listSubtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	logger.Default.Logf(t, "Using Region %s", region)
@@ -138,7 +138,7 @@ func GetRandomZoneContextE(t testing.TestingT, ctx context.Context, projectID st
 		zonesToPickFrom = allZones
 	}
 
-	zonesToPickFrom = listSubtract(zonesToPickFrom, forbiddenZones)
+	zonesToPickFrom = collections.Subtract(zonesToPickFrom, forbiddenZones)
 
 	var zonesToPickFromFiltered []string
 
@@ -435,17 +435,4 @@ func isInRegions(zone string, regions []string) bool {
 // isInRegion returns true if the given zone is in the given region.
 func isInRegion(zone string, region string) bool {
 	return strings.Contains(zone, region)
-}
-
-// listSubtract returns the items in list1 that are not in list2.
-func listSubtract(list1, list2 []string) []string {
-	out := []string{}
-
-	for _, item := range list1 {
-		if !slices.Contains(list2, item) {
-			out = append(out, item)
-		}
-	}
-
-	return out
 }
