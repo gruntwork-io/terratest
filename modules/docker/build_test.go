@@ -1,11 +1,11 @@
 package docker_test
 
 import (
+	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/docker"
-	"github.com/gruntwork-io/terratest/modules/git"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/require"
@@ -102,9 +102,14 @@ func TestGitCloneAndBuild(t *testing.T) {
 
 	ctx := t.Context()
 
-	gitBranchName := git.GetCurrentBranchNameContext(t, ctx, "")
-	if gitBranchName == "" {
-		logger.Default.Logf(t, "WARNING: git.GetCurrentBranchNameContext returned an empty string; falling back to main")
+	branchOut, err := exec.CommandContext(ctx, "git", "branch", "--show-current").Output()
+	gitBranchName := ""
+	if err == nil {
+		gitBranchName = strings.TrimSpace(string(branchOut))
+	}
+
+	if gitBranchName == "" || gitBranchName == "HEAD" {
+		logger.Default.Logf(t, "WARNING: could not determine the current git branch; falling back to main")
 
 		gitBranchName = "main"
 	}

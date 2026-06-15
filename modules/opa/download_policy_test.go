@@ -2,6 +2,7 @@ package opa_test
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -11,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/files"
-	"github.com/gruntwork-io/terratest/modules/git"
 	"github.com/gruntwork-io/terratest/modules/opa"
 )
 
@@ -30,7 +30,17 @@ func TestDownloadPolicyReturnsLocalPath(t *testing.T) {
 func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 	t.Parallel()
 
-	curRef := git.GetCurrentGitRefContext(t, t.Context(), "")
+	ctx := t.Context()
+
+	branchOut, err := exec.CommandContext(ctx, "git", "branch", "--show-current").Output()
+	require.NoError(t, err)
+
+	curRef := strings.TrimSpace(string(branchOut))
+	if curRef == "" || curRef == "HEAD" {
+		tagOut, err := exec.CommandContext(ctx, "git", "describe", "--tags").Output()
+		require.NoError(t, err)
+		curRef = strings.TrimSpace(string(tagOut))
+	}
 	baseDir := "git::https://github.com/gruntwork-io/terratest.git?ref=" + curRef
 	localPath := "../../examples/terraform-opa-example/policy/enforce_source.rego"
 	remotePath := "git::https://github.com/gruntwork-io/terratest.git//examples/terraform-opa-example/policy/enforce_source.rego?ref=" + curRef
