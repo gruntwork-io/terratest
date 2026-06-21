@@ -37,6 +37,10 @@ only happen in major releases (e.g. v2.0.0).
 Symbols renamed or replaced in v1 are kept with `// Deprecated:` annotations pointing at the new name; removals happen
 in v2. Migrating from v0.x: see the [v1 migration guide](https://terratest.gruntwork.io/docs/migrating-to-v1/overview/).
 
+**v1 maintenance.** With v2 in development, the v1 line has entered maintenance: it receives security fixes only,
+delivered on the `v1` branch, until 12 months after v2.0.0 reaches general availability. v2 ships under new `/v2`
+module paths, so pinned v1 consumers are unaffected. Upgrade on your own schedule.
+
 ## More info
 
 - [Terratest Website](https://terratest.gruntwork.io)
