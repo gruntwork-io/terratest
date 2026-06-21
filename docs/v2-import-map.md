@@ -1,6 +1,6 @@
 # Terratest v2 Import Map
 
-Status: DRAFT, pending one decision (see "Open decisions"). Not yet frozen.
+Status: FROZEN. The one open decision (renames) is resolved: no renames in v2, hyphenated names are kept.
 
 Built from the actual v1 layout at tag `v1.0.1-test` (27 `modules/` packages, 2 `cmd/` binaries, 1 `internal/lib` tree).
 
@@ -42,9 +42,9 @@ So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, and `modules
 | `modules/opa` | `modules/opa/v2` | |
 | `modules/terraform` | `modules/terraform/v2` | |
 | `modules/terragrunt` | `modules/terragrunt/v2` | |
-| `modules/http-helper` | `modules/httphelper/v2` | rename (provisional) |
-| `modules/dns-helper` | `modules/dnshelper/v2` | rename (provisional) |
-| `modules/test-structure` | `modules/teststructure/v2` | rename (provisional) |
+| `modules/http-helper` | `modules/http-helper/v2` | |
+| `modules/dns-helper` | `modules/dns-helper/v2` | |
+| `modules/test-structure` | `modules/test-structure/v2` | |
 
 ## Removed in v2.0.0 (deprecated in v1 first, deleted at cutover)
 
@@ -69,10 +69,11 @@ So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, and `modules
 
 27 `modules/` packages = 6 collapsed into core + 15 standalone submodules + 6 removed. Plus 2 removed `cmd/` binaries and 1 internal flatten. Submodule count: 16.
 
-## Open decisions (must close before freezing)
+## Open decisions
 
-1. **Renames.** `http-helper`/`dns-helper`/`test-structure` rewrites are marked provisional. The team is still weighing whether to do renames at all in v2. This must be settled before the map is frozen, because the map encodes the final names.
+None. The map is frozen.
 
 ## Resolved
 
 - **`oci`** (Oracle Cloud Infrastructure): not carried forward to v2. Niche provider; removed alongside the other dropped packages. Oracle Cloud users stay on frozen v1.
+- **Renames.** Decided against renaming in v2. `http-helper`, `dns-helper`, and `test-structure` keep their hyphenated names under `/v2` (`modules/http-helper/v2`, etc.). Renaming would cost consumers a second import churn on top of the `/v2` rewrite; the idiomatic-naming cleanup can wait for a later major version, if ever.
