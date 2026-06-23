@@ -68,6 +68,7 @@ func firstNonEmptyEnvVar(names []string) string {
 // if all of them are empty.
 func firstNonEmptyEnvVarOrFatal(t testing.TestingT, names []string) string {
 	t.Helper()
+
 	value := firstNonEmptyEnvVar(names)
 	require.NotEmptyf(t, value, "All of the following env vars %v are empty. At least one must be non-empty.", names)
 

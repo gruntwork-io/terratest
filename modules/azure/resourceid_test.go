@@ -49,6 +49,7 @@ func TestGetNameFromResourceIDE(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
 			_, err := azure.GetNameFromResourceIDE(tc.resourceID)
 			require.Error(t, err)
 
