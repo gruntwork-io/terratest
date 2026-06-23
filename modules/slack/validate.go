@@ -19,8 +19,14 @@ import (
 // All other blocks are ignored in the validation.
 // NOTE: This only looks for bot posted messages.
 //
-// Deprecated: scheduled for removal in Terratest v2. Use the slack-go client
-// directly if you need this.
+// Deprecated: scheduled for removal in Terratest v2. Use the slack-go client directly, e.g.:
+//
+//	client := slack.New(token)
+//	resp, err := client.GetConversationHistory(&slack.GetConversationHistoryParameters{
+//		ChannelID: channelID,
+//		Limit:     historyLimit,
+//	})
+//	// then scan resp.Messages for the expected text.
 func ValidateExpectedSlackMessageE(
 	t testing.TestingT,
 	token,

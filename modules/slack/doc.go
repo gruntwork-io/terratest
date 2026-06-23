@@ -2,6 +2,6 @@
 //
 // Deprecated: The slack package is scheduled for removal in Terratest v2. Slack
 // validation is out of scope for an infrastructure testing library; use the
-// slack-go client directly if you need it. See the Terratest v2 migration notes
-// for details.
+// github.com/slack-go/slack client directly if you need it. There is no public
+// replacement; the package is being dropped.
 package slack
