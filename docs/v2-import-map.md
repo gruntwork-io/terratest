@@ -1,6 +1,6 @@
 # Terratest v2 Import Map
 
-Status: FROZEN. The one open decision (renames) is resolved: no renames in v2, hyphenated names are kept.
+Status: FROZEN. The one open decision (renames) is resolved: the three hyphenated packages are renamed to idiomatic Go names at the `/v2` boundary.
 
 Built from the actual v1 layout at tag `v1.0.1-test` (27 `modules/` packages, 2 `cmd/` binaries, 1 `internal/lib` tree).
 
@@ -10,10 +10,11 @@ Module base path: `github.com/gruntwork-io/terratest`
 
 For any surviving import path, the rewrite is a prefix replacement that also applies to every subpackage:
 
-- `modules/<name>/...` -> `modules/<name>/v2/...` (the `/v2` SIV goes after the module root, directory layout unchanged)
+- `modules/<name>/...` -> `modules/<name>/v2/...` (the `/v2` SIV goes after the module root; directory layout unchanged except for the three renames below)
 - The six tier-0 utilities collapse under one module: `modules/<util>/...` -> `modules/core/v2/<util>/...`
+- Three packages are also renamed to drop the hyphen: `http-helper` -> `httphelper`, `dns-helper` -> `dnshelper`, `test-structure` -> `teststructure`. The package identifier loses its underscore too (`http_helper` -> `httphelper`), so call sites change, not just the import path. The codemod handles both.
 
-So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, and `modules/aws/foo` -> `modules/aws/v2/foo`.
+So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, `modules/aws/foo` -> `modules/aws/v2/foo`, and `modules/http-helper` -> `modules/httphelper/v2`.
 
 ## core collapse (6 v1 packages -> one `modules/core/v2`)
 
@@ -28,23 +29,23 @@ So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, and `modules
 
 ## Standalone `/v2` submodules
 
-| v1 import path | v2 import path | note |
-|---|---|---|
-| `modules/aws` | `modules/aws/v2` | |
-| `modules/azure` | `modules/azure/v2` | |
-| `modules/gcp` | `modules/gcp/v2` | |
-| `modules/k8s` | `modules/k8s/v2` | |
-| `modules/helm` | `modules/helm/v2` | |
-| `modules/ssh` | `modules/ssh/v2` | |
-| `modules/docker` | `modules/docker/v2` | |
-| `modules/packer` | `modules/packer/v2` | |
-| `modules/database` | `modules/database/v2` | |
-| `modules/opa` | `modules/opa/v2` | |
-| `modules/terraform` | `modules/terraform/v2` | |
-| `modules/terragrunt` | `modules/terragrunt/v2` | |
-| `modules/http-helper` | `modules/http-helper/v2` | |
-| `modules/dns-helper` | `modules/dns-helper/v2` | |
-| `modules/test-structure` | `modules/test-structure/v2` | |
+| v1 import path | v2 import path |
+|---|---|
+| `modules/aws` | `modules/aws/v2` |
+| `modules/azure` | `modules/azure/v2` |
+| `modules/gcp` | `modules/gcp/v2` |
+| `modules/k8s` | `modules/k8s/v2` |
+| `modules/helm` | `modules/helm/v2` |
+| `modules/ssh` | `modules/ssh/v2` |
+| `modules/docker` | `modules/docker/v2` |
+| `modules/packer` | `modules/packer/v2` |
+| `modules/database` | `modules/database/v2` |
+| `modules/opa` | `modules/opa/v2` |
+| `modules/terraform` | `modules/terraform/v2` |
+| `modules/terragrunt` | `modules/terragrunt/v2` |
+| `modules/http-helper` | `modules/httphelper/v2` |
+| `modules/dns-helper` | `modules/dnshelper/v2` |
+| `modules/test-structure` | `modules/teststructure/v2` |
 
 ## Removed in v2.0.0 (deprecated in v1 first, deleted at cutover)
 
@@ -76,4 +77,4 @@ None. The map is frozen.
 ## Resolved
 
 - **`oci`** (Oracle Cloud Infrastructure): not carried forward to v2. Niche provider; removed alongside the other dropped packages. Oracle Cloud users stay on frozen v1.
-- **Renames.** Decided against renaming in v2. `http-helper`, `dns-helper`, and `test-structure` keep their hyphenated names under `/v2` (`modules/http-helper/v2`, etc.). Renaming would cost consumers a second import churn on top of the `/v2` rewrite; the idiomatic-naming cleanup can wait for a later major version, if ever.
+- **Renames.** Decided to rename the three hyphenated packages at the v2 boundary: `http-helper` -> `httphelper`, `dns-helper` -> `dnshelper`, `test-structure` -> `teststructure`. Consumers already rewrite every import for the `/v2` bump, so folding the rename into that same edit adds no separate migration, and it drops the non-idiomatic underscore package names (`http_helper`, currently suppressed with `//nolint:staticcheck`). The rename rides along with the modularization import rewrite, and the codemod covers both the path and the package identifier.
