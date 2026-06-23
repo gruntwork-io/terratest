@@ -80,7 +80,7 @@ func GetCurrentBranchNameContextE(t testing.TestingT, ctx context.Context, dir s
 // string in case of detached state using git rev-parse --abbrev-ref HEAD.
 //
 // Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
-// exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").Output() (empty when detached).
+// exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").Output() (prints "HEAD" when detached; map it to "").
 func GetCurrentBranchNameOldE(t testing.TestingT) (string, error) {
 	return GetCurrentBranchNameOldContextE(t, context.Background(), "")
 }
