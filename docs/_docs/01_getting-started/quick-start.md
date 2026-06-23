@@ -4,7 +4,7 @@ title: Quick start
 category: getting-started
 excerpt: Learn how to start with Terratest.
 tags: ["quick-start"]
-order: 102
+order: 101
 nav_title: Documentation
 nav_title_link: /docs/
 custom_js:
