@@ -18,7 +18,7 @@ func GetNameFromResourceID(resourceID string) string {
 // This function would fail the test if there is an error.
 func GetNameFromResourceIDE(resourceID string) (string, error) {
 	i := strings.LastIndex(resourceID, "/")
-	if i == -1 {
+	if i == -1 || i == len(resourceID)-1 {
 		return "", NewResourceIDNameNotFoundError(resourceID)
 	}
 
