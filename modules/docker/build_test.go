@@ -104,6 +104,7 @@ func TestGitCloneAndBuild(t *testing.T) {
 
 	branchOut, err := exec.CommandContext(ctx, "git", "branch", "--show-current").Output()
 	gitBranchName := ""
+
 	if err == nil {
 		gitBranchName = strings.TrimSpace(string(branchOut))
 	}

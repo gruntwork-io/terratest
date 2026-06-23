@@ -257,6 +257,7 @@ func runValidateOnAllTerraformModulesContext(
 	gitRootCmd.Dir = opts.RootDir
 	gitRootOut, err := gitRootCmd.Output()
 	require.NoError(t, err)
+
 	gitRoot := strings.TrimSpace(string(gitRootOut))
 
 	// Find the relative path between the root dir and the git root

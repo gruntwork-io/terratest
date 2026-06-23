@@ -39,8 +39,10 @@ func TestDownloadPolicyDownloadsRemote(t *testing.T) {
 	if curRef == "" || curRef == "HEAD" {
 		tagOut, err := exec.CommandContext(ctx, "git", "describe", "--tags").Output()
 		require.NoError(t, err)
+
 		curRef = strings.TrimSpace(string(tagOut))
 	}
+
 	baseDir := "git::https://github.com/gruntwork-io/terratest.git?ref=" + curRef
 	localPath := "../../examples/terraform-opa-example/policy/enforce_source.rego"
 	remotePath := "git::https://github.com/gruntwork-io/terratest.git//examples/terraform-opa-example/policy/enforce_source.rego?ref=" + curRef
