@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// output contains the output after runnig a command.
+// output contains the output after running a command.
 type output struct {
 	stdout *outputStream
 	stderr *outputStream
@@ -52,12 +52,12 @@ func (o *output) Combined() string {
 }
 
 type outputStream struct {
-	*merged
-	Lines []string
+	merged *merged
+	lines  []string
 }
 
 func (st *outputStream) WriteString(s string) (n int, err error) {
-	st.Lines = append(st.Lines, s)
+	st.lines = append(st.lines, s)
 
 	return st.merged.WriteString(s)
 }
@@ -67,11 +67,11 @@ func (st *outputStream) String() string {
 		return ""
 	}
 
-	return strings.Join(st.Lines, "\n")
+	return strings.Join(st.lines, "\n")
 }
 
 type merged struct {
-	Lines []string
+	lines []string
 	// ensure that there are no parallel writes
 	sync.Mutex
 }
@@ -81,14 +81,14 @@ func (m *merged) String() string {
 		return ""
 	}
 
-	return strings.Join(m.Lines, "\n")
+	return strings.Join(m.lines, "\n")
 }
 
 func (m *merged) WriteString(s string) (n int, err error) {
 	m.Lock()
 	defer m.Unlock()
 
-	m.Lines = append(m.Lines, s)
+	m.lines = append(m.lines, s)
 
 	return len(s), nil
 }
