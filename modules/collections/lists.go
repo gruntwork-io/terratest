@@ -5,7 +5,8 @@ import "slices"
 // ListIntersection returns all the items in both list1 and list2. Note that this will dedup the items so that the
 // output is more predictable. Otherwise, the end list depends on which list was used as the base.
 //
-// Deprecated: scheduled for removal in Terratest v2. Build it inline with the slices
+// Deprecated: scheduled for removal in Terratest v2. The collections package is being
+// dropped, so there is no drop-in public replacement; build it inline with the slices
 // package (Go 1.21+) at the call site, e.g.:
 //
 //	out := []T{}
@@ -29,7 +30,8 @@ func ListIntersection[T comparable](list1 []T, list2 []T) []T {
 
 // ListSubtract removes all the items in list2 from list1.
 //
-// Deprecated: scheduled for removal in Terratest v2. Build it inline with the slices
+// Deprecated: scheduled for removal in Terratest v2. The collections package is being
+// dropped, so there is no drop-in public replacement; build it inline with the slices
 // package (Go 1.21+) at the call site, e.g.:
 //
 //	out := []T{}
