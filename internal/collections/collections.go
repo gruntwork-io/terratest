@@ -17,7 +17,7 @@ func Intersection[T comparable](list1 []T, list2 []T) []T {
 	for _, item := range list1 {
 		if _, found := lookups[item]; found {
 			out = append(out, item)
-			delete(lookups, item)
+			delete(lookups, item) // delete so a repeated list1 item isn't emitted twice
 		}
 	}
 

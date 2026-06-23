@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// GetFirstNonEmptyEnvVarOrFatal returns the first non-empty environment variable from envVarNames, or throws a fatal
+// GetFirstNonEmptyEnvVarOrFatal returns the first non-empty environment variable from envVarNames, or fails the test if all of them are empty.
 //
 // Deprecated: scheduled for removal in Terratest v2. Range over os.Getenv at the call
 // site, e.g.:

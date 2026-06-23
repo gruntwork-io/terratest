@@ -19,7 +19,9 @@ func TestIntersection(t *testing.T) {
 	}{
 		{"common items, ordered by list1", []string{"a", "b", "c"}, []string{"b", "c", "d"}, []string{"b", "c"}},
 		{"dedups output", []string{"a", "a"}, []string{"a"}, []string{"a"}},
+		{"dedups duplicates in list2", []string{"a"}, []string{"a", "a"}, []string{"a"}},
 		{"no overlap returns empty, not nil", []string{"a"}, []string{"b"}, []string{}},
+		{"nil inputs return empty, not nil", nil, nil, []string{}},
 	}
 
 	for _, tc := range tests {
@@ -41,6 +43,8 @@ func TestSubtract(t *testing.T) {
 	}{
 		{"removes list2 items", []string{"a", "b", "c"}, []string{"b", "c"}, []string{"a"}},
 		{"everything removed returns empty, not nil", []string{"a", "b"}, []string{"a", "b"}, []string{}},
+		{"nil list1 returns empty, not nil", nil, []string{"a"}, []string{}},
+		{"nil list2 keeps list1", []string{"a", "b"}, nil, []string{"a", "b"}},
 	}
 
 	for _, tc := range tests {

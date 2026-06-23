@@ -11,11 +11,23 @@ import (
 func TestGetNameFromResourceID(t *testing.T) {
 	t.Parallel()
 
-	resultSuccess := azure.GetNameFromResourceID("this/is/a/long/slash/separated/string/ResourceID")
-	assert.Equal(t, "ResourceID", resultSuccess)
+	tests := []struct {
+		name       string
+		resourceID string
+		want       string
+	}{
+		{"normal resource ID", "this/is/a/long/slash/separated/string/ResourceID", "ResourceID"},
+		{"no separator", "noresourcepresent", ""},
+		{"trailing slash", "this/is/a/ResourceID/", ""},
+		{"empty", "", ""},
+	}
 
-	resultBadSeparator := azure.GetNameFromResourceID("noresourcepresent")
-	assert.Empty(t, resultBadSeparator)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.want, azure.GetNameFromResourceID(tc.resourceID))
+		})
+	}
 }
 
 func TestGetNameFromResourceIDE(t *testing.T) {
@@ -25,6 +37,24 @@ func TestGetNameFromResourceIDE(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "ResourceID", name)
 
-	_, err = azure.GetNameFromResourceIDE("noresourcepresent")
-	require.Error(t, err)
+	tests := []struct {
+		name       string
+		resourceID string
+	}{
+		{"no separator", "noresourcepresent"},
+		{"trailing slash", "this/is/a/ResourceID/"},
+		{"empty", ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := azure.GetNameFromResourceIDE(tc.resourceID)
+			require.Error(t, err)
+
+			var notFound azure.ResourceIDNameNotFoundError
+			require.ErrorAs(t, err, &notFound)
+			assert.Equal(t, tc.resourceID, notFound.ResourceID)
+		})
+	}
 }
