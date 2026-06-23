@@ -72,6 +72,20 @@ func (e *UnknownEnvironmentError) Error() string {
 		e.EnvironmentName)
 }
 
+// ResourceIDNameNotFoundError is returned when a name cannot be resolved from an Azure resource ID.
+type ResourceIDNameNotFoundError struct {
+	resourceID string
+}
+
+func (err ResourceIDNameNotFoundError) Error() string {
+	return fmt.Sprintf("could not resolve name from resource ID %q", err.resourceID)
+}
+
+// NewResourceIDNameNotFoundError creates a ResourceIDNameNotFoundError for the given resource ID.
+func NewResourceIDNameNotFoundError(resourceID string) ResourceIDNameNotFoundError {
+	return ResourceIDNameNotFoundError{resourceID: resourceID}
+}
+
 // ResourceNotFoundErrorExists checks the Service Error Code for the 'Resource Not Found' error.
 func ResourceNotFoundErrorExists(err error) bool {
 	if err == nil {

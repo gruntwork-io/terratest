@@ -5,8 +5,15 @@ import "slices"
 // ListIntersection returns all the items in both list1 and list2. Note that this will dedup the items so that the
 // output is more predictable. Otherwise, the end list depends on which list was used as the base.
 //
-// Deprecated: scheduled for removal in Terratest v2. Use the slices package
-// (Go 1.21+) to build this in a few lines at the call site.
+// Deprecated: scheduled for removal in Terratest v2. Build it inline with the slices
+// package (Go 1.21+) at the call site, e.g.:
+//
+//	out := []T{}
+//	for _, x := range list1 {
+//		if slices.Contains(list2, x) && !slices.Contains(out, x) {
+//			out = append(out, x)
+//		}
+//	}
 func ListIntersection[T comparable](list1 []T, list2 []T) []T {
 	out := []T{}
 
@@ -22,8 +29,15 @@ func ListIntersection[T comparable](list1 []T, list2 []T) []T {
 
 // ListSubtract removes all the items in list2 from list1.
 //
-// Deprecated: scheduled for removal in Terratest v2. Use the slices package
-// (Go 1.21+) to build this in a few lines at the call site.
+// Deprecated: scheduled for removal in Terratest v2. Build it inline with the slices
+// package (Go 1.21+) at the call site, e.g.:
+//
+//	out := []T{}
+//	for _, x := range list1 {
+//		if !slices.Contains(list2, x) {
+//			out = append(out, x)
+//		}
+//	}
 func ListSubtract[T comparable](list1 []T, list2 []T) []T {
 	out := []T{}
 
@@ -38,7 +52,8 @@ func ListSubtract[T comparable](list1 []T, list2 []T) []T {
 
 // ListContains returns true if the given list of strings (haystack) contains the given string (needle).
 //
-// Deprecated: Use slices.Contains instead. Scheduled for removal in Terratest v2.
+// Deprecated: scheduled for removal in Terratest v2. Replace at the call site with
+// slices.Contains(haystack, needle) (Go 1.21+).
 func ListContains(haystack []string, needle string) bool {
 	return slices.Contains(haystack, needle)
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/azure"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetNameFromResourceID(t *testing.T) {
@@ -21,9 +22,9 @@ func TestGetNameFromResourceIDE(t *testing.T) {
 	t.Parallel()
 
 	name, err := azure.GetNameFromResourceIDE("this/is/a/long/slash/separated/string/ResourceID")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "ResourceID", name)
 
 	_, err = azure.GetNameFromResourceIDE("noresourcepresent")
-	assert.Error(t, err)
+	require.Error(t, err)
 }

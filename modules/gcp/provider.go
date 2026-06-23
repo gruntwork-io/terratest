@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/stretchr/testify/require"
 )
 
 var credsEnvVars = []string{
@@ -67,9 +68,7 @@ func firstNonEmptyEnvVar(names []string) string {
 // if all of them are empty.
 func firstNonEmptyEnvVarOrFatal(t testing.TestingT, names []string) string {
 	value := firstNonEmptyEnvVar(names)
-	if value == "" {
-		t.Fatalf("All of the following env vars %v are empty. At least one must be non-empty.", names)
-	}
+	require.NotEmptyf(t, value, "All of the following env vars %v are empty. At least one must be non-empty.", names)
 
 	return value
 }

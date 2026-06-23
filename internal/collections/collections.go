@@ -4,16 +4,20 @@
 // v2.
 package collections
 
-import "slices"
-
 // Intersection returns the items present in both lists, de-duplicated, in the
 // order they appear in list1.
 func Intersection[T comparable](list1 []T, list2 []T) []T {
-	out := []T{}
+	lookups := make(map[T]struct{}, len(list2))
+	for _, item := range list2 {
+		lookups[item] = struct{}{}
+	}
+
+	out := make([]T, 0, min(len(list1), len(list2)))
 
 	for _, item := range list1 {
-		if slices.Contains(list2, item) && !slices.Contains(out, item) {
+		if _, found := lookups[item]; found {
 			out = append(out, item)
+			delete(lookups, item)
 		}
 	}
 
@@ -22,10 +26,15 @@ func Intersection[T comparable](list1 []T, list2 []T) []T {
 
 // Subtract returns the items in list1 that are not in list2.
 func Subtract[T comparable](list1 []T, list2 []T) []T {
-	out := []T{}
+	lookups := make(map[T]struct{}, len(list2))
+	for _, item := range list2 {
+		lookups[item] = struct{}{}
+	}
+
+	out := make([]T, 0, len(list1))
 
 	for _, item := range list1 {
-		if !slices.Contains(list2, item) {
+		if _, found := lookups[item]; !found {
 			out = append(out, item)
 		}
 	}

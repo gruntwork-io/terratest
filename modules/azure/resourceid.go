@@ -1,7 +1,6 @@
 package azure
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -18,11 +17,10 @@ func GetNameFromResourceID(resourceID string) string {
 // GetNameFromResourceIDE gets the Name from an Azure Resource ID.
 // This function would fail the test if there is an error.
 func GetNameFromResourceIDE(resourceID string) (string, error) {
-	if !strings.Contains(resourceID, "/") {
-		return "", fmt.Errorf("could not resolve name from resource ID %q", resourceID)
+	i := strings.LastIndex(resourceID, "/")
+	if i == -1 {
+		return "", NewResourceIDNameNotFoundError(resourceID)
 	}
 
-	parts := strings.Split(resourceID, "/")
-
-	return parts[len(parts)-1], nil
+	return resourceID[i+1:], nil
 }
