@@ -297,9 +297,8 @@ func packerInit(t testing.TestingT, ctx context.Context, options *Options) error
 		return nil
 	}
 
-	extension := filepath.Ext(options.Template)
-	if extension != ".hcl" {
-		options.Logger.Logf(t, "Skipping 'packer init' because it is only supported for HCL2 templates")
+	if !packerInitSupportsTemplate(options) {
+		options.Logger.Logf(t, "Skipping 'packer init' because it is only supported for HCL2 templates (an .hcl file or a directory)")
 		return nil
 	}
 
@@ -317,6 +316,25 @@ func packerInit(t testing.TestingT, ctx context.Context, options *Options) error
 	})
 
 	return err
+}
+
+// packerInitSupportsTemplate reports whether `packer init` applies to the configured template. init supports HCL2
+// templates, which can be either a single .hcl file (for example foo.pkr.hcl) or a directory holding HCL2 templates.
+// Legacy JSON templates are not supported. Template paths are resolved relative to WorkingDir, matching how packer is
+// invoked.
+func packerInitSupportsTemplate(options *Options) bool {
+	if filepath.Ext(options.Template) == ".hcl" {
+		return true
+	}
+
+	templatePath := options.Template
+	if options.WorkingDir != "" && !filepath.IsAbs(templatePath) {
+		templatePath = filepath.Join(options.WorkingDir, templatePath)
+	}
+
+	info, err := os.Stat(templatePath)
+
+	return err == nil && info.IsDir()
 }
 
 // FormatPackerArgs converts the inputs to a format palatable to packer. The build command should have the format:
