@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gruntwork-io/terratest/modules/collections"
+	"github.com/gruntwork-io/terratest/internal/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -76,7 +76,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, projectID 
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	logger.Default.Logf(t, "Using Region %s", region)
@@ -138,7 +138,7 @@ func GetRandomZoneContextE(t testing.TestingT, ctx context.Context, projectID st
 		zonesToPickFrom = allZones
 	}
 
-	zonesToPickFrom = collections.ListSubtract(zonesToPickFrom, forbiddenZones)
+	zonesToPickFrom = collections.Subtract(zonesToPickFrom, forbiddenZones)
 
 	var zonesToPickFromFiltered []string
 
