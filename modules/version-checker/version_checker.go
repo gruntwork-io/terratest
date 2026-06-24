@@ -1,4 +1,8 @@
 // Package version_checker provides utilities for checking binary versions against constraints.
+//
+// Deprecated: The version_checker package is scheduled for removal in Terratest v2.
+// It offers marginal value over shelling out to verify a binary's version
+// yourself; do that instead. There is no public replacement; the package is being dropped.
 package version_checker //nolint:staticcheck // package name matches directory convention
 
 import (
@@ -14,9 +18,13 @@ import (
 )
 
 // VersionCheckerBinary is an enum for supported version checking.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type VersionCheckerBinary int
 
 // List of binaries supported for version checking.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 const (
 	Docker VersionCheckerBinary = iota
 	Terraform
@@ -31,6 +39,8 @@ const (
 )
 
 // CheckVersionParams contains the parameters for checking a binary's version.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type CheckVersionParams struct {
 	// BinaryPath is a path to the binary you want to check the version for.
 	BinaryPath string
@@ -46,7 +56,13 @@ type CheckVersionParams struct {
 // CheckVersionE checks whether the given Binary version is greater than or equal
 // to the given expected version.
 //
-// Deprecated: Use CheckVersionContextE instead.
+// Deprecated: scheduled for removal in Terratest v2. Verify the version yourself, e.g.
+// run "<binary> --version", extract with a regexp, and compare with go-version:
+//
+//	out, _ := exec.Command(binaryPath, "--version").Output()
+//	v := regexp.MustCompile(`\d+(\.\d+)+`).FindString(string(out))
+//	c, _ := version.NewConstraint(">= 1.2.0, < 2.0.0")
+//	ok := c.Check(version.Must(version.NewVersion(v)))
 func CheckVersionE(
 	t testing.TestingT,
 	params CheckVersionParams) error {
@@ -54,6 +70,14 @@ func CheckVersionE(
 }
 
 // CheckVersionContextE is like CheckVersionE but includes a context.
+//
+// Deprecated: scheduled for removal in Terratest v2. Verify the version yourself, e.g.
+// run "<binary> --version", extract with a regexp, and compare with go-version:
+//
+//	out, _ := exec.Command(binaryPath, "--version").Output()
+//	v := regexp.MustCompile(`\d+(\.\d+)+`).FindString(string(out))
+//	c, _ := version.NewConstraint(">= 1.2.0, < 2.0.0")
+//	ok := c.Check(version.Must(version.NewVersion(v)))
 func CheckVersionContextE(
 	t testing.TestingT,
 	ctx context.Context,
@@ -73,7 +97,13 @@ func CheckVersionContextE(
 // CheckVersion checks whether the given Binary version is greater than or equal to the
 // given expected version and fails if it's not.
 //
-// Deprecated: Use CheckVersionContext instead.
+// Deprecated: scheduled for removal in Terratest v2. Verify the version yourself, e.g.
+// run "<binary> --version", extract with a regexp, and compare with go-version:
+//
+//	out, _ := exec.Command(binaryPath, "--version").Output()
+//	v := regexp.MustCompile(`\d+(\.\d+)+`).FindString(string(out))
+//	c, _ := version.NewConstraint(">= 1.2.0, < 2.0.0")
+//	ok := c.Check(version.Must(version.NewVersion(v)))
 func CheckVersion(
 	t testing.TestingT,
 	params CheckVersionParams) {
@@ -81,6 +111,14 @@ func CheckVersion(
 }
 
 // CheckVersionContext is like CheckVersion but includes a context.
+//
+// Deprecated: scheduled for removal in Terratest v2. Verify the version yourself, e.g.
+// run "<binary> --version", extract with a regexp, and compare with go-version:
+//
+//	out, _ := exec.Command(binaryPath, "--version").Output()
+//	v := regexp.MustCompile(`\d+(\.\d+)+`).FindString(string(out))
+//	c, _ := version.NewConstraint(">= 1.2.0, < 2.0.0")
+//	ok := c.Check(version.Must(version.NewVersion(v)))
 func CheckVersionContext(
 	t testing.TestingT,
 	ctx context.Context,
@@ -154,6 +192,10 @@ func getBinary(params CheckVersionParams) (string, error) {
 
 // ExtractVersionFromShellCommandOutput extracts version with regex string matching
 // from the given shell command output string.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker
+// package. Extract the version yourself, e.g.
+// regexp.MustCompile(`\d+(\.\d+)+`).FindString(output).
 func ExtractVersionFromShellCommandOutput(output string) (string, error) {
 	regexMatcher := regexp.MustCompile(versionRegexMatcher)
 
@@ -172,6 +214,12 @@ func ExtractVersionFromShellCommandOutput(output string) (string, error) {
 //
 //	CheckVersionConstraint("1.2.31",  ">= 1.2.0, < 2.0.0") - no error
 //	CheckVersionConstraint("1.0.31",  ">= 1.2.0, < 2.0.0") - error
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker
+// package. Compare with github.com/hashicorp/go-version directly, e.g.
+//
+//	c, _ := version.NewConstraint(versionConstraintStr)
+//	ok := c.Check(version.Must(version.NewVersion(actualVersionStr)))
 func CheckVersionConstraint(actualVersionStr string, versionConstraintStr string) error {
 	actualVersion, err := version.NewVersion(actualVersionStr)
 	if err != nil {

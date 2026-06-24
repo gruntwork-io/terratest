@@ -14,10 +14,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/gruntwork-io/terratest/modules/git"
 
 	go_test "testing"
 
@@ -253,9 +252,13 @@ func runValidateOnAllTerraformModulesContext(
 ) {
 	t.Helper()
 
-	// Find the Git root
-	gitRoot, err := git.GetRepoRootForDirContextE(t, ctx, opts.RootDir)
+	// Find the Git root by shelling out to git rev-parse from the target directory.
+	gitRootCmd := exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel")
+	gitRootCmd.Dir = opts.RootDir
+	gitRootOut, err := gitRootCmd.Output()
 	require.NoError(t, err)
+
+	gitRoot := strings.TrimSpace(string(gitRootOut))
 
 	// Find the relative path between the root dir and the git root
 	relPath, err := filepath.Rel(gitRoot, opts.RootDir)

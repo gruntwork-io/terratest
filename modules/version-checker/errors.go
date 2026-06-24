@@ -4,6 +4,8 @@ import "fmt"
 
 // VersionMismatchErr is returned when a binary's version does not satisfy the
 // given version constraint.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type VersionMismatchErr struct {
 	Actual     string
 	Constraint string
@@ -15,6 +17,8 @@ func (e *VersionMismatchErr) Error() string {
 
 // MissingParamErr is returned when a required field in [CheckVersionParams] is
 // empty.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type MissingParamErr struct {
 	Param string
 }
@@ -25,6 +29,8 @@ func (e *MissingParamErr) Error() string {
 
 // InvalidVersionConstraintErr is returned when the VersionConstraint string
 // cannot be parsed.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type InvalidVersionConstraintErr struct {
 	Underlying error
 	Constraint string
@@ -40,6 +46,8 @@ func (e *InvalidVersionConstraintErr) Unwrap() error {
 
 // UnsupportedBinaryErr is returned when [CheckVersionParams.Binary] is set to
 // an unknown [VersionCheckerBinary] value.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type UnsupportedBinaryErr struct {
 	Binary VersionCheckerBinary
 }
@@ -49,6 +57,8 @@ func (e *UnsupportedBinaryErr) Error() string {
 }
 
 // InvalidVersionFormatErr is returned when a version string cannot be parsed.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type InvalidVersionFormatErr struct {
 	Underlying error
 	Field      string
@@ -65,6 +75,8 @@ func (e *InvalidVersionFormatErr) Unwrap() error {
 
 // VersionExtractionErr is returned when the version string cannot be parsed
 // from the output of running a binary's --version command.
+//
+// Deprecated: scheduled for removal in Terratest v2 along with the version_checker package.
 type VersionExtractionErr struct {
 	Output string
 }
