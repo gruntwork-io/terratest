@@ -1,4 +1,9 @@
 // Package git allows to interact with Git.
+//
+// Deprecated: The git package is scheduled for removal in Terratest v2. Each
+// helper here wraps a single git command (for example, git rev-parse or
+// git describe); call git directly with os/exec instead. There is no public
+// replacement; the package is being dropped.
 package git
 
 import (
@@ -14,9 +19,8 @@ import (
 // GetCurrentBranchName retrieves the current branch name or an empty string
 // in case of detached state. Fails the test if an error occurs.
 //
-// Deprecated: Use [GetCurrentBranchNameContext] instead, which supports context
-// cancellation and accepts an explicit working directory rather than relying on
-// the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "branch", "--show-current").Output() (empty when detached).
 func GetCurrentBranchName(t testing.TestingT) string {
 	return GetCurrentBranchNameContext(t, context.Background(), "")
 }
@@ -25,6 +29,9 @@ func GetCurrentBranchName(t testing.TestingT) string {
 // string in case of detached state. The dir parameter specifies the working
 // directory for the git command; if empty, the process working directory is
 // used. Fails the test if an error occurs.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "branch", "--show-current") with cmd.Dir = dir, then .Output().
 func GetCurrentBranchNameContext(t testing.TestingT, ctx context.Context, dir string) string {
 	out, err := GetCurrentBranchNameContextE(t, ctx, dir)
 	if err != nil {
@@ -38,9 +45,8 @@ func GetCurrentBranchNameContext(t testing.TestingT, ctx context.Context, dir st
 // in case of detached state. Uses git branch --show-current, which was
 // introduced in git v2.22. Falls back to git rev-parse for older versions.
 //
-// Deprecated: Use [GetCurrentBranchNameContextE] instead, which supports
-// context cancellation and accepts an explicit working directory rather than
-// relying on the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "branch", "--show-current").Output() (empty when detached).
 func GetCurrentBranchNameE(t testing.TestingT) (string, error) {
 	return GetCurrentBranchNameContextE(t, context.Background(), "")
 }
@@ -50,6 +56,9 @@ func GetCurrentBranchNameE(t testing.TestingT) (string, error) {
 // introduced in git v2.22. Falls back to git rev-parse for older versions.
 // The dir parameter specifies the working directory for the git command; if
 // empty, the process working directory is used.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "branch", "--show-current") with cmd.Dir = dir, then .Output().
 func GetCurrentBranchNameContextE(t testing.TestingT, ctx context.Context, dir string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", "branch", "--show-current")
 	cmd.Dir = dir
@@ -70,9 +79,8 @@ func GetCurrentBranchNameContextE(t testing.TestingT, ctx context.Context, dir s
 // GetCurrentBranchNameOldE retrieves the current branch name or an empty
 // string in case of detached state using git rev-parse --abbrev-ref HEAD.
 //
-// Deprecated: Use [GetCurrentBranchNameOldContextE] instead, which supports
-// context cancellation and accepts an explicit working directory rather than
-// relying on the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").Output() (prints "HEAD" when detached; map it to "").
 func GetCurrentBranchNameOldE(t testing.TestingT) (string, error) {
 	return GetCurrentBranchNameOldContextE(t, context.Background(), "")
 }
@@ -82,6 +90,9 @@ func GetCurrentBranchNameOldE(t testing.TestingT) (string, error) {
 // This is a fallback for git versions older than v2.22 that lack
 // git branch --show-current. The dir parameter specifies the working directory
 // for the git command; if empty, the process working directory is used.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "rev-parse", "--abbrev-ref", "HEAD") with cmd.Dir = dir, then .Output().
 func GetCurrentBranchNameOldContextE(t testing.TestingT, ctx context.Context, dir string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", "rev-parse", "--abbrev-ref", "HEAD")
 	cmd.Dir = dir
@@ -103,9 +114,8 @@ func GetCurrentBranchNameOldContextE(t testing.TestingT, ctx context.Context, di
 // (non-annotated) tag, or exact tag value if the tag points to the current
 // commit. Fails the test if an error occurs.
 //
-// Deprecated: Use [GetCurrentGitRefContext] instead, which supports context
-// cancellation and accepts an explicit working directory rather than relying on
-// the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly: try
+// git branch --show-current, then git describe --tags when detached.
 func GetCurrentGitRef(t testing.TestingT) string {
 	return GetCurrentGitRefContext(t, context.Background(), "")
 }
@@ -115,6 +125,9 @@ func GetCurrentGitRef(t testing.TestingT) string {
 // commit. The dir parameter specifies the working directory for the git
 // command; if empty, the process working directory is used. Fails the test if
 // an error occurs.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly: try
+// git branch --show-current, then git describe --tags when detached (set cmd.Dir = dir).
 func GetCurrentGitRefContext(t testing.TestingT, ctx context.Context, dir string) string {
 	out, err := GetCurrentGitRefContextE(t, ctx, dir)
 	if err != nil {
@@ -128,9 +141,8 @@ func GetCurrentGitRefContext(t testing.TestingT, ctx context.Context, dir string
 // (non-annotated) tag, or exact tag value if the tag points to the current
 // commit.
 //
-// Deprecated: Use [GetCurrentGitRefContextE] instead, which supports context
-// cancellation and accepts an explicit working directory rather than relying on
-// the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly: try
+// git branch --show-current, then git describe --tags when detached.
 func GetCurrentGitRefE(t testing.TestingT) (string, error) {
 	return GetCurrentGitRefContextE(t, context.Background(), "")
 }
@@ -139,6 +151,9 @@ func GetCurrentGitRefE(t testing.TestingT) (string, error) {
 // (non-annotated) tag, or exact tag value if the tag points to the current
 // commit. The dir parameter specifies the working directory for the git
 // command; if empty, the process working directory is used.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly: try
+// git branch --show-current, then git describe --tags when detached (set cmd.Dir = dir).
 func GetCurrentGitRefContextE(t testing.TestingT, ctx context.Context, dir string) (string, error) {
 	out, err := GetCurrentBranchNameContextE(t, ctx, dir)
 	if err != nil {
@@ -160,9 +175,8 @@ func GetCurrentGitRefContextE(t testing.TestingT, ctx context.Context, dir strin
 // GetTagE retrieves the lightweight (non-annotated) tag or exact tag value if
 // the tag points to the current commit.
 //
-// Deprecated: Use [GetTagContextE] instead, which supports context
-// cancellation and accepts an explicit working directory rather than relying on
-// the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "describe", "--tags").Output().
 func GetTagE(t testing.TestingT) (string, error) {
 	return GetTagContextE(t, context.Background(), "")
 }
@@ -171,6 +185,9 @@ func GetTagE(t testing.TestingT) (string, error) {
 // value if the tag points to the current commit. The dir parameter specifies
 // the working directory for the git command; if empty, the process working
 // directory is used.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "describe", "--tags") with cmd.Dir = dir, then .Output().
 func GetTagContextE(t testing.TestingT, ctx context.Context, dir string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", "describe", "--tags")
 	cmd.Dir = dir
@@ -186,9 +203,8 @@ func GetTagContextE(t testing.TestingT, ctx context.Context, dir string) (string
 // GetRepoRoot retrieves the path to the root directory of the repo. Fails the
 // test if there is an error.
 //
-// Deprecated: Use [GetRepoRootContext] instead, which supports context
-// cancellation and accepts an explicit working directory rather than relying on
-// the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "rev-parse", "--show-toplevel").Output().
 func GetRepoRoot(t testing.TestingT) string {
 	return GetRepoRootContext(t, context.Background(), "")
 }
@@ -196,6 +212,9 @@ func GetRepoRoot(t testing.TestingT) string {
 // GetRepoRootContext retrieves the path to the root directory of the repo. The
 // dir parameter specifies the working directory for the git command; if empty,
 // the process working directory is used. Fails the test if there is an error.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel") with cmd.Dir = dir, then .Output().
 func GetRepoRootContext(t testing.TestingT, ctx context.Context, dir string) string {
 	out, err := GetRepoRootContextE(t, ctx, dir)
 	require.NoError(t, err)
@@ -205,9 +224,8 @@ func GetRepoRootContext(t testing.TestingT, ctx context.Context, dir string) str
 
 // GetRepoRootE retrieves the path to the root directory of the repo.
 //
-// Deprecated: Use [GetRepoRootContextE] instead, which supports context
-// cancellation and accepts an explicit working directory rather than relying on
-// the process working directory.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "rev-parse", "--show-toplevel").Output().
 func GetRepoRootE(t testing.TestingT) (string, error) {
 	return GetRepoRootContextE(t, context.Background(), "")
 }
@@ -215,6 +233,9 @@ func GetRepoRootE(t testing.TestingT) (string, error) {
 // GetRepoRootContextE retrieves the path to the root directory of the repo.
 // The dir parameter specifies the working directory for the git command; if
 // empty, the process working directory is used.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel") with cmd.Dir = dir, then .Output().
 func GetRepoRootContextE(t testing.TestingT, ctx context.Context, dir string) (string, error) {
 	if dir == "" {
 		cwd, err := os.Getwd()
@@ -231,14 +252,17 @@ func GetRepoRootContextE(t testing.TestingT, ctx context.Context, dir string) (s
 // GetRepoRootForDir retrieves the path to the root directory of the repo in
 // which dir resides. Fails the test if there is an error.
 //
-// Deprecated: Use [GetRepoRootForDirContext] instead, which supports context
-// cancellation.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "rev-parse", "--show-toplevel") with cmd.Dir = dir, then .Output().
 func GetRepoRootForDir(t testing.TestingT, dir string) string {
 	return GetRepoRootForDirContext(t, context.Background(), dir)
 }
 
 // GetRepoRootForDirContext retrieves the path to the root directory of the
 // repo in which dir resides. Fails the test if there is an error.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel") with cmd.Dir = dir, then .Output().
 func GetRepoRootForDirContext(t testing.TestingT, ctx context.Context, dir string) string {
 	out, err := GetRepoRootForDirContextE(t, ctx, dir)
 	require.NoError(t, err)
@@ -249,14 +273,17 @@ func GetRepoRootForDirContext(t testing.TestingT, ctx context.Context, dir strin
 // GetRepoRootForDirE retrieves the path to the root directory of the repo in
 // which dir resides.
 //
-// Deprecated: Use [GetRepoRootForDirContextE] instead, which supports context
-// cancellation.
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.Command("git", "rev-parse", "--show-toplevel") with cmd.Dir = dir, then .Output().
 func GetRepoRootForDirE(t testing.TestingT, dir string) (string, error) {
 	return GetRepoRootForDirContextE(t, context.Background(), dir)
 }
 
 // GetRepoRootForDirContextE retrieves the path to the root directory of the
 // repo in which dir resides.
+//
+// Deprecated: scheduled for removal in Terratest v2. Shell out to git directly, e.g.
+// exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel") with cmd.Dir = dir, then .Output().
 func GetRepoRootForDirContextE(t testing.TestingT, ctx context.Context, dir string) (string, error) {
 	cmd := exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel")
 	cmd.Dir = dir

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/gruntwork-io/terratest/modules/collections"
+	"github.com/gruntwork-io/terratest/internal/collections"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -53,11 +53,11 @@ func GetRandomStableRegionContextE(t testing.TestingT, ctx context.Context, appr
 	regionsToPickFrom := stableRegions
 
 	if len(approvedRegions) > 0 {
-		regionsToPickFrom = collections.ListIntersection(regionsToPickFrom, approvedRegions)
+		regionsToPickFrom = collections.Intersection(regionsToPickFrom, approvedRegions)
 	}
 
 	if len(forbiddenRegions) > 0 {
-		regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+		regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	}
 
 	return GetRandomRegionContextE(t, ctx, regionsToPickFrom, nil)
@@ -122,7 +122,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRe
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	logger.Default.Logf(t, "Using region %s", region)
