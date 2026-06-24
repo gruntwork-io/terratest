@@ -5,7 +5,7 @@ category: getting-started
 excerpt: >-
   Learn how to test Terragrunt configurations with Terratest.
 tags: ["terragrunt", "testing", "quick-start"]
-order: 105
+order: 106
 nav_title: Documentation
 nav_title_link: /docs/
 ---
