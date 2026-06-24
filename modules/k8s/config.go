@@ -12,7 +12,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
 
-	"github.com/gruntwork-io/terratest/modules/environment"
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/testing"
@@ -146,7 +145,7 @@ func RemoveOrphanedClusterAndAuthInfoConfig(config *api.Config) {
 // GetKubeConfigPathContextE determines which file path to use as the kubectl config path.
 // The ctx parameter is accepted for API consistency.
 func GetKubeConfigPathContextE(t testing.TestingT, ctx context.Context) (string, error) {
-	kubeConfigPath := environment.GetFirstNonEmptyEnvVarOrEmptyString(t, []string{"KUBECONFIG"})
+	kubeConfigPath := os.Getenv("KUBECONFIG")
 	if kubeConfigPath == "" {
 		configPath, err := KubeConfigPathFromHomeDirE()
 		if err != nil {

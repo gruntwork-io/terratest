@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/gruntwork-io/terratest/modules/collections"
+	"github.com/gruntwork-io/terratest/internal/collections"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/testing"
 	"github.com/stretchr/testify/require"
@@ -72,11 +72,11 @@ func GetRandomStableRegionContext(t testing.TestingT, ctx context.Context, appro
 	regionsToPickFrom := stableRegions
 
 	if len(approvedRegions) > 0 {
-		regionsToPickFrom = collections.ListIntersection(regionsToPickFrom, approvedRegions)
+		regionsToPickFrom = collections.Intersection(regionsToPickFrom, approvedRegions)
 	}
 
 	if len(forbiddenRegions) > 0 {
-		regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+		regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	}
 
 	return GetRandomRegionContext(t, ctx, regionsToPickFrom, nil, subscriptionID) //nolint:staticcheck
@@ -145,7 +145,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRe
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = collections.ListSubtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	return region, nil
