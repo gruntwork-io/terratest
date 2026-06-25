@@ -4,7 +4,7 @@ title: Pinning a Terratest version
 category: getting-started
 excerpt: Lock your tests to a specific Terratest release.
 tags: ["versioning", "go-modules", "pinning"]
-order: 107
+order: 106
 nav_title: Documentation
 nav_title_link: /docs/
 ---
