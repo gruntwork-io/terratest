@@ -46,6 +46,39 @@ func TestValidateAllTerraformModulesSucceedsOnValidTerraform(t *testing.T) {
 	teststructure.ValidateAllTerraformModulesContext(t, t.Context(), opts)
 }
 
+// TestValidateAllTerraformModulesParallelSucceedsOnValidTerraform runs the same valid fixture with Parallel enabled,
+// exercising the t.Parallel path.
+func TestValidateAllTerraformModulesParallelSucceedsOnValidTerraform(t *testing.T) {
+	t.Parallel()
+
+	cwd, err := os.Getwd()
+	require.NoError(t, err)
+
+	projectRootDir := filepath.Join(cwd, "../../test/fixtures")
+
+	opts, optsErr := teststructure.NewValidationOptions(projectRootDir, []string{"terraform-validation-valid"}, []string{})
+	require.NoError(t, optsErr)
+
+	opts.Parallel = true
+
+	teststructure.ValidateAllTerraformModulesContext(t, t.Context(), opts)
+}
+
+// TestCloneWithNewRootDirPreservesParallel ensures the Parallel flag survives the clone that ValidateAllTerraformModules
+// performs internally; otherwise the parallel mode would never take effect.
+func TestCloneWithNewRootDirPreservesParallel(t *testing.T) {
+	t.Parallel()
+
+	opts, err := teststructure.NewValidationOptions(t.TempDir(), []string{}, []string{})
+	require.NoError(t, err)
+
+	opts.Parallel = true
+
+	cloned, err := teststructure.CloneWithNewRootDir(opts, t.TempDir())
+	require.NoError(t, err)
+	assert.True(t, cloned.Parallel)
+}
+
 func TestNewValidationOptionsRejectsEmptyRootDir(t *testing.T) {
 	t.Parallel()
 

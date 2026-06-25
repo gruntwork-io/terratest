@@ -37,6 +37,9 @@ type ValidationOptions struct {
 	// Note that while the struct requires full paths, you can pass relative paths to the NewValidationOptions function
 	// which will build the full paths based on the supplied RootDir
 	ExcludeDirs []string
+	// If true, each discovered module is validated in a parallel subtest (via t.Parallel) rather than sequentially.
+	// Go caps the number of concurrent subtests at the -parallel flag (GOMAXPROCS by default).
+	Parallel bool
 }
 
 // CloneWithNewRootDir clones the given opts with a new root dir. Updates all include and exclude dirs to be relative
@@ -58,6 +61,7 @@ func CloneWithNewRootDir(opts *ValidationOptions, newRootDir string) (*Validatio
 	}
 
 	out.FileType = opts.FileType
+	out.Parallel = opts.Parallel
 
 	return out, nil
 }

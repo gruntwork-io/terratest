@@ -278,6 +278,10 @@ func runValidateOnAllTerraformModulesContext(
 
 	for _, dir := range dirsToValidate {
 		t.Run(strings.TrimLeft(dir, "/"), func(t *go_test.T) {
+			if clonedOpts.Parallel {
+				t.Parallel()
+			}
+
 			// Run the validation function on the test folder that was copied to /tmp to avoid any potential conflicts
 			// with tests that may not use the same copy to /tmp behavior
 			tfOpts := &terraform.Options{TerraformDir: dir}
