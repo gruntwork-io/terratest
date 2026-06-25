@@ -3,6 +3,7 @@ package k8s
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -145,7 +146,43 @@ type PodNotAvailable struct {
 
 // Error is a simple function to return a formatted error message as a string
 func (err PodNotAvailable) Error() string {
-	return fmt.Sprintf("Pod %s is not available, reason: %s, message: %s", err.pod.Name, err.pod.Status.Reason, err.pod.Status.Message)
+	msg := fmt.Sprintf("Pod %s is not available, reason: %s, message: %s", err.pod.Name, err.pod.Status.Reason, err.pod.Status.Message)
+
+	// The pod-level reason and message above are usually empty when a container fails to start. The actionable detail
+	// (for example CrashLoopBackOff or ImagePullBackOff) lives in the container statuses, so surface it here.
+	details := append(
+		unreadyContainerDetails("init container", err.pod.Status.InitContainerStatuses),
+		unreadyContainerDetails("container", err.pod.Status.ContainerStatuses)...,
+	)
+	if len(details) > 0 {
+		msg += ". " + strings.Join(details, "; ")
+	}
+
+	return msg
+}
+
+// unreadyContainerDetails returns a short description of the waiting or terminated state of each container that is not
+// ready, prefixed with the given kind (for example "container" or "init container").
+func unreadyContainerDetails(kind string, statuses []corev1.ContainerStatus) []string {
+	var details []string
+
+	for i := range statuses {
+		status := statuses[i]
+		if status.Ready {
+			continue
+		}
+
+		switch {
+		case status.State.Waiting != nil:
+			detail := fmt.Sprintf("%s %s waiting: %s", kind, status.Name, status.State.Waiting.Reason)
+			details = append(details, strings.TrimSpace(detail+" "+status.State.Waiting.Message))
+		case status.State.Terminated != nil:
+			detail := fmt.Sprintf("%s %s terminated: %s", kind, status.Name, status.State.Terminated.Reason)
+			details = append(details, strings.TrimSpace(detail+" "+status.State.Terminated.Message))
+		}
+	}
+
+	return details
 }
 
 // NewPodNotAvailableError returns a PodNotAvailable struct when Kubernetes deems a pod is not available
