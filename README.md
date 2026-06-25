@@ -8,7 +8,7 @@
 Terratest is a Go library that makes it easier to write automated tests for your infrastructure code. It provides a
 variety of helper functions and patterns for common infrastructure testing tasks, including:
 
-- Testing OpenTofu and Terraform code
+- Testing Terraform code
 - Testing Packer templates
 - Testing Docker images
 - Executing commands on servers over SSH
@@ -20,23 +20,6 @@ variety of helper functions and patterns for common infrastructure testing tasks
 - Making HTTP requests
 - Running shell commands
 - And much more
-
-## What Terratest is for
-
-Terratest is a Go library for writing automated tests of infrastructure code. It covers five workflows that, together,
-let you test infrastructure end to end:
-
-- **Deploy** OpenTofu, Terragrunt, Packer, or Docker from Go and capture their output.
-- **Inspect** what got deployed by calling cloud provider APIs (AWS, Azure, GCP, Kubernetes).
-- **Interact** with it over the network: SSH, HTTP, DNS, and database checks that cloud SDKs alone can't do.
-- **Validate** behavior and policy: OPA against OpenTofu plans, test-stage orchestration, retry-with-backoff for
-  eventual consistency.
-- **Tear down** with `tofu destroy` and cleanup helpers.
-
-Terratest is deliberately scoped. It is not a unit-testing framework (Go's standard `testing` covers that), a mocking
-library, a general-purpose utility collection, or a CI/notification tool. Helpers that fall outside the five workflows
-above, including ones the standard library already covers, are being deprecated and removed in v2. See
-[What Terratest is for](https://terratest.gruntwork.io/docs/getting-started/what-terratest-is-for/) for the full picture.
 
 ## Install
 
@@ -53,6 +36,10 @@ only happen in major releases (e.g. v2.0.0).
 
 Symbols renamed or replaced in v1 are kept with `// Deprecated:` annotations pointing at the new name; removals happen
 in v2. Migrating from v0.x: see the [v1 migration guide](https://terratest.gruntwork.io/docs/migrating-to-v1/overview/).
+
+**v1 maintenance.** With v2 in development, the v1 line has entered maintenance: it receives security fixes only,
+delivered on the `v1` branch, until 12 months after v2.0.0 reaches general availability. v2 ships under new `/v2`
+module paths, so pinned v1 consumers are unaffected. Upgrade on your own schedule.
 
 ## More info
 

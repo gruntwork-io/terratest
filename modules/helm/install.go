@@ -32,8 +32,9 @@ func InstallE(t testing.TestingT, options *Options, chart string, releaseName st
 	return InstallContextE(t, context.Background(), options, chart, releaseName)
 }
 
-// InstallContextE will install the selected helm chart with the provided options under the given release name. The ctx
-// parameter supports cancellation and timeouts.
+// InstallContextE will install the selected helm chart with the provided options under the given release name. If
+// releaseName is empty, the name is omitted so callers can rely on helm's --generate-name (passed through ExtraArgs).
+// The ctx parameter supports cancellation and timeouts.
 func InstallContextE(t testing.TestingT, ctx context.Context, options *Options, chart string, releaseName string) error {
 	// If the chart refers to a path, convert to absolute path. Otherwise, pass straight through as it may be a remote
 	// chart.
@@ -54,13 +55,25 @@ func InstallContextE(t testing.TestingT, ctx context.Context, options *Options, 
 	}
 
 	// Now call out to helm install to install the charts with the provided options
-	var err error
+	args, err := installArgs(options, chart, releaseName) //nolint:contextcheck // installArgs only formats values via context-free helpers
+	if err != nil {
+		return err
+	}
 
+	_, err = RunHelmCommandAndGetOutputContextE(t, ctx, options, "install", args...)
+
+	return err
+}
+
+// installArgs builds the argument list passed to `helm install`. When releaseName is empty, the release name is omitted
+// so callers can rely on helm's --generate-name (supplied through ExtraArgs["install"]) to name the release. Passing an
+// empty release name as a positional argument would otherwise make helm fail with "expected at most two arguments".
+func installArgs(options *Options, chart string, releaseName string) ([]string, error) {
 	args := []string{}
 
 	if options.ExtraArgs != nil {
-		if installArgs, ok := options.ExtraArgs["install"]; ok {
-			args = append(args, installArgs...)
+		if extra, ok := options.ExtraArgs["install"]; ok {
+			args = append(args, extra...)
 		}
 	}
 
@@ -68,13 +81,16 @@ func InstallContextE(t testing.TestingT, ctx context.Context, options *Options, 
 		args = append(args, "--version", options.Version)
 	}
 
-	args, err = getValuesArgsE(options, args...) //nolint:contextcheck // getValuesArgsE is a local helper without context
+	args, err := getValuesArgsE(options, args...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	args = append(args, releaseName, chart)
-	_, err = RunHelmCommandAndGetOutputContextE(t, ctx, options, "install", args...)
+	if releaseName != "" {
+		args = append(args, releaseName)
+	}
 
-	return err
+	args = append(args, chart)
+
+	return args, nil
 }

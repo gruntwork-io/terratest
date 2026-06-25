@@ -8,7 +8,6 @@ import (
 	"github.com/slack-go/slack"
 	"github.com/stretchr/testify/require"
 
-	"github.com/gruntwork-io/terratest/modules/environment"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	terratestslack "github.com/gruntwork-io/terratest/modules/slack"
@@ -22,8 +21,8 @@ const (
 func TestValidateSlackMessage(t *testing.T) {
 	t.Parallel()
 
-	environment.RequireEnvVar(t, slackTokenEnv)
-	environment.RequireEnvVar(t, slackChannelIDEnv)
+	require.NotEmptyf(t, os.Getenv(slackTokenEnv), "Environment variable %s must be set for this test.", slackTokenEnv)
+	require.NotEmptyf(t, os.Getenv(slackChannelIDEnv), "Environment variable %s must be set for this test.", slackChannelIDEnv)
 
 	token := os.Getenv(slackTokenEnv)
 	channelID := os.Getenv(slackChannelIDEnv)

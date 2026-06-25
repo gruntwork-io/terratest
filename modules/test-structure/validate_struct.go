@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	go_commons_collections "github.com/gruntwork-io/go-commons/collections"
-	"github.com/gruntwork-io/terratest/modules/collections"
+	"github.com/gruntwork-io/terratest/internal/collections"
 	"github.com/gruntwork-io/terratest/modules/files"
 	"github.com/mattn/go-zglob"
 )
@@ -178,11 +178,11 @@ func FindTerraformModulePathsInRootE(opts *ValidationOptions) ([]string, error) 
 	terraformDirs := go_commons_collections.Keys(terraformDirSet)
 
 	if len(opts.IncludeDirs) > 0 {
-		terraformDirs = collections.ListIntersection(terraformDirs, opts.IncludeDirs)
+		terraformDirs = collections.Intersection(terraformDirs, opts.IncludeDirs)
 	}
 
 	if len(opts.ExcludeDirs) > 0 {
-		terraformDirs = collections.ListSubtract(terraformDirs, opts.ExcludeDirs)
+		terraformDirs = collections.Subtract(terraformDirs, opts.ExcludeDirs)
 	}
 
 	// Filter out any filepaths that were explicitly included in opts.ExcludeDirs
