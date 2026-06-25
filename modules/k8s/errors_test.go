@@ -113,6 +113,47 @@ func TestErrorPodNotAvailable(t *testing.T) {
 			},
 			expectedErr: "Pod foo is not available, reason: , message: . init container setup waiting: ImagePullBackOff",
 		},
+		{
+			title: "ContainerTerminated",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Status: v1.PodStatus{
+					ContainerStatuses: []v1.ContainerStatus{
+						{
+							Name:  "web",
+							Ready: false,
+							State: v1.ContainerState{Terminated: &v1.ContainerStateTerminated{Reason: "Error", Message: "exit code 1"}},
+						},
+					},
+				},
+			},
+			expectedErr: "Pod foo is not available, reason: , message: . container web terminated: Error exit code 1",
+		},
+		{
+			title: "ContainerRunningButNotReady",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Status: v1.PodStatus{
+					ContainerStatuses: []v1.ContainerStatus{
+						{Name: "web", Ready: false, State: v1.ContainerState{Running: &v1.ContainerStateRunning{}}},
+					},
+				},
+			},
+			expectedErr: "Pod foo is not available, reason: , message: . container web running but not ready",
+		},
+		{
+			title: "MultipleUnreadyContainers",
+			pod: &v1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Name: "foo"},
+				Status: v1.PodStatus{
+					ContainerStatuses: []v1.ContainerStatus{
+						{Name: "web", Ready: false, State: v1.ContainerState{Waiting: &v1.ContainerStateWaiting{Reason: "CrashLoopBackOff"}}},
+						{Name: "sidecar", Ready: false, State: v1.ContainerState{Waiting: &v1.ContainerStateWaiting{Reason: "ImagePullBackOff"}}},
+					},
+				},
+			},
+			expectedErr: "Pod foo is not available, reason: , message: . container web waiting: CrashLoopBackOff; container sidecar waiting: ImagePullBackOff",
+		},
 	}
 
 	for _, tc := range testCases {

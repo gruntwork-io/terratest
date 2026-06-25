@@ -174,11 +174,12 @@ func unreadyContainerDetails(kind string, statuses []corev1.ContainerStatus) []s
 
 		switch {
 		case status.State.Waiting != nil:
-			detail := fmt.Sprintf("%s %s waiting: %s", kind, status.Name, status.State.Waiting.Reason)
-			details = append(details, strings.TrimSpace(detail+" "+status.State.Waiting.Message))
+			details = append(details, strings.TrimSpace(fmt.Sprintf("%s %s waiting: %s %s", kind, status.Name, status.State.Waiting.Reason, status.State.Waiting.Message)))
 		case status.State.Terminated != nil:
-			detail := fmt.Sprintf("%s %s terminated: %s", kind, status.Name, status.State.Terminated.Reason)
-			details = append(details, strings.TrimSpace(detail+" "+status.State.Terminated.Message))
+			details = append(details, strings.TrimSpace(fmt.Sprintf("%s %s terminated: %s %s", kind, status.Name, status.State.Terminated.Reason, status.State.Terminated.Message)))
+		case status.State.Running != nil:
+			// Running but not ready is the most common cause of a wait timeout (a failing readiness probe).
+			details = append(details, fmt.Sprintf("%s %s running but not ready", kind, status.Name))
 		}
 	}
 
