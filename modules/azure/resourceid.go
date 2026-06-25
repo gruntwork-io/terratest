@@ -1,6 +1,8 @@
 package azure
 
-import "github.com/gruntwork-io/terratest/modules/collections"
+import (
+	"strings"
+)
 
 // GetNameFromResourceID gets the Name from an Azure Resource ID.
 func GetNameFromResourceID(resourceID string) string {
@@ -15,10 +17,10 @@ func GetNameFromResourceID(resourceID string) string {
 // GetNameFromResourceIDE gets the Name from an Azure Resource ID.
 // This function would fail the test if there is an error.
 func GetNameFromResourceIDE(resourceID string) (string, error) {
-	id, err := collections.GetSliceLastValueE(resourceID, "/")
-	if err != nil {
-		return "", err
+	i := strings.LastIndex(resourceID, "/")
+	if i == -1 || i == len(resourceID)-1 {
+		return "", NewResourceIDNameNotFoundError(resourceID)
 	}
 
-	return id, nil
+	return resourceID[i+1:], nil
 }

@@ -5,7 +5,7 @@ excerpt: Examples are the best way to start testing Terraform, Docker, Packer, K
 tags: ["example"]
 redirect_to:
   - /examples/
-order: 103
+order: 102
 nav_title: Documentation
 nav_title_link: /docs/
 ---
