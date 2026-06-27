@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	terraaws "github.com/gruntwork-io/terratest/modules/aws"
+	terraaws "github.com/gruntwork-io/terratest/modules/aws/v2"
 )
 
 func TestGetDefaultVpc(t *testing.T) {

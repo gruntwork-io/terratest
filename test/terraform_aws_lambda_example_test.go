@@ -5,11 +5,11 @@ package test_test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/aws/v2"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/core/v2/shell"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/teststructure"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
+	"github.com/gruntwork-io/terratest/modules/teststructure/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

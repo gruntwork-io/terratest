@@ -3,4 +3,19 @@ go 1.26.0
 use (
 	.
 	./modules/core
+	./modules/ssh
+	./modules/httphelper
+	./modules/dnshelper
+	./modules/docker
+	./modules/packer
+	./modules/database
+	./modules/opa
+	./modules/aws
+	./modules/azure
+	./modules/gcp
+	./modules/k8s
+	./modules/helm
+	./modules/terraform
+	./modules/terragrunt
+	./modules/teststructure
 )

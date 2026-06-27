@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/teststructure"
+	"github.com/gruntwork-io/terratest/modules/teststructure/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

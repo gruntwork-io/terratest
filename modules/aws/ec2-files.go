@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
-	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/ssh/v2"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/require"

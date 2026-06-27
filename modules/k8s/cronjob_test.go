@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/k8s/v2"
 
 	batchv1 "k8s.io/api/batch/v1"
 

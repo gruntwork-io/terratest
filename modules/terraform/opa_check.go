@@ -11,7 +11,7 @@ import (
 	"github.com/tmccombs/hcl2json/convert"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
-	"github.com/gruntwork-io/terratest/modules/opa"
+	"github.com/gruntwork-io/terratest/modules/opa/v2"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 

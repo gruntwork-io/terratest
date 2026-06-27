@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/k8s/v2"
 
 	"github.com/stretchr/testify/require"
 	authv1 "k8s.io/api/authorization/v1"

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/terragrunt"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
+	"github.com/gruntwork-io/terratest/modules/terragrunt/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

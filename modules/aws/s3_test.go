@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	terraaws "github.com/gruntwork-io/terratest/modules/aws"
+	terraaws "github.com/gruntwork-io/terratest/modules/aws/v2"
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/stretchr/testify/assert"

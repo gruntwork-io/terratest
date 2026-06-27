@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/stretchr/testify/require"
 
-	aws "github.com/gruntwork-io/terratest/modules/aws"
+	aws "github.com/gruntwork-io/terratest/modules/aws/v2"
 )
 
 // mockDynamoDBClient is a test double for aws.DynamoDBAPI.
