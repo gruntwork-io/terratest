@@ -12,15 +12,12 @@ set -uo pipefail
 # Tier assignment. Lower number = lower layer.
 declare -A TIER=(
   [core]=0
-  [shell]=1
   [ssh]=1
-  [http-helper]=1
-  [dns-helper]=1
+  [httphelper]=1
+  [dnshelper]=1
   [docker]=2
   [packer]=2
   [database]=2
-  [slack]=2
-  [oci]=2
   [opa]=2
   [aws]=3
   [azure]=3
@@ -29,8 +26,7 @@ declare -A TIER=(
   [helm]=3
   [terraform]=4
   [terragrunt]=4
-  [test-structure]=4
-  [version-checker]=4
+  [teststructure]=4
 )
 
 fail=0

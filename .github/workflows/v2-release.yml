@@ -66,11 +66,11 @@ jobs:
           # Same order as docs/v2-release-runbook.md.
           ORDER=(
             modules/core
-            modules/shell modules/ssh modules/http-helper modules/dns-helper modules/version-checker
-            modules/docker modules/packer modules/database modules/slack modules/oci modules/opa
+            modules/ssh modules/httphelper modules/dnshelper
+            modules/docker modules/packer modules/database modules/opa
             modules/aws modules/azure modules/gcp modules/k8s modules/helm
-            modules/terraform modules/terragrunt modules/test-structure
-            cmd/terratest_log_parser cmd/pick-instance-type
+            modules/terraform modules/terragrunt modules/teststructure
+           
           )
 
           for path in "${ORDER[@]}"; do
@@ -92,7 +92,7 @@ jobs:
           # Allow the proxy a moment to populate after push.
           sleep 30
           fail=0
-          for path in modules/core modules/shell modules/ssh modules/http-helper modules/dns-helper modules/version-checker modules/docker modules/packer modules/database modules/slack modules/oci modules/opa modules/aws modules/azure modules/gcp modules/k8s modules/helm modules/terraform modules/terragrunt modules/test-structure cmd/terratest_log_parser cmd/pick-instance-type; do
+          for path in modules/core modules/ssh modules/httphelper modules/dnshelper modules/docker modules/packer modules/database modules/opa modules/aws modules/azure modules/gcp modules/k8s modules/helm modules/terraform modules/terragrunt modules/teststructure; do
             url="https://proxy.golang.org/github.com/gruntwork-io/terratest/${path}/v2/@v/${VERSION}.info"
             code=$(curl -s -o /dev/null -w '%{http_code}' "$url")
             if [ "$code" = "200" ]; then
