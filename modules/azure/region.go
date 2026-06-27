@@ -3,7 +3,7 @@ package azure
 import (
 	"context"
 
-	"github.com/gruntwork-io/terratest/internal/collections"
+	"github.com/gruntwork-io/terratest/modules/core/v2/collections"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
