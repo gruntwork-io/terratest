@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/database"
-	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/core/v2/retry"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 

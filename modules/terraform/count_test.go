@@ -3,9 +3,9 @@ package terraform_test
 import (
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	ttesting "github.com/gruntwork-io/terratest/modules/testing"
+	ttesting "github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"sync/atomic"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 
 // RunDummyServerContext runs a dummy HTTP server on a unique port that will return the given text. Returns the Listener

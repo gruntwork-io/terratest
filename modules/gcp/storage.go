@@ -8,8 +8,8 @@ import (
 	"io"
 
 	"cloud.google.com/go/storage"
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/iterator"
 )

@@ -1,0 +1,108 @@
+name: v2 Release (lockstep tag push)
+
+# Manual-trigger workflow that pushes the full v2 tag set from a release-prep commit.
+# Procedure documented in docs/v2-release-runbook.md.
+#
+# Use this AFTER:
+#   - scripts/release-prep.sh ran on the release-prep branch
+#   - The release-prep commit was reviewed and approved
+#   - check-no-replaces.sh passes on that commit
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to tag (e.g. v2.0.0-beta.1). Applied to every submodule.'
+        required: true
+        type: string
+      commit_sha:
+        description: 'SHA of the release-prep commit to tag.'
+        required: true
+        type: string
+      dry_run:
+        description: 'If true, print the tag commands without pushing.'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Pre-flight checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha }}
+      - run: bash scripts/check-no-replaces.sh
+      - run: bash scripts/check-acyclic-deps.sh
+      - run: bash scripts/check-single-source.sh
+      - run: bash scripts/check-siv-placement.sh
+
+  tag-and-push:
+    name: Push lockstep tags
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Tag in dependency order
+        env:
+          VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -e
+
+          # Same order as docs/v2-release-runbook.md.
+          ORDER=(
+            modules/core
+            modules/shell modules/ssh modules/http-helper modules/dns-helper modules/version-checker
+            modules/docker modules/packer modules/database modules/slack modules/oci modules/opa
+            modules/aws modules/azure modules/gcp modules/k8s modules/helm
+            modules/terraform modules/terragrunt modules/test-structure
+            cmd/terratest_log_parser cmd/pick-instance-type
+          )
+
+          for path in "${ORDER[@]}"; do
+            tag="${path}/${VERSION}"
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "DRY-RUN would tag: $tag"
+            else
+              git tag -a "$tag" -m "v2 lockstep release $VERSION"
+              git push origin "$tag"
+              echo "pushed $tag"
+            fi
+          done
+
+      - name: Verify proxy serves each tag
+        if: ${{ inputs.dry_run == false }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          # Allow the proxy a moment to populate after push.
+          sleep 30
+          fail=0
+          for path in modules/core modules/shell modules/ssh modules/http-helper modules/dns-helper modules/version-checker modules/docker modules/packer modules/database modules/slack modules/oci modules/opa modules/aws modules/azure modules/gcp modules/k8s modules/helm modules/terraform modules/terragrunt modules/test-structure cmd/terratest_log_parser cmd/pick-instance-type; do
+            url="https://proxy.golang.org/github.com/gruntwork-io/terratest/${path}/v2/@v/${VERSION}.info"
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$url")
+            if [ "$code" = "200" ]; then
+              echo "  $path: 200"
+            else
+              echo "::error::$path: $code from $url"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Proxy verification failed. Some tags may need a few minutes; retry the verify step manually if so."
+            exit 1
+          fi

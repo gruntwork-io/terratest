@@ -1,0 +1,61 @@
+name: v2 Modularization Checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  acyclic-deps:
+    name: Acyclic dependency graph
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-acyclic-deps.sh
+
+  single-source:
+    name: Single source of truth per package path
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-single-source.sh
+
+  siv-placement:
+    name: /v2 SIV placement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-siv-placement.sh
+
+  consumer-simulation:
+    name: External consumer simulation (GOWORK=off)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up mise
+        uses: jdx/mise-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & test test-external
+        env:
+          GOWORK: 'off'
+        working-directory: test-external
+        run: |
+          go mod tidy
+          go build ./...
+          go test -count=1 -timeout=120s ./...
+
+  release-prep-guard:
+    name: No local terratest replaces (release commits only)
+    runs-on: ubuntu-latest
+    if: |
+      startsWith(github.ref, 'refs/tags/modules/') ||
+      startsWith(github.ref, 'refs/tags/cmd/') ||
+      contains(github.event.head_commit.message, '[release-prep]')
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/check-no-replaces.sh

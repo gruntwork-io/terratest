@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/httphelper"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/docker"
 	"github.com/gruntwork-io/terratest/modules/httphelper"
-	"github.com/gruntwork-io/terratest/modules/shell"
+	"github.com/gruntwork-io/terratest/modules/core/v2/shell"
 	"github.com/stretchr/testify/require"
 )
 
