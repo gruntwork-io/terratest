@@ -50,7 +50,7 @@ aws.FetchFilesFromInstanceContext(t, ctx, awsRegion, sshUserName, keyPair, appSe
 Finally, to put all of this together, in your go test you could do something like:
 
 ```go
-defer test_structure.RunTestStage(t, "grab_logs", func() {
+defer teststructure.RunTestStage(t, "grab_logs", func() {
 	if t.Failed() {
 		takeElkMultiClusterLogSnapshot(t, examplesDir, awsRegion, "ubuntu")
 	}

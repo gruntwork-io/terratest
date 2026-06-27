@@ -3,7 +3,7 @@ package terraform_test
 import (
 	"testing"
 
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,7 @@ func TestPlannedValuesMapWithBasicJson(t *testing.T) {
 	t.Parallel()
 
 	// Retrieve test data from the terraform-json project.
-	_, jsonData := http_helper.HTTPGetContext(t, t.Context(), basicJSONURL, nil)
+	_, jsonData := httphelper.HTTPGetContext(t, t.Context(), basicJSONURL, nil)
 
 	plan, err := terraform.ParsePlanJSON(jsonData)
 	require.NoError(t, err)
@@ -50,7 +50,7 @@ func TestPlannedValuesMapWithDeepModuleJson(t *testing.T) {
 	t.Parallel()
 
 	// Retrieve test data from the terraform-json project.
-	_, jsonData := http_helper.HTTPGetContext(t, t.Context(), deepModuleJSONURL, nil)
+	_, jsonData := httphelper.HTTPGetContext(t, t.Context(), deepModuleJSONURL, nil)
 
 	plan, err := terraform.ParsePlanJSON(jsonData)
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestResourceChangesJson(t *testing.T) {
 	t.Parallel()
 
 	// Retrieve test data from the terraform-json project.
-	_, jsonData := http_helper.HTTPGetContext(t, t.Context(), changesJSONURL, nil)
+	_, jsonData := httphelper.HTTPGetContext(t, t.Context(), changesJSONURL, nil)
 
 	plan, err := terraform.ParsePlanJSON(jsonData)
 	require.NoError(t, err)

@@ -1,4 +1,4 @@
-package http_helper_test //nolint:staticcheck // package name determined by directory
+package httphelper_test
 
 import (
 	"crypto/tls"
@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	httphelper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/assert"
 )
