@@ -74,7 +74,7 @@ jobs:
           )
 
           for path in "${ORDER[@]}"; do
-            tag="${path}/${VERSION}"
+            tag="${path}/v2/${VERSION}"
             if [ "$DRY_RUN" = "true" ]; then
               echo "DRY-RUN would tag: $tag"
             else

@@ -13,16 +13,11 @@ set -euo pipefail
 # Submodules whose top-level package is the module root (with /v2 SIV).
 # Format: short-name|sub-packages-list (space-separated). For each, check that
 # imports of any sub-package put /v2 at the module-root, not at the leaf.
-SUBMODULES=(
-  core
-  shell ssh http-helper dns-helper version-checker
-  docker packer database slack oci opa
-  aws azure gcp k8s helm
-  terraform terragrunt test-structure
-)
-
 fail=0
-for name in "${SUBMODULES[@]}"; do
+# Derive the module set from disk so this gate can never silently go vacuous
+# when modules are renamed/added/removed.
+for dir in modules/*/; do
+  name=$(basename "$dir")
   # Matches: "github.com/gruntwork-io/terratest/modules/<name>/<sub-pkg>/v2"
   # where <sub-pkg> is any path component(s) not equal to v2.
   bugged=$(grep -rEn "\"github\.com/gruntwork-io/terratest/modules/${name}/[a-zA-Z0-9_./-]+/v2\"" \

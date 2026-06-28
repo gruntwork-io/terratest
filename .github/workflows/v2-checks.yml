@@ -54,7 +54,6 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       startsWith(github.ref, 'refs/tags/modules/') ||
-      startsWith(github.ref, 'refs/tags/cmd/') ||
       contains(github.event.head_commit.message, '[release-prep]')
     steps:
       - uses: actions/checkout@v4

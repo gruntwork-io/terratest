@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const copyFolderContentsFixtureRoot = "../../test/fixtures/copy-folder-contents"
+const copyFolderContentsFixtureRoot = "../../../test/fixtures/copy-folder-contents"
 
 func TestFileExists(t *testing.T) {
 	t.Parallel()
