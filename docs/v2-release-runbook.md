@@ -32,7 +32,18 @@ builds a consumer, and discards it (see `scripts/`).
    - Add a temporary `replace` for EVERY sibling it transitively needs, not just
      its direct imports. Tidy follows transitive edges, so a partial replace set
      fails with `unknown revision` on a deeper sibling.
+   - Seed the module with the root `go.mod`'s exact dependency versions before
+     tidying (copy its `require` lines in). Otherwise tidy floats deps to the
+     latest compatible release and you get silent version drift, e.g. the Azure
+     SDK advancing to a release that drops a symbol the code uses
+     (`undefined: armmonitor.DiagnosticSettingsClient`). The code is tested
+     against the root's pinned versions; the submodules must inherit them.
    - `GOWORK=off go mod tidy` to populate external `require`s and `go.sum`.
+
+`scripts/check-release-mode.sh` performs this exact pin (transitive replaces +
+root-version seeding + an all-module external consumer build under `GOWORK=off`)
+in a throwaway and reverts it, and runs in CI on every PR so the release-mode
+build is validated continuously without committing the pin or needing tags.
 3. Set every internal `require` to the exact version being tagged, then DROP all
    internal `replace` directives. Do not run `go work sync` against the unpinned
    tree.

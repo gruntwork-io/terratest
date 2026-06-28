@@ -40,14 +40,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & test test-external
-        env:
-          GOWORK: 'off'
-        working-directory: test-external
-        run: |
-          go mod tidy
-          go build ./...
-          go test -count=1 -timeout=120s ./...
+      - name: Release-mode build (all 16 modules pin + external consumer, GOWORK=off)
+        run: bash scripts/check-release-mode.sh
 
   release-prep-guard:
     name: No local terratest replaces (release commits only)
