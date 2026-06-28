@@ -32,7 +32,7 @@ for dir in modules/*/; do
 done
 
 if [ "$fail" -ne 0 ]; then
-  echo "::error::Run scripts/v2-import-rewrite.sh to auto-fix."
+  echo "::error::Move the /v2 SIV to the module root in the import path."
   exit 1
 fi
 
