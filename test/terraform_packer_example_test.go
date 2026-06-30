@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
-	httpHelper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/packer"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	testStructure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 )
 
 // This is a complicated, end-to-end integration test. It builds the AMI from examples/packer-docker-example,
@@ -26,39 +26,39 @@ func TestTerraformPackerExample(t *testing.T) {
 	workingDir := "../examples/terraform-packer-example"
 
 	// At the end of the test, delete the AMI
-	defer testStructure.RunTestStage(t, "cleanup_ami", func() {
-		awsRegion := testStructure.LoadString(t, workingDir, "awsRegion")
+	defer teststructure.RunTestStage(t, "cleanup_ami", func() {
+		awsRegion := teststructure.LoadString(t, workingDir, "awsRegion")
 		deleteAMI(t, awsRegion, workingDir)
 	})
 
 	// At the end of the test, undeploy the web app using Terraform
-	defer testStructure.RunTestStage(t, "cleanup_terraform", func() {
+	defer teststructure.RunTestStage(t, "cleanup_terraform", func() {
 		undeployUsingTerraform(t, workingDir)
 	})
 
 	// At the end of the test, fetch the most recent syslog entries from each Instance. This can be useful for
 	// debugging issues without having to manually SSH to the server.
-	defer testStructure.RunTestStage(t, "logs", func() {
-		awsRegion := testStructure.LoadString(t, workingDir, "awsRegion")
+	defer teststructure.RunTestStage(t, "logs", func() {
+		awsRegion := teststructure.LoadString(t, workingDir, "awsRegion")
 		fetchSyslogForInstance(t, awsRegion, workingDir)
 	})
 
 	// Build the AMI for the web app
-	testStructure.RunTestStage(t, "build_ami", func() {
+	teststructure.RunTestStage(t, "build_ami", func() {
 		// Pick a random AWS region to test in. This helps ensure your code works in all regions.
 		awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
-		testStructure.SaveString(t, workingDir, "awsRegion", awsRegion)
+		teststructure.SaveString(t, workingDir, "awsRegion", awsRegion)
 		buildAMI(t, awsRegion, workingDir)
 	})
 
 	// Deploy the web app using Terraform
-	testStructure.RunTestStage(t, "deploy_terraform", func() {
-		awsRegion := testStructure.LoadString(t, workingDir, "awsRegion")
+	teststructure.RunTestStage(t, "deploy_terraform", func() {
+		awsRegion := teststructure.LoadString(t, workingDir, "awsRegion")
 		deployUsingTerraform(t, awsRegion, workingDir)
 	})
 
 	// Validate that the web app deployed and is responding to HTTP requests
-	testStructure.RunTestStage(t, "validate", func() {
+	teststructure.RunTestStage(t, "validate", func() {
 		validateInstanceRunningWebServer(t, workingDir)
 	})
 }
@@ -90,13 +90,13 @@ func buildAMI(t *testing.T, awsRegion string, workingDir string) {
 	}
 
 	// Save the Packer Options so future test stages can use them
-	testStructure.SavePackerOptions(t, workingDir, packerOptions)
+	teststructure.SavePackerOptions(t, workingDir, packerOptions)
 
 	// Build the AMI
 	amiID := packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
 	// Save the AMI ID so future test stages can use them
-	testStructure.SaveArtifactID(t, workingDir, amiID)
+	teststructure.SaveArtifactID(t, workingDir, amiID)
 }
 
 // Delete the AMI
@@ -104,7 +104,7 @@ func deleteAMI(t *testing.T, awsRegion string, workingDir string) {
 	t.Helper()
 
 	// Load the AMI ID and Packer Options saved by the earlier build_ami stage
-	amiID := testStructure.LoadArtifactID(t, workingDir)
+	amiID := teststructure.LoadArtifactID(t, workingDir)
 
 	aws.DeleteAmiContext(t, t.Context(), awsRegion, amiID)
 }
@@ -128,7 +128,7 @@ func deployUsingTerraform(t *testing.T, awsRegion string, workingDir string) {
 	instanceType := aws.GetRecommendedInstanceTypeContext(t, t.Context(), awsRegion, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
 
 	// Load the AMI ID saved by the earlier build_ami stage
-	amiID := testStructure.LoadArtifactID(t, workingDir)
+	amiID := teststructure.LoadArtifactID(t, workingDir)
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 	// terraform testing.
@@ -147,7 +147,7 @@ func deployUsingTerraform(t *testing.T, awsRegion string, workingDir string) {
 	})
 
 	// Save the Terraform Options struct, instance name, and instance text so future test stages can use it
-	testStructure.SaveTerraformOptions(t, workingDir, terraformOptions)
+	teststructure.SaveTerraformOptions(t, workingDir, terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
@@ -158,7 +158,7 @@ func undeployUsingTerraform(t *testing.T, workingDir string) {
 	t.Helper()
 
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
-	terraformOptions := testStructure.LoadTerraformOptions(t, workingDir)
+	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 
 	terraform.DestroyContext(t, t.Context(), terraformOptions)
 }
@@ -169,7 +169,7 @@ func fetchSyslogForInstance(t *testing.T, awsRegion string, workingDir string) {
 	t.Helper()
 
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
-	terraformOptions := testStructure.LoadTerraformOptions(t, workingDir)
+	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 
 	instanceID := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "instance_id")
 	logs := aws.GetSyslogForInstanceContext(t, t.Context(), instanceID, awsRegion)
@@ -182,7 +182,7 @@ func validateInstanceRunningWebServer(t *testing.T, workingDir string) {
 	t.Helper()
 
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
-	terraformOptions := testStructure.LoadTerraformOptions(t, workingDir)
+	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 
 	// Run `terraform output` to get the value of an output variable
 	instanceURL := terraform.OutputContext(t, t.Context(), terraformOptions, "instance_url")
@@ -198,5 +198,5 @@ func validateInstanceRunningWebServer(t *testing.T, workingDir string) {
 	timeBetweenRetries := 5 * time.Second
 
 	// Verify that we get back a 200 OK with the expected instanceText
-	httpHelper.HTTPGetWithRetryContext(t, t.Context(), instanceURL, &tlsConfig, 200, instanceText, maxRetries, timeBetweenRetries)
+	httphelper.HTTPGetWithRetryContext(t, t.Context(), instanceURL, &tlsConfig, 200, instanceText, maxRetries, timeBetweenRetries)
 }

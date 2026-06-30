@@ -9,7 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +20,7 @@ func TestTerraformAwsLambdaExample(t *testing.T) {
 
 	// Make a copy of the terraform module to a temporary directory. This allows running multiple tests in parallel
 	// against the same terraform module.
-	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-lambda-example")
+	exampleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-lambda-example")
 
 	err := buildLambdaBinary(t, exampleFolder)
 	require.NoError(t, err)
@@ -100,7 +100,7 @@ func TestTerraformAwsLambdaWithParamsExample(t *testing.T) {
 
 	// Make a copy of the terraform module to a temporary directory. This allows running multiple tests in parallel
 	// against the same terraform module.
-	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-lambda-example")
+	exampleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-lambda-example")
 
 	err := buildLambdaBinary(t, exampleFolder)
 	require.NoError(t, err)

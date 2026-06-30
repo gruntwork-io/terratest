@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/docker"
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/packer"
 	"github.com/gruntwork-io/terratest/modules/random"
 )
@@ -65,5 +65,5 @@ func TestPackerDockerExampleLocal(t *testing.T) {
 	tlsConfig := tls.Config{}
 
 	// website::tag::5::Verify that we get back a 200 OK with the expected text
-	http_helper.HTTPGetWithRetryContext(t, t.Context(), url, &tlsConfig, 200, expectedServerText, maxRetries, timeBetweenRetries)
+	httphelper.HTTPGetWithRetryContext(t, t.Context(), url, &tlsConfig, 200, expectedServerText, maxRetries, timeBetweenRetries)
 }

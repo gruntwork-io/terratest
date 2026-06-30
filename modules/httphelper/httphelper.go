@@ -1,5 +1,5 @@
-// Package http_helper contains helpers to interact with deployed resources through HTTP.
-package http_helper //nolint:staticcheck // package name determined by directory
+// Package httphelper contains helpers to interact with deployed resources through HTTP.
+package httphelper
 
 import (
 	"bytes"

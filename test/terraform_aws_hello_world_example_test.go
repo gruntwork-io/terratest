@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 )
@@ -32,5 +32,5 @@ func TestTerraformAwsHelloWorldExample(t *testing.T) {
 
 	// website::tag::5:: Make an HTTP request to the instance and make sure we get back a 200 OK with the body "Hello, World!"
 	url := "http://" + publicIP + ":8080"
-	http_helper.HTTPGetWithRetryContext(t, t.Context(), url, nil, 200, "Hello, World!", 30, 5*time.Second)
+	httphelper.HTTPGetWithRetryContext(t, t.Context(), url, nil, 200, "Hello, World!", 30, 5*time.Second)
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 )
 
 const expectedTextSSH = "Hello, World"
@@ -25,24 +25,24 @@ const expectedTextSSH = "Hello, World"
 func TestTerraformSshExample(t *testing.T) {
 	t.Parallel()
 
-	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-ssh-example")
+	exampleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-ssh-example")
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
+	defer teststructure.RunTestStage(t, "teardown", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
 
-		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
+		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
 		aws.DeleteEC2KeyPairContext(t, t.Context(), keyPair)
 	})
 
 	// Deploy the example
-	test_structure.RunTestStage(t, "setup", func() {
+	teststructure.RunTestStage(t, "setup", func() {
 		terraformOptions, keyPair := configureTerraformOptions(t, exampleFolder)
 
 		// Save the options and key pair so later test stages can use them
-		test_structure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
-		test_structure.SaveEc2KeyPair(t, exampleFolder, keyPair)
+		teststructure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
+		teststructure.SaveEc2KeyPair(t, exampleFolder, keyPair)
 
 		// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
@@ -50,9 +50,9 @@ func TestTerraformSshExample(t *testing.T) {
 
 	// Make sure we can SSH to the public Instance directly from the public Internet and the private Instance by using
 	// the public Instance as a jump host
-	test_structure.RunTestStage(t, "validate", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
-		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
+	teststructure.RunTestStage(t, "validate", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
+		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
 
 		testSSHToPublicHost(t, terraformOptions, keyPair)
 		testSSHToPrivateHost(t, terraformOptions, keyPair)
