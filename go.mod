@@ -21,7 +21,6 @@ require (
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
 	github.com/miekg/dns v1.1.62
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/oracle/oci-go-sdk v7.1.0+incompatible
 	github.com/pquerna/otp v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
@@ -100,7 +99,6 @@ require (
 	github.com/jackc/pgx/v5 v5.9.0
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/go-mssqldb v1.9.8
-	github.com/slack-go/slack v0.23.1
 	golang.org/x/sync v0.20.0
 	google.golang.org/grpc v1.80.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -159,6 +157,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
+	github.com/go-test/deep v1.1.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
