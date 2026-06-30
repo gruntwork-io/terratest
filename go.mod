@@ -25,7 +25,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
 	github.com/tmccombs/hcl2json v0.6.4
-	github.com/urfave/cli v1.22.16
+	github.com/urfave/cli v1.22.16 // indirect
 	github.com/zclconf/go-cty v1.15.0
 	golang.org/x/crypto v0.49.0
 	golang.org/x/net v0.52.0 // indirect
