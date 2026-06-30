@@ -66,7 +66,7 @@ Here are the guidelines for contributions with external tools:
 These are helper functions for creating, destroying, and validating infrastructure directly via API calls or SDKs.
 Examples:
 
-* `http_helper.HTTPGetWithRetryContext`: make an HTTP request, retrying until you get a certain expected response.
+* `httphelper.HTTPGetWithRetryContext`: make an HTTP request, retrying until you get a certain expected response.
 * `ssh.CheckSSHCommandContext`: SSH to a server and execute a command.
 * `aws.CreateS3BucketContext`: create an S3 bucket.
 * `aws.GetPrivateIpsOfEc2InstancesContext`: use the AWS APIs to fetch IPs of some EC2 instances.

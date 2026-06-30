@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/docker"
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/stretchr/testify/require"
 )
@@ -40,7 +40,7 @@ func TestStop(t *testing.T) {
 	docker.RunContext(t, ctx, "nginx:1.17-alpine", runOpts)
 
 	// verify nginx is running
-	http_helper.HTTPGetWithRetryWithCustomValidationContext(t, ctx, testURL, &tls.Config{}, 60, 2*time.Second, verifyNginxIsUp)
+	httphelper.HTTPGetWithRetryWithCustomValidationContext(t, ctx, testURL, &tls.Config{}, 60, 2*time.Second, verifyNginxIsUp)
 
 	// try to stop it now
 	out := docker.StopContext(t, ctx, []string{name}, &docker.StopOptions{})

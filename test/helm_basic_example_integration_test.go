@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 )
@@ -94,7 +94,7 @@ func TestHelmBasicExampleDeployment(t *testing.T) {
 
 	// Test the endpoint for up to 5 minutes. This will only fail if we timeout waiting for the service to return a 200
 	// response.
-	http_helper.HTTPGetWithRetryWithCustomValidationContext(
+	httphelper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
 		t.Context(),
 		"http://"+endpoint,

@@ -1,10 +1,10 @@
-package dns_helper_test //nolint:staticcheck // package name determined by directory
+package dnshelper_test
 
 import (
 	"testing"
 	"time"
 
-	dnshelper "github.com/gruntwork-io/terratest/modules/dns-helper"
+	"github.com/gruntwork-io/terratest/modules/dnshelper"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/stretchr/testify/require"
 )

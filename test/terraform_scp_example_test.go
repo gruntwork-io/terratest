@@ -13,56 +13,56 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTerraformScpExample(t *testing.T) {
 	t.Parallel()
 
-	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-asg-scp-example")
+	exampleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-asg-scp-example")
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
-	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
+	defer teststructure.RunTestStage(t, "teardown", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
 
-		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
+		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
 		aws.DeleteEC2KeyPairContext(t, t.Context(), keyPair)
 	})
 
 	// Deploy the example
-	test_structure.RunTestStage(t, "setup", func() {
+	teststructure.RunTestStage(t, "setup", func() {
 		terraformOptions, keyPair := createTerraformOptions(t, exampleFolder)
 
 		// Save the options and key pair so later test stages can use them
-		test_structure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
-		test_structure.SaveEc2KeyPair(t, exampleFolder, keyPair)
+		teststructure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
+		teststructure.SaveEc2KeyPair(t, exampleFolder, keyPair)
 
 		// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 	})
 
 	// Make sure we can SCP a file from an EC2 instance to our local box
-	test_structure.RunTestStage(t, "validate_file", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
-		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
+	teststructure.RunTestStage(t, "validate_file", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
+		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
 
 		testScpFromHost(t, terraformOptions, keyPair)
 	})
 
 	// Make sure we can SCP all files in a given remote dir from an EC2 instance to our local box
-	test_structure.RunTestStage(t, "validate_dir", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
-		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
+	teststructure.RunTestStage(t, "validate_dir", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
+		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
 
 		testScpDirFromHost(t, terraformOptions, keyPair)
 	})
 
 	// Make sure we can SCP all files in a given remote dir from an EC2 instance to our local box
-	test_structure.RunTestStage(t, "validate_asg", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
-		keyPair := test_structure.LoadEc2KeyPair(t, exampleFolder)
+	teststructure.RunTestStage(t, "validate_asg", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
+		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
 
 		testScpFromAsg(t, terraformOptions, keyPair, exampleFolder)
 	})

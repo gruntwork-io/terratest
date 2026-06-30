@@ -3,8 +3,8 @@ layout: collection-browser-doc
 title: Iterating locally using test stages
 category: testing-best-practices
 excerpt: >-
-  Learn more about Terratest's `test_structure`.
-tags: ["testing-best-practices", "test_structure"]
+  Learn more about Terratest's `teststructure`.
+tags: ["testing-best-practices", "teststructure"]
 order: 210
 nav_title: Documentation
 nav_title_link: /docs/
@@ -21,7 +21,7 @@ Often, while testing locally, you'll want to re-run some subset of these stages 
 might want to repeatedly run the validation step while you work out the kinks. Having to run _all_ of these stages
 each time you change a single line of code can be very slow.
 
-This is where Terratest's `test_structure` package comes in handy: it allows you to explicitly break up your tests into
+This is where Terratest's `teststructure` package comes in handy: it allows you to explicitly break up your tests into
 stages and to be able to disable any one of those stages by setting an environment variable. Check out the
 [terraform_packer_example_test.go](https://github.com/gruntwork-io/terratest/blob/main/test/terraform_packer_example_test.go)
 for working sample code.

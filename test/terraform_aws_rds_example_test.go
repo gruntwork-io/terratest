@@ -9,7 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -81,7 +81,7 @@ func TestTerraformAwsRdsExample(t *testing.T) {
 			awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 			engineVersion := aws.GetValidEngineVersionContext(t, t.Context(), awsRegion, tt.engineName, tt.majorEngineVersion)
 			instanceType := aws.GetRecommendedRdsInstanceTypeContext(t, t.Context(), awsRegion, tt.engineName, engineVersion, []string{"db.t2.micro", "db.t3.micro", "db.t3.small"})
-			moduleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-rds-example")
+			moduleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-rds-example")
 
 			// Construct the terraform options with default retryable errors to handle the most common retryable errors in
 			// terraform testing.

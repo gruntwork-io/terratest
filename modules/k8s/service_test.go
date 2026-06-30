@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/random"
 )
 
@@ -96,7 +96,7 @@ func TestGetServiceEndpointEReturnsAccessibleEndpointForNodePort(t *testing.T) {
 	tlsConfig := tls.Config{}
 
 	// Test up to 5 minutes
-	http_helper.HTTPGetWithRetryWithCustomValidationContext(
+	httphelper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
 		t.Context(),
 		"http://"+endpoint,
