@@ -74,6 +74,11 @@ jobs:
         run: |
           set -e
 
+          if [[ ! "$VERSION" =~ ^v2\.[0-9] ]]; then
+            echo "::error::version '$VERSION' must look like v2.<minor>.<patch>[-suffix] (e.g. v2.0.0-beta.1)"
+            exit 1
+          fi
+
           # Same order as docs/v2-release-runbook.md.
           ORDER=(
             modules/core
@@ -81,7 +86,6 @@ jobs:
             modules/docker modules/packer modules/database modules/opa
             modules/aws modules/azure modules/gcp modules/k8s modules/helm
             modules/terraform modules/terragrunt modules/teststructure
-           
           )
 
           for path in "${ORDER[@]}"; do

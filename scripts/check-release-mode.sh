@@ -22,7 +22,11 @@ if ! ls modules/*/go.mod >/dev/null 2>&1; then
 fi
 
 cleanup() {
-  git checkout -- modules/ go.work.sum >/dev/null 2>&1 || true
+  # Revert each path independently. `git checkout -- a b` aborts entirely if any
+  # pathspec matches no tracked file, so a missing go.work.sum would otherwise
+  # leave the rewritten modules/*/go.mod files dirty.
+  git checkout -- modules/ >/dev/null 2>&1 || true
+  git checkout -- go.work.sum >/dev/null 2>&1 || true
   git status --porcelain 2>/dev/null | awk '/^\?\?.*modules\/.*\/go\.sum$/{print $2}' | xargs -r rm -f
   [ -n "${TMP:-}" ] && rm -rf "$TMP"
 }

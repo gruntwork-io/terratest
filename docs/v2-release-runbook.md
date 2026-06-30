@@ -47,8 +47,9 @@ build is validated continuously without committing the pin or needing tags.
 3. Set every internal `require` to the exact version being tagged, then DROP all
    internal `replace` directives. Do not run `go work sync` against the unpinned
    tree.
-4. CI guard: `grep -nH '^replace github.com/gruntwork-io/terratest' modules/*/go.mod`
-   must return zero before tagging.
+4. CI guard: run `bash scripts/check-no-replaces.sh`; it must pass before tagging.
+   It catches both single-line and block-form `replace ( ... )` directives, which
+   a plain `grep '^replace'` would miss.
 5. Move `test/` to its own module here too if not already done, and pin it the
    same way (it is test-only, so committed `replace`s are acceptable for it).
 
