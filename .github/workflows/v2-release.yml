@@ -25,8 +25,10 @@ on:
         type: boolean
         default: true
 
+# Default to read-only. Only the tag-pushing job is granted write, so the
+# pre-flight job cannot push even though it runs scripts from a dispatched SHA.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -41,10 +43,19 @@ jobs:
       - run: bash scripts/check-single-source.sh
       - run: bash scripts/check-siv-placement.sh
 
+      - name: Set up mise
+        uses: jdx/mise-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release-mode build (GOWORK=off external consumer)
+        run: bash scripts/check-release-mode.sh
+
   tag-and-push:
     name: Push lockstep tags
     needs: verify
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:

@@ -40,13 +40,25 @@ fail=0
 
 for dir in modules/*/; do
   importer=$(basename "$dir")
-  importer_tier="${TIER[$importer]:-99}"
+  # Only real submodules carry a go.mod and a tier; skip anything else.
+  [ -f "$dir/go.mod" ] || continue
+  if [ -z "${TIER[$importer]+set}" ]; then
+    echo "::error file=${dir}::module '$importer' has no tier; add it to the TIER map in check-acyclic-deps.sh"
+    fail=1
+    continue
+  fi
+  importer_tier="${TIER[$importer]}"
 
   # Scan all .go files in the submodule recursively, excluding test files.
   while IFS= read -r gofile; do
     while IFS= read -r importee; do
       [ -z "$importee" ] && continue
-      importee_tier="${TIER[$importee]:-99}"
+      if [ -z "${TIER[$importee]+set}" ]; then
+        echo "::error file=${gofile}::imports unknown module '$importee'; add it to the TIER map in check-acyclic-deps.sh"
+        fail=1
+        continue
+      fi
+      importee_tier="${TIER[$importee]}"
       if [ "$importee_tier" -gt "$importer_tier" ]; then
         echo "::error file=${gofile}::tier violation — $importer (tier $importer_tier) imports $importee (tier $importee_tier)"
         fail=1

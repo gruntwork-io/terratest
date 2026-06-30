@@ -8,7 +8,12 @@
 
 set -euo pipefail
 
-matches=$(grep -nH '^replace github.com/gruntwork-io/terratest' modules/*/go.mod cmd/*/go.mod 2>/dev/null || true)
+# Match both the single-line form (`replace github.com/... => ...`) and the
+# block form (`replace (` ... `github.com/... => ...` ... `)`). Both put the
+# directive's `=>` on the same line as the terratest path, while `require`
+# lines never have `=>`, so this catches every internal replace regardless of
+# style.
+matches=$(grep -nHE 'github\.com/gruntwork-io/terratest.*=>' modules/*/go.mod cmd/*/go.mod 2>/dev/null || true)
 
 if [ -n "$matches" ]; then
   echo "::error::Local terratest replace directives present in release commit:"
