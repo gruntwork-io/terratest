@@ -1,5 +1,5 @@
-// Package dns_helper contains helpers to interact with the Domain Name System.
-package dns_helper //nolint:staticcheck // package name determined by directory
+// Package dnshelper contains helpers to interact with the Domain Name System.
+package dnshelper
 
 import (
 	"context"

@@ -61,7 +61,7 @@ warnings over the table when they disagree.
 
 The Context migration is the single largest source of deprecation
 warnings you will see when upgrading. It touches nearly every helper
-package: `terraform`, `helm`, `dns-helper`, `http-helper`, `packer`,
+package: `terraform`, `helm`, `dnshelper`, `httphelper`, `packer`,
 `docker`, `ssh`, `oci`, `k8s`, `aws`, `azure`, `gcp`. The non-`Context`
 variants compile and behave the same as before; they just emit a
 `// Deprecated:` godoc warning.

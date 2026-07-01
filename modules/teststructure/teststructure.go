@@ -1,4 +1,4 @@
-// Package test_structure provides helpers for structuring Terraform tests into stages.
+// Package teststructure provides helpers for structuring Terraform tests into stages.
 //
 // Test stages allow you to break up a test into setup, validation, and teardown phases that
 // can be selectively skipped via environment variables (e.g., SKIP_teardown). This enables
@@ -8,7 +8,7 @@
 // The package also provides utilities for copying Terraform folders to temporary directories
 // to avoid conflicts when running tests in parallel, and for recursively discovering and
 // validating all Terraform modules under a given root directory.
-package test_structure //nolint:staticcheck // package name determined by directory
+package teststructure
 
 import (
 	"context"
@@ -77,7 +77,7 @@ func SkipStageEnvVarSet() bool {
 //	terraformFolderRelativeToRoot := "examples/terraform-aws-example"
 //
 //	// Copy the terraform folder to a temp folder
-//	tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
+//	tempTestFolder := teststructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot)
 //
 //	// Make sure to use the temp test folder in the terraform options
 //	terraformOptions := &terraform.Options{
@@ -112,7 +112,7 @@ func CopyTerraformFolderToTemp(t testing.TestingT, rootFolder string, terraformM
 //	terraformFolderRelativeToRoot := "examples/terraform-aws-example"
 //
 //	// Copy the terraform folder to a temp folder
-//	tempTestFolder := test_structure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot, destRootFolder)
+//	tempTestFolder := teststructure.CopyTerraformFolderToTemp(t, rootFolder, terraformFolderRelativeToRoot, destRootFolder)
 //
 //	// Make sure to use the temp test folder in the terraform options
 //	terraformOptions := &terraform.Options{

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 )
 
@@ -34,5 +34,5 @@ func TestKubernetesHelloWorldExample(t *testing.T) {
 	url := "http://" + k8s.GetServiceEndpointContext(t, t.Context(), options, service, 5000)
 
 	// website::tag::5:: Make an HTTP request to the URL and make sure it returns a 200 OK with the body "Hello, World!".
-	http_helper.HTTPGetWithRetryContext(t, t.Context(), url, nil, 200, "Hello, World!", 30, 3*time.Second)
+	httphelper.HTTPGetWithRetryContext(t, t.Context(), url, nil, 200, "Hello, World!", 30, 3*time.Second)
 }

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 )
@@ -64,5 +64,5 @@ func TestTerraformHttpExample(t *testing.T) {
 	timeBetweenRetries := 5 * time.Second
 
 	// Verify that we get back a 200 OK with the expected instanceText
-	http_helper.HTTPGetWithRetryContext(t, t.Context(), instanceURL, &tlsConfig, 200, instanceText, maxRetries, timeBetweenRetries)
+	httphelper.HTTPGetWithRetryContext(t, t.Context(), instanceURL, &tlsConfig, 200, instanceText, maxRetries, timeBetweenRetries)
 }

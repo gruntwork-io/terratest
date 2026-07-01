@@ -1,4 +1,4 @@
-package test_structure_test //nolint:staticcheck // package name determined by directory
+package teststructure_test
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	"slices"
 	"testing"
 
-	teststructure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

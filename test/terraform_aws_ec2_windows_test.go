@@ -10,7 +10,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/packer"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 )
 
 func TestWindowsInstance(t *testing.T) {
@@ -24,25 +24,25 @@ func TestWindowsInstance(t *testing.T) {
 	// os.Setenv("SKIP_cleanup", "true")
 
 	workingDir := filepath.Join(".", "stages", t.Name())
-	testBasePath := test_structure.CopyTerraformFolderToTemp(t, "..", "examples/terraform-aws-ec2-windows-example")
+	testBasePath := teststructure.CopyTerraformFolderToTemp(t, "..", "examples/terraform-aws-ec2-windows-example")
 
-	test_structure.RunTestStage(t, "setup", func() {
+	teststructure.RunTestStage(t, "setup", func() {
 		ctx := t.Context()
 		uniqueID := random.UniqueID()
 		region := aws.GetRandomRegionContext(t, ctx, []string{}, []string{})
 		roleName := uniqueID + "-test-role"
 
 		instanceType := aws.GetRecommendedInstanceTypeContext(t, ctx, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})
-		test_structure.SaveString(t, workingDir, "region", region)
-		test_structure.SaveString(t, workingDir, "uniqueID", uniqueID)
-		test_structure.SaveString(t, workingDir, "instanceType", instanceType)
-		test_structure.SaveString(t, workingDir, "roleName", roleName)
+		teststructure.SaveString(t, workingDir, "region", region)
+		teststructure.SaveString(t, workingDir, "uniqueID", uniqueID)
+		teststructure.SaveString(t, workingDir, "instanceType", instanceType)
+		teststructure.SaveString(t, workingDir, "roleName", roleName)
 	})
 
-	test_structure.RunTestStage(t, "build_ami", func() {
-		region := test_structure.LoadString(t, workingDir, "region")
-		instanceType := test_structure.LoadString(t, workingDir, "instanceType")
-		roleName := test_structure.LoadString(t, workingDir, "roleName")
+	teststructure.RunTestStage(t, "build_ami", func() {
+		region := teststructure.LoadString(t, workingDir, "region")
+		instanceType := teststructure.LoadString(t, workingDir, "instanceType")
+		roleName := teststructure.LoadString(t, workingDir, "roleName")
 
 		varsMap := make(map[string]string)
 
@@ -55,7 +55,7 @@ func TestWindowsInstance(t *testing.T) {
 
 		amiID := packer.BuildArtifactContext(t, t.Context(), packerOptions)
 
-		test_structure.SaveString(t, workingDir, "amiID", amiID)
+		teststructure.SaveString(t, workingDir, "amiID", amiID)
 
 		terratestOptions := &terraform.Options{
 			TerraformDir: testBasePath,
@@ -65,16 +65,16 @@ func TestWindowsInstance(t *testing.T) {
 		terratestOptions.Vars["ami"] = amiID
 		terratestOptions.Vars["region"] = region
 		terratestOptions.Vars["iam_role_name"] = roleName
-		test_structure.SaveTerraformOptions(t, workingDir, terratestOptions)
+		teststructure.SaveTerraformOptions(t, workingDir, terratestOptions)
 	})
 
-	defer test_structure.RunTestStage(t, "cleanup", func() {
-		terratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+	defer teststructure.RunTestStage(t, "cleanup", func() {
+		terratestOptions := teststructure.LoadTerraformOptions(t, workingDir)
 		terraform.DestroyContext(t, t.Context(), terratestOptions)
 	})
 
-	test_structure.RunTestStage(t, "deploy", func() {
-		terratestOptions := test_structure.LoadTerraformOptions(t, workingDir)
+	teststructure.RunTestStage(t, "deploy", func() {
+		terratestOptions := teststructure.LoadTerraformOptions(t, workingDir)
 		terraform.InitAndApplyContext(t, t.Context(), terratestOptions)
 	})
 }

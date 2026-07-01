@@ -11,7 +11,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/gcp"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +26,7 @@ func TestTerraformGcpPubSubExample(t *testing.T) {
 	expectedTopicName := "pubsub-topic-" + random.UniqueID()
 	expectedSubscriptionName := "pubsub-sub-" + random.UniqueID()
 
-	exampleDir := test_structure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-pubsub-example")
+	exampleDir := teststructure.CopyTerraformFolderToTemp(t, "../../", "examples/terraform-gcp-pubsub-example")
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: exampleDir,

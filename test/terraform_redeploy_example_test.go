@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -32,40 +32,40 @@ func TestTerraformRedeployExample(t *testing.T) {
 	workingDir := "../examples/terraform-redeploy-example"
 
 	// Pick a random AWS region to test in. This helps ensure your code works in all regions.
-	test_structure.RunTestStage(t, "pick_region", func() {
+	teststructure.RunTestStage(t, "pick_region", func() {
 		awsRegion := aws.GetRandomStableRegionContext(t, t.Context(), nil, nil)
 		// Save the region, so that we reuse the same region when we skip stages
-		test_structure.SaveString(t, workingDir, "region", awsRegion)
+		teststructure.SaveString(t, workingDir, "region", awsRegion)
 	})
 
 	// At the end of the test, clean up all the resources we created
-	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
+	defer teststructure.RunTestStage(t, "teardown", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
 	})
 
 	// At the end of the test, fetch the logs from each Instance. This can be useful for
 	// debugging issues without having to manually SSH to the server.
-	defer test_structure.RunTestStage(t, "logs", func() {
-		awsRegion := test_structure.LoadString(t, workingDir, "region")
+	defer teststructure.RunTestStage(t, "logs", func() {
+		awsRegion := teststructure.LoadString(t, workingDir, "region")
 		fetchSyslogForAsg(t, awsRegion, workingDir)
 		fetchFilesFromAsg(t, awsRegion, workingDir)
 	})
 
 	// Deploy the web app
-	test_structure.RunTestStage(t, "deploy_initial", func() {
-		awsRegion := test_structure.LoadString(t, workingDir, "region")
+	teststructure.RunTestStage(t, "deploy_initial", func() {
+		awsRegion := teststructure.LoadString(t, workingDir, "region")
 		initialDeploy(t, awsRegion, workingDir)
 	})
 
 	// Validate that the ASG deployed and is responding to HTTP requests
-	test_structure.RunTestStage(t, "validate_initial", func() {
-		awsRegion := test_structure.LoadString(t, workingDir, "region")
+	teststructure.RunTestStage(t, "validate_initial", func() {
+		awsRegion := teststructure.LoadString(t, workingDir, "region")
 		validateAsgRunningWebServer(t, awsRegion, workingDir)
 	})
 
 	// Validate that we can deploy a change to the ASG with zero downtime
-	test_structure.RunTestStage(t, "validate_redeploy", func() {
+	teststructure.RunTestStage(t, "validate_redeploy", func() {
 		validateAsgRedeploy(t, workingDir)
 	})
 }
@@ -80,7 +80,7 @@ func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
 
 	// Create a KeyPair we can use later to SSH to each Instance
 	keyPair := aws.CreateAndImportEC2KeyPairContext(t, t.Context(), awsRegion, uniqueID)
-	test_structure.SaveEc2KeyPair(t, workingDir, keyPair)
+	teststructure.SaveEc2KeyPair(t, workingDir, keyPair)
 
 	// Give the ASG and other resources in the Terraform code a name with a unique ID so it doesn't clash
 	// with anything else in the AWS account.
@@ -109,7 +109,7 @@ func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
 	})
 
 	// Save the Terraform Options struct so future test stages can use it
-	test_structure.SaveTerraformOptions(t, workingDir, terraformOptions)
+	teststructure.SaveTerraformOptions(t, workingDir, terraformOptions)
 
 	// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 	terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
@@ -120,7 +120,7 @@ func validateAsgRunningWebServer(t *testing.T, awsRegion string, workingDir stri
 	t.Helper()
 
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
-	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
+	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 
 	// Run `terraform output` to get the value of an output variable
 	url := terraform.OutputContext(t, t.Context(), terraformOptions, "url")
@@ -145,7 +145,7 @@ func validateAsgRunningWebServer(t *testing.T, awsRegion string, workingDir stri
 
 	// Verify that we get back a 200 OK with the expectedText
 	// It can take a few minutes for the ALB to boot up, so retry a few times
-	http_helper.HTTPGetWithRetryContext(t, t.Context(), url, &tlsConfig, 200, expectedText, maxRetries, timeBetweenRetries)
+	httphelper.HTTPGetWithRetryContext(t, t.Context(), url, &tlsConfig, 200, expectedText, maxRetries, timeBetweenRetries)
 }
 
 // Validate we can deploy an update to the ASG with zero downtime for users accessing the ALB
@@ -153,7 +153,7 @@ func validateAsgRedeploy(t *testing.T, workingDir string) {
 	t.Helper()
 
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
-	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
+	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 
 	// Figure out what text the ASG was returning for each request
 	originalText, _ := terraformOptions.Vars["instance_text"].(string)
@@ -163,7 +163,7 @@ func validateAsgRedeploy(t *testing.T, workingDir string) {
 	terraformOptions.Vars["instance_text"] = newText
 
 	// Save the updated Terraform Options struct
-	test_structure.SaveTerraformOptions(t, workingDir, terraformOptions)
+	teststructure.SaveTerraformOptions(t, workingDir, terraformOptions)
 
 	// Run `terraform output` to get the value of an output variable
 	url := terraform.OutputContext(t, t.Context(), terraformOptions, "url")
@@ -173,7 +173,7 @@ func validateAsgRedeploy(t *testing.T, workingDir string) {
 
 	// Check once per second that the ELB returns a proper response to make sure there is no downtime during deployment
 	elbChecks := retry.DoInBackgroundUntilStoppedContext(t, t.Context(), "Check URL "+url, 1*time.Second, func() {
-		http_helper.HTTPGetWithCustomValidationContext(t, t.Context(), url, &tlsConfig, func(statusCode int, body string) bool {
+		httphelper.HTTPGetWithCustomValidationContext(t, t.Context(), url, &tlsConfig, func(statusCode int, body string) bool {
 			return statusCode == 200 && (body == originalText || body == newText)
 		})
 	})
@@ -193,7 +193,7 @@ func fetchSyslogForAsg(t *testing.T, awsRegion string, workingDir string) {
 	t.Helper()
 
 	// Load the Terraform Options saved by the earlier deploy_terraform stage
-	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
+	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 
 	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
 	asgLogs := aws.GetSyslogForInstancesInAsgContext(t, t.Context(), asgName, awsRegion)
@@ -218,8 +218,8 @@ func fetchFilesFromAsg(t *testing.T, awsRegion string, workingDir string) {
 	t.Helper()
 
 	// Load the Terraform Options and Key Pair saved by the earlier deploy_terraform stage
-	terraformOptions := test_structure.LoadTerraformOptions(t, workingDir)
-	keyPair := test_structure.LoadEc2KeyPair(t, workingDir)
+	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
+	keyPair := teststructure.LoadEc2KeyPair(t, workingDir)
 
 	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
 	instanceIDToFilePathToContents := aws.FetchContentsOfFilesFromAsgContext(t, t.Context(), awsRegion, "ubuntu", keyPair, asgName, true, syslogPathUbuntu, indexHTMLUbuntu)

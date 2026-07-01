@@ -1,4 +1,4 @@
-package test_structure //nolint:staticcheck // package name determined by directory
+package teststructure
 
 import (
 	"fmt"
