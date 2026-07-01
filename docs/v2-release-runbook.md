@@ -2,6 +2,10 @@
 
 How to cut a coordinated release of the v2 submodules. Read this before tagging.
 
+The tag push and proxy verification are automated by the `v2 Release` workflow
+(`.github/workflows/v2-release.yml`, run via workflow_dispatch). This runbook
+explains the procedure that workflow follows and how to do it by hand if needed.
+
 ## Layout
 
 v2 is split into per-domain modules under `modules/<name>/`, each declaring
@@ -71,9 +75,11 @@ should return 200.
 
 ## Verify
 
-Run the `test-external/` consumer against the published tags with `GOWORK=off`. A
-clean external consumer should resolve, build, and test green with zero local
-references.
+Build a throwaway external consumer that imports every published module with
+`GOWORK=off`. This is what `scripts/check-release-mode.sh` generates in a temp
+directory, except now it resolves against the real published tags rather than
+local `replace`s. A clean consumer should resolve, build, and test green with
+zero local references.
 
 ## If a tag is wrong
 

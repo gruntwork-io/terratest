@@ -7,6 +7,8 @@
 # (e.g. modules/core/logger/parser_test imports modules/shell/v2 — legal per the
 # RFC's external _test package rule).
 
+# No -e: we accumulate every tier violation and report them all, rather than
+# aborting on the first one.
 set -uo pipefail
 
 # Tier assignment. Lower number = lower layer.

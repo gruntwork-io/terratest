@@ -7,6 +7,7 @@
 # tidy cannot float a dep to an incompatible newer release, then (3) tidies.
 # Finally it builds an external consumer that imports every module. All changes
 # are reverted on exit; nothing is committed.
+# No -e: main() accumulates a fail flag across all modules and reports them all.
 set -uo pipefail
 
 MODULE_BASE="github.com/gruntwork-io/terratest/modules"
@@ -32,6 +33,7 @@ consumer_imports() {
   local s pkg
   for s in $ORDER; do
     if [ "$s" = core ]; then
+      # Keep in sync with core/v2's public leaf packages.
       for pkg in random files collections formatting; do
         echo "  _ \"$MODULE_BASE/core/v2/$pkg\""
       done
@@ -44,7 +46,7 @@ consumer_imports() {
 main() {
   local root reqargs fail=0 m s
   root=$(git rev-parse --show-toplevel)
-  cd "$root"
+  cd "$root" || { echo "::error::cannot cd to repo root '$root'"; return 1; }
 
   export GOFLAGS="${GOFLAGS:--tags=aws,azure,azure_ci_excluded,azureslim,compute,gcp,helm,kubeall,kubernetes,network}"
 

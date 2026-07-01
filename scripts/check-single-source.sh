@@ -5,6 +5,9 @@
 # `github.com/foo/bar/baz/v2`) are fine, because each go.mod creates a hard
 # boundary that the loader respects.
 
+# No -e: we scan every go.mod and report all duplicate module paths, not just
+# the first. No pre-split guard either, since single-source is a general
+# invariant that holds before and after the split.
 set -uo pipefail
 
 declare -A SEEN=()

@@ -17,7 +17,7 @@ matches=$(grep -nHE 'github\.com/gruntwork-io/terratest.*=>' modules/*/go.mod cm
 
 if [ -n "$matches" ]; then
   echo "::error::Local terratest replace directives present in release commit:"
-  echo "$matches" | sed 's/^/    /'
+  sed 's/^/    /' <<< "$matches"
   echo "::error::Strip them before tagging (see docs/v2-release-runbook.md)."
   exit 1
 fi

@@ -10,23 +10,30 @@
 
 set -euo pipefail
 
-# Submodules whose top-level package is the module root (with /v2 SIV).
-# Format: short-name|sub-packages-list (space-separated). For each, check that
-# imports of any sub-package put /v2 at the module-root, not at the leaf.
+# Pre-split guard: the /v2 SIV only exists once the submodules are created, so
+# there is nothing meaningful to check on the flat pre-split tree.
+if ! ls modules/*/go.mod >/dev/null 2>&1; then
+  echo "SIV-placement check: skipped (no /v2 submodules present yet)"
+  exit 0
+fi
+
 fail=0
 # Derive the module set from disk so this gate can never silently go vacuous
 # when modules are renamed/added/removed.
 for dir in modules/*/; do
   name=$(basename "$dir")
   # Matches: "github.com/gruntwork-io/terratest/modules/<name>/<sub-pkg>/v2"
-  # where <sub-pkg> is any path component(s) not equal to v2.
-  bugged=$(grep -rEn "\"github\.com/gruntwork-io/terratest/modules/${name}/[a-zA-Z0-9_./-]+/v2\"" \
+  # where <sub-pkg> is any path component(s) not equal to v2. `-o` prints only
+  # the matched import token so the `/v2/` filter below inspects the import
+  # itself, not the whole source line (a comment or a second import on the same
+  # line must not mask a real bug).
+  bugged=$(grep -rEno "\"github\.com/gruntwork-io/terratest/modules/${name}/[a-zA-Z0-9_./-]+/v2\"" \
     --include='*.go' . 2>/dev/null \
     | grep -v '/v2/' \
     || true)
   if [ -n "$bugged" ]; then
-    echo "::error::SIV placement bug detected under modules/${name}/ — /v2 must come right after the module name, not at the package leaf:"
-    echo "$bugged" | sed 's/^/    /'
+    echo "::error::SIV placement bug under modules/${name}/. The /v2 must come right after the module name, not at the package leaf:"
+    sed 's/^/    /' <<< "$bugged"
     fail=1
   fi
 done

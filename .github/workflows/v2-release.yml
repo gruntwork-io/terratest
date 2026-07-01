@@ -34,8 +34,9 @@ jobs:
   verify:
     name: Pre-flight checks
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.commit_sha }}
       - run: bash scripts/check-no-replaces.sh
@@ -54,10 +55,21 @@ jobs:
     name: Push lockstep tags
     needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
+    env:
+      VERSION: ${{ inputs.version }}
+      # Single source of truth for the module list and tag order (mirrors ORDER
+      # in scripts/check-release-mode.sh and the runbook tag sequence).
+      MODULE_PATHS: >-
+        modules/core
+        modules/ssh modules/httphelper modules/dnshelper
+        modules/docker modules/packer modules/database modules/opa
+        modules/aws modules/azure modules/gcp modules/k8s modules/helm
+        modules/terraform modules/terragrunt modules/teststructure
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.commit_sha }}
           fetch-depth: 0
@@ -69,26 +81,16 @@ jobs:
 
       - name: Tag in dependency order
         env:
-          VERSION: ${{ inputs.version }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -e
 
-          if [[ ! "$VERSION" =~ ^v2\.[0-9] ]]; then
+          if [[ ! "$VERSION" =~ ^v2\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
             echo "::error::version '$VERSION' must look like v2.<minor>.<patch>[-suffix] (e.g. v2.0.0-beta.1)"
             exit 1
           fi
 
-          # Same order as docs/v2-release-runbook.md.
-          ORDER=(
-            modules/core
-            modules/ssh modules/httphelper modules/dnshelper
-            modules/docker modules/packer modules/database modules/opa
-            modules/aws modules/azure modules/gcp modules/k8s modules/helm
-            modules/terraform modules/terragrunt modules/teststructure
-          )
-
-          for path in "${ORDER[@]}"; do
+          for path in $MODULE_PATHS; do
             tag="${path}/v2/${VERSION}"
             if [ "$DRY_RUN" = "true" ]; then
               echo "DRY-RUN would tag: $tag"
@@ -101,23 +103,20 @@ jobs:
 
       - name: Verify proxy serves each tag
         if: ${{ inputs.dry_run == false }}
-        env:
-          VERSION: ${{ inputs.version }}
         run: |
           # Allow the proxy a moment to populate after push.
           sleep 30
           fail=0
-          for path in modules/core modules/ssh modules/httphelper modules/dnshelper modules/docker modules/packer modules/database modules/opa modules/aws modules/azure modules/gcp modules/k8s modules/helm modules/terraform modules/terragrunt modules/teststructure; do
+          for path in $MODULE_PATHS; do
             url="https://proxy.golang.org/github.com/gruntwork-io/terratest/${path}/v2/@v/${VERSION}.info"
             code=$(curl -s -o /dev/null -w '%{http_code}' "$url")
             if [ "$code" = "200" ]; then
               echo "  $path: 200"
             else
-              echo "::error::$path: $code from $url"
+              echo "::warning::$path: $code from $url"
               fail=1
             fi
           done
           if [ "$fail" -ne 0 ]; then
-            echo "::error::Proxy verification failed. Some tags may need a few minutes; retry the verify step manually if so."
-            exit 1
+            echo "::warning::Proxy has not served every tag yet. The tags are already pushed and immutable; the proxy usually populates within a few minutes. Re-run this check if needed."
           fi
