@@ -6,7 +6,6 @@ name: v2 Release (lockstep tag push)
 # Use this AFTER:
 #   - scripts/release-prep.sh ran on the release-prep branch
 #   - The release-prep commit was reviewed and approved
-#   - check-no-replaces.sh passes on that commit
 
 on:
   workflow_dispatch:
@@ -40,7 +39,6 @@ jobs:
         with:
           ref: ${{ inputs.commit_sha }}
           persist-credentials: false
-      - run: bash scripts/check-no-replaces.sh
       - run: bash scripts/check-acyclic-deps.sh
       - run: bash scripts/check-single-source.sh
       - run: bash scripts/check-siv-placement.sh

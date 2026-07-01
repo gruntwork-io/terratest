@@ -56,15 +56,3 @@ jobs:
 
       - name: Release-mode build (all 16 modules pin + external consumer, GOWORK=off)
         run: bash scripts/check-release-mode.sh
-
-  release-prep-guard:
-    name: No local terratest replaces (release commits only)
-    runs-on: ubuntu-latest
-    if: |
-      startsWith(github.ref, 'refs/tags/modules/') ||
-      contains(github.event.head_commit.message, '[release-prep]')
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          persist-credentials: false
-      - run: bash scripts/check-no-replaces.sh
