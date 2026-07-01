@@ -8,18 +8,13 @@
 # Finally it builds an external consumer that imports every module. All changes
 # are reverted on exit; nothing is committed.
 set -uo pipefail
-cd "$(git rev-parse --show-toplevel)"
-export GOFLAGS="${GOFLAGS:--tags=aws,azure,azure_ci_excluded,azureslim,compute,gcp,helm,kubeall,kubernetes,network}"
-B="github.com/gruntwork-io/terratest/modules"
+
+MODULE_BASE="github.com/gruntwork-io/terratest/modules"
 ORDER="core ssh httphelper dnshelper docker packer database opa aws azure gcp k8s helm terraform terragrunt teststructure"
 
-# Pre-split guard: until the /v2 submodules exist, there is nothing to validate.
-# This lets the gate land and run green before the modularization commit, and do
-# the real release-mode build afterward.
-if ! ls modules/*/go.mod >/dev/null 2>&1; then
-  echo "release-mode check: skipped (no /v2 submodules present yet)"
-  exit 0
-fi
+# Scratch directory (a fresh `mktemp -d`) holding per-module tidy stderr and the
+# throwaway consumer module. Set by main(); removed wholesale by cleanup().
+WORKDIR=""
 
 cleanup() {
   # Revert each path independently. `git checkout -- a b` aborts entirely if any
@@ -28,35 +23,65 @@ cleanup() {
   git checkout -- modules/ >/dev/null 2>&1 || true
   git checkout -- go.work.sum >/dev/null 2>&1 || true
   git status --porcelain 2>/dev/null | awk '/^\?\?.*modules\/.*\/go\.sum$/{print $2}' | xargs -r rm -f
-  [ -n "${TMP:-}" ] && rm -rf "$TMP"
+  [ -n "$WORKDIR" ] && rm -rf "$WORKDIR"
 }
-trap cleanup EXIT
 
-# Exact dependency versions the code is tested against, from the root module.
-REQARGS=$(go mod edit -json go.mod | jq -r '.Require[]? | "-require=\(.Path)@\(.Version)"' | tr '\n' ' ')
+# Emit the consumer's import block from the single ORDER list: core exposes leaf
+# packages, every other module is imported at its /v2 root.
+consumer_imports() {
+  local s pkg
+  for s in $ORDER; do
+    if [ "$s" = core ]; then
+      for pkg in random files collections formatting; do
+        echo "  _ \"$MODULE_BASE/core/v2/$pkg\""
+      done
+    else
+      echo "  _ \"$MODULE_BASE/$s/v2\""
+    fi
+  done
+}
 
-fail=0
-for m in $ORDER; do
-  ( cd "modules/$m"
-    for s in $ORDER; do [ "$s" = "$m" ] || go mod edit -replace="$B/$s/v2=../$s"; done
-    # shellcheck disable=SC2086
-    go mod edit $REQARGS
-    GOWORK=off go mod tidy ) 2>/tmp/cr_$m.err || { echo "::error::release-mode tidy failed: modules/$m"; tail -4 /tmp/cr_$m.err; fail=1; }
-done
-[ "$fail" -ne 0 ] && { echo "release-mode check: FAILED (per-module pin)"; exit 1; }
+main() {
+  local root reqargs fail=0 m s
+  root=$(git rev-parse --show-toplevel)
+  cd "$root"
 
-TMP=$(mktemp -d)
-{ echo "module releasecheckconsumer"; echo "go 1.26"; } > "$TMP/go.mod"
-for s in $ORDER; do
-  go mod edit -modfile="$TMP/go.mod" -require="$B/$s/v2@v2.0.0" -replace="$B/$s/v2=$(pwd)/modules/$s"
-done
-{
-  echo "package main"; echo "import ("
-  echo "  _ \"$B/core/v2/random\""; echo "  _ \"$B/core/v2/files\""; echo "  _ \"$B/core/v2/collections\""; echo "  _ \"$B/core/v2/formatting\""
-  for s in ssh httphelper dnshelper docker packer database opa aws azure gcp k8s helm terraform terragrunt teststructure; do echo "  _ \"$B/$s/v2\""; done
-  echo ")"; echo "func main() {}"
-} > "$TMP/main.go"
-( cd "$TMP" && GOWORK=off go mod tidy && GOWORK=off go build ./... ) 2>/tmp/cr_consumer.err \
-  || { echo "::error::external consumer failed to build in release mode"; tail -10 /tmp/cr_consumer.err; echo "release-mode check: FAILED (consumer)"; exit 1; }
+  export GOFLAGS="${GOFLAGS:--tags=aws,azure,azure_ci_excluded,azureslim,compute,gcp,helm,kubeall,kubernetes,network}"
 
-echo "release-mode check: OK (all 16 modules pin at root versions + external consumer builds with GOWORK=off)"
+  # Pre-split guard: until the /v2 submodules exist, there is nothing to validate.
+  # This lets the gate land and run green before the modularization commit, and do
+  # the real release-mode build afterward.
+  if ! ls modules/*/go.mod >/dev/null 2>&1; then
+    echo "release-mode check: skipped (no /v2 submodules present yet)"
+    return 0
+  fi
+
+  trap cleanup EXIT
+  WORKDIR=$(mktemp -d)
+
+  # Exact dependency versions the code is tested against, from the root module.
+  reqargs=$(go mod edit -json go.mod | jq -r '.Require[]? | "-require=\(.Path)@\(.Version)"' | tr '\n' ' ')
+
+  for m in $ORDER; do
+    ( cd "modules/$m"
+      for s in $ORDER; do [ "$s" = "$m" ] || go mod edit -replace="$MODULE_BASE/$s/v2=../$s"; done
+      # shellcheck disable=SC2086
+      go mod edit $reqargs
+      GOWORK=off go mod tidy ) 2>"$WORKDIR/tidy_$m.err" \
+      || { echo "::error::release-mode tidy failed: modules/$m"; tail -4 "$WORKDIR/tidy_$m.err"; fail=1; }
+  done
+  [ "$fail" -ne 0 ] && { echo "release-mode check: FAILED (per-module pin)"; return 1; }
+
+  # Build an external consumer that imports every module, in release mode.
+  { echo "module releasecheckconsumer"; echo "go 1.26"; } > "$WORKDIR/go.mod"
+  for s in $ORDER; do
+    go mod edit -modfile="$WORKDIR/go.mod" -require="$MODULE_BASE/$s/v2@v2.0.0" -replace="$MODULE_BASE/$s/v2=$root/modules/$s"
+  done
+  { echo "package main"; echo "import ("; consumer_imports; echo ")"; echo "func main() {}"; } > "$WORKDIR/main.go"
+  ( cd "$WORKDIR" && GOWORK=off go mod tidy && GOWORK=off go build ./... ) 2>"$WORKDIR/consumer.err" \
+    || { echo "::error::external consumer failed to build in release mode"; tail -10 "$WORKDIR/consumer.err"; echo "release-mode check: FAILED (consumer)"; return 1; }
+
+  echo "release-mode check: OK (all 16 modules pin at root versions + external consumer builds with GOWORK=off)"
+}
+
+main "$@"

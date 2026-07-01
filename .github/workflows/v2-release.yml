@@ -35,7 +35,7 @@ jobs:
     name: Pre-flight checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
         with:
           ref: ${{ inputs.commit_sha }}
       - run: bash scripts/check-no-replaces.sh
@@ -44,7 +44,7 @@ jobs:
       - run: bash scripts/check-siv-placement.sh
 
       - name: Set up mise
-        uses: jdx/mise-action@v3
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Release-mode build (GOWORK=off external consumer)
@@ -57,7 +57,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
         with:
           ref: ${{ inputs.commit_sha }}
           fetch-depth: 0
