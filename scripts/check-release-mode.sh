@@ -11,7 +11,9 @@
 set -uo pipefail
 
 MODULE_BASE="github.com/gruntwork-io/terratest/modules"
-ORDER="core ssh httphelper dnshelper docker packer database opa aws azure gcp k8s helm terraform terragrunt teststructure"
+# Every submodule that currently has its own go.mod. Derived from disk so the
+# gate works during an incremental split (core only) and after the full split.
+ORDER=$(for d in modules/*/; do [ -f "${d}go.mod" ] && basename "$d"; done | tr '\n' ' ')
 
 # Scratch directory (a fresh `mktemp -d`) holding per-module tidy stderr and the
 # throwaway consumer module. Set by main(); removed wholesale by cleanup().
@@ -34,7 +36,7 @@ consumer_imports() {
   for s in $ORDER; do
     if [ "$s" = core ]; then
       # Keep in sync with core/v2's public leaf packages.
-      for pkg in random files collections formatting; do
+      for pkg in random files collections formatting logger shell retry testing; do
         echo "  _ \"$MODULE_BASE/core/v2/$pkg\""
       done
     else
@@ -97,7 +99,7 @@ main() {
   ( cd "$WORKDIR" && GOWORK=off go mod tidy && GOWORK=off go build ./... ) 2>"$WORKDIR/consumer.err" \
     || { echo "::error::external consumer failed to build in release mode"; tail -10 "$WORKDIR/consumer.err"; echo "release-mode check: FAILED (consumer)"; return 1; }
 
-  echo "release-mode check: OK (all 16 modules pin at root versions + external consumer builds with GOWORK=off)"
+  echo "release-mode check: OK ($(echo "$ORDER" | wc -w | tr -d ' ') module(s) pin at root versions + external consumer builds with GOWORK=off)"
 }
 
 main "$@"

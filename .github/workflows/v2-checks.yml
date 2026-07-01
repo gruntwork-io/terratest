@@ -54,5 +54,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Release-mode build (all 16 modules pin + external consumer, GOWORK=off)
+      - name: Release-mode build (each module pins at root versions + external consumer, GOWORK=off)
         run: bash scripts/check-release-mode.sh
