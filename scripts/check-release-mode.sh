@@ -43,6 +43,18 @@ consumer_imports() {
   done
 }
 
+# Refuse to run against a dirty tree: the cleanup trap reverts modules/ wholesale
+# via `git checkout`, which would discard a developer's uncommitted module work.
+ensure_clean_worktree() {
+  local dirty
+  dirty=$(git status --porcelain -- modules go.work.sum)
+  if [ -n "$dirty" ]; then
+    echo "::error::release-mode check needs a clean modules/ and go.work.sum worktree (cleanup reverts them). Commit or stash first:"
+    sed 's/^/    /' <<< "$dirty"
+    return 1
+  fi
+}
+
 main() {
   local root reqargs fail=0 m s
   root=$(git rev-parse --show-toplevel)
@@ -57,6 +69,8 @@ main() {
     echo "release-mode check: skipped (no /v2 submodules present yet)"
     return 0
   fi
+
+  ensure_clean_worktree || return 1
 
   trap cleanup EXIT
   WORKDIR=$(mktemp -d)

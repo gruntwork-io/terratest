@@ -39,6 +39,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ inputs.commit_sha }}
+          persist-credentials: false
       - run: bash scripts/check-no-replaces.sh
       - run: bash scripts/check-acyclic-deps.sh
       - run: bash scripts/check-single-source.sh
