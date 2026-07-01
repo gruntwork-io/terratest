@@ -21,5 +21,3 @@ if [ -n "$matches" ]; then
   echo "::error::Strip them before tagging (see docs/v2-release-runbook.md)."
   exit 1
 fi
-
-echo "no-replaces check: OK"
