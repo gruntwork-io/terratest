@@ -6,8 +6,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 
 	// Microsoft SQL Database Driver (Microsoft-maintained fork of denisenkom/go-mssqldb)
 	_ "github.com/microsoft/go-mssqldb"
