@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.22.0
 	github.com/hashicorp/terraform-json v0.23.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
-	github.com/jstemmer/go-junit-report v1.0.0
+	github.com/jstemmer/go-junit-report v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
 	github.com/miekg/dns v1.1.62
@@ -94,6 +94,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0
 	github.com/aws/smithy-go v1.27.1
 	github.com/gonvenience/ytbx v1.4.4
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/homeport/dyff v1.6.0
 	github.com/jackc/pgx/v5 v5.9.0
@@ -243,3 +244,11 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+// The root module (examples/ and test/) imports core/v2, which is not published
+// yet. go.work resolves it for workspace builds, but `go mod tidy` (the CI tidy
+// check) and any GOWORK=off build ignore go.work, so this replace is what lets
+// them find core locally. Dev-only: the root module is not published in v2
+// (consumers import the submodules directly), and this replace is never part of
+// a release tag. As more tiers split out, the root gains one replace per submodule.
+replace github.com/gruntwork-io/terratest/modules/core/v2 => ./modules/core

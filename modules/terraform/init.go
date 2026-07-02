@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 
 // InitContext calls terraform init with the given options and returns stdout/stderr.
