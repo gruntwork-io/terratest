@@ -245,6 +245,10 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-// Local resolution so the root module builds core without go.work (e.g. GOWORK=off).
-// go.work covers workspace dev; this covers the rest.
+// The root module (examples/ and test/) imports core/v2, which is not published
+// yet. go.work resolves it for workspace builds, but `go mod tidy` (the CI tidy
+// check) and any GOWORK=off build ignore go.work, so this replace is what lets
+// them find core locally. Dev-only: the root module is not published in v2
+// (consumers import the submodules directly), and this replace is never part of
+// a release tag. As more tiers split out, the root gains one replace per submodule.
 replace github.com/gruntwork-io/terratest/modules/core/v2 => ./modules/core
