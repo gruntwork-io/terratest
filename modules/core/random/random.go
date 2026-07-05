@@ -4,12 +4,11 @@ package random
 import (
 	"bytes"
 	"math/rand"
-	"time"
 )
 
 // Random generates a random int between min and max, inclusive.
 func Random(min int, max int) int {
-	return newRand().Intn(max-min+1) + min
+	return rand.Intn(max-min+1) + min
 }
 
 // RandomInt picks a random element in the slice of ints.
@@ -33,15 +32,9 @@ const uniqueIDLength = 6 // Should be good for 62^6 = 56+ billion combinations
 func UniqueID() string {
 	var out bytes.Buffer
 
-	generator := newRand()
 	for i := 0; i < uniqueIDLength; i++ {
-		out.WriteByte(base62chars[generator.Intn(len(base62chars))])
+		out.WriteByte(base62chars[rand.Intn(len(base62chars))])
 	}
 
 	return out.String()
-}
-
-// newRand creates a new random number generator, seeding it with the current system time.
-func newRand() *rand.Rand {
-	return rand.New(rand.NewSource(time.Now().UnixNano()))
 }
