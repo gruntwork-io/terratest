@@ -1,4 +1,4 @@
-package http_helper //nolint:staticcheck // package name determined by directory
+package httphelper
 
 import "fmt"
 

@@ -1,4 +1,4 @@
-package dns_helper //nolint:staticcheck // package name determined by directory
+package dnshelper
 
 import "fmt"
 

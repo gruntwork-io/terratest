@@ -12,7 +12,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 )
 
 const expectedTextSSHPassword = "Hello, World"
@@ -24,28 +24,28 @@ const expectedTextSSHPassword = "Hello, World"
 func TestTerraformSshPasswordExample(t *testing.T) {
 	t.Parallel()
 
-	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-ssh-password-example")
+	exampleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-ssh-password-example")
 
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created.
-	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
+	defer teststructure.RunTestStage(t, "teardown", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
 	})
 
 	// Deploy the example.
-	test_structure.RunTestStage(t, "setup", func() {
+	teststructure.RunTestStage(t, "setup", func() {
 		terraformOptions := configureTerraformSSHPasswordOptions(t, exampleFolder)
 
 		// Save the options so later test stages can use them.
-		test_structure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
+		teststructure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
 
 		// This will run `terraform init` and `terraform apply` and fail the test if there are any errors.
 		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
 	})
 
 	// Make sure we can SSH to the public instance directly from the public internet.
-	test_structure.RunTestStage(t, "validate", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, exampleFolder)
+	teststructure.RunTestStage(t, "validate", func() {
+		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
 
 		testSSHPasswordToPublicHost(t, terraformOptions)
 	})

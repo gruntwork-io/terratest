@@ -1,4 +1,4 @@
-package test_structure_test //nolint:staticcheck // package name determined by directory
+package teststructure_test
 
 import (
 	"encoding/json"
@@ -12,8 +12,8 @@ import (
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	teststructure "github.com/gruntwork-io/terratest/modules/test-structure"
 	gotesting "github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

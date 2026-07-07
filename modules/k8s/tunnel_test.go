@@ -18,7 +18,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
 
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/random"
 )
 
@@ -44,7 +44,7 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	tlsConfig := tls.Config{}
 
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-	http_helper.HTTPGetWithRetryWithCustomValidationContext(
+	httphelper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
 		t.Context(),
 		"http://"+tunnel.Endpoint(),
@@ -77,7 +77,7 @@ func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
 	tlsConfig := tls.Config{}
 
 	// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-	http_helper.HTTPGetWithRetryWithCustomValidationContext(
+	httphelper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
 		t.Context(),
 		"http://"+tunnel.Endpoint(),
@@ -134,7 +134,7 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 			tlsConfig := tls.Config{}
 
 			// Try to access the nginx service on the local port, retrying until we get a good response for up to 5 minutes
-			http_helper.HTTPGetWithRetryWithCustomValidationContext(
+			httphelper.HTTPGetWithRetryWithCustomValidationContext(
 				t,
 				t.Context(),
 				"http://"+tunnel.Endpoint(),

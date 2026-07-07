@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/azure"
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -85,7 +85,7 @@ func TestTerraformAzureAKSExample(t *testing.T) {
 
 	// Test the endpoint for up to 5 minutes. This will only fail if we timeout waiting for the service to return a 200
 	// response.
-	http_helper.HTTPGetWithRetryWithCustomValidationContext(
+	httphelper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
 		t.Context(),
 		"http://"+endpoint,

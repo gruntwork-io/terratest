@@ -21,15 +21,14 @@ require (
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
 	github.com/miekg/dns v1.1.62
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/oracle/oci-go-sdk v7.1.0+incompatible
 	github.com/pquerna/otp v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
 	github.com/tmccombs/hcl2json v0.6.4
 	github.com/urfave/cli v1.22.16
 	github.com/zclconf/go-cty v1.15.0
-	golang.org/x/crypto v0.49.0
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/crypto v0.51.0
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.276.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
@@ -70,7 +69,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets v1.4.0
-	github.com/aws/aws-sdk-go-v2 v1.41.6
+	github.com/aws/aws-sdk-go-v2 v1.42.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.15
 	github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager v0.1.17
@@ -80,6 +79,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.57.1
+	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.78.1
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.8
 	github.com/aws/aws-sdk-go-v2/service/kms v1.50.5
@@ -92,14 +92,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.26
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0
-	github.com/aws/smithy-go v1.25.0
+	github.com/aws/smithy-go v1.27.1
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/homeport/dyff v1.6.0
 	github.com/jackc/pgx/v5 v5.9.0
 	github.com/lib/pq v1.10.9
 	github.com/microsoft/go-mssqldb v1.9.8
-	github.com/slack-go/slack v0.23.1
 	golang.org/x/sync v0.20.0
 	google.golang.org/grpc v1.80.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -126,8 +125,8 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.9 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.22 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.22 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.22 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.23 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.14 // indirect
@@ -158,6 +157,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
+	github.com/go-test/deep v1.1.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
@@ -222,12 +222,12 @@ require (
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/mod v0.33.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/term v0.41.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.42.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect

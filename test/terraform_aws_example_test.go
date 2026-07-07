@@ -8,7 +8,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ func TestTerraformAwsExample(t *testing.T) {
 
 	// Make a copy of the terraform module to a temporary directory. This allows running multiple tests in parallel
 	// against the same terraform module.
-	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-example")
+	exampleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-aws-example")
 
 	// Give this EC2 Instance a unique ID for a name tag so we can distinguish it from any other EC2 Instance running
 	// in your AWS account

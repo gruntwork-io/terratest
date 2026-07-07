@@ -1,4 +1,4 @@
-package dns_helper_test //nolint:staticcheck // package name determined by directory
+package dnshelper_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	dnshelper "github.com/gruntwork-io/terratest/modules/dns-helper"
+	"github.com/gruntwork-io/terratest/modules/dnshelper"
 	"github.com/miekg/dns"
 )
 

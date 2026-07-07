@@ -21,7 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
-	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
+	"github.com/gruntwork-io/terratest/modules/httphelper"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/stretchr/testify/require"
@@ -96,7 +96,7 @@ func TestRemoteChartInstall(t *testing.T) {
 	// Setup a TLS configuration to submit with the helper, a blank struct is acceptable
 	tlsConfig := tls.Config{}
 
-	http_helper.HTTPGetWithRetryWithCustomValidationContext(
+	httphelper.HTTPGetWithRetryWithCustomValidationContext(
 		t,
 		t.Context(),
 		"http://"+endpoint,

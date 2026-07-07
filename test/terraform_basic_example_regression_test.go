@@ -10,7 +10,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
+	"github.com/gruntwork-io/terratest/modules/teststructure"
 )
 
 // The tests in this folder are not example usage of Terratest. Instead, this is a regression test to ensure the
@@ -166,7 +166,7 @@ func TestTerraformFormatNestedListMap(t *testing.T) {
 func getTerraformOptionsForFormatTests(t *testing.T) *terraform.Options {
 	t.Helper()
 
-	exampleFolder := test_structure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-basic-example")
+	exampleFolder := teststructure.CopyTerraformFolderToTemp(t, "../", "examples/terraform-basic-example")
 
 	// Set up terratest to retry on known failures
 	maxTerraformRetries := 3
