@@ -9,7 +9,7 @@
       default: true
   learn_more:
     - name: Terraform Hello, World
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/terraform-hello-world-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/terraform-hello-world-example
 
 - id: packer-hello-world
   name: Packer Hello, World Example
@@ -22,7 +22,7 @@
       default: true
   learn_more:
     - name: Packer Hello, World
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/packer-hello-world-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/packer-hello-world-example
 
 - id: docker-hello-world
   name: Docker Hello, World Example
@@ -36,7 +36,7 @@
       default: true
   learn_more:
     - name: Docker Hello, World
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/docker-hello-world-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/docker-hello-world-example
 
 - id: kubernetes-hello-world
   name: Kubernetes Hello, World Example
@@ -49,7 +49,7 @@
       default: true
   learn_more:
     - name: Kubernetes Hello, World
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/kubernetes-hello-world-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/kubernetes-hello-world-example
 
 - id: terragrunt-hello-world
   name: Terragrunt Example
@@ -64,9 +64,9 @@
       default: true
   learn_more:
     - name: Terragrunt Unit
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/terragrunt-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/terragrunt-example
     - name: Terragrunt Stack
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/terragrunt-multi-module-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/terragrunt-multi-module-example
 
 - id: aws-hello-world
   name: AWS Hello, World Example
@@ -79,7 +79,7 @@
       default: true
   learn_more:
     - name: AWS Hello, World
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/terraform-aws-hello-world-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/terraform-aws-hello-world-example
 
 - id: gcp-hello-world
   name: GCP Hello, World Example
@@ -92,7 +92,7 @@
       default: true
   learn_more:
     - name: GCP Hello, World
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/terraform-gcp-hello-world-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/terraform-gcp-hello-world-example
 
 - id: azure-basic
   name: Azure Hello, World Example
@@ -109,7 +109,7 @@
       default: true
   learn_more:
     - name: Terraform Azure Example
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/azure/terraform-azure-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/azure/terraform-azure-example
 
 - id: opa-terraform
   name: OPA Terraform Example
@@ -126,7 +126,7 @@
       default: true
   learn_more:
     - name: Terraform OPA Example
-      url: https://github.com/gruntwork-io/terratest/tree/main/examples/terraform-opa-example
+      url: https://github.com/gruntwork-io/terratest/tree/v1.0.1/examples/terraform-opa-example
 
 - id: client-factory
   name: Azure Client Factory
