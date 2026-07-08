@@ -255,5 +255,3 @@ replace github.com/gruntwork-io/terratest/modules/core/v2 => ./modules/core
 replace github.com/gruntwork-io/terratest/modules/ssh/v2 => ./modules/ssh
 
 replace github.com/gruntwork-io/terratest/modules/httphelper/v2 => ./modules/httphelper
-
-replace github.com/gruntwork-io/terratest/modules/dnshelper/v2 => ./modules/dnshelper
