@@ -29,11 +29,15 @@ description: >- # this means to ignore newlines until "baseurl:"
 baseurl: "" # the subpath of your site, e.g. /blog
 full_company_name: "Gruntwork, Inc"
 thumbnail_path: "/assets/img/terratest-thumbnail.png"
+# The Git ref (tag) that documentation examples and "View on GitHub" links point at.
+# Keep this on the latest GA release so users copy stable, released code rather than
+# whatever is currently on `main`. Update this and github_api_url below on each GA release.
+stable_ref: v1.0.1
 repository: "github.com/gruntwork-io/terratest"
 twitter_username: https://twitter.com/gruntwork_io
 github_username:  https://github.com/gruntwork-io
 
-github_api_url: https://raw.githubusercontent.com/gruntwork-io/terratest/main
+github_api_url: https://raw.githubusercontent.com/gruntwork-io/terratest/v1.0.1
 
 # Build settings
 # theme: minima
