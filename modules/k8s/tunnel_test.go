@@ -18,8 +18,8 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/k8s"
 
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/httphelper"
-	"github.com/gruntwork-io/terratest/modules/random"
 )
 
 func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {

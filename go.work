@@ -1,0 +1,14 @@
+go 1.26.0
+
+// Development workspace. Resolves the local /v2 submodules for `go build` and
+// `go test` so they see each other's uncommitted code without publishing anything
+// or adding per-module `replace` directives, which keeps the submodule go.mod
+// files clean. As more tiers split out, each adds a `use ./modules/<name>` line.
+//
+// Not used at release: tags are cut with GOWORK=off and no replaces, and the
+// published modules resolve each other by version from the proxy. See
+// scripts/check-release-mode.sh, which validates that GOWORK=off build.
+use (
+	.
+	./modules/core
+)
