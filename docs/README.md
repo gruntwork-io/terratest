@@ -208,7 +208,7 @@ collections:
 5. Add `index.html` file to newly create folder:
 ```
 ---
-layout: collection-browser # DO NOT CAHNGE THIS
+layout: collection-browser # DO NOT CHANGE THIS
 title: Use cases
 subtitle: Learn how to work with Terratest.
 excerpt: Learn how to work with Terratest.

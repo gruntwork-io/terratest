@@ -28,6 +28,6 @@ RUN pip install awscli --upgrade
 
 # Ideally, we'd install the latest version of Docker to avoid a conflict between the Docker client in this container
 # and the Docker API on your local host, but installing the latest version of Docker yields the error "Requires:
-# container-selinux >= 2.9", whch indicates that a newer Linux kernel version is required than what comes with Amazon Linux.
+# container-selinux >= 2.9", which indicates that a newer Linux kernel version is required than what comes with Amazon Linux.
 # So we settle for the Amazon Linux supported version for now.
 RUN yum install -y docker

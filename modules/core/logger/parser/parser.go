@@ -169,7 +169,7 @@ func parseAndStoreTestOutput(
 
 			case strings.HasPrefix(data, "Test"):
 				// Heuristic: `go test` will only execute test functions named `Test.*`, so we assume any line prefixed
-				// with `Test` is a test output for a named test. Also assume that test output will be space delimeted and
+				// with `Test` is a test output for a named test. Also assume that test output will be space delimited and
 				// test names can't contain spaces (because they are function names).
 				// This must be modified when `logger.DoLog` changes.
 				vals := strings.Split(data, " ")

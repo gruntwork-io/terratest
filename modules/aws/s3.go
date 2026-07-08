@@ -730,7 +730,7 @@ func NewS3UploaderContext(t testing.TestingT, ctx context.Context, region string
 	return uploader
 }
 
-// S3AccessLoggingNotEnabledErr is a custom error that occurs when acess logging hasn't been enabled on the S3 Bucket
+// S3AccessLoggingNotEnabledErr is a custom error that occurs when access logging hasn't been enabled on the S3 Bucket
 type S3AccessLoggingNotEnabledErr struct {
 	OriginBucket string
 	Region       string

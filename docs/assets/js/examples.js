@@ -33,7 +33,7 @@ $(document).ready(function () {
   // Open example and scroll to examples section when user clicks on
   // tech in the header
   $('.link-to-test-with-terratest').on('click', function() {
-    // Find any containting the keyword from data-target
+    // Find any containing the keyword from data-target
     const found = $('.navs .examples__nav-item[data-id*="'+$(this).data('target')+'"]')
     if (found && found.length > 0) {
       openExample('index_page', $(found[0]).data('id'))

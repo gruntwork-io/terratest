@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// output contains the output after runnig a command.
+// output contains the output after running a command.
 type output struct {
 	stdout *outputStream
 	stderr *outputStream

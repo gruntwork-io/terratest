@@ -48,7 +48,7 @@ type Options struct {
 	Stdin            io.Reader         // Optional stdin to pass to Terraform commands
 	WarningsAsErrors map[string]string // Terraform warning messages that should be treated as errors. The keys are a regexp to match against the warning and the value is what to display to a user if that warning is matched.
 	Logger           *logger.Logger    // Set a non-default logger that should be used. See the logger package for more info.
-	BackendConfig    map[string]any    // The vars to pass to the terraform init command for extra configuration for the backend. If a var is nil, it will be formated as `--backend-config=var` instead of `--backend-config=var=null`
+	BackendConfig    map[string]any    // The vars to pass to the terraform init command for extra configuration for the backend. If a var is nil, it will be formatted as `--backend-config=var` instead of `--backend-config=var=null`
 	EnvVars          map[string]string // Environment variables to set when running Terraform
 
 	// The vars to pass to Terraform commands using the -var option. Note that terraform does not support passing `null`
@@ -69,7 +69,7 @@ type Options struct {
 	LockTimeout              string            // The lock timeout option to pass to the terraform command with -lock-timeout
 	ExtraArgs                ExtraArgs         // Extra arguments passed to Terraform commands
 	Targets                  []string          // The target resources to pass to the terraform command with -target
-	MixedVars                []Var             // Mix of `-var` and `-var-file` in arbritrary order, use `VarInline()` `VarFile()` to set the value.
+	MixedVars                []Var             // Mix of `-var` and `-var-file` in arbitrary order, use `VarInline()` `VarFile()` to set the value.
 	VarFiles                 []string          // The var file paths to pass to Terraform commands using -var-file option.
 	TimeBetweenRetries       time.Duration     // The amount of time to wait between retries
 	Parallelism              int               // Set the parallelism setting for Terraform

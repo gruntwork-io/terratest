@@ -26,7 +26,7 @@ variable "ssh_public_key" {
 }
 
 variable "dns_prefix" {
-  description = "The prefix to set for the AKS cluster resoureces names."
+  description = "The prefix to set for the AKS cluster resources names."
   default     = "k8stest"
 }
 

@@ -1,7 +1,7 @@
 # Terraform Azure Availability Set Example
 
 This folder contains a simple Terraform module that deploys resources in [Azure](https://azure.microsoft.com/) to demonstrate
-how you can use Terratest to write automated tests for your Azure Terraform code. This module deploys an Availability Set with one attched Virtual Machine.
+how you can use Terratest to write automated tests for your Azure Terraform code. This module deploys an Availability Set with one attached Virtual Machine.
 
 - An [Availability Set](https://docs.microsoft.com/en-us/azure/virtual-machines/availability) that gives the module the following:
   - `Availability Set` with the name specified in the `availability_set_name` output variable.
