@@ -1,0 +1,58 @@
+name: v2 Modularization Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref; these gates are cheap and idempotent.
+concurrency:
+  group: v2-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  acyclic-deps:
+    name: Acyclic dependency graph
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - run: bash scripts/check-acyclic-deps.sh
+
+  single-source:
+    name: Single source of truth per package path
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - run: bash scripts/check-single-source.sh
+
+  siv-placement:
+    name: /v2 SIV placement
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - run: bash scripts/check-siv-placement.sh
+
+  consumer-simulation:
+    name: External consumer simulation (GOWORK=off)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up mise
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release-mode build (each module pins at root versions + external consumer, GOWORK=off)
+        run: bash scripts/check-release-mode.sh

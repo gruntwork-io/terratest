@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	aws "github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 )
 
 // ecrPublicRegion is fixed because the ECR Public API is only available in us-east-1.

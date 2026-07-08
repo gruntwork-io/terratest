@@ -10,8 +10,8 @@ import (
 	getter "github.com/hashicorp/go-getter/v2"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/gruntwork-io/terratest/modules/logger"
-	"github.com/gruntwork-io/terratest/modules/testing"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
+	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 
 var (
