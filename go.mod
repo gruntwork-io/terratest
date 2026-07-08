@@ -26,7 +26,7 @@ require (
 	github.com/tmccombs/hcl2json v0.6.4
 	github.com/urfave/cli v1.22.16 // indirect
 	github.com/zclconf/go-cty v1.15.0
-	golang.org/x/crypto v0.51.0
+	golang.org/x/crypto v0.52.0
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.276.0
