@@ -19,7 +19,6 @@ require (
 	github.com/jstemmer/go-junit-report v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
-	github.com/miekg/dns v1.1.62
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pquerna/otp v1.4.0
 	github.com/sirupsen/logrus v1.9.3
@@ -95,6 +94,8 @@ require (
 	github.com/aws/smithy-go v1.27.1
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/httphelper/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-00010101000000-000000000000
 	github.com/hashicorp/go-getter/v2 v2.2.3
 	github.com/homeport/dyff v1.6.0
 	github.com/jackc/pgx/v5 v5.9.0
@@ -158,7 +159,6 @@ require (
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
-	github.com/go-test/deep v1.1.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
@@ -252,3 +252,9 @@ require (
 // (consumers import the submodules directly), and this replace is never part of
 // a release tag. As more tiers split out, the root gains one replace per submodule.
 replace github.com/gruntwork-io/terratest/modules/core/v2 => ./modules/core
+
+replace github.com/gruntwork-io/terratest/modules/ssh/v2 => ./modules/ssh
+
+replace github.com/gruntwork-io/terratest/modules/httphelper/v2 => ./modules/httphelper
+
+replace github.com/gruntwork-io/terratest/modules/dnshelper/v2 => ./modules/dnshelper
