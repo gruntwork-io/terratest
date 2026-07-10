@@ -7,7 +7,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
-	"github.com/gruntwork-io/terratest/modules/docker"
+	"github.com/gruntwork-io/terratest/modules/docker/v2"
 	"github.com/stretchr/testify/require"
 )
 

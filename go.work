@@ -11,7 +11,11 @@ go 1.26.0
 use (
 	.
 	./modules/core
+	./modules/database
 	./modules/dnshelper
+	./modules/docker
 	./modules/httphelper
+	./modules/opa
+	./modules/packer
 	./modules/ssh
 )
