@@ -11,4 +11,7 @@ go 1.26.0
 use (
 	.
 	./modules/core
+	./modules/dnshelper
+	./modules/httphelper
+	./modules/ssh
 )

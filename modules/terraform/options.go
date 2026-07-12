@@ -6,7 +6,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
-	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/ssh/v2"
 	"github.com/jinzhu/copier"
 	"github.com/stretchr/testify/require"
 )

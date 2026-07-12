@@ -16,8 +16,9 @@ directives during normal development.
 
 ## Why pinning is a release-time step (do not commit it early)
 
-The submodules' `go.mod` files are deliberately left without cross-module
-`require` lines on `main`. Pinning a sibling `require` to the to-be-published
+On `main`, a submodule's cross-module `require` sits at the local zero
+placeholder (e.g. `core/v2 v2.0.0-00010101000000-000000000000`) that `go.work`
+resolves; it is never pinned to a real, to-be-published version. Pinning a sibling `require` to the to-be-published
 version (e.g. `core/v2 v2.0.0-beta.1`) BREAKS the workspace build until that tag
 actually exists: `go.work` does not shadow an unpublished required version, so
 `go build` and `go work sync` try to fetch the missing revision and fail. The pin
