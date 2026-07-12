@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/stretchr/testify/require"
 
-	aws "github.com/gruntwork-io/terratest/modules/aws"
+	aws "github.com/gruntwork-io/terratest/modules/aws/v2"
 )
 
 // mockEc2SyslogClient is a test double for aws.Ec2SyslogAPI.

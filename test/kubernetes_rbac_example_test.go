@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	authv1 "k8s.io/api/authorization/v1"
 
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/k8s/v2"
 )
 
 // An example of how to test the Kubernetes resource config in examples/kubernetes-rbac-example using Terratest,
