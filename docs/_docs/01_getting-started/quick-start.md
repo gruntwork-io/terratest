@@ -88,9 +88,9 @@ repo. This quick start section uses an OpenTofu/Terraform example, but check out
 [Examples]({{site.baseurl}}/examples/) section for other types of infrastructure code you can test (e.g., Packer,
 Kubernetes, etc).
 
-1. Copy the folder including all the files from the [basic example](https://github.com/gruntwork-io/terratest/tree/main/examples/terraform-basic-example/) into the `examples` folder.
+1. Copy the folder including all the files from the [basic example](https://github.com/gruntwork-io/terratest/tree/{{ site.stable_ref }}/examples/terraform-basic-example/) into the `examples` folder.
 
-1. Copy the [basic example test](https://github.com/gruntwork-io/terratest/blob/main/test/terraform_basic_example_test.go) into the `test` folder.
+1. Copy the [basic example test](https://github.com/gruntwork-io/terratest/blob/{{ site.stable_ref }}/test/terraform_basic_example_test.go) into the `test` folder.
 
 1. To configure dependencies, run:
 

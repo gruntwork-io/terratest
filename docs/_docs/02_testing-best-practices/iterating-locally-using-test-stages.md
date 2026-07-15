@@ -23,7 +23,7 @@ each time you change a single line of code can be very slow.
 
 This is where Terratest's `teststructure` package comes in handy: it allows you to explicitly break up your tests into
 stages and to be able to disable any one of those stages by setting an environment variable. Check out the
-[terraform_packer_example_test.go](https://github.com/gruntwork-io/terratest/blob/main/test/terraform_packer_example_test.go)
+[terraform_packer_example_test.go](https://github.com/gruntwork-io/terratest/blob/{{ site.stable_ref }}/test/terraform_packer_example_test.go)
 for working sample code.
 
 ## How to skip stages

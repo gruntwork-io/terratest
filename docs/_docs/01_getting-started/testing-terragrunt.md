@@ -94,5 +94,5 @@ For Terragrunt [stacks](https://terragrunt.gruntwork.io/docs/features/stacks/):
 ## Further Reading
 
 - [Terragrunt Documentation](https://terragrunt.gruntwork.io/)
-- [Stack example](https://github.com/gruntwork-io/terratest/tree/main/examples/terragrunt-multi-module-example)
+- [Stack example](https://github.com/gruntwork-io/terratest/tree/{{ site.stable_ref }}/examples/terragrunt-multi-module-example)
 - [terragrunt package reference](https://pkg.go.dev/github.com/gruntwork-io/terratest/modules/terragrunt)
