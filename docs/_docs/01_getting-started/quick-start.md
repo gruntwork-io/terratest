@@ -165,7 +165,7 @@ output variable using `tofu output`, checking its value is what we expect, and r
 succeeds or fails). If you put this code in a file called `terraform_hello_world_example_test.go`, you can run it by 
 executing `go test`, and you’ll see output that looks like this (truncated for readability):
 
-```
+```console
 $ go test -v
 === RUN   TestTerraformHelloWorldExample
 Running command tofu with args [init]
@@ -216,7 +216,7 @@ response is what we expect, and then runs `tofu destroy` at the end. If you put 
 `terraform_aws_hello_world_example_test.go`, you can run just this test by passing the `-run` argument to `go test` as 
 follows:
 
-```
+```console
 $ go test -v -run TestTerraformAwsHelloWorldExample -timeout 30m
 === RUN   TestTerraformAwsHelloWorldExample
 Running command tofu with args [init]
