@@ -7,12 +7,12 @@ require (
 	cloud.google.com/go/storage v1.62.1 // indirect
 	github.com/aws/aws-lambda-go v1.54.0
 	github.com/go-errors/errors v1.0.2-0.20180813162953-d98b870cc4e0 // indirect
-	github.com/go-sql-driver/mysql v1.8.1
+	github.com/go-sql-driver/mysql v1.10.0 // indirect
 	github.com/google/go-containerregistry v0.20.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gruntwork-io/go-commons v0.8.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-version v1.7.0
+	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.22.0
 	github.com/hashicorp/terraform-json v0.23.0
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
@@ -44,19 +44,18 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.78.1
 	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/database/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/docker/v2 v2.0.0-00010101000000-000000000000
 	github.com/gruntwork-io/terratest/modules/httphelper/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/packer/v2 v2.0.0-00010101000000-000000000000
 	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-00010101000000-000000000000
-	github.com/hashicorp/go-getter/v2 v2.2.3
-	github.com/lib/pq v1.10.9
-	github.com/microsoft/go-mssqldb v1.9.8
-	golang.org/x/sync v0.20.0
-	gotest.tools/v3 v3.5.2
 )
 
 require (
 	cloud.google.com/go/cloudbuild v1.28.0 // indirect
 	cloud.google.com/go/pubsub/v2 v2.4.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers/v3 v3.0.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appservice/armappservice/v2 v2.3.0 // indirect
@@ -103,10 +102,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.0 // indirect
 	github.com/aws/smithy-go v1.27.1 // indirect
 	github.com/gonvenience/ytbx v1.4.4 // indirect
+	github.com/hashicorp/go-getter/v2 v2.2.3 // indirect
 	github.com/homeport/dyff v1.6.0 // indirect
 	github.com/jackc/pgx/v5 v5.9.0 // indirect
+	github.com/lib/pq v1.12.3 // indirect
+	github.com/microsoft/go-mssqldb v1.10.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
 	google.golang.org/grpc v1.80.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gotest.tools/v3 v3.5.2 // indirect
 )
 
 require (
@@ -117,8 +121,8 @@ require (
 	cloud.google.com/go/iam v1.7.0 // indirect
 	cloud.google.com/go/longrunning v0.9.0 // indirect
 	cloud.google.com/go/monitoring v1.24.3 // indirect
-	filippo.io/edwards25519 v1.1.1 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/internal v1.2.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.6.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
@@ -267,8 +271,16 @@ replace github.com/gruntwork-io/terratest/modules/aws/v2 => ./modules/aws
 
 replace github.com/gruntwork-io/terratest/modules/azure/v2 => ./modules/azure
 
+replace github.com/gruntwork-io/terratest/modules/database/v2 => ./modules/database
+
+replace github.com/gruntwork-io/terratest/modules/docker/v2 => ./modules/docker
+
 replace github.com/gruntwork-io/terratest/modules/gcp/v2 => ./modules/gcp
+
+replace github.com/gruntwork-io/terratest/modules/helm/v2 => ./modules/helm
 
 replace github.com/gruntwork-io/terratest/modules/k8s/v2 => ./modules/k8s
 
-replace github.com/gruntwork-io/terratest/modules/helm/v2 => ./modules/helm
+replace github.com/gruntwork-io/terratest/modules/opa/v2 => ./modules/opa
+
+replace github.com/gruntwork-io/terratest/modules/packer/v2 => ./modules/packer

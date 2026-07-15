@@ -13,10 +13,14 @@ use (
 	./modules/aws
 	./modules/azure
 	./modules/core
+	./modules/database
 	./modules/dnshelper
+	./modules/docker
 	./modules/gcp
 	./modules/helm
 	./modules/httphelper
 	./modules/k8s
+	./modules/opa
+	./modules/packer
 	./modules/ssh
 )
