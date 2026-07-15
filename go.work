@@ -10,8 +10,17 @@ go 1.26.0
 // scripts/check-release-mode.sh, which validates that GOWORK=off build.
 use (
 	.
+	./modules/aws
+	./modules/azure
 	./modules/core
+	./modules/database
 	./modules/dnshelper
+	./modules/docker
+	./modules/gcp
+	./modules/helm
 	./modules/httphelper
+	./modules/k8s
+	./modules/opa
+	./modules/packer
 	./modules/ssh
 )

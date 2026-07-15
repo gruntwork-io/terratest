@@ -12,7 +12,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
-	"github.com/gruntwork-io/terratest/modules/opa"
+	"github.com/gruntwork-io/terratest/modules/opa/v2"
 )
 
 // OPAEvalContext runs `opa eval` with the given options on the terraform files identified in the TerraformDir
