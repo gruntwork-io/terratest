@@ -10,21 +10,21 @@ require (
 	github.com/go-sql-driver/mysql v1.10.0 // indirect
 	github.com/google/go-containerregistry v0.20.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gruntwork-io/go-commons v0.8.0
-	github.com/hashicorp/go-multierror v1.1.1
+	github.com/gruntwork-io/go-commons v0.8.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.9.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.22.0
-	github.com/hashicorp/terraform-json v0.23.0
-	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
+	github.com/hashicorp/hcl/v2 v2.22.0 // indirect
+	github.com/hashicorp/terraform-json v0.23.0 // indirect
+	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a // indirect
 	github.com/magiconair/properties v1.8.7
-	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
+	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pquerna/otp v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/testify v1.11.1
-	github.com/tmccombs/hcl2json v0.6.4
+	github.com/tmccombs/hcl2json v0.6.4 // indirect
 	github.com/urfave/cli v1.22.16 // indirect
-	github.com/zclconf/go-cty v1.15.0
+	github.com/zclconf/go-cty v1.15.0 // indirect
 	golang.org/x/crypto v0.52.0
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
@@ -50,6 +50,8 @@ require (
 	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0-00010101000000-000000000000
 	github.com/gruntwork-io/terratest/modules/packer/v2 v2.0.0-00010101000000-000000000000
 	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/teststructure/v2 v2.0.0-00010101000000-000000000000
 )
 
 require (
@@ -284,3 +286,7 @@ replace github.com/gruntwork-io/terratest/modules/k8s/v2 => ./modules/k8s
 replace github.com/gruntwork-io/terratest/modules/opa/v2 => ./modules/opa
 
 replace github.com/gruntwork-io/terratest/modules/packer/v2 => ./modules/packer
+
+replace github.com/gruntwork-io/terratest/modules/terraform/v2 => ./modules/terraform
+
+replace github.com/gruntwork-io/terratest/modules/teststructure/v2 => ./modules/teststructure

@@ -8,7 +8,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/retry"
 	"github.com/gruntwork-io/terratest/modules/database/v2"
-	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
 )
 
 func TestTerraformDatabaseExample(t *testing.T) {

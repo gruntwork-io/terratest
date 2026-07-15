@@ -23,4 +23,7 @@ use (
 	./modules/opa
 	./modules/packer
 	./modules/ssh
+	./modules/terraform
+	./modules/terragrunt
+	./modules/teststructure
 )

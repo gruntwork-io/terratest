@@ -10,8 +10,8 @@ import (
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/httphelper/v2"
 	"github.com/gruntwork-io/terratest/modules/packer/v2"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/teststructure"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
+	"github.com/gruntwork-io/terratest/modules/teststructure/v2"
 )
 
 // This is a complicated, end-to-end integration test. It builds the AMI from examples/packer-docker-example,

@@ -11,7 +11,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
-	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
 )
 
 func TestTerraformGcpHelloWorldExample(t *testing.T) {
