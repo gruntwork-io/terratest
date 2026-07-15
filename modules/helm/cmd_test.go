@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
-	"github.com/gruntwork-io/terratest/modules/helm"
-	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/helm/v2"
+	"github.com/gruntwork-io/terratest/modules/k8s/v2"
 	"github.com/stretchr/testify/assert"
 )
 

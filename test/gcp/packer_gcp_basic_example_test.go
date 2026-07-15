@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gruntwork-io/terratest/modules/gcp"
+	"github.com/gruntwork-io/terratest/modules/gcp/v2"
 	"github.com/gruntwork-io/terratest/modules/packer/v2"
 )
 
