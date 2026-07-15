@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/k8s/v2"
@@ -30,5 +31,5 @@ func TestCanIDoReturnsTrueForAllowedAction(t *testing.T) {
 		Resource:  "pod",
 	}
 	options := k8s.NewKubectlOptions("", "", "kube-system")
-	assert.True(t, k8s.CanIDo(t, options, action))
+	assert.True(t, k8s.CanIDoContext(t, context.Background(), options, action))
 }

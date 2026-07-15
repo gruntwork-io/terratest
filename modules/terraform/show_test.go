@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ func TestShowWithInlinePlan(t *testing.T) {
 		},
 	}
 
-	out := terraform.InitAndPlan(t, options)
+	out := terraform.InitAndPlanContext(t, context.Background(), options)
 	out = strings.ReplaceAll(out, "\n", "")
 	require.Contains(t, out, "Saved the plan to:"+planFilePath)
 	require.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
@@ -38,7 +39,7 @@ func TestShowWithInlinePlan(t *testing.T) {
 	}
 
 	// Test the JSON string
-	planJSON := terraform.Show(t, showOptions)
+	planJSON := terraform.ShowContext(t, context.Background(), showOptions)
 	require.Contains(t, planJSON, "null_resource.test[0]")
 }
 
@@ -58,7 +59,7 @@ func TestShowWithStructInlinePlan(t *testing.T) {
 		},
 	}
 
-	out := terraform.InitAndPlan(t, options)
+	out := terraform.InitAndPlanContext(t, context.Background(), options)
 	out = strings.ReplaceAll(out, "\n", "")
 	require.Contains(t, out, "Saved the plan to:"+planFilePath)
 	require.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
@@ -70,6 +71,6 @@ func TestShowWithStructInlinePlan(t *testing.T) {
 	}
 
 	// Test the JSON string
-	plan := terraform.ShowWithStruct(t, showOptions)
+	plan := terraform.ShowWithStructContext(t, context.Background(), showOptions)
 	require.Contains(t, plan.ResourcePlannedValuesMap, "null_resource.test[0]")
 }

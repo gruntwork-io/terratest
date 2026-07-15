@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,7 +34,7 @@ foo="bar"
 	}
 
 	// Run format command
-	terragrunt.FormatAll(t, options)
+	terragrunt.FormatAllContext(t, context.Background(), options)
 
 	// Read the formatted file to verify it was actually formatted
 	formattedContent, err := os.ReadFile(tgFile)
@@ -71,7 +72,7 @@ foo="bar"
 	}
 
 	// Run format command - should succeed
-	_, err = terragrunt.FormatAllE(t, options)
+	_, err = terragrunt.FormatAllContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
 	// Verify the file was actually formatted by reading it

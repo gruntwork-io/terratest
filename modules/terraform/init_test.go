@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -58,7 +59,7 @@ func TestInitBackendConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			options, expectedPath := tt.setup(t, testFolder)
-			terraform.InitAndApply(t, options)
+			terraform.InitAndApplyContext(t, context.Background(), options)
 			assert.FileExists(t, expectedPath)
 		})
 	}
@@ -90,9 +91,9 @@ func TestInitPluginDir(t *testing.T) {
 		PluginDir:    testingDir,
 	}
 
-	terraform.Init(t, terraformOptions)
+	terraform.InitContext(t, context.Background(), terraformOptions)
 
-	_, err = terraform.InitE(t, terraformOptionsPluginDir)
+	_, err = terraform.InitContextE(t, context.Background(), terraformOptionsPluginDir)
 	require.Error(t, err)
 
 	// In Terraform 0.13, the directory is "plugins"
@@ -104,7 +105,7 @@ func TestInitPluginDir(t *testing.T) {
 	files.CopyFolderContents(initializedPluginDir, testingDir)
 	files.CopyFolderContents(initializedProviderDir, testingDir)
 
-	initOutput := terraform.Init(t, terraformOptionsPluginDir)
+	initOutput := terraform.InitContext(t, context.Background(), terraformOptionsPluginDir)
 
 	assert.Contains(t, initOutput, "(unauthenticated)")
 }
@@ -127,14 +128,14 @@ func TestInitReconfigureBackend(t *testing.T) {
 		},
 	}
 
-	terraform.Init(t, options)
+	terraform.InitContext(t, context.Background(), options)
 
 	options.BackendConfig["workspace_dir"] = "new"
-	_, err = terraform.InitE(t, options)
+	_, err = terraform.InitContextE(t, context.Background(), options)
 	require.Error(t, err, "Backend initialization with changed configuration should fail without -reconfigure option")
 
 	options.Reconfigure = true
-	_, err = terraform.InitE(t, options)
+	_, err = terraform.InitContextE(t, context.Background(), options)
 	require.NoError(t, err, "Backend initialization with changed configuration should success with -reconfigure option")
 }
 
@@ -156,14 +157,14 @@ func TestInitBackendMigration(t *testing.T) {
 		},
 	}
 
-	terraform.Init(t, options)
+	terraform.InitContext(t, context.Background(), options)
 
 	options.BackendConfig["workspace_dir"] = "new"
-	_, err = terraform.InitE(t, options)
+	_, err = terraform.InitContextE(t, context.Background(), options)
 	require.Error(t, err, "Backend initialization with changed configuration should fail without -migrate-state option")
 
 	options.MigrateState = true
-	_, err = terraform.InitE(t, options)
+	_, err = terraform.InitContextE(t, context.Background(), options)
 	require.NoError(t, err, "Backend initialization with changed configuration should success with -migrate-state option")
 }
 
@@ -178,7 +179,7 @@ func TestInitNoColorOption(t *testing.T) {
 		NoColor:      true,
 	})
 
-	out := terraform.InitAndApply(t, options)
+	out := terraform.InitAndApplyContext(t, context.Background(), options)
 
 	require.Contains(t, out, "Hello, World")
 

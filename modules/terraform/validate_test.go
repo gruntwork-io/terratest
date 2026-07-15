@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -18,7 +19,7 @@ func TestInitAndValidateWithNoError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	out := terraform.InitAndValidate(t, options)
+	out := terraform.InitAndValidateContext(t, context.Background(), options)
 	require.Contains(t, out, "The configuration is valid")
 }
 
@@ -32,7 +33,7 @@ func TestInitAndValidateWithError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	out, err := terraform.InitAndValidateE(t, options)
+	out, err := terraform.InitAndValidateContextE(t, context.Background(), options)
 	require.Error(t, err)
 	require.Contains(t, out, "Reference to undeclared input variable")
 }

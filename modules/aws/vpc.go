@@ -132,14 +132,14 @@ func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) 
 //
 // Deprecated: Use [GetVpcByID] instead.
 func GetVpcById(t testing.TestingT, vpcID string, region string) *Vpc { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetVpcByID(t, vpcID, region)
+	return GetVpcByIDContext(t, context.Background(), vpcID, region)
 }
 
 // GetVpcByIdE fetches information about a VPC with given ID in the given region.
 //
 // Deprecated: Use [GetVpcByIDE] instead.
 func GetVpcByIdE(t testing.TestingT, vpcID string, region string) (*Vpc, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetVpcByIDE(t, vpcID, region)
+	return GetVpcByIDContextE(t, context.Background(), vpcID, region)
 }
 
 // GetVpcsContextE fetches information about VPCs from given regions limited by filters

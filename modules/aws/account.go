@@ -65,7 +65,7 @@ func GetAccountIDE(t testing.TestingT) (string, error) {
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetAccountId(t testing.TestingT) string {
-	return GetAccountID(t)
+	return GetAccountIDContext(t, context.Background())
 }
 
 // GetAccountIdE gets the Account ID for the currently logged in IAM User.
@@ -74,7 +74,7 @@ func GetAccountId(t testing.TestingT) string {
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetAccountIdE(t testing.TestingT) (string, error) {
-	return GetAccountIDE(t)
+	return GetAccountIDContextE(t, context.Background())
 }
 
 // ExtractAccountIDFromARN extracts the AWS account ID from an IAM ARN.

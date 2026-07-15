@@ -54,7 +54,7 @@ func LoadApiClientConfigE(configPath string, contextName string) (*restclient.Co
 // that are orphaned as a result of it. The config path is either specified in the environment variable KUBECONFIG or at
 // the user's home directory under `.kube/config`.
 func DeleteConfigContextE(t testing.TestingT, contextName string) error {
-	kubeConfigPath, err := GetKubeConfigPathE(t)
+	kubeConfigPath, err := GetKubeConfigPathContextE(t, context.Background())
 	if err != nil {
 		return err
 	}

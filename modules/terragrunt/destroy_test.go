@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -19,8 +20,8 @@ func TestDestroyAll(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	terragrunt.ApplyAll(t, options)
-	destroyOut := terragrunt.DestroyAll(t, options)
+	terragrunt.ApplyAllContext(t, context.Background(), options)
+	destroyOut := terragrunt.DestroyAllContext(t, context.Background(), options)
 	require.NotEmpty(t, destroyOut)
 }
 
@@ -35,8 +36,8 @@ func TestDestroy(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	terragrunt.Apply(t, options)
-	destroyOut := terragrunt.Destroy(t, options)
+	terragrunt.ApplyContext(t, context.Background(), options)
+	destroyOut := terragrunt.DestroyContext(t, context.Background(), options)
 	require.NotEmpty(t, destroyOut)
 }
 
@@ -48,7 +49,7 @@ func TestDestroyAllWithArgs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Apply first
-	terragrunt.ApplyAll(t, &terragrunt.Options{
+	terragrunt.ApplyAllContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -60,7 +61,7 @@ func TestDestroyAllWithArgs(t *testing.T) {
 		TerragruntArgs:   []string{"--log-level", "error"},
 	}
 
-	destroyOut := terragrunt.DestroyAll(t, options)
+	destroyOut := terragrunt.DestroyAllContext(t, context.Background(), options)
 	require.NotEmpty(t, destroyOut)
 	// With --log-level error, should not see info logs
 	require.NotContains(t, destroyOut, "level=info")

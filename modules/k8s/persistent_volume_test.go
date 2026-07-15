@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -40,12 +41,12 @@ func TestListPersistentVolumesReturnsAllPersistentVolumes(t *testing.T) {
 
 	for pvName := range pvNames {
 		pv := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
-		defer k8s.KubectlDeleteFromString(t, options, pv)
+		defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, pv)
 
-		k8s.KubectlApplyFromString(t, options, pv)
+		k8s.KubectlApplyFromStringContext(t, context.Background(), options, pv)
 	}
 
-	pvs := k8s.ListPersistentVolumes(t, options, metav1.ListOptions{})
+	pvs := k8s.ListPersistentVolumesContext(t, context.Background(), options, metav1.ListOptions{})
 	for _, pv := range pvs {
 		if _, ok := pvNames[pv.Name]; ok {
 			numPvFound++
@@ -59,7 +60,7 @@ func TestListPersistentVolumesReturnsZeroPersistentVolumesIfNoneCreated(t *testi
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "")
-	pvs := k8s.ListPersistentVolumes(t, options, metav1.ListOptions{})
+	pvs := k8s.ListPersistentVolumesContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Empty(t, pvs)
 }
 
@@ -67,7 +68,7 @@ func TestGetPersistentVolumeEReturnsErrorForNonExistentPersistentVolumes(t *test
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "")
-	_, err := k8s.GetPersistentVolumeE(t, options, "non-existent")
+	_, err := k8s.GetPersistentVolumeContextE(t, context.Background(), options, "non-existent")
 	require.Error(t, err)
 }
 
@@ -78,11 +79,11 @@ func TestGetPersistentVolumeReturnsCorrectPersistentVolume(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", "")
 
 	configData := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	pv := k8s.GetPersistentVolume(t, options, pvName)
+	pv := k8s.GetPersistentVolumeContext(t, context.Background(), options, pvName)
 	require.Equal(t, pv.Name, pvName)
 }
 
@@ -95,10 +96,10 @@ func TestWaitUntilPersistentVolumeInTheGivenStatusPhase(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", pvName)
 	configData := fmt.Sprintf(PvFixtureYamlTemplate, pvName, pvName)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilPersistentVolumeInStatus(t, options, pvName, &pvAvailableStatusPhase, 60, 1*time.Second)
+	k8s.WaitUntilPersistentVolumeInStatusContext(t, context.Background(), options, pvName, &pvAvailableStatusPhase, 60, 1*time.Second)
 }
 
 const PvFixtureYamlTemplate = `---

@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -22,7 +23,7 @@ func TestGetResourceCount(t *testing.T) {
 		},
 	}
 
-	cnt := terraform.GetResourceCount(t, terraform.InitAndPlan(t, terraformOptions))
+	cnt := terraform.GetResourceCount(t, terraform.InitAndPlanContext(t, context.Background(), terraformOptions))
 	assert.Equal(t, 1, cnt.Add)
 	assert.Equal(t, 0, cnt.Change)
 	assert.Equal(t, 0, cnt.Destroy)
@@ -88,7 +89,7 @@ func runTestGetResourceCountE(t *testing.T, noColor bool) { //nolint:tparallel /
 	t.Run("InvalidInput",
 		func(t *testing.T) {
 			terraformOptions.Vars["cnt"] = "abc"
-			cmdout, _ := terraform.PlanE(t, terraformOptions)
+			cmdout, _ := terraform.PlanContextE(t, context.Background(), terraformOptions)
 			cnt, err := terraform.GetResourceCountE(t, cmdout)
 			require.EqualError(t, err, terraform.GetResourceCountErrMessage)
 			assert.Nil(t, cnt)

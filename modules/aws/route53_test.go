@@ -16,8 +16,8 @@ import (
 
 func TestRoute53Record(t *testing.T) {
 	t.Parallel()
-	region := aws.GetRandomStableRegion(t, nil, nil)
-	c, err := aws.NewRoute53ClientE(t, region)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	c, err := aws.NewRoute53ClientContextE(t, context.Background(), region)
 	require.NoError(t, err)
 
 	domain := "terratest" + strconv.FormatInt(time.Now().UnixNano(), 10) + "example.com"
@@ -74,7 +74,7 @@ func TestRoute53Record(t *testing.T) {
 	t.Run("ExistingRecord", func(t *testing.T) {
 		t.Parallel()
 
-		route53Record := aws.GetRoute53Record(t, *hostedZone.HostedZone.Id, recordName, string(resourceRecordSet.Type), region)
+		route53Record := aws.GetRoute53RecordContext(t, context.Background(), *hostedZone.HostedZone.Id, recordName, string(resourceRecordSet.Type), region)
 		require.NotNil(t, route53Record)
 		assert.Equal(t, recordName+".", *route53Record.Name)
 		assert.Equal(t, resourceRecordSet.Type, route53Record.Type)
@@ -84,7 +84,7 @@ func TestRoute53Record(t *testing.T) {
 	t.Run("NotExistRecord", func(t *testing.T) {
 		t.Parallel()
 
-		route53Record, err := aws.GetRoute53RecordE(t, *hostedZone.HostedZone.Id, "ne"+recordName, "A", region)
+		route53Record, err := aws.GetRoute53RecordContextE(t, context.Background(), *hostedZone.HostedZone.Id, "ne"+recordName, "A", region)
 		require.Error(t, err)
 		assert.Nil(t, route53Record)
 	})

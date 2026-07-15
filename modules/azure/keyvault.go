@@ -186,7 +186,7 @@ func KeyVaultSecretExistsE(keyVaultName, secretName string) (bool, error) {
 // GetKeyVaultSecretsClientContextE creates a KeyVault secrets client.
 // The ctx parameter supports cancellation and timeouts.
 func GetKeyVaultSecretsClientContextE(_ context.Context, keyVaultName string) (*azsecrets.Client, error) {
-	keyVaultSuffix, err := GetKeyVaultURISuffixE() //nolint:contextcheck
+	keyVaultSuffix, err := GetKeyVaultURISuffixContextE(context.Background()) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func GetKeyVaultSecretsClientE(keyVaultName string) (*azsecrets.Client, error) {
 // GetKeyVaultKeysClientContextE creates a KeyVault keys client.
 // The ctx parameter supports cancellation and timeouts.
 func GetKeyVaultKeysClientContextE(_ context.Context, keyVaultName string) (*azkeys.Client, error) {
-	keyVaultSuffix, err := GetKeyVaultURISuffixE() //nolint:contextcheck
+	keyVaultSuffix, err := GetKeyVaultURISuffixContextE(context.Background()) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func GetKeyVaultKeysClientE(keyVaultName string) (*azkeys.Client, error) {
 // GetKeyVaultCertificatesClientContextE creates a KeyVault certificates client.
 // The ctx parameter supports cancellation and timeouts.
 func GetKeyVaultCertificatesClientContextE(_ context.Context, keyVaultName string) (*azcertificates.Client, error) {
-	keyVaultSuffix, err := GetKeyVaultURISuffixE() //nolint:contextcheck
+	keyVaultSuffix, err := GetKeyVaultURISuffixContextE(context.Background()) //nolint:contextcheck
 	if err != nil {
 		return nil, err
 	}

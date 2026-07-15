@@ -25,40 +25,40 @@ import (
 func TestCreateAndDestroyS3Bucket(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	id := random.UniqueID()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	terraaws.DeleteS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 }
 
 func TestAssertS3BucketExistsNoFalseNegative(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(random.UniqueID())
 	logger.Default.Logf(t, "Random values selected. Region = %s, s3BucketName = %s\n", region, s3BucketName)
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	defer terraaws.DeleteS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 
-	terraaws.AssertS3BucketExists(t, region, s3BucketName)
+	terraaws.AssertS3BucketExistsContext(t, context.Background(), region, s3BucketName)
 }
 
 func TestAssertS3BucketExistsNoFalsePositive(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(random.UniqueID())
 	logger.Default.Logf(t, "Random values selected. Region = %s, s3BucketName = %s\n", region, s3BucketName)
 
 	// We elect not to create the S3 bucket to confirm that our function correctly reports it doesn't exist.
 	// aws.CreateS3Bucket(region, s3BucketName)
 
-	err := terraaws.AssertS3BucketExistsE(t, region, s3BucketName)
+	err := terraaws.AssertS3BucketExistsContextE(t, context.Background(), region, s3BucketName)
 	if err == nil {
 		t.Fatalf("Function claimed that S3 Bucket '%s' exists, but in fact it does not.", s3BucketName)
 	}
@@ -67,31 +67,31 @@ func TestAssertS3BucketExistsNoFalsePositive(t *testing.T) {
 func TestAssertS3BucketVersioningEnabled(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(random.UniqueID())
 	logger.Default.Logf(t, "Random values selected. Region = %s, s3BucketName = %s\n", region, s3BucketName)
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	defer terraaws.DeleteS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 
-	terraaws.PutS3BucketVersioning(t, region, s3BucketName)
+	terraaws.PutS3BucketVersioningContext(t, context.Background(), region, s3BucketName)
 
-	terraaws.AssertS3BucketVersioningExists(t, region, s3BucketName)
+	terraaws.AssertS3BucketVersioningExistsContext(t, context.Background(), region, s3BucketName)
 }
 
 func TestEmptyS3Bucket(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	id := random.UniqueID()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	defer terraaws.DeleteS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 
-	s3Client, err := terraaws.NewS3ClientE(t, region)
+	s3Client, err := terraaws.NewS3ClientContextE(t, context.Background(), region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,17 +102,17 @@ func TestEmptyS3Bucket(t *testing.T) {
 func TestEmptyS3BucketVersioned(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 
 	id := random.UniqueID()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	defer terraaws.DeleteS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 
-	s3Client, err := terraaws.NewS3ClientE(t, region)
+	s3Client, err := terraaws.NewS3ClientContextE(t, context.Background(), region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,7 +136,7 @@ func TestEmptyS3BucketVersioned(t *testing.T) {
 func TestAssertS3BucketPolicyExists(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 
 	id := random.UniqueID()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
@@ -144,26 +144,26 @@ func TestAssertS3BucketPolicyExists(t *testing.T) {
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
 	exampleBucketPolicy := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":["*"]},"Action":"s3:Get*","Resource":"arn:aws:s3:::` + s3BucketName + `/*","Condition":{"Bool":{"aws:SecureTransport":"false"}}}]}`
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	defer terraaws.DeleteS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 
-	terraaws.PutS3BucketPolicy(t, region, s3BucketName, exampleBucketPolicy)
+	terraaws.PutS3BucketPolicyContext(t, context.Background(), region, s3BucketName, exampleBucketPolicy)
 
-	terraaws.AssertS3BucketPolicyExists(t, region, s3BucketName)
+	terraaws.AssertS3BucketPolicyExistsContext(t, context.Background(), region, s3BucketName)
 }
 
 func TestGetS3BucketTags(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	id := random.UniqueID()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	defer terraaws.DeleteS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 
-	s3Client, err := terraaws.NewS3ClientE(t, region)
+	s3Client, err := terraaws.NewS3ClientContextE(t, context.Background(), region)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestGetS3BucketTags(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	actualTags := terraaws.GetS3BucketTags(t, region, s3BucketName)
+	actualTags := terraaws.GetS3BucketTagsContext(t, context.Background(), region, s3BucketName)
 	assert.Equal(t, "Value1", actualTags["Key1"])
 	assert.Equal(t, "Value2", actualTags["Key2"])
 	assert.Empty(t, actualTags["NonExistentKey"])
@@ -212,7 +212,7 @@ func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketN
 			Body:   body,
 		}
 
-		uploader := terraaws.NewS3Uploader(t, region)
+		uploader := terraaws.NewS3UploaderContext(t, context.Background(), region)
 
 		_, err := uploader.UploadObject(context.Background(), params)
 		if err != nil {
@@ -268,7 +268,7 @@ func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketN
 
 	// empty bucket
 	logger.Default.Logf(t, "Emptying bucket %s", s3BucketName)
-	terraaws.EmptyS3Bucket(t, region, s3BucketName)
+	terraaws.EmptyS3BucketContext(t, context.Background(), region, s3BucketName)
 
 	// verify the bucket is empty
 	bucketObjects, err := s3Client.ListObjectsV2(context.Background(), listObjectsParams)
@@ -282,20 +282,20 @@ func testEmptyBucket(t *testing.T, s3Client *s3.Client, region string, s3BucketN
 func TestGetS3BucketOwnershipControls(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	id := random.UniqueID()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
 	t.Cleanup(func() {
-		terraaws.DeleteS3Bucket(t, region, s3BucketName)
+		terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
 	})
 
 	t.Run("Exist", func(t *testing.T) {
 		t.Parallel()
 
-		s3Client, err := terraaws.NewS3ClientE(t, region)
+		s3Client, err := terraaws.NewS3ClientContextE(t, context.Background(), region)
 		require.NoError(t, err)
 		_, err = s3Client.PutBucketOwnershipControls(context.Background(), &s3.PutBucketOwnershipControlsInput{
 			Bucket: &s3BucketName,
@@ -315,7 +315,7 @@ func TestGetS3BucketOwnershipControls(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		controls := terraaws.GetS3BucketOwnershipControls(t, region, s3BucketName)
+		controls := terraaws.GetS3BucketOwnershipControlsContext(t, context.Background(), region, s3BucketName)
 		assert.Len(t, controls, 1)
 		assert.Equal(t, string(types.ObjectOwnershipBucketOwnerEnforced), controls[0])
 	})
@@ -323,7 +323,7 @@ func TestGetS3BucketOwnershipControls(t *testing.T) {
 	t.Run("NotExist", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := terraaws.GetS3BucketOwnershipControlsE(t, region, s3BucketName)
+		_, err := terraaws.GetS3BucketOwnershipControlsContextE(t, context.Background(), region, s3BucketName)
 		assert.Error(t, err)
 	})
 }
@@ -331,7 +331,7 @@ func TestGetS3BucketOwnershipControls(t *testing.T) {
 func TestAssertS3BucketServerSideEncryption(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	logger.Default.Logf(t, "Random values selected. Region = %s\n", region)
 
 	algorithms := []types.ServerSideEncryption{
@@ -344,10 +344,10 @@ func TestAssertS3BucketServerSideEncryption(t *testing.T) {
 			t.Parallel()
 
 			s3BucketName := fmt.Sprintf("gruntwork-terratest-sse-%d-%s", i, strings.ToLower(random.UniqueID()))
-			terraaws.CreateS3Bucket(t, region, s3BucketName)
-			t.Cleanup(func() { terraaws.DeleteS3Bucket(t, region, s3BucketName) })
+			terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+			t.Cleanup(func() { terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName) })
 
-			s3Client := terraaws.NewS3Client(t, region)
+			s3Client := terraaws.NewS3ClientContext(t, context.Background(), region)
 			_, err := s3Client.PutBucketEncryption(context.Background(), &s3.PutBucketEncryptionInput{
 				Bucket: aws.String(s3BucketName),
 				ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
@@ -362,7 +362,7 @@ func TestAssertS3BucketServerSideEncryption(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			terraaws.AssertS3BucketServerSideEncryption(t, region, s3BucketName, algorithm)
+			terraaws.AssertS3BucketServerSideEncryptionContext(t, context.Background(), region, s3BucketName, algorithm)
 
 			otherAlgorithm := types.ServerSideEncryptionAwsKms
 			if algorithm == types.ServerSideEncryptionAwsKms {
@@ -371,7 +371,7 @@ func TestAssertS3BucketServerSideEncryption(t *testing.T) {
 
 			var notEnabled terraaws.BucketServerSideEncryptionNotEnabledError
 
-			err = terraaws.AssertS3BucketServerSideEncryptionE(t, region, s3BucketName, otherAlgorithm)
+			err = terraaws.AssertS3BucketServerSideEncryptionContextE(t, context.Background(), region, s3BucketName, otherAlgorithm)
 			require.ErrorAs(t, err, &notEnabled)
 		})
 	}
@@ -380,21 +380,21 @@ func TestAssertS3BucketServerSideEncryption(t *testing.T) {
 func TestS3ObjectContents(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	id := random.UniqueID()
 	logger.Default.Logf(t, "Random values selected. Region = %s, Id = %s\n", region, id)
 	s3BucketName := "gruntwork-terratest-" + strings.ToLower(id)
 
-	terraaws.CreateS3Bucket(t, region, s3BucketName)
-	defer terraaws.DeleteS3Bucket(t, region, s3BucketName)
-	defer terraaws.EmptyS3BucketE(t, region, s3BucketName)
+	terraaws.CreateS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.DeleteS3BucketContext(t, context.Background(), region, s3BucketName)
+	defer terraaws.EmptyS3BucketContextE(t, context.Background(), region, s3BucketName)
 
 	key := "content-" + id
 	body := make([]byte, 1024)
 	_, _ = cryptorand.Read(body)
 
-	terraaws.PutS3ObjectContentsE(t, region, s3BucketName, key, bytes.NewReader(body))
-	storedBody := terraaws.GetS3ObjectContents(t, region, s3BucketName, key)
+	terraaws.PutS3ObjectContentsContextE(t, context.Background(), region, s3BucketName, key, bytes.NewReader(body))
+	storedBody := terraaws.GetS3ObjectContentsContext(t, context.Background(), region, s3BucketName, key)
 
 	assert.Equal(t, body, []byte(storedBody))
 }

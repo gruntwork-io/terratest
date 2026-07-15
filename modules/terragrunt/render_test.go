@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -17,7 +18,7 @@ func TestRender(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	output := terragrunt.Render(t, &terragrunt.Options{
+	output := terragrunt.RenderContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -35,7 +36,7 @@ func TestRenderJSON(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	output := terragrunt.RenderJSON(t, &terragrunt.Options{
+	output := terragrunt.RenderJSONContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -68,6 +69,6 @@ func TestRenderE_InvalidConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "terragrunt.hcl"), []byte("not_valid!!!"), 0644))
 
-	_, err := terragrunt.RenderE(t, &terragrunt.Options{TerragruntDir: tmpDir})
+	_, err := terragrunt.RenderContextE(t, context.Background(), &terragrunt.Options{TerragruntDir: tmpDir})
 	require.Error(t, err)
 }

@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -19,9 +20,9 @@ func TestApplyAll(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer terragrunt.DestroyAll(t, options)
+	defer terragrunt.DestroyAllContext(t, context.Background(), options)
 
-	out := terragrunt.ApplyAll(t, options)
+	out := terragrunt.ApplyAllContext(t, context.Background(), options)
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -36,9 +37,9 @@ func TestApply(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer terragrunt.Destroy(t, options)
+	defer terragrunt.DestroyContext(t, context.Background(), options)
 
-	out := terragrunt.Apply(t, options)
+	out := terragrunt.ApplyContext(t, context.Background(), options)
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -53,9 +54,9 @@ func TestInitAndApply(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer terragrunt.Destroy(t, options)
+	defer terragrunt.DestroyContext(t, context.Background(), options)
 
-	out := terragrunt.InitAndApply(t, options)
+	out := terragrunt.InitAndApplyContext(t, context.Background(), options)
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -73,7 +74,7 @@ func TestInitAndApplyE_InitFailure(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	out, err := terragrunt.InitAndApplyE(t, options)
+	out, err := terragrunt.InitAndApplyContextE(t, context.Background(), options)
 	require.Error(t, err, "InitAndApplyE should propagate init failure")
 	require.Empty(t, out, "Output should be empty when init fails")
 	require.Contains(t, err.Error(), "Missing expression",

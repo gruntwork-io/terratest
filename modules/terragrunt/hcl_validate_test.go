@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,7 +17,7 @@ func TestHclValidate(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
-	terragrunt.HclValidate(t, &terragrunt.Options{
+	terragrunt.HclValidateContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -28,6 +29,6 @@ func TestHclValidateE_InvalidConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "terragrunt.hcl"), []byte("not_valid!!!"), 0644))
 
-	_, err := terragrunt.HclValidateE(t, &terragrunt.Options{TerragruntDir: tmpDir})
+	_, err := terragrunt.HclValidateContextE(t, context.Background(), &terragrunt.Options{TerragruntDir: tmpDir})
 	require.Error(t, err)
 }

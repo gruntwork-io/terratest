@@ -36,7 +36,7 @@ func (c *customLogger) Logf(_ tftesting.TestingT, format string, args ...any) {
 
 //nolint:paralleltest // test verifies nil Logger behavior and uses subtests that interact with shared state
 func TestCustomLogger(t *testing.T) {
-	logger.Logf(t, "this should be logged with the default logger")
+	logger.Default.Logf(t, "this should be logged with the default logger")
 
 	var l *logger.Logger
 	l.Logf(t, "this should be logged with the default logger too")
@@ -81,7 +81,7 @@ func TestLockedLog(t *testing.T) {
 		},
 		{
 			fn: func(s string) {
-				logger.Logf(t, "%s", s)
+				logger.Default.Logf(t, "%s", s)
 			},
 			name: "Logf",
 		},

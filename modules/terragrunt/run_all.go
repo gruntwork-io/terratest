@@ -28,12 +28,12 @@ func RunAllContextE(t testing.TestingT, ctx context.Context, options *Options, c
 //
 // Deprecated: Use [RunContext] with the --all flag in tgArgs instead.
 func RunAll(t testing.TestingT, options *Options, command string) string {
-	return RunAllContext(t, context.Background(), options, command)
+	return RunContext(t, context.Background(), options, []string{"--all"}, []string{command})
 }
 
 // RunAllE runs terragrunt run --all -- <command> with the given options and returns stdout/stderr.
 //
 // Deprecated: Use [RunContextE] with the --all flag in tgArgs instead.
 func RunAllE(t testing.TestingT, options *Options, command string) (string, error) {
-	return RunAllContextE(t, context.Background(), options, command)
+	return RunContextE(t, context.Background(), options, []string{"--all"}, []string{command})
 }

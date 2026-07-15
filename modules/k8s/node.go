@@ -233,7 +233,7 @@ func AreAllNodesReadyContextE(t testing.TestingT, ctx context.Context, options *
 //
 // Deprecated: Use [AreAllNodesReadyContextE] instead.
 func AreAllNodesReady(t testing.TestingT, options *KubectlOptions) bool {
-	nodesReady, _ := AreAllNodesReadyE(t, options)
+	nodesReady, _ := AreAllNodesReadyContextE(t, context.Background(), options)
 	return nodesReady
 }
 

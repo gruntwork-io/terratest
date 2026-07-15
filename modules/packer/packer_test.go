@@ -1,6 +1,7 @@
 package packer_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -241,18 +242,18 @@ func TestGetArtifactIDFromManifestBuildNameE(t *testing.T) {
 	t.Run("Found", func(t *testing.T) {
 		t.Parallel()
 
-		artifactID, err := packer.GetArtifactIDFromManifestBuildNameE(t, manifestPath, "docker")
+		artifactID, err := packer.GetArtifactIDFromManifestBuildNameContextE(t, context.Background(), manifestPath, "docker")
 		require.NoError(t, err)
 		assert.Equal(t, "Container", artifactID)
 
-		artifactID2 := packer.GetArtifactIDFromManifestBuildName(t, manifestPath, "docker")
+		artifactID2 := packer.GetArtifactIDFromManifestBuildNameContext(t, context.Background(), manifestPath, "docker")
 		assert.Equal(t, "Container", artifactID2)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := packer.GetArtifactIDFromManifestBuildNameE(t, manifestPath, "notfound")
+		_, err := packer.GetArtifactIDFromManifestBuildNameContextE(t, context.Background(), manifestPath, "notfound")
 		require.Error(t, err)
 	})
 }

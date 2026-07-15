@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -28,11 +29,11 @@ type KubectlVersion struct {
 func TestGetKubernetesClusterVersionE(t *testing.T) {
 	t.Parallel()
 
-	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionE(t)
+	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionContextE(t, context.Background())
 	require.NoError(t, err)
 
 	options := k8s.NewKubectlOptions("", "", "")
-	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
+	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputContextE(t, context.Background(), options, "version", "-o", "json")
 	require.NoError(t, err)
 
 	var kctlClusterVersion KubectlVersion
@@ -48,10 +49,10 @@ func TestGetKubernetesClusterVersionWithOptionsE(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "")
-	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionWithOptionsE(t, options)
+	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionWithOptionsContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
-	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputE(t, options, "version", "-o", "json")
+	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputContextE(t, context.Background(), options, "version", "-o", "json")
 	require.NoError(t, err)
 
 	var kctlClusterVersion KubectlVersion

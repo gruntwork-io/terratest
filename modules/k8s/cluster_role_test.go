@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/k8s/v2"
@@ -21,7 +22,7 @@ func TestGetClusterRoleEReturnsErrorForNonExistantClusterRole(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetClusterRoleE(t, options, "non-existing-role")
+	_, err := k8s.GetClusterRoleContextE(t, context.Background(), options, "non-existing-role")
 	require.Error(t, err)
 }
 
@@ -29,11 +30,11 @@ func TestGetClusterRoleEReturnsCorrectClusterRoleInCorrectNamespace(t *testing.T
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	defer k8s.KubectlDeleteFromString(t, options, exampleClusterRoleYAMLTemplate)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, exampleClusterRoleYAMLTemplate)
 
-	k8s.KubectlApplyFromString(t, options, exampleClusterRoleYAMLTemplate)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, exampleClusterRoleYAMLTemplate)
 
-	role := k8s.GetClusterRole(t, options, "terratest-cluster-role")
+	role := k8s.GetClusterRoleContext(t, context.Background(), options, "terratest-cluster-role")
 	require.Equal(t, "terratest-cluster-role", role.Name)
 }
 

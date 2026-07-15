@@ -9,6 +9,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -28,7 +29,7 @@ func TestGetDaemonSetEReturnsErrorForNonExistantDaemonSet(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "")
-	_, err := k8s.GetDaemonSetE(t, options, "sample-ds")
+	_, err := k8s.GetDaemonSetContextE(t, context.Background(), options, "sample-ds")
 	require.Error(t, err)
 }
 
@@ -39,10 +40,10 @@ func TestGetDaemonSetEReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleDaemonSetYAMLTemplate, uniqueID, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	daemonSet := k8s.GetDaemonSet(t, options, "sample-ds")
+	daemonSet := k8s.GetDaemonSetContext(t, context.Background(), options, "sample-ds")
 	require.Equal(t, "sample-ds", daemonSet.Name)
 	require.Equal(t, daemonSet.Namespace, uniqueID)
 }
@@ -54,10 +55,10 @@ func TestListDaemonSetsReturnsCorrectServiceInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleDaemonSetYAMLTemplate, uniqueID, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	daemonSets := k8s.ListDaemonSets(t, options, metav1.ListOptions{})
+	daemonSets := k8s.ListDaemonSetsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, daemonSets, 1)
 
 	daemonSet := daemonSets[0]
@@ -72,10 +73,10 @@ func TestWaitUntilDaemonSetAvailable(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleDaemonSetYAMLTemplate, uniqueID, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilDaemonSetAvailable(t, options, "sample-ds", 60, 1*time.Second)
+	k8s.WaitUntilDaemonSetAvailableContext(t, context.Background(), options, "sample-ds", 60, 1*time.Second)
 }
 
 func TestIsDaemonSetAvailable(t *testing.T) {

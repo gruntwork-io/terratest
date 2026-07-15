@@ -16,26 +16,26 @@ import (
 func TestGetIamCurrentUserName(t *testing.T) {
 	t.Parallel()
 
-	username := aws.GetIamCurrentUserName(t)
+	username := aws.GetIamCurrentUserNameContext(t, context.Background())
 	assert.NotEmpty(t, username)
 }
 
 func TestGetIamCurrentUserArn(t *testing.T) {
 	t.Parallel()
 
-	username := aws.GetIamCurrentUserArn(t)
+	username := aws.GetIamCurrentUserArnContext(t, context.Background())
 	assert.Regexp(t, "^arn:aws:iam::[0-9]{12}:user/.+$", username)
 }
 
 func TestGetIAMPolicyDocument(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomRegion(t, nil, nil)
+	region := aws.GetRandomRegionContext(t, context.Background(), nil, nil)
 
 	t.Run("Exists", func(t *testing.T) {
 		t.Parallel()
 
-		iamClient, err := aws.NewIamClientE(t, region)
+		iamClient, err := aws.NewIamClientContextE(t, context.Background(), region)
 		require.NoError(t, err)
 
 		policyDocument := `{
@@ -66,7 +66,7 @@ func TestGetIAMPolicyDocument(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		p := aws.GetIamPolicyDocument(t, region, *policy.Policy.Arn)
+		p := aws.GetIamPolicyDocumentContext(t, context.Background(), region, *policy.Policy.Arn)
 		t.Log("Retrieved Policy Document:", p)
 		assert.JSONEq(t, policyDocument, p)
 	})
@@ -74,7 +74,7 @@ func TestGetIAMPolicyDocument(t *testing.T) {
 	t.Run("DoesNotExist", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := aws.GetIamPolicyDocumentE(t, region, "arn:aws:iam::1234567890:policy/does-not-exist")
+		_, err := aws.GetIamPolicyDocumentContextE(t, context.Background(), region, "arn:aws:iam::1234567890:policy/does-not-exist")
 		require.Error(t, err)
 	})
 }

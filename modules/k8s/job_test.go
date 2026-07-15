@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -33,11 +34,11 @@ func TestListJobsReturnsJobsInNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleJobYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	jobs := k8s.ListJobs(t, options, metav1.ListOptions{})
+	jobs := k8s.ListJobsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, jobs, 1)
 	job := jobs[0]
 	require.Equal(t, "pi-job", job.Name)
@@ -48,7 +49,7 @@ func TestGetJobEReturnsErrorForNonExistantJob(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetJobE(t, options, "pi-job")
+	_, err := k8s.GetJobContextE(t, context.Background(), options, "pi-job")
 	require.Error(t, err)
 }
 
@@ -59,11 +60,11 @@ func TestGetJobEReturnsCorrectJobInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleJobYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	job := k8s.GetJob(t, options, "pi-job")
+	job := k8s.GetJobContext(t, context.Background(), options, "pi-job")
 	require.Equal(t, "pi-job", job.Name)
 	require.Equal(t, job.Namespace, uniqueID)
 }
@@ -75,11 +76,11 @@ func TestWaitUntilJobSucceedReturnsSuccessfully(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleJobYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilJobSucceed(t, options, "pi-job", 60, 1*time.Second)
+	k8s.WaitUntilJobSucceedContext(t, context.Background(), options, "pi-job", 60, 1*time.Second)
 }
 
 func TestIsJobSucceeded(t *testing.T) {
@@ -146,12 +147,12 @@ func TestCreateJobFromCronJobReturnsCreatedJob(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleCronJobYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
 	newJobName := "pi-copied-job"
-	job := k8s.CreateJobFromCronJob(t, options, "pi-cronjob", newJobName)
+	job := k8s.CreateJobFromCronJobContext(t, context.Background(), options, "pi-cronjob", newJobName)
 	require.NotNil(t, job)
 	assert.Equal(t, job.Namespace, uniqueID)
 	assert.Equal(t, job.Name, newJobName)
@@ -161,7 +162,7 @@ func TestCreateJobFromCronJobEReturnsErrorForNonExistentCronJob(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.CreateJobFromCronJobE(t, options, "non-existent-cronjob", "new-job-name")
+	_, err := k8s.CreateJobFromCronJobContextE(t, context.Background(), options, "non-existent-cronjob", "new-job-name")
 	require.Error(t, err)
 }
 

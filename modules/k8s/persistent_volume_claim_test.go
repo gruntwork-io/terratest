@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -33,11 +34,11 @@ func TestListPersistentVolumeClaimsReturnsPersistentVolumeClaimsInNamespace(t *t
 	options := k8s.NewKubectlOptions("", "", namespace)
 
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	pvcs := k8s.ListPersistentVolumeClaims(t, options, metav1.ListOptions{})
+	pvcs := k8s.ListPersistentVolumeClaimsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, pvcs, 1)
 	pvc := pvcs[0]
 	require.Equal(t, pvc.Name, pvcName)
@@ -50,10 +51,10 @@ func TestListPersistentVolumeClaimsReturnsZeroPersistentVolumeClaimsIfNoneCreate
 	namespace := strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", namespace)
 
-	k8s.CreateNamespace(t, options, namespace)
-	defer k8s.DeleteNamespace(t, options, namespace)
+	k8s.CreateNamespaceContext(t, context.Background(), options, namespace)
+	defer k8s.DeleteNamespaceContext(t, context.Background(), options, namespace)
 
-	pvcs := k8s.ListPersistentVolumeClaims(t, options, metav1.ListOptions{})
+	pvcs := k8s.ListPersistentVolumeClaimsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Empty(t, pvcs)
 }
 
@@ -61,7 +62,7 @@ func TestGetPersistentVolumeClaimEReturnsErrorForNonExistantPersistentVolumeClai
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetPersistentVolumeClaimE(t, options, "non-existent")
+	_, err := k8s.GetPersistentVolumeClaimContextE(t, context.Background(), options, "non-existent")
 	require.Error(t, err)
 }
 
@@ -73,11 +74,11 @@ func TestGetPersistentVolumeClaimReturnsCorrectPersistentVolumeClaimInCorrectNam
 	options := k8s.NewKubectlOptions("", "", namespace)
 
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	pvc := k8s.GetPersistentVolumeClaim(t, options, pvcName)
+	pvc := k8s.GetPersistentVolumeClaimContext(t, context.Background(), options, pvcName)
 	require.Equal(t, pvc.Name, pvcName)
 	require.Equal(t, pvc.Namespace, namespace)
 }
@@ -91,11 +92,11 @@ func TestWaitUntilPersistentVolumeClaimInGivenStatusPhase(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", namespace)
 
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilPersistentVolumeClaimInStatus(t, options, pvcName, &pvcBoundStatusPhase, 60, 1*time.Second)
+	k8s.WaitUntilPersistentVolumeClaimInStatusContext(t, context.Background(), options, pvcName, &pvcBoundStatusPhase, 60, 1*time.Second)
 }
 
 func TestWaitUntilPersistentVolumeClaimInStatusEReturnsErrorWhenWaitingForAnUnexistentPvc(t *testing.T) {
@@ -103,7 +104,7 @@ func TestWaitUntilPersistentVolumeClaimInStatusEReturnsErrorWhenWaitingForAnUnex
 
 	pvcBoundStatusPhase := corev1.ClaimBound
 	options := k8s.NewKubectlOptions("", "", "default")
-	err := k8s.WaitUntilPersistentVolumeClaimInStatusE(t, options, "non-existent", &pvcBoundStatusPhase, 3, 1*time.Second)
+	err := k8s.WaitUntilPersistentVolumeClaimInStatusContextE(t, context.Background(), options, "non-existent", &pvcBoundStatusPhase, 3, 1*time.Second)
 	require.Error(t, err)
 }
 
@@ -116,11 +117,11 @@ func TestWaitUntilPersistentVolumeClaimInStatusEReturnsErrorWhenTimesOut(t *test
 	options := k8s.NewKubectlOptions("", "", namespace)
 
 	configData := renderFixtureYamlTemplate(namespace, pvcName)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	err := k8s.WaitUntilPersistentVolumeClaimInStatusE(t, options, pvcName, &pvcLostStatusPhase, 5, 1*time.Second)
+	err := k8s.WaitUntilPersistentVolumeClaimInStatusContextE(t, context.Background(), options, pvcName, &pvcLostStatusPhase, 5, 1*time.Second)
 	require.Error(t, err)
 }
 

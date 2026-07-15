@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -27,7 +28,7 @@ func TestGetNodes(t *testing.T) {
 
 	// Assumes local kubernetes (minikube or docker-for-desktop kube), where there is only one node
 	options := k8s.NewKubectlOptions("", "", "default")
-	nodes := k8s.GetNodes(t, options)
+	nodes := k8s.GetNodesContext(t, context.Background(), options)
 	require.Len(t, nodes, 1)
 
 	node := nodes[0]
@@ -43,7 +44,7 @@ func TestGetReadyNodes(t *testing.T) {
 
 	// Assumes local kubernetes (minikube or docker-for-desktop kube), where there is only one node
 	options := k8s.NewKubectlOptions("", "", "default")
-	nodes := k8s.GetReadyNodes(t, options)
+	nodes := k8s.GetReadyNodesContext(t, context.Background(), options)
 	require.Len(t, nodes, 1)
 
 	node := nodes[0]
@@ -59,16 +60,16 @@ func TestWaitUntilAllNodesReady(t *testing.T) {
 
 	options := k8s.NewKubectlOptions("", "", "default")
 
-	k8s.WaitUntilAllNodesReady(t, options, 12, 5*time.Second)
+	k8s.WaitUntilAllNodesReadyContext(t, context.Background(), options, 12, 5*time.Second)
 
-	nodes := k8s.GetNodes(t, options)
+	nodes := k8s.GetNodesContext(t, context.Background(), options)
 
 	nodeNames := map[string]bool{}
 	for _, node := range nodes {
 		nodeNames[node.Name] = true
 	}
 
-	readyNodes := k8s.GetReadyNodes(t, options)
+	readyNodes := k8s.GetReadyNodesContext(t, context.Background(), options)
 
 	readyNodeNames := map[string]bool{}
 	for _, node := range readyNodes {

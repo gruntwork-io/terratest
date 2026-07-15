@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -25,7 +26,7 @@ func TestGetRoleEReturnsErrorForNonExistantRole(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetRoleE(t, options, "non-existing-role")
+	_, err := k8s.GetRoleContextE(t, context.Background(), options, "non-existing-role")
 	require.Error(t, err)
 }
 
@@ -36,11 +37,11 @@ func TestGetRoleEReturnsCorrectRoleInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleRoleYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	role := k8s.GetRole(t, options, "terratest-role")
+	role := k8s.GetRoleContext(t, context.Background(), options, "terratest-role")
 	require.Equal(t, "terratest-role", role.Name)
 	require.Equal(t, role.Namespace, uniqueID)
 }

@@ -518,7 +518,7 @@ func GetStorageDNSStringContextE(ctx context.Context, storageAccountName, resour
 	}
 
 	if retval {
-		storageSuffix, err2 := GetStorageURISuffixE() //nolint:contextcheck
+		storageSuffix, err2 := GetStorageURISuffixContextE(context.Background()) //nolint:contextcheck
 		if err2 != nil {
 			return "", err2
 		}

@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ func TestGetNetworkPolicyEReturnsErrorForNonExistantNetworkPolicy(t *testing.T) 
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetNetworkPolicyE(t, options, "test-network-policy")
+	_, err := k8s.GetNetworkPolicyContextE(t, context.Background(), options, "test-network-policy")
 	require.Error(t, err)
 }
 
@@ -37,11 +38,11 @@ func TestGetNetworkPolicyEReturnsCorrectNetworkPolicyInCorrectNamespace(t *testi
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleNetworkPolicyYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	networkPolicy := k8s.GetNetworkPolicy(t, options, "test-network-policy")
+	networkPolicy := k8s.GetNetworkPolicyContext(t, context.Background(), options, "test-network-policy")
 	require.Equal(t, "test-network-policy", networkPolicy.Name)
 	require.Equal(t, networkPolicy.Namespace, uniqueID)
 }
@@ -53,10 +54,10 @@ func TestWaitUntilNetworkPolicyAvailableReturnsSuccessfully(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleNetworkPolicyYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	k8s.WaitUntilNetworkPolicyAvailable(t, options, "test-network-policy", 10, 1*time.Second)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	k8s.WaitUntilNetworkPolicyAvailableContext(t, context.Background(), options, "test-network-policy", 10, 1*time.Second)
 }
 
 const exampleNetworkPolicyYAMLTemplate = `---

@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ func TestGetConfigMapEReturnsErrorForNonExistantConfigMap(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetConfigMapE(t, options, "test-config-map")
+	_, err := k8s.GetConfigMapContextE(t, context.Background(), options, "test-config-map")
 	require.Error(t, err)
 }
 
@@ -37,11 +38,11 @@ func TestGetConfigMapEReturnsCorrectConfigMapInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleConfigMapYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	configMap := k8s.GetConfigMap(t, options, "test-config-map")
+	configMap := k8s.GetConfigMapContext(t, context.Background(), options, "test-config-map")
 	require.Equal(t, "test-config-map", configMap.Name)
 	require.Equal(t, configMap.Namespace, uniqueID)
 }
@@ -53,10 +54,10 @@ func TestWaitUntilConfigMapAvailableReturnsSuccessfully(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleConfigMapYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	k8s.WaitUntilConfigMapAvailable(t, options, "test-config-map", 10, 1*time.Second)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	k8s.WaitUntilConfigMapAvailableContext(t, context.Background(), options, "test-config-map", 10, 1*time.Second)
 }
 
 const exampleConfigMapYAMLTemplate = `---

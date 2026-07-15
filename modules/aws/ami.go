@@ -216,7 +216,7 @@ func GetMostRecentAmiIDE(t testing.TestingT, region string, ownerID string, filt
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filters map[string][]string) string {
-	return GetMostRecentAmiID(t, region, ownerId, filters)
+	return GetMostRecentAmiIDContext(t, context.Background(), region, ownerId, filters)
 }
 
 // GetMostRecentAmiIdE gets the ID of the most recent AMI in the given region that has the given owner and matches
@@ -226,7 +226,7 @@ func GetMostRecentAmiId(t testing.TestingT, region string, ownerId string, filte
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetMostRecentAmiIdE(t testing.TestingT, region string, ownerId string, filters map[string][]string) (string, error) {
-	return GetMostRecentAmiIDE(t, region, ownerId, filters)
+	return GetMostRecentAmiIDContextE(t, context.Background(), region, ownerId, filters)
 }
 
 // Image sorting code borrowed from: https://github.com/hashicorp/packer/blob/7f4112ba229309cfc0ebaa10ded2abdfaf1b22c8/builder/amazon/common/step_source_ami_info.go

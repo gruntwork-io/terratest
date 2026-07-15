@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"strings"
@@ -29,10 +30,10 @@ func TestTunnelOpensAPortForwardTunnelToPod(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	k8s.WaitUntilPodAvailableContext(t, context.Background(), options, "nginx-pod", 60, 1*time.Second)
 
 	// Open a tunnel to pod from any available port locally
 	tunnel := k8s.NewTunnel(options, k8s.ResourceTypePod, "nginx-pod", 0, 80)
@@ -62,10 +63,10 @@ func TestTunnelOpensAPortForwardTunnelToDeployment(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilDeploymentAvailable(t, options, "nginx-deployment", 60, 1*time.Second)
+	k8s.WaitUntilDeploymentAvailableContext(t, context.Background(), options, "nginx-deployment", 60, 1*time.Second)
 
 	// Open a tunnel to pod from any available port locally
 	tunnel := k8s.NewTunnel(options, k8s.ResourceTypeDeployment, "nginx-deployment", 0, 80)
@@ -96,11 +97,11 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 	configData := fmt.Sprintf(ExamplePodWithServiceYAMLTemplate, uniqueID, uniqueID, uniqueID, uniqueID)
 
 	t.Cleanup(func() {
-		k8s.KubectlDeleteFromString(t, options, configData)
+		k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 	})
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 	// t.FailNow()
-	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	k8s.WaitUntilPodAvailableContext(t, context.Background(), options, "nginx-pod", 60, 1*time.Second)
 
 	testCases := []struct {
 		name        string
@@ -120,7 +121,7 @@ func TestTunnelOpensAPortForwardTunnelToService(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			k8s.WaitUntilServiceAvailable(t, options, testCase.serviceName, 60, 1*time.Second)
+			k8s.WaitUntilServiceAvailableContext(t, context.Background(), options, testCase.serviceName, 60, 1*time.Second)
 
 			// Open a tunnel from any available port locally
 			tunnel := k8s.NewTunnel(options, k8s.ResourceTypeService, testCase.serviceName, 0, 8080)

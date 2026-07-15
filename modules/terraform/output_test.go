@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,21 +21,21 @@ func TestOutputString(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	b := terraform.Output(t, options, "bool")
+	b := terraform.OutputContext(t, context.Background(), options, "bool")
 	require.Equal(t, "true", b, "Bool %q should match %q", "true", b)
 
-	str := terraform.Output(t, options, "string")
+	str := terraform.OutputContext(t, context.Background(), options, "string")
 	require.Equal(t, "This is a string.", str, "String %q should match %q", "This is a string.", str)
 
-	num := terraform.Output(t, options, "number")
+	num := terraform.OutputContext(t, context.Background(), options, "number")
 	require.Equal(t, "3.14", num, "Number %q should match %q", "3.14", num)
 
-	num1 := terraform.Output(t, options, "number1")
+	num1 := terraform.OutputContext(t, context.Background(), options, "number1")
 	require.Equal(t, "3", num1, "Number %q should match %q", "3", num1)
 
-	unicodeString := terraform.Output(t, options, "unicode_string")
+	unicodeString := terraform.OutputContext(t, context.Background(), options, "unicode_string")
 	require.Equal(t, "söme chäräcter", unicodeString)
 }
 
@@ -48,8 +49,8 @@ func TestOutputList(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
-	out := terraform.OutputList(t, options, "giant_steps")
+	terraform.InitAndApplyContext(t, context.Background(), options)
+	out := terraform.OutputListContext(t, context.Background(), options, "giant_steps")
 
 	expectedLen := 4
 	expectedItem := "John Coltrane"
@@ -73,9 +74,9 @@ func TestOutputNotListError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	_, err = terraform.OutputListE(t, options, "not_a_list")
+	_, err = terraform.OutputListContextE(t, context.Background(), options, "not_a_list")
 	require.Error(t, err)
 }
 
@@ -89,8 +90,8 @@ func TestOutputMap(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
-	out := terraform.OutputMap(t, options, "mogwai")
+	terraform.InitAndApplyContext(t, context.Background(), options)
+	out := terraform.OutputMapContext(t, context.Background(), options, "mogwai")
 
 	t.Log(out)
 
@@ -116,9 +117,9 @@ func TestOutputNotMapError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	_, err = terraform.OutputMapE(t, options, "not_a_map")
+	_, err = terraform.OutputMapContextE(t, context.Background(), options, "not_a_map")
 	require.Error(t, err)
 }
 
@@ -132,8 +133,8 @@ func TestOutputMapOfObjects(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
-	out := terraform.OutputMapOfObjects(t, options, "map_of_objects")
+	terraform.InitAndApplyContext(t, context.Background(), options)
+	out := terraform.OutputMapOfObjectsContext(t, context.Background(), options, "map_of_objects")
 
 	nestedMap1 := map[string]any{
 		"four": 4,
@@ -170,9 +171,9 @@ func TestOutputNotMapOfObjectsError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	_, err = terraform.OutputMapOfObjectsE(t, options, "not_map_of_objects")
+	_, err = terraform.OutputMapOfObjectsContextE(t, context.Background(), options, "not_map_of_objects")
 	require.Error(t, err)
 }
 
@@ -186,8 +187,8 @@ func TestOutputListOfObjects(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
-	out := terraform.OutputListOfObjects(t, options, "list_of_maps")
+	terraform.InitAndApplyContext(t, context.Background(), options)
+	out := terraform.OutputListOfObjectsContext(t, context.Background(), options, "list_of_maps")
 
 	expectedLen := 3
 	nestedMap1 := map[string]any{
@@ -243,9 +244,9 @@ func TestOutputNotListOfObjectsError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	_, err = terraform.OutputListOfObjectsE(t, options, "not_list_of_maps")
+	_, err = terraform.OutputListOfObjectsContextE(t, context.Background(), options, "not_list_of_maps")
 	require.Error(t, err)
 }
 
@@ -261,8 +262,8 @@ func TestOutputsForKeys(t *testing.T) {
 
 	keys := []string{"our_star", "stars", "magnitudes"}
 
-	terraform.InitAndApply(t, options)
-	out := terraform.OutputForKeys(t, options, keys)
+	terraform.InitAndApplyContext(t, context.Background(), options)
+	out := terraform.OutputForKeysContext(t, context.Background(), options, keys)
 
 	expectedLen := 3
 	require.Len(t, out, expectedLen, "Output should contain %d items", expectedLen)
@@ -311,7 +312,7 @@ func TestOutputJson(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
 	expected := `{
   "bool": {
@@ -341,7 +342,7 @@ func TestOutputJson(t *testing.T) {
   }
 }`
 
-	str := terraform.OutputJSON(t, options, "")
+	str := terraform.OutputJSONContext(t, context.Background(), options, "")
 	require.Equal(t, expected, str, "JSON %q should match %q", expected, str)
 }
 
@@ -371,7 +372,7 @@ func TestOutputStruct(t *testing.T) {
 		},
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
 	expectedObject := TestStruct{
 		Somebool:    true,
@@ -384,7 +385,7 @@ func TestOutputStruct(t *testing.T) {
 	}
 	actualObject := TestStruct{}
 
-	terraform.OutputStruct(t, options, "object", &actualObject)
+	terraform.OutputStructContext(t, context.Background(), options, "object", &actualObject)
 
 	expectedList := []TestStruct{
 		{
@@ -402,7 +403,7 @@ func TestOutputStruct(t *testing.T) {
 	}
 	actualList := []TestStruct{}
 
-	terraform.OutputStruct(t, options, "list_of_objects", &actualList)
+	terraform.OutputStructContext(t, context.Background(), options, "list_of_objects", &actualList)
 
 	require.Equal(t, expectedObject, actualObject, "Object should be %q, got %q", expectedObject, actualObject)
 	require.Equal(t, expectedList, actualList, "List should be %q, got %q", expectedList, actualList)
@@ -420,8 +421,8 @@ func TestOutputsAll(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
-	out := terraform.OutputAll(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
+	out := terraform.OutputAllContext(t, context.Background(), options)
 
 	expectedLen := 4
 	require.Len(t, out, expectedLen, "Output should contain %d items", expectedLen)
@@ -465,9 +466,9 @@ func TestOutputsForKeysError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	_, err = terraform.OutputForKeysE(t, options, []string{"random_key"})
+	_, err = terraform.OutputForKeysContextE(t, context.Background(), options, []string{"random_key"})
 	require.Error(t, err)
 }
 
@@ -481,9 +482,9 @@ func TestOutputWithDebugLogLevel(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	_, err = terraform.OutputMapOfObjectsE(t, &terraform.Options{
+	_, err = terraform.OutputMapOfObjectsContextE(t, context.Background(), &terraform.Options{
 		TerraformDir: options.TerraformDir,
 		EnvVars:      map[string]string{"TF_LOG": "DEBUG"},
 	}, "map_of_objects")

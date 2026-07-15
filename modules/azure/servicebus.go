@@ -9,15 +9,15 @@ import (
 )
 
 func serviceBusNamespaceClientE(subscriptionID string) (*armservicebus.NamespacesClient, error) {
-	return CreateServiceBusNamespacesClientE(subscriptionID) //nolint:contextcheck
+	return CreateServiceBusNamespacesClientContextE(context.Background(), subscriptionID) //nolint:contextcheck
 }
 
 func serviceBusTopicClientE(subscriptionID string) (*armservicebus.TopicsClient, error) {
-	return CreateServiceBusTopicsClientE(subscriptionID) //nolint:contextcheck
+	return CreateServiceBusTopicsClientContextE(context.Background(), subscriptionID) //nolint:contextcheck
 }
 
 func serviceBusSubscriptionsClientE(subscriptionID string) (*armservicebus.SubscriptionsClient, error) {
-	return CreateServiceBusSubscriptionsClientE(subscriptionID) //nolint:contextcheck
+	return CreateServiceBusSubscriptionsClientContextE(context.Background(), subscriptionID) //nolint:contextcheck
 }
 
 // ListServiceBusNamespaceContextE lists all SB namespaces in all resource groups in the given subscription ID.

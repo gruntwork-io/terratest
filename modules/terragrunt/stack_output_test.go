@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -28,7 +29,7 @@ func TestStackOutputIntegration(t *testing.T) {
 	}
 
 	// Initialize and apply tg using stack commands
-	_, err = terragrunt.InitE(t, options)
+	_, err = terragrunt.InitContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
 	applyOptions := &terragrunt.Options{
@@ -37,7 +38,7 @@ func TestStackOutputIntegration(t *testing.T) {
 		Logger:           logger.Discard,
 		TerraformArgs:    []string{"apply"}, // stack run auto-approves by default
 	}
-	_, err = terragrunt.StackRunE(t, applyOptions)
+	_, err = terragrunt.StackRunContextE(t, context.Background(), applyOptions)
 	require.NoError(t, err)
 
 	// Clean up after test
@@ -48,11 +49,11 @@ func TestStackOutputIntegration(t *testing.T) {
 			Logger:           logger.Discard,
 			TerraformArgs:    []string{"destroy"}, // stack run auto-approves by default
 		}
-		_, _ = terragrunt.StackRunE(t, destroyOptions)
+		_, _ = terragrunt.StackRunContextE(t, context.Background(), destroyOptions)
 	}()
 
 	// Test string stack output - get output from mother unit
-	strOutput := terragrunt.StackOutput(t, options, "mother")
+	strOutput := terragrunt.StackOutputContext(t, context.Background(), options, "mother")
 	assert.Contains(t, strOutput, "./test.txt")
 
 	// Test getting stack output as JSON using the StackOutputJSON function
@@ -62,12 +63,12 @@ func TestStackOutputIntegration(t *testing.T) {
 		Logger:           logger.Discard,
 	}
 
-	strOutputJSON := terragrunt.StackOutputJSON(t, jsonOptions, "mother")
+	strOutputJSON := terragrunt.StackOutputJSONContext(t, context.Background(), jsonOptions, "mother")
 	// The JSON output for a single value should still be cleaned to just show the value
 	assert.Contains(t, strOutputJSON, "./test.txt")
 
 	// Test getting all stack outputs as JSON
-	allOutputsJSON := terragrunt.StackOutputJSON(t, jsonOptions, "")
+	allOutputsJSON := terragrunt.StackOutputJSONContext(t, context.Background(), jsonOptions, "")
 	require.NotEmpty(t, allOutputsJSON)
 
 	// For JSON output of all outputs, we should get valid JSON
@@ -114,7 +115,7 @@ func TestStackOutputErrorHandling(t *testing.T) {
 	}
 
 	// Initialize and apply tg using stack commands
-	_, err = terragrunt.InitE(t, options)
+	_, err = terragrunt.InitContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
 	applyOptions := &terragrunt.Options{
@@ -123,7 +124,7 @@ func TestStackOutputErrorHandling(t *testing.T) {
 		Logger:           logger.Discard,
 		TerraformArgs:    []string{"apply"}, // stack run auto-approves by default
 	}
-	_, err = terragrunt.StackRunE(t, applyOptions)
+	_, err = terragrunt.StackRunContextE(t, context.Background(), applyOptions)
 	require.NoError(t, err)
 
 	// Clean up after test
@@ -134,11 +135,11 @@ func TestStackOutputErrorHandling(t *testing.T) {
 			Logger:           logger.Discard,
 			TerraformArgs:    []string{"destroy"}, // stack run auto-approves by default
 		}
-		_, _ = terragrunt.StackRunE(t, destroyOptions)
+		_, _ = terragrunt.StackRunContextE(t, context.Background(), destroyOptions)
 	}()
 
 	// Test that non-existent stack output returns error or empty string
-	output, err := terragrunt.StackOutputE(t, options, "non_existent_output")
+	output, err := terragrunt.StackOutputContextE(t, context.Background(), options, "non_existent_output")
 	// Tg stack output might return empty string for non-existent outputs
 	// rather than an error, so we need to handle both cases
 	if err != nil {
@@ -164,7 +165,7 @@ func TestStackOutputAll(t *testing.T) {
 	}
 
 	// Initialize and apply tg using stack commands
-	_, err = terragrunt.InitE(t, options)
+	_, err = terragrunt.InitContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
 	applyOptions := &terragrunt.Options{
@@ -173,7 +174,7 @@ func TestStackOutputAll(t *testing.T) {
 		Logger:           logger.Discard,
 		TerraformArgs:    []string{"apply"}, // stack run auto-approves by default
 	}
-	_, err = terragrunt.StackRunE(t, applyOptions)
+	_, err = terragrunt.StackRunContextE(t, context.Background(), applyOptions)
 	require.NoError(t, err)
 
 	// Clean up after test
@@ -184,11 +185,11 @@ func TestStackOutputAll(t *testing.T) {
 			Logger:           logger.Discard,
 			TerraformArgs:    []string{"destroy"}, // stack run auto-approves by default
 		}
-		_, _ = terragrunt.StackRunE(t, destroyOptions)
+		_, _ = terragrunt.StackRunContextE(t, context.Background(), destroyOptions)
 	}()
 
 	// Test StackOutputAll - get all outputs as a map
-	allOutputs := terragrunt.StackOutputAll(t, options)
+	allOutputs := terragrunt.StackOutputAllContext(t, context.Background(), options)
 	require.NotEmpty(t, allOutputs)
 
 	// Verify expected outputs are present
@@ -218,7 +219,7 @@ func TestStackOutputListAll(t *testing.T) {
 	}
 
 	// Initialize and apply using stack commands
-	_, err = terragrunt.InitE(t, options)
+	_, err = terragrunt.InitContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
 	applyOptions := &terragrunt.Options{
@@ -227,7 +228,7 @@ func TestStackOutputListAll(t *testing.T) {
 		Logger:           logger.Discard,
 		TerraformArgs:    []string{"apply"},
 	}
-	_, err = terragrunt.StackRunE(t, applyOptions)
+	_, err = terragrunt.StackRunContextE(t, context.Background(), applyOptions)
 	require.NoError(t, err)
 
 	// Clean up after test
@@ -238,11 +239,11 @@ func TestStackOutputListAll(t *testing.T) {
 			Logger:           logger.Discard,
 			TerraformArgs:    []string{"destroy"},
 		}
-		_, _ = terragrunt.StackRunE(t, destroyOptions)
+		_, _ = terragrunt.StackRunContextE(t, context.Background(), destroyOptions)
 	}()
 
 	// Test StackOutputListAll - get all output keys
-	keys := terragrunt.StackOutputListAll(t, options)
+	keys := terragrunt.StackOutputListAllContext(t, context.Background(), options)
 	require.NotEmpty(t, keys)
 
 	// Verify expected keys are present
@@ -269,7 +270,7 @@ func TestStackOutputListAllE(t *testing.T) {
 		Logger:           logger.Discard,
 	}
 
-	_, err = terragrunt.InitE(t, options)
+	_, err = terragrunt.InitContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
 	applyOptions := &terragrunt.Options{
@@ -278,7 +279,7 @@ func TestStackOutputListAllE(t *testing.T) {
 		Logger:           logger.Discard,
 		TerraformArgs:    []string{"apply"},
 	}
-	_, err = terragrunt.StackRunE(t, applyOptions)
+	_, err = terragrunt.StackRunContextE(t, context.Background(), applyOptions)
 	require.NoError(t, err)
 
 	defer func() {
@@ -288,10 +289,10 @@ func TestStackOutputListAllE(t *testing.T) {
 			Logger:           logger.Discard,
 			TerraformArgs:    []string{"destroy"},
 		}
-		_, _ = terragrunt.StackRunE(t, destroyOptions)
+		_, _ = terragrunt.StackRunContextE(t, context.Background(), destroyOptions)
 	}()
 
-	keys, err := terragrunt.StackOutputListAllE(t, options)
+	keys, err := terragrunt.StackOutputListAllContextE(t, context.Background(), options)
 	require.NoError(t, err)
 	require.NotEmpty(t, keys)
 	require.Contains(t, keys, "mother")

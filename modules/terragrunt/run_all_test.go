@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -20,7 +21,7 @@ func TestRunAll(t *testing.T) {
 	}
 
 	// Test with validate command
-	out := terragrunt.RunAll(t, options, "validate")
+	out := terragrunt.RunContext(t, context.Background(), options, []string{"--all"}, []string{"validate"})
 	require.NotEmpty(t, out)
 }
 
@@ -36,7 +37,7 @@ func TestRunAllE(t *testing.T) {
 	}
 
 	// Test with validate command
-	out, err := terragrunt.RunAllE(t, options, "validate")
+	out, err := terragrunt.RunContextE(t, context.Background(), options, []string{"--all"}, []string{"validate"})
 	require.NoError(t, err)
 	require.NotEmpty(t, out)
 }
@@ -53,7 +54,7 @@ func TestRunAllWithPlan(t *testing.T) {
 	}
 
 	// Test with plan command - verify output contains expected terraform plan text
-	out, err := terragrunt.RunAllE(t, options, "plan")
+	out, err := terragrunt.RunContextE(t, context.Background(), options, []string{"--all"}, []string{"plan"})
 	require.NoError(t, err)
 	require.Contains(t, out, "Changes to Outputs")
 }

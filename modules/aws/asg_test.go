@@ -22,14 +22,14 @@ func TestGetCapacityInfoForAsg(t *testing.T) {
 
 	uniqueID := random.UniqueID()
 	asgName := t.Name() + "-" + uniqueID
-	region := aws.GetRandomStableRegion(t, []string{}, []string{})
+	region := aws.GetRandomStableRegionContext(t, context.Background(), []string{}, []string{})
 
 	defer deleteAutoScalingGroup(t, asgName, region)
 
 	createTestAutoScalingGroup(t, asgName, region, 2)
-	aws.WaitForCapacity(t, asgName, region, 40, 15*time.Second)
+	aws.WaitForCapacityContext(t, context.Background(), asgName, region, 40, 15*time.Second)
 
-	capacityInfo := aws.GetCapacityInfoForAsg(t, asgName, region)
+	capacityInfo := aws.GetCapacityInfoForAsgContext(t, context.Background(), asgName, region)
 	assert.Equal(t, int64(2), capacityInfo.DesiredCapacity)
 	assert.Equal(t, int64(2), capacityInfo.CurrentCapacity)
 	assert.Equal(t, int64(1), capacityInfo.MinCapacity)
@@ -41,33 +41,33 @@ func TestGetInstanceIdsForAsg(t *testing.T) {
 
 	uniqueID := random.UniqueID()
 	asgName := t.Name() + "-" + uniqueID
-	region := aws.GetRandomStableRegion(t, []string{}, []string{})
+	region := aws.GetRandomStableRegionContext(t, context.Background(), []string{}, []string{})
 
 	defer deleteAutoScalingGroup(t, asgName, region)
 
 	createTestAutoScalingGroup(t, asgName, region, 1)
-	aws.WaitForCapacity(t, asgName, region, 40, 15*time.Second)
+	aws.WaitForCapacityContext(t, context.Background(), asgName, region, 40, 15*time.Second)
 
-	instanceIDs := aws.GetInstanceIdsForAsg(t, asgName, region)
+	instanceIDs := aws.GetInstanceIdsForAsgContext(t, context.Background(), asgName, region)
 	assert.Len(t, instanceIDs, 1)
 }
 
 func createTestAutoScalingGroup(t *testing.T, name string, region string, desiredCount int32) {
 	t.Helper()
 
-	azs := aws.GetAvailabilityZones(t, region)
-	ec2Client := aws.NewEc2Client(t, region)
-	imageID := aws.GetAmazonLinuxAmi(t, region)
+	azs := aws.GetAvailabilityZonesContext(t, context.Background(), region)
+	ec2Client := aws.NewEc2ClientContext(t, context.Background(), region)
+	imageID := aws.GetAmazonLinuxAmiContext(t, context.Background(), region)
 	template, err := ec2Client.CreateLaunchTemplate(context.Background(), &ec2.CreateLaunchTemplateInput{
 		LaunchTemplateData: &types.RequestLaunchTemplateData{
 			ImageId:      awsSDK.String(imageID),
-			InstanceType: types.InstanceType(aws.GetRecommendedInstanceType(t, region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})),
+			InstanceType: types.InstanceType(aws.GetRecommendedInstanceTypeContext(t, context.Background(), region, []string{"t2.micro, t3.micro", "t2.small", "t3.small"})),
 		},
 		LaunchTemplateName: awsSDK.String(name),
 	})
 	require.NoError(t, err)
 
-	asgClient := aws.NewAsgClient(t, region)
+	asgClient := aws.NewAsgClientContext(t, context.Background(), region)
 	param := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName: &name,
 		LaunchTemplate: &autoscalingTypes.LaunchTemplateSpecification{
@@ -95,7 +95,7 @@ func deleteAutoScalingGroup(t *testing.T, name string, region string) {
 	// We have to scale ASG down to 0 before we can delete it
 	scaleAsgToZero(t, name, region)
 
-	asgClient := aws.NewAsgClient(t, region)
+	asgClient := aws.NewAsgClientContext(t, context.Background(), region)
 	input := &autoscaling.DeleteAutoScalingGroupInput{AutoScalingGroupName: awsSDK.String(name)}
 	_, err := asgClient.DeleteAutoScalingGroup(context.Background(), input)
 	require.NoError(t, err)
@@ -106,7 +106,7 @@ func deleteAutoScalingGroup(t *testing.T, name string, region string) {
 	}, 40*time.Minute)
 	require.NoError(t, err)
 
-	ec2Client := aws.NewEc2Client(t, region)
+	ec2Client := aws.NewEc2ClientContext(t, context.Background(), region)
 	_, err = ec2Client.DeleteLaunchTemplate(context.Background(), &ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateName: awsSDK.String(name),
 	})
@@ -116,7 +116,7 @@ func deleteAutoScalingGroup(t *testing.T, name string, region string) {
 func scaleAsgToZero(t *testing.T, name string, region string) {
 	t.Helper()
 
-	asgClient := aws.NewAsgClient(t, region)
+	asgClient := aws.NewAsgClientContext(t, context.Background(), region)
 	input := &autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: awsSDK.String(name),
 		DesiredCapacity:      awsSDK.Int32(0),
@@ -125,7 +125,7 @@ func scaleAsgToZero(t *testing.T, name string, region string) {
 	}
 	_, err := asgClient.UpdateAutoScalingGroup(context.Background(), input)
 	require.NoError(t, err)
-	aws.WaitForCapacity(t, name, region, 40, 15*time.Second)
+	aws.WaitForCapacityContext(t, context.Background(), name, region, 40, 15*time.Second)
 
 	// There is an eventual consistency bug where even though the ASG is scaled down, AWS sometimes still views a
 	// scaling activity so we add a 5-second pause here to work around it.
