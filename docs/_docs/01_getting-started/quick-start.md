@@ -14,32 +14,92 @@ custom_js:
 
 ## Requirements
 
-Terratest uses the Go testing framework. To use Terratest, you need to install:
+Terratest uses the Go testing framework, and the examples below drive [OpenTofu](https://opentofu.org/). To follow
+along, you need:
 
 - [Go](https://golang.org/) (requires version >=1.26)
+- [OpenTofu](https://opentofu.org/docs/intro/install/) (or [Terraform](https://www.terraform.io/), if you prefer)
 
-## Setting up your project
+Terratest's `terraform` module runs whichever binary you point it at. By default it uses `terraform` when that binary
+is on your `PATH` and otherwise falls back to `tofu`, so installing only OpenTofu is enough to get going. To pin a test
+to OpenTofu regardless of what else is installed, set `TerraformBinary: "tofu"` in the `terraform.Options` you pass to
+the helpers (more on this [below](#preferring-opentofu)).
+
+The rest of this guide uses [mise](https://mise.jdx.dev/) to manage tool versions. It isn't required (install Go and
+OpenTofu however you like), but it keeps everyone on the same versions.
+
+## Starting a new project
+
+If you're adding tests to an existing module, skip to [Setting up your tests](#setting-up-your-tests). Otherwise, here
+is how to stand up a fresh Go project from scratch.
+
+1. Create the project and initialize Git:
+
+    ```bash
+    mkdir my-infra && cd my-infra
+    git init
+    ```
+
+1. Pin your tools with mise. This writes a `mise.toml` that anyone cloning the repo can use to install the exact same
+   versions:
+
+    ```bash
+    mise use go@1.26
+    mise use opentofu@1.12.3
+    ```
+
+    Run `mise install` to fetch the tools, and prefix commands with `mise x -- <command>` (or run `mise activate` in
+    your shell) so they resolve to the pinned versions.
+
+1. Lay out the standard Terratest folders. Infrastructure code lives in `examples`, and the Go tests that exercise it
+   live in `test`:
+
+    ```bash
+    mkdir examples test
+    ```
+
+1. Initialize the Go module. Terratest tests live in their own module under `test`:
+
+    ```bash
+    cd test
+    go mod init "<MODULE_NAME>"
+    ```
+
+    Where `<MODULE_NAME>` is the name of your module, typically in the format
+    `github.com/<YOUR_USERNAME>/<YOUR_REPO_NAME>`.
+
+1. Add a `.gitignore` so you don't commit local state, provider plugins, or build artifacts:
+
+    ```bash
+    cat > ../.gitignore <<'EOF'
+    .terraform/
+    *.tfstate
+    *.tfstate.backup
+    .terraform.lock.hcl
+    EOF
+    ```
+
+Now add some infrastructure and a test, as described next.
+
+## Setting up your tests
 
 The easiest way to get started with Terratest is to copy one of the examples and its corresponding tests from this
-repo. This quick start section uses a Terraform example, but check out the [Examples]({{site.baseurl}}/examples/) section for other
-types of infrastructure code you can test (e.g., Packer, Kubernetes, etc).
+repo. This quick start section uses an OpenTofu/Terraform example, but check out the
+[Examples]({{site.baseurl}}/examples/) section for other types of infrastructure code you can test (e.g., Packer,
+Kubernetes, etc).
 
-1. Create an `examples` and `test` folder.
+1. Copy the folder including all the files from the [basic example](https://github.com/gruntwork-io/terratest/tree/{{ site.stable_ref }}/examples/terraform-basic-example/) into the `examples` folder.
 
-1. Copy the folder including all the files from the [basic terraform example](https://github.com/gruntwork-io/terratest/tree/{{ site.stable_ref }}/examples/terraform-basic-example/) into the `examples` folder.
-
-1. Copy the [basic terraform example test](https://github.com/gruntwork-io/terratest/blob/{{ site.stable_ref }}/test/terraform_basic_example_test.go) into the `test` folder.
+1. Copy the [basic example test](https://github.com/gruntwork-io/terratest/blob/{{ site.stable_ref }}/test/terraform_basic_example_test.go) into the `test` folder.
 
 1. To configure dependencies, run:
 
     ```bash
     cd test
-    go mod init "<MODULE_NAME>"
     go mod tidy
     ```
 
-    Where `<MODULE_NAME>` is the name of your module, typically in the format
-    `github.com/<YOUR_USERNAME>/<YOUR_REPO_NAME>`.
+    (If you skipped the previous section, run `go mod init "<MODULE_NAME>"` first.)
 
     To lock your tests to a specific Terratest release, see [Pinning a Terratest version]({{ site.baseurl }}/docs/getting-started/version-pinning/).
 
@@ -52,56 +112,72 @@ types of infrastructure code you can test (e.g., Packer, Kubernetes, etc).
 
     *(See [Timeouts and logging]({{ site.baseurl }}/docs/testing-best-practices/timeouts-and-logging/) for why the `-timeout` parameter is used.)*
 
+### Preferring OpenTofu
+
+By default the `terraform` helpers use the `terraform` binary if it's installed and fall back to `tofu` otherwise. To
+run OpenTofu explicitly, even on a machine that also has Terraform, set `TerraformBinary` on the options you pass in:
+
+```go
+terraformOptions := &terraform.Options{
+    TerraformDir:    "../examples/terraform-basic-example",
+    TerraformBinary: "tofu",
+}
+```
+
+The helper function names (`terraform.InitAndApply`, `terraform.Output`, and so on) don't change; only the underlying
+executable does.
+
 
 ## Terratest intro
 
 The basic usage pattern for writing automated tests with Terratest is to:
 
 1. Write tests using Go’s built-in [package testing](https://golang.org/pkg/testing/): you create a file ending in `_test.go` and run tests with the `go test` command. E.g., `go test my_test.go`.
-1. Use Terratest to execute your _real_ IaC tools (e.g., Terraform, Packer, etc.) to deploy _real_ infrastructure (e.g., servers) in a _real_ environment (e.g., AWS).
+1. Use Terratest to execute your _real_ IaC tools (e.g., OpenTofu, Packer, etc.) to deploy _real_ infrastructure (e.g., servers) in a _real_ environment (e.g., AWS).
 1. Use the tools built into Terratest to validate that the infrastructure works correctly in that environment by making HTTP requests, API calls, SSH connections, etc.
 1. Undeploy everything at the end of the test.
 
-To make this sort of testing easier, Terratest provides a variety of helper functions and patterns for common infrastructure testing tasks, such as testing Terraform code, testing Packer templates, testing Docker images, executing commands on servers over SSH, making HTTP requests, working with AWS APIs, and so on.
+To make this sort of testing easier, Terratest provides a variety of helper functions and patterns for common infrastructure testing tasks, such as testing OpenTofu and Terraform code, testing Packer templates, testing Docker images, executing commands on servers over SSH, making HTTP requests, working with AWS APIs, and so on.
 
 
-## Example #1: Terraform "Hello, World"
+## Example #1: OpenTofu "Hello, World"
 
-Let's start with the simplest possible [Terraform](https://www.terraform.io/) code, which just outputs the text, 
-"Hello, World" (if you’re new to Terraform, check out our [Comprehensive Guide to 
-Terraform](https://blog.gruntwork.io/a-comprehensive-guide-to-terraform-b3d32832baca)): 
- 
+Let's start with the simplest possible [OpenTofu](https://opentofu.org/) code, which just outputs the text,
+"Hello, World" (if you’re new to OpenTofu or Terraform, check out our [Comprehensive Guide to
+Terraform](https://blog.gruntwork.io/a-comprehensive-guide-to-terraform-b3d32832baca), which applies equally to
+OpenTofu):
+
 {% include examples/explorer.html example_id='terraform-hello-world' file_id='terraform_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}
  
 How can you test this code to be confident it works correctly? Well, let’s think about how you would test it manually:
 
-1. Run `terraform init` and `terraform apply` to execute the code.
+1. Run `tofu init` and `tofu apply` to execute the code.
 1. When `apply` finishes, check that the output variable says, "Hello, World".
-1. When you're done testing, run `terraform destroy` to clean everything up.
+1. When you're done testing, run `tofu destroy` to clean everything up.
  
 Using Terratest, you can write an automated test that performs the exact same steps! Here’s what the code looks like:
  
 {% include examples/explorer.html example_id='terraform-hello-world' file_id='test_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}
  
-This code does all the steps we mentioned above, including running `terraform init`, `terraform apply`, reading the 
-output variable using `terraform output`, checking its value is what we expect, and running `terraform destroy` 
+This code does all the steps we mentioned above, including running `tofu init`, `tofu apply`, reading the
+output variable using `tofu output`, checking its value is what we expect, and running `tofu destroy`
 (using [`defer`](https://blog.golang.org/defer-panic-and-recover) to run it at the end of the test, whether the test 
 succeeds or fails). If you put this code in a file called `terraform_hello_world_example_test.go`, you can run it by 
 executing `go test`, and you’ll see output that looks like this (truncated for readability):
 
-```
+```console
 $ go test -v
 === RUN   TestTerraformHelloWorldExample
-Running command terraform with args [init]
+Running command tofu with args [init]
 Initializing provider plugins...
 [...]
-Terraform has been successfully initialized!
+OpenTofu has been successfully initialized!
 [...]
 Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
 Outputs:
 hello_world = "Hello, World!"
 [...]
-Running command terraform with args [destroy -force -input=false]
+Running command tofu with args [destroy -auto-approve -input=false]
 [...]
 Destroy complete! Resources: 2 destroyed.
 --- PASS: TestTerraformHelloWorldExample (149.36s)
@@ -109,9 +185,9 @@ Destroy complete! Resources: 2 destroyed.
 
 Success! 
 
-## Example #2: Terraform and AWS
+## Example #2: OpenTofu and AWS
 
-Let's now try out a more realistic Terraform example. Here is some Terraform code that deploys a simple web server in 
+Let's now try out a more realistic example. Here is some OpenTofu code that deploys a simple web server in
 AWS:
 
 {% include examples/explorer.html example_id='aws-hello-world' file_id='terraform_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}
@@ -124,31 +200,31 @@ script that, while the server is booting, fires up a dirt-simple web server that
 How can you test this code to be confident it works correctly? Well, let’s again think about how you would test it 
 manually:
 
-1. Run `terraform init` and `terraform apply` to deploy the web server into your AWS account.
+1. Run `tofu init` and `tofu apply` to deploy the web server into your AWS account.
 1. When `apply` finishes, get the IP of the web server by reading the `public_ip` output variable.
 1. Open the IP in your web browser with port 8080 and make sure it says “Hello, World”. Note that it can take 1–2 
    minutes for the server to boot up, so you may have to retry a few times.
-1. When you’re done testing, run `terraform destroy` to clean everything up.
+1. When you’re done testing, run `tofu destroy` to clean everything up.
 
 Here's how we can automate the steps above using Terratest:
 
 {% include examples/explorer.html example_id='aws-hello-world' file_id='test_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}
 
-This test code runs `terraform init` and `terraform apply`, reads the server IP using `terraform output`, makes HTTP 
+This test code runs `tofu init` and `tofu apply`, reads the server IP using `tofu output`, makes HTTP
 requests to the web server (including plenty of retries to account for the server taking time to boot), checks the HTTP
-response is what we expect, and then runs `terraform destroy` at the end. If you put this code in a file called 
+response is what we expect, and then runs `tofu destroy` at the end. If you put this code in a file called
 `terraform_aws_hello_world_example_test.go`, you can run just this test by passing the `-run` argument to `go test` as 
 follows:
 
-```
+```console
 $ go test -v -run TestTerraformAwsHelloWorldExample -timeout 30m
 === RUN   TestTerraformAwsHelloWorldExample
-Running command terraform with args [init]
+Running command tofu with args [init]
 Initializing provider plugins...
 [...]
-Terraform has been successfully initialized!
+OpenTofu has been successfully initialized!
 [...]
-Running command terraform with args [apply -auto-approve]
+Running command tofu with args [apply -auto-approve]
 aws_instance.example: Creating...
   associate_public_ip_address:       "" => "<computed>"
   availability_zone:                 "" => "<computed>"
@@ -169,25 +245,25 @@ Sleeping for 5s and will try again.
 Making an HTTP GET call to URL http://52.67.41.31:8080
 Success!
 [...]
-Running command terraform with args [destroy -force -input=false]
+Running command tofu with args [destroy -auto-approve -input=false]
 [...]
 Destroy complete! Resources: 2 destroyed.
 --- PASS: TestTerraformAwsHelloWorldExample (149.36s)
 ```
 
-Success! Now, every time you make a change to this Terraform code, the test code can run and make sure your web server 
+Success! Now, every time you make a change to this OpenTofu code, the test code can run and make sure your web server
 works as expected.
 
 Note that in the `go test` command above, we set `-timeout 30m`. This is because Go sets a default test time out of 10
 minutes, and if your test take longer than that to run, Go will panic, and kill the test code part way through. This is
-not only annoying, but also prevents the clean up code from running (the `terraform destroy`), leaving you with lots of
+not only annoying, but also prevents the clean up code from running (the `tofu destroy`), leaving you with lots of
 resources hanging in your AWS account. To prevent this, we always recommend setting a high test timeout; the test above
 doesn't actually take anywhere near 30 minutes (typical runtime is ~3 minutes), but we give lots of extra buffer to be
 extra sure that the test always has a chance to finish cleanly. 
 
 ## Example #3: Docker
 
-You can use Terratest for testing a variety of infrastructure code, not just Terraform. For example, you can use it to
+You can use Terratest for testing a variety of infrastructure code, not just OpenTofu. For example, you can use it to
 test your [Docker](https://www.docker.com/) images:
 
 {% include examples/explorer.html example_id='docker-hello-world' file_id='docker_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}
@@ -204,7 +280,7 @@ Here's how you can use Terratest to automate this process:
 
 {% include examples/explorer.html example_id='docker-hello-world' file_id='test_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}
 
-Instead of using Terraform helpers, this test code uses Terratest's Docker helpers to run `docker build`, `docker run`,
+Instead of using the OpenTofu/Terraform helpers, this test code uses Terratest's Docker helpers to run `docker build`, `docker run`,
 and check the contents of the text file. As before, you can run this test using `go test`!
 
 ## Example #4: Kubernetes
