@@ -8,7 +8,7 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/httphelper/v2"
 
-	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
 )
 
 func TestTerraformAwsHelloWorldExample(t *testing.T) {

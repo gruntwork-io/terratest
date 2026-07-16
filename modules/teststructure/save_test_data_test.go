@@ -12,8 +12,8 @@ import (
 	gotesting "github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/gruntwork-io/terratest/modules/k8s/v2"
 	"github.com/gruntwork-io/terratest/modules/ssh/v2"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/gruntwork-io/terratest/modules/teststructure"
+	"github.com/gruntwork-io/terratest/modules/terraform/v2"
+	"github.com/gruntwork-io/terratest/modules/teststructure/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
