@@ -285,8 +285,7 @@ func FetchFilesFromInstanceContextE(t testing.TestingT, ctx context.Context, aws
 		FileNameFilters: filenameFilters,
 	}
 
-	//nolint:staticcheck,contextcheck // ScpDirFromE has no Context variant yet
-	return ssh.SCPDirFromContextE(t, context.Background(), &scpOptions, useSudo)
+	return ssh.SCPDirFromContextE(t, ctx, &scpOptions, useSudo)
 }
 
 // FetchFilesFromInstanceContext looks up the EC2 Instances in the given ASG, looks up the public IPs of those EC2

@@ -44,23 +44,23 @@ func TestGetResourceCountENoColor(t *testing.T) { //nolint:tparallel // subtests
 func runTestGetResourceCountE(t *testing.T, noColor bool) { //nolint:tparallel // subtests share mutable terraform options
 	t.Helper()
 	testCases := []struct {
-		tfFuncToRun     func(t ttesting.TestingT, options *terraform.Options) string
+		tfFuncToRun     func(t ttesting.TestingT, ctx context.Context, options *terraform.Options) string
 		name            string
 		cntValue        int
 		expectedAdd     int
 		expectedChange  int
 		expectedDestroy int
 	}{
-		{name: "PlanZero", tfFuncToRun: terraform.InitAndPlan, cntValue: 0, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
-		{name: "ApplyZero", tfFuncToRun: terraform.InitAndApply, cntValue: 0, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
-		{name: "PlanAddResouce", tfFuncToRun: terraform.InitAndPlan, cntValue: 2, expectedAdd: 2, expectedChange: 0, expectedDestroy: 0},
-		{name: "ApplyAddResouce", tfFuncToRun: terraform.InitAndApply, cntValue: 2, expectedAdd: 2, expectedChange: 0, expectedDestroy: 0},
-		{name: "PlanNoOp", tfFuncToRun: terraform.InitAndApply, cntValue: 2, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
-		{name: "ApplyNoOp", tfFuncToRun: terraform.InitAndApply, cntValue: 2, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
-		{name: "PlanDestroyResource", tfFuncToRun: terraform.InitAndPlan, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
-		{name: "ApplyDestroyResource", tfFuncToRun: terraform.InitAndApply, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
-		{name: "Destroy", tfFuncToRun: terraform.Destroy, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
-		{name: "DestroyNoOp", tfFuncToRun: terraform.Destroy, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "PlanZero", tfFuncToRun: terraform.InitAndPlanContext, cntValue: 0, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "ApplyZero", tfFuncToRun: terraform.InitAndApplyContext, cntValue: 0, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "PlanAddResouce", tfFuncToRun: terraform.InitAndPlanContext, cntValue: 2, expectedAdd: 2, expectedChange: 0, expectedDestroy: 0},
+		{name: "ApplyAddResouce", tfFuncToRun: terraform.InitAndApplyContext, cntValue: 2, expectedAdd: 2, expectedChange: 0, expectedDestroy: 0},
+		{name: "PlanNoOp", tfFuncToRun: terraform.InitAndApplyContext, cntValue: 2, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "ApplyNoOp", tfFuncToRun: terraform.InitAndApplyContext, cntValue: 2, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
+		{name: "PlanDestroyResource", tfFuncToRun: terraform.InitAndPlanContext, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
+		{name: "ApplyDestroyResource", tfFuncToRun: terraform.InitAndApplyContext, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
+		{name: "Destroy", tfFuncToRun: terraform.DestroyContext, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 1},
+		{name: "DestroyNoOp", tfFuncToRun: terraform.DestroyContext, cntValue: 1, expectedAdd: 0, expectedChange: 0, expectedDestroy: 0},
 	}
 
 	testFolder, err := files.CopyTerraformFolderToTemp("../../test/fixtures/terraform-basic-configuration", t.Name())
@@ -78,7 +78,7 @@ func runTestGetResourceCountE(t *testing.T, noColor bool) { //nolint:tparallel /
 		t.Run(tc.name,
 			func(t *testing.T) {
 				terraformOptions.Vars["cnt"] = tc.cntValue
-				cnt, err := terraform.GetResourceCountE(t, tc.tfFuncToRun(t, terraformOptions))
+				cnt, err := terraform.GetResourceCountE(t, tc.tfFuncToRun(t, context.Background(), terraformOptions))
 				require.NoError(t, err)
 				assert.Equal(t, tc.expectedAdd, cnt.Add)
 				assert.Equal(t, tc.expectedChange, cnt.Change)
