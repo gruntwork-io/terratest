@@ -32,21 +32,3 @@ func GetRoleContext(t testing.TestingT, ctx context.Context, options *KubectlOpt
 
 	return role
 }
-
-// GetRole returns a Kubernetes role resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetRoleContext] instead.
-func GetRole(t testing.TestingT, options *KubectlOptions, roleName string) *rbacv1.Role {
-	t.Helper()
-
-	return GetRoleContext(t, context.Background(), options, roleName)
-}
-
-// GetRoleE returns a Kubernetes role resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions.
-//
-// Deprecated: Use [GetRoleContextE] instead.
-func GetRoleE(t testing.TestingT, options *KubectlOptions, roleName string) (*rbacv1.Role, error) {
-	return GetRoleContextE(t, context.Background(), options, roleName)
-}

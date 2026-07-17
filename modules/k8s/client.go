@@ -38,16 +38,9 @@ func GetKubernetesClientContext(t testing.TestingT, ctx context.Context) *kubern
 	return clientset
 }
 
-// GetKubernetesClientE returns a Kubernetes API client that can be used to make requests.
-//
-// Deprecated: Use [GetKubernetesClientContextE] instead.
-func GetKubernetesClientE(t testing.TestingT) (*kubernetes.Clientset, error) {
-	return GetKubernetesClientContextE(t, context.Background())
-}
-
 // GetKubernetesClientFromOptionsContextE returns a Kubernetes API client given a configured KubectlOptions object.
 // The ctx parameter is accepted for API consistency.
-func GetKubernetesClientFromOptionsContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions) (*kubernetes.Clientset, error) { //nolint:contextcheck // GetConfigPath is a method that doesn't accept ctx
+func GetKubernetesClientFromOptionsContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions) (*kubernetes.Clientset, error) {
 	var (
 		err    error
 		config *rest.Config
@@ -65,13 +58,13 @@ func GetKubernetesClientFromOptionsContextE(t testing.TestingT, ctx context.Cont
 		config = options.RestConfig
 		options.Logger.Logf(t, "Configuring Kubernetes client to use provided rest config object set with API server address: %s", config.Host)
 	default:
-		kubeConfigPath, err := options.GetConfigPath(t) //nolint:contextcheck // method doesn't accept ctx
+		kubeConfigPath, err := options.GetConfigPath(t)
 		if err != nil {
 			return nil, err
 		}
 
 		options.Logger.Logf(t, "Configuring Kubernetes client using config file %s with context %s", kubeConfigPath, options.ContextName)
-		// Load API config (instead of more low level ClientConfig)
+
 		config, err = LoadAPIClientConfigE(kubeConfigPath, options.ContextName)
 		if err != nil {
 			options.Logger.Logf(t, "Error loading api client config, falling back to in-cluster authentication via serviceaccount token: %s", err)
@@ -102,11 +95,4 @@ func GetKubernetesClientFromOptionsContext(t testing.TestingT, ctx context.Conte
 	require.NoError(t, err)
 
 	return clientset
-}
-
-// GetKubernetesClientFromOptionsE returns a Kubernetes API client given a configured KubectlOptions object.
-//
-// Deprecated: Use [GetKubernetesClientFromOptionsContextE] instead.
-func GetKubernetesClientFromOptionsE(t testing.TestingT, options *KubectlOptions) (*kubernetes.Clientset, error) {
-	return GetKubernetesClientFromOptionsContextE(t, context.Background(), options)
 }

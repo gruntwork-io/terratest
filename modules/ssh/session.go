@@ -28,11 +28,6 @@ type SSHConnectionOptions struct {
 	Port int
 }
 
-// SshConnectionOptions is a backwards-compatible alias for [SSHConnectionOptions].
-//
-// Deprecated: Use [SSHConnectionOptions] instead.
-type SshConnectionOptions = SSHConnectionOptions //nolint:staticcheck,revive // preserving deprecated type name
-
 // ConnectionString returns the connection string for an SSH connection.
 func (options *SSHConnectionOptions) ConnectionString() string {
 	return net.JoinHostPort(options.Address, strconv.Itoa(options.Port))
@@ -54,19 +49,12 @@ type SSHSession struct {
 	Input *func(io.WriteCloser)
 }
 
-// SshSession is a backwards-compatible alias for [SSHSession].
-//
-// Deprecated: Use [SSHSession] instead.
-type SshSession = SSHSession //nolint:staticcheck,revive // preserving deprecated type name
-
 // Cleanup cleans up an existing SSH session.
 func (sshSession *SSHSession) Cleanup(t testing.TestingT) {
 	if sshSession == nil {
 		return
 	}
 
-	// Closing the session may result in an EOF error if it's already closed (e.g. due to hitting CTRL + D), so
-	// don't report those errors, as there is nothing actually wrong in that case.
 	Close(t, sshSession.Session, io.EOF.Error())
 	Close(t, sshSession.Client)
 	sshSession.JumpHost.Cleanup(t)
@@ -88,8 +76,6 @@ func (jumpHost *JumpHostSession) Cleanup(t testing.TestingT) {
 		return
 	}
 
-	// Closing a connection may result in an EOF error if it's already closed (e.g. due to hitting CTRL + D), so
-	// don't report those errors, as there is nothing actually wrong in that case.
 	Close(t, jumpHost.HostConnection, io.EOF.Error())
 	Close(t, jumpHost.HostVirtualConnection, io.EOF.Error())
 	Close(t, jumpHost.JumpHostClient)

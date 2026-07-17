@@ -20,13 +20,6 @@ func GetMYSQLServerClientContextE(_ context.Context, subscriptionID string) (*ar
 	return clientFactory.NewServersClient(), nil
 }
 
-// GetMYSQLServerClientE is a helper function that will setup a mysql server client.
-//
-// Deprecated: Use [GetMYSQLServerClientContextE] instead.
-func GetMYSQLServerClientE(subscriptionID string) (*armmysql.ServersClient, error) {
-	return GetMYSQLServerClientContextE(context.Background(), subscriptionID)
-}
-
 // GetMYSQLServerContext is a helper function that gets the server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -39,20 +32,10 @@ func GetMYSQLServerContext(t testing.TestingT, ctx context.Context, subscription
 	return mysqlServer
 }
 
-// GetMYSQLServer is a helper function that gets the server.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetMYSQLServerContext] instead.
-func GetMYSQLServer(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) *armmysql.Server {
-	t.Helper()
-
-	return GetMYSQLServerContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
-}
-
 // GetMYSQLServerContextE is a helper function that gets the server.
 // The ctx parameter supports cancellation and timeouts.
 func GetMYSQLServerContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) (*armmysql.Server, error) {
-	// Create a MySQL Server client
+
 	mysqlClient, err := CreateMySQLServerClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
@@ -71,13 +54,6 @@ func GetMYSQLServerWithClient(ctx context.Context, client *armmysql.ServersClien
 	return &resp.Server, nil
 }
 
-// GetMYSQLServerE is a helper function that gets the server.
-//
-// Deprecated: Use [GetMYSQLServerContextE] instead.
-func GetMYSQLServerE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) (*armmysql.Server, error) {
-	return GetMYSQLServerContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
-}
-
 // GetMYSQLDBClientContextE is a helper function that will setup a mysql DB client.
 // The ctx parameter supports cancellation and timeouts.
 func GetMYSQLDBClientContextE(_ context.Context, subscriptionID string) (*armmysql.DatabasesClient, error) {
@@ -87,13 +63,6 @@ func GetMYSQLDBClientContextE(_ context.Context, subscriptionID string) (*armmys
 	}
 
 	return clientFactory.NewDatabasesClient(), nil
-}
-
-// GetMYSQLDBClientE is a helper function that will setup a mysql DB client.
-//
-// Deprecated: Use [GetMYSQLDBClientContextE] instead.
-func GetMYSQLDBClientE(subscriptionID string) (*armmysql.DatabasesClient, error) {
-	return GetMYSQLDBClientContextE(context.Background(), subscriptionID)
 }
 
 // GetMYSQLDBContext is a helper function that gets the database.
@@ -108,20 +77,10 @@ func GetMYSQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID s
 	return database
 }
 
-// GetMYSQLDB is a helper function that gets the database.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetMYSQLDBContext] instead.
-func GetMYSQLDB(t testing.TestingT, resGroupName string, serverName string, dbName string, subscriptionID string) *armmysql.Database {
-	t.Helper()
-
-	return GetMYSQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName, dbName) //nolint:staticcheck
-}
-
 // GetMYSQLDBContextE is a helper function that gets the database.
 // The ctx parameter supports cancellation and timeouts.
 func GetMYSQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
-	// Create a MySQL db client
+
 	mysqldbClient, err := GetMYSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
@@ -140,13 +99,6 @@ func GetMYSQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient,
 	return &resp.Database, nil
 }
 
-// GetMYSQLDBE is a helper function that gets the database.
-//
-// Deprecated: Use [GetMYSQLDBContextE] instead.
-func GetMYSQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string, dbName string) (*armmysql.Database, error) {
-	return GetMYSQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName, dbName)
-}
-
 // ListMySQLDBContext is a helper function that gets all databases per server.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -159,20 +111,10 @@ func ListMySQLDBContext(t testing.TestingT, ctx context.Context, subscriptionID 
 	return dblist
 }
 
-// ListMySQLDB is a helper function that gets all databases per server.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ListMySQLDBContext] instead.
-func ListMySQLDB(t testing.TestingT, resGroupName string, serverName string, subscriptionID string) []*armmysql.Database {
-	t.Helper()
-
-	return ListMySQLDBContext(t, context.Background(), subscriptionID, resGroupName, serverName) //nolint:staticcheck
-}
-
 // ListMySQLDBContextE is a helper function that gets all databases per server.
 // The ctx parameter supports cancellation and timeouts.
 func ListMySQLDBContextE(t testing.TestingT, ctx context.Context, subscriptionID string, resGroupName string, serverName string) ([]*armmysql.Database, error) {
-	// Create a MySQL db client
+
 	mysqldbClient, err := GetMYSQLDBClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
@@ -197,11 +139,4 @@ func ListMySQLDBWithClient(ctx context.Context, client *armmysql.DatabasesClient
 	}
 
 	return databases, nil
-}
-
-// ListMySQLDBE is a helper function that gets all databases per server.
-//
-// Deprecated: Use [ListMySQLDBContextE] instead.
-func ListMySQLDBE(t testing.TestingT, subscriptionID string, resGroupName string, serverName string) ([]*armmysql.Database, error) {
-	return ListMySQLDBContextE(t, context.Background(), subscriptionID, resGroupName, serverName)
 }

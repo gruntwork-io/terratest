@@ -24,13 +24,6 @@ type Options struct {
 	EnableBuildKit bool
 }
 
-// RunDockerCompose runs docker compose with the given arguments and options and return stdout/stderr.
-//
-// Deprecated: Use [RunDockerComposeContext] instead.
-func RunDockerCompose(t testing.TestingT, options *Options, args ...string) string {
-	return RunDockerComposeContext(t, context.Background(), options, args...)
-}
-
 // RunDockerComposeContext runs docker compose with the given arguments and options and returns stdout/stderr.
 // This method fails the test if there are any errors. The ctx parameter supports cancellation and timeouts.
 func RunDockerComposeContext(t testing.TestingT, ctx context.Context, options *Options, args ...string) string {
@@ -42,13 +35,6 @@ func RunDockerComposeContext(t testing.TestingT, ctx context.Context, options *O
 	return out
 }
 
-// RunDockerComposeAndGetStdOut runs docker compose with the given arguments and options and returns only stdout.
-//
-// Deprecated: Use [RunDockerComposeAndGetStdOutContext] instead.
-func RunDockerComposeAndGetStdOut(t testing.TestingT, options *Options, args ...string) string {
-	return RunDockerComposeAndGetStdOutContext(t, context.Background(), options, args...)
-}
-
 // RunDockerComposeAndGetStdOutContext runs docker compose with the given arguments and options and returns only
 // stdout. This method fails the test if there are any errors. The ctx parameter supports cancellation and
 // timeouts.
@@ -57,13 +43,6 @@ func RunDockerComposeAndGetStdOutContext(t testing.TestingT, ctx context.Context
 	require.NoError(t, err)
 
 	return out
-}
-
-// RunDockerComposeE runs docker compose with the given arguments and options and return stdout/stderr.
-//
-// Deprecated: Use [RunDockerComposeContextE] instead.
-func RunDockerComposeE(t testing.TestingT, options *Options, args ...string) (string, error) {
-	return RunDockerComposeContextE(t, context.Background(), options, args...)
 }
 
 // RunDockerComposeContextE runs docker compose with the given arguments and options and returns stdout/stderr,
@@ -103,8 +82,7 @@ func runDockerComposeE(t testing.TestingT, ctx context.Context, stdout bool, opt
 	} else {
 		cmd = &shell.Command{
 			Command: "docker-compose",
-			// We append --project-name to ensure containers from multiple different tests using Docker Compose don't end
-			// up in the same project and end up conflicting with each other.
+
 			Args:       append([]string{"--project-name", generateValidDockerComposeProjectName(projectName)}, args...),
 			WorkingDir: options.WorkingDir,
 			Env:        options.EnvVars,

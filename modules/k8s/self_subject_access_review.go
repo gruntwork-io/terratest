@@ -50,25 +50,3 @@ func CanIDoContext(t testing.TestingT, ctx context.Context, options *KubectlOpti
 
 	return allowed
 }
-
-// CanIDo returns whether or not the provided action is allowed by the client configured by the provided kubectl option.
-// This will fail if there are any errors accessing the kubernetes API (but not if the action is denied).
-//
-// Deprecated: Use [CanIDoContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func CanIDo(t testing.TestingT, options *KubectlOptions, action authv1.ResourceAttributes) bool {
-	t.Helper()
-
-	return CanIDoContext(t, context.Background(), options, action)
-}
-
-// CanIDoE returns whether or not the provided action is allowed by the client configured by the provided kubectl option.
-// This will an error if there are problems accessing the kubernetes API (but not if the action is simply denied).
-//
-// Deprecated: Use [CanIDoContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func CanIDoE(t testing.TestingT, options *KubectlOptions, action authv1.ResourceAttributes) (bool, error) {
-	return CanIDoContextE(t, context.Background(), options, action)
-}

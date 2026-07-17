@@ -1,4 +1,4 @@
-package terragrunt //nolint:dupl // structural pattern for terragrunt command wrappers
+package terragrunt
 
 import (
 	"context"
@@ -24,20 +24,4 @@ func StackCleanContext(t testing.TestingT, ctx context.Context, options *Options
 // or stack run.
 func StackCleanContextE(t testing.TestingT, ctx context.Context, options *Options) (string, error) {
 	return runTerragruntStackCommandE(t, ctx, options, "clean")
-}
-
-// StackClean calls terragrunt stack clean to remove the .terragrunt-stack directory.
-// This command cleans up the generated stack files created by stack generate or stack run.
-//
-// Deprecated: Use [StackCleanContext] instead.
-func StackClean(t testing.TestingT, options *Options) string {
-	return StackCleanContext(t, context.Background(), options)
-}
-
-// StackCleanE calls terragrunt stack clean to remove the .terragrunt-stack directory.
-// This command cleans up the generated stack files created by stack generate or stack run.
-//
-// Deprecated: Use [StackCleanContextE] instead.
-func StackCleanE(t testing.TestingT, options *Options) (string, error) {
-	return StackCleanContextE(t, context.Background(), options)
 }

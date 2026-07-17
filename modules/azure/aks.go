@@ -20,13 +20,6 @@ func GetManagedClusterContext(t testing.TestingT, ctx context.Context, resourceG
 	return cluster
 }
 
-// GetManagedClusterE returns a ManagedCluster for the specified cluster in the given resource group.
-//
-// Deprecated: Use [GetManagedClusterContextE] instead.
-func GetManagedClusterE(t testing.TestingT, resourceGroupName, clusterName, subscriptionID string) (*armcontainerservice.ManagedCluster, error) {
-	return GetManagedClusterContextE(t, context.Background(), resourceGroupName, clusterName, subscriptionID)
-}
-
 // GetManagedClusterContextE returns a ManagedCluster for the specified cluster in the given resource group.
 // The ctx parameter supports cancellation and timeouts.
 func GetManagedClusterContextE(t testing.TestingT, ctx context.Context, resourceGroupName, clusterName, subscriptionID string) (*armcontainerservice.ManagedCluster, error) {

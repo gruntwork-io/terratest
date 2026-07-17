@@ -13,16 +13,6 @@ import (
 	"google.golang.org/api/oslogin/v1"
 )
 
-// ImportSSHKey will import an SSH key to GCP under the provided user identity.
-// The user parameter should be the email address of the user.
-// The key parameter should be the public key of the SSH key being uploaded.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [ImportSSHKeyContext] instead.
-func ImportSSHKey(t testing.TestingT, user, key string) {
-	ImportSSHKeyContext(t, context.Background(), user, key)
-}
-
 // ImportSSHKeyContext will import an SSH key to GCP under the provided user identity.
 // The user parameter should be the email address of the user.
 // The key parameter should be the public key of the SSH key being uploaded.
@@ -30,15 +20,6 @@ func ImportSSHKey(t testing.TestingT, user, key string) {
 // The ctx parameter supports cancellation and timeouts.
 func ImportSSHKeyContext(t testing.TestingT, ctx context.Context, user, key string) {
 	require.NoErrorf(t, ImportSSHKeyContextE(t, ctx, user, key), "Could not add SSH Key to user %s", user)
-}
-
-// ImportSSHKeyE will import an SSH key to GCP under the provided user identity.
-// The user parameter should be the email address of the user.
-// The key parameter should be the public key of the SSH key being uploaded.
-//
-// Deprecated: Use [ImportSSHKeyContextE] instead.
-func ImportSSHKeyE(t testing.TestingT, user, key string) error {
-	return ImportSSHKeyContextE(t, context.Background(), user, key)
 }
 
 // ImportSSHKeyContextE will import an SSH key to GCP under the provided user identity.
@@ -56,17 +37,6 @@ func ImportSSHKeyContextE(t testing.TestingT, ctx context.Context, user, key str
 	return ImportSSHKeyWithClient(ctx, service, user, key)
 }
 
-// ImportProjectSSHKey will import an SSH key to GCP under the provided user identity.
-// The user parameter should be the email address of the user.
-// The key parameter should be the public key of the SSH key being uploaded.
-// The projectID parameter should be the chosen project ID.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [ImportProjectSSHKeyContext] instead.
-func ImportProjectSSHKey(t testing.TestingT, user, key, projectID string) {
-	ImportProjectSSHKeyContext(t, context.Background(), user, key, projectID)
-}
-
 // ImportProjectSSHKeyContext will import an SSH key to GCP under the provided user identity.
 // The user parameter should be the email address of the user.
 // The key parameter should be the public key of the SSH key being uploaded.
@@ -75,16 +45,6 @@ func ImportProjectSSHKey(t testing.TestingT, user, key, projectID string) {
 // The ctx parameter supports cancellation and timeouts.
 func ImportProjectSSHKeyContext(t testing.TestingT, ctx context.Context, user, key, projectID string) {
 	require.NoErrorf(t, ImportProjectSSHKeyContextE(t, ctx, user, key, projectID), "Could not add SSH Key to user %s", user)
-}
-
-// ImportProjectSSHKeyE will import an SSH key to GCP under the provided user identity.
-// The user parameter should be the email address of the user.
-// The key parameter should be the public key of the SSH key being uploaded.
-// The projectID parameter should be the chosen project ID.
-//
-// Deprecated: Use [ImportProjectSSHKeyContextE] instead.
-func ImportProjectSSHKeyE(t testing.TestingT, user, key, projectID string) error {
-	return ImportProjectSSHKeyContextE(t, context.Background(), user, key, projectID)
 }
 
 // ImportProjectSSHKeyContextE will import an SSH key to GCP under the provided user identity.
@@ -122,16 +82,6 @@ func ImportProjectSSHKeyWithClient(ctx context.Context, service *oslogin.Service
 	return err
 }
 
-// DeleteSSHKey will delete an SSH key attached to the provided user identity.
-// The user parameter should be the email address of the user.
-// The key parameter should be the public key of the SSH key that was uploaded.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [DeleteSSHKeyContext] instead.
-func DeleteSSHKey(t testing.TestingT, user, key string) {
-	DeleteSSHKeyContext(t, context.Background(), user, key)
-}
-
 // DeleteSSHKeyContext will delete an SSH key attached to the provided user identity.
 // The user parameter should be the email address of the user.
 // The key parameter should be the public key of the SSH key that was uploaded.
@@ -139,15 +89,6 @@ func DeleteSSHKey(t testing.TestingT, user, key string) {
 // The ctx parameter supports cancellation and timeouts.
 func DeleteSSHKeyContext(t testing.TestingT, ctx context.Context, user, key string) {
 	require.NoErrorf(t, DeleteSSHKeyContextE(t, ctx, user, key), "Could not delete SSH Key for user %s", user)
-}
-
-// DeleteSSHKeyE will delete an SSH key attached to the provided user identity.
-// The user parameter should be the email address of the user.
-// The key parameter should be the public key of the SSH key that was uploaded.
-//
-// Deprecated: Use [DeleteSSHKeyContextE] instead.
-func DeleteSSHKeyE(t testing.TestingT, user, key string) error {
-	return DeleteSSHKeyContextE(t, context.Background(), user, key)
 }
 
 // DeleteSSHKeyContextE will delete an SSH key attached to the provided user identity.
@@ -192,17 +133,6 @@ func DeleteSSHKeyWithClient(ctx context.Context, service *oslogin.Service, user,
 	return nil
 }
 
-// GetLoginProfile will retrieve the login profile for a user's Google identity. The login profile is a combination of
-// OS Login + gcloud SSH keys and POSIX accounts the user will appear as. Generally, this will only be the OS Login
-// key + account, but gcloud compute ssh could create temporary keys and profiles.
-// The user parameter should be the email address of the user.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [GetLoginProfileContext] instead.
-func GetLoginProfile(t testing.TestingT, user string) *oslogin.LoginProfile {
-	return GetLoginProfileContext(t, context.Background(), user)
-}
-
 // GetLoginProfileContext will retrieve the login profile for a user's Google identity. The login profile is a
 // combination of OS Login + gcloud SSH keys and POSIX accounts the user will appear as. Generally, this will only be
 // the OS Login key + account, but gcloud compute ssh could create temporary keys and profiles.
@@ -214,16 +144,6 @@ func GetLoginProfileContext(t testing.TestingT, ctx context.Context, user string
 	require.NoErrorf(t, err, "Could not get login profile for user %s", user)
 
 	return profile
-}
-
-// GetLoginProfileE will retrieve the login profile for a user's Google identity. The login profile is a combination of
-// OS Login + gcloud SSH keys and POSIX accounts the user will appear as. Generally, this will only be the OS Login
-// key + account, but gcloud compute ssh could create temporary keys and profiles.
-// The user parameter should be the email address of the user.
-//
-// Deprecated: Use [GetLoginProfileContextE] instead.
-func GetLoginProfileE(t testing.TestingT, user string) (*oslogin.LoginProfile, error) {
-	return GetLoginProfileContextE(t, context.Background(), user)
 }
 
 // GetLoginProfileContextE will retrieve the login profile for a user's Google identity. The login profile is a
@@ -256,13 +176,6 @@ func GetLoginProfileWithClient(ctx context.Context, service *oslogin.Service, us
 	}
 
 	return profile, nil
-}
-
-// NewOSLoginServiceE creates a new OS Login service, which is used to make OS Login API calls.
-//
-// Deprecated: Use [NewOSLoginServiceContextE] instead.
-func NewOSLoginServiceE(t testing.TestingT) (*oslogin.Service, error) {
-	return NewOSLoginServiceContextE(t, context.Background())
 }
 
 // NewOSLoginServiceContextE creates a new OS Login service, which is used to make OS Login API calls.

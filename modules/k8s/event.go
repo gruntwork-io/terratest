@@ -41,24 +41,3 @@ func ListEventsContext(t testing.TestingT, ctx context.Context, options *Kubectl
 
 	return events
 }
-
-// ListEvents will retrieve the Events in the given namespace that match the given filters and return them. This will fail the
-// test if there is an error.
-//
-// Deprecated: Use [ListEventsContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListEvents(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []corev1.Event {
-	t.Helper()
-
-	return ListEventsContext(t, context.Background(), options, filters)
-}
-
-// ListEventsE will retrieve the Events that match the given filters and return them.
-//
-// Deprecated: Use [ListEventsContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListEventsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Event, error) {
-	return ListEventsContextE(t, context.Background(), options, filters)
-}

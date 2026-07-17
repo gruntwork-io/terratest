@@ -42,22 +42,6 @@ func GetIamCurrentUserNameContext(t testing.TestingT, ctx context.Context) strin
 	return out
 }
 
-// GetIamCurrentUserName gets the username for the current IAM user.
-//
-// Deprecated: Use [GetIamCurrentUserNameContext] instead.
-func GetIamCurrentUserName(t testing.TestingT) string {
-	t.Helper()
-
-	return GetIamCurrentUserNameContext(t, context.Background())
-}
-
-// GetIamCurrentUserNameE gets the username for the current IAM user.
-//
-// Deprecated: Use [GetIamCurrentUserNameContextE] instead.
-func GetIamCurrentUserNameE(t testing.TestingT) (string, error) {
-	return GetIamCurrentUserNameContextE(t, context.Background())
-}
-
 // GetIamCurrentUserArnContextE gets the ARN for the current IAM user.
 // The ctx parameter supports cancellation and timeouts.
 func GetIamCurrentUserArnContextE(t testing.TestingT, ctx context.Context) (string, error) {
@@ -84,22 +68,6 @@ func GetIamCurrentUserArnContext(t testing.TestingT, ctx context.Context) string
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetIamCurrentUserArn gets the ARN for the current IAM user.
-//
-// Deprecated: Use [GetIamCurrentUserArnContext] instead.
-func GetIamCurrentUserArn(t testing.TestingT) string {
-	t.Helper()
-
-	return GetIamCurrentUserArnContext(t, context.Background())
-}
-
-// GetIamCurrentUserArnE gets the ARN for the current IAM user.
-//
-// Deprecated: Use [GetIamCurrentUserArnContextE] instead.
-func GetIamCurrentUserArnE(t testing.TestingT) (string, error) {
-	return GetIamCurrentUserArnContextE(t, context.Background())
 }
 
 // GetIamPolicyDocumentContextE gets the most recent policy (JSON) document for an IAM policy.
@@ -165,22 +133,6 @@ func GetIamPolicyDocumentContext(t testing.TestingT, ctx context.Context, region
 	return out
 }
 
-// GetIamPolicyDocument gets the most recent policy (JSON) document for an IAM policy.
-//
-// Deprecated: Use [GetIamPolicyDocumentContext] instead.
-func GetIamPolicyDocument(t testing.TestingT, region string, policyARN string) string {
-	t.Helper()
-
-	return GetIamPolicyDocumentContext(t, context.Background(), region, policyARN)
-}
-
-// GetIamPolicyDocumentE gets the most recent policy (JSON) document for an IAM policy.
-//
-// Deprecated: Use [GetIamPolicyDocumentContextE] instead.
-func GetIamPolicyDocumentE(t testing.TestingT, region string, policyARN string) (string, error) {
-	return GetIamPolicyDocumentContextE(t, context.Background(), region, policyARN)
-}
-
 // CreateMfaDeviceContextE creates an MFA device using the given IAM client.
 // The ctx parameter supports cancellation and timeouts.
 func CreateMfaDeviceContextE(t testing.TestingT, ctx context.Context, iamClient *iam.Client, deviceName string) (*types.VirtualMFADevice, error) {
@@ -210,22 +162,6 @@ func CreateMfaDeviceContext(t testing.TestingT, ctx context.Context, iamClient *
 	require.NoError(t, err)
 
 	return mfaDevice
-}
-
-// CreateMfaDevice creates an MFA device using the given IAM client.
-//
-// Deprecated: Use [CreateMfaDeviceContext] instead.
-func CreateMfaDevice(t testing.TestingT, iamClient *iam.Client, deviceName string) *types.VirtualMFADevice {
-	t.Helper()
-
-	return CreateMfaDeviceContext(t, context.Background(), iamClient, deviceName)
-}
-
-// CreateMfaDeviceE creates an MFA device using the given IAM client.
-//
-// Deprecated: Use [CreateMfaDeviceContextE] instead.
-func CreateMfaDeviceE(t testing.TestingT, iamClient *iam.Client, deviceName string) (*types.VirtualMFADevice, error) {
-	return CreateMfaDeviceContextE(t, context.Background(), iamClient, deviceName)
 }
 
 // EnableMfaDeviceContextE enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
@@ -283,24 +219,6 @@ func EnableMfaDeviceContext(t testing.TestingT, ctx context.Context, iamClient *
 	require.NoError(t, err)
 }
 
-// EnableMfaDevice enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
-// logins by the given IAM User.
-//
-// Deprecated: Use [EnableMfaDeviceContext] instead.
-func EnableMfaDevice(t testing.TestingT, iamClient *iam.Client, mfaDevice *types.VirtualMFADevice) {
-	t.Helper()
-
-	EnableMfaDeviceContext(t, context.Background(), iamClient, mfaDevice)
-}
-
-// EnableMfaDeviceE enables a newly created MFA Device by supplying the first two one-time passwords, so that it can be used for future
-// logins by the given IAM User.
-//
-// Deprecated: Use [EnableMfaDeviceContextE] instead.
-func EnableMfaDeviceE(t testing.TestingT, iamClient *iam.Client, mfaDevice *types.VirtualMFADevice) error {
-	return EnableMfaDeviceContextE(t, context.Background(), iamClient, mfaDevice)
-}
-
 // NewIamClientContextE creates a new IAM client.
 // The ctx parameter supports cancellation and timeouts.
 func NewIamClientContextE(t testing.TestingT, ctx context.Context, region string) (*iam.Client, error) {
@@ -322,20 +240,4 @@ func NewIamClientContext(t testing.TestingT, ctx context.Context, region string)
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewIamClient creates a new IAM client.
-//
-// Deprecated: Use [NewIamClientContext] instead.
-func NewIamClient(t testing.TestingT, region string) *iam.Client {
-	t.Helper()
-
-	return NewIamClientContext(t, context.Background(), region)
-}
-
-// NewIamClientE creates a new IAM client.
-//
-// Deprecated: Use [NewIamClientContextE] instead.
-func NewIamClientE(t testing.TestingT, region string) (*iam.Client, error) {
-	return NewIamClientContextE(t, context.Background(), region)
 }

@@ -43,40 +43,6 @@ func GetAccountIDContext(t testing.TestingT, ctx context.Context) string {
 	return id
 }
 
-// GetAccountID gets the Account ID for the currently logged in IAM User.
-//
-// Deprecated: Use [GetAccountIDContext] instead.
-func GetAccountID(t testing.TestingT) string {
-	t.Helper()
-
-	return GetAccountIDContext(t, context.Background())
-}
-
-// GetAccountIDE gets the Account ID for the currently logged in IAM User.
-//
-// Deprecated: Use [GetAccountIDContextE] instead.
-func GetAccountIDE(t testing.TestingT) (string, error) {
-	return GetAccountIDContextE(t, context.Background())
-}
-
-// GetAccountId gets the Account ID for the currently logged in IAM User.
-//
-// Deprecated: Use [GetAccountID] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetAccountId(t testing.TestingT) string {
-	return GetAccountIDContext(t, context.Background())
-}
-
-// GetAccountIdE gets the Account ID for the currently logged in IAM User.
-//
-// Deprecated: Use [GetAccountIDE] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetAccountIdE(t testing.TestingT) (string, error) {
-	return GetAccountIDContextE(t, context.Background())
-}
-
 // ExtractAccountIDFromARN extracts the AWS account ID from an IAM ARN.
 // An IAM ARN is of the format arn:aws:iam::123456789012:user/test. The account ID is the number after arn:aws:iam::,
 // so we split on a colon and return the 5th item.
@@ -111,20 +77,4 @@ func NewStsClientContext(t testing.TestingT, ctx context.Context, region string)
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewStsClient creates a new STS client.
-//
-// Deprecated: Use [NewStsClientContext] instead.
-func NewStsClient(t testing.TestingT, region string) *sts.Client {
-	t.Helper()
-
-	return NewStsClientContext(t, context.Background(), region)
-}
-
-// NewStsClientE creates a new STS client.
-//
-// Deprecated: Use [NewStsClientContextE] instead.
-func NewStsClientE(t testing.TestingT, region string) (*sts.Client, error) {
-	return NewStsClientContextE(t, context.Background(), region)
 }

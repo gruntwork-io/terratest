@@ -37,36 +37,11 @@ func getNamespaceArgs(options *Options) []string {
 	return []string{}
 }
 
-// mergeSetJSONValues merges the deprecated SetJsonValues field into SetJSONValues. Values from SetJSONValues take
-// precedence when the same key appears in both maps.
-func mergeSetJSONValues(options *Options) map[string]string {
-	if len(options.SetJsonValues) == 0 { //nolint:staticcheck // Reading deprecated field for backwards compatibility.
-		return options.SetJSONValues
-	}
-
-	if len(options.SetJSONValues) == 0 {
-		return options.SetJsonValues //nolint:staticcheck // Reading deprecated field for backwards compatibility.
-	}
-
-	merged := make(map[string]string, len(options.SetJsonValues)+len(options.SetJSONValues)) //nolint:staticcheck // Reading deprecated field for backwards compatibility.
-
-	for k, v := range options.SetJsonValues { //nolint:staticcheck // Reading deprecated field for backwards compatibility.
-		merged[k] = v
-	}
-
-	// SetJSONValues takes precedence over the deprecated SetJsonValues.
-	for k, v := range options.SetJSONValues {
-		merged[k] = v
-	}
-
-	return merged
-}
-
 // getValuesArgsE computes the args to pass in for setting values.
 func getValuesArgsE(options *Options, args ...string) ([]string, error) {
 	args = append(args, FormatSetValuesAsArgs(options.SetValues, "--set")...)
 	args = append(args, FormatSetValuesAsArgs(options.SetStrValues, "--set-string")...)
-	args = append(args, FormatSetValuesAsArgs(mergeSetJSONValues(options), "--set-json")...)
+	args = append(args, FormatSetValuesAsArgs(options.SetJSONValues, "--set-json")...)
 
 	valuesFilesArgs, err := FormatValuesFilesAsArgsContextE(context.Background(), options.ValuesFiles)
 	if err != nil {
@@ -85,14 +60,6 @@ func getValuesArgsE(options *Options, args ...string) ([]string, error) {
 	return args, nil
 }
 
-// RunHelmCommandAndGetOutputE runs helm with the given arguments and options and returns combined, interleaved
-// stdout/stderr.
-//
-// Deprecated: Use [RunHelmCommandAndGetOutputContextE] instead.
-func RunHelmCommandAndGetOutputE(t testing.TestingT, options *Options, cmd string, additionalArgs ...string) (string, error) {
-	return RunHelmCommandAndGetOutputContextE(t, context.Background(), options, cmd, additionalArgs...)
-}
-
 // RunHelmCommandAndGetOutputContextE runs helm with the given arguments and options and returns combined, interleaved
 // stdout/stderr. The ctx parameter supports cancellation and timeouts.
 func RunHelmCommandAndGetOutputContextE(t testing.TestingT, ctx context.Context, options *Options, cmd string, additionalArgs ...string) (string, error) {
@@ -101,27 +68,12 @@ func RunHelmCommandAndGetOutputContextE(t testing.TestingT, ctx context.Context,
 	return shell.RunCommandContextAndGetOutputE(t, ctx, helmCmd)
 }
 
-// RunHelmCommandAndGetStdOutE runs helm with the given arguments and options and returns stdout.
-//
-// Deprecated: Use [RunHelmCommandAndGetStdOutContextE] instead.
-func RunHelmCommandAndGetStdOutE(t testing.TestingT, options *Options, cmd string, additionalArgs ...string) (string, error) {
-	return RunHelmCommandAndGetStdOutContextE(t, context.Background(), options, cmd, additionalArgs...)
-}
-
 // RunHelmCommandAndGetStdOutContextE runs helm with the given arguments and options and returns stdout. The ctx
 // parameter supports cancellation and timeouts.
 func RunHelmCommandAndGetStdOutContextE(t testing.TestingT, ctx context.Context, options *Options, cmd string, additionalArgs ...string) (string, error) {
 	helmCmd := PrepareHelmCommand(options, cmd, additionalArgs...)
 
 	return shell.RunCommandContextAndGetStdOutE(t, ctx, helmCmd)
-}
-
-// RunHelmCommandAndGetStdOutErrE runs helm with the given arguments and options and returns stdout and stderr
-// separately.
-//
-// Deprecated: Use [RunHelmCommandAndGetStdOutErrContextE] instead.
-func RunHelmCommandAndGetStdOutErrE(t testing.TestingT, options *Options, cmd string, additionalArgs ...string) (string, string, error) {
-	return RunHelmCommandAndGetStdOutErrContextE(t, context.Background(), options, cmd, additionalArgs...)
 }
 
 // RunHelmCommandAndGetStdOutErrContextE runs helm with the given arguments and options and returns stdout and stderr
@@ -138,7 +90,6 @@ func PrepareHelmCommand(options *Options, cmd string, additionalArgs ...string) 
 	args := []string{cmd}
 	args = getCommonArgs(options, args...)
 
-	// namespace arg only appended if it is not already present
 	if !slices.Contains(additionalArgs, "--namespace") {
 		args = append(args, getNamespaceArgs(options)...)
 	}

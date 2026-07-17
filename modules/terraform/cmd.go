@@ -55,9 +55,8 @@ func GetCommonOptions(options *Options, args ...string) (*Options, []string) {
 		args = append(args, fmt.Sprintf("--parallelism=%d", options.Parallelism))
 	}
 
-	// if SshAgent is provided, override the local SSH agent with the socket of our in-process agent
 	if options.SshAgent != nil {
-		// Initialize EnvVars, if it hasn't been set yet
+
 		if options.EnvVars == nil {
 			options.EnvVars = map[string]string{}
 		}
@@ -99,20 +98,6 @@ func RunTerraformCommandContextE(t testing.TestingT, ctx context.Context, additi
 	})
 }
 
-// RunTerraformCommand runs terraform with the given arguments and options and return stdout/stderr.
-//
-// Deprecated: Use [RunTerraformCommandContext] instead.
-func RunTerraformCommand(t testing.TestingT, additionalOptions *Options, args ...string) string {
-	return RunTerraformCommandContext(t, context.Background(), additionalOptions, args...)
-}
-
-// RunTerraformCommandE runs terraform with the given arguments and options and return stdout/stderr.
-//
-// Deprecated: Use [RunTerraformCommandContextE] instead.
-func RunTerraformCommandE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (string, error) {
-	return RunTerraformCommandContextE(t, context.Background(), additionalOptions, additionalArgs...)
-}
-
 // RunTerraformCommandAndGetStdoutContext runs terraform with the given arguments and options and returns solely its
 // stdout (but not stderr).
 func RunTerraformCommandAndGetStdoutContext(t testing.TestingT, ctx context.Context, additionalOptions *Options, additionalArgs ...string) string {
@@ -128,22 +113,6 @@ func RunTerraformCommandAndGetStdoutContextE(t testing.TestingT, ctx context.Con
 	out, _, _, err := RunTerraformCommandAndGetStdOutErrCodeContextE(t, ctx, additionalOptions, additionalArgs...)
 
 	return out, err
-}
-
-// RunTerraformCommandAndGetStdout runs terraform with the given arguments and options and returns solely its stdout
-// (but not stderr).
-//
-// Deprecated: Use [RunTerraformCommandAndGetStdoutContext] instead.
-func RunTerraformCommandAndGetStdout(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) string {
-	return RunTerraformCommandAndGetStdoutContext(t, context.Background(), additionalOptions, additionalArgs...)
-}
-
-// RunTerraformCommandAndGetStdoutE runs terraform with the given arguments and options and returns solely its stdout
-// (but not stderr).
-//
-// Deprecated: Use [RunTerraformCommandAndGetStdoutContextE] instead.
-func RunTerraformCommandAndGetStdoutE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (string, error) {
-	return RunTerraformCommandAndGetStdoutContextE(t, context.Background(), additionalOptions, additionalArgs...)
 }
 
 // RunTerraformCommandAndGetStdOutErrCodeContext runs terraform with the given arguments and options and returns its
@@ -188,22 +157,6 @@ func RunTerraformCommandAndGetStdOutErrCodeContextE(t testing.TestingT, ctx cont
 	return
 }
 
-// RunTerraformCommandAndGetStdOutErrCode runs terraform with the given arguments and options and returns its stdout,
-// stderr, and exitcode.
-//
-// Deprecated: Use [RunTerraformCommandAndGetStdOutErrCodeContext] instead.
-func RunTerraformCommandAndGetStdOutErrCode(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (stdout string, stderr string, exit int) {
-	return RunTerraformCommandAndGetStdOutErrCodeContext(t, context.Background(), additionalOptions, additionalArgs...)
-}
-
-// RunTerraformCommandAndGetStdOutErrCodeE runs terraform with the given arguments and options and returns its stdout,
-// stderr, and exitcode.
-//
-// Deprecated: Use [RunTerraformCommandAndGetStdOutErrCodeContextE] instead.
-func RunTerraformCommandAndGetStdOutErrCodeE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (stdout string, stderr string, exit int, err error) {
-	return RunTerraformCommandAndGetStdOutErrCodeContextE(t, context.Background(), additionalOptions, additionalArgs...)
-}
-
 // GetExitCodeForTerraformCommandContext runs terraform with the given arguments and options and returns exit code.
 func GetExitCodeForTerraformCommandContext(t testing.TestingT, ctx context.Context, additionalOptions *Options, args ...string) int {
 	exitCode, err := GetExitCodeForTerraformCommandContextE(t, ctx, additionalOptions, args...)
@@ -235,20 +188,6 @@ func GetExitCodeForTerraformCommandContextE(t testing.TestingT, ctx context.Cont
 	return DefaultErrorExitCode, getExitCodeErr
 }
 
-// GetExitCodeForTerraformCommand runs terraform with the given arguments and options and returns exit code.
-//
-// Deprecated: Use [GetExitCodeForTerraformCommandContext] instead.
-func GetExitCodeForTerraformCommand(t testing.TestingT, additionalOptions *Options, args ...string) int {
-	return GetExitCodeForTerraformCommandContext(t, context.Background(), additionalOptions, args...)
-}
-
-// GetExitCodeForTerraformCommandE runs terraform with the given arguments and options and returns exit code.
-//
-// Deprecated: Use [GetExitCodeForTerraformCommandContextE] instead.
-func GetExitCodeForTerraformCommandE(t testing.TestingT, additionalOptions *Options, additionalArgs ...string) (int, error) {
-	return GetExitCodeForTerraformCommandContextE(t, context.Background(), additionalOptions, additionalArgs...)
-}
-
 func defaultTerraformExecutable() string {
 	cmd := exec.CommandContext(context.Background(), TerraformDefaultPath, "-version")
 	cmd.Stdin = nil
@@ -259,7 +198,6 @@ func defaultTerraformExecutable() string {
 		return TerraformDefaultPath
 	}
 
-	// fallback to Tofu if terraform is not available
 	return TofuDefaultPath
 }
 

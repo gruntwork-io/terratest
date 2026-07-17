@@ -27,20 +27,6 @@ func InitContextE(t testing.TestingT, ctx context.Context, options *Options) (st
 	return runTerragruntCommandE(t, ctx, options, "run", args...)
 }
 
-// Init calls terragrunt run init and returns stdout/stderr.
-//
-// Deprecated: Use [InitContext] instead.
-func Init(t testing.TestingT, options *Options) string {
-	return InitContext(t, context.Background(), options)
-}
-
-// InitE calls terragrunt run -- init and returns stdout/stderr.
-//
-// Deprecated: Use [InitContextE] instead.
-func InitE(t testing.TestingT, options *Options) (string, error) {
-	return InitContextE(t, context.Background(), options)
-}
-
 // initArgs builds the argument list for terragrunt init command.
 // This function handles complex configuration that requires special formatting.
 func initArgs(options *Options) []string {

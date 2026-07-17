@@ -113,7 +113,7 @@ func parseList(items []any) (_ []any, err error) {
 	for i, v := range items {
 		rv := reflect.ValueOf(v)
 
-		switch rv.Kind() { //nolint:exhaustive // only map, slice/array, and float64 need special handling
+		switch rv.Kind() {
 		case reflect.Map:
 			items[i], err = parseMap(rv.Interface().(map[string]any))
 		case reflect.Slice, reflect.Array:
@@ -400,194 +400,9 @@ func OutputAllContextE(t testing.TestingT, ctx context.Context, options *Options
 	return OutputForKeysContextE(t, ctx, options, nil)
 }
 
-// Output calls terraform output for the given variable and return its string value representation.
-// It only designed to work with primitive terraform types: string, number and bool.
-// Please use OutputStruct for anything else.
-//
-// Deprecated: Use [OutputContext] instead.
-func Output(t testing.TestingT, options *Options, key string) string {
-	return OutputContext(t, context.Background(), options, key)
-}
-
-// OutputE calls terraform output for the given variable and return its string value representation.
-// It only designed to work with primitive terraform types: string, number and bool.
-// Please use OutputStructE for anything else.
-//
-// Deprecated: Use [OutputContextE] instead.
-func OutputE(t testing.TestingT, options *Options, key string) (string, error) {
-	return OutputContextE(t, context.Background(), options, key)
-}
-
-// OutputRequired calls terraform output for the given variable and return its value. If the value is empty, fail the test.
-//
-// Deprecated: Use [OutputRequiredContext] instead.
-func OutputRequired(t testing.TestingT, options *Options, key string) string {
-	return OutputRequiredContext(t, context.Background(), options, key)
-}
-
-// OutputRequiredE calls terraform output for the given variable and return its value. If the value is empty, return an error.
-//
-// Deprecated: Use [OutputRequiredContextE] instead.
-func OutputRequiredE(t testing.TestingT, options *Options, key string) (string, error) {
-	return OutputRequiredContextE(t, context.Background(), options, key)
-}
-
-// OutputMapOfObjects calls terraform output for the given variable and returns its value as a map of lists/maps.
-// If the output value is not a map of lists/maps, then it fails the test.
-//
-// Deprecated: Use [OutputMapOfObjectsContext] instead.
-func OutputMapOfObjects(t testing.TestingT, options *Options, key string) map[string]any {
-	return OutputMapOfObjectsContext(t, context.Background(), options, key)
-}
-
-// OutputMapOfObjectsE calls terraform output for the given variable and returns its value as a map of lists/maps.
-// Also returns an error object if an error was generated.
-// If the output value is not a map of lists/maps, then it fails the test.
-//
-// Deprecated: Use [OutputMapOfObjectsContextE] instead.
-func OutputMapOfObjectsE(t testing.TestingT, options *Options, key string) (map[string]any, error) {
-	return OutputMapOfObjectsContextE(t, context.Background(), options, key)
-}
-
-// OutputListOfObjects calls terraform output for the given variable and returns its value as a list of maps/lists.
-// If the output value is not a list of maps/lists, then it fails the test.
-//
-// Deprecated: Use [OutputListOfObjectsContext] instead.
-func OutputListOfObjects(t testing.TestingT, options *Options, key string) []map[string]any {
-	return OutputListOfObjectsContext(t, context.Background(), options, key)
-}
-
-// OutputListOfObjectsE calls terraform output for the given variable and returns its value as a list of maps/lists.
-// Also returns an error object if an error was generated.
-// If the output value is not a list of maps/lists, then it fails the test.
-//
-// Deprecated: Use [OutputListOfObjectsContextE] instead.
-func OutputListOfObjectsE(t testing.TestingT, options *Options, key string) ([]map[string]any, error) {
-	return OutputListOfObjectsContextE(t, context.Background(), options, key)
-}
-
-// OutputList calls terraform output for the given variable and returns its value as a list.
-// If the output value is not a list type, then it fails the test.
-//
-// Deprecated: Use [OutputListContext] instead.
-func OutputList(t testing.TestingT, options *Options, key string) []string {
-	return OutputListContext(t, context.Background(), options, key)
-}
-
-// OutputListE calls terraform output for the given variable and returns its value as a list.
-// If the output value is not a list type, then it returns an error.
-//
-// Deprecated: Use [OutputListContextE] instead.
-func OutputListE(t testing.TestingT, options *Options, key string) ([]string, error) {
-	return OutputListContextE(t, context.Background(), options, key)
-}
-
-// OutputMap calls terraform output for the given variable and returns its value as a map.
-// If the output value is not a map type, then it fails the test.
-//
-// Deprecated: Use [OutputMapContext] instead.
-func OutputMap(t testing.TestingT, options *Options, key string) map[string]string {
-	return OutputMapContext(t, context.Background(), options, key)
-}
-
-// OutputMapE calls terraform output for the given variable and returns its value as a map.
-// If the output value is not a map type, then it returns an error.
-//
-// Deprecated: Use [OutputMapContextE] instead.
-func OutputMapE(t testing.TestingT, options *Options, key string) (map[string]string, error) {
-	return OutputMapContextE(t, context.Background(), options, key)
-}
-
-// OutputForKeys calls terraform output for the given key list and returns values as a map.
-// If keys not found in the output, fails the test
-//
-// Deprecated: Use [OutputForKeysContext] instead.
-func OutputForKeys(t testing.TestingT, options *Options, keys []string) map[string]any {
-	return OutputForKeysContext(t, context.Background(), options, keys)
-}
-
-// OutputForKeysE calls terraform output for the given key list and returns values as a map.
-// The returned values are of type any and need to be type casted as necessary. Refer to output_test.go
-//
-// Deprecated: Use [OutputForKeysContextE] instead.
-func OutputForKeysE(t testing.TestingT, options *Options, keys []string) (map[string]any, error) {
-	return OutputForKeysContextE(t, context.Background(), options, keys)
-}
-
-// OutputJSON calls terraform output for the given variable and returns the
-// result as the JSON string.
-// If key is an empty string, it will return all the output variables.
-//
-// Deprecated: Use [OutputJSONContext] instead.
-func OutputJSON(t testing.TestingT, options *Options, key string) string {
-	return OutputJSONContext(t, context.Background(), options, key)
-}
-
-// OutputJSONE calls terraform output for the given variable and returns the
-// result as the JSON string.
-// If key is an empty string, it will return all the output variables.
-//
-// Deprecated: Use [OutputJSONContextE] instead.
-func OutputJSONE(t testing.TestingT, options *Options, key string) (string, error) {
-	return OutputJSONContextE(t, context.Background(), options, key)
-}
-
-// OutputJson calls terraform output for the given variable and returns the
-// result as the JSON string.
-// If key is an empty string, it will return all the output variables.
-//
-// Deprecated: Use [OutputJSONContext] instead.
-func OutputJson(t testing.TestingT, options *Options, key string) string { //nolint:revive,staticcheck // preserving deprecated function name
-	return OutputJSONContext(t, context.Background(), options, key)
-}
-
-// OutputJsonE calls terraform output for the given variable and returns the
-// result as the JSON string.
-// If key is an empty string, it will return all the output variables.
-//
-// Deprecated: Use [OutputJSONContextE] instead.
-func OutputJsonE(t testing.TestingT, options *Options, key string) (string, error) { //nolint:revive,staticcheck // preserving deprecated function name
-	return OutputJSONContextE(t, context.Background(), options, key)
-}
-
-// OutputStruct calls terraform output for the given variable and stores the
-// result in the value pointed to by v. If v is nil or not a pointer, or if
-// the value returned by Terraform is not appropriate for a given target type,
-// it fails the test.
-//
-// Deprecated: Use [OutputStructContext] instead.
-func OutputStruct(t testing.TestingT, options *Options, key string, v any) {
-	OutputStructContext(t, context.Background(), options, key, v)
-}
-
-// OutputStructE calls terraform output for the given variable and stores the
-// result in the value pointed to by v. If v is nil or not a pointer, or if
-// the value returned by Terraform is not appropriate for a given target type,
-// it returns an error.
-//
-// Deprecated: Use [OutputStructContextE] instead.
-func OutputStructE(t testing.TestingT, options *Options, key string, v any) error {
-	return OutputStructContextE(t, context.Background(), options, key, v)
-}
-
-// OutputAll calls terraform output returns all values as a map.
-// If there is error fetching the output, fails the test
-//
-// Deprecated: Use [OutputAllContext] instead.
-func OutputAll(t testing.TestingT, options *Options) map[string]any {
-	return OutputAllContext(t, context.Background(), options)
-}
-
-// OutputAllE calls terraform and returns all the outputs as a map
-//
-// Deprecated: Use [OutputAllContextE] instead.
-func OutputAllE(t testing.TestingT, options *Options) (map[string]any, error) {
-	return OutputAllContextE(t, context.Background(), options)
-}
-
 // cleanJSON removes ANSI characters from the JSON and normalizes formatting.
 func cleanJSON(input string) (string, error) {
-	// Remove ANSI escape codes
+
 	cleaned := ansiLineRegex.ReplaceAllString(input, "")
 	cleaned = tgLogLevel.ReplaceAllString(cleaned, "")
 
@@ -611,7 +426,6 @@ func cleanJSON(input string) (string, error) {
 		return "", err
 	}
 
-	// Format JSON output with indentation
 	normalized, err := json.MarshalIndent(jsonObj, "", "  ")
 	if err != nil {
 		return "", err

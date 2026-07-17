@@ -70,22 +70,6 @@ func GetDefaultVpcContext(t testing.TestingT, ctx context.Context, region string
 	return vpc
 }
 
-// GetDefaultVpc fetches information about the default VPC in the given region.
-//
-// Deprecated: Use [GetDefaultVpcContext] instead.
-func GetDefaultVpc(t testing.TestingT, region string) *Vpc {
-	t.Helper()
-
-	return GetDefaultVpcContext(t, context.Background(), region)
-}
-
-// GetDefaultVpcE fetches information about the default VPC in the given region.
-//
-// Deprecated: Use [GetDefaultVpcContextE] instead.
-func GetDefaultVpcE(t testing.TestingT, region string) (*Vpc, error) {
-	return GetDefaultVpcContextE(t, context.Background(), region)
-}
-
 // GetVpcByIDContextE fetches information about a VPC with given ID in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func GetVpcByIDContextE(t testing.TestingT, ctx context.Context, vpcID string, region string) (*Vpc, error) {
@@ -110,36 +94,6 @@ func GetVpcByIDContext(t testing.TestingT, ctx context.Context, vpcID string, re
 	require.NoError(t, err)
 
 	return vpc
-}
-
-// GetVpcByID fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByIDContext] instead.
-func GetVpcByID(t testing.TestingT, vpcID string, region string) *Vpc {
-	t.Helper()
-
-	return GetVpcByIDContext(t, context.Background(), vpcID, region)
-}
-
-// GetVpcByIDE fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByIDContextE] instead.
-func GetVpcByIDE(t testing.TestingT, vpcID string, region string) (*Vpc, error) {
-	return GetVpcByIDContextE(t, context.Background(), vpcID, region)
-}
-
-// GetVpcById fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByID] instead.
-func GetVpcById(t testing.TestingT, vpcID string, region string) *Vpc { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetVpcByIDContext(t, context.Background(), vpcID, region)
-}
-
-// GetVpcByIdE fetches information about a VPC with given ID in the given region.
-//
-// Deprecated: Use [GetVpcByIDE] instead.
-func GetVpcByIdE(t testing.TestingT, vpcID string, region string) (*Vpc, error) { //nolint:staticcheck,revive // preserving deprecated function name
-	return GetVpcByIDContextE(t, context.Background(), vpcID, region)
 }
 
 // GetVpcsContextE fetches information about VPCs from given regions limited by filters
@@ -205,13 +159,6 @@ func GetVpcsContextE(t testing.TestingT, ctx context.Context, filters []types.Fi
 	return retVal, nil
 }
 
-// GetVpcsE fetches information about VPCs from given regions limited by filters
-//
-// Deprecated: Use [GetVpcsContextE] instead.
-func GetVpcsE(t testing.TestingT, filters []types.Filter, region string) ([]*Vpc, error) {
-	return GetVpcsContextE(t, context.Background(), filters, region)
-}
-
 // FindVPCName extracts the VPC name from its tags (if any). Falls back to "Default" if it's the default VPC or empty
 // string otherwise.
 func FindVPCName(vpc *types.Vpc) string {
@@ -226,14 +173,6 @@ func FindVPCName(vpc *types.Vpc) string {
 	}
 
 	return ""
-}
-
-// FindVpcName extracts the VPC name from its tags (if any). Fall back to "Default" if it's the default VPC or empty string
-// otherwise.
-//
-// Deprecated: Use [FindVPCName] instead.
-func FindVpcName(vpc types.Vpc) string { //nolint:staticcheck,revive,gocritic // preserving deprecated function name
-	return FindVPCName(&vpc)
 }
 
 // GetSubnetsForVpcContextE gets the subnets in the specified VPC.
@@ -276,22 +215,6 @@ func GetSubnetsForVpcContext(t testing.TestingT, ctx context.Context, vpcID stri
 	return subnets
 }
 
-// GetSubnetsForVpc gets the subnets in the specified VPC.
-//
-// Deprecated: Use [GetSubnetsForVpcContext] instead.
-func GetSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
-	t.Helper()
-
-	return GetSubnetsForVpcContext(t, context.Background(), vpcID, region)
-}
-
-// GetSubnetsForVpcE gets the subnets in the specified VPC.
-//
-// Deprecated: Use [GetSubnetsForVpcContextE] instead.
-func GetSubnetsForVpcE(t testing.TestingT, region string, filters []types.Filter) ([]Subnet, error) {
-	return GetSubnetsForVpcContextE(t, context.Background(), region, filters)
-}
-
 // GetAzDefaultSubnetsForVpcContextE gets the default az subnets in the specified VPC.
 // The ctx parameter supports cancellation and timeouts.
 func GetAzDefaultSubnetsForVpcContextE(t testing.TestingT, ctx context.Context, vpcID string, region string) ([]Subnet, error) {
@@ -314,22 +237,6 @@ func GetAzDefaultSubnetsForVpcContext(t testing.TestingT, ctx context.Context, v
 	require.NoError(t, err)
 
 	return subnets
-}
-
-// GetAzDefaultSubnetsForVpc gets the default az subnets in the specified VPC.
-//
-// Deprecated: Use [GetAzDefaultSubnetsForVpcContext] instead.
-func GetAzDefaultSubnetsForVpc(t testing.TestingT, vpcID string, region string) []Subnet {
-	t.Helper()
-
-	return GetAzDefaultSubnetsForVpcContext(t, context.Background(), vpcID, region)
-}
-
-// GetAzDefaultSubnetsForVpcE gets the default az subnets in the specified VPC.
-//
-// Deprecated: Use [GetAzDefaultSubnetsForVpcContextE] instead.
-func GetAzDefaultSubnetsForVpcE(t testing.TestingT, vpcID string, region string) ([]Subnet, error) {
-	return GetAzDefaultSubnetsForVpcContextE(t, context.Background(), vpcID, region)
 }
 
 // generateVpcIDFilter is a helper method to generate vpc id filter
@@ -380,30 +287,13 @@ func GetTagsForVpcContext(t testing.TestingT, ctx context.Context, vpcID string,
 	return tags
 }
 
-// GetTagsForVpc gets the tags for the specified VPC.
-//
-// Deprecated: Use [GetTagsForVpcContext] instead.
-func GetTagsForVpc(t testing.TestingT, vpcID string, region string) map[string]string {
-	t.Helper()
-
-	return GetTagsForVpcContext(t, context.Background(), vpcID, region)
-}
-
-// GetTagsForVpcE gets the tags for the specified VPC.
-//
-// Deprecated: Use [GetTagsForVpcContextE] instead.
-func GetTagsForVpcE(t testing.TestingT, vpcID string, region string) (map[string]string, error) {
-	return GetTagsForVpcContextE(t, context.Background(), vpcID, region)
-}
-
 // GetDefaultSubnetIDsForVpcPContextE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
 // The P suffix differentiates this function (which accepts *Vpc pointer) from the deprecated
 // GetDefaultSubnetIDsForVpcE which accepts Vpc by value.
 // The ctx parameter is accepted for API consistency with other Context functions.
 func GetDefaultSubnetIDsForVpcPContextE(t testing.TestingT, ctx context.Context, vpc *Vpc) ([]string, error) {
 	if vpc.Name != defaultVPCName {
-		// You cannot create a default subnet in a nondefault VPC
-		// https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html
+
 		return nil, fmt.Errorf("only default VPCs have default subnets but VPC with id %s is not default VPC", vpc.Id)
 	}
 
@@ -437,38 +327,6 @@ func GetDefaultSubnetIDsForVpcPContext(t testing.TestingT, ctx context.Context, 
 	return subnetIDs
 }
 
-// GetDefaultSubnetIDsForVpcP gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-//
-// Deprecated: Use [GetDefaultSubnetIDsForVpcPContext] instead.
-func GetDefaultSubnetIDsForVpcP(t testing.TestingT, vpc *Vpc) []string {
-	t.Helper()
-
-	return GetDefaultSubnetIDsForVpcPContext(t, context.Background(), vpc)
-}
-
-// GetDefaultSubnetIDsForVpcPE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-//
-// Deprecated: Use [GetDefaultSubnetIDsForVpcPContextE] instead.
-func GetDefaultSubnetIDsForVpcPE(t testing.TestingT, vpc *Vpc) ([]string, error) {
-	return GetDefaultSubnetIDsForVpcPContextE(t, context.Background(), vpc)
-}
-
-// GetDefaultSubnetIDsForVpc gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-//
-// Deprecated: Use [GetDefaultSubnetIDsForVpcPContext] instead.
-func GetDefaultSubnetIDsForVpc(t testing.TestingT, vpc Vpc) []string { //nolint:gocritic // preserving deprecated function signature
-	t.Helper()
-
-	return GetDefaultSubnetIDsForVpcPContext(t, context.Background(), &vpc)
-}
-
-// GetDefaultSubnetIDsForVpcE gets the ids of the subnets that are the default subnet for the AvailabilityZone.
-//
-// Deprecated: Use [GetDefaultSubnetIDsForVpcPContextE] instead.
-func GetDefaultSubnetIDsForVpcE(t testing.TestingT, vpc Vpc) ([]string, error) { //nolint:gocritic // preserving deprecated function signature
-	return GetDefaultSubnetIDsForVpcPContextE(t, context.Background(), &vpc)
-}
-
 // GetTagsForSubnetContextE gets the tags for the specified subnet.
 // The ctx parameter supports cancellation and timeouts.
 func GetTagsForSubnetContextE(t testing.TestingT, ctx context.Context, subnetID string, region string) (map[string]string, error) {
@@ -485,22 +343,6 @@ func GetTagsForSubnetContext(t testing.TestingT, ctx context.Context, subnetID s
 	require.NoError(t, err)
 
 	return tags
-}
-
-// GetTagsForSubnet gets the tags for the specified subnet.
-//
-// Deprecated: Use [GetTagsForSubnetContext] instead.
-func GetTagsForSubnet(t testing.TestingT, subnetID string, region string) map[string]string {
-	t.Helper()
-
-	return GetTagsForSubnetContext(t, context.Background(), subnetID, region)
-}
-
-// GetTagsForSubnetE gets the tags for the specified subnet.
-//
-// Deprecated: Use [GetTagsForSubnetContextE] instead.
-func GetTagsForSubnetE(t testing.TestingT, subnetID string, region string) (map[string]string, error) {
-	return GetTagsForSubnetContextE(t, context.Background(), subnetID, region)
 }
 
 // IsPublicSubnetContextE returns True if the subnet identified by the given id in the provided region is public.
@@ -524,7 +366,7 @@ func IsPublicSubnetContextE(t testing.TestingT, ctx context.Context, subnetID st
 	}
 
 	if len(rts.RouteTables) == 0 {
-		// Subnets not explicitly associated with any route table are implicitly associated with the main route table
+
 		rts, err = getImplicitRouteTableForSubnetContextE(t, ctx, subnetID, region)
 		if err != nil {
 			return false, err
@@ -556,22 +398,6 @@ func IsPublicSubnetContext(t testing.TestingT, ctx context.Context, subnetID str
 	require.NoError(t, err)
 
 	return isPublic
-}
-
-// IsPublicSubnet returns True if the subnet identified by the given id in the provided region is public.
-//
-// Deprecated: Use [IsPublicSubnetContext] instead.
-func IsPublicSubnet(t testing.TestingT, subnetID string, region string) bool {
-	t.Helper()
-
-	return IsPublicSubnetContext(t, context.Background(), subnetID, region)
-}
-
-// IsPublicSubnetE returns True if the subnet identified by the given id in the provided region is public.
-//
-// Deprecated: Use [IsPublicSubnetContextE] instead.
-func IsPublicSubnetE(t testing.TestingT, subnetID string, region string) (bool, error) {
-	return IsPublicSubnetContextE(t, context.Background(), subnetID, region)
 }
 
 // getImplicitRouteTableForSubnetContextE gets the implicit route table for a subnet.
@@ -621,59 +447,59 @@ func GetRandomPrivateCidrBlock(routingPrefix int) string {
 	var o1, o2, o3, o4 int
 
 	switch routingPrefix {
-	case 32: //nolint:mnd // RFC 1918 private address range
-		o1 = random.RandomInt([]int{10, 172, 192}) //nolint:mnd // RFC 1918 private address range
+	case 32:
+		o1 = random.RandomInt([]int{10, 172, 192})
 
 		switch o1 {
-		case 10: //nolint:mnd // RFC 1918 private address range
-			o2 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
-			o3 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
-			o4 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
-		case 172: //nolint:mnd // RFC 1918 private address range
-			o2 = random.Random(16, 31) //nolint:mnd // RFC 1918 private address range
-			o3 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
-			o4 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
-		case 192: //nolint:mnd // RFC 1918 private address range
-			o2 = 168                   //nolint:mnd // RFC 1918 private address range
-			o3 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
-			o4 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
+		case 10:
+			o2 = random.Random(0, 255)
+			o3 = random.Random(0, 255)
+			o4 = random.Random(0, 255)
+		case 172:
+			o2 = random.Random(16, 31)
+			o3 = random.Random(0, 255)
+			o4 = random.Random(0, 255)
+		case 192:
+			o2 = 168
+			o3 = random.Random(0, 255)
+			o4 = random.Random(0, 255)
 		}
 
-	case 31, 30, 29, 28, 27, 26, 25: //nolint:mnd // RFC 1918 private address range
+	case 31, 30, 29, 28, 27, 26, 25:
 		fallthrough
-	case 24: //nolint:mnd // RFC 1918 private address range
-		o1 = random.RandomInt([]int{10, 172, 192}) //nolint:mnd // RFC 1918 private address range
+	case 24:
+		o1 = random.RandomInt([]int{10, 172, 192})
 
 		switch o1 {
-		case 10: //nolint:mnd // RFC 1918 private address range
-			o2 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
-			o3 = random.Random(0, 255) //nolint:mnd // RFC 1918 private address range
+		case 10:
+			o2 = random.Random(0, 255)
+			o3 = random.Random(0, 255)
 			o4 = 0
-		case 172: //nolint:mnd // RFC 1918 private address range
-			o2 = 16 //nolint:mnd // RFC 1918 private address range
+		case 172:
+			o2 = 16
 			o3 = 0
 			o4 = 0
-		case 192: //nolint:mnd // RFC 1918 private address range
-			o2 = 168 //nolint:mnd // RFC 1918 private address range
+		case 192:
+			o2 = 168
 			o3 = 0
 			o4 = 0
 		}
-	case 23, 22, 21, 20, 19: //nolint:mnd // RFC 1918 private address range
+	case 23, 22, 21, 20, 19:
 		fallthrough
-	case 18: //nolint:mnd // RFC 1918 private address range
-		o1 = random.RandomInt([]int{10, 172, 192}) //nolint:mnd // RFC 1918 private address range
+	case 18:
+		o1 = random.RandomInt([]int{10, 172, 192})
 
 		switch o1 {
-		case 10: //nolint:mnd // RFC 1918 private address range
+		case 10:
 			o2 = 0
 			o3 = 0
 			o4 = 0
-		case 172: //nolint:mnd // RFC 1918 private address range
-			o2 = 16 //nolint:mnd // RFC 1918 private address range
+		case 172:
+			o2 = 16
 			o3 = 0
 			o4 = 0
-		case 192: //nolint:mnd // RFC 1918 private address range
-			o2 = 168 //nolint:mnd // RFC 1918 private address range
+		case 192:
+			o2 = 168
 			o3 = 0
 			o4 = 0
 		}

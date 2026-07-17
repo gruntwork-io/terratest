@@ -22,7 +22,7 @@ func GetPrivateIPOfEc2InstanceContextE(t testing.TestingT, ctx context.Context, 
 	ip, containsIP := ips[instanceID]
 
 	if !containsIP {
-		return "", IpForEc2InstanceNotFound{InstanceId: instanceID, AwsRegion: awsRegion, Type: "private"}
+		return "", IPForEc2InstanceNotFound{InstanceId: instanceID, AwsRegion: awsRegion, Type: "private"}
 	}
 
 	return ip, nil
@@ -39,54 +39,12 @@ func GetPrivateIPOfEc2InstanceContext(t testing.TestingT, ctx context.Context, i
 	return ip
 }
 
-// GetPrivateIPOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
-// This function will fail the test if there is an error.
-//
-// Deprecated: Use [GetPrivateIPOfEc2InstanceContext] instead.
-func GetPrivateIPOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	t.Helper()
-
-	return GetPrivateIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetPrivateIPOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPrivateIPOfEc2InstanceContextE] instead.
-func GetPrivateIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPrivateIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetPrivateIpOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPrivateIPOfEc2Instance] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPrivateIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	return GetPrivateIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetPrivateIpOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPrivateIPOfEc2InstanceE] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPrivateIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPrivateIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
-}
-
 // GetPrivateIpsOfEc2InstancesContextE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 // The ctx parameter supports cancellation and timeouts.
 func GetPrivateIpsOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) {
 	return getInstanceFieldMapContextE(t, ctx, instanceIDs, awsRegion, func(inst *types.Instance) string {
 		return aws.ToString(inst.PrivateIpAddress)
 	})
-}
-
-// GetPrivateIpsOfEc2InstancesE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-//
-// Deprecated: Use [GetPrivateIpsOfEc2InstancesContextE] instead.
-func GetPrivateIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRegion string) (map[string]string, error) {
-	return GetPrivateIpsOfEc2InstancesContextE(t, context.Background(), instanceIDs, awsRegion)
 }
 
 // GetPrivateIpsOfEc2InstancesContext gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
@@ -98,14 +56,6 @@ func GetPrivateIpsOfEc2InstancesContext(t testing.TestingT, ctx context.Context,
 	require.NoError(t, err)
 
 	return ips
-}
-
-// GetPrivateIpsOfEc2Instances gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-//
-// Deprecated: Use [GetPrivateIpsOfEc2InstancesContext] instead.
-func GetPrivateIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRegion string) map[string]string {
-	t.Helper()
-	return GetPrivateIpsOfEc2InstancesContext(t, context.Background(), instanceIDs, awsRegion)
 }
 
 // GetPrivateHostnameOfEc2InstanceContextE gets the private IP address of the given EC2 Instance in the given region.
@@ -136,21 +86,6 @@ func GetPrivateHostnameOfEc2InstanceContext(t testing.TestingT, ctx context.Cont
 	return ip
 }
 
-// GetPrivateHostnameOfEc2Instance gets the private IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPrivateHostnameOfEc2InstanceContext] instead.
-func GetPrivateHostnameOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	t.Helper()
-	return GetPrivateHostnameOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetPrivateHostnameOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPrivateHostnameOfEc2InstanceContextE] instead.
-func GetPrivateHostnameOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPrivateHostnameOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
-}
-
 // GetPrivateHostnamesOfEc2InstancesContextE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 // The ctx parameter supports cancellation and timeouts.
 func GetPrivateHostnamesOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) {
@@ -170,21 +105,6 @@ func GetPrivateHostnamesOfEc2InstancesContext(t testing.TestingT, ctx context.Co
 	return ips
 }
 
-// GetPrivateHostnamesOfEc2Instances gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-//
-// Deprecated: Use [GetPrivateHostnamesOfEc2InstancesContext] instead.
-func GetPrivateHostnamesOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRegion string) map[string]string {
-	t.Helper()
-	return GetPrivateHostnamesOfEc2InstancesContext(t, context.Background(), instanceIDs, awsRegion)
-}
-
-// GetPrivateHostnamesOfEc2InstancesE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-//
-// Deprecated: Use [GetPrivateHostnamesOfEc2InstancesContextE] instead.
-func GetPrivateHostnamesOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRegion string) (map[string]string, error) {
-	return GetPrivateHostnamesOfEc2InstancesContextE(t, context.Background(), instanceIDs, awsRegion)
-}
-
 // GetPublicIPOfEc2InstanceContextE gets the public IP address of the given EC2 Instance in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func GetPublicIPOfEc2InstanceContextE(t testing.TestingT, ctx context.Context, instanceID string, awsRegion string) (string, error) {
@@ -196,7 +116,7 @@ func GetPublicIPOfEc2InstanceContextE(t testing.TestingT, ctx context.Context, i
 	ip, containsIP := ips[instanceID]
 
 	if !containsIP {
-		return "", IpForEc2InstanceNotFound{InstanceId: instanceID, AwsRegion: awsRegion, Type: "public"}
+		return "", IPForEc2InstanceNotFound{InstanceId: instanceID, AwsRegion: awsRegion, Type: "public"}
 	}
 
 	return ip, nil
@@ -213,54 +133,12 @@ func GetPublicIPOfEc2InstanceContext(t testing.TestingT, ctx context.Context, in
 	return ip
 }
 
-// GetPublicIPOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
-// This function will fail the test if there is an error.
-//
-// Deprecated: Use [GetPublicIPOfEc2InstanceContext] instead.
-func GetPublicIPOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	t.Helper()
-
-	return GetPublicIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetPublicIPOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPublicIPOfEc2InstanceContextE] instead.
-func GetPublicIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPublicIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetPublicIpOfEc2Instance gets the public IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPublicIPOfEc2Instance] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPublicIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	return GetPublicIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetPublicIpOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
-//
-// Deprecated: Use [GetPublicIPOfEc2InstanceE] instead.
-//
-//nolint:staticcheck,revive // preserving deprecated function name
-func GetPublicIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPublicIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
-}
-
 // GetPublicIpsOfEc2InstancesContextE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
 // The ctx parameter supports cancellation and timeouts.
 func GetPublicIpsOfEc2InstancesContextE(t testing.TestingT, ctx context.Context, instanceIDs []string, awsRegion string) (map[string]string, error) {
 	return getInstanceFieldMapContextE(t, ctx, instanceIDs, awsRegion, func(inst *types.Instance) string {
 		return aws.ToString(inst.PublicIpAddress)
 	})
-}
-
-// GetPublicIpsOfEc2InstancesE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-//
-// Deprecated: Use [GetPublicIpsOfEc2InstancesContextE] instead.
-func GetPublicIpsOfEc2InstancesE(t testing.TestingT, instanceIDs []string, awsRegion string) (map[string]string, error) {
-	return GetPublicIpsOfEc2InstancesContextE(t, context.Background(), instanceIDs, awsRegion)
 }
 
 // GetPublicIpsOfEc2InstancesContext gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
@@ -272,14 +150,6 @@ func GetPublicIpsOfEc2InstancesContext(t testing.TestingT, ctx context.Context, 
 	require.NoError(t, err)
 
 	return ips
-}
-
-// GetPublicIpsOfEc2Instances gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
-//
-// Deprecated: Use [GetPublicIpsOfEc2InstancesContext] instead.
-func GetPublicIpsOfEc2Instances(t testing.TestingT, instanceIDs []string, awsRegion string) map[string]string {
-	t.Helper()
-	return GetPublicIpsOfEc2InstancesContext(t, context.Background(), instanceIDs, awsRegion)
 }
 
 // GetEc2InstanceIdsByTagContextE returns all the IDs of EC2 instances in the given region with the given tag.
@@ -301,21 +171,6 @@ func GetEc2InstanceIdsByTagContext(t testing.TestingT, ctx context.Context, regi
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetEc2InstanceIdsByTag returns all the IDs of EC2 instances in the given region with the given tag.
-//
-// Deprecated: Use [GetEc2InstanceIdsByTagContext] instead.
-func GetEc2InstanceIdsByTag(t testing.TestingT, region string, tagName string, tagValue string) []string {
-	t.Helper()
-	return GetEc2InstanceIdsByTagContext(t, context.Background(), region, tagName, tagValue)
-}
-
-// GetEc2InstanceIdsByTagE returns all the IDs of EC2 instances in the given region with the given tag.
-//
-// Deprecated: Use [GetEc2InstanceIdsByTagContextE] instead.
-func GetEc2InstanceIdsByTagE(t testing.TestingT, region string, tagName string, tagValue string) ([]string, error) {
-	return GetEc2InstanceIdsByTagContextE(t, context.Background(), region, tagName, tagValue)
 }
 
 // GetEc2InstanceIdsByFiltersContextE returns all the IDs of EC2 instances in the given region which match to EC2 filter list
@@ -363,23 +218,6 @@ func GetEc2InstanceIdsByFiltersContext(t testing.TestingT, ctx context.Context, 
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetEc2InstanceIdsByFilters returns all the IDs of EC2 instances in the given region which match to EC2 filter list
-// as per https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeInstancesInput.
-//
-// Deprecated: Use [GetEc2InstanceIdsByFiltersContext] instead.
-func GetEc2InstanceIdsByFilters(t testing.TestingT, region string, ec2Filters map[string][]string) []string {
-	t.Helper()
-	return GetEc2InstanceIdsByFiltersContext(t, context.Background(), region, ec2Filters)
-}
-
-// GetEc2InstanceIdsByFiltersE returns all the IDs of EC2 instances in the given region which match to EC2 filter list
-// as per https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#DescribeInstancesInput.
-//
-// Deprecated: Use [GetEc2InstanceIdsByFiltersContextE] instead.
-func GetEc2InstanceIdsByFiltersE(t testing.TestingT, region string, ec2Filters map[string][]string) ([]string, error) {
-	return GetEc2InstanceIdsByFiltersContextE(t, context.Background(), region, ec2Filters)
 }
 
 // GetTagsForEc2InstanceContextE returns all the tags for the given EC2 Instance.
@@ -431,21 +269,6 @@ func GetTagsForEc2InstanceContext(t testing.TestingT, ctx context.Context, regio
 	return tags
 }
 
-// GetTagsForEc2Instance returns all the tags for the given EC2 Instance.
-//
-// Deprecated: Use [GetTagsForEc2InstanceContext] instead.
-func GetTagsForEc2Instance(t testing.TestingT, region string, instanceID string) map[string]string {
-	t.Helper()
-	return GetTagsForEc2InstanceContext(t, context.Background(), region, instanceID)
-}
-
-// GetTagsForEc2InstanceE returns all the tags for the given EC2 Instance.
-//
-// Deprecated: Use [GetTagsForEc2InstanceContextE] instead.
-func GetTagsForEc2InstanceE(t testing.TestingT, region string, instanceID string) (map[string]string, error) {
-	return GetTagsForEc2InstanceContextE(t, context.Background(), region, instanceID)
-}
-
 // DeleteAmiContextE deletes the given AMI in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteAmiContextE(t testing.TestingT, ctx context.Context, region string, imageID string) error {
@@ -467,21 +290,6 @@ func DeleteAmiContextE(t testing.TestingT, ctx context.Context, region string, i
 func DeleteAmiContext(t testing.TestingT, ctx context.Context, region string, imageID string) {
 	t.Helper()
 	require.NoError(t, DeleteAmiContextE(t, ctx, region, imageID))
-}
-
-// DeleteAmi deletes the given AMI in the given region.
-//
-// Deprecated: Use [DeleteAmiContext] instead.
-func DeleteAmi(t testing.TestingT, region string, imageID string) {
-	t.Helper()
-	DeleteAmiContext(t, context.Background(), region, imageID)
-}
-
-// DeleteAmiE deletes the given AMI in the given region.
-//
-// Deprecated: Use [DeleteAmiContextE] instead.
-func DeleteAmiE(t testing.TestingT, region string, imageID string) error {
-	return DeleteAmiContextE(t, context.Background(), region, imageID)
 }
 
 // AddTagsToResourceContextE adds the tags to the given taggable AWS resource such as EC2, AMI or VPC.
@@ -517,21 +325,6 @@ func AddTagsToResourceContext(t testing.TestingT, ctx context.Context, region st
 	require.NoError(t, AddTagsToResourceContextE(t, ctx, region, resource, tags))
 }
 
-// AddTagsToResource adds the tags to the given taggable AWS resource such as EC2, AMI or VPC.
-//
-// Deprecated: Use [AddTagsToResourceContext] instead.
-func AddTagsToResource(t testing.TestingT, region string, resource string, tags map[string]string) {
-	t.Helper()
-	AddTagsToResourceContext(t, context.Background(), region, resource, tags)
-}
-
-// AddTagsToResourceE adds the tags to the given taggable AWS resource such as EC2, AMI or VPC.
-//
-// Deprecated: Use [AddTagsToResourceContextE] instead.
-func AddTagsToResourceE(t testing.TestingT, region string, resource string, tags map[string]string) error {
-	return AddTagsToResourceContextE(t, context.Background(), region, resource, tags)
-}
-
 // TerminateInstanceContextE terminates the EC2 instance with the given ID in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func TerminateInstanceContextE(t testing.TestingT, ctx context.Context, region string, instanceID string) error {
@@ -557,21 +350,6 @@ func TerminateInstanceContextE(t testing.TestingT, ctx context.Context, region s
 func TerminateInstanceContext(t testing.TestingT, ctx context.Context, region string, instanceID string) {
 	t.Helper()
 	require.NoError(t, TerminateInstanceContextE(t, ctx, region, instanceID))
-}
-
-// TerminateInstance terminates the EC2 instance with the given ID in the given region.
-//
-// Deprecated: Use [TerminateInstanceContext] instead.
-func TerminateInstance(t testing.TestingT, region string, instanceID string) {
-	t.Helper()
-	TerminateInstanceContext(t, context.Background(), region, instanceID)
-}
-
-// TerminateInstanceE terminates the EC2 instance with the given ID in the given region.
-//
-// Deprecated: Use [TerminateInstanceContextE] instead.
-func TerminateInstanceE(t testing.TestingT, region string, instanceID string) error {
-	return TerminateInstanceContextE(t, context.Background(), region, instanceID)
 }
 
 // GetAmiPubliclyAccessibleContextE returns whether the AMI is publicly accessible or not
@@ -602,21 +380,6 @@ func GetAmiPubliclyAccessibleContext(t testing.TestingT, ctx context.Context, aw
 	return output
 }
 
-// GetAmiPubliclyAccessible returns whether the AMI is publicly accessible or not
-//
-// Deprecated: Use [GetAmiPubliclyAccessibleContext] instead.
-func GetAmiPubliclyAccessible(t testing.TestingT, awsRegion string, amiID string) bool {
-	t.Helper()
-	return GetAmiPubliclyAccessibleContext(t, context.Background(), awsRegion, amiID)
-}
-
-// GetAmiPubliclyAccessibleE returns whether the AMI is publicly accessible or not
-//
-// Deprecated: Use [GetAmiPubliclyAccessibleContextE] instead.
-func GetAmiPubliclyAccessibleE(t testing.TestingT, awsRegion string, amiID string) (bool, error) {
-	return GetAmiPubliclyAccessibleContextE(t, context.Background(), awsRegion, amiID)
-}
-
 // GetAccountsWithLaunchPermissionsForAmiContextE returns list of accounts that the AMI is shared with
 // The ctx parameter supports cancellation and timeouts.
 func GetAccountsWithLaunchPermissionsForAmiContextE(t testing.TestingT, ctx context.Context, awsRegion string, amiID string) ([]string, error) {
@@ -645,21 +408,6 @@ func GetAccountsWithLaunchPermissionsForAmiContext(t testing.TestingT, ctx conte
 	require.NoError(t, err)
 
 	return output
-}
-
-// GetAccountsWithLaunchPermissionsForAmi returns list of accounts that the AMI is shared with
-//
-// Deprecated: Use [GetAccountsWithLaunchPermissionsForAmiContext] instead.
-func GetAccountsWithLaunchPermissionsForAmi(t testing.TestingT, awsRegion string, amiID string) []string {
-	t.Helper()
-	return GetAccountsWithLaunchPermissionsForAmiContext(t, context.Background(), awsRegion, amiID)
-}
-
-// GetAccountsWithLaunchPermissionsForAmiE returns list of accounts that the AMI is shared with
-//
-// Deprecated: Use [GetAccountsWithLaunchPermissionsForAmiContextE] instead.
-func GetAccountsWithLaunchPermissionsForAmiE(t testing.TestingT, awsRegion string, amiID string) ([]string, error) {
-	return GetAccountsWithLaunchPermissionsForAmiContextE(t, context.Background(), awsRegion, amiID)
 }
 
 // GetLaunchPermissionsForAmiContextE returns launchPermissions as configured in AWS
@@ -694,21 +442,6 @@ func GetLaunchPermissionsForAmiContext(t testing.TestingT, ctx context.Context, 
 	return output
 }
 
-// GetLaunchPermissionsForAmi returns launchPermissions as configured in AWS.
-//
-// Deprecated: Use [GetLaunchPermissionsForAmiContext] instead.
-func GetLaunchPermissionsForAmi(t testing.TestingT, awsRegion string, amiID string) []types.LaunchPermission {
-	t.Helper()
-	return GetLaunchPermissionsForAmiContext(t, context.Background(), awsRegion, amiID)
-}
-
-// GetLaunchPermissionsForAmiE returns launchPermissions as configured in AWS
-//
-// Deprecated: Use [GetLaunchPermissionsForAmiContextE] instead.
-func GetLaunchPermissionsForAmiE(t testing.TestingT, awsRegion string, amiID string) ([]types.LaunchPermission, error) {
-	return GetLaunchPermissionsForAmiContextE(t, context.Background(), awsRegion, amiID)
-}
-
 // GetRecommendedInstanceTypeContextE takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
 // first instance type in the list that is available in all Availability Zones (AZs) in the given region. If there's no
 // instance available in all AZs, this function exits with an error. This is useful because certain instance types,
@@ -739,32 +472,6 @@ func GetRecommendedInstanceTypeContext(t testing.TestingT, ctx context.Context, 
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetRecommendedInstanceType takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
-// first instance type in the list that is available in all Availability Zones (AZs) in the given region. If there's no
-// instance available in all AZs, this function exits with an error. This is useful because certain instance types,
-// such as t2.micro, are not available in some of the newer AZs, while t3.micro is not available in some of the older
-// AZs, and if you have code that needs to run on a "small" instance across all AZs in many different regions, you can
-// use this function to automatically figure out which instance type you should use.
-// This function will fail the test if there is an error.
-//
-// Deprecated: Use [GetRecommendedInstanceTypeContext] instead.
-func GetRecommendedInstanceType(t testing.TestingT, region string, instanceTypeOptions []string) string {
-	t.Helper()
-	return GetRecommendedInstanceTypeContext(t, context.Background(), region, instanceTypeOptions)
-}
-
-// GetRecommendedInstanceTypeE takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
-// first instance type in the list that is available in all Availability Zones (AZs) in the given region. If there's no
-// instance available in all AZs, this function exits with an error. This is useful because certain instance types,
-// such as t2.micro, are not available in some of the newer AZs, while t3.micro is not available in some of the older
-// AZs. If you have code that needs to run on a "small" instance across all AZs in many different regions, you can
-// use this function to automatically figure out which instance type you should use.
-//
-// Deprecated: Use [GetRecommendedInstanceTypeContextE] instead.
-func GetRecommendedInstanceTypeE(t testing.TestingT, region string, instanceTypeOptions []string) (string, error) {
-	return GetRecommendedInstanceTypeContextE(t, context.Background(), region, instanceTypeOptions)
 }
 
 // GetRecommendedInstanceTypeWithClientContextE takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
@@ -806,39 +513,11 @@ func GetRecommendedInstanceTypeWithClientContext(t testing.TestingT, ctx context
 	return out
 }
 
-// GetRecommendedInstanceTypeWithClient takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
-// first instance type in the list that is available in all Availability Zones (AZs) in the given region. If there's no
-// instance available in all AZs, this function exits with an error. This is useful because certain instance types,
-// such as t2.micro, are not available in some of the newer AZs, while t3.micro is not available in some of the older
-// AZs. If you have code that needs to run on a "small" instance across all AZs in many different regions, you can
-// use this function to automatically figure out which instance type you should use.
-// This function expects an authenticated EC2 client from the AWS SDK Go library.
-// This function will fail the test if there is an error.
-//
-// Deprecated: Use [GetRecommendedInstanceTypeWithClientContext] instead.
-func GetRecommendedInstanceTypeWithClient(t testing.TestingT, ec2Client *ec2.Client, instanceTypeOptions []string) string {
-	t.Helper()
-	return GetRecommendedInstanceTypeWithClientContext(t, context.Background(), ec2Client, instanceTypeOptions)
-}
-
-// GetRecommendedInstanceTypeWithClientE takes in a list of EC2 instance types (e.g., "t2.micro", "t3.micro") and returns the
-// first instance type in the list that is available in all Availability Zones (AZs) in the given region. If there's no
-// instance available in all AZs, this function exits with an error. This is useful because certain instance types,
-// such as t2.micro, are not available in some of the newer AZs, while t3.micro is not available in some of the older
-// AZs. If you have code that needs to run on a "small" instance across all AZs in many different regions, you can
-// use this function to automatically figure out which instance type you should use.
-// This function expects an authenticated EC2 client from the AWS SDK Go library.
-//
-// Deprecated: Use [GetRecommendedInstanceTypeWithClientContextE] instead.
-func GetRecommendedInstanceTypeWithClientE(t testing.TestingT, ec2Client *ec2.Client, instanceTypeOptions []string) (string, error) {
-	return GetRecommendedInstanceTypeWithClientContextE(t, context.Background(), ec2Client, instanceTypeOptions)
-}
-
 // PickRecommendedInstanceTypeE picks the first instance type from instanceTypeOptions that is available in all the
 // given availability zones based on the given instance type offerings. Returns a NoInstanceTypeError if none of
 // the options are available in all AZs.
 func PickRecommendedInstanceTypeE(availabilityZones []string, instanceTypeOfferings []types.InstanceTypeOffering, instanceTypeOptions []string) (string, error) {
-	// O(n^3) for the win!
+
 	for _, instanceType := range instanceTypeOptions {
 		if instanceTypeExistsInAllAzs(instanceType, availabilityZones, instanceTypeOfferings) {
 			return instanceType, nil
@@ -962,22 +641,6 @@ func NewEc2ClientContextE(t testing.TestingT, ctx context.Context, region string
 	}
 
 	return ec2.NewFromConfig(*sess), nil
-}
-
-// NewEc2Client creates an EC2 client.
-//
-// Deprecated: Use [NewEc2ClientContext] instead.
-func NewEc2Client(t testing.TestingT, region string) *ec2.Client {
-	t.Helper()
-
-	return NewEc2ClientContext(t, context.Background(), region)
-}
-
-// NewEc2ClientE creates an EC2 client.
-//
-// Deprecated: Use [NewEc2ClientContextE] instead.
-func NewEc2ClientE(t testing.TestingT, region string) (*ec2.Client, error) {
-	return NewEc2ClientContextE(t, context.Background(), region)
 }
 
 // NewEc2ClientContext creates an EC2 client.

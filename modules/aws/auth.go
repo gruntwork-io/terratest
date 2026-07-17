@@ -33,14 +33,6 @@ func NewAuthenticatedSessionContext(ctx context.Context, region string) (*aws.Co
 	return NewAuthenticatedSessionFromDefaultCredentialsContext(ctx, region)
 }
 
-// NewAuthenticatedSession creates an AWS Config following to standard AWS authentication workflow.
-// If AuthAssumeIamRoleEnvVar environment variable is set, assumes IAM role specified in it.
-//
-// Deprecated: Use [NewAuthenticatedSessionContext] instead.
-func NewAuthenticatedSession(region string) (*aws.Config, error) {
-	return NewAuthenticatedSessionContext(context.Background(), region)
-}
-
 // NewAuthenticatedSessionFromDefaultCredentialsContext gets an AWS Config, checking that the user has credentials properly configured in their environment.
 // The ctx parameter supports cancellation and timeouts.
 func NewAuthenticatedSessionFromDefaultCredentialsContext(ctx context.Context, region string) (*aws.Config, error) {
@@ -50,13 +42,6 @@ func NewAuthenticatedSessionFromDefaultCredentialsContext(ctx context.Context, r
 	}
 
 	return &cfg, nil
-}
-
-// NewAuthenticatedSessionFromDefaultCredentials gets an AWS Config, checking that the user has credentials properly configured in their environment.
-//
-// Deprecated: Use [NewAuthenticatedSessionFromDefaultCredentialsContext] instead.
-func NewAuthenticatedSessionFromDefaultCredentials(region string) (*aws.Config, error) {
-	return NewAuthenticatedSessionFromDefaultCredentialsContext(context.Background(), region)
 }
 
 // NewAuthenticatedSessionFromRoleContext returns a new AWS Config after assuming the
@@ -86,15 +71,6 @@ func NewAuthenticatedSessionFromRoleContext(ctx context.Context, region string, 
 	}, nil
 }
 
-// NewAuthenticatedSessionFromRole returns a new AWS Config after assuming the
-// role whose ARN is provided in roleARN. If the credentials are not properly
-// configured in the underlying environment, an error is returned.
-//
-// Deprecated: Use [NewAuthenticatedSessionFromRoleContext] instead.
-func NewAuthenticatedSessionFromRole(region string, roleARN string) (*aws.Config, error) {
-	return NewAuthenticatedSessionFromRoleContext(context.Background(), region, roleARN)
-}
-
 // CreateAwsSessionWithCredsContext creates a new AWS Config using explicit credentials. This is useful if you want to create an IAM User dynamically and
 // create an AWS Config authenticated as the new IAM User.
 // The ctx parameter is accepted for API consistency but not currently used.
@@ -103,14 +79,6 @@ func CreateAwsSessionWithCredsContext(ctx context.Context, region string, access
 		Region:      region,
 		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
 	}, nil
-}
-
-// CreateAwsSessionWithCreds creates a new AWS Config using explicit credentials. This is useful if you want to create an IAM User dynamically and
-// create an AWS Config authenticated as the new IAM User.
-//
-// Deprecated: Use [CreateAwsSessionWithCredsContext] instead.
-func CreateAwsSessionWithCreds(region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
-	return CreateAwsSessionWithCredsContext(context.Background(), region, accessKeyID, secretAccessKey)
 }
 
 // CreateAwsSessionWithMfaContext creates a new AWS Config authenticated using an MFA token retrieved using the given STS client and MFA Device.
@@ -139,13 +107,6 @@ func CreateAwsSessionWithMfaContext(ctx context.Context, region string, stsClien
 	}, nil
 }
 
-// CreateAwsSessionWithMfa creates a new AWS Config authenticated using an MFA token retrieved using the given STS client and MFA Device.
-//
-// Deprecated: Use [CreateAwsSessionWithMfaContext] instead.
-func CreateAwsSessionWithMfa(region string, stsClient *sts.Client, mfaDevice *types.VirtualMFADevice) (*aws.Config, error) {
-	return CreateAwsSessionWithMfaContext(context.Background(), region, stsClient, mfaDevice)
-}
-
 // GetTimeBasedOneTimePassword gets a One-Time Password from the given mfaDevice. Per the RFC 6238 standard, this value will be different every 30 seconds.
 func GetTimeBasedOneTimePassword(mfaDevice *types.VirtualMFADevice) (string, error) {
 	base32StringSeed := string(mfaDevice.Base32StringSeed)
@@ -167,13 +128,6 @@ func ReadPasswordPolicyMinPasswordLengthContext(ctx context.Context, iamClient *
 	}
 
 	return int(*output.PasswordPolicy.MinimumPasswordLength), nil
-}
-
-// ReadPasswordPolicyMinPasswordLength returns the minimal password length.
-//
-// Deprecated: Use [ReadPasswordPolicyMinPasswordLengthContext] instead.
-func ReadPasswordPolicyMinPasswordLength(iamClient *iam.Client) (int, error) {
-	return ReadPasswordPolicyMinPasswordLengthContext(context.Background(), iamClient)
 }
 
 // CredentialsError is an error that occurs because AWS credentials can't be found.

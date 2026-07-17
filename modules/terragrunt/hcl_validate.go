@@ -1,4 +1,4 @@
-package terragrunt //nolint:dupl // structural pattern for terragrunt command wrappers
+package terragrunt
 
 import (
 	"context"
@@ -29,22 +29,4 @@ func HclValidateContext(t testing.TestingT, ctx context.Context, options *Option
 // Use TerraformArgs to pass additional flags like "--inputs" or "--strict".
 func HclValidateContextE(t testing.TestingT, ctx context.Context, options *Options) (string, error) {
 	return runTerragruntCommandE(t, ctx, options, "hcl", "validate")
-}
-
-// HclValidate runs terragrunt hcl validate to check terragrunt.hcl syntax.
-// This validates Terragrunt HCL configuration and can check for mis-aligned inputs.
-// Use TerraformArgs to pass additional flags like "--inputs" or "--strict".
-//
-// Deprecated: Use [HclValidateContext] instead.
-func HclValidate(t testing.TestingT, options *Options) string {
-	return HclValidateContext(t, context.Background(), options)
-}
-
-// HclValidateE runs terragrunt hcl validate to check terragrunt.hcl syntax.
-// This validates Terragrunt HCL configuration and can check for mis-aligned inputs.
-// Use TerraformArgs to pass additional flags like "--inputs" or "--strict".
-//
-// Deprecated: Use [HclValidateContextE] instead.
-func HclValidateE(t testing.TestingT, options *Options) (string, error) {
-	return HclValidateContextE(t, context.Background(), options)
 }

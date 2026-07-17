@@ -1,4 +1,4 @@
-package k8s //nolint:dupl // structural pattern for k8s resource operations
+package k8s
 
 import (
 	"context"
@@ -34,24 +34,6 @@ func GetNetworkPolicyContext(t testing.TestingT, ctx context.Context, options *K
 	require.NoError(t, err)
 
 	return networkPolicy
-}
-
-// GetNetworkPolicy returns a Kubernetes networkpolicy resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetNetworkPolicyContext] instead.
-func GetNetworkPolicy(t testing.TestingT, options *KubectlOptions, networkPolicyName string) *networkingv1.NetworkPolicy {
-	t.Helper()
-
-	return GetNetworkPolicyContext(t, context.Background(), options, networkPolicyName)
-}
-
-// GetNetworkPolicyE returns a Kubernetes networkpolicy resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions.
-//
-// Deprecated: Use [GetNetworkPolicyContextE] instead.
-func GetNetworkPolicyE(t testing.TestingT, options *KubectlOptions, networkPolicyName string) (*networkingv1.NetworkPolicy, error) {
-	return GetNetworkPolicyContextE(t, context.Background(), options, networkPolicyName)
 }
 
 // WaitUntilNetworkPolicyAvailableContextE waits until the networkpolicy is present on the cluster in cases where it is not immediately
@@ -92,13 +74,4 @@ func WaitUntilNetworkPolicyAvailableContext(t testing.TestingT, ctx context.Cont
 	t.Helper()
 	err := WaitUntilNetworkPolicyAvailableContextE(t, ctx, options, networkPolicyName, retries, sleepBetweenRetries)
 	require.NoError(t, err)
-}
-
-// WaitUntilNetworkPolicyAvailable waits until the networkpolicy is present on the cluster in cases where it is not immediately
-// available (for example, when using ClusterIssuer to request a certificate).
-//
-// Deprecated: Use [WaitUntilNetworkPolicyAvailableContext] instead.
-func WaitUntilNetworkPolicyAvailable(t testing.TestingT, options *KubectlOptions, networkPolicyName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilNetworkPolicyAvailableContext(t, context.Background(), options, networkPolicyName, retries, sleepBetweenRetries)
 }

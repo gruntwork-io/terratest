@@ -48,27 +48,6 @@ func ListServicesContext(t testing.TestingT, ctx context.Context, options *Kubec
 	return services
 }
 
-// ListServices will look for services in the given namespace that match the given filters and return them. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [ListServicesContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListServices(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []corev1.Service {
-	t.Helper()
-
-	return ListServicesContext(t, context.Background(), options, filters)
-}
-
-// ListServicesE will look for services in the given namespace that match the given filters and return them.
-//
-// Deprecated: Use [ListServicesContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListServicesE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]corev1.Service, error) {
-	return ListServicesContextE(t, context.Background(), options, filters)
-}
-
 // GetServiceContextE returns a Kubernetes service resource in the provided namespace with the given name.
 // The ctx parameter supports cancellation and timeouts.
 func GetServiceContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string) (*corev1.Service, error) {
@@ -91,23 +70,6 @@ func GetServiceContext(t testing.TestingT, ctx context.Context, options *Kubectl
 	return service
 }
 
-// GetService returns a Kubernetes service resource in the provided namespace with the given name. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [GetServiceContext] instead.
-func GetService(t testing.TestingT, options *KubectlOptions, serviceName string) *corev1.Service {
-	t.Helper()
-
-	return GetServiceContext(t, context.Background(), options, serviceName)
-}
-
-// GetServiceE returns a Kubernetes service resource in the provided namespace with the given name.
-//
-// Deprecated: Use [GetServiceContextE] instead.
-func GetServiceE(t testing.TestingT, options *KubectlOptions, serviceName string) (*corev1.Service, error) {
-	return GetServiceContextE(t, context.Background(), options, serviceName)
-}
-
 // WaitUntilServiceAvailableContextE waits until the service endpoint is ready to accept traffic.
 // The ctx parameter supports cancellation and timeouts.
 func WaitUntilServiceAvailableContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, serviceName string, retries int, sleepBetweenRetries time.Duration) error {
@@ -125,13 +87,11 @@ func WaitUntilServiceAvailableContextE(t testing.TestingT, ctx context.Context, 
 				return "", err
 			}
 
-			isMinikube, err := IsMinikubeE(t, options) //nolint:contextcheck // IsMinikubeE not yet context-aware
+			isMinikube, err := IsMinikubeE(t, options)
 			if err != nil {
 				return "", err
 			}
 
-			// For minikube, all services will be available immediately so we only do the check if we are not on
-			// minikube.
 			if !isMinikube && !IsServiceAvailable(service) {
 				return "", NewServiceNotAvailableError(service)
 			}
@@ -157,22 +117,14 @@ func WaitUntilServiceAvailableContext(t testing.TestingT, ctx context.Context, o
 	require.NoError(t, err)
 }
 
-// WaitUntilServiceAvailable waits until the service endpoint is ready to accept traffic.
-//
-// Deprecated: Use [WaitUntilServiceAvailableContext] instead.
-func WaitUntilServiceAvailable(t testing.TestingT, options *KubectlOptions, serviceName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilServiceAvailableContext(t, context.Background(), options, serviceName, retries, sleepBetweenRetries)
-}
-
 // IsServiceAvailable returns true if the service endpoint is ready to accept traffic. Note that for Minikube, this
 // function is moot as all services, even LoadBalancer, is available immediately.
 func IsServiceAvailable(service *corev1.Service) bool {
-	// Only the LoadBalancer type has a delay. All other service types are available if the resource exists.
+
 	switch service.Spec.Type {
 	case corev1.ServiceTypeLoadBalancer:
 		ingress := service.Status.LoadBalancer.Ingress
-		// The load balancer is ready if it has at least one ingress point
+
 		return len(ingress) > 0
 	case corev1.ServiceTypeClusterIP, corev1.ServiceTypeNodePort, corev1.ServiceTypeExternalName:
 		return true
@@ -191,16 +143,6 @@ func GetServiceEndpointContext(t testing.TestingT, ctx context.Context, options 
 	return endpoint
 }
 
-// GetServiceEndpoint will return the service access point. If the service endpoint is not ready, will fail the test
-// immediately.
-//
-// Deprecated: Use [GetServiceEndpointContext] instead.
-func GetServiceEndpoint(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) string {
-	t.Helper()
-
-	return GetServiceEndpointContext(t, context.Background(), options, service, servicePort)
-}
-
 // GetServiceEndpointContextE will return the service access point using the provided context and the following logic:
 //   - For ClusterIP service type, return the URL that maps to ClusterIP and Service Port
 //   - For NodePort service type, identify the public IP of the node (if it exists, otherwise return the bound hostname),
@@ -211,15 +153,15 @@ func GetServiceEndpoint(t testing.TestingT, options *KubectlOptions, service *co
 func GetServiceEndpointContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, service *corev1.Service, servicePort int) (string, error) {
 	switch service.Spec.Type {
 	case corev1.ServiceTypeClusterIP:
-		// ClusterIP service type will map directly to service port
+
 		return fmt.Sprintf("%s:%d", service.Spec.ClusterIP, servicePort), nil
 	case corev1.ServiceTypeNodePort:
 		return findEndpointForNodePortServiceContext(t, ctx, options, service, int32(servicePort))
 	case corev1.ServiceTypeExternalName:
 		return "", NewUnknownServiceTypeError(service)
 	case corev1.ServiceTypeLoadBalancer:
-		// For minikube, LoadBalancer service is exactly the same as NodePort service
-		isMinikube, err := IsMinikubeE(t, options) //nolint:contextcheck // IsMinikubeE not yet context-aware
+
+		isMinikube, err := IsMinikubeE(t, options)
 		if err != nil {
 			return "", err
 		}
@@ -236,24 +178,11 @@ func GetServiceEndpointContextE(t testing.TestingT, ctx context.Context, options
 		if ingress[0].Hostname == "" {
 			return fmt.Sprintf("%s:%d", ingress[0].IP, servicePort), nil
 		}
-		// Load Balancer service type will map directly to service port
+
 		return fmt.Sprintf("%s:%d", ingress[0].Hostname, servicePort), nil
 	default:
 		return "", NewUnknownServiceTypeError(service)
 	}
-}
-
-// GetServiceEndpointE will return the service access point using the following logic:
-//   - For ClusterIP service type, return the URL that maps to ClusterIP and Service Port
-//   - For NodePort service type, identify the public IP of the node (if it exists, otherwise return the bound hostname),
-//     and the assigned node port for the provided service port, and return the URL that maps to node ip and node port.
-//   - For LoadBalancer service type, return the publicly accessible hostname of the load balancer.
-//     If the hostname is empty, it will return the public IP of the LoadBalancer.
-//   - All other service types are not supported.
-//
-// Deprecated: Use [GetServiceEndpointContextE] instead.
-func GetServiceEndpointE(t testing.TestingT, options *KubectlOptions, service *corev1.Service, servicePort int) (string, error) {
-	return GetServiceEndpointContextE(t, context.Background(), options, service, servicePort)
 }
 
 // findEndpointForNodePortServiceContext extracts an endpoint that can be reached outside the kubernetes cluster using the
@@ -271,7 +200,7 @@ func findEndpointForNodePortServiceContext(
 		return "", err
 	}
 
-	node, err := pickRandomNodeE(t, options) //nolint:contextcheck // pickRandomNodeE not yet context-aware
+	node, err := pickRandomNodeE(t, options)
 	if err != nil {
 		return "", err
 	}
@@ -306,13 +235,6 @@ func FindNodePortContext(t testing.TestingT, ctx context.Context, service *corev
 	require.NoError(t, err)
 
 	return nodePort
-}
-
-// FindNodePortE returns the allocated NodePort for the given servicePort from the service definition.
-//
-// Deprecated: Use [FindNodePortContextE] instead.
-func FindNodePortE(service *corev1.Service, servicePort int32) (int32, error) {
-	return FindNodePortContextE(context.Background(), service, servicePort)
 }
 
 // pickRandomNode will pick a random node in the kubernetes cluster
@@ -361,17 +283,6 @@ func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, node core
 	}
 }
 
-// FindNodeHostnameE returns the hostname or IP address of the given node, preferring the external IP when available.
-//
-// Deprecated: Use [FindNodeHostnameContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func FindNodeHostnameE(t testing.TestingT, node corev1.Node) (string, error) {
-	t.Helper()
-
-	return FindNodeHostnameContextE(t, context.Background(), node)
-}
-
 // findAwsNodeHostname will return the public ip of the node, assuming the node is an AWS EC2 instance.
 // If the instance does not have a public IP, will return the internal hostname as recorded on the Kubernetes node
 // object.
@@ -379,7 +290,7 @@ func FindNodeHostnameE(t testing.TestingT, node corev1.Node) (string, error) {
 const expectedAWSIDPathParts = 3
 
 func findAwsNodeHostnameContextE(t testing.TestingT, ctx context.Context, node *corev1.Node, awsIDUri *url.URL) (string, error) {
-	// Path is /AVAILABILITY_ZONE/INSTANCE_ID
+
 	parts := strings.Split(awsIDUri.Path, "/")
 	if len(parts) != expectedAWSIDPathParts {
 		return "", NewMalformedNodeIDError(node)
@@ -387,8 +298,7 @@ func findAwsNodeHostnameContextE(t testing.TestingT, ctx context.Context, node *
 
 	instanceID := parts[2]
 	availabilityZone := parts[1]
-	// Availability Zone name is known to be region code + 1 letter
-	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html
+
 	region := availabilityZone[:len(availabilityZone)-1]
 
 	ipMap, err := aws.GetPublicIpsOfEc2InstancesContextE(t, ctx, []string{instanceID}, region)
@@ -398,7 +308,7 @@ func findAwsNodeHostnameContextE(t testing.TestingT, ctx context.Context, node *
 
 	publicIP, containsIP := ipMap[instanceID]
 	if !containsIP || publicIP == "" {
-		// return default hostname
+
 		return findDefaultNodeHostnameE(node)
 	}
 

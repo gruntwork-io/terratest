@@ -21,18 +21,3 @@ func CreateSubscriptionsClientContextE(_ context.Context) (*armsubscriptions.Cli
 
 	return armsubscriptions.NewClient(cred, opts)
 }
-
-// GetSubscriptionClientContextE is a helper function that will setup an Azure Subscription client on your behalf.
-// The ctx parameter supports cancellation and timeouts.
-//
-// Deprecated: Use [CreateSubscriptionsClientContextE] instead.
-func GetSubscriptionClientContextE(ctx context.Context) (*armsubscriptions.Client, error) {
-	return CreateSubscriptionsClientContextE(ctx)
-}
-
-// GetSubscriptionClientE is a helper function that will setup an Azure Subscription client on your behalf.
-//
-// Deprecated: Use [CreateSubscriptionsClientContextE] instead.
-func GetSubscriptionClientE() (*armsubscriptions.Client, error) {
-	return CreateSubscriptionsClientContextE(context.Background())
-}

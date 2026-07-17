@@ -44,22 +44,6 @@ func CreateSnsTopicContext(t testing.TestingT, ctx context.Context, region strin
 	return out
 }
 
-// CreateSnsTopic creates an SNS Topic and return the ARN.
-//
-// Deprecated: Use [CreateSnsTopicContext] instead.
-func CreateSnsTopic(t testing.TestingT, region string, snsTopicName string) string {
-	t.Helper()
-
-	return CreateSnsTopicContext(t, context.Background(), region, snsTopicName)
-}
-
-// CreateSnsTopicE creates an SNS Topic and return the ARN.
-//
-// Deprecated: Use [CreateSnsTopicContextE] instead.
-func CreateSnsTopicE(t testing.TestingT, region string, snsTopicName string) (string, error) {
-	return CreateSnsTopicContextE(t, context.Background(), region, snsTopicName)
-}
-
 // DeleteSNSTopicContextE deletes an SNS Topic.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteSNSTopicContextE(t testing.TestingT, ctx context.Context, region string, snsTopicArn string) error {
@@ -89,22 +73,6 @@ func DeleteSNSTopicContext(t testing.TestingT, ctx context.Context, region strin
 	require.NoError(t, err)
 }
 
-// DeleteSNSTopic deletes an SNS Topic.
-//
-// Deprecated: Use [DeleteSNSTopicContext] instead.
-func DeleteSNSTopic(t testing.TestingT, region string, snsTopicArn string) {
-	t.Helper()
-
-	DeleteSNSTopicContext(t, context.Background(), region, snsTopicArn)
-}
-
-// DeleteSNSTopicE deletes an SNS Topic.
-//
-// Deprecated: Use [DeleteSNSTopicContextE] instead.
-func DeleteSNSTopicE(t testing.TestingT, region string, snsTopicArn string) error {
-	return DeleteSNSTopicContextE(t, context.Background(), region, snsTopicArn)
-}
-
 // NewSnsClientContextE creates a new SNS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewSnsClientContextE(t testing.TestingT, ctx context.Context, region string) (*sns.Client, error) {
@@ -126,20 +94,4 @@ func NewSnsClientContext(t testing.TestingT, ctx context.Context, region string)
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewSnsClient creates a new SNS client.
-//
-// Deprecated: Use [NewSnsClientContext] instead.
-func NewSnsClient(t testing.TestingT, region string) *sns.Client {
-	t.Helper()
-
-	return NewSnsClientContext(t, context.Background(), region)
-}
-
-// NewSnsClientE creates a new SNS client.
-//
-// Deprecated: Use [NewSnsClientContextE] instead.
-func NewSnsClientE(t testing.TestingT, region string) (*sns.Client, error) {
-	return NewSnsClientContextE(t, context.Background(), region)
 }

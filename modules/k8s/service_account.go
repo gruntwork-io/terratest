@@ -50,24 +50,6 @@ func GetServiceAccountContext(t testing.TestingT, ctx context.Context, options *
 	return serviceAccount
 }
 
-// GetServiceAccount returns a Kubernetes service account resource in the provided namespace with the given name. The
-// namespace used is the one provided in the KubectlOptions. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetServiceAccountContext] instead.
-func GetServiceAccount(t testing.TestingT, options *KubectlOptions, serviceAccountName string) *corev1.ServiceAccount {
-	t.Helper()
-
-	return GetServiceAccountContext(t, context.Background(), options, serviceAccountName)
-}
-
-// GetServiceAccountE returns a Kubernetes service account resource in the provided namespace with the given name. The
-// namespace used is the one provided in the KubectlOptions.
-//
-// Deprecated: Use [GetServiceAccountContextE] instead.
-func GetServiceAccountE(t testing.TestingT, options *KubectlOptions, serviceAccountName string) (*corev1.ServiceAccount, error) {
-	return GetServiceAccountContextE(t, context.Background(), options, serviceAccountName)
-}
-
 // CreateServiceAccountContextE will create a new service account resource in the provided namespace with the given name.
 // The namespace used is the one provided in the KubectlOptions.
 // The ctx parameter supports cancellation and timeouts.
@@ -97,23 +79,6 @@ func CreateServiceAccountContext(t testing.TestingT, ctx context.Context, option
 	require.NoError(t, CreateServiceAccountContextE(t, ctx, options, serviceAccountName))
 }
 
-// CreateServiceAccount will create a new service account resource in the provided namespace with the given name. The
-// namespace used is the one provided in the KubectlOptions. This will fail the test if there is an error.
-//
-// Deprecated: Use [CreateServiceAccountContext] instead.
-func CreateServiceAccount(t testing.TestingT, options *KubectlOptions, serviceAccountName string) {
-	t.Helper()
-	CreateServiceAccountContext(t, context.Background(), options, serviceAccountName)
-}
-
-// CreateServiceAccountE will create a new service account resource in the provided namespace with the given name. The
-// namespace used is the one provided in the KubectlOptions.
-//
-// Deprecated: Use [CreateServiceAccountContextE] instead.
-func CreateServiceAccountE(t testing.TestingT, options *KubectlOptions, serviceAccountName string) error {
-	return CreateServiceAccountContextE(t, context.Background(), options, serviceAccountName)
-}
-
 // GetServiceAccountAuthTokenContextE will retrieve the ServiceAccount token from the cluster so it can be used to
 // authenticate requests as that ServiceAccount.
 // On K8s 1.24+, service account tokens are no longer auto-created as secrets, so this uses the TokenRequest API.
@@ -124,7 +89,6 @@ func GetServiceAccountAuthTokenContextE(t testing.TestingT, ctx context.Context,
 		return "", err
 	}
 
-	// First try the TokenRequest API (K8s 1.24+)
 	expSeconds := tokenExpirationSeconds
 	tokenRequest := &authenticationv1.TokenRequest{
 		Spec: authenticationv1.TokenRequestSpec{
@@ -142,7 +106,6 @@ func GetServiceAccountAuthTokenContextE(t testing.TestingT, ctx context.Context,
 		return tokenResponse.Status.Token, nil
 	}
 
-	// Fall back to legacy secret-based tokens for older K8s versions
 	kubectlOptions.Logger.Logf(t, "TokenRequest API failed (%s), falling back to secret-based tokens", err)
 
 	msg, retryErr := retry.DoWithRetryContextE(
@@ -204,25 +167,6 @@ func GetServiceAccountAuthTokenContext(t testing.TestingT, ctx context.Context, 
 	return token
 }
 
-// GetServiceAccountAuthToken will retrieve the ServiceAccount token from the cluster so it can be used to
-// authenticate requests as that ServiceAccount. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetServiceAccountAuthTokenContext] instead.
-func GetServiceAccountAuthToken(t testing.TestingT, kubectlOptions *KubectlOptions, serviceAccountName string) string {
-	t.Helper()
-
-	return GetServiceAccountAuthTokenContext(t, context.Background(), kubectlOptions, serviceAccountName)
-}
-
-// GetServiceAccountAuthTokenE will retrieve the ServiceAccount token from the cluster so it can be used to
-// authenticate requests as that ServiceAccount.
-// On K8s 1.24+, service account tokens are no longer auto-created as secrets, so this uses the TokenRequest API.
-//
-// Deprecated: Use [GetServiceAccountAuthTokenContextE] instead.
-func GetServiceAccountAuthTokenE(t testing.TestingT, kubectlOptions *KubectlOptions, serviceAccountName string) (string, error) {
-	return GetServiceAccountAuthTokenContextE(t, context.Background(), kubectlOptions, serviceAccountName)
-}
-
 // AddConfigContextForServiceAccountE will add a new config context that binds the ServiceAccount auth token to the
 // Kubernetes cluster of the current config context.
 func AddConfigContextForServiceAccountE(
@@ -232,7 +176,7 @@ func AddConfigContextForServiceAccountE(
 	serviceAccountName string,
 	token string,
 ) error {
-	// First load the config context
+
 	config := LoadConfigFromPath(kubectlOptions.ConfigPath)
 
 	rawConfig, err := config.RawConfig()
@@ -240,17 +184,13 @@ func AddConfigContextForServiceAccountE(
 		return errors.WithStackTrace(err)
 	}
 
-	// Next get the current cluster
 	currentContext := rawConfig.Contexts[rawConfig.CurrentContext]
 	currentCluster := currentContext.Cluster
 
-	// Now insert the auth info for the service account
 	rawConfig.AuthInfos[serviceAccountName] = &api.AuthInfo{Token: token}
 
-	// We now have enough info to add the new context
 	UpsertConfigContext(&rawConfig, contextName, currentCluster, serviceAccountName)
 
-	// Finally, overwrite the config
 	if err := clientcmd.ModifyConfig(config.ConfigAccess(), rawConfig, false); err != nil {
 		return errors.WithStackTrace(err)
 	}

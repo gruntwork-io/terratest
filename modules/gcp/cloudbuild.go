@@ -12,14 +12,6 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-// CreateBuild creates a new build blocking until the operation is complete.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [CreateBuildContext] instead.
-func CreateBuild(t testing.TestingT, projectID string, build *cloudbuildpb.Build) *cloudbuildpb.Build {
-	return CreateBuildContext(t, context.Background(), projectID, build)
-}
-
 // CreateBuildContext creates a new build blocking until the operation is complete.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -28,13 +20,6 @@ func CreateBuildContext(t testing.TestingT, ctx context.Context, projectID strin
 	require.NoError(t, err)
 
 	return out
-}
-
-// CreateBuildE creates a new build blocking until the operation is complete.
-//
-// Deprecated: Use [CreateBuildContextE] instead.
-func CreateBuildE(t testing.TestingT, projectID string, build *cloudbuildpb.Build) (*cloudbuildpb.Build, error) {
-	return CreateBuildContextE(t, context.Background(), projectID, build)
 }
 
 // CreateBuildContextE creates a new build blocking until the operation is complete.
@@ -73,14 +58,6 @@ func CreateBuildWithClient(ctx context.Context, service *cloudbuild.Client, proj
 	return resp, nil
 }
 
-// GetBuild gets the given build.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [GetBuildContext] instead.
-func GetBuild(t testing.TestingT, projectID string, buildID string) *cloudbuildpb.Build {
-	return GetBuildContext(t, context.Background(), projectID, buildID)
-}
-
 // GetBuildContext gets the given build.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -89,13 +66,6 @@ func GetBuildContext(t testing.TestingT, ctx context.Context, projectID string, 
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetBuildE gets the given build.
-//
-// Deprecated: Use [GetBuildContextE] instead.
-func GetBuildE(t testing.TestingT, projectID string, buildID string) (*cloudbuildpb.Build, error) {
-	return GetBuildContextE(t, context.Background(), projectID, buildID)
 }
 
 // GetBuildContextE gets the given build.
@@ -128,14 +98,6 @@ func GetBuildWithClient(ctx context.Context, service *cloudbuild.Client, project
 	return resp, nil
 }
 
-// GetBuilds gets the list of builds for a given project.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [GetBuildsContext] instead.
-func GetBuilds(t testing.TestingT, projectID string) []*cloudbuildpb.Build {
-	return GetBuildsContext(t, context.Background(), projectID)
-}
-
 // GetBuildsContext gets the list of builds for a given project.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -144,13 +106,6 @@ func GetBuildsContext(t testing.TestingT, ctx context.Context, projectID string)
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetBuildsE gets the list of builds for a given project.
-//
-// Deprecated: Use [GetBuildsContextE] instead.
-func GetBuildsE(t testing.TestingT, projectID string) ([]*cloudbuildpb.Build, error) {
-	return GetBuildsContextE(t, context.Background(), projectID)
 }
 
 // GetBuildsContextE gets the list of builds for a given project.
@@ -195,14 +150,6 @@ func GetBuildsWithClient(ctx context.Context, service *cloudbuild.Client, projec
 	return builds, nil
 }
 
-// GetBuildsForTrigger gets a list of builds for a specific cloud build trigger.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [GetBuildsForTriggerContext] instead.
-func GetBuildsForTrigger(t testing.TestingT, projectID string, triggerID string) []*cloudbuildpb.Build {
-	return GetBuildsForTriggerContext(t, context.Background(), projectID, triggerID)
-}
-
 // GetBuildsForTriggerContext gets a list of builds for a specific cloud build trigger.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -211,13 +158,6 @@ func GetBuildsForTriggerContext(t testing.TestingT, ctx context.Context, project
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetBuildsForTriggerE gets a list of builds for a specific cloud build trigger.
-//
-// Deprecated: Use [GetBuildsForTriggerContextE] instead.
-func GetBuildsForTriggerE(t testing.TestingT, projectID string, triggerID string) ([]*cloudbuildpb.Build, error) {
-	return GetBuildsForTriggerContextE(t, context.Background(), projectID, triggerID)
 }
 
 // GetBuildsForTriggerContextE gets a list of builds for a specific cloud build trigger.
@@ -258,14 +198,6 @@ func filterBuildsByTrigger(builds []*cloudbuildpb.Build, triggerID string) []*cl
 	return filtered
 }
 
-// NewCloudBuildService creates a new Cloud Build service, which is used to make Cloud Build API calls.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [NewCloudBuildServiceContext] instead.
-func NewCloudBuildService(t testing.TestingT) *cloudbuild.Client {
-	return NewCloudBuildServiceContext(t, context.Background())
-}
-
 // NewCloudBuildServiceContext creates a new Cloud Build service, which is used to make Cloud Build API calls.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -274,13 +206,6 @@ func NewCloudBuildServiceContext(t testing.TestingT, ctx context.Context) *cloud
 	require.NoError(t, err)
 
 	return service
-}
-
-// NewCloudBuildServiceE creates a new Cloud Build service, which is used to make Cloud Build API calls.
-//
-// Deprecated: Use [NewCloudBuildServiceContextE] instead.
-func NewCloudBuildServiceE(t testing.TestingT) (*cloudbuild.Client, error) {
-	return NewCloudBuildServiceContextE(t, context.Background())
 }
 
 // NewCloudBuildServiceContextE creates a new Cloud Build service, which is used to make Cloud Build API calls.

@@ -52,23 +52,6 @@ func GetEcsClusterWithIncludeContext(t testing.TestingT, ctx context.Context, re
 	return clusterInfo
 }
 
-// GetEcsClusterWithInclude fetches extended information about specified ECS cluster.
-// The `include` parameter specifies a list of `ecs.ClusterField*` constants, such as `ecs.ClusterFieldTags`.
-//
-// Deprecated: Use [GetEcsClusterWithIncludeContext] instead.
-func GetEcsClusterWithInclude(t testing.TestingT, region string, name string, include []types.ClusterField) *types.Cluster {
-	t.Helper()
-	return GetEcsClusterWithIncludeContext(t, context.Background(), region, name, include)
-}
-
-// GetEcsClusterWithIncludeE fetches extended information about specified ECS cluster.
-// The `include` parameter specifies a list of `ecs.ClusterField*` constants, such as `ecs.ClusterFieldTags`.
-//
-// Deprecated: Use [GetEcsClusterWithIncludeContextE] instead.
-func GetEcsClusterWithIncludeE(t testing.TestingT, region string, name string, include []types.ClusterField) (*types.Cluster, error) {
-	return GetEcsClusterWithIncludeContextE(t, context.Background(), region, name, include)
-}
-
 // GetEcsClusterContextE fetches information about specified ECS cluster.
 // The ctx parameter supports cancellation and timeouts.
 func GetEcsClusterContextE(t testing.TestingT, ctx context.Context, region string, name string) (*types.Cluster, error) {
@@ -85,21 +68,6 @@ func GetEcsClusterContext(t testing.TestingT, ctx context.Context, region string
 	return cluster
 }
 
-// GetEcsCluster fetches information about specified ECS cluster.
-//
-// Deprecated: Use [GetEcsClusterContext] instead.
-func GetEcsCluster(t testing.TestingT, region string, name string) *types.Cluster {
-	t.Helper()
-	return GetEcsClusterContext(t, context.Background(), region, name)
-}
-
-// GetEcsClusterE fetches information about specified ECS cluster.
-//
-// Deprecated: Use [GetEcsClusterContextE] instead.
-func GetEcsClusterE(t testing.TestingT, region string, name string) (*types.Cluster, error) {
-	return GetEcsClusterContextE(t, context.Background(), region, name)
-}
-
 // GetDefaultEcsClusterContextE fetches information about default ECS cluster.
 // The ctx parameter supports cancellation and timeouts.
 func GetDefaultEcsClusterContextE(t testing.TestingT, ctx context.Context, region string) (*types.Cluster, error) {
@@ -111,21 +79,6 @@ func GetDefaultEcsClusterContextE(t testing.TestingT, ctx context.Context, regio
 func GetDefaultEcsClusterContext(t testing.TestingT, ctx context.Context, region string) *types.Cluster {
 	t.Helper()
 	return GetEcsClusterContext(t, ctx, region, "default")
-}
-
-// GetDefaultEcsClusterE fetches information about default ECS cluster.
-//
-// Deprecated: Use [GetDefaultEcsClusterContextE] instead.
-func GetDefaultEcsClusterE(t testing.TestingT, region string) (*types.Cluster, error) {
-	return GetDefaultEcsClusterContextE(t, context.Background(), region)
-}
-
-// GetDefaultEcsCluster fetches information about default ECS cluster.
-//
-// Deprecated: Use [GetDefaultEcsClusterContext] instead.
-func GetDefaultEcsCluster(t testing.TestingT, region string) *types.Cluster {
-	t.Helper()
-	return GetDefaultEcsClusterContext(t, context.Background(), region)
 }
 
 // CreateEcsClusterContextE creates ECS cluster in the given region under the given name.
@@ -156,21 +109,6 @@ func CreateEcsClusterContext(t testing.TestingT, ctx context.Context, region str
 	return cluster
 }
 
-// CreateEcsCluster creates ECS cluster in the given region under the given name.
-//
-// Deprecated: Use [CreateEcsClusterContext] instead.
-func CreateEcsCluster(t testing.TestingT, region string, name string) *types.Cluster {
-	t.Helper()
-	return CreateEcsClusterContext(t, context.Background(), region, name)
-}
-
-// CreateEcsClusterE creates ECS cluster in the given region under the given name.
-//
-// Deprecated: Use [CreateEcsClusterContextE] instead.
-func CreateEcsClusterE(t testing.TestingT, region string, name string) (*types.Cluster, error) {
-	return CreateEcsClusterContextE(t, context.Background(), region, name)
-}
-
 // DeleteEcsClusterContextE deletes existing ECS cluster in the given region.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteEcsClusterContextE(t testing.TestingT, ctx context.Context, region string, cluster *types.Cluster) error {
@@ -192,21 +130,6 @@ func DeleteEcsClusterContext(t testing.TestingT, ctx context.Context, region str
 	t.Helper()
 	err := DeleteEcsClusterContextE(t, ctx, region, cluster)
 	require.NoError(t, err)
-}
-
-// DeleteEcsCluster deletes existing ECS cluster in the given region.
-//
-// Deprecated: Use [DeleteEcsClusterContext] instead.
-func DeleteEcsCluster(t testing.TestingT, region string, cluster *types.Cluster) {
-	t.Helper()
-	DeleteEcsClusterContext(t, context.Background(), region, cluster)
-}
-
-// DeleteEcsClusterE deletes existing ECS cluster in the given region.
-//
-// Deprecated: Use [DeleteEcsClusterContextE] instead.
-func DeleteEcsClusterE(t testing.TestingT, region string, cluster *types.Cluster) error {
-	return DeleteEcsClusterContextE(t, context.Background(), region, cluster)
 }
 
 // GetEcsServiceContextE fetches information about specified ECS service.
@@ -247,21 +170,6 @@ func GetEcsServiceContext(t testing.TestingT, ctx context.Context, region string
 	return service
 }
 
-// GetEcsService fetches information about specified ECS service.
-//
-// Deprecated: Use [GetEcsServiceContext] instead.
-func GetEcsService(t testing.TestingT, region string, clusterName string, serviceName string) *types.Service {
-	t.Helper()
-	return GetEcsServiceContext(t, context.Background(), region, clusterName, serviceName)
-}
-
-// GetEcsServiceE fetches information about specified ECS service.
-//
-// Deprecated: Use [GetEcsServiceContextE] instead.
-func GetEcsServiceE(t testing.TestingT, region string, clusterName string, serviceName string) (*types.Service, error) {
-	return GetEcsServiceContextE(t, context.Background(), region, clusterName, serviceName)
-}
-
 // GetEcsTaskDefinitionContextE fetches information about specified ECS task definition.
 // The ctx parameter supports cancellation and timeouts.
 func GetEcsTaskDefinitionContextE(t testing.TestingT, ctx context.Context, region string, taskDefinition string) (*types.TaskDefinition, error) {
@@ -290,21 +198,6 @@ func GetEcsTaskDefinitionContext(t testing.TestingT, ctx context.Context, region
 	return task
 }
 
-// GetEcsTaskDefinition fetches information about specified ECS task definition.
-//
-// Deprecated: Use [GetEcsTaskDefinitionContext] instead.
-func GetEcsTaskDefinition(t testing.TestingT, region string, taskDefinition string) *types.TaskDefinition {
-	t.Helper()
-	return GetEcsTaskDefinitionContext(t, context.Background(), region, taskDefinition)
-}
-
-// GetEcsTaskDefinitionE fetches information about specified ECS task definition.
-//
-// Deprecated: Use [GetEcsTaskDefinitionContextE] instead.
-func GetEcsTaskDefinitionE(t testing.TestingT, region string, taskDefinition string) (*types.TaskDefinition, error) {
-	return GetEcsTaskDefinitionContextE(t, context.Background(), region, taskDefinition)
-}
-
 // NewEcsClientContextE creates an ECS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewEcsClientContextE(t testing.TestingT, ctx context.Context, region string) (*ecs.Client, error) {
@@ -324,19 +217,4 @@ func NewEcsClientContext(t testing.TestingT, ctx context.Context, region string)
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewEcsClient creates en ECS client.
-//
-// Deprecated: Use [NewEcsClientContext] instead.
-func NewEcsClient(t testing.TestingT, region string) *ecs.Client {
-	t.Helper()
-	return NewEcsClientContext(t, context.Background(), region)
-}
-
-// NewEcsClientE creates an ECS client.
-//
-// Deprecated: Use [NewEcsClientContextE] instead.
-func NewEcsClientE(t testing.TestingT, region string) (*ecs.Client, error) {
-	return NewEcsClientContextE(t, context.Background(), region)
 }

@@ -68,22 +68,6 @@ func GetAcmCertificateArnContext(t testing.TestingT, ctx context.Context, awsReg
 	return arn
 }
 
-// GetAcmCertificateArn gets the ACM certificate for the given domain name in the given region.
-//
-// Deprecated: Use [GetAcmCertificateArnContext] instead.
-func GetAcmCertificateArn(t testing.TestingT, awsRegion string, certDomainName string) string {
-	t.Helper()
-
-	return GetAcmCertificateArnContext(t, context.Background(), awsRegion, certDomainName)
-}
-
-// GetAcmCertificateArnE gets the ACM certificate for the given domain name in the given region.
-//
-// Deprecated: Use [GetAcmCertificateArnContextE] instead.
-func GetAcmCertificateArnE(t testing.TestingT, awsRegion string, certDomainName string) (string, error) {
-	return GetAcmCertificateArnContextE(t, context.Background(), awsRegion, certDomainName)
-}
-
 // NewAcmClientContextE creates a new ACM client.
 // The ctx parameter supports cancellation and timeouts.
 func NewAcmClientContextE(t testing.TestingT, ctx context.Context, region string) (*acm.Client, error) {
@@ -105,20 +89,4 @@ func NewAcmClientContext(t testing.TestingT, ctx context.Context, region string)
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewAcmClient creates a new ACM client.
-//
-// Deprecated: Use [NewAcmClientContext] instead.
-func NewAcmClient(t testing.TestingT, region string) *acm.Client {
-	t.Helper()
-
-	return NewAcmClientContext(t, context.Background(), region)
-}
-
-// NewAcmClientE creates a new ACM client.
-//
-// Deprecated: Use [NewAcmClientContextE] instead.
-func NewAcmClientE(t testing.TestingT, awsRegion string) (*acm.Client, error) {
-	return NewAcmClientContextE(t, context.Background(), awsRegion)
 }

@@ -43,22 +43,6 @@ func CreateAndImportEC2KeyPairContext(t testing.TestingT, ctx context.Context, r
 	return keyPair
 }
 
-// CreateAndImportEC2KeyPair generates a public/private KeyPair and import it into EC2 in the given region under the given name.
-//
-// Deprecated: Use [CreateAndImportEC2KeyPairContext] instead.
-func CreateAndImportEC2KeyPair(t testing.TestingT, region string, name string) *Ec2Keypair {
-	t.Helper()
-
-	return CreateAndImportEC2KeyPairContext(t, context.Background(), region, name)
-}
-
-// CreateAndImportEC2KeyPairE generates a public/private KeyPair and import it into EC2 in the given region under the given name.
-//
-// Deprecated: Use [CreateAndImportEC2KeyPairContextE] instead.
-func CreateAndImportEC2KeyPairE(t testing.TestingT, region string, name string) (*Ec2Keypair, error) {
-	return CreateAndImportEC2KeyPairContextE(t, context.Background(), region, name)
-}
-
 // ImportEC2KeyPairContextE creates a Key Pair in EC2 by importing an existing public key.
 // The ctx parameter supports cancellation and timeouts.
 func ImportEC2KeyPairContextE(t testing.TestingT, ctx context.Context, region string, name string, keyPair *ssh.KeyPair) (*Ec2Keypair, error) {
@@ -96,22 +80,6 @@ func ImportEC2KeyPairContext(t testing.TestingT, ctx context.Context, region str
 	return ec2KeyPair
 }
 
-// ImportEC2KeyPair creates a Key Pair in EC2 by importing an existing public key.
-//
-// Deprecated: Use [ImportEC2KeyPairContext] instead.
-func ImportEC2KeyPair(t testing.TestingT, region string, name string, keyPair *ssh.KeyPair) *Ec2Keypair {
-	t.Helper()
-
-	return ImportEC2KeyPairContext(t, context.Background(), region, name, keyPair)
-}
-
-// ImportEC2KeyPairE creates a Key Pair in EC2 by importing an existing public key.
-//
-// Deprecated: Use [ImportEC2KeyPairContextE] instead.
-func ImportEC2KeyPairE(t testing.TestingT, region string, name string, keyPair *ssh.KeyPair) (*Ec2Keypair, error) {
-	return ImportEC2KeyPairContextE(t, context.Background(), region, name, keyPair)
-}
-
 // DeleteEC2KeyPairContextE deletes an EC2 key pair.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteEC2KeyPairContextE(t testing.TestingT, ctx context.Context, keyPair *Ec2Keypair) error {
@@ -141,20 +109,4 @@ func DeleteEC2KeyPairContext(t testing.TestingT, ctx context.Context, keyPair *E
 
 	err := DeleteEC2KeyPairContextE(t, ctx, keyPair)
 	require.NoError(t, err)
-}
-
-// DeleteEC2KeyPair deletes an EC2 key pair.
-//
-// Deprecated: Use [DeleteEC2KeyPairContext] instead.
-func DeleteEC2KeyPair(t testing.TestingT, keyPair *Ec2Keypair) {
-	t.Helper()
-
-	DeleteEC2KeyPairContext(t, context.Background(), keyPair)
-}
-
-// DeleteEC2KeyPairE deletes an EC2 key pair.
-//
-// Deprecated: Use [DeleteEC2KeyPairContextE] instead.
-func DeleteEC2KeyPairE(t testing.TestingT, keyPair *Ec2Keypair) error {
-	return DeleteEC2KeyPairContextE(t, context.Background(), keyPair)
 }

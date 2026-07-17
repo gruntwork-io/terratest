@@ -120,16 +120,6 @@ type inspectOutput struct {
 	} `json:"State"`
 }
 
-// Inspect runs the 'docker inspect {container id}' command and returns a ContainerInspect
-// struct, converted from the output JSON, along with any errors
-//
-// Deprecated: Use [InspectContext] instead.
-func Inspect(t testing.TestingT, id string) *ContainerInspect {
-	t.Helper()
-
-	return InspectContext(t, context.Background(), id)
-}
-
 // InspectContext runs the 'docker inspect {container id}' command and returns a [ContainerInspect] struct,
 // converted from the output JSON. This will fail the test if there are any errors. The ctx parameter supports
 // cancellation and timeouts.
@@ -142,16 +132,6 @@ func InspectContext(t testing.TestingT, ctx context.Context, id string) *Contain
 	return out
 }
 
-// InspectE runs the 'docker inspect {container id}' command and returns a ContainerInspect
-// struct, converted from the output JSON, along with any errors
-//
-// Deprecated: Use [InspectContextE] instead.
-func InspectE(t testing.TestingT, id string) (*ContainerInspect, error) {
-	t.Helper()
-
-	return InspectContextE(t, context.Background(), id)
-}
-
 // InspectContextE runs the 'docker inspect {container id}' command and returns a [ContainerInspect] struct,
 // converted from the output JSON, along with any errors. The ctx parameter supports cancellation and timeouts.
 func InspectContextE(t testing.TestingT, ctx context.Context, id string) (*ContainerInspect, error) {
@@ -160,7 +140,7 @@ func InspectContextE(t testing.TestingT, ctx context.Context, id string) (*Conta
 	cmd := &shell.Command{
 		Command: "docker",
 		Args:    []string{"container", "inspect", id},
-		// inspect is a short-running command, don't print the output.
+
 		Logger: logger.Discard,
 	}
 
@@ -290,7 +270,6 @@ func transformContainerVolumes(container *inspectOutput) []VolumeBind {
 
 		split := strings.Split(bind, ":")
 
-		// Considering it as an unbound volume
 		dest = split[0]
 
 		if len(split) == volumeBindParts {

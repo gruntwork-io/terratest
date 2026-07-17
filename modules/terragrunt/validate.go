@@ -26,20 +26,6 @@ func ValidateAllContextE(t testing.TestingT, ctx context.Context, options *Optio
 	return runTerragruntCommandE(t, ctx, options, "run", args...)
 }
 
-// ValidateAll runs terragrunt run --all validate with the given options and returns stdout/stderr.
-//
-// Deprecated: Use [ValidateAllContext] instead.
-func ValidateAll(t testing.TestingT, options *Options) string {
-	return ValidateAllContext(t, context.Background(), options)
-}
-
-// ValidateAllE runs terragrunt run --all -- validate with the given options and returns stdout/stderr.
-//
-// Deprecated: Use [ValidateAllContextE] instead.
-func ValidateAllE(t testing.TestingT, options *Options) (string, error) {
-	return ValidateAllContextE(t, context.Background(), options)
-}
-
 // ValidateContext runs terragrunt run validate for a single unit and returns stdout/stderr.
 // The provided context is passed through to the underlying command execution, allowing for timeout
 // and cancellation control.
@@ -59,20 +45,6 @@ func ValidateContextE(t testing.TestingT, ctx context.Context, options *Options)
 	return runTerragruntCommandE(t, ctx, options, "run", args...)
 }
 
-// Validate runs terragrunt run validate for a single unit and returns stdout/stderr.
-//
-// Deprecated: Use [ValidateContext] instead.
-func Validate(t testing.TestingT, options *Options) string {
-	return ValidateContext(t, context.Background(), options)
-}
-
-// ValidateE runs terragrunt run -- validate for a single unit and returns stdout/stderr.
-//
-// Deprecated: Use [ValidateContextE] instead.
-func ValidateE(t testing.TestingT, options *Options) (string, error) {
-	return ValidateContextE(t, context.Background(), options)
-}
-
 // InitAndValidateContext runs terragrunt init followed by validate for a single unit and returns the validate stdout/stderr.
 // The provided context is passed through to both the init and validate command executions.
 func InitAndValidateContext(t testing.TestingT, ctx context.Context, options *Options) string {
@@ -90,18 +62,4 @@ func InitAndValidateContextE(t testing.TestingT, ctx context.Context, options *O
 	}
 
 	return ValidateContextE(t, ctx, options)
-}
-
-// InitAndValidate runs terragrunt init followed by validate for a single unit and returns the validate stdout/stderr.
-//
-// Deprecated: Use [InitAndValidateContext] instead.
-func InitAndValidate(t testing.TestingT, options *Options) string {
-	return InitAndValidateContext(t, context.Background(), options)
-}
-
-// InitAndValidateE runs terragrunt init followed by validate for a single unit and returns the validate stdout/stderr.
-//
-// Deprecated: Use [InitAndValidateContextE] instead.
-func InitAndValidateE(t testing.TestingT, options *Options) (string, error) {
-	return InitAndValidateContextE(t, context.Background(), options)
 }

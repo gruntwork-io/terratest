@@ -31,13 +31,6 @@ func GetKubernetesClusterVersionContext(t testing.TestingT, ctx context.Context)
 	return version
 }
 
-// GetKubernetesClusterVersionE returns the Kubernetes cluster version.
-//
-// Deprecated: Use [GetKubernetesClusterVersionContextE] instead.
-func GetKubernetesClusterVersionE(t testing.TestingT) (string, error) {
-	return GetKubernetesClusterVersionContextE(t, context.Background())
-}
-
 // GetKubernetesClusterVersionWithOptionsContextE returns the Kubernetes cluster version given a configured KubectlOptions object.
 // The ctx parameter is accepted for API consistency.
 func GetKubernetesClusterVersionWithOptionsContextE(t testing.TestingT, ctx context.Context, kubectlOptions *KubectlOptions) (string, error) {
@@ -63,11 +56,4 @@ func GetKubernetesClusterVersionWithOptionsContext(t testing.TestingT, ctx conte
 	require.NoError(t, err)
 
 	return version
-}
-
-// GetKubernetesClusterVersionWithOptionsE returns the Kubernetes cluster version given a configured KubectlOptions object.
-//
-// Deprecated: Use [GetKubernetesClusterVersionWithOptionsContextE] instead.
-func GetKubernetesClusterVersionWithOptionsE(t testing.TestingT, kubectlOptions *KubectlOptions) (string, error) {
-	return GetKubernetesClusterVersionWithOptionsContextE(t, context.Background(), kubectlOptions)
 }

@@ -20,9 +20,6 @@ type Options struct {
 	// SetJSONValues are values that should be set via the command line in JSON format.
 	SetJSONValues map[string]string
 
-	// Deprecated: Use [SetJSONValues] instead.
-	SetJsonValues map[string]string //nolint:revive,staticcheck // Deprecated field kept for backwards compatibility.
-
 	// Values that should be set from a file. These should be file paths. Use to avoid logging secrets.
 	SetFiles map[string]string
 

@@ -16,9 +16,8 @@ import (
 // FormatSetValuesAsArgs formats the given values as command line args for helm using the given flag (e.g flags of
 // the format "--set"/"--set-string"/"--set-json" resulting in args like --set/set-string/set-json key=value...).
 func FormatSetValuesAsArgs(setValues map[string]string, flag string) []string {
-	args := make([]string, 0, len(setValues)*2) //nolint:mnd // Each key-value pair produces 2 args (flag + value).
+	args := make([]string, 0, len(setValues)*2)
 
-	// To make it easier to test, go through the keys in sorted order
 	keys := collections.Keys(setValues)
 	for _, key := range keys {
 		value := setValues[key]
@@ -27,14 +26,6 @@ func FormatSetValuesAsArgs(setValues map[string]string, flag string) []string {
 	}
 
 	return args
-}
-
-// FormatValuesFilesAsArgs formats the given list of values file paths as command line args for helm (e.g of the format
-// -f path). This will fail the test if one of the paths do not exist or the absolute path can not be determined.
-//
-// Deprecated: Use [FormatValuesFilesAsArgsContext] instead.
-func FormatValuesFilesAsArgs(t testing.TestingT, valuesFiles []string) []string {
-	return FormatValuesFilesAsArgsContext(t, context.Background(), valuesFiles)
 }
 
 // FormatValuesFilesAsArgsContext formats the given list of values file paths as command line args for helm (e.g of the
@@ -47,14 +38,6 @@ func FormatValuesFilesAsArgsContext(t testing.TestingT, ctx context.Context, val
 	return args
 }
 
-// FormatValuesFilesAsArgsE formats the given list of values file paths as command line args for helm (e.g of the format
-// -f path). This will error if the file does not exist.
-//
-// Deprecated: Use [FormatValuesFilesAsArgsContextE] instead.
-func FormatValuesFilesAsArgsE(valuesFiles []string) ([]string, error) {
-	return FormatValuesFilesAsArgsContextE(context.Background(), valuesFiles)
-}
-
 // FormatValuesFilesAsArgsContextE formats the given list of values file paths as command line args for helm (e.g of the
 // format -f path). The ctx parameter is accepted for API consistency with other Context-aware helpers.
 // This will error if the file does not exist.
@@ -62,7 +45,7 @@ func FormatValuesFilesAsArgsContextE(ctx context.Context, valuesFiles []string) 
 	args := []string{}
 
 	for _, valuesFilePath := range valuesFiles {
-		// Pass through filepath.Abs to clean the path, and then make sure this file exists
+
 		absValuesFilePath, err := filepath.Abs(valuesFilePath)
 		if err != nil {
 			return args, errors.WithStackTrace(err)
@@ -78,15 +61,6 @@ func FormatValuesFilesAsArgsContextE(ctx context.Context, valuesFiles []string) 
 	return args, nil
 }
 
-// FormatSetFilesAsArgs formats the given list of keys and file paths as command line args for helm to set from file
-// (e.g of the format --set-file key=path). This will fail the test if one of the paths do not exist or the absolute
-// path can not be determined.
-//
-// Deprecated: Use [FormatSetFilesAsArgsContext] instead.
-func FormatSetFilesAsArgs(t testing.TestingT, setFiles map[string]string) []string {
-	return FormatSetFilesAsArgsContext(t, context.Background(), setFiles)
-}
-
 // FormatSetFilesAsArgsContext formats the given list of keys and file paths as command line args for helm to set from
 // file (e.g of the format --set-file key=path). The ctx parameter is accepted for API consistency with other
 // Context-aware helpers. This will fail the test if one of the paths do not exist or the absolute path can not be
@@ -98,25 +72,16 @@ func FormatSetFilesAsArgsContext(t testing.TestingT, ctx context.Context, setFil
 	return args
 }
 
-// FormatSetFilesAsArgsE formats the given list of keys and file paths as command line args for helm to set from file
-// (e.g of the format --set-file key=path).
-//
-// Deprecated: Use [FormatSetFilesAsArgsContextE] instead.
-func FormatSetFilesAsArgsE(setFiles map[string]string) ([]string, error) {
-	return FormatSetFilesAsArgsContextE(context.Background(), setFiles)
-}
-
 // FormatSetFilesAsArgsContextE formats the given list of keys and file paths as command line args for helm to set from
 // file (e.g of the format --set-file key=path). The ctx parameter is accepted for API consistency with other
 // Context-aware helpers.
 func FormatSetFilesAsArgsContextE(ctx context.Context, setFiles map[string]string) ([]string, error) {
 	args := []string{}
 
-	// To make it easier to test, go through the keys in sorted order
 	keys := collections.Keys(setFiles)
 	for _, key := range keys {
 		setFilePath := setFiles[key]
-		// Pass through filepath.Abs to clean the path, and then make sure this file exists
+
 		absSetFilePath, err := filepath.Abs(setFilePath)
 		if err != nil {
 			return args, errors.WithStackTrace(err)
