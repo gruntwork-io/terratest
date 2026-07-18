@@ -36,7 +36,7 @@ consumer_imports() {
   for s in $ORDER; do
     if [ "$s" = core ]; then
       # Keep in sync with core/v2's public leaf packages.
-      for pkg in random files collections formatting logger shell retry testing; do
+      for pkg in random files formatting logger shell retry testing; do
         echo "  _ \"$MODULE_BASE/core/v2/$pkg\""
       done
     else
