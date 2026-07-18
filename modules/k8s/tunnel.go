@@ -60,7 +60,7 @@ func makeLabels(labels map[string]string) string {
 	return strings.Join(out, ",")
 }
 
-// Tunnel is the main struct that configures and manages port forwading tunnels to Kubernetes resources.
+// Tunnel is the main struct that configures and manages port forwarding tunnels to Kubernetes resources.
 type Tunnel struct {
 	out            io.Writer
 	logger         logger.TestLogger

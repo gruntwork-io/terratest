@@ -24,7 +24,7 @@ func SaveTerraformOptions(t testing.TestingT, testFolder string, terraformOption
 
 // SaveTerraformOptionsIfNotPresent serializes and saves TerraformOptions into the given folder if the file does not exist or the json is
 // empty. This allows you to create TerraformOptions during setup and to reuse that TerraformOptions later during validation and teardown,
-// but will prevent overwritting the contents and potentially duplicating resources.
+// but will prevent overwriting the contents and potentially duplicating resources.
 func SaveTerraformOptionsIfNotPresent(t testing.TestingT, testFolder string, terraformOptions *terraform.Options) {
 	SaveTestData(t, formatTerraformOptionsPath(testFolder), false, terraformOptions)
 }

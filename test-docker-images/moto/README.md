@@ -39,7 +39,7 @@ upload it:
 docker run -p 5000:5000 gruntwork/moto moto_server ec2 --host 0.0.0.0
 ```
 
-This runs the `moto` service as a RESTful API, specially for the AWS EC2 API with support for acceping connections from
+This runs the `moto` service as a RESTful API, specially for the AWS EC2 API with support for accepting connections from
 any IP address (versus just from localhost). For additional information:
 - See the [moto stand-alone server usage docs](https://github.com/spulec/moto#stand-alone-server-mode)
 - See [which AWS services are supported](https://github.com/spulec/moto#in-a-nutshell)

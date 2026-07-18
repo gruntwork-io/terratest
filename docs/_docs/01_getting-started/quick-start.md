@@ -307,7 +307,7 @@ Here's how you automate this process with Terratest:
 
 {% include examples/explorer.html example_id='kubernetes-hello-world' file_id='test_code' class='wide quick-start-examples' skip_learn_more=true skip_view_on_github=true skip_tags=true %}
 
-The test code above uses Kuberenetes helpers built into Terratest to run `kubectl apply`, wait for the service to come
+The test code above uses Kubernetes helpers built into Terratest to run `kubectl apply`, wait for the service to come
 up, get the service endpoint, make HTTP requests to the service (with plenty of retries), check the response is what
 we expect, and runs `kubectl delete` at the end. You run this test with `go test` as well! 
 
