@@ -56,6 +56,11 @@ var (
 	regexStatus  = regexp.MustCompile(`=== (RUN|PAUSE|CONT)\s+(.+)`)
 	regexSummary = regexp.MustCompile(`(^FAIL$)|(^(ok|FAIL)\s+([^ ]+)\s+(?:(\d+\.\d+)s|\(cached\)|(\[\w+ failed]))(?:\s+coverage:\s+(\d+\.\d+)%\sof\sstatements(?:\sin\s.+)?)?$)`)
 	regexPanic   = regexp.MustCompile(`^panic:`)
+	// regexIndentedTerratestLog matches a terratest log line emitted through t.Log: the testing framework indents it
+	// and prepends its own "file.go:NN: " decoration, e.g. "    apply_test.go:42: TestFoo 2006-01-02T15:04:05Z07:00
+	// caller.go:7: message". It captures the embedded test name so parallel output can still be de-interleaved. The
+	// "TestName <RFC3339 timestamp>" signature is what distinguishes a terratest line from an ordinary t.Log line.
+	regexIndentedTerratestLog = regexp.MustCompile(`^\s+\S+:\d+:\s+(Test\S*)\s+\d{4}-\d{2}-\d{2}T`)
 )
 
 // GetIndent takes a line and returns the indent string
@@ -107,6 +112,19 @@ func IsSummaryLine(text string) bool {
 // IsPanicLine checks if a line of text matches a panic
 func IsPanicLine(text string) bool {
 	return regexPanic.MatchString(text)
+}
+
+// IsIndentedTerratestLogLine checks whether a line is a terratest log line that was emitted through t.Log, i.e. indented
+// by the testing framework and prefixed with its "file.go:NN: " decoration. See regexIndentedTerratestLog.
+func IsIndentedTerratestLogLine(text string) bool {
+	return regexIndentedTerratestLog.MatchString(text)
+}
+
+// GetTestNameFromIndentedTerratestLogLine extracts the test name embedded in a terratest log line emitted through
+// t.Log. See regexIndentedTerratestLog.
+func GetTestNameFromIndentedTerratestLogLine(text string) string {
+	m := regexIndentedTerratestLog.FindStringSubmatch(text)
+	return m[1]
 }
 
 // parseAndStoreTestOutput will take test log entries from terratest and aggregate the output by test. Takes advantage
@@ -170,10 +188,23 @@ func parseAndStoreTestOutput(
 			case strings.HasPrefix(data, "Test"):
 				// Heuristic: `go test` will only execute test functions named `Test.*`, so we assume any line prefixed
 				// with `Test` is a test output for a named test. Also assume that test output will be space delimited and
-				// test names can't contain spaces (because they are function names).
-				// This must be modified when `logger.DoLog` changes.
+				// test names can't contain spaces (because they are function names). This handles un-indented terratest
+				// output, i.e. the stdout fallback path in logger.DoLog (used when no *testing.T is available).
 				vals := strings.Split(data, " ")
 				testName := vals[0]
+				previousTestName = testName
+
+				if writeErr := logWriter.WriteLog(logger, testName, data); writeErr != nil {
+					logger.Errorf("Error writing log for test %s: %s", testName, writeErr)
+				}
+
+			case IsIndentedTerratestLogLine(data):
+				// When a *testing.T is available, logger.DoLog emits through t.Log, so terratest lines are indented and
+				// carry the framework's "file.go:NN: " decoration before the terratest prefix. The line still embeds its
+				// owning test name, so we extract and attribute it directly. This is what preserves de-interleaving of
+				// parallel tests: the `=== CONT` status lines alone cannot, since both tests resume up front and never
+				// pause again, so previousTestName would otherwise misattribute every line to the last test resumed.
+				testName := GetTestNameFromIndentedTerratestLogLine(data)
 				previousTestName = testName
 
 				if writeErr := logWriter.WriteLog(logger, testName, data); writeErr != nil {
