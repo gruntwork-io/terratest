@@ -48,19 +48,3 @@ func DeleteEbsSnapshotContext(t testing.TestingT, ctx context.Context, region st
 	err := DeleteEbsSnapshotContextE(t, ctx, region, snapshot)
 	require.NoError(t, err)
 }
-
-// DeleteEbsSnapshot deletes the given EBS snapshot.
-//
-// Deprecated: Use [DeleteEbsSnapshotContext] instead.
-func DeleteEbsSnapshot(t testing.TestingT, region string, snapshot string) {
-	t.Helper()
-
-	DeleteEbsSnapshotContext(t, context.Background(), region, snapshot)
-}
-
-// DeleteEbsSnapshotE deletes the given EBS snapshot.
-//
-// Deprecated: Use [DeleteEbsSnapshotContextE] instead.
-func DeleteEbsSnapshotE(t testing.TestingT, region string, snapshot string) error {
-	return DeleteEbsSnapshotContextE(t, context.Background(), region, snapshot)
-}

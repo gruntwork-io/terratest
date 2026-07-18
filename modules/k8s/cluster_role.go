@@ -30,19 +30,3 @@ func GetClusterRoleContext(t testing.TestingT, ctx context.Context, options *Kub
 
 	return role
 }
-
-// GetClusterRole returns a Kubernetes ClusterRole resource with the given name. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetClusterRoleContext] instead.
-func GetClusterRole(t testing.TestingT, options *KubectlOptions, roleName string) *rbacv1.ClusterRole {
-	t.Helper()
-
-	return GetClusterRoleContext(t, context.Background(), options, roleName)
-}
-
-// GetClusterRoleE returns a Kubernetes ClusterRole resource with the given name.
-//
-// Deprecated: Use [GetClusterRoleContextE] instead.
-func GetClusterRoleE(t testing.TestingT, options *KubectlOptions, roleName string) (*rbacv1.ClusterRole, error) {
-	return GetClusterRoleContextE(t, context.Background(), options, roleName)
-}

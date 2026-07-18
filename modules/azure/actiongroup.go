@@ -40,27 +40,6 @@ func GetActionGroupResourceContextE(ctx context.Context, ruleName string, resGro
 	return GetActionGroupResourceWithClient(ctx, client, rgName, ruleName)
 }
 
-// GetActionGroupResource gets the ActionGroupResource.
-// This function would fail the test if there is an error.
-// ruleName - required to find the ActionGroupResource.
-// resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
-// subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
-//
-// Deprecated: Use [GetActionGroupResourceContext] instead.
-func GetActionGroupResource(t testing.TestingT, ruleName string, resGroupName string, subscriptionID string) *armmonitor.ActionGroupResource {
-	return GetActionGroupResourceContext(t, context.Background(), ruleName, resGroupName, subscriptionID)
-}
-
-// GetActionGroupResourceE gets the ActionGroupResource.
-// ruleName - required to find the ActionGroupResource.
-// resGroupName - use an empty string if you have the AZURE_RES_GROUP_NAME environment variable set
-// subscriptionId - use an empty string if you have the ARM_SUBSCRIPTION_ID environment variable set
-//
-// Deprecated: Use [GetActionGroupResourceContextE] instead.
-func GetActionGroupResourceE(ruleName string, resGroupName string, subscriptionID string) (*armmonitor.ActionGroupResource, error) {
-	return GetActionGroupResourceContextE(context.Background(), ruleName, resGroupName, subscriptionID)
-}
-
 // GetActionGroupResourceWithClient gets the ActionGroupResource using the provided client.
 func GetActionGroupResourceWithClient(ctx context.Context, client *armmonitor.ActionGroupsClient, resGroupName string, ruleName string) (*armmonitor.ActionGroupResource, error) {
 	resp, err := client.Get(ctx, resGroupName, ruleName, nil)

@@ -39,23 +39,6 @@ func ResourceGroupExistsContextE(ctx context.Context, resourceGroupName, subscri
 	return exists, nil
 }
 
-// ResourceGroupExists indicates whether a resource group exists within a subscription; otherwise false.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ResourceGroupExistsContext] instead.
-func ResourceGroupExists(t testing.TestingT, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return ResourceGroupExistsContext(t, context.Background(), resourceGroupName, subscriptionID)
-}
-
-// ResourceGroupExistsE indicates whether a resource group exists within a subscription.
-//
-// Deprecated: Use [ResourceGroupExistsContextE] instead.
-func ResourceGroupExistsE(resourceGroupName, subscriptionID string) (bool, error) {
-	return ResourceGroupExistsContextE(context.Background(), resourceGroupName, subscriptionID)
-}
-
 // GetResourceGroupContextE checks whether a resource group name matches the one retrieved from the subscription.
 // Azure resource group names are case-insensitive, so the comparison is performed with EqualFold.
 // The ctx parameter supports cancellation and timeouts.
@@ -70,13 +53,6 @@ func GetResourceGroupContextE(ctx context.Context, resourceGroupName, subscripti
 	}
 
 	return strings.EqualFold(resourceGroupName, *rg.Name), nil
-}
-
-// GetResourceGroupE checks whether a resource group name matches the one retrieved from the subscription.
-//
-// Deprecated: Use [GetResourceGroupContextE] instead.
-func GetResourceGroupE(resourceGroupName, subscriptionID string) (bool, error) {
-	return GetResourceGroupContextE(context.Background(), resourceGroupName, subscriptionID)
 }
 
 // GetAResourceGroupContext returns a resource group within a subscription.
@@ -100,23 +76,6 @@ func GetAResourceGroupContextE(ctx context.Context, resourceGroupName, subscript
 	}
 
 	return GetAResourceGroupWithClient(ctx, client, resourceGroupName)
-}
-
-// GetAResourceGroup returns a resource group within a subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetAResourceGroupContext] instead.
-func GetAResourceGroup(t testing.TestingT, resourceGroupName string, subscriptionID string) *armresources.ResourceGroup {
-	t.Helper()
-
-	return GetAResourceGroupContext(t, context.Background(), resourceGroupName, subscriptionID)
-}
-
-// GetAResourceGroupE gets a resource group within a subscription.
-//
-// Deprecated: Use [GetAResourceGroupContextE] instead.
-func GetAResourceGroupE(resourceGroupName, subscriptionID string) (*armresources.ResourceGroup, error) {
-	return GetAResourceGroupContextE(context.Background(), resourceGroupName, subscriptionID)
 }
 
 // GetAResourceGroupWithClient gets a resource group using the provided ResourceGroupsClient.
@@ -150,23 +109,6 @@ func ListResourceGroupsByTagContextE(ctx context.Context, tag string, subscripti
 	}
 
 	return ListResourceGroupsByTagWithClient(ctx, client, tag)
-}
-
-// ListResourceGroupsByTag returns a resource group list within a subscription based on a tag key.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ListResourceGroupsByTagContext] instead.
-func ListResourceGroupsByTag(t testing.TestingT, tag, subscriptionID string) []*armresources.ResourceGroup {
-	t.Helper()
-
-	return ListResourceGroupsByTagContext(t, context.Background(), tag, subscriptionID)
-}
-
-// ListResourceGroupsByTagE returns a resource group list within a subscription based on a tag key.
-//
-// Deprecated: Use [ListResourceGroupsByTagContextE] instead.
-func ListResourceGroupsByTagE(tag string, subscriptionID string) ([]*armresources.ResourceGroup, error) {
-	return ListResourceGroupsByTagContextE(context.Background(), tag, subscriptionID)
 }
 
 // ListResourceGroupsByTagWithClient returns resource groups matching a tag key using the provided client.

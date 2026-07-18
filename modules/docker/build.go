@@ -60,25 +60,10 @@ type BuildOptions struct {
 	EnableBuildKit bool
 }
 
-// Build runs the 'docker build' command at the given path with the given options and fails the test if there are any
-// errors.
-//
-// Deprecated: Use [BuildContext] instead.
-func Build(t testing.TestingT, path string, options *BuildOptions) {
-	BuildContext(t, context.Background(), path, options)
-}
-
 // BuildContext runs the 'docker build' command at the given path with the given options and fails the test if
 // there are any errors. The ctx parameter supports cancellation and timeouts.
 func BuildContext(t testing.TestingT, ctx context.Context, path string, options *BuildOptions) {
 	require.NoError(t, BuildContextE(t, ctx, path, options))
-}
-
-// BuildE runs the 'docker build' command at the given path with the given options and returns any errors.
-//
-// Deprecated: Use [BuildContextE] instead.
-func BuildE(t testing.TestingT, path string, options *BuildOptions) error {
-	return BuildContextE(t, context.Background(), path, options)
 }
 
 // BuildContextE runs the 'docker build' command at the given path with the given options and returns any errors.
@@ -106,8 +91,6 @@ func BuildContextE(t testing.TestingT, ctx context.Context, path string, options
 		return err
 	}
 
-	// For non multiarch images, we need to call docker push for each tag since build does not have a push option like
-	// buildx.
 	if len(options.Architectures) == 0 && options.Push {
 		errorsOccurred := new(multierror.Error)
 
@@ -122,7 +105,6 @@ func BuildContextE(t testing.TestingT, ctx context.Context, path string, options
 		return errorsOccurred.ErrorOrNil()
 	}
 
-	// For multiarch images, if a load is requested call the load command to export the built image into the daemon.
 	if len(options.Architectures) > 0 && options.Load {
 		loadCmd := &shell.Command{
 			Command: "docker",
@@ -134,21 +116,6 @@ func BuildContextE(t testing.TestingT, ctx context.Context, path string, options
 	}
 
 	return nil
-}
-
-// GitCloneAndBuild builds a new Docker image from a given Git repo. This function will clone the given repo at the
-// specified ref, and call the docker build command on the cloned repo from the given relative path (relative to repo
-// root). This will fail the test if there are any errors.
-//
-// Deprecated: Use [GitCloneAndBuildContext] instead.
-func GitCloneAndBuild(
-	t testing.TestingT,
-	repo string,
-	ref string,
-	path string,
-	dockerBuildOpts *BuildOptions,
-) {
-	GitCloneAndBuildContext(t, context.Background(), repo, ref, path, dockerBuildOpts)
 }
 
 // GitCloneAndBuildContext builds a new Docker image from a given Git repo. This function will clone the given
@@ -164,21 +131,6 @@ func GitCloneAndBuildContext(
 	dockerBuildOpts *BuildOptions,
 ) {
 	require.NoError(t, GitCloneAndBuildContextE(t, ctx, repo, ref, path, dockerBuildOpts))
-}
-
-// GitCloneAndBuildE builds a new Docker image from a given Git repo. This function will clone the given repo at the
-// specified ref, and call the docker build command on the cloned repo from the given relative path (relative to repo
-// root).
-//
-// Deprecated: Use [GitCloneAndBuildContextE] instead.
-func GitCloneAndBuildE(
-	t testing.TestingT,
-	repo string,
-	ref string,
-	path string,
-	dockerBuildOpts *BuildOptions,
-) error {
-	return GitCloneAndBuildContextE(t, context.Background(), repo, ref, path, dockerBuildOpts)
 }
 
 // GitCloneAndBuildContextE builds a new Docker image from a given Git repo. This function will clone the given
@@ -254,7 +206,7 @@ func formatDockerBuildArgs(path string, options *BuildOptions) []string {
 func formatDockerBuildxLoadArgs(path string, options *BuildOptions) []string {
 	base := formatDockerBuildBaseArgs(path, options)
 
-	args := make([]string, 0, len(base)+3) //nolint:mnd // 3 = "buildx" + "build" + "--load"
+	args := make([]string, 0, len(base)+3)
 	args = append(args, "buildx", "build", "--load")
 
 	return append(args, base...)
@@ -262,7 +214,7 @@ func formatDockerBuildxLoadArgs(path string, options *BuildOptions) []string {
 
 // formatDockerBuildBaseArgs formats the common args for the build command, both for `build` and `buildx`.
 func formatDockerBuildBaseArgs(path string, options *BuildOptions) []string {
-	//nolint:mnd // 2 = pairs of (--flag, value); 3 = max of --target flag + value + path
+
 	args := make([]string, 0, len(options.Tags)*2+len(options.BuildArgs)*2+len(options.OtherOptions)+3)
 
 	for _, tag := range options.Tags {

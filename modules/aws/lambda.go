@@ -121,21 +121,6 @@ func InvokeFunctionContext(t testing.TestingT, ctx context.Context, region, func
 	return out
 }
 
-// InvokeFunction invokes a lambda function.
-//
-// Deprecated: Use [InvokeFunctionContext] instead.
-func InvokeFunction(t testing.TestingT, region, functionName string, payload any) []byte {
-	t.Helper()
-	return InvokeFunctionContext(t, context.Background(), region, functionName, payload)
-}
-
-// InvokeFunctionE invokes a lambda function.
-//
-// Deprecated: Use [InvokeFunctionContextE] instead.
-func InvokeFunctionE(t testing.TestingT, region, functionName string, payload any) ([]byte, error) {
-	return InvokeFunctionContextE(t, context.Background(), region, functionName, payload)
-}
-
 // InvokeFunctionWithParamsContextE invokes a lambda function using parameters
 // supplied in the LambdaOptions struct.  Returns the status code and payload
 // in a LambdaOutput struct and the error.  A non-nil error will either reflect
@@ -148,9 +133,6 @@ func InvokeFunctionWithParamsContextE(t testing.TestingT, ctx context.Context, r
 		return nil, err
 	}
 
-	// Verify the InvocationType is one of the allowed values and report
-	// an error if it's not.  By default, the InvocationType will be
-	// "RequestResponse".
 	invocationType, err := input.InvocationType.Value()
 	if err != nil {
 		return nil, err
@@ -175,9 +157,6 @@ func InvokeFunctionWithParamsContextE(t testing.TestingT, ctx context.Context, r
 		return nil, err
 	}
 
-	// As this function supports different invocation types, it must
-	// then support different combinations of output other than just
-	// payload.
 	lambdaOutput := LambdaOutput{
 		Payload:    out.Payload,
 		StatusCode: out.StatusCode,
@@ -200,27 +179,6 @@ func InvokeFunctionWithParamsContext(t testing.TestingT, ctx context.Context, re
 	require.NoError(t, err)
 
 	return out
-}
-
-// InvokeFunctionWithParams invokes a lambda function using parameters
-// supplied in the LambdaOptions struct and returns values in a LambdaOutput
-// struct.  Checks for failure using "require".
-//
-// Deprecated: Use [InvokeFunctionWithParamsContext] instead.
-func InvokeFunctionWithParams(t testing.TestingT, region, functionName string, input *LambdaOptions) *LambdaOutput {
-	t.Helper()
-	return InvokeFunctionWithParamsContext(t, context.Background(), region, functionName, input)
-}
-
-// InvokeFunctionWithParamsE invokes a lambda function using parameters
-// supplied in the LambdaOptions struct.  Returns the status code and payload
-// in a LambdaOutput struct and the error.  A non-nil error will either reflect
-// a problem with the parameters supplied to this function or an error returned
-// by the Lambda.
-//
-// Deprecated: Use [InvokeFunctionWithParamsContextE] instead.
-func InvokeFunctionWithParamsE(t testing.TestingT, region, functionName string, input *LambdaOptions) (*LambdaOutput, error) {
-	return InvokeFunctionWithParamsContextE(t, context.Background(), region, functionName, input)
 }
 
 // FunctionError is returned when an AWS Lambda invocation reports a function
@@ -256,19 +214,4 @@ func NewLambdaClientContext(t testing.TestingT, ctx context.Context, region stri
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewLambdaClient creates a new Lambda client.
-//
-// Deprecated: Use [NewLambdaClientContext] instead.
-func NewLambdaClient(t testing.TestingT, region string) *lambda.Client {
-	t.Helper()
-	return NewLambdaClientContext(t, context.Background(), region)
-}
-
-// NewLambdaClientE creates a new Lambda client.
-//
-// Deprecated: Use [NewLambdaClientContextE] instead.
-func NewLambdaClientE(t testing.TestingT, region string) (*lambda.Client, error) {
-	return NewLambdaClientContextE(t, context.Background(), region)
 }

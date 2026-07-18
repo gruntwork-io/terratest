@@ -1,10 +1,5 @@
 package k8s
 
-// The following code is a fork of the Helm client. The main differences are:
-// - Support testing context for better logging
-// - Support resources other than pods
-// See: https://github.com/helm/helm/blob/master/pkg/kube/tunnel.go
-
 import (
 	"context"
 	"fmt"
@@ -50,7 +45,7 @@ func (resourceType KubeResourceType) String() string {
 	case ResourceTypeService:
 		return "svc"
 	default:
-		// This should not happen
+
 		return "UNKNOWN_RESOURCE_TYPE"
 	}
 }
@@ -195,7 +190,6 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 		tunnel.remotePort,
 	)
 
-	// Prepare a kubernetes client for the client-go library
 	clientset, err := GetKubernetesClientFromOptionsContextE(t, context.Background(), tunnel.kubectlOptions)
 	if err != nil {
 		tunnel.logger.Logf(t, "Error creating a new Kubernetes client: %s", err)
@@ -217,7 +211,6 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 		}
 	}
 
-	// Find the pod to port forward to
 	podName, err := tunnel.getAttachablePodForResourceE(t)
 	if err != nil {
 		tunnel.logger.Logf(t, "Error finding available pod: %s", err)
@@ -228,7 +221,6 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 
 	var targetPort = tunnel.remotePort
 
-	// in case of services, find target port on pod based on service definition
 	if tunnel.resourceType == ResourceTypeService {
 		service := GetServiceContext(t, context.Background(), tunnel.kubectlOptions, tunnel.resourceName)
 
@@ -265,8 +257,6 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 		}
 	}
 
-	// Build a url to the portforward endpoint
-	// example: http://localhost:8080/api/v1/namespaces/helm/pods/tiller-deploy-9itlq/portforward
 	postEndpoint := clientset.CoreV1().RESTClient().Post()
 	namespace := tunnel.kubectlOptions.Namespace
 	portForwardCreateURL := postEndpoint.
@@ -278,7 +268,6 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 
 	tunnel.logger.Logf(t, "Using URL %s to create portforward", portForwardCreateURL)
 
-	// Construct the spdy client required by the client-go portforward library
 	transport, upgrader, err := spdy.RoundTripperFor(config)
 	if err != nil {
 		tunnel.logger.Logf(t, "Error creating http client: %s", err)
@@ -287,12 +276,6 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", portForwardCreateURL)
 
-	// If the localport is 0, get an available port before continuing. We do this here instead of relying on the
-	// underlying portforwarder library, because the portforwarder library does not expose the selected local port in a
-	// machine readable manner.
-	// Synchronize on the global lock to avoid race conditions with concurrently selecting the same available port,
-	// since there is a brief moment between `GetAvailablePort` and `portforwader.ForwardPorts` where the selected port
-	// is available for selection again.
 	if tunnel.localPort == 0 {
 		tunnel.logger.Logf(t, "Requested local port is 0. Selecting an open port on host system")
 
@@ -307,7 +290,6 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 		defer globalMutex.Unlock()
 	}
 
-	// Construct a new PortForwarder struct that manages the instructed port forward tunnel
 	ports := []string{fmt.Sprintf("%d:%d", tunnel.localPort, targetPort)}
 
 	portforwarder, err := portforward.New(dialer, ports, tunnel.stopChan, tunnel.readyChan, tunnel.out, tunnel.out)
@@ -316,15 +298,12 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 		return err
 	}
 
-	// Open the tunnel in a goroutine so that it is available in the background. Report errors to the main goroutine via
-	// a new channel.
 	errChan := make(chan error)
 
 	go func() {
 		errChan <- portforwarder.ForwardPorts()
 	}()
 
-	// Wait for an error or the tunnel to be ready
 	select {
 	case err = <-errChan:
 		tunnel.logger.Logf(t, "Error starting port forwarding tunnel: %s", err)
@@ -343,15 +322,6 @@ func GetAvailablePortContext(t testing.TestingT, ctx context.Context) int {
 	require.NoError(t, err)
 
 	return port
-}
-
-// GetAvailablePort retrieves an available port on the host machine. This delegates the port selection to the golang net
-// library by starting a server and then checking the port that the server is using. This will fail the test if it could
-// not find an available port.
-//
-// Deprecated: Use GetAvailablePortContext instead.
-func GetAvailablePort(t testing.TestingT) int {
-	return GetAvailablePortContext(t, context.Background())
 }
 
 // GetAvailablePortContextE retrieves an available port on the host machine using the provided context. This delegates
@@ -375,14 +345,6 @@ func GetAvailablePortContextE(t testing.TestingT, ctx context.Context) (int, err
 	}
 
 	return port, err
-}
-
-// GetAvailablePortE retrieves an available port on the host machine. This delegates the port selection to the golang net
-// library by starting a server and then checking the port that the server is using.
-//
-// Deprecated: Use GetAvailablePortContextE instead.
-func GetAvailablePortE(t testing.TestingT) (int, error) {
-	return GetAvailablePortContextE(t, context.Background())
 }
 
 func getPodPortByName(pod *corev1.Pod, portName string) (int, error) {

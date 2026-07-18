@@ -6,19 +6,14 @@ import (
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
-// IpForEc2InstanceNotFound is an error that occurs when the IP for an EC2 instance is not found.
-//
-// Deprecated: Use [IPForEc2InstanceNotFound] instead.
-type IpForEc2InstanceNotFound struct { //nolint:staticcheck,revive // preserving deprecated type name
+// IPForEc2InstanceNotFound is an error that occurs when the IP for an EC2 instance is not found.
+type IPForEc2InstanceNotFound struct {
 	InstanceId string //nolint:staticcheck,revive // preserving existing field name
 	AwsRegion  string
 	Type       string
 }
 
-// IPForEc2InstanceNotFound is an alias for [IpForEc2InstanceNotFound].
-type IPForEc2InstanceNotFound = IpForEc2InstanceNotFound //nolint:staticcheck,revive // preserving deprecated type name
-
-func (err IpForEc2InstanceNotFound) Error() string {
+func (err IPForEc2InstanceNotFound) Error() string {
 	return fmt.Sprintf("Could not find a %s IP address for EC2 Instance %s in %s", err.Type, err.InstanceId, err.AwsRegion)
 }
 

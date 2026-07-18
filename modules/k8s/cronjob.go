@@ -44,26 +44,6 @@ func ListCronJobsContext(t testing.TestingT, ctx context.Context, options *Kubec
 	return cronJobs
 }
 
-// ListCronJobs list cron jobs in namespace that match provided filters. This will fail the test if there is an error.
-//
-// Deprecated: Use [ListCronJobsContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListCronJobs(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []batchv1.CronJob {
-	t.Helper()
-
-	return ListCronJobsContext(t, context.Background(), options, filters)
-}
-
-// ListCronJobsE list cron jobs in namespace that match provided filters. This will return list or error.
-//
-// Deprecated: Use [ListCronJobsContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListCronJobsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]batchv1.CronJob, error) {
-	return ListCronJobsContextE(t, context.Background(), options, filters)
-}
-
 // GetCronJobContextE returns a cron job resource from namespace by name.
 // The ctx parameter supports cancellation and timeouts.
 func GetCronJobContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, cronJobName string) (*batchv1.CronJob, error) {
@@ -86,26 +66,10 @@ func GetCronJobContext(t testing.TestingT, ctx context.Context, options *Kubectl
 	return job
 }
 
-// GetCronJob return cron job resource from namespace by name. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetCronJobContext] instead.
-func GetCronJob(t testing.TestingT, options *KubectlOptions, cronJobName string) *batchv1.CronJob {
-	t.Helper()
-
-	return GetCronJobContext(t, context.Background(), options, cronJobName)
-}
-
-// GetCronJobE return cron job resource from namespace by name. This will return cron job or error.
-//
-// Deprecated: Use [GetCronJobContextE] instead.
-func GetCronJobE(t testing.TestingT, options *KubectlOptions, cronJobName string) (*batchv1.CronJob, error) {
-	return GetCronJobContextE(t, context.Background(), options, cronJobName)
-}
-
 // WaitUntilCronJobSucceedContextE waits until cron job will successfully complete a job, retrying the check for the
 // specified amount of times, sleeping for the provided duration between each try.
 // The ctx parameter supports cancellation and timeouts.
-func WaitUntilCronJobSucceedContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, cronJobName string, retries int, sleepBetweenRetries time.Duration) error { //nolint:dupl // similar retry pattern across resource types is intentional
+func WaitUntilCronJobSucceedContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, cronJobName string, retries int, sleepBetweenRetries time.Duration) error {
 	statusMsg := fmt.Sprintf("Wait for CronJob %s to successfully schedule container", cronJobName)
 
 	message, err := retry.DoWithRetryContextE(
@@ -144,23 +108,6 @@ func WaitUntilCronJobSucceedContextE(t testing.TestingT, ctx context.Context, op
 func WaitUntilCronJobSucceedContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, cronJobName string, retries int, sleepBetweenRetries time.Duration) {
 	t.Helper()
 	require.NoError(t, WaitUntilCronJobSucceedContextE(t, ctx, options, cronJobName, retries, sleepBetweenRetries))
-}
-
-// WaitUntilCronJobSucceed waits until cron job will successfully complete a job. This will fail the test if there is an
-// error or if the check times out.
-//
-// Deprecated: Use [WaitUntilCronJobSucceedContext] instead.
-func WaitUntilCronJobSucceed(t testing.TestingT, options *KubectlOptions, cronJobName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilCronJobSucceedContext(t, context.Background(), options, cronJobName, retries, sleepBetweenRetries)
-}
-
-// WaitUntilCronJobSucceedE waits until cron job will successfully complete a job, retrying the check for the specified
-// amount of times, sleeping for the provided duration between each try.
-//
-// Deprecated: Use [WaitUntilCronJobSucceedContextE] instead.
-func WaitUntilCronJobSucceedE(t testing.TestingT, options *KubectlOptions, cronJobName string, retries int, sleepBetweenRetries time.Duration) error {
-	return WaitUntilCronJobSucceedContextE(t, context.Background(), options, cronJobName, retries, sleepBetweenRetries)
 }
 
 // IsCronJobSucceeded returns true if cron job successfully scheduled and completed job.

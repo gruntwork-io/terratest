@@ -40,17 +40,15 @@ func OPAEvalContextE(
 	opaEvalOptions *opa.EvalOptions,
 	resultQuery string,
 ) error {
-	_ = ctx // reserved for future use when opa.EvalE supports context
+	_ = ctx
 
 	tfOptions.Logger.Logf(t, "Running terraform files in %s through `opa eval` on policy %s", tfOptions.TerraformDir, opaEvalOptions.RulePath)
 
-	// Find all the tf files in the terraform dir to process.
 	tfFiles, err := files.FindTerraformSourceFilesInDir(tfOptions.TerraformDir)
 	if err != nil {
 		return err
 	}
 
-	// Create a temporary dir to store all the json files
 	tmpDir, err := os.MkdirTemp("", "terratest-opa-hcl2json-*")
 	if err != nil {
 		return err
@@ -62,7 +60,6 @@ func OPAEvalContextE(
 
 	tfOptions.Logger.Logf(t, "Using temporary folder %s for json representation of terraform module %s", tmpDir, tfOptions.TerraformDir)
 
-	// Convert all the found tf files to json format so OPA works.
 	jsonFiles := make([]string, len(tfFiles))
 	errorsOccurred := new(multierror.Error)
 
@@ -83,36 +80,7 @@ func OPAEvalContextE(
 		return err
 	}
 
-	// Run OPA checks on each of the converted json files.
-	return opa.EvalE(t, opaEvalOptions, jsonFiles, resultQuery) //nolint:contextcheck // opa.EvalE does not have a context variant yet
-}
-
-// OPAEval runs `opa eval` with the given option on the terraform files identified in the TerraformDir directory of the
-// Options struct. Note that since OPA does not natively support parsing HCL code, we first convert all the files to
-// JSON prior to passing it through OPA. This function fails the test if there is an error.
-//
-// Deprecated: Use [OPAEvalContext] instead.
-func OPAEval(
-	t testing.TestingT,
-	tfOptions *Options,
-	opaEvalOptions *opa.EvalOptions,
-	resultQuery string,
-) {
-	OPAEvalContext(t, context.Background(), tfOptions, opaEvalOptions, resultQuery)
-}
-
-// OPAEvalE runs `opa eval` with the given option on the terraform files identified in the TerraformDir directory of the
-// Options struct. Note that since OPA does not natively support parsing HCL code, we first convert all the files to
-// JSON prior to passing it through OPA.
-//
-// Deprecated: Use [OPAEvalContextE] instead.
-func OPAEvalE(
-	t testing.TestingT,
-	tfOptions *Options,
-	opaEvalOptions *opa.EvalOptions,
-	resultQuery string,
-) error {
-	return OPAEvalContextE(t, context.Background(), tfOptions, opaEvalOptions, resultQuery)
+	return opa.EvalE(t, opaEvalOptions, jsonFiles, resultQuery)
 }
 
 // HCLFileToJSONFile is a function that takes a path containing HCL code, and converts it to JSON representation and
@@ -128,5 +96,5 @@ func HCLFileToJSONFile(hclPath, jsonOutPath string) error {
 		return err
 	}
 
-	return os.WriteFile(jsonOutPath, converted, 0o600) //nolint:mnd // standard owner read-write permission
+	return os.WriteFile(jsonOutPath, converted, 0o600)
 }

@@ -20,16 +20,6 @@ func ManagedEnvironmentExistsContext(t testing.TestingT, ctx context.Context, en
 	return exists
 }
 
-// ManagedEnvironmentExists indicates whether the specified Managed Environment exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ManagedEnvironmentExistsContext] instead.
-func ManagedEnvironmentExists(t testing.TestingT, environmentName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return ManagedEnvironmentExistsContext(t, context.Background(), environmentName, resourceGroupName, subscriptionID) //nolint:staticcheck
-}
-
 // ManagedEnvironmentExistsContextE indicates whether the specified Managed Environment exists.
 // The ctx parameter supports cancellation and timeouts.
 func ManagedEnvironmentExistsContextE(ctx context.Context, environmentName string, resourceGroupName string, subscriptionID string) (bool, error) {
@@ -50,13 +40,6 @@ func ManagedEnvironmentExistsContextE(ctx context.Context, environmentName strin
 	return true, nil
 }
 
-// ManagedEnvironmentExistsE indicates whether the specified Managed Environment exists.
-//
-// Deprecated: Use [ManagedEnvironmentExistsContextE] instead.
-func ManagedEnvironmentExistsE(environmentName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	return ManagedEnvironmentExistsContextE(context.Background(), environmentName, resourceGroupName, subscriptionID)
-}
-
 // GetManagedEnvironmentContext returns the Managed Environment object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -67,16 +50,6 @@ func GetManagedEnvironmentContext(t testing.TestingT, ctx context.Context, envir
 	require.NoError(t, err)
 
 	return env
-}
-
-// GetManagedEnvironment gets the Managed Environment object.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetManagedEnvironmentContext] instead.
-func GetManagedEnvironment(t testing.TestingT, environmentName string, resourceGroupName string, subscriptionID string) *armappcontainers.ManagedEnvironment {
-	t.Helper()
-
-	return GetManagedEnvironmentContext(t, context.Background(), environmentName, resourceGroupName, subscriptionID) //nolint:staticcheck
 }
 
 // GetManagedEnvironmentContextE returns the Managed Environment object.
@@ -101,13 +74,6 @@ func GetManagedEnvironmentWithClient(ctx context.Context, client *armappcontaine
 	return &resp.ManagedEnvironment, nil
 }
 
-// GetManagedEnvironmentE gets the Managed Environment object.
-//
-// Deprecated: Use [GetManagedEnvironmentContextE] instead.
-func GetManagedEnvironmentE(environmentName string, resourceGroupName string, subscriptionID string) (*armappcontainers.ManagedEnvironment, error) {
-	return GetManagedEnvironmentContextE(context.Background(), environmentName, resourceGroupName, subscriptionID)
-}
-
 // ContainerAppExistsContext indicates whether the Container App exists for the subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -118,16 +84,6 @@ func ContainerAppExistsContext(t testing.TestingT, ctx context.Context, containe
 	require.NoError(t, err)
 
 	return exists
-}
-
-// ContainerAppExists indicates whether the Container App exists for the subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ContainerAppExistsContext] instead.
-func ContainerAppExists(t testing.TestingT, containerAppName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return ContainerAppExistsContext(t, context.Background(), containerAppName, resourceGroupName, subscriptionID) //nolint:staticcheck
 }
 
 // ContainerAppExistsContextE indicates whether the Container App exists for the subscription.
@@ -150,13 +106,6 @@ func ContainerAppExistsContextE(ctx context.Context, containerAppName string, re
 	return true, nil
 }
 
-// ContainerAppExistsE indicates whether the Container App exists for the subscription.
-//
-// Deprecated: Use [ContainerAppExistsContextE] instead.
-func ContainerAppExistsE(containerAppName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	return ContainerAppExistsContextE(context.Background(), containerAppName, resourceGroupName, subscriptionID)
-}
-
 // GetContainerAppContext returns the Container App object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -167,16 +116,6 @@ func GetContainerAppContext(t testing.TestingT, ctx context.Context, containerAp
 	require.NoError(t, err)
 
 	return app
-}
-
-// GetContainerApp gets the Container App object.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetContainerAppContext] instead.
-func GetContainerApp(t testing.TestingT, containerAppName string, resourceGroupName string, subscriptionID string) *armappcontainers.ContainerApp {
-	t.Helper()
-
-	return GetContainerAppContext(t, context.Background(), containerAppName, resourceGroupName, subscriptionID) //nolint:staticcheck
 }
 
 // GetContainerAppContextE returns the Container App object.
@@ -201,13 +140,6 @@ func GetContainerAppWithClient(ctx context.Context, client *armappcontainers.Con
 	return &resp.ContainerApp, nil
 }
 
-// GetContainerAppE gets the Container App object.
-//
-// Deprecated: Use [GetContainerAppContextE] instead.
-func GetContainerAppE(containerAppName string, resourceGroupName string, subscriptionID string) (*armappcontainers.ContainerApp, error) {
-	return GetContainerAppContextE(context.Background(), containerAppName, resourceGroupName, subscriptionID)
-}
-
 // ContainerAppJobExistsContext indicates whether the Container App Job exists for the subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -218,16 +150,6 @@ func ContainerAppJobExistsContext(t testing.TestingT, ctx context.Context, conta
 	require.NoError(t, err)
 
 	return exists
-}
-
-// ContainerAppJobExists indicates whether the Container App Job exists for the subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [ContainerAppJobExistsContext] instead.
-func ContainerAppJobExists(t testing.TestingT, containerAppName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return ContainerAppJobExistsContext(t, context.Background(), containerAppName, resourceGroupName, subscriptionID) //nolint:staticcheck
 }
 
 // ContainerAppJobExistsContextE indicates whether the Container App Job exists for the subscription.
@@ -250,13 +172,6 @@ func ContainerAppJobExistsContextE(ctx context.Context, containerAppName string,
 	return true, nil
 }
 
-// ContainerAppJobExistsE indicates whether the Container App Job exists for the subscription.
-//
-// Deprecated: Use [ContainerAppJobExistsContextE] instead.
-func ContainerAppJobExistsE(containerAppName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	return ContainerAppJobExistsContextE(context.Background(), containerAppName, resourceGroupName, subscriptionID)
-}
-
 // GetContainerAppJobContext returns the Container App Job object.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -267,16 +182,6 @@ func GetContainerAppJobContext(t testing.TestingT, ctx context.Context, containe
 	require.NoError(t, err)
 
 	return app
-}
-
-// GetContainerAppJob gets the Container App Job object.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetContainerAppJobContext] instead.
-func GetContainerAppJob(t testing.TestingT, containerAppName string, resourceGroupName string, subscriptionID string) *armappcontainers.Job {
-	t.Helper()
-
-	return GetContainerAppJobContext(t, context.Background(), containerAppName, resourceGroupName, subscriptionID) //nolint:staticcheck
 }
 
 // GetContainerAppJobContextE returns the Container App Job object.
@@ -299,11 +204,4 @@ func GetContainerAppJobWithClient(ctx context.Context, client *armappcontainers.
 	}
 
 	return &resp.Job, nil
-}
-
-// GetContainerAppJobE gets the Container App Job object.
-//
-// Deprecated: Use [GetContainerAppJobContextE] instead.
-func GetContainerAppJobE(containerAppName string, resourceGroupName string, subscriptionID string) (*armappcontainers.Job, error) {
-	return GetContainerAppJobContextE(context.Background(), containerAppName, resourceGroupName, subscriptionID)
 }

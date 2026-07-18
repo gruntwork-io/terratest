@@ -1,4 +1,4 @@
-package terragrunt //nolint:dupl // structural pattern for terragrunt command wrappers
+package terragrunt
 
 import (
 	"context"
@@ -22,18 +22,4 @@ func StackGenerateContext(t testing.TestingT, ctx context.Context, options *Opti
 // and cancellation control.
 func StackGenerateContextE(t testing.TestingT, ctx context.Context, options *Options) (string, error) {
 	return runTerragruntStackCommandE(t, ctx, options, "generate")
-}
-
-// StackGenerate calls terragrunt stack generate and returns stdout/stderr.
-//
-// Deprecated: Use [StackGenerateContext] instead.
-func StackGenerate(t testing.TestingT, options *Options) string {
-	return StackGenerateContext(t, context.Background(), options)
-}
-
-// StackGenerateE calls terragrunt stack generate and returns stdout/stderr.
-//
-// Deprecated: Use [StackGenerateContextE] instead.
-func StackGenerateE(t testing.TestingT, options *Options) (string, error) {
-	return StackGenerateContextE(t, context.Background(), options)
 }

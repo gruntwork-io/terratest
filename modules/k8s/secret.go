@@ -1,4 +1,4 @@
-package k8s //nolint:dupl // structural pattern for k8s resource operations
+package k8s
 
 import (
 	"context"
@@ -34,24 +34,6 @@ func GetSecretContext(t testing.TestingT, ctx context.Context, options *KubectlO
 	require.NoError(t, err)
 
 	return secret
-}
-
-// GetSecret returns a Kubernetes secret resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetSecretContext] instead.
-func GetSecret(t testing.TestingT, options *KubectlOptions, secretName string) *corev1.Secret {
-	t.Helper()
-
-	return GetSecretContext(t, context.Background(), options, secretName)
-}
-
-// GetSecretE returns a Kubernetes secret resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions.
-//
-// Deprecated: Use [GetSecretContextE] instead.
-func GetSecretE(t testing.TestingT, options *KubectlOptions, secretName string) (*corev1.Secret, error) {
-	return GetSecretContextE(t, context.Background(), options, secretName)
 }
 
 // WaitUntilSecretAvailableContextE waits until the secret is present on the cluster in cases where it is not
@@ -92,13 +74,4 @@ func WaitUntilSecretAvailableContext(t testing.TestingT, ctx context.Context, op
 	t.Helper()
 	err := WaitUntilSecretAvailableContextE(t, ctx, options, secretName, retries, sleepBetweenRetries)
 	require.NoError(t, err)
-}
-
-// WaitUntilSecretAvailable waits until the secret is present on the cluster in cases where it is not immediately
-// available (for example, when using ClusterIssuer to request a certificate).
-//
-// Deprecated: Use [WaitUntilSecretAvailableContext] instead.
-func WaitUntilSecretAvailable(t testing.TestingT, options *KubectlOptions, secretName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilSecretAvailableContext(t, context.Background(), options, secretName, retries, sleepBetweenRetries)
 }

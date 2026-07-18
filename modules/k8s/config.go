@@ -42,14 +42,6 @@ func LoadAPIClientConfigE(configPath string, contextName string) (*restclient.Co
 	return config.ClientConfig()
 }
 
-// LoadApiClientConfigE loads a ClientConfig object from a file path that points to a location on disk containing a
-// kubectl config, with the requested context loaded.
-//
-// Deprecated: Use LoadAPIClientConfigE instead.
-func LoadApiClientConfigE(configPath string, contextName string) (*restclient.Config, error) { //nolint:staticcheck,revive // deprecated
-	return LoadAPIClientConfigE(configPath, contextName)
-}
-
 // DeleteConfigContextE will remove the context specified at the provided name, and remove any clusters and authinfos
 // that are orphaned as a result of it. The config path is either specified in the environment variable KUBECONFIG or at
 // the user's home directory under `.kube/config`.
@@ -67,7 +59,6 @@ func DeleteConfigContextE(t testing.TestingT, contextName string) error {
 func DeleteConfigContextWithPathE(t testing.TestingT, kubeConfigPath string, contextName string) error {
 	logger.Default.Logf(t, "Removing kubectl config context %s from config at path %s", contextName, kubeConfigPath)
 
-	// Load config and get data structure representing config info
 	config := LoadConfigFromPath(kubeConfigPath)
 
 	rawConfig, err := config.RawConfig()
@@ -75,7 +66,6 @@ func DeleteConfigContextWithPathE(t testing.TestingT, kubeConfigPath string, con
 		return err
 	}
 
-	// Check if the context we want to delete actually exists, and if so, delete it.
 	_, ok := rawConfig.Contexts[contextName]
 	if !ok {
 		logger.Default.Logf(t, "WARNING: Could not find context %s from config at path %s", contextName, kubeConfigPath)
@@ -84,14 +74,12 @@ func DeleteConfigContextWithPathE(t testing.TestingT, kubeConfigPath string, con
 
 	delete(rawConfig.Contexts, contextName)
 
-	// If the removing context is the current context, be sure to set a new one
 	if contextName == rawConfig.CurrentContext {
 		if err := setNewContext(&rawConfig); err != nil {
 			return err
 		}
 	}
 
-	// Finally, clean up orphaned clusters and authinfos and then save config
 	RemoveOrphanedClusterAndAuthInfoConfig(&rawConfig)
 
 	if err := clientcmd.ModifyConfig(config.ConfigAccess(), rawConfig, false); err != nil {
@@ -110,7 +98,7 @@ func DeleteConfigContextWithPathE(t testing.TestingT, kubeConfigPath string, con
 // setNewContext will pick the alphebetically first available context from the list of contexts in the config to use as
 // the new current context
 func setNewContext(config *api.Config) error {
-	// Sort contextNames and pick the first one
+
 	contextNames := make([]string, 0, len(config.Contexts))
 	for name := range config.Contexts {
 		contextNames = append(contextNames, name)
@@ -167,13 +155,6 @@ func GetKubeConfigPathContext(t testing.TestingT, ctx context.Context) string {
 	require.NoError(t, err)
 
 	return path
-}
-
-// GetKubeConfigPathE determines which file path to use as the kubectl config path
-//
-// Deprecated: Use [GetKubeConfigPathContextE] instead.
-func GetKubeConfigPathE(t testing.TestingT) (string, error) {
-	return GetKubeConfigPathContextE(t, context.Background())
 }
 
 // KubeConfigPathFromHomeDirE returns a string to the default Kubernetes config path in the home directory. This will

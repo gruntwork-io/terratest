@@ -49,13 +49,6 @@ func DirectoryEqualContext(t *testing.T, ctx context.Context, dirA string, dirB 
 	return exitCode == 0
 }
 
-// Deprecated: Use DirectoryEqualContext instead.
-func DirectoryEqual(t *testing.T, dirA string, dirB string) bool {
-	t.Helper()
-
-	return DirectoryEqualContext(t, context.Background(), dirA, dirB)
-}
-
 func openFile(t *testing.T, filename string) *os.File {
 	t.Helper()
 

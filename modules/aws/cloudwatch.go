@@ -60,22 +60,6 @@ func GetCloudWatchLogEntriesContext(t testing.TestingT, ctx context.Context, aws
 	return out
 }
 
-// GetCloudWatchLogEntries returns the CloudWatch log messages in the given region for the given log stream and log group.
-//
-// Deprecated: Use [GetCloudWatchLogEntriesContext] instead.
-func GetCloudWatchLogEntries(t testing.TestingT, awsRegion string, logStreamName string, logGroupName string) []string {
-	t.Helper()
-
-	return GetCloudWatchLogEntriesContext(t, context.Background(), awsRegion, logStreamName, logGroupName)
-}
-
-// GetCloudWatchLogEntriesE returns the CloudWatch log messages in the given region for the given log stream and log group.
-//
-// Deprecated: Use [GetCloudWatchLogEntriesContextE] instead.
-func GetCloudWatchLogEntriesE(t testing.TestingT, awsRegion string, logStreamName string, logGroupName string) ([]string, error) {
-	return GetCloudWatchLogEntriesContextE(t, context.Background(), awsRegion, logStreamName, logGroupName)
-}
-
 // NewCloudWatchLogsClientContextE creates a new CloudWatch Logs client.
 // The ctx parameter supports cancellation and timeouts.
 func NewCloudWatchLogsClientContextE(t testing.TestingT, ctx context.Context, region string) (*cloudwatchlogs.Client, error) {
@@ -97,20 +81,4 @@ func NewCloudWatchLogsClientContext(t testing.TestingT, ctx context.Context, reg
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewCloudWatchLogsClient creates a new CloudWatch Logs client.
-//
-// Deprecated: Use [NewCloudWatchLogsClientContext] instead.
-func NewCloudWatchLogsClient(t testing.TestingT, region string) *cloudwatchlogs.Client {
-	t.Helper()
-
-	return NewCloudWatchLogsClientContext(t, context.Background(), region)
-}
-
-// NewCloudWatchLogsClientE creates a new CloudWatch Logs client.
-//
-// Deprecated: Use [NewCloudWatchLogsClientContextE] instead.
-func NewCloudWatchLogsClientE(t testing.TestingT, region string) (*cloudwatchlogs.Client, error) {
-	return NewCloudWatchLogsClientContextE(t, context.Background(), region)
 }

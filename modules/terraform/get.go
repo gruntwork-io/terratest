@@ -6,13 +6,6 @@ import (
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 )
 
-// Get calls terraform get and return stdout/stderr.
-//
-// Deprecated: Use [GetContext] instead.
-func Get(t testing.TestingT, options *Options) string {
-	return GetContext(t, context.Background(), options)
-}
-
 // GetContext calls terraform get and returns stdout/stderr. The provided context is passed through to the underlying
 // command execution, allowing for timeout and cancellation control.
 func GetContext(t testing.TestingT, ctx context.Context, options *Options) string {
@@ -22,13 +15,6 @@ func GetContext(t testing.TestingT, ctx context.Context, options *Options) strin
 	}
 
 	return out
-}
-
-// GetE calls terraform get and return stdout/stderr.
-//
-// Deprecated: Use [GetContextE] instead.
-func GetE(t testing.TestingT, options *Options) (string, error) {
-	return GetContextE(t, context.Background(), options)
 }
 
 // GetContextE calls terraform get and returns stdout/stderr. The provided context is passed through to the underlying

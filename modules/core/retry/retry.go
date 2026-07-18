@@ -20,14 +20,6 @@ type Either struct {
 	Result string
 }
 
-// DoWithTimeout runs the specified action and waits up to the specified timeout for it to complete. Return the output of the action if
-// it completes on time or fail the test otherwise.
-//
-// Deprecated: Use [DoWithTimeoutContext] instead.
-func DoWithTimeout(t testing.TestingT, actionDescription string, timeout time.Duration, action func() (string, error)) string {
-	return DoWithTimeoutContext(t, context.Background(), actionDescription, timeout, action)
-}
-
 // DoWithTimeoutContext runs the specified action and waits up to the specified timeout for it to complete. Return the
 // output of the action if it completes on time or fail the test otherwise. The ctx parameter supports cancellation
 // and timeouts.
@@ -38,14 +30,6 @@ func DoWithTimeoutContext(t testing.TestingT, ctx context.Context, actionDescrip
 	}
 
 	return out
-}
-
-// DoWithTimeoutE runs the specified action and waits up to the specified timeout for it to complete. Return the output of the action if
-// it completes on time or an error otherwise.
-//
-// Deprecated: Use [DoWithTimeoutContextE] instead.
-func DoWithTimeoutE(t testing.TestingT, actionDescription string, timeout time.Duration, action func() (string, error)) (string, error) {
-	return DoWithTimeoutContextE(t, context.Background(), actionDescription, timeout, action)
 }
 
 // DoWithTimeoutContextE runs the specified action and waits up to the specified timeout for it to complete. Return the
@@ -70,15 +54,6 @@ func DoWithTimeoutContextE(t testing.TestingT, ctx context.Context, actionDescri
 	}
 }
 
-// DoWithRetry runs the specified action. If it returns a string, return that string. If it returns a FatalError, return that error
-// immediately. If it returns any other type of error, sleep for sleepBetweenRetries and try again, up to a maximum of
-// maxRetries retries. If maxRetries is exceeded, fail the test.
-//
-// Deprecated: Use [DoWithRetryContext] instead.
-func DoWithRetry(t testing.TestingT, actionDescription string, maxRetries int, sleepBetweenRetries time.Duration, action func() (string, error)) string {
-	return DoWithRetryContext(t, context.Background(), actionDescription, maxRetries, sleepBetweenRetries, action)
-}
-
 // DoWithRetryContext runs the specified action. If it returns a string, return that string. If it returns a FatalError,
 // return that error immediately. If it returns any other type of error, sleep for sleepBetweenRetries and try again, up
 // to a maximum of maxRetries retries. If maxRetries is exceeded, fail the test. The ctx parameter supports cancellation
@@ -92,15 +67,6 @@ func DoWithRetryContext(t testing.TestingT, ctx context.Context, actionDescripti
 	return out
 }
 
-// DoWithRetryE runs the specified action. If it returns a string, return that string. If it returns a FatalError, return that error
-// immediately. If it returns any other type of error, sleep for sleepBetweenRetries and try again, up to a maximum of
-// maxRetries retries. If maxRetries is exceeded, return a MaxRetriesExceeded error.
-//
-// Deprecated: Use [DoWithRetryContextE] instead.
-func DoWithRetryE(t testing.TestingT, actionDescription string, maxRetries int, sleepBetweenRetries time.Duration, action func() (string, error)) (string, error) {
-	return DoWithRetryContextE(t, context.Background(), actionDescription, maxRetries, sleepBetweenRetries, action)
-}
-
 // DoWithRetryContextE runs the specified action. If it returns a string, return that string. If it returns a FatalError,
 // return that error immediately. If it returns any other type of error, sleep for sleepBetweenRetries and try again, up
 // to a maximum of maxRetries retries. If maxRetries is exceeded, return a MaxRetriesExceeded error. The ctx parameter
@@ -109,15 +75,6 @@ func DoWithRetryContextE(t testing.TestingT, ctx context.Context, actionDescript
 	out, err := DoWithRetryInterfaceContextE(t, ctx, actionDescription, maxRetries, sleepBetweenRetries, func() (any, error) { return action() })
 
 	return out.(string), err
-}
-
-// DoWithRetryInterface runs the specified action. If it returns a value, return that value. If it returns a FatalError, return that error
-// immediately. If it returns any other type of error, sleep for sleepBetweenRetries and try again, up to a maximum of
-// maxRetries retries. If maxRetries is exceeded, fail the test.
-//
-// Deprecated: Use [DoWithRetryInterfaceContext] instead.
-func DoWithRetryInterface(t testing.TestingT, actionDescription string, maxRetries int, sleepBetweenRetries time.Duration, action func() (any, error)) any {
-	return DoWithRetryInterfaceContext(t, context.Background(), actionDescription, maxRetries, sleepBetweenRetries, action)
 }
 
 // DoWithRetryInterfaceContext runs the specified action. If it returns a value, return that value. If it returns a
@@ -131,15 +88,6 @@ func DoWithRetryInterfaceContext(t testing.TestingT, ctx context.Context, action
 	}
 
 	return out
-}
-
-// DoWithRetryInterfaceE runs the specified action. If it returns a value, return that value. If it returns a FatalError, return that error
-// immediately. If it returns any other type of error, sleep for sleepBetweenRetries and try again, up to a maximum of
-// maxRetries retries. If maxRetries is exceeded, return a MaxRetriesExceeded error.
-//
-// Deprecated: Use [DoWithRetryInterfaceContextE] instead.
-func DoWithRetryInterfaceE(t testing.TestingT, actionDescription string, maxRetries int, sleepBetweenRetries time.Duration, action func() (any, error)) (any, error) {
-	return DoWithRetryInterfaceContextE(t, context.Background(), actionDescription, maxRetries, sleepBetweenRetries, action)
 }
 
 // DoWithRetryInterfaceContextE runs the specified action. If it returns a value, return that value. If it returns a
@@ -174,24 +122,13 @@ func DoWithRetryInterfaceContextE(t testing.TestingT, ctx context.Context, actio
 
 		select {
 		case <-time.After(sleepBetweenRetries):
-			// Continue to next retry
+
 		case <-ctx.Done():
 			return output, ctx.Err()
 		}
 	}
 
 	return output, MaxRetriesExceeded{Description: actionDescription, MaxRetries: maxRetries}
-}
-
-// DoWithRetryableErrors runs the specified action. If it returns a value, return that value. If it returns an error,
-// check if error message or the string output from the action (which is often stdout/stderr from running some command)
-// matches any of the regular expressions in the specified retryableErrors map. If there is a match, sleep for
-// sleepBetweenRetries, and retry the specified action, up to a maximum of maxRetries retries. If there is no match,
-// return that error immediately, wrapped in a FatalError. If maxRetries is exceeded, return a MaxRetriesExceeded error.
-//
-// Deprecated: Use [DoWithRetryableErrorsContext] instead.
-func DoWithRetryableErrors(t testing.TestingT, actionDescription string, retryableErrors map[string]string, maxRetries int, sleepBetweenRetries time.Duration, action func() (string, error)) string {
-	return DoWithRetryableErrorsContext(t, context.Background(), actionDescription, retryableErrors, maxRetries, sleepBetweenRetries, action)
 }
 
 // DoWithRetryableErrorsContext runs the specified action. If it returns a value, return that value. If it returns an
@@ -205,17 +142,6 @@ func DoWithRetryableErrorsContext(t testing.TestingT, ctx context.Context, actio
 	require.NoError(t, err)
 
 	return out
-}
-
-// DoWithRetryableErrorsE runs the specified action. If it returns a value, return that value. If it returns an error,
-// check if error message or the string output from the action (which is often stdout/stderr from running some command)
-// matches any of the regular expressions in the specified retryableErrors map. If there is a match, sleep for
-// sleepBetweenRetries, and retry the specified action, up to a maximum of maxRetries retries. If there is no match,
-// return that error immediately, wrapped in a FatalError. If maxRetries is exceeded, return a MaxRetriesExceeded error.
-//
-// Deprecated: Use [DoWithRetryableErrorsContextE] instead.
-func DoWithRetryableErrorsE(t testing.TestingT, actionDescription string, retryableErrors map[string]string, maxRetries int, sleepBetweenRetries time.Duration, action func() (string, error)) (string, error) {
-	return DoWithRetryableErrorsContextE(t, context.Background(), actionDescription, retryableErrors, maxRetries, sleepBetweenRetries, action)
 }
 
 // DoWithRetryableErrorsContextE runs the specified action. If it returns a value, return that value. If it returns an
@@ -263,14 +189,6 @@ func (done Done) Done() {
 	done.stop <- true
 }
 
-// DoInBackgroundUntilStopped runs the specified action in the background (in a goroutine) repeatedly, waiting the specified amount of time between
-// repetitions. To stop this action, call the Done() function on the returned value.
-//
-// Deprecated: Use [DoInBackgroundUntilStoppedContext] instead.
-func DoInBackgroundUntilStopped(t testing.TestingT, actionDescription string, sleepBetweenRepeats time.Duration, action func()) Done {
-	return DoInBackgroundUntilStoppedContext(t, context.Background(), actionDescription, sleepBetweenRepeats, action)
-}
-
 // DoInBackgroundUntilStoppedContext runs the specified action in the background (in a goroutine) repeatedly, waiting
 // the specified amount of time between repetitions. To stop this action, cancel the ctx or call the Done() function on
 // the returned value. The ctx parameter supports cancellation and timeouts.
@@ -284,7 +202,7 @@ func DoInBackgroundUntilStoppedContext(t testing.TestingT, ctx context.Context, 
 				logger.Default.Logf(t, "Context cancelled for action '%s'.", actionDescription)
 				return
 			default:
-				// Continue
+
 			}
 
 			logger.Default.Logf(t, "Executing action '%s'", actionDescription)
@@ -295,7 +213,7 @@ func DoInBackgroundUntilStoppedContext(t testing.TestingT, ctx context.Context, 
 
 			select {
 			case <-time.After(sleepBetweenRepeats):
-				// Nothing to do, just allow the loop to continue
+
 			case <-stop:
 				logger.Default.Logf(t, "Received stop signal for action '%s'.", actionDescription)
 				return
@@ -308,8 +226,6 @@ func DoInBackgroundUntilStoppedContext(t testing.TestingT, ctx context.Context, 
 
 	return Done{stop: stop}
 }
-
-// Custom error types
 
 // TimeoutExceeded is an error that occurs when a timeout is exceeded.
 type TimeoutExceeded struct {

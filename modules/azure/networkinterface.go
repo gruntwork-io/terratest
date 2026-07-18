@@ -8,23 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// NetworkInterfaceExists indicates whether the specified Azure Network Interface exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [NetworkInterfaceExistsContext] instead.
-func NetworkInterfaceExists(t testing.TestingT, nicName string, resGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return NetworkInterfaceExistsContext(t, context.Background(), nicName, resGroupName, subscriptionID)
-}
-
-// NetworkInterfaceExistsE indicates whether the specified Azure Network Interface exists.
-//
-// Deprecated: Use [NetworkInterfaceExistsContextE] instead.
-func NetworkInterfaceExistsE(nicName string, resGroupName string, subscriptionID string) (bool, error) {
-	return NetworkInterfaceExistsContextE(context.Background(), nicName, resGroupName, subscriptionID)
-}
-
 // NetworkInterfaceExistsContext indicates whether the specified Azure Network Interface exists.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -40,7 +23,7 @@ func NetworkInterfaceExistsContext(t testing.TestingT, ctx context.Context, nicN
 // NetworkInterfaceExistsContextE indicates whether the specified Azure Network Interface exists.
 // The ctx parameter supports cancellation and timeouts.
 func NetworkInterfaceExistsContextE(ctx context.Context, nicName string, resGroupName string, subscriptionID string) (bool, error) {
-	// Get the Network Interface
+
 	_, err := GetNetworkInterfaceContextE(ctx, nicName, resGroupName, subscriptionID)
 	if err != nil {
 		if ResourceNotFoundErrorExists(err) {
@@ -51,23 +34,6 @@ func NetworkInterfaceExistsContextE(ctx context.Context, nicName string, resGrou
 	}
 
 	return true, nil
-}
-
-// GetNetworkInterfacePrivateIPs gets a list of the Private IPs of a Network Interface configs.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetNetworkInterfacePrivateIPsContext] instead.
-func GetNetworkInterfacePrivateIPs(t testing.TestingT, nicName string, resGroupName string, subscriptionID string) []string {
-	t.Helper()
-
-	return GetNetworkInterfacePrivateIPsContext(t, context.Background(), nicName, resGroupName, subscriptionID)
-}
-
-// GetNetworkInterfacePrivateIPsE gets a list of the Private IPs of a Network Interface configs.
-//
-// Deprecated: Use [GetNetworkInterfacePrivateIPsContextE] instead.
-func GetNetworkInterfacePrivateIPsE(nicName string, resGroupName string, subscriptionID string) ([]string, error) {
-	return GetNetworkInterfacePrivateIPsContextE(context.Background(), nicName, resGroupName, subscriptionID)
 }
 
 // GetNetworkInterfacePrivateIPsContext gets a list of the Private IPs of a Network Interface configs.
@@ -93,23 +59,6 @@ func GetNetworkInterfacePrivateIPsContextE(ctx context.Context, nicName string, 
 	return ExtractNetworkInterfacePrivateIPs(nic), nil
 }
 
-// GetNetworkInterfacePublicIPs returns a list of all the Public IPs found in the Network Interface configurations.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetNetworkInterfacePublicIPsContext] instead.
-func GetNetworkInterfacePublicIPs(t testing.TestingT, nicName string, resGroupName string, subscriptionID string) []string {
-	t.Helper()
-
-	return GetNetworkInterfacePublicIPsContext(t, context.Background(), nicName, resGroupName, subscriptionID)
-}
-
-// GetNetworkInterfacePublicIPsE returns a list of all the Public IPs found in the Network Interface configurations.
-//
-// Deprecated: Use [GetNetworkInterfacePublicIPsContextE] instead.
-func GetNetworkInterfacePublicIPsE(nicName string, resGroupName string, subscriptionID string) ([]string, error) {
-	return GetNetworkInterfacePublicIPsContextE(context.Background(), nicName, resGroupName, subscriptionID)
-}
-
 // GetNetworkInterfacePublicIPsContext returns a list of all the Public IPs found in the Network Interface configurations.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -127,7 +76,6 @@ func GetNetworkInterfacePublicIPsContext(t testing.TestingT, ctx context.Context
 func GetNetworkInterfacePublicIPsContextE(ctx context.Context, nicName string, resGroupName string, subscriptionID string) ([]string, error) {
 	var publicIPs []string
 
-	// Get the Network Interface client
 	nic, err := GetNetworkInterfaceContextE(ctx, nicName, resGroupName, subscriptionID)
 	if err != nil {
 		return publicIPs, err
@@ -137,9 +85,6 @@ func GetNetworkInterfacePublicIPsContextE(ctx context.Context, nicName string, r
 		return publicIPs, nil
 	}
 
-	// Get the Public IPs from each configuration available.
-	// Not failing on individual errors as this is an optimistic accumulator —
-	// it collects what it can and skips configurations that fail.
 	for _, IPConfiguration := range nic.Properties.IPConfigurations {
 		if IPConfiguration == nil || IPConfiguration.Name == nil {
 			continue
@@ -168,29 +113,20 @@ func GetNetworkInterfacePublicIPsContextE(ctx context.Context, nicName string, r
 	return publicIPs, nil
 }
 
-// GetNetworkInterfaceConfigurationE gets a Network Interface IP Configuration in the specified Azure Resource Group.
-//
-// Deprecated: Use [GetNetworkInterfaceConfigurationContextE] instead.
-func GetNetworkInterfaceConfigurationE(nicName string, nicConfigName string, resGroupName string, subscriptionID string) (*armnetwork.InterfaceIPConfiguration, error) {
-	return GetNetworkInterfaceConfigurationContextE(context.Background(), nicName, nicConfigName, resGroupName, subscriptionID)
-}
-
 // GetNetworkInterfaceConfigurationContextE gets a Network Interface Configuration in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func GetNetworkInterfaceConfigurationContextE(ctx context.Context, nicName string, nicConfigName string, resGroupName string, subscriptionID string) (*armnetwork.InterfaceIPConfiguration, error) {
-	// Validate Azure Resource Group
+
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the client reference
 	client, err := GetNetworkInterfaceConfigurationClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the Network Interface
 	resp, err := client.Get(ctx, resGroupName, nicName, nicConfigName, nil)
 	if err != nil {
 		return nil, err
@@ -205,30 +141,15 @@ func GetNetworkInterfaceConfigurationClientContextE(ctx context.Context, subscri
 	return CreateNetworkInterfaceIPConfigurationClientContextE(ctx, subscriptionID)
 }
 
-// GetNetworkInterfaceConfigurationClientE creates a new Network Interface Configuration client in the specified Azure Subscription.
-//
-// Deprecated: Use [GetNetworkInterfaceConfigurationClientContextE] instead.
-func GetNetworkInterfaceConfigurationClientE(subscriptionID string) (*armnetwork.InterfaceIPConfigurationsClient, error) {
-	return GetNetworkInterfaceConfigurationClientContextE(context.Background(), subscriptionID)
-}
-
-// GetNetworkInterfaceE gets a Network Interface in the specified Azure Resource Group.
-//
-// Deprecated: Use [GetNetworkInterfaceContextE] instead.
-func GetNetworkInterfaceE(nicName string, resGroupName string, subscriptionID string) (*armnetwork.Interface, error) {
-	return GetNetworkInterfaceContextE(context.Background(), nicName, resGroupName, subscriptionID)
-}
-
 // GetNetworkInterfaceContextE gets a Network Interface in the specified Azure Resource Group.
 // The ctx parameter supports cancellation and timeouts.
 func GetNetworkInterfaceContextE(ctx context.Context, nicName string, resGroupName string, subscriptionID string) (*armnetwork.Interface, error) {
-	// Validate Azure Resource Group
+
 	resGroupName, err := getTargetAzureResourceGroupName(resGroupName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the client reference
 	client, err := GetNetworkInterfaceClientContextE(ctx, subscriptionID)
 	if err != nil {
 		return nil, err
@@ -270,11 +191,4 @@ func ExtractNetworkInterfacePrivateIPs(nic *armnetwork.Interface) []string {
 // The ctx parameter supports cancellation and timeouts.
 func GetNetworkInterfaceClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.InterfacesClient, error) {
 	return CreateNetworkInterfacesClientContextE(ctx, subscriptionID)
-}
-
-// GetNetworkInterfaceClientE creates a new Network Interface client in the specified Azure Subscription.
-//
-// Deprecated: Use [GetNetworkInterfaceClientContextE] instead.
-func GetNetworkInterfaceClientE(subscriptionID string) (*armnetwork.InterfacesClient, error) {
-	return GetNetworkInterfaceClientContextE(context.Background(), subscriptionID)
 }

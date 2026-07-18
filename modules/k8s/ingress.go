@@ -45,27 +45,6 @@ func ListIngressesContext(t testing.TestingT, ctx context.Context, options *Kube
 	return ingresses
 }
 
-// ListIngresses will look for Ingress resources in the given namespace that match the given filters and return them.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [ListIngressesContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListIngresses(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []networkingv1.Ingress {
-	t.Helper()
-
-	return ListIngressesContext(t, context.Background(), options, filters)
-}
-
-// ListIngressesE will look for Ingress resources in the given namespace that match the given filters and return them.
-//
-// Deprecated: Use [ListIngressesContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListIngressesE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]networkingv1.Ingress, error) {
-	return ListIngressesContextE(t, context.Background(), options, filters)
-}
-
 // GetIngressContextE returns a Kubernetes Ingress resource in the provided namespace with the given name.
 // The ctx parameter supports cancellation and timeouts.
 func GetIngressContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, ingressName string) (*networkingv1.Ingress, error) {
@@ -88,26 +67,9 @@ func GetIngressContext(t testing.TestingT, ctx context.Context, options *Kubectl
 	return ingress
 }
 
-// GetIngress returns a Kubernetes Ingress resource in the provided namespace with the given name. This will fail the
-// test if there is an error.
-//
-// Deprecated: Use [GetIngressContext] instead.
-func GetIngress(t testing.TestingT, options *KubectlOptions, ingressName string) *networkingv1.Ingress {
-	t.Helper()
-
-	return GetIngressContext(t, context.Background(), options, ingressName)
-}
-
-// GetIngressE returns a Kubernetes Ingress resource in the provided namespace with the given name.
-//
-// Deprecated: Use [GetIngressContextE] instead.
-func GetIngressE(t testing.TestingT, options *KubectlOptions, ingressName string) (*networkingv1.Ingress, error) {
-	return GetIngressContextE(t, context.Background(), options, ingressName)
-}
-
 // IsIngressAvailable returns true if the Ingress endpoint is provisioned and available.
 func IsIngressAvailable(ingress *networkingv1.Ingress) bool {
-	// Ingress is ready if it has at least one endpoint
+
 	endpoints := ingress.Status.LoadBalancer.Ingress
 	return len(endpoints) > 0
 }
@@ -154,14 +116,6 @@ func WaitUntilIngressAvailableContext(t testing.TestingT, ctx context.Context, o
 	require.NoError(t, err)
 }
 
-// WaitUntilIngressAvailable waits until the Ingress resource has an endpoint provisioned for it.
-//
-// Deprecated: Use [WaitUntilIngressAvailableContext] instead.
-func WaitUntilIngressAvailable(t testing.TestingT, options *KubectlOptions, ingressName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilIngressAvailableContext(t, context.Background(), options, ingressName, retries, sleepBetweenRetries)
-}
-
 // ListIngressesV1Beta1ContextE will look for Ingress resources in the given namespace that match the given filters and
 // return them, using networking.k8s.io/v1beta1 API.
 // The ctx parameter supports cancellation and timeouts.
@@ -195,28 +149,6 @@ func ListIngressesV1Beta1Context(t testing.TestingT, ctx context.Context, option
 	return ingresses
 }
 
-// ListIngressesV1Beta1 will look for Ingress resources in the given namespace that match the given filters and return
-// them, using networking.k8s.io/v1beta1 API. This will fail the test if there is an error.
-//
-// Deprecated: Use [ListIngressesV1Beta1Context] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListIngressesV1Beta1(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []networkingv1beta1.Ingress {
-	t.Helper()
-
-	return ListIngressesV1Beta1Context(t, context.Background(), options, filters)
-}
-
-// ListIngressesV1Beta1E will look for Ingress resources in the given namespace that match the given filters and return
-// them, using networking.k8s.io/v1beta1 API.
-//
-// Deprecated: Use [ListIngressesV1Beta1ContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListIngressesV1Beta1E(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]networkingv1beta1.Ingress, error) {
-	return ListIngressesV1Beta1ContextE(t, context.Background(), options, filters)
-}
-
 // GetIngressV1Beta1ContextE returns a Kubernetes Ingress resource in the provided namespace with the given name, using
 // networking.k8s.io/v1beta1 API.
 // The ctx parameter supports cancellation and timeouts.
@@ -241,28 +173,10 @@ func GetIngressV1Beta1Context(t testing.TestingT, ctx context.Context, options *
 	return ingress
 }
 
-// GetIngressV1Beta1 returns a Kubernetes Ingress resource in the provided namespace with the given name, using
-// networking.k8s.io/v1beta1 API. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetIngressV1Beta1Context] instead.
-func GetIngressV1Beta1(t testing.TestingT, options *KubectlOptions, ingressName string) *networkingv1beta1.Ingress {
-	t.Helper()
-
-	return GetIngressV1Beta1Context(t, context.Background(), options, ingressName)
-}
-
-// GetIngressV1Beta1E returns a Kubernetes Ingress resource in the provided namespace with the given name, using
-// networking.k8s.io/v1beta1.
-//
-// Deprecated: Use [GetIngressV1Beta1ContextE] instead.
-func GetIngressV1Beta1E(t testing.TestingT, options *KubectlOptions, ingressName string) (*networkingv1beta1.Ingress, error) {
-	return GetIngressV1Beta1ContextE(t, context.Background(), options, ingressName)
-}
-
 // IsIngressAvailableV1Beta1 returns true if the Ingress endpoint is provisioned and available, using
 // networking.k8s.io/v1beta1 API.
 func IsIngressAvailableV1Beta1(ingress *networkingv1beta1.Ingress) bool {
-	// Ingress is ready if it has at least one endpoint
+
 	endpoints := ingress.Status.LoadBalancer.Ingress
 	return len(endpoints) > 0
 }
@@ -309,13 +223,4 @@ func WaitUntilIngressAvailableV1Beta1Context(t testing.TestingT, ctx context.Con
 	t.Helper()
 	err := WaitUntilIngressAvailableV1Beta1ContextE(t, ctx, options, ingressName, retries, sleepBetweenRetries)
 	require.NoError(t, err)
-}
-
-// WaitUntilIngressAvailableV1Beta1 waits until the Ingress resource has an endpoint provisioned for it, using
-// networking.k8s.io/v1beta1 API.
-//
-// Deprecated: Use [WaitUntilIngressAvailableV1Beta1Context] instead.
-func WaitUntilIngressAvailableV1Beta1(t testing.TestingT, options *KubectlOptions, ingressName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilIngressAvailableV1Beta1Context(t, context.Background(), options, ingressName, retries, sleepBetweenRetries)
 }

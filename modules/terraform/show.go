@@ -22,11 +22,9 @@ func ShowContext(t testing.TestingT, ctx context.Context, options *Options) stri
 // PlanFilePath is set on the options, this will show the plan file. Otherwise, this will show the current state of the
 // terraform module at options.TerraformDir. The context argument can be used for cancellation or timeout control.
 func ShowContextE(t testing.TestingT, ctx context.Context, options *Options) (string, error) {
-	// We manually construct the args here instead of using `FormatArgs`, because show only accepts a limited set of
-	// args.
+
 	args := []string{"show", "-no-color", "-json"}
 
-	// Attach plan file path if specified.
 	if options.PlanFilePath != "" {
 		args = append(args, options.PlanFilePath)
 	}
@@ -61,38 +59,4 @@ func ShowWithStructContextE(t testing.TestingT, ctx context.Context, options *Op
 	}
 
 	return planStruct, nil
-}
-
-// Show calls terraform show in json mode with the given options and returns stdout from the command. If
-// PlanFilePath is set on the options, this will show the plan file. Otherwise, this will show the current state of the
-// terraform module at options.TerraformDir. This will fail the test if there is an error in the command.
-//
-// Deprecated: Use [ShowContext] instead.
-func Show(t testing.TestingT, options *Options) string {
-	return ShowContext(t, context.Background(), options)
-}
-
-// ShowE calls terraform show in json mode with the given options and returns stdout from the command. If
-// PlanFilePath is set on the options, this will show the plan file. Otherwise, this will show the current state of the
-// terraform module at options.TerraformDir.
-//
-// Deprecated: Use [ShowContextE] instead.
-func ShowE(t testing.TestingT, options *Options) (string, error) {
-	return ShowContextE(t, context.Background(), options)
-}
-
-// ShowWithStruct calls terraform show in json mode with the given options, parses the json result into a
-// PlanStruct, and returns it. This will fail the test if there is an error in the command.
-//
-// Deprecated: Use [ShowWithStructContext] instead.
-func ShowWithStruct(t testing.TestingT, options *Options) *PlanStruct {
-	return ShowWithStructContext(t, context.Background(), options)
-}
-
-// ShowWithStructE calls terraform show in json mode with the given options, parses the json result into a
-// PlanStruct, and returns it.
-//
-// Deprecated: Use [ShowWithStructContextE] instead.
-func ShowWithStructE(t testing.TestingT, options *Options) (*PlanStruct, error) {
-	return ShowWithStructContextE(t, context.Background(), options)
 }

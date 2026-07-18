@@ -33,23 +33,3 @@ func RunContextE(t testing.TestingT, ctx context.Context, options *Options, tgAr
 
 	return runTerragruntCommandE(t, ctx, options, "run", args...)
 }
-
-// Run runs terragrunt run [tgArgs...] -- [tfArgs...] with the given options and returns stdout/stderr.
-// This is a generic wrapper that allows running any OpenTofu/Terraform command through terragrunt run.
-// The -- separator disambiguates Terragrunt flags from OpenTofu/Terraform flags.
-// The OpenTofu/Terraform command (e.g. "apply") should be the first element of tfArgs.
-//
-// Deprecated: Use [RunContext] instead.
-func Run(t testing.TestingT, options *Options, tgArgs []string, tfArgs []string) string {
-	return RunContext(t, context.Background(), options, tgArgs, tfArgs)
-}
-
-// RunE runs terragrunt run [tgArgs...] -- [tfArgs...] with the given options and returns stdout/stderr.
-// This is a generic wrapper that allows running any OpenTofu/Terraform command through terragrunt run.
-// The -- separator disambiguates Terragrunt flags from OpenTofu/Terraform flags.
-// The OpenTofu/Terraform command (e.g. "apply") should be the first element of tfArgs.
-//
-// Deprecated: Use [RunContextE] instead.
-func RunE(t testing.TestingT, options *Options, tgArgs []string, tfArgs []string) (string, error) {
-	return RunContextE(t, context.Background(), options, tgArgs, tfArgs)
-}

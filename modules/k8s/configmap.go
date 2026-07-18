@@ -1,4 +1,4 @@
-package k8s //nolint:dupl // structural pattern for k8s resource operations
+package k8s
 
 import (
 	"context"
@@ -35,24 +35,6 @@ func GetConfigMapContext(t testing.TestingT, ctx context.Context, options *Kubec
 	require.NoError(t, err)
 
 	return configMap
-}
-
-// GetConfigMap returns a Kubernetes configmap resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions. This will fail the test if there is an error.
-//
-// Deprecated: Use [GetConfigMapContext] instead.
-func GetConfigMap(t testing.TestingT, options *KubectlOptions, configMapName string) *corev1.ConfigMap {
-	t.Helper()
-
-	return GetConfigMapContext(t, context.Background(), options, configMapName)
-}
-
-// GetConfigMapE returns a Kubernetes configmap resource in the provided namespace with the given name. The namespace used
-// is the one provided in the KubectlOptions.
-//
-// Deprecated: Use [GetConfigMapContextE] instead.
-func GetConfigMapE(t testing.TestingT, options *KubectlOptions, configMapName string) (*corev1.ConfigMap, error) {
-	return GetConfigMapContextE(t, context.Background(), options, configMapName)
 }
 
 // WaitUntilConfigMapAvailableContextE waits until the configmap is present on the cluster in cases where it is not
@@ -93,13 +75,4 @@ func WaitUntilConfigMapAvailableContext(t testing.TestingT, ctx context.Context,
 	t.Helper()
 	err := WaitUntilConfigMapAvailableContextE(t, ctx, options, configMapName, retries, sleepBetweenRetries)
 	require.NoError(t, err)
-}
-
-// WaitUntilConfigMapAvailable waits until the configmap is present on the cluster in cases where it is not immediately
-// available (for example, when using ClusterIssuer to request a certificate).
-//
-// Deprecated: Use [WaitUntilConfigMapAvailableContext] instead.
-func WaitUntilConfigMapAvailable(t testing.TestingT, options *KubectlOptions, configMapName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilConfigMapAvailableContext(t, context.Background(), options, configMapName, retries, sleepBetweenRetries)
 }

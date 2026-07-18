@@ -1,4 +1,4 @@
-package k8s //nolint:dupl // structural pattern for k8s resource operations
+package k8s
 
 import (
 	"context"
@@ -41,27 +41,6 @@ func ListReplicaSetsContext(t testing.TestingT, ctx context.Context, options *Ku
 	return replicaset
 }
 
-// ListReplicaSets will look for replicasets in the given namespace that match the given filters and return them. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [ListReplicaSetsContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListReplicaSets(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []appsv1.ReplicaSet {
-	t.Helper()
-
-	return ListReplicaSetsContext(t, context.Background(), options, filters)
-}
-
-// ListReplicaSetsE will look for replicasets in the given namespace that match the given filters and return them.
-//
-// Deprecated: Use [ListReplicaSetsContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListReplicaSetsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]appsv1.ReplicaSet, error) {
-	return ListReplicaSetsContextE(t, context.Background(), options, filters)
-}
-
 // GetReplicaSetContextE returns a Kubernetes replicaset resource in the provided namespace with the given name.
 // The ctx parameter supports cancellation and timeouts.
 func GetReplicaSetContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, replicaSetName string) (*appsv1.ReplicaSet, error) {
@@ -82,21 +61,4 @@ func GetReplicaSetContext(t testing.TestingT, ctx context.Context, options *Kube
 	require.NoError(t, err)
 
 	return replicaset
-}
-
-// GetReplicaSet returns a Kubernetes replicaset resource in the provided namespace with the given name. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [GetReplicaSetContext] instead.
-func GetReplicaSet(t testing.TestingT, options *KubectlOptions, replicaSetName string) *appsv1.ReplicaSet {
-	t.Helper()
-
-	return GetReplicaSetContext(t, context.Background(), options, replicaSetName)
-}
-
-// GetReplicaSetE returns a Kubernetes replicaset resource in the provided namespace with the given name.
-//
-// Deprecated: Use [GetReplicaSetContextE] instead.
-func GetReplicaSetE(t testing.TestingT, options *KubectlOptions, replicaSetName string) (*appsv1.ReplicaSet, error) {
-	return GetReplicaSetContextE(t, context.Background(), options, replicaSetName)
 }

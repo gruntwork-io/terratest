@@ -58,33 +58,12 @@ func GetDefaultNsgRulesClientContext(t testing.TestingT, ctx context.Context, su
 	return client
 }
 
-// GetDefaultNsgRulesClient returns a rules client which can be used to read the list of *default* security rules
-// defined on a network security group. Note that the "default" rules are those provided implicitly
-// by the Azure platform.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetDefaultNsgRulesClientContext] instead.
-func GetDefaultNsgRulesClient(t testing.TestingT, subscriptionID string) *armnetwork.DefaultSecurityRulesClient {
-	t.Helper()
-
-	return GetDefaultNsgRulesClientContext(t, context.Background(), subscriptionID) //nolint:staticcheck
-}
-
 // GetDefaultNsgRulesClientContextE returns a rules client which can be used to read the list of *default* security rules
 // defined on a network security group. Note that the "default" rules are those provided implicitly
 // by the Azure platform.
 // The ctx parameter supports cancellation and timeouts.
 func GetDefaultNsgRulesClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
 	return CreateNsgDefaultRulesClientContextE(ctx, subscriptionID)
-}
-
-// GetDefaultNsgRulesClientE returns a rules client which can be used to read the list of *default* security rules
-// defined on a network security group. Note that the "default" rules are those provided implicitly
-// by the Azure platform.
-//
-// Deprecated: Use [GetDefaultNsgRulesClientContextE] instead.
-func GetDefaultNsgRulesClientE(subscriptionID string) (*armnetwork.DefaultSecurityRulesClient, error) {
-	return GetDefaultNsgRulesClientContextE(context.Background(), subscriptionID)
 }
 
 // GetCustomNsgRulesClientContext returns a rules client which can be used to read the list of *custom* security rules
@@ -101,52 +80,12 @@ func GetCustomNsgRulesClientContext(t testing.TestingT, ctx context.Context, sub
 	return client
 }
 
-// GetCustomNsgRulesClient returns a rules client which can be used to read the list of *custom* security rules
-// defined on a network security group. Note that the "custom" rules are those defined by
-// end users.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetCustomNsgRulesClientContext] instead.
-func GetCustomNsgRulesClient(t testing.TestingT, subscriptionID string) *armnetwork.SecurityRulesClient {
-	t.Helper()
-
-	return GetCustomNsgRulesClientContext(t, context.Background(), subscriptionID) //nolint:staticcheck
-}
-
 // GetCustomNsgRulesClientContextE returns a rules client which can be used to read the list of *custom* security rules
 // defined on a network security group. Note that the "custom" rules are those defined by
 // end users.
 // The ctx parameter supports cancellation and timeouts.
 func GetCustomNsgRulesClientContextE(ctx context.Context, subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
 	return CreateNsgCustomRulesClientContextE(ctx, subscriptionID)
-}
-
-// GetCustomNsgRulesClientE returns a rules client which can be used to read the list of *custom* security rules
-// defined on a network security group. Note that the "custom" rules are those defined by
-// end users.
-//
-// Deprecated: Use [GetCustomNsgRulesClientContextE] instead.
-func GetCustomNsgRulesClientE(subscriptionID string) (*armnetwork.SecurityRulesClient, error) {
-	return GetCustomNsgRulesClientContextE(context.Background(), subscriptionID)
-}
-
-// GetAllNSGRules returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
-// from a network security group.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetAllNSGRulesContext] instead.
-func GetAllNSGRules(t testing.TestingT, resourceGroupName, nsgName, subscriptionID string) NsgRuleSummaryList {
-	t.Helper()
-
-	return GetAllNSGRulesContext(t, context.Background(), resourceGroupName, nsgName, subscriptionID)
-}
-
-// GetAllNSGRulesE returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
-// from a network security group.
-//
-// Deprecated: Use [GetAllNSGRulesContextE] instead.
-func GetAllNSGRulesE(resourceGroupName, nsgName, subscriptionID string) (NsgRuleSummaryList, error) {
-	return GetAllNSGRulesContextE(context.Background(), resourceGroupName, nsgName, subscriptionID)
 }
 
 // GetAllNSGRulesContext returns an NsgRuleSummaryList instance containing the combined "default" and "custom" rules
@@ -323,24 +262,20 @@ func portRangeAllowsPort(portRange string, port string) (bool, error) {
 		return true, nil
 	}
 
-	// Decode the provided port range
 	low, high, parseErr := parsePortRangeString(portRange)
 	if parseErr != nil {
 		return false, parseErr
 	}
 
-	// Decode user-provided port
 	portAsInt, parseErr := strconv.ParseInt(port, 10, 16)
 	if (parseErr != nil) && (port != "*") {
 		return false, parseErr
 	}
 
-	// If the user wants to check "all", make sure we parsed input range to include all ports.
 	if (port == "*") && (low == 0) && (high == allPortsMax) {
 		return true, nil
 	}
 
-	// Evaluate and return
 	return ((uint16(portAsInt) >= low) && (uint16(portAsInt) <= high)), nil
 }
 
@@ -348,12 +283,11 @@ func portRangeAllowsPort(portRange string, port string) (bool, error) {
 // a tuple in [low, hi] form. Note that if a single digit is supplied, both members of the
 // return tuple will be the same value (e.g., "22" returns (22, 22))
 func parsePortRangeString(rangeString string) (uint16, uint16, error) {
-	// An asterisk means all ports
+
 	if rangeString == "*" {
 		return uint16(0), uint16(allPortsMax), nil
 	}
 
-	// Check for range string that contains hyphen separator
 	if !strings.Contains(rangeString, "-") {
 		val, parseErr := strconv.ParseInt(rangeString, 10, 16)
 		if parseErr != nil {
@@ -363,32 +297,25 @@ func parsePortRangeString(rangeString string) (uint16, uint16, error) {
 		return uint16(val), uint16(val), nil
 	}
 
-	// Split the range into parts and validate
 	parts := strings.Split(rangeString, "-")
 
 	if len(parts) != portRangeParts {
 		return 0, 0, errors.New("invalid port range specified; must be of the format '{low port}-{high port}'")
 	}
 
-	// Assume the low port is listed first; parse it
 	lowVal, parseErr := strconv.ParseInt(parts[0], 10, 16)
 	if parseErr != nil {
 		return 0, 0, parseErr
 	}
 
-	// Assume the hi port is listed first; parse it
 	highVal, parseErr := strconv.ParseInt(parts[1], 10, 16)
 	if parseErr != nil {
 		return 0, 0, parseErr
 	}
 
-	// Normalize ordering in the case that low and hi were reversed.
-	// This should _never_ happen, as the Azure API's won't allow it, but
-	// we shouldn't fail if it's the case.
 	if lowVal > highVal {
 		lowVal, highVal = highVal, lowVal
 	}
 
-	// Return values
 	return uint16(lowVal), uint16(highVal), nil
 }

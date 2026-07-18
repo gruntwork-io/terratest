@@ -11,7 +11,7 @@ import (
 
 // Reference for region list: https://azure.microsoft.com/en-us/global-infrastructure/locations/
 var stableRegions = []string{
-	// Americas
+
 	"centralus",
 	"eastus",
 	"eastus2",
@@ -24,17 +24,13 @@ var stableRegions = []string{
 	"canadaeast",
 	"brazilsouth",
 
-	// Europe
 	"northeurope",
 	"westeurope",
 	"francecentral",
 	"francesouth",
 	"uksouth",
 	"ukwest",
-	// "germanycentral", // Shows as active on Azure website, but not from API
-	// "germanynortheast", // Shows as active on Azure website, but not from API
 
-	// Asia Pacific
 	"eastasia",
 	"southeastasia",
 	"australiacentral",
@@ -53,7 +49,6 @@ var stableRegions = []string{
 	"koreacentral",
 	"koreasouth",
 
-	// Middle East and Africa
 	"southafricanorth",
 	"southafricawest",
 	"uaecentral",
@@ -79,20 +74,7 @@ func GetRandomStableRegionContext(t testing.TestingT, ctx context.Context, appro
 		regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
 	}
 
-	return GetRandomRegionContext(t, ctx, regionsToPickFrom, nil, subscriptionID) //nolint:staticcheck
-}
-
-// GetRandomStableRegion gets a randomly chosen Azure region that is considered stable. Like GetRandomRegion, you can
-// further restrict the stable region list using approvedRegions and forbiddenRegions. We consider stable regions to be
-// those that have been around for at least 1 year.
-// Note that regions in the approvedRegions list that are not considered stable are ignored.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetRandomStableRegionContext] instead.
-func GetRandomStableRegion(t testing.TestingT, approvedRegions []string, forbiddenRegions []string, subscriptionID string) string {
-	t.Helper()
-
-	return GetRandomStableRegionContext(t, context.Background(), approvedRegions, forbiddenRegions, subscriptionID)
+	return GetRandomRegionContext(t, ctx, regionsToPickFrom, nil, subscriptionID)
 }
 
 // GetRandomRegionContext gets a randomly chosen Azure region.
@@ -110,25 +92,13 @@ func GetRandomRegionContext(t testing.TestingT, ctx context.Context, approvedReg
 	return region
 }
 
-// GetRandomRegion gets a randomly chosen Azure region. If approvedRegions is not empty, this will be a region from the approvedRegions
-// list; otherwise, this method will fetch the latest list of regions from the Azure APIs and pick one of those. If
-// forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetRandomRegionContext] instead.
-func GetRandomRegion(t testing.TestingT, approvedRegions []string, forbiddenRegions []string, subscriptionID string) string {
-	t.Helper()
-
-	return GetRandomRegionContext(t, context.Background(), approvedRegions, forbiddenRegions, subscriptionID) //nolint:staticcheck
-}
-
 // GetRandomRegionContextE gets a randomly chosen Azure region.
 // If approvedRegions is not empty, this will be a region from the approvedRegions list; otherwise,
 // this method will fetch the latest list of regions from the Azure APIs and pick one of those.
 // If forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
 // The ctx parameter supports cancellation and timeouts.
 func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRegions []string, forbiddenRegions []string, subscriptionID string) (string, error) {
-	// Validate Azure subscription ID
+
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return "", err
@@ -151,15 +121,6 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRe
 	return region, nil
 }
 
-// GetRandomRegionE gets a randomly chosen Azure region. If approvedRegions is not empty, this will be a region from the approvedRegions
-// list; otherwise, this method will fetch the latest list of regions from the Azure APIs and pick one of those. If
-// forbiddenRegions is not empty, this method will make sure the returned region is not in the forbiddenRegions list.
-//
-// Deprecated: Use [GetRandomRegionContextE] instead.
-func GetRandomRegionE(t testing.TestingT, approvedRegions []string, forbiddenRegions []string, subscriptionID string) (string, error) {
-	return GetRandomRegionContextE(t, context.Background(), approvedRegions, forbiddenRegions, subscriptionID)
-}
-
 // GetAllAzureRegionsContext gets the list of Azure regions available in this subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -172,26 +133,15 @@ func GetAllAzureRegionsContext(t testing.TestingT, ctx context.Context, subscrip
 	return out
 }
 
-// GetAllAzureRegions gets the list of Azure regions available in this subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetAllAzureRegionsContext] instead.
-func GetAllAzureRegions(t testing.TestingT, subscriptionID string) []string {
-	t.Helper()
-
-	return GetAllAzureRegionsContext(t, context.Background(), subscriptionID)
-}
-
 // GetAllAzureRegionsContextE gets the list of Azure regions available in this subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscriptionID string) ([]string, error) {
-	// Validate Azure subscription ID
+
 	subscriptionID, err := getTargetAzureSubscription(subscriptionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Setup Subscription client
 	subscriptionClient, err := CreateSubscriptionsClientContextE(ctx)
 	if err != nil {
 		return nil, err
@@ -217,11 +167,4 @@ func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscri
 	}
 
 	return regions, nil
-}
-
-// GetAllAzureRegionsE gets the list of Azure regions available in this subscription.
-//
-// Deprecated: Use [GetAllAzureRegionsContextE] instead.
-func GetAllAzureRegionsE(t testing.TestingT, subscriptionID string) ([]string, error) {
-	return GetAllAzureRegionsContextE(t, context.Background(), subscriptionID)
 }

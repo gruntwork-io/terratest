@@ -76,26 +76,6 @@ func DNSLookupContextE(t testing.TestingT, ctx context.Context, query DNSQuery, 
 	return nil, err
 }
 
-// DNSLookup sends a DNS query for the specified record and type using the given resolvers.
-// Fails on any error.
-// Supported record types: A, AAAA, CNAME, MX, NS, TXT
-//
-// Deprecated: Use [DNSLookupContext] instead.
-func DNSLookup(t testing.TestingT, query DNSQuery, resolvers []string) DNSAnswers {
-	return DNSLookupContext(t, context.Background(), query, resolvers)
-}
-
-// DNSLookupE sends a DNS query for the specified record and type using the given resolvers.
-// Returns [QueryTypeError] when record type is not supported.
-// Returns [NoResolversError] when no resolvers are provided.
-// Returns any underlying error.
-// Supported record types: A, AAAA, CNAME, MX, NS, TXT
-//
-// Deprecated: Use [DNSLookupContextE] instead.
-func DNSLookupE(t testing.TestingT, query DNSQuery, resolvers []string) (DNSAnswers, error) {
-	return DNSLookupContextE(t, context.Background(), query, resolvers)
-}
-
 // DNSFindNameserversContext tries to find the NS record for the given FQDN, iterating down the domain hierarchy
 // until it finds the NS records and returns them. Fails if there's any error or no NS record is found up to the apex domain.
 func DNSFindNameserversContext(t testing.TestingT, ctx context.Context, fqdn string, resolvers []string) []string {
@@ -167,22 +147,6 @@ func DNSFindNameserversContextE(t testing.TestingT, ctx context.Context, fqdn st
 	return nil, &NSNotFoundError{FQDN: fqdn, Nameserver: domain}
 }
 
-// DNSFindNameservers tries to find the NS record for the given FQDN, iterating down the domain hierarchy
-// until it finds the NS records and returns them. Fails if there's any error or no NS record is found up to the apex domain.
-//
-// Deprecated: Use [DNSFindNameserversContext] instead.
-func DNSFindNameservers(t testing.TestingT, fqdn string, resolvers []string) []string {
-	return DNSFindNameserversContext(t, context.Background(), fqdn, resolvers)
-}
-
-// DNSFindNameserversE tries to find the NS record for the given FQDN, iterating down the domain hierarchy
-// until it finds the NS records and returns them. Returns [NSNotFoundError] if the apex domain is reached with no result.
-//
-// Deprecated: Use [DNSFindNameserversContextE] instead.
-func DNSFindNameserversE(t testing.TestingT, fqdn string, resolvers []string) ([]string, error) {
-	return DNSFindNameserversContextE(t, context.Background(), fqdn, resolvers)
-}
-
 // DNSLookupAuthoritativeContext gets authoritative answers for the specified record and type.
 // If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
 // Fails on any error from [DNSLookupAuthoritativeContextE].
@@ -204,25 +168,6 @@ func DNSLookupAuthoritativeContextE(t testing.TestingT, ctx context.Context, que
 	}
 
 	return DNSLookupContextE(t, ctx, query, nameservers)
-}
-
-// DNSLookupAuthoritative gets authoritative answers for the specified record and type.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Fails on any error from [DNSLookupAuthoritativeContextE].
-//
-// Deprecated: Use [DNSLookupAuthoritativeContext] instead.
-func DNSLookupAuthoritative(t testing.TestingT, query DNSQuery, resolvers []string) DNSAnswers {
-	return DNSLookupAuthoritativeContext(t, context.Background(), query, resolvers)
-}
-
-// DNSLookupAuthoritativeE gets authoritative answers for the specified record and type.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Returns [NotFoundError] when no answer found in any authoritative nameserver.
-// Returns any underlying error from individual lookups.
-//
-// Deprecated: Use [DNSLookupAuthoritativeContextE] instead.
-func DNSLookupAuthoritativeE(t testing.TestingT, query DNSQuery, resolvers []string) (DNSAnswers, error) {
-	return DNSLookupAuthoritativeContextE(t, context.Background(), query, resolvers)
 }
 
 // DNSLookupAuthoritativeWithRetryContext repeatedly gets authoritative answers for the specified record and type
@@ -250,27 +195,6 @@ func DNSLookupAuthoritativeWithRetryContextE(t testing.TestingT, ctx context.Con
 		})
 
 	return res.(DNSAnswers), err
-}
-
-// DNSLookupAuthoritativeWithRetry repeatedly gets authoritative answers for the specified record and type
-// until ANY of the authoritative nameservers found replies with a non-empty answer,
-// or until max retries has been exceeded.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Fails on any error from [DNSLookupAuthoritativeWithRetryContextE].
-//
-// Deprecated: Use [DNSLookupAuthoritativeWithRetryContext] instead.
-func DNSLookupAuthoritativeWithRetry(t testing.TestingT, query DNSQuery, resolvers []string, maxRetries int, sleepBetweenRetries time.Duration) DNSAnswers {
-	return DNSLookupAuthoritativeWithRetryContext(t, context.Background(), query, resolvers, maxRetries, sleepBetweenRetries)
-}
-
-// DNSLookupAuthoritativeWithRetryE repeatedly gets authoritative answers for the specified record and type
-// until ANY of the authoritative nameservers found replies with a non-empty answer,
-// or until max retries has been exceeded.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-//
-// Deprecated: Use [DNSLookupAuthoritativeWithRetryContextE] instead.
-func DNSLookupAuthoritativeWithRetryE(t testing.TestingT, query DNSQuery, resolvers []string, maxRetries int, sleepBetweenRetries time.Duration) (DNSAnswers, error) {
-	return DNSLookupAuthoritativeWithRetryContextE(t, context.Background(), query, resolvers, maxRetries, sleepBetweenRetries)
 }
 
 // DNSLookupAuthoritativeAllContext gets authoritative answers for the specified record and type.
@@ -315,27 +239,6 @@ func DNSLookupAuthoritativeAllContextE(t testing.TestingT, ctx context.Context, 
 	return answers, nil
 }
 
-// DNSLookupAuthoritativeAll gets authoritative answers for the specified record and type.
-// All the authoritative nameservers found must give the same answers.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Fails on any error from [DNSLookupAuthoritativeAllContextE].
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllContext] instead.
-func DNSLookupAuthoritativeAll(t testing.TestingT, query DNSQuery, resolvers []string) DNSAnswers {
-	return DNSLookupAuthoritativeAllContext(t, context.Background(), query, resolvers)
-}
-
-// DNSLookupAuthoritativeAllE gets authoritative answers for the specified record and type.
-// All the authoritative nameservers found must give the same answers.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Returns [InconsistentAuthoritativeError] when any authoritative nameserver gives a different answer.
-// Returns any underlying error.
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllContextE] instead.
-func DNSLookupAuthoritativeAllE(t testing.TestingT, query DNSQuery, resolvers []string) (DNSAnswers, error) {
-	return DNSLookupAuthoritativeAllContextE(t, context.Background(), query, resolvers)
-}
-
 // DNSLookupAuthoritativeAllWithRetryContext repeatedly sends DNS requests for the specified record and type,
 // until ALL authoritative nameservers reply with the exact same non-empty answers or until max retries has been exceeded.
 // If defined, uses the given resolvers instead of the default system ones to find the authoritative nameservers.
@@ -357,25 +260,6 @@ func DNSLookupAuthoritativeAllWithRetryContextE(t testing.TestingT, ctx context.
 		})
 
 	return res.(DNSAnswers), err
-}
-
-// DNSLookupAuthoritativeAllWithRetry repeatedly sends DNS requests for the specified record and type,
-// until ALL authoritative nameservers reply with the exact same non-empty answers or until max retries has been exceeded.
-// If defined, uses the given resolvers instead of the default system ones to find the authoritative nameservers.
-// Fails when max retries has been exceeded.
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllWithRetryContext] instead.
-func DNSLookupAuthoritativeAllWithRetry(t testing.TestingT, query DNSQuery, resolvers []string, maxRetries int, sleepBetweenRetries time.Duration) {
-	DNSLookupAuthoritativeAllWithRetryContext(t, context.Background(), query, resolvers, maxRetries, sleepBetweenRetries)
-}
-
-// DNSLookupAuthoritativeAllWithRetryE repeatedly sends DNS requests for the specified record and type,
-// until ALL authoritative nameservers reply with the exact same non-empty answers or until max retries has been exceeded.
-// If defined, uses the given resolvers instead of the default system ones to find the authoritative nameservers.
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllWithRetryContextE] instead.
-func DNSLookupAuthoritativeAllWithRetryE(t testing.TestingT, query DNSQuery, resolvers []string, maxRetries int, sleepBetweenRetries time.Duration) (DNSAnswers, error) {
-	return DNSLookupAuthoritativeAllWithRetryContextE(t, context.Background(), query, resolvers, maxRetries, sleepBetweenRetries)
 }
 
 // DNSLookupAuthoritativeAllWithValidationContext gets authoritative answers for the specified record and type.
@@ -407,27 +291,6 @@ func DNSLookupAuthoritativeAllWithValidationContextE(t testing.TestingT, ctx con
 	return nil
 }
 
-// DNSLookupAuthoritativeAllWithValidation gets authoritative answers for the specified record and type.
-// All the authoritative nameservers found must give the same answers and match the expectedAnswers.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Fails on any underlying error from [DNSLookupAuthoritativeAllWithValidationContextE].
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllWithValidationContext] instead.
-func DNSLookupAuthoritativeAllWithValidation(t testing.TestingT, query DNSQuery, resolvers []string, expectedAnswers DNSAnswers) {
-	DNSLookupAuthoritativeAllWithValidationContext(t, context.Background(), query, resolvers, expectedAnswers)
-}
-
-// DNSLookupAuthoritativeAllWithValidationE gets authoritative answers for the specified record and type.
-// All the authoritative nameservers found must give the same answers and match the expectedAnswers.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Returns [ValidationError] when expectedAnswers differ from the obtained ones.
-// Returns any underlying error from [DNSLookupAuthoritativeAllContextE].
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllWithValidationContextE] instead.
-func DNSLookupAuthoritativeAllWithValidationE(t testing.TestingT, query DNSQuery, resolvers []string, expectedAnswers DNSAnswers) error {
-	return DNSLookupAuthoritativeAllWithValidationContextE(t, context.Background(), query, resolvers, expectedAnswers)
-}
-
 // DNSLookupAuthoritativeAllWithValidationRetryContext repeatedly gets authoritative answers for the specified record and type
 // until ALL the authoritative nameservers found give the same answers and match the expectedAnswers,
 // or until max retries has been exceeded.
@@ -451,27 +314,6 @@ func DNSLookupAuthoritativeAllWithValidationRetryContextE(t testing.TestingT, ct
 		})
 
 	return err
-}
-
-// DNSLookupAuthoritativeAllWithValidationRetry repeatedly gets authoritative answers for the specified record and type
-// until ALL the authoritative nameservers found give the same answers and match the expectedAnswers,
-// or until max retries has been exceeded.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-// Fails when max retries has been exceeded.
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllWithValidationRetryContext] instead.
-func DNSLookupAuthoritativeAllWithValidationRetry(t testing.TestingT, query DNSQuery, resolvers []string, expectedAnswers DNSAnswers, maxRetries int, sleepBetweenRetries time.Duration) {
-	DNSLookupAuthoritativeAllWithValidationRetryContext(t, context.Background(), query, resolvers, expectedAnswers, maxRetries, sleepBetweenRetries)
-}
-
-// DNSLookupAuthoritativeAllWithValidationRetryE repeatedly gets authoritative answers for the specified record and type
-// until ALL the authoritative nameservers found give the same answers and match the expectedAnswers,
-// or until max retries has been exceeded.
-// If resolvers are defined, uses them instead of the default system ones to find the authoritative nameservers.
-//
-// Deprecated: Use [DNSLookupAuthoritativeAllWithValidationRetryContextE] instead.
-func DNSLookupAuthoritativeAllWithValidationRetryE(t testing.TestingT, query DNSQuery, resolvers []string, expectedAnswers DNSAnswers, maxRetries int, sleepBetweenRetries time.Duration) error {
-	return DNSLookupAuthoritativeAllWithValidationRetryContextE(t, context.Background(), query, resolvers, expectedAnswers, maxRetries, sleepBetweenRetries)
 }
 
 // dnsLookupContext sends a DNS query for the specified record and type using the given resolver.

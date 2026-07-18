@@ -28,30 +28,10 @@ type Command struct {
 	Args       []string          // The args to pass to the command
 }
 
-// RunCommand runs a shell command and redirects its stdout and stderr to the stdout of the atomic script itself. If
-// there are any errors, fail the test.
-//
-// Deprecated: Use RunCommandContext instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommand(t testing.TestingT, command Command) {
-	RunCommandContext(t, context.Background(), &command)
-}
-
 // RunCommandContext is like RunCommand but includes a context.
 func RunCommandContext(t testing.TestingT, ctx context.Context, command *Command) {
 	err := RunCommandContextE(t, ctx, command)
 	require.NoError(t, err)
-}
-
-// RunCommandE runs a shell command and redirects its stdout and stderr to the stdout of the atomic script itself. Any
-// returned error will be of type ErrWithCmdOutput, containing the output streams and the underlying error.
-//
-// Deprecated: Use RunCommandContextE instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommandE(t testing.TestingT, command Command) error {
-	return RunCommandContextE(t, context.Background(), &command)
 }
 
 // RunCommandContextE is like RunCommandE but includes a context.
@@ -64,33 +44,12 @@ func RunCommandContextE(t testing.TestingT, ctx context.Context, command *Comman
 	return nil
 }
 
-// RunCommandAndGetOutput runs a shell command and returns its stdout and stderr as a string. The stdout and stderr of
-// that command will also be logged with Command.Log to make debugging easier. If there are any errors, fail the test.
-//
-// Deprecated: Use RunCommandContextAndGetOutput instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommandAndGetOutput(t testing.TestingT, command Command) string {
-	return RunCommandContextAndGetOutput(t, context.Background(), &command)
-}
-
 // RunCommandContextAndGetOutput is like RunCommandAndGetOutput but includes a context.
 func RunCommandContextAndGetOutput(t testing.TestingT, ctx context.Context, command *Command) string {
 	out, err := RunCommandContextAndGetOutputE(t, ctx, command)
 	require.NoError(t, err)
 
 	return out
-}
-
-// RunCommandAndGetOutputE runs a shell command and returns its stdout and stderr as a string. The stdout and stderr of
-// that command will also be logged with Command.Log to make debugging easier. Any returned error will be of type
-// ErrWithCmdOutput, containing the output streams and the underlying error.
-//
-// Deprecated: Use RunCommandContextAndGetOutputE instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommandAndGetOutputE(t testing.TestingT, command Command) (string, error) {
-	return RunCommandContextAndGetOutputE(t, context.Background(), &command)
 }
 
 // RunCommandContextAndGetOutputE is like RunCommandAndGetOutputE but includes a context.
@@ -103,34 +62,12 @@ func RunCommandContextAndGetOutputE(t testing.TestingT, ctx context.Context, com
 	return output.Combined(), nil
 }
 
-// RunCommandAndGetStdOut runs a shell command and returns solely its stdout (but not stderr) as a string. The stdout and
-// stderr of that command will also be logged with Command.Log to make debugging easier. If there are any errors, fail
-// the test.
-//
-// Deprecated: Use RunCommandContextAndGetStdOut instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommandAndGetStdOut(t testing.TestingT, command Command) string {
-	return RunCommandContextAndGetStdOut(t, context.Background(), &command)
-}
-
 // RunCommandContextAndGetStdOut is like RunCommandAndGetStdOut but includes a context.
 func RunCommandContextAndGetStdOut(t testing.TestingT, ctx context.Context, command *Command) string {
 	output, err := RunCommandContextAndGetStdOutE(t, ctx, command)
 	require.NoError(t, err)
 
 	return output
-}
-
-// RunCommandAndGetStdOutE runs a shell command and returns solely its stdout (but not stderr) as a string. The stdout
-// and stderr of that command will also be printed to the stdout and stderr of this Go program to make debugging easier.
-// Any returned error will be of type ErrWithCmdOutput, containing the output streams and the underlying error.
-//
-// Deprecated: Use RunCommandContextAndGetStdOutE instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommandAndGetStdOutE(t testing.TestingT, command Command) (string, error) {
-	return RunCommandContextAndGetStdOutE(t, context.Background(), &command)
 }
 
 // RunCommandContextAndGetStdOutE is like RunCommandAndGetStdOutE but includes a context.
@@ -143,34 +80,12 @@ func RunCommandContextAndGetStdOutE(t testing.TestingT, ctx context.Context, com
 	return output.Stdout(), nil
 }
 
-// RunCommandAndGetStdOutErr runs a shell command and returns solely its stdout and stderr as a string. The stdout and
-// stderr of that command will also be logged with Command.Log to make debugging easier. If there are any errors, fail
-// the test.
-//
-// Deprecated: Use RunCommandContextAndGetStdOutErr instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommandAndGetStdOutErr(t testing.TestingT, command Command) (stdout string, stderr string) {
-	return RunCommandContextAndGetStdOutErr(t, context.Background(), &command)
-}
-
 // RunCommandContextAndGetStdOutErr is like RunCommandAndGetStdOutErr but includes a context.
 func RunCommandContextAndGetStdOutErr(t testing.TestingT, ctx context.Context, command *Command) (stdout string, stderr string) {
 	stdout, stderr, err := RunCommandContextAndGetStdOutErrE(t, ctx, command)
 	require.NoError(t, err)
 
 	return stdout, stderr
-}
-
-// RunCommandAndGetStdOutErrE runs a shell command and returns solely its stdout and stderr as a string. The stdout
-// and stderr of that command will also be printed to the stdout and stderr of this Go program to make debugging easier.
-// Any returned error will be of type ErrWithCmdOutput, containing the output streams and the underlying error.
-//
-// Deprecated: Use RunCommandContextAndGetStdOutErrE instead.
-//
-//nolint:gocritic // hugeParam - changing to pointer would break public API
-func RunCommandAndGetStdOutErrE(t testing.TestingT, command Command) (stdout string, stderr string, err error) {
-	return RunCommandContextAndGetStdOutErrE(t, context.Background(), &command)
 }
 
 // RunCommandContextAndGetStdOutErrE is like RunCommandAndGetStdOutErrE but includes a context.
@@ -242,7 +157,7 @@ func readStdoutAndStderr(t testing.TestingT, log *logger.Logger, stdout, stderr 
 
 	wg := &sync.WaitGroup{}
 
-	wg.Add(2) //nolint:mnd // 2 goroutines: one for stdout, one for stderr
+	wg.Add(2)
 
 	var stdoutErr, stderrErr error
 
@@ -280,24 +195,12 @@ func readData(t testing.TestingT, log *logger.Logger, reader *bufio.Reader, writ
 	for {
 		line, readErr = reader.ReadString('\n')
 
-		// remove newline, our output is in a slice,
-		// one element per line.
 		line = strings.TrimSuffix(line, "\n")
 
-		// only return early if the line does not have
-		// any contents. We could have a line that does
-		// not not have a newline before io.EOF, we still
-		// need to add it to the output.
 		if len(line) == 0 && readErr == io.EOF {
 			break
 		}
 
-		// logger.Logger has a Logf method, but not a Log method.
-		// We have to use the format string indirection to avoid
-		// interpreting any possible formatting characters in
-		// the line.
-		//
-		// See https://github.com/gruntwork-io/terratest/issues/982.
 		log.Logf(t, "%s", line)
 
 		if _, err := writer.WriteString(line); err != nil {
@@ -327,12 +230,7 @@ func GetExitCodeForRunCommandError(err error) (int, error) {
 	// http://stackoverflow.com/a/10385867/483528
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
-		// The program has exited with an exit code != 0
 
-		// This works on both Unix and Windows. Although package
-		// syscall is generally platform dependent, WaitStatus is
-		// defined for both Unix and Windows and in both cases has
-		// an ExitStatus() method with the same signature.
 		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
 			return status.ExitStatus(), nil
 		}

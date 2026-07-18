@@ -69,11 +69,6 @@ type SCPDownloadOptions struct {
 	MaxFileSizeMB int
 }
 
-// ScpDownloadOptions is a backwards-compatible alias for [SCPDownloadOptions].
-//
-// Deprecated: Use [SCPDownloadOptions] instead.
-type ScpDownloadOptions = SCPDownloadOptions //nolint:staticcheck,revive // preserving deprecated type name
-
 // GetPort returns the port to use for SSH connections. If [Host.CustomPort] is set,
 // it returns that value; otherwise, it returns the default SSH port 22.
 func (h *Host) GetPort() int {
@@ -82,21 +77,6 @@ func (h *Host) GetPort() int {
 	}
 
 	return h.CustomPort
-}
-
-// ScpFileTo uploads the contents using SCP to the given host.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [SCPFileToContext] instead.
-func ScpFileTo(t testing.TestingT, host Host, mode os.FileMode, remotePath, contents string) { //nolint:gocritic // preserving existing value parameter API
-	SCPFileToContext(t, context.Background(), &host, mode, remotePath, contents)
-}
-
-// ScpFileToE uploads the contents using SCP to the given host and returns an error if the process fails.
-//
-// Deprecated: Use [SCPFileToContextE] instead.
-func ScpFileToE(t testing.TestingT, host Host, mode os.FileMode, remotePath, contents string) error { //nolint:gocritic // preserving existing value parameter API
-	return SCPFileToContextE(t, context.Background(), &host, mode, remotePath, contents)
 }
 
 // SCPFileToContext uploads the contents using SCP to the given host.
@@ -142,21 +122,6 @@ func SCPFileToContextE(t testing.TestingT, ctx context.Context, host *Host, mode
 	return err
 }
 
-// ScpFileFrom downloads the file from remotePath on the given host using SCP.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [SCPFileFromContext] instead.
-func ScpFileFrom(t testing.TestingT, host Host, remotePath string, localDestination *os.File, useSudo bool) { //nolint:gocritic // preserving existing value parameter API
-	SCPFileFromContext(t, context.Background(), &host, remotePath, localDestination, useSudo)
-}
-
-// ScpFileFromE downloads the file from remotePath on the given host using SCP and returns an error if the process fails.
-//
-// Deprecated: Use [SCPFileFromContextE] instead.
-func ScpFileFromE(t testing.TestingT, host Host, remotePath string, localDestination *os.File, useSudo bool) error { //nolint:gocritic // preserving existing value parameter API
-	return SCPFileFromContextE(t, context.Background(), &host, remotePath, localDestination, useSudo)
-}
-
 // SCPFileFromContext downloads the file from remotePath on the given host using SCP.
 // This will fail the test if the connection fails.
 // The ctx parameter supports cancellation and timeouts.
@@ -194,24 +159,6 @@ func SCPFileFromContextE(t testing.TestingT, ctx context.Context, host *Host, re
 	defer sshSession.Cleanup(t)
 
 	return copyFileFromRemote(ctx, t, sshSession, localDestination, remotePath, useSudo)
-}
-
-// ScpDirFrom downloads all the files from remotePath on the given host using SCP.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [SCPDirFromContext] instead.
-func ScpDirFrom(t testing.TestingT, options ScpDownloadOptions, useSudo bool) { //nolint:gocritic // preserving existing value parameter API
-	SCPDirFromContext(t, context.Background(), &options, useSudo)
-}
-
-// ScpDirFromE downloads all the files from remotePath on the given host using SCP
-// and returns an error if the process fails. Only files within remotePath will
-// be downloaded. This function will not recursively download subdirectories or follow
-// symlinks.
-//
-// Deprecated: Use [SCPDirFromContextE] instead.
-func ScpDirFromE(t testing.TestingT, options ScpDownloadOptions, useSudo bool) error { //nolint:gocritic // preserving existing value parameter API
-	return SCPDirFromContextE(t, context.Background(), &options, useSudo)
 }
 
 // SCPDirFromContext downloads all the files from remotePath on the given host using SCP.
@@ -276,7 +223,7 @@ func SCPDirFromContextE(t testing.TestingT, ctx context.Context, options *SCPDow
 		logger.Default.Logf(t, "Copying remote file: %s to local path %s", fullRemoteFilePath, localFilePath)
 
 		err = copyFileFromRemote(ctx, t, sshSession, localFile, fullRemoteFilePath, useSudo)
-		// Close the local file regardless of copy outcome so we do not leak file handles.
+
 		if closeErr := localFile.Close(); closeErr != nil && err == nil {
 			err = closeErr
 		}
@@ -285,21 +232,6 @@ func SCPDirFromContextE(t testing.TestingT, ctx context.Context, options *SCPDow
 	}
 
 	return errorsOccurred.ErrorOrNil()
-}
-
-// CheckSshConnection checks that you can connect via SSH to the given host.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [CheckSSHConnectionContext] instead.
-func CheckSshConnection(t testing.TestingT, host Host) { //nolint:gocritic,staticcheck,revive // preserving existing API
-	CheckSSHConnectionContext(t, context.Background(), &host)
-}
-
-// CheckSshConnectionE checks that you can connect via SSH to the given host and returns an error if the connection fails.
-//
-// Deprecated: Use [CheckSSHConnectionContextE] instead.
-func CheckSshConnectionE(t testing.TestingT, host Host) error { //nolint:gocritic,staticcheck,revive // preserving existing API
-	return CheckSSHConnectionContextE(t, context.Background(), &host)
 }
 
 // CheckSSHConnectionContext checks that you can connect via SSH to the given host.
@@ -319,42 +251,6 @@ func CheckSSHConnectionContextE(t testing.TestingT, ctx context.Context, host *H
 	_, err := CheckSSHCommandContextE(t, ctx, host, "'exit'")
 
 	return err
-}
-
-// CheckSshConnectionWithRetry attempts to connect via SSH until max retries has been exceeded.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [CheckSSHConnectionWithRetryContext] instead.
-func CheckSshConnectionWithRetry(t testing.TestingT, host Host, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host) error) { //nolint:gocritic,staticcheck,revive // preserving existing API
-	handler := CheckSshConnectionE
-
-	if len(f) > 0 {
-		handler = f[0]
-	}
-
-	ctxHandler := func(t testing.TestingT, _ context.Context, host *Host) error {
-		return handler(t, *host)
-	}
-
-	CheckSSHConnectionWithRetryContext(t, context.Background(), &host, retries, sleepBetweenRetries, ctxHandler)
-}
-
-// CheckSshConnectionWithRetryE attempts to connect via SSH until max retries has been exceeded
-// and returns an error if the connection fails.
-//
-// Deprecated: Use [CheckSSHConnectionWithRetryContextE] instead.
-func CheckSshConnectionWithRetryE(t testing.TestingT, host Host, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host) error) error { //nolint:gocritic,staticcheck,revive // preserving existing API
-	handler := CheckSshConnectionE
-
-	if len(f) > 0 {
-		handler = f[0]
-	}
-
-	ctxHandler := func(t testing.TestingT, _ context.Context, host *Host) error {
-		return handler(t, *host)
-	}
-
-	return CheckSSHConnectionWithRetryContextE(t, context.Background(), &host, retries, sleepBetweenRetries, ctxHandler)
 }
 
 // CheckSSHConnectionWithRetryContext attempts to connect via SSH until max retries has been exceeded.
@@ -382,22 +278,6 @@ func CheckSSHConnectionWithRetryContextE(t testing.TestingT, ctx context.Context
 	})
 
 	return err
-}
-
-// CheckSshCommand checks that you can connect via SSH to the given host and run the given command.
-// Returns the stdout/stderr. This will fail the test if the connection fails.
-//
-// Deprecated: Use [CheckSSHCommandContext] instead.
-func CheckSshCommand(t testing.TestingT, host Host, command string) string { //nolint:gocritic,staticcheck,revive // preserving existing API
-	return CheckSSHCommandContext(t, context.Background(), &host, command)
-}
-
-// CheckSshCommandE checks that you can connect via SSH to the given host and run the given command.
-// Returns the stdout/stderr.
-//
-// Deprecated: Use [CheckSSHCommandContextE] instead.
-func CheckSshCommandE(t testing.TestingT, host Host, command string) (string, error) { //nolint:gocritic,staticcheck,revive // preserving existing API
-	return CheckSSHCommandContextE(t, context.Background(), &host, command)
 }
 
 // CheckSSHCommandContext checks that you can connect via SSH to the given host and run the given command.
@@ -439,43 +319,6 @@ func CheckSSHCommandContextE(t testing.TestingT, ctx context.Context, host *Host
 	return runSSHCommand(ctx, t, sshSession)
 }
 
-// CheckSshCommandWithRetry checks that you can connect via SSH to the given host and run the given command
-// until max retries have been exceeded. Returns the stdout/stderr.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [CheckSSHCommandWithRetryContext] instead.
-func CheckSshCommandWithRetry(t testing.TestingT, host Host, command string, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host, string) (string, error)) string { //nolint:gocritic,staticcheck,revive // preserving existing API
-	handler := CheckSshCommandE
-
-	if len(f) > 0 {
-		handler = f[0]
-	}
-
-	ctxHandler := func(t testing.TestingT, _ context.Context, host *Host, command string) (string, error) {
-		return handler(t, *host, command)
-	}
-
-	return CheckSSHCommandWithRetryContext(t, context.Background(), &host, command, retries, sleepBetweenRetries, ctxHandler)
-}
-
-// CheckSshCommandWithRetryE checks that you can connect via SSH to the given host and run the given command
-// until max retries has been exceeded. Returns an error if the command fails after max retries has been exceeded.
-//
-// Deprecated: Use [CheckSSHCommandWithRetryContextE] instead.
-func CheckSshCommandWithRetryE(t testing.TestingT, host Host, command string, retries int, sleepBetweenRetries time.Duration, f ...func(testing.TestingT, Host, string) (string, error)) (string, error) { //nolint:gocritic,staticcheck,revive // preserving existing API
-	handler := CheckSshCommandE
-
-	if len(f) > 0 {
-		handler = f[0]
-	}
-
-	ctxHandler := func(t testing.TestingT, _ context.Context, host *Host, command string) (string, error) {
-		return handler(t, *host, command)
-	}
-
-	return CheckSSHCommandWithRetryContextE(t, context.Background(), &host, command, retries, sleepBetweenRetries, ctxHandler)
-}
-
 // CheckSSHCommandWithRetryContext checks that you can connect via SSH to the given host and run the given command
 // until max retries have been exceeded. Returns the stdout/stderr.
 // This will fail the test if the connection fails.
@@ -502,25 +345,6 @@ func CheckSSHCommandWithRetryContextE(t testing.TestingT, ctx context.Context, h
 	return retry.DoWithRetryContextE(t, ctx, "Checking SSH connection to "+host.Hostname, retries, sleepBetweenRetries, func() (string, error) {
 		return handler(t, ctx, host, command)
 	})
-}
-
-// CheckPrivateSshConnection attempts to connect to privateHost (which is not addressable from the Internet) via a
-// separate publicHost (which is addressable from the Internet) and then executes "command" on privateHost and returns
-// its output. It is useful for checking that it's possible to SSH from a Bastion Host to a private instance.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [CheckPrivateSSHConnectionContext] instead.
-func CheckPrivateSshConnection(t testing.TestingT, publicHost Host, privateHost Host, command string) string { //nolint:gocritic,staticcheck,revive // preserving existing API
-	return CheckPrivateSSHConnectionContext(t, context.Background(), &publicHost, &privateHost, command)
-}
-
-// CheckPrivateSshConnectionE attempts to connect to privateHost (which is not addressable from the Internet) via a
-// separate publicHost (which is addressable from the Internet) and then executes "command" on privateHost and returns
-// its output. It is useful for checking that it's possible to SSH from a Bastion Host to a private instance.
-//
-// Deprecated: Use [CheckPrivateSSHConnectionContextE] instead.
-func CheckPrivateSshConnectionE(t testing.TestingT, publicHost Host, privateHost Host, command string) (string, error) { //nolint:gocritic,staticcheck,revive // preserving existing API
-	return CheckPrivateSSHConnectionContextE(t, context.Background(), &publicHost, &privateHost, command)
 }
 
 // CheckPrivateSSHConnectionContext attempts to connect to privateHost (which is not addressable from the Internet) via a
@@ -578,23 +402,6 @@ func CheckPrivateSSHConnectionContextE(t testing.TestingT, ctx context.Context, 
 	return runSSHCommand(ctx, t, sshSession)
 }
 
-// FetchContentsOfFiles connects to the given host via SSH and fetches the contents of the files at the given filePaths.
-// If useSudo is true, then the contents will be retrieved using sudo. Returns a map from file path to contents.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [FetchContentsOfFilesContext] instead.
-func FetchContentsOfFiles(t testing.TestingT, host Host, useSudo bool, filePaths ...string) map[string]string { //nolint:gocritic // preserving existing value parameter API
-	return FetchContentsOfFilesContext(t, context.Background(), &host, useSudo, filePaths...)
-}
-
-// FetchContentsOfFilesE connects to the given host via SSH and fetches the contents of the files at the given filePaths.
-// If useSudo is true, then the contents will be retrieved using sudo. Returns a map from file path to contents.
-//
-// Deprecated: Use [FetchContentsOfFilesContextE] instead.
-func FetchContentsOfFilesE(t testing.TestingT, host Host, useSudo bool, filePaths ...string) (map[string]string, error) { //nolint:gocritic // preserving existing value parameter API
-	return FetchContentsOfFilesContextE(t, context.Background(), &host, useSudo, filePaths...)
-}
-
 // FetchContentsOfFilesContext connects to the given host via SSH and fetches the contents of the files at the given filePaths.
 // If useSudo is true, then the contents will be retrieved using sudo. Returns a map from file path to contents.
 // This will fail the test if the connection fails.
@@ -624,23 +431,6 @@ func FetchContentsOfFilesContextE(t testing.TestingT, ctx context.Context, host 
 	}
 
 	return filePathToContents, nil
-}
-
-// FetchContentsOfFile connects to the given host via SSH and fetches the contents of the file at the given filePath.
-// If useSudo is true, then the contents will be retrieved using sudo. Returns the contents of that file.
-// This will fail the test if the connection fails.
-//
-// Deprecated: Use [FetchContentsOfFileContext] instead.
-func FetchContentsOfFile(t testing.TestingT, host Host, useSudo bool, filePath string) string { //nolint:gocritic // preserving existing value parameter API
-	return FetchContentsOfFileContext(t, context.Background(), &host, useSudo, filePath)
-}
-
-// FetchContentsOfFileE connects to the given host via SSH and fetches the contents of the file at the given filePath.
-// If useSudo is true, then the contents will be retrieved using sudo. Returns the contents of that file.
-//
-// Deprecated: Use [FetchContentsOfFileContextE] instead.
-func FetchContentsOfFileE(t testing.TestingT, host Host, useSudo bool, filePath string) (string, error) { //nolint:gocritic // preserving existing value parameter API
-	return FetchContentsOfFileContextE(t, context.Background(), &host, useSudo, filePath)
 }
 
 // FetchContentsOfFileContext connects to the given host via SSH and fetches the contents of the file at the given filePath.
@@ -692,12 +482,10 @@ func listFileInRemoteDir(ctx context.Context, t testing.TestingT, sshSession *SS
 		findCommandArgs = append(findCommandArgs, "\\(")
 
 		for i, curFilter := range options.FileNameFilters {
-			// Due to inconsistent bash behavior we need to wrap the
-			// filter in single quotes.
+
 			curFilter = fmt.Sprintf("'%s'", curFilter)
 			findCommandArgs = append(findCommandArgs, "-name", curFilter)
 
-			// Only add the or flag if we're not the last element.
 			if filtersLength-i > 1 {
 				findCommandArgs = append(findCommandArgs, "-o")
 			}
@@ -717,10 +505,6 @@ func listFileInRemoteDir(ctx context.Context, t testing.TestingT, sshSession *SS
 		return nil, err
 	}
 
-	// The last character returned is `\n` this results in an extra "" array
-	// member when we do the split below. Cut off the last character to avoid
-	// having to remove the blank entry in the array. Guard against empty output
-	// so we do not panic with index out of range.
 	if len(resultString) > 0 {
 		resultString = resultString[:len(resultString)-1]
 	}
@@ -731,8 +515,7 @@ func listFileInRemoteDir(ctx context.Context, t testing.TestingT, sshSession *SS
 // copyFileFromRemote copies a file from a remote host to a local file.
 // Based on code: https://github.com/bramvdbogaerde/go-scp/pull/6/files
 func copyFileFromRemote(ctx context.Context, t testing.TestingT, sshSession *SSHSession, file *os.File, remotePath string, useSudo bool) error {
-	// Ensure the local file handle is always closed; the caller passes us an
-	// open *os.File and we own its lifetime from here.
+
 	defer func() { _ = file.Close() }()
 
 	if err := setUpSSHClient(ctx, sshSession); err != nil {
@@ -757,7 +540,6 @@ func copyFileFromRemote(ctx context.Context, t testing.TestingT, sshSession *SSH
 		return fmt.Errorf("error reading from remote stdout: %w", err)
 	}
 
-	// Write to local file.
 	_, err = file.Write(r)
 
 	return err
@@ -873,9 +655,9 @@ func createSSHClientConfig(hostOptions *SSHConnectionOptions) *ssh.ClientConfig 
 	clientConfig := &ssh.ClientConfig{
 		User: hostOptions.Username,
 		Auth: hostOptions.AuthMethods,
-		// Do not do a host key check, as Terratest is only used for testing, not prod.
+
 		HostKeyCallback: NoOpHostKeyCallback,
-		// By default, Go does not impose a timeout, so a SSH connection attempt can hang for a LONG time.
+
 		Timeout: sshConnectionTimeout,
 	}
 	clientConfig.SetDefaults()
@@ -893,7 +675,6 @@ func NoOpHostKeyCallback(hostname string, remote net.Addr, key ssh.PublicKey) er
 func createAuthMethodsForHost(ctx context.Context, host *Host) ([]ssh.AuthMethod, error) {
 	var methods []ssh.AuthMethod
 
-	// Override local ssh agent with given sshAgent instance.
 	if host.OverrideSshAgent != nil {
 		conn, err := (&net.Dialer{}).DialContext(ctx, "unix", host.OverrideSshAgent.socketFile)
 		if err != nil {
@@ -904,8 +685,6 @@ func createAuthMethodsForHost(ctx context.Context, host *Host) ([]ssh.AuthMethod
 		methods = append(methods, ssh.PublicKeysCallback(agentClient.Signers))
 	}
 
-	// Use existing ssh agent socket.
-	// If agent authentication is enabled and no agent is set up, returns an error.
 	if host.SshAgent {
 		socket := os.Getenv("SSH_AUTH_SOCK")
 
@@ -918,7 +697,6 @@ func createAuthMethodsForHost(ctx context.Context, host *Host) ([]ssh.AuthMethod
 		methods = append(methods, ssh.PublicKeysCallback(agentClient.Signers))
 	}
 
-	// Use provided ssh key pair.
 	if host.SshKeyPair != nil {
 		signer, err := ssh.ParsePrivateKey([]byte(host.SshKeyPair.PrivateKey))
 		if err != nil {
@@ -940,12 +718,10 @@ func createAuthMethodsForHost(ctx context.Context, host *Host) ([]ssh.AuthMethod
 		methods = append(methods, ssh.PublicKeys(signer))
 	}
 
-	// Use given password.
 	if len(host.Password) > 0 {
 		methods = append(methods, ssh.Password(host.Password))
 	}
 
-	// No valid authentication method was provided.
 	if len(methods) < 1 {
 		return methods, ErrNoAuthMethod
 	}
@@ -960,13 +736,10 @@ func sendScpCommandsToCopyFile(mode os.FileMode, fileName, contents string) func
 	return func(input io.WriteCloser) {
 		octalMode := "0" + strconv.FormatInt(int64(mode), 8)
 
-		// Create a file at <filename> with Unix permissions set to <octalMode> and the file will be <len(content)> bytes long.
 		_, _ = fmt.Fprintln(input, "C"+octalMode, len(contents), fileName)
 
-		// Actually send the file.
 		_, _ = fmt.Fprint(input, contents)
 
-		// End of transfer.
 		_, _ = fmt.Fprint(input, "\x00")
 	}
 }

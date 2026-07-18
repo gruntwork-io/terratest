@@ -28,7 +28,7 @@ type Ec2SyslogAPI interface {
 // The ctx parameter supports cancellation and timeouts.
 func GetSyslogForInstanceContextE(t testing.TestingT, ctx context.Context, instanceID string, region string) (string, error) {
 	description := fmt.Sprintf("Fetching syslog for Instance %s in %s", instanceID, region)
-	maxRetries := 120 //nolint:mnd // max retry count for syslog availability
+	maxRetries := 120
 
 	logger.Default.Logf(t, "%s", description)
 
@@ -92,28 +92,6 @@ func GetSyslogForInstanceContext(t testing.TestingT, ctx context.Context, instan
 	return out
 }
 
-// GetSyslogForInstance (Deprecated) See the FetchContentsOfFileFromInstance method for a more powerful solution.
-//
-// GetSyslogForInstance gets the syslog for the Instance with the given ID in the given region. This should be available ~1 minute after an
-// Instance boots and is very useful for debugging boot-time issues, such as an error in User Data.
-//
-// Deprecated: Use [GetSyslogForInstanceContext] instead.
-func GetSyslogForInstance(t testing.TestingT, instanceID string, awsRegion string) string {
-	t.Helper()
-
-	return GetSyslogForInstanceContext(t, context.Background(), instanceID, awsRegion)
-}
-
-// GetSyslogForInstanceE (Deprecated) See the FetchContentsOfFileFromInstanceE method for a more powerful solution.
-//
-// GetSyslogForInstanceE gets the syslog for the Instance with the given ID in the given region. This should be available ~1 minute after an
-// Instance boots and is very useful for debugging boot-time issues, such as an error in User Data.
-//
-// Deprecated: Use [GetSyslogForInstanceContextE] instead.
-func GetSyslogForInstanceE(t testing.TestingT, instanceID string, region string) (string, error) {
-	return GetSyslogForInstanceContextE(t, context.Background(), instanceID, region)
-}
-
 // GetSyslogForInstancesInAsgContextE gets the syslog for each of the Instances in the given ASG in the given region. These logs should be available ~1
 // minute after the Instance boots and are very useful for debugging boot-time issues, such as an error in User Data.
 // Returns a map of Instance ID -> Syslog for that Instance.
@@ -152,28 +130,4 @@ func GetSyslogForInstancesInAsgContext(t testing.TestingT, ctx context.Context, 
 	require.NoError(t, err)
 
 	return out
-}
-
-// GetSyslogForInstancesInAsg (Deprecated) See the FetchContentsOfFilesFromAsg method for a more powerful solution.
-//
-// GetSyslogForInstancesInAsg gets the syslog for each of the Instances in the given ASG in the given region. These logs should be available ~1
-// minute after the Instance boots and are very useful for debugging boot-time issues, such as an error in User Data.
-// Returns a map of Instance ID -> Syslog for that Instance.
-//
-// Deprecated: Use [GetSyslogForInstancesInAsgContext] instead.
-func GetSyslogForInstancesInAsg(t testing.TestingT, asgName string, awsRegion string) map[string]string {
-	t.Helper()
-
-	return GetSyslogForInstancesInAsgContext(t, context.Background(), asgName, awsRegion)
-}
-
-// GetSyslogForInstancesInAsgE (Deprecated) See the FetchContentsOfFilesFromAsgE method for a more powerful solution.
-//
-// GetSyslogForInstancesInAsgE gets the syslog for each of the Instances in the given ASG in the given region. These logs should be available ~1
-// minute after the Instance boots and are very useful for debugging boot-time issues, such as an error in User Data.
-// Returns a map of Instance ID -> Syslog for that Instance.
-//
-// Deprecated: Use [GetSyslogForInstancesInAsgContextE] instead.
-func GetSyslogForInstancesInAsgE(t testing.TestingT, asgName string, awsRegion string) (map[string]string, error) {
-	return GetSyslogForInstancesInAsgContextE(t, context.Background(), asgName, awsRegion)
 }

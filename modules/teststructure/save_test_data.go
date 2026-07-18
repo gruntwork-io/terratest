@@ -98,22 +98,6 @@ func LoadSSHKeyPair(t testing.TestingT, testFolder string) *ssh.KeyPair {
 	return &keyPair
 }
 
-// SaveSshKeyPair serializes and saves an SSH key pair into the given folder. This allows you to create an SSH key pair
-// during setup and to reuse that key pair later during validation and teardown.
-//
-// Deprecated: Use [SaveSSHKeyPair] instead.
-func SaveSshKeyPair(t testing.TestingT, testFolder string, keyPair *ssh.KeyPair) { //nolint:staticcheck,revive // preserving existing function name
-	SaveSSHKeyPair(t, testFolder, keyPair)
-}
-
-// LoadSshKeyPair loads and unserializes an SSH key pair from the given folder. This allows you to reuse an SSH key pair
-// that was created during an earlier setup step in later validation and teardown steps.
-//
-// Deprecated: Use [LoadSSHKeyPair] instead.
-func LoadSshKeyPair(t testing.TestingT, testFolder string) *ssh.KeyPair { //nolint:staticcheck,revive // preserving existing function name
-	return LoadSSHKeyPair(t, testFolder)
-}
-
 // formatSSHKeyPairPath formats a path to save an SSH key pair in the given folder.
 func formatSSHKeyPairPath(testFolder string) string {
 	return FormatTestDataPath(testFolder, "SshKeyPair.json")
@@ -183,22 +167,6 @@ func LoadArtifactID(t testing.TestingT, testFolder string) string {
 	return LoadString(t, testFolder, "Artifact")
 }
 
-// SaveAmiId serializes and saves an AMI ID into the given folder. This allows you to build an AMI during setup and to reuse that
-// AMI later during validation and teardown.
-//
-// Deprecated: Use [SaveArtifactID] instead.
-func SaveAmiId(t testing.TestingT, testFolder string, amiId string) { //nolint:staticcheck,revive // preserving existing function name
-	SaveString(t, testFolder, "AMI", amiId)
-}
-
-// LoadAmiId loads and unserializes an AMI ID from the given folder. This allows you to reuse an AMI  that was created during an
-// earlier setup step in later validation and teardown steps.
-//
-// Deprecated: Use [LoadArtifactID] instead.
-func LoadAmiId(t testing.TestingT, testFolder string) string { //nolint:staticcheck,revive // preserving existing function name
-	return LoadString(t, testFolder, "AMI")
-}
-
 // formatNamedTestDataPath formats a path to save an arbitrary named value in the given folder.
 func formatNamedTestDataPath(testFolder string, name string) string {
 	filename := name + ".json"
@@ -248,11 +216,11 @@ func saveTestData(t testing.TestingT, path string, overwrite bool, value any, lo
 
 	parentDir := filepath.Dir(path)
 
-	if err := os.MkdirAll(parentDir, 0o755); err != nil { //nolint:mnd // standard directory permissions
+	if err := os.MkdirAll(parentDir, 0o755); err != nil {
 		t.Fatalf("Failed to create folder %s: %v", parentDir, err)
 	}
 
-	if err := os.WriteFile(path, bytes, 0o644); err != nil { //nolint:mnd // standard file permissions
+	if err := os.WriteFile(path, bytes, 0o644); err != nil {
 		t.Fatalf("Failed to save value %s: %v", path, err)
 	}
 }

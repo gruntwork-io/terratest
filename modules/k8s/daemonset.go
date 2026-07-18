@@ -1,4 +1,4 @@
-package k8s //nolint:dupl // structural pattern for k8s resource operations
+package k8s
 
 import (
 	"context"
@@ -44,27 +44,6 @@ func ListDaemonSetsContext(t testing.TestingT, ctx context.Context, options *Kub
 	return daemonset
 }
 
-// ListDaemonSets will look for daemonsets in the given namespace that match the given filters and return them. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [ListDaemonSetsContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListDaemonSets(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []appsv1.DaemonSet {
-	t.Helper()
-
-	return ListDaemonSetsContext(t, context.Background(), options, filters)
-}
-
-// ListDaemonSetsE will look for daemonsets in the given namespace that match the given filters and return them.
-//
-// Deprecated: Use [ListDaemonSetsContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListDaemonSetsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]appsv1.DaemonSet, error) {
-	return ListDaemonSetsContextE(t, context.Background(), options, filters)
-}
-
 // GetDaemonSetContextE returns a Kubernetes daemonset resource in the provided namespace with the given name.
 // The ctx parameter supports cancellation and timeouts.
 func GetDaemonSetContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, daemonSetName string) (*appsv1.DaemonSet, error) {
@@ -87,27 +66,10 @@ func GetDaemonSetContext(t testing.TestingT, ctx context.Context, options *Kubec
 	return daemonset
 }
 
-// GetDaemonSet returns a Kubernetes daemonset resource in the provided namespace with the given name. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [GetDaemonSetContext] instead.
-func GetDaemonSet(t testing.TestingT, options *KubectlOptions, daemonSetName string) *appsv1.DaemonSet {
-	t.Helper()
-
-	return GetDaemonSetContext(t, context.Background(), options, daemonSetName)
-}
-
-// GetDaemonSetE returns a Kubernetes daemonset resource in the provided namespace with the given name.
-//
-// Deprecated: Use [GetDaemonSetContextE] instead.
-func GetDaemonSetE(t testing.TestingT, options *KubectlOptions, daemonSetName string) (*appsv1.DaemonSet, error) {
-	return GetDaemonSetContextE(t, context.Background(), options, daemonSetName)
-}
-
 // WaitUntilDaemonSetAvailableContextE waits until all desired pods of the daemonset are available on their nodes,
 // retrying the check for the specified amount of times, sleeping for the provided duration between each try.
 // The ctx parameter supports cancellation and timeouts.
-func WaitUntilDaemonSetAvailableContextE( //nolint:dupl // similar retry pattern across resource types is intentional
+func WaitUntilDaemonSetAvailableContextE(
 	t testing.TestingT,
 	ctx context.Context,
 	options *KubectlOptions,
@@ -153,32 +115,6 @@ func WaitUntilDaemonSetAvailableContextE( //nolint:dupl // similar retry pattern
 func WaitUntilDaemonSetAvailableContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, daemonSetName string, retries int, sleepBetweenRetries time.Duration) {
 	t.Helper()
 	require.NoError(t, WaitUntilDaemonSetAvailableContextE(t, ctx, options, daemonSetName, retries, sleepBetweenRetries))
-}
-
-// WaitUntilDaemonSetAvailable waits until all desired pods of the daemonset are available on their nodes,
-// retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [WaitUntilDaemonSetAvailableContext] instead.
-func WaitUntilDaemonSetAvailable(t testing.TestingT, options *KubectlOptions, daemonSetName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilDaemonSetAvailableContext(t, context.Background(), options, daemonSetName, retries, sleepBetweenRetries)
-}
-
-// WaitUntilDaemonSetAvailableE waits until all desired pods of the daemonset are available on their nodes,
-// retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try.
-//
-// Deprecated: Use [WaitUntilDaemonSetAvailableContextE] instead.
-func WaitUntilDaemonSetAvailableE(
-	t testing.TestingT,
-	options *KubectlOptions,
-	daemonSetName string,
-	retries int,
-	sleepBetweenRetries time.Duration,
-) error {
-	return WaitUntilDaemonSetAvailableContextE(t, context.Background(), options, daemonSetName, retries, sleepBetweenRetries)
 }
 
 // IsDaemonSetAvailable returns true once the daemonset's rollout is complete. The check mirrors `kubectl rollout

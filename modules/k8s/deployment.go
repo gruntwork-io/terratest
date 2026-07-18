@@ -45,27 +45,6 @@ func ListDeploymentsContext(t testing.TestingT, ctx context.Context, options *Ku
 	return deployment
 }
 
-// ListDeployments will look for deployments in the given namespace that match the given filters and return them. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [ListDeploymentsContext] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListDeployments(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) []appsv1.Deployment {
-	t.Helper()
-
-	return ListDeploymentsContext(t, context.Background(), options, filters)
-}
-
-// ListDeploymentsE will look for deployments in the given namespace that match the given filters and return them.
-//
-// Deprecated: Use [ListDeploymentsContextE] instead.
-//
-//nolint:gocritic // hugeParam: cannot change public function signature
-func ListDeploymentsE(t testing.TestingT, options *KubectlOptions, filters metav1.ListOptions) ([]appsv1.Deployment, error) {
-	return ListDeploymentsContextE(t, context.Background(), options, filters)
-}
-
 // GetDeploymentContextE returns a Kubernetes deployment resource in the provided namespace with the given name.
 // The ctx parameter supports cancellation and timeouts.
 func GetDeploymentContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, deploymentName string) (*appsv1.Deployment, error) {
@@ -88,27 +67,10 @@ func GetDeploymentContext(t testing.TestingT, ctx context.Context, options *Kube
 	return deployment
 }
 
-// GetDeployment returns a Kubernetes deployment resource in the provided namespace with the given name. This will
-// fail the test if there is an error.
-//
-// Deprecated: Use [GetDeploymentContext] instead.
-func GetDeployment(t testing.TestingT, options *KubectlOptions, deploymentName string) *appsv1.Deployment {
-	t.Helper()
-
-	return GetDeploymentContext(t, context.Background(), options, deploymentName)
-}
-
-// GetDeploymentE returns a Kubernetes deployment resource in the provided namespace with the given name.
-//
-// Deprecated: Use [GetDeploymentContextE] instead.
-func GetDeploymentE(t testing.TestingT, options *KubectlOptions, deploymentName string) (*appsv1.Deployment, error) {
-	return GetDeploymentContextE(t, context.Background(), options, deploymentName)
-}
-
 // WaitUntilDeploymentAvailableContextE waits until all pods within the deployment are ready and started,
 // retrying the check for the specified amount of times, sleeping for the provided duration between each try.
 // The ctx parameter supports cancellation and timeouts.
-func WaitUntilDeploymentAvailableContextE( //nolint:dupl // similar retry pattern across resource types is intentional
+func WaitUntilDeploymentAvailableContextE(
 	t testing.TestingT,
 	ctx context.Context,
 	options *KubectlOptions,
@@ -154,32 +116,6 @@ func WaitUntilDeploymentAvailableContextE( //nolint:dupl // similar retry patter
 func WaitUntilDeploymentAvailableContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, deploymentName string, retries int, sleepBetweenRetries time.Duration) {
 	t.Helper()
 	require.NoError(t, WaitUntilDeploymentAvailableContextE(t, ctx, options, deploymentName, retries, sleepBetweenRetries))
-}
-
-// WaitUntilDeploymentAvailable waits until all pods within the deployment are ready and started,
-// retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [WaitUntilDeploymentAvailableContext] instead.
-func WaitUntilDeploymentAvailable(t testing.TestingT, options *KubectlOptions, deploymentName string, retries int, sleepBetweenRetries time.Duration) {
-	t.Helper()
-	WaitUntilDeploymentAvailableContext(t, context.Background(), options, deploymentName, retries, sleepBetweenRetries)
-}
-
-// WaitUntilDeploymentAvailableE waits until all pods within the deployment are ready and started,
-// retrying the check for the specified amount of times, sleeping
-// for the provided duration between each try.
-//
-// Deprecated: Use [WaitUntilDeploymentAvailableContextE] instead.
-func WaitUntilDeploymentAvailableE(
-	t testing.TestingT,
-	options *KubectlOptions,
-	deploymentName string,
-	retries int,
-	sleepBetweenRetries time.Duration,
-) error {
-	return WaitUntilDeploymentAvailableContextE(t, context.Background(), options, deploymentName, retries, sleepBetweenRetries)
 }
 
 // IsDeploymentAvailable returns true if all pods within the deployment are ready and started

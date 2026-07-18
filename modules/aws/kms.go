@@ -54,24 +54,6 @@ func GetCmkArnContext(t testing.TestingT, ctx context.Context, region string, cm
 	return out
 }
 
-// GetCmkArn gets the ARN of a KMS Customer Master Key (CMK) in the given region with the given ID. The ID can be an alias, such
-// as "alias/my-cmk".
-//
-// Deprecated: Use [GetCmkArnContext] instead.
-func GetCmkArn(t testing.TestingT, region string, cmkID string) string {
-	t.Helper()
-
-	return GetCmkArnContext(t, context.Background(), region, cmkID)
-}
-
-// GetCmkArnE gets the ARN of a KMS Customer Master Key (CMK) in the given region with the given ID. The ID can be an alias, such
-// as "alias/my-cmk".
-//
-// Deprecated: Use [GetCmkArnContextE] instead.
-func GetCmkArnE(t testing.TestingT, region string, cmkID string) (string, error) {
-	return GetCmkArnContextE(t, context.Background(), region, cmkID)
-}
-
 // NewKmsClientContextE creates a KMS client.
 // The ctx parameter supports cancellation and timeouts.
 func NewKmsClientContextE(t testing.TestingT, ctx context.Context, region string) (*kms.Client, error) {
@@ -93,20 +75,4 @@ func NewKmsClientContext(t testing.TestingT, ctx context.Context, region string)
 	require.NoError(t, err)
 
 	return client
-}
-
-// NewKmsClient creates a KMS client.
-//
-// Deprecated: Use [NewKmsClientContext] instead.
-func NewKmsClient(t testing.TestingT, region string) *kms.Client {
-	t.Helper()
-
-	return NewKmsClientContext(t, context.Background(), region)
-}
-
-// NewKmsClientE creates a KMS client.
-//
-// Deprecated: Use [NewKmsClientContextE] instead.
-func NewKmsClientE(t testing.TestingT, region string) (*kms.Client, error) {
-	return NewKmsClientContextE(t, context.Background(), region)
 }

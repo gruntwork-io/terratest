@@ -19,7 +19,7 @@ import (
 const defaultTimeoutSeconds = 10
 
 // HttpGetOptions defines options for HTTP GET requests.
-type HttpGetOptions struct { //nolint:staticcheck,revive // preserving existing type name
+type HttpGetOptions struct {
 	// Context for the HTTP request. If nil, context.Background() is used.
 	Context   context.Context
 	TlsConfig *tls.Config //nolint:staticcheck,revive // preserving existing field name
@@ -28,7 +28,7 @@ type HttpGetOptions struct { //nolint:staticcheck,revive // preserving existing 
 }
 
 // HttpDoOptions defines options for HTTP requests using an arbitrary method.
-type HttpDoOptions struct { //nolint:staticcheck,revive // preserving existing type name
+type HttpDoOptions struct {
 	// Context for the HTTP request. If nil, context.Background() is used.
 	Context   context.Context
 	Body      io.Reader
@@ -51,23 +51,13 @@ func optionsContext(ctx context.Context) context.Context {
 // HTTPGetContext performs an HTTP GET on the given URL with an optional custom TLS configuration and returns the HTTP
 // status code and body. The provided context is used for the HTTP request. If there's any error, fail the test.
 func HTTPGetContext(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config) (int, string) {
-	return HttpGetWithOptions(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}) //nolint:contextcheck // context is passed via options struct
+	return HttpGetWithOptions(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds})
 }
 
 // HTTPGetContextE performs an HTTP GET on the given URL with an optional custom TLS configuration and returns the HTTP
 // status code, body, and any error. The provided context is used for the HTTP request.
 func HTTPGetContextE(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config) (int, string, error) {
-	return HttpGetWithOptionsE(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}) //nolint:contextcheck // context is passed via options struct
-}
-
-// HttpGet performs an HTTP GET, with an optional pointer to a custom TLS configuration, on the given URL and
-// return the HTTP status code and body. If there's any error, fail the test.
-//
-// Deprecated: Use [HTTPGetContext] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGet(t testing.TestingT, url string, tlsConfig *tls.Config) (int, string) {
-	return HttpGetWithOptions(t, HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds})
+	return HttpGetWithOptionsE(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds})
 }
 
 // HttpGetWithOptions performs an HTTP GET, with an optional pointer to a custom TLS configuration, on the given URL and
@@ -83,16 +73,6 @@ func HttpGetWithOptions(t testing.TestingT, options HttpGetOptions) (int, string
 	return statusCode, body
 }
 
-// HttpGetE performs an HTTP GET, with an optional pointer to a custom TLS configuration, on the given URL and
-// return the HTTP status code, body, and any error.
-//
-// Deprecated: Use [HTTPGetContextE] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetE(t testing.TestingT, url string, tlsConfig *tls.Config) (int, string, error) {
-	return HttpGetWithOptionsE(t, HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds})
-}
-
 // HttpGetWithOptionsE performs an HTTP GET on the given URL with the given options and returns the HTTP status code,
 // body, and any error.
 //
@@ -102,14 +82,13 @@ func HttpGetWithOptionsE(t testing.TestingT, options HttpGetOptions) (int, strin
 
 	ctx := optionsContext(options.Context)
 
-	// Set HTTP client transport config
 	tr := http.DefaultTransport.(*http.Transport).Clone()
 	tr.TLSClientConfig = options.TlsConfig
 
 	client := http.Client{
-		// By default, Go does not impose a timeout, so an HTTP connection attempt can hang for a LONG time.
+
 		Timeout: time.Duration(options.Timeout) * time.Second,
-		// Include the previously created transport config
+
 		Transport: tr,
 	}
 
@@ -137,7 +116,7 @@ func HttpGetWithOptionsE(t testing.TestingT, options HttpGetOptions) (int, strin
 // status code and body. The provided context is used for the HTTP request. If either doesn't match, fail the test.
 func HTTPGetWithValidationContext(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, expectedStatusCode int, expectedBody string) {
 	options := HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-	HttpGetWithValidationWithOptions(t, options, expectedStatusCode, expectedBody) //nolint:contextcheck // context is passed via options struct
+	HttpGetWithValidationWithOptions(t, options, expectedStatusCode, expectedBody)
 }
 
 // HTTPGetWithValidationContextE performs an HTTP GET on the given URL and verifies that the response has the expected
@@ -145,18 +124,7 @@ func HTTPGetWithValidationContext(t testing.TestingT, ctx context.Context, url s
 func HTTPGetWithValidationContextE(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, expectedStatusCode int, expectedBody string) error {
 	options := HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
 
-	return HttpGetWithValidationWithOptionsE(t, options, expectedStatusCode, expectedBody) //nolint:contextcheck // context is passed via options struct
-}
-
-// HttpGetWithValidation performs an HTTP GET on the given URL and verify that you get back the expected status code and body. If either
-// doesn't match, fail the test.
-//
-// Deprecated: Use [HTTPGetWithValidationContext] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithValidation(t testing.TestingT, url string, tlsConfig *tls.Config, expectedStatusCode int, expectedBody string) {
-	options := HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-	HttpGetWithValidationWithOptions(t, options, expectedStatusCode, expectedBody)
+	return HttpGetWithValidationWithOptionsE(t, options, expectedStatusCode, expectedBody)
 }
 
 // HttpGetWithValidationWithOptions performs an HTTP GET on the given URL and verify that you get back the expected status code and body. If either
@@ -168,18 +136,6 @@ func HttpGetWithValidationWithOptions(t testing.TestingT, options HttpGetOptions
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// HttpGetWithValidationE performs an HTTP GET on the given URL and verify that you get back the expected status code and body. If either
-// doesn't match, return an error.
-//
-// Deprecated: Use [HTTPGetWithValidationContextE] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithValidationE(t testing.TestingT, url string, tlsConfig *tls.Config, expectedStatusCode int, expectedBody string) error {
-	options := HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-
-	return HttpGetWithValidationWithOptionsE(t, options, expectedStatusCode, expectedBody)
 }
 
 // HttpGetWithValidationWithOptionsE performs an HTTP GET on the given URL and verify that you get back the expected status code and body. If either
@@ -195,22 +151,13 @@ func HttpGetWithValidationWithOptionsE(t testing.TestingT, options HttpGetOption
 // HTTPGetWithCustomValidationContext performs an HTTP GET on the given URL and validates the returned status code and
 // body using the given function. The provided context is used for the HTTP request.
 func HTTPGetWithCustomValidationContext(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, validateResponse func(int, string) bool) {
-	HttpGetWithCustomValidationWithOptions(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}, validateResponse) //nolint:contextcheck // context is passed via options struct
+	HttpGetWithCustomValidationWithOptions(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}, validateResponse)
 }
 
 // HTTPGetWithCustomValidationContextE performs an HTTP GET on the given URL and validates the returned status code and
 // body using the given function. The provided context is used for the HTTP request.
 func HTTPGetWithCustomValidationContextE(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, validateResponse func(int, string) bool) error {
-	return HttpGetWithCustomValidationWithOptionsE(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}, validateResponse) //nolint:contextcheck // context is passed via options struct
-}
-
-// HttpGetWithCustomValidation performs an HTTP GET on the given URL and validate the returned status code and body using the given function.
-//
-// Deprecated: Use [HTTPGetWithCustomValidationContext] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithCustomValidation(t testing.TestingT, url string, tlsConfig *tls.Config, validateResponse func(int, string) bool) {
-	HttpGetWithCustomValidationWithOptions(t, HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}, validateResponse)
+	return HttpGetWithCustomValidationWithOptionsE(t, HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}, validateResponse)
 }
 
 // HttpGetWithCustomValidationWithOptions performs an HTTP GET on the given URL and validate the returned status code and body using the given function.
@@ -221,15 +168,6 @@ func HttpGetWithCustomValidationWithOptions(t testing.TestingT, options HttpGetO
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// HttpGetWithCustomValidationE performs an HTTP GET on the given URL and validate the returned status code and body using the given function.
-//
-// Deprecated: Use [HTTPGetWithCustomValidationContextE] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithCustomValidationE(t testing.TestingT, url string, tlsConfig *tls.Config, validateResponse func(int, string) bool) error {
-	return HttpGetWithCustomValidationWithOptionsE(t, HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}, validateResponse)
 }
 
 // HttpGetWithCustomValidationWithOptionsE performs an HTTP GET on the given URL and validate the returned status code and body using the given function.
@@ -252,7 +190,7 @@ func HttpGetWithCustomValidationWithOptionsE(t testing.TestingT, options HttpGet
 // returned or until max retries has been exceeded. The provided context is used for each HTTP request.
 func HTTPGetWithRetryContext(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, expectedStatus int, expectedBody string, retries int, sleepBetweenRetries time.Duration) {
 	options := HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-	HttpGetWithRetryWithOptions(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries) //nolint:contextcheck // context is passed via options struct
+	HttpGetWithRetryWithOptions(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
 }
 
 // HTTPGetWithRetryContextE repeatedly performs an HTTP GET on the given URL until the given status code and body are
@@ -260,18 +198,7 @@ func HTTPGetWithRetryContext(t testing.TestingT, ctx context.Context, url string
 func HTTPGetWithRetryContextE(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, expectedStatus int, expectedBody string, retries int, sleepBetweenRetries time.Duration) error {
 	options := HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
 
-	return HttpGetWithRetryWithOptionsE(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries) //nolint:contextcheck // context is passed via options struct
-}
-
-// HttpGetWithRetry repeatedly performs an HTTP GET on the given URL until the given status code and body are returned or until max
-// retries has been exceeded.
-//
-// Deprecated: Use [HTTPGetWithRetryContext] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithRetry(t testing.TestingT, url string, tlsConfig *tls.Config, expectedStatus int, expectedBody string, retries int, sleepBetweenRetries time.Duration) {
-	options := HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-	HttpGetWithRetryWithOptions(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
+	return HttpGetWithRetryWithOptionsE(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
 }
 
 // HttpGetWithRetryWithOptions repeatedly performs an HTTP GET on the given URL until the given status code and body are returned or until max
@@ -283,18 +210,6 @@ func HttpGetWithRetryWithOptions(t testing.TestingT, options HttpGetOptions, exp
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// HttpGetWithRetryE repeatedly performs an HTTP GET on the given URL until the given status code and body are returned or until max
-// retries has been exceeded.
-//
-// Deprecated: Use [HTTPGetWithRetryContextE] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithRetryE(t testing.TestingT, url string, tlsConfig *tls.Config, expectedStatus int, expectedBody string, retries int, sleepBetweenRetries time.Duration) error {
-	options := HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-
-	return HttpGetWithRetryWithOptionsE(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
 }
 
 // HttpGetWithRetryWithOptionsE repeatedly performs an HTTP GET on the given URL until the given status code and body are returned or until max
@@ -313,7 +228,7 @@ func HttpGetWithRetryWithOptionsE(t testing.TestingT, options HttpGetOptions, ex
 // validation function returns true or max retries has been exceeded. The provided context is used for each HTTP request.
 func HTTPGetWithRetryWithCustomValidationContext(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, retries int, sleepBetweenRetries time.Duration, validateResponse func(int, string) bool) {
 	options := HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-	HttpGetWithRetryWithCustomValidationWithOptions(t, options, retries, sleepBetweenRetries, validateResponse) //nolint:contextcheck // context is passed via options struct
+	HttpGetWithRetryWithCustomValidationWithOptions(t, options, retries, sleepBetweenRetries, validateResponse)
 }
 
 // HTTPGetWithRetryWithCustomValidationContextE repeatedly performs an HTTP GET on the given URL until the given
@@ -321,18 +236,7 @@ func HTTPGetWithRetryWithCustomValidationContext(t testing.TestingT, ctx context
 func HTTPGetWithRetryWithCustomValidationContextE(t testing.TestingT, ctx context.Context, url string, tlsConfig *tls.Config, retries int, sleepBetweenRetries time.Duration, validateResponse func(int, string) bool) error {
 	options := HttpGetOptions{Context: ctx, Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
 
-	return HttpGetWithRetryWithCustomValidationWithOptionsE(t, options, retries, sleepBetweenRetries, validateResponse) //nolint:contextcheck // context is passed via options struct
-}
-
-// HttpGetWithRetryWithCustomValidation repeatedly performs an HTTP GET on the given URL until the given validation function returns true or max retries
-// has been exceeded.
-//
-// Deprecated: Use [HTTPGetWithRetryWithCustomValidationContext] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithRetryWithCustomValidation(t testing.TestingT, url string, tlsConfig *tls.Config, retries int, sleepBetweenRetries time.Duration, validateResponse func(int, string) bool) {
-	options := HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-	HttpGetWithRetryWithCustomValidationWithOptions(t, options, retries, sleepBetweenRetries, validateResponse)
+	return HttpGetWithRetryWithCustomValidationWithOptionsE(t, options, retries, sleepBetweenRetries, validateResponse)
 }
 
 // HttpGetWithRetryWithCustomValidationWithOptions repeatedly performs an HTTP GET on the given URL until the given validation function returns true or max retries
@@ -344,18 +248,6 @@ func HttpGetWithRetryWithCustomValidationWithOptions(t testing.TestingT, options
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// HttpGetWithRetryWithCustomValidationE repeatedly performs an HTTP GET on the given URL until the given validation function returns true or max retries
-// has been exceeded.
-//
-// Deprecated: Use [HTTPGetWithRetryWithCustomValidationContextE] instead.
-//
-//nolint:staticcheck,revive // preserving existing function name
-func HttpGetWithRetryWithCustomValidationE(t testing.TestingT, url string, tlsConfig *tls.Config, retries int, sleepBetweenRetries time.Duration, validateResponse func(int, string) bool) error {
-	options := HttpGetOptions{Url: url, TlsConfig: tlsConfig, Timeout: defaultTimeoutSeconds}
-
-	return HttpGetWithRetryWithCustomValidationWithOptionsE(t, options, retries, sleepBetweenRetries, validateResponse)
 }
 
 // HttpGetWithRetryWithCustomValidationWithOptionsE repeatedly performs an HTTP GET on the given URL until the given validation function returns true or max retries
@@ -386,7 +278,7 @@ func HTTPDoContext(
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	return HTTPDoWithOptions(t, options) //nolint:contextcheck // context is passed via options struct
+	return HTTPDoWithOptions(t, options)
 }
 
 // HTTPDoContextE performs the given HTTP method on the given URL and returns the HTTP status code, body, and any error.
@@ -405,27 +297,7 @@ func HTTPDoContextE(
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	return HTTPDoWithOptionsE(t, options) //nolint:contextcheck // context is passed via options struct
-}
-
-// HTTPDo performs the given HTTP method on the given URL and return the HTTP status code and body.
-// If there's any error, fail the test.
-//
-// Deprecated: Use [HTTPDoContext] instead.
-func HTTPDo(
-	t testing.TestingT, method string, url string, body io.Reader,
-	headers map[string]string, tlsConfig *tls.Config,
-) (int, string) {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      body,
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	return HTTPDoWithOptions(t, options)
+	return HTTPDoWithOptionsE(t, options)
 }
 
 // HTTPDoWithOptions performs the given HTTP method on the given URL and return the HTTP status code and body.
@@ -443,25 +315,6 @@ func HTTPDoWithOptions(
 	return statusCode, respBody
 }
 
-// HTTPDoE performs the given HTTP method on the given URL and return the HTTP status code, body, and any error.
-//
-// Deprecated: Use [HTTPDoContextE] instead.
-func HTTPDoE(
-	t testing.TestingT, method string, url string, body io.Reader,
-	headers map[string]string, tlsConfig *tls.Config,
-) (int, string, error) {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      body,
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	return HTTPDoWithOptionsE(t, options)
-}
-
 // HTTPDoWithOptionsE performs the given HTTP method on the given URL and return the HTTP status code, body, and any error.
 //
 //nolint:gocritic // cannot change public function signature
@@ -476,7 +329,7 @@ func HTTPDoWithOptionsE(
 	tr.TLSClientConfig = options.TlsConfig
 
 	client := http.Client{
-		// By default, Go does not impose a timeout, so an HTTP connection attempt can hang for a LONG time.
+
 		Timeout:   time.Duration(options.Timeout) * time.Second,
 		Transport: tr,
 	}
@@ -516,7 +369,7 @@ func HTTPDoWithRetryContext(
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	return HTTPDoWithRetryWithOptions(t, options, expectedStatus, retries, sleepBetweenRetries) //nolint:contextcheck // context is passed via options struct
+	return HTTPDoWithRetryWithOptions(t, options, expectedStatus, retries, sleepBetweenRetries)
 }
 
 // HTTPDoWithRetryContextE repeatedly performs the given HTTP method on the given URL until the given status code is
@@ -537,29 +390,7 @@ func HTTPDoWithRetryContextE(
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	return HTTPDoWithRetryWithOptionsE(t, options, expectedStatus, retries, sleepBetweenRetries) //nolint:contextcheck // context is passed via options struct
-}
-
-// HTTPDoWithRetry repeatedly performs the given HTTP method on the given URL until the given status code and body are
-// returned or until max retries has been exceeded.
-// The function compares the expected status code against the received one and fails if they don't match.
-//
-// Deprecated: Use [HTTPDoWithRetryContext] instead.
-func HTTPDoWithRetry(
-	t testing.TestingT, method string, url string,
-	body []byte, headers map[string]string, expectedStatus int,
-	retries int, sleepBetweenRetries time.Duration, tlsConfig *tls.Config,
-) string {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      bytes.NewReader(body),
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	return HTTPDoWithRetryWithOptions(t, options, expectedStatus, retries, sleepBetweenRetries)
+	return HTTPDoWithRetryWithOptionsE(t, options, expectedStatus, retries, sleepBetweenRetries)
 }
 
 // HTTPDoWithRetryWithOptions repeatedly performs the given HTTP method on the given URL until the given status code and body are
@@ -579,28 +410,6 @@ func HTTPDoWithRetryWithOptions(
 	return out
 }
 
-// HTTPDoWithRetryE repeatedly performs the given HTTP method on the given URL until the given status code and body are
-// returned or until max retries has been exceeded.
-// The function compares the expected status code against the received one and fails if they don't match.
-//
-// Deprecated: Use [HTTPDoWithRetryContextE] instead.
-func HTTPDoWithRetryE(
-	t testing.TestingT, method string, url string,
-	body []byte, headers map[string]string, expectedStatus int,
-	retries int, sleepBetweenRetries time.Duration, tlsConfig *tls.Config,
-) (string, error) {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      bytes.NewReader(body),
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	return HTTPDoWithRetryWithOptionsE(t, options, expectedStatus, retries, sleepBetweenRetries)
-}
-
 // HTTPDoWithRetryWithOptionsE repeatedly performs the given HTTP method on the given URL until the given status code and body are
 // returned or until max retries has been exceeded.
 // The function compares the expected status code against the received one and fails if they don't match.
@@ -613,8 +422,7 @@ func HTTPDoWithRetryWithOptionsE(
 	var data []byte
 
 	if options.Body != nil {
-		// The request body is closed after a request is complete.
-		// Read the underlying data and cache it, so we can reuse for retried requests.
+
 		b, err := io.ReadAll(options.Body)
 		if err != nil {
 			return "", err
@@ -625,7 +433,7 @@ func HTTPDoWithRetryWithOptionsE(
 
 	options.Body = nil
 
-	out, err := retry.DoWithRetryContextE( //nolint:staticcheck // deprecated wrapper; use HTTPDoWithRetryContext for context support
+	out, err := retry.DoWithRetryContextE(
 		t, context.Background(), "HTTP "+options.Method+" to URL "+options.Url, retries,
 		sleepBetweenRetries, func() (string, error) {
 			options.Body = bytes.NewReader(data)
@@ -664,7 +472,7 @@ func HTTPDoWithValidationRetryContext(
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	HTTPDoWithValidationRetryWithOptions(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries) //nolint:contextcheck // context is passed via options struct
+	HTTPDoWithValidationRetryWithOptions(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
 }
 
 // HTTPDoWithValidationRetryContextE repeatedly performs the given HTTP method on the given URL until the given status
@@ -684,28 +492,7 @@ func HTTPDoWithValidationRetryContextE(
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	return HTTPDoWithValidationRetryWithOptionsE(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries) //nolint:contextcheck // context is passed via options struct
-}
-
-// HTTPDoWithValidationRetry repeatedly performs the given HTTP method on the given URL until the given status code and
-// body are returned or until max retries has been exceeded.
-//
-// Deprecated: Use [HTTPDoWithValidationRetryContext] instead.
-func HTTPDoWithValidationRetry(
-	t testing.TestingT, method string, url string,
-	body []byte, headers map[string]string, expectedStatus int,
-	expectedBody string, retries int, sleepBetweenRetries time.Duration, tlsConfig *tls.Config,
-) {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      bytes.NewReader(body),
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	HTTPDoWithValidationRetryWithOptions(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
+	return HTTPDoWithValidationRetryWithOptionsE(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
 }
 
 // HTTPDoWithValidationRetryWithOptions repeatedly performs the given HTTP method on the given URL until the given status code and
@@ -722,27 +509,6 @@ func HTTPDoWithValidationRetryWithOptions(
 	}
 }
 
-// HTTPDoWithValidationRetryE repeatedly performs the given HTTP method on the given URL until the given status code and
-// body are returned or until max retries has been exceeded.
-//
-// Deprecated: Use [HTTPDoWithValidationRetryContextE] instead.
-func HTTPDoWithValidationRetryE(
-	t testing.TestingT, method string, url string,
-	body []byte, headers map[string]string, expectedStatus int,
-	expectedBody string, retries int, sleepBetweenRetries time.Duration, tlsConfig *tls.Config,
-) error {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      bytes.NewReader(body),
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	return HTTPDoWithValidationRetryWithOptionsE(t, options, expectedStatus, expectedBody, retries, sleepBetweenRetries)
-}
-
 // HTTPDoWithValidationRetryWithOptionsE repeatedly performs the given HTTP method on the given URL until the given status code and
 // body are returned or until max retries has been exceeded.
 //
@@ -751,7 +517,7 @@ func HTTPDoWithValidationRetryWithOptionsE(
 	t testing.TestingT, options HttpDoOptions, expectedStatus int,
 	expectedBody string, retries int, sleepBetweenRetries time.Duration,
 ) error {
-	_, err := retry.DoWithRetryContextE(t, context.Background(), "HTTP "+options.Method+" to URL "+options.Url, retries, //nolint:staticcheck // deprecated wrapper; use HTTPDoWithValidationRetryContext for context support
+	_, err := retry.DoWithRetryContextE(t, context.Background(), "HTTP "+options.Method+" to URL "+options.Url, retries,
 		sleepBetweenRetries, func() (string, error) {
 			return "", HTTPDoWithValidationWithOptionsE(t, options, expectedStatus, expectedBody)
 		})
@@ -773,7 +539,7 @@ func HTTPDoWithValidationContext(t testing.TestingT, ctx context.Context, method
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	HTTPDoWithValidationWithOptions(t, options, expectedStatusCode, expectedBody) //nolint:contextcheck // context is passed via options struct
+	HTTPDoWithValidationWithOptions(t, options, expectedStatusCode, expectedBody)
 }
 
 // HTTPDoWithValidationContextE performs the given HTTP method on the given URL and verifies that the response has the
@@ -790,24 +556,7 @@ func HTTPDoWithValidationContextE(t testing.TestingT, ctx context.Context, metho
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	return HTTPDoWithValidationWithOptionsE(t, options, expectedStatusCode, expectedBody) //nolint:contextcheck // context is passed via options struct
-}
-
-// HTTPDoWithValidation performs the given HTTP method on the given URL and verify that you get back the expected status
-// code and body. If either doesn't match, fail the test.
-//
-// Deprecated: Use [HTTPDoWithValidationContext] instead.
-func HTTPDoWithValidation(t testing.TestingT, method string, url string, body io.Reader, headers map[string]string, expectedStatusCode int, expectedBody string, tlsConfig *tls.Config) {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      body,
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	HTTPDoWithValidationWithOptions(t, options, expectedStatusCode, expectedBody)
+	return HTTPDoWithValidationWithOptionsE(t, options, expectedStatusCode, expectedBody)
 }
 
 // HTTPDoWithValidationWithOptions performs the given HTTP method on the given URL and verify that you get back the expected status
@@ -819,23 +568,6 @@ func HTTPDoWithValidationWithOptions(t testing.TestingT, options HttpDoOptions, 
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// HTTPDoWithValidationE performs the given HTTP method on the given URL and verify that you get back the expected status
-// code and body. If either doesn't match, return an error.
-//
-// Deprecated: Use [HTTPDoWithValidationContextE] instead.
-func HTTPDoWithValidationE(t testing.TestingT, method string, url string, body io.Reader, headers map[string]string, expectedStatusCode int, expectedBody string, tlsConfig *tls.Config) error {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      body,
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	return HTTPDoWithValidationWithOptionsE(t, options, expectedStatusCode, expectedBody)
 }
 
 // HTTPDoWithValidationWithOptionsE performs the given HTTP method on the given URL and verify that you get back the expected status
@@ -861,7 +593,7 @@ func HTTPDoWithCustomValidationContext(t testing.TestingT, ctx context.Context, 
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	HTTPDoWithCustomValidationWithOptions(t, options, validateResponse) //nolint:contextcheck // context is passed via options struct
+	HTTPDoWithCustomValidationWithOptions(t, options, validateResponse)
 }
 
 // HTTPDoWithCustomValidationContextE performs the given HTTP method on the given URL and validates the returned status
@@ -877,24 +609,7 @@ func HTTPDoWithCustomValidationContextE(t testing.TestingT, ctx context.Context,
 		Timeout:   defaultTimeoutSeconds,
 	}
 
-	return HTTPDoWithCustomValidationWithOptionsE(t, options, validateResponse) //nolint:contextcheck // context is passed via options struct
-}
-
-// HTTPDoWithCustomValidation performs the given HTTP method on the given URL and validate the returned status code and
-// body using the given function.
-//
-// Deprecated: Use [HTTPDoWithCustomValidationContext] instead.
-func HTTPDoWithCustomValidation(t testing.TestingT, method string, url string, body io.Reader, headers map[string]string, validateResponse func(int, string) bool, tlsConfig *tls.Config) {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      body,
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	HTTPDoWithCustomValidationWithOptions(t, options, validateResponse)
+	return HTTPDoWithCustomValidationWithOptionsE(t, options, validateResponse)
 }
 
 // HTTPDoWithCustomValidationWithOptions performs the given HTTP method on the given URL and validate the returned status code and
@@ -906,23 +621,6 @@ func HTTPDoWithCustomValidationWithOptions(t testing.TestingT, options HttpDoOpt
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-// HTTPDoWithCustomValidationE performs the given HTTP method on the given URL and validate the returned status code and
-// body using the given function.
-//
-// Deprecated: Use [HTTPDoWithCustomValidationContextE] instead.
-func HTTPDoWithCustomValidationE(t testing.TestingT, method string, url string, body io.Reader, headers map[string]string, validateResponse func(int, string) bool, tlsConfig *tls.Config) error {
-	options := HttpDoOptions{
-		Method:    method,
-		Url:       url,
-		Body:      body,
-		Headers:   headers,
-		TlsConfig: tlsConfig,
-		Timeout:   defaultTimeoutSeconds,
-	}
-
-	return HTTPDoWithCustomValidationWithOptionsE(t, options, validateResponse)
 }
 
 // HTTPDoWithCustomValidationWithOptionsE performs the given HTTP method on the given URL and validate the returned status code and

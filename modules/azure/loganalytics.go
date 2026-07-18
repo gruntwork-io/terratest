@@ -20,16 +20,6 @@ func LogAnalyticsWorkspaceExistsContext(t testing.TestingT, ctx context.Context,
 	return exists
 }
 
-// LogAnalyticsWorkspaceExists indicates whether the operational insights workspace exists.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [LogAnalyticsWorkspaceExistsContext] instead.
-func LogAnalyticsWorkspaceExists(t testing.TestingT, workspaceName string, resourceGroupName string, subscriptionID string) bool {
-	t.Helper()
-
-	return LogAnalyticsWorkspaceExistsContext(t, context.Background(), workspaceName, resourceGroupName, subscriptionID)
-}
-
 // LogAnalyticsWorkspaceExistsContextE indicates whether the operational insights workspace exists and may return an error.
 // The ctx parameter supports cancellation and timeouts.
 func LogAnalyticsWorkspaceExistsContextE(ctx context.Context, workspaceName string, resourceGroupName string, subscriptionID string) (bool, error) {
@@ -45,13 +35,6 @@ func LogAnalyticsWorkspaceExistsContextE(ctx context.Context, workspaceName stri
 	return true, nil
 }
 
-// LogAnalyticsWorkspaceExistsE indicates whether the operational insights workspace exists and may return an error.
-//
-// Deprecated: Use [LogAnalyticsWorkspaceExistsContextE] instead.
-func LogAnalyticsWorkspaceExistsE(workspaceName string, resourceGroupName string, subscriptionID string) (bool, error) {
-	return LogAnalyticsWorkspaceExistsContextE(context.Background(), workspaceName, resourceGroupName, subscriptionID)
-}
-
 // GetLogAnalyticsWorkspaceContext gets an operational insights workspace if it exists in a subscription.
 // This function would fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -64,16 +47,6 @@ func GetLogAnalyticsWorkspaceContext(t testing.TestingT, ctx context.Context, wo
 	return ws
 }
 
-// GetLogAnalyticsWorkspace gets an operational insights workspace if it exists in a subscription.
-// This function would fail the test if there is an error.
-//
-// Deprecated: Use [GetLogAnalyticsWorkspaceContext] instead.
-func GetLogAnalyticsWorkspace(t testing.TestingT, workspaceName string, resourceGroupName string, subscriptionID string) *armoperationalinsights.Workspace {
-	t.Helper()
-
-	return GetLogAnalyticsWorkspaceContext(t, context.Background(), workspaceName, resourceGroupName, subscriptionID)
-}
-
 // GetLogAnalyticsWorkspaceContextE gets an operational insights workspace if it exists in a subscription.
 // The ctx parameter supports cancellation and timeouts.
 func GetLogAnalyticsWorkspaceContextE(ctx context.Context, workspaceName, resourceGroupName, subscriptionID string) (*armoperationalinsights.Workspace, error) {
@@ -83,13 +56,6 @@ func GetLogAnalyticsWorkspaceContextE(ctx context.Context, workspaceName, resour
 	}
 
 	return GetLogAnalyticsWorkspaceWithClient(ctx, client, resourceGroupName, workspaceName)
-}
-
-// GetLogAnalyticsWorkspaceE gets an operational insights workspace if it exists in a subscription.
-//
-// Deprecated: Use [GetLogAnalyticsWorkspaceContextE] instead.
-func GetLogAnalyticsWorkspaceE(workspaceName, resourceGroupName, subscriptionID string) (*armoperationalinsights.Workspace, error) {
-	return GetLogAnalyticsWorkspaceContextE(context.Background(), workspaceName, resourceGroupName, subscriptionID)
 }
 
 // GetLogAnalyticsWorkspaceWithClient gets an operational insights workspace using the provided WorkspacesClient.
@@ -121,19 +87,4 @@ func CreateLogAnalyticsWorkspacesClientContextE(_ context.Context, subscriptionI
 	}
 
 	return armoperationalinsights.NewWorkspacesClient(subscriptionID, cred, opts)
-}
-
-// GetLogAnalyticsWorkspacesClientContextE returns a workspaces client; otherwise error.
-// The ctx parameter supports cancellation and timeouts.
-//
-// Deprecated: Use [CreateLogAnalyticsWorkspacesClientContextE] instead.
-func GetLogAnalyticsWorkspacesClientContextE(ctx context.Context, subscriptionID string) (*armoperationalinsights.WorkspacesClient, error) {
-	return CreateLogAnalyticsWorkspacesClientContextE(ctx, subscriptionID)
-}
-
-// GetLogAnalyticsWorkspacesClientE returns a workspaces client; otherwise error.
-//
-// Deprecated: Use [CreateLogAnalyticsWorkspacesClientContextE] instead.
-func GetLogAnalyticsWorkspacesClientE(subscriptionID string) (*armoperationalinsights.WorkspacesClient, error) {
-	return CreateLogAnalyticsWorkspacesClientContextE(context.Background(), subscriptionID)
 }

@@ -22,14 +22,6 @@ type GCRClient struct {
 	Transport     http.RoundTripper
 }
 
-// DeleteGCRRepo deletes a GCR repository including all tagged images.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [DeleteGCRRepoContext] instead.
-func DeleteGCRRepo(t testing.TestingT, repo string) {
-	DeleteGCRRepoContext(t, context.Background(), repo)
-}
-
 // DeleteGCRRepoContext deletes a GCR repository including all tagged images.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -38,17 +30,10 @@ func DeleteGCRRepoContext(t testing.TestingT, ctx context.Context, repo string) 
 	require.NoError(t, err)
 }
 
-// DeleteGCRRepoE deletes a GCR repository including all tagged images.
-//
-// Deprecated: Use [DeleteGCRRepoContextE] instead.
-func DeleteGCRRepoE(t testing.TestingT, repo string) error {
-	return DeleteGCRRepoContextE(t, context.Background(), repo)
-}
-
 // DeleteGCRRepoContextE deletes a GCR repository including all tagged images.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteGCRRepoContextE(t testing.TestingT, ctx context.Context, repo string) error {
-	authenticator, err := newGCRAuthenticator() //nolint:contextcheck // newGCRAuthenticator is a pure credential helper
+	authenticator, err := newGCRAuthenticator()
 	if err != nil {
 		return fmt.Errorf("failed to create authenticator: %w", err)
 	}
@@ -93,14 +78,6 @@ func DeleteGCRRepoWithClient(ctx context.Context, client *GCRClient, repo string
 	return nil
 }
 
-// DeleteGCRImageRef deletes a single repo image ref/digest.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [DeleteGCRImageRefContext] instead.
-func DeleteGCRImageRef(t testing.TestingT, ref string) {
-	DeleteGCRImageRefContext(t, context.Background(), ref)
-}
-
 // DeleteGCRImageRefContext deletes a single repo image ref/digest.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
@@ -109,17 +86,10 @@ func DeleteGCRImageRefContext(t testing.TestingT, ctx context.Context, ref strin
 	require.NoError(t, err)
 }
 
-// DeleteGCRImageRefE deletes a single repo image ref/digest.
-//
-// Deprecated: Use [DeleteGCRImageRefContextE] instead.
-func DeleteGCRImageRefE(t testing.TestingT, ref string) error {
-	return DeleteGCRImageRefContextE(t, context.Background(), ref)
-}
-
 // DeleteGCRImageRefContextE deletes a single repo image ref/digest.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteGCRImageRefContextE(t testing.TestingT, ctx context.Context, ref string) error {
-	authenticator, err := newGCRAuthenticator() //nolint:contextcheck // newGCRAuthenticator is a pure credential helper
+	authenticator, err := newGCRAuthenticator()
 	if err != nil {
 		return fmt.Errorf("failed to create authenticator: %w", err)
 	}

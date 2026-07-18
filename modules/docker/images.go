@@ -53,24 +53,10 @@ func (image Image) String() string {
 	return fmt.Sprintf("%s:%s", image.Repository, image.Tag)
 }
 
-// DeleteImage removes a docker image using the Docker CLI. This will fail the test if there is an error.
-//
-// Deprecated: Use [DeleteImageContext] instead.
-func DeleteImage(t testing.TestingT, img string, logger *logger.Logger) {
-	DeleteImageContext(t, context.Background(), img, logger)
-}
-
 // DeleteImageContext removes a docker image using the Docker CLI. This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func DeleteImageContext(t testing.TestingT, ctx context.Context, img string, logger *logger.Logger) {
 	require.NoError(t, DeleteImageContextE(t, ctx, img, logger))
-}
-
-// DeleteImageE removes a docker image using the Docker CLI.
-//
-// Deprecated: Use [DeleteImageContextE] instead.
-func DeleteImageE(t testing.TestingT, img string, logger *logger.Logger) error {
-	return DeleteImageContextE(t, context.Background(), img, logger)
 }
 
 // DeleteImageContextE removes a docker image using the Docker CLI. The ctx parameter supports cancellation and
@@ -85,13 +71,6 @@ func DeleteImageContextE(t testing.TestingT, ctx context.Context, img string, lo
 	return shell.RunCommandContextE(t, ctx, cmd)
 }
 
-// ListImages calls docker images using the Docker CLI to list the available images on the local docker daemon.
-//
-// Deprecated: Use [ListImagesContext] instead.
-func ListImages(t testing.TestingT, logger *logger.Logger) []Image {
-	return ListImagesContext(t, context.Background(), logger)
-}
-
 // ListImagesContext calls docker images using the Docker CLI to list the available images on the local docker
 // daemon. This will fail the test if there is an error. The ctx parameter supports cancellation and timeouts.
 func ListImagesContext(t testing.TestingT, ctx context.Context, logger *logger.Logger) []Image {
@@ -99,13 +78,6 @@ func ListImagesContext(t testing.TestingT, ctx context.Context, logger *logger.L
 	require.NoError(t, err)
 
 	return out
-}
-
-// ListImagesE calls docker images using the Docker CLI to list the available images on the local docker daemon.
-//
-// Deprecated: Use [ListImagesContextE] instead.
-func ListImagesE(t testing.TestingT, logger *logger.Logger) ([]Image, error) {
-	return ListImagesContextE(t, context.Background(), logger)
 }
 
 // ListImagesContextE calls docker images using the Docker CLI to list the available images on the local docker
@@ -122,7 +94,6 @@ func ListImagesContextE(t testing.TestingT, ctx context.Context, logger *logger.
 		return nil, err
 	}
 
-	// Parse and return the list of image objects.
 	images := []Image{}
 
 	scanner := bufio.NewScanner(strings.NewReader(out))
@@ -140,14 +111,6 @@ func ListImagesContextE(t testing.TestingT, ctx context.Context, logger *logger.
 	}
 
 	return images, nil
-}
-
-// DoesImageExist lists the images in the docker daemon and returns true if the given image label (repo:tag) exists.
-// This will fail the test if there is an error.
-//
-// Deprecated: Use [DoesImageExistContext] instead.
-func DoesImageExist(t testing.TestingT, imgLabel string, logger *logger.Logger) bool {
-	return DoesImageExistContext(t, context.Background(), imgLabel, logger)
 }
 
 // DoesImageExistContext lists the images in the docker daemon and returns true if the given image label

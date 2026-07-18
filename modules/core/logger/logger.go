@@ -73,8 +73,6 @@ func (l *Logger) Logf(t testing.TestingT, format string, args ...any) {
 		tt.Helper()
 	}
 
-	// methods can be called on (typed) nil pointers. In this case, use the Default function to log. This enables the
-	// caller to do `var l *Logger` and then use the logger already.
 	if l == nil || l.l == nil {
 		Default.Logf(t, format, args...)
 		return
@@ -96,10 +94,10 @@ func (discardLogger) Logf(testing.TestingT, string, ...any) {}
 type testingT struct{}
 
 func (testingT) Logf(t testing.TestingT, format string, args ...any) {
-	// this should never fail
+
 	tt, ok := t.(*gotesting.T)
 	if !ok {
-		// fallback
+
 		DoLog(t, callDepthDirect, os.Stdout, fmt.Sprintf(format, args...))
 		return
 	}
@@ -112,36 +110,6 @@ type terratestLogger struct{}
 
 func (terratestLogger) Logf(t testing.TestingT, format string, args ...any) {
 	DoLog(t, callDepthWrapped, os.Stdout, fmt.Sprintf(format, args...))
-}
-
-// Logf logs the given format and arguments, formatted using fmt.Sprintf, to stdout, along with a timestamp and information
-// about what test and file is doing the logging. Before Go 1.14, this is an alternative to t.Logf as it logs to stdout
-// immediately, rather than buffering all log output and only displaying it at the very end of the test. This is useful
-// because:
-//
-//  1. It allows you to iterate faster locally, as you get feedback on whether your code changes are working as expected
-//     right away, rather than at the very end of the test run.
-//
-//  2. If you have a bug in your code that causes a test to never complete or if the test code crashes, t.Logf would
-//     show you no log output whatsoever, making debugging very hard, where as this method will show you all the log
-//     output available.
-//
-//  3. If you have a test that takes a long time to complete, some CI systems will kill the test suite prematurely
-//     because there is no log output with t.Logf (e.g., CircleCI kills tests after 10 minutes of no log output). With
-//     this log method, you get log output continuously.
-//
-// Although t.Logf now supports streaming output since Go 1.14, this is kept for compatibility purposes.
-//
-// Deprecated: use Logger instead, as it provides more flexibility on logging.
-func Logf(t testing.TestingT, format string, args ...any) {
-	if tt, ok := t.(helper); ok {
-		tt.Helper()
-	}
-
-	MutexStdout.Lock()
-	defer MutexStdout.Unlock()
-
-	DoLog(t, callDepthDirect, os.Stdout, fmt.Sprintf(format, args...))
 }
 
 // Log logs the given arguments to stdout, along with a timestamp and information about what test and file is doing the
@@ -167,7 +135,7 @@ func DoLog(t testing.TestingT, callDepth int, writer io.Writer, args ...any) {
 	date := time.Now()
 	prefix := fmt.Sprintf("%s %s %s:", t.Name(), date.Format(time.RFC3339), CallerPrefix(callDepth+1))
 	allArgs := append([]any{prefix}, args...)
-	//nolint:errcheck // DoLog is a void logging function; swallowing write errors is intentional
+
 	fmt.Fprintln(writer, allArgs...)
 }
 
@@ -179,7 +147,7 @@ func DoLog(t testing.TestingT, callDepth int, writer io.Writer, args ...any) {
 func CallerPrefix(callDepth int) string {
 	_, file, line, ok := runtime.Caller(callDepth)
 	if ok {
-		// Truncate file name at last file name separator.
+
 		if index := strings.LastIndex(file, "/"); index >= 0 {
 			file = file[index+1:]
 		} else if index = strings.LastIndex(file, "\\"); index >= 0 {
