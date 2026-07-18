@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -20,10 +21,10 @@ func TestPlanAllExitCode(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer terragrunt.DestroyAll(t, options)
+	defer terragrunt.DestroyAllContext(t, context.Background(), options)
 
-	terragrunt.ApplyAll(t, options)
-	exitCode := terragrunt.PlanAllExitCode(t, options)
+	terragrunt.ApplyAllContext(t, context.Background(), options)
+	exitCode := terragrunt.PlanAllExitCodeContext(t, context.Background(), options)
 	require.Equal(t, 0, exitCode)
 }
 
@@ -38,7 +39,7 @@ func TestPlan(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	out := terragrunt.Plan(t, options)
+	out := terragrunt.PlanContext(t, context.Background(), options)
 	require.NotEmpty(t, out)
 }
 
@@ -54,10 +55,10 @@ func TestPlanExitCode(t *testing.T) {
 	}
 
 	// Apply first so plan shows no changes (exit code 0)
-	terragrunt.Apply(t, options)
-	defer terragrunt.Destroy(t, options)
+	terragrunt.ApplyContext(t, context.Background(), options)
+	defer terragrunt.DestroyContext(t, context.Background(), options)
 
-	exitCode := terragrunt.PlanExitCode(t, options)
+	exitCode := terragrunt.PlanExitCodeContext(t, context.Background(), options)
 	assert.Equal(t, 0, exitCode)
 }
 
@@ -72,7 +73,7 @@ func TestInitAndPlan(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	out := terragrunt.InitAndPlan(t, options)
+	out := terragrunt.InitAndPlanContext(t, context.Background(), options)
 	require.NotEmpty(t, out)
 }
 
@@ -87,7 +88,7 @@ func TestPlanAllWithError(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	getExitCode, errExitCode := terragrunt.PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode := terragrunt.PlanAllExitCodeContextE(t, context.Background(), options)
 	// GetExitCodeForRunCommandError was unable to determine the exit code correctly
 	require.NoError(t, errExitCode)
 
@@ -105,9 +106,9 @@ func TestAssertPlanAllExitCodeNoError(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer terragrunt.DestroyAll(t, options)
+	defer terragrunt.DestroyAllContext(t, context.Background(), options)
 
-	getExitCode, errExitCode := terragrunt.PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode := terragrunt.PlanAllExitCodeContextE(t, context.Background(), options)
 	if errExitCode != nil {
 		t.Fatal(errExitCode)
 	}
@@ -116,9 +117,9 @@ func TestAssertPlanAllExitCodeNoError(t *testing.T) {
 	assert.Equal(t, 2, getExitCode)
 	assertPlanAllExitCode(t, getExitCode, true)
 
-	terragrunt.ApplyAll(t, options)
+	terragrunt.ApplyAllContext(t, context.Background(), options)
 
-	getExitCode, errExitCode = terragrunt.PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode = terragrunt.PlanAllExitCodeContextE(t, context.Background(), options)
 	if errExitCode != nil {
 		t.Fatal(errExitCode)
 	}
@@ -139,7 +140,7 @@ func TestAssertPlanAllExitCodeWithError(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	getExitCode, errExitCode := terragrunt.PlanAllExitCodeE(t, options)
+	getExitCode, errExitCode := terragrunt.PlanAllExitCodeContextE(t, context.Background(), options)
 	require.NoError(t, errExitCode)
 
 	assertPlanAllExitCode(t, getExitCode, false)

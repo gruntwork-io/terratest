@@ -1,6 +1,7 @@
 package aws_test
 
 import (
+	"context"
 	"testing"
 
 	aws "github.com/gruntwork-io/terratest/modules/aws/v2"
@@ -60,8 +61,8 @@ func TestGetRecommendedRdsInstanceTypeHappyPath(t *testing.T) {
 
 		t.Run(scenerio.name, func(t *testing.T) {
 			t.Parallel()
-			engineVersion := aws.GetValidEngineVersion(t, scenerio.region, scenerio.databaseEngine, scenerio.engineMajorVersion)
-			actual, err := aws.GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, engineVersion, scenerio.instanceTypes)
+			engineVersion := aws.GetValidEngineVersionContext(t, context.Background(), scenerio.region, scenerio.databaseEngine, scenerio.engineMajorVersion)
+			actual, err := aws.GetRecommendedRdsInstanceTypeContextE(t, context.Background(), scenerio.region, scenerio.databaseEngine, engineVersion, scenerio.instanceTypes)
 			require.NoError(t, err)
 			assert.Equal(t, scenerio.expected, actual)
 		})
@@ -144,7 +145,7 @@ func TestGetRecommendedRdsInstanceTypeErrors(t *testing.T) {
 		t.Run(scenerio.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := aws.GetRecommendedRdsInstanceTypeE(t, scenerio.region, scenerio.databaseEngine, scenerio.databaseEngineVersion, scenerio.instanceTypes)
+			_, err := aws.GetRecommendedRdsInstanceTypeContextE(t, context.Background(), scenerio.region, scenerio.databaseEngine, scenerio.databaseEngineVersion, scenerio.instanceTypes)
 			assert.EqualError(t, err, aws.NoRdsInstanceTypeError{InstanceTypeOptions: scenerio.instanceTypes, DatabaseEngine: scenerio.databaseEngine, DatabaseEngineVersion: scenerio.databaseEngineVersion}.Error())
 		})
 	}

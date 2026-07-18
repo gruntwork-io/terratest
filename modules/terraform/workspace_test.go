@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -22,7 +23,7 @@ func TestWorkspaceNew(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	out := terraform.WorkspaceSelectOrNew(t, options, "terratest")
+	out := terraform.WorkspaceSelectOrNewContext(t, context.Background(), options, "terratest")
 
 	assert.Equal(t, "terratest", out)
 }
@@ -39,7 +40,7 @@ func TestWorkspaceIllegalName(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	out, err := terraform.WorkspaceSelectOrNewE(t, options, "###@@@&&&")
+	out, err := terraform.WorkspaceSelectOrNewContextE(t, context.Background(), options, "###@@@&&&")
 
 	require.Error(t, err)
 	assert.Empty(t, out, "%q should be an empty string", out)
@@ -57,10 +58,10 @@ func TestWorkspaceSelect(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	out := terraform.WorkspaceSelectOrNew(t, options, "terratest")
+	out := terraform.WorkspaceSelectOrNewContext(t, context.Background(), options, "terratest")
 	assert.Equal(t, "terratest", out)
 
-	out = terraform.WorkspaceSelectOrNew(t, options, "default")
+	out = terraform.WorkspaceSelectOrNewContext(t, context.Background(), options, "default")
 	assert.Equal(t, "default", out)
 }
 
@@ -76,8 +77,8 @@ func TestWorkspaceApply(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	terraform.WorkspaceSelectOrNew(t, options, "Terratest")
-	out := terraform.InitAndApply(t, options)
+	terraform.WorkspaceSelectOrNewContext(t, context.Background(), options, "Terratest")
+	out := terraform.InitAndApplyContext(t, context.Background(), options)
 
 	assert.Contains(t, out, "Hello, Terratest")
 }
@@ -184,16 +185,16 @@ func TestWorkspaceDeleteE(t *testing.T) {
 
 			// Set up pre-existing environment based on test case description
 			for _, existingWorkspace := range testCase.initialState.workspaces {
-				_, err = terraform.RunTerraformCommandE(t, options, "workspace", "new", existingWorkspace)
+				_, err = terraform.RunTerraformCommandContextE(t, context.Background(), options, "workspace", "new", existingWorkspace)
 				require.NoError(t, err)
 			}
 
 			// Switch to the specified workspace
-			_, err = terraform.RunTerraformCommandE(t, options, "workspace", "select", testCase.initialState.current)
+			_, err = terraform.RunTerraformCommandContextE(t, context.Background(), options, "workspace", "select", testCase.initialState.current)
 			require.NoError(t, err)
 
 			// Testing time, wooohoooo
-			gotResult, gotErr := terraform.WorkspaceDeleteE(t, options, testCase.toDeleteWorkspace)
+			gotResult, gotErr := terraform.WorkspaceDeleteContextE(t, context.Background(), options, testCase.toDeleteWorkspace)
 
 			// Check for errors
 			if testCase.expectedError != nil {
@@ -204,7 +205,7 @@ func TestWorkspaceDeleteE(t *testing.T) {
 				require.NoError(t, gotErr)
 				// Check for results
 				assert.Equal(t, testCase.expectedCurrent, gotResult)
-				assert.False(t, terraform.IsExistingWorkspace(terraform.RunTerraformCommand(t, options, "workspace", "list"), testCase.toDeleteWorkspace))
+				assert.False(t, terraform.IsExistingWorkspace(terraform.RunTerraformCommandContext(t, context.Background(), options, "workspace", "list"), testCase.toDeleteWorkspace))
 			}
 		})
 	}

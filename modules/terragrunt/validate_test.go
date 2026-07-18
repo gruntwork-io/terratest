@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -14,7 +15,7 @@ func TestValidateAll(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
-	terragrunt.ValidateAll(t, &terragrunt.Options{
+	terragrunt.ValidateAllContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -26,7 +27,7 @@ func TestValidate(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	terragrunt.Validate(t, &terragrunt.Options{
+	terragrunt.ValidateContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -38,7 +39,7 @@ func TestInitAndValidate(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	out := terragrunt.InitAndValidate(t, &terragrunt.Options{
+	out := terragrunt.InitAndValidateContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})

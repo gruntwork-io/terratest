@@ -1,6 +1,7 @@
 package aws_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -15,17 +16,17 @@ import (
 func TestEcrRepo(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
 
-	repo1, err := aws.CreateECRRepoE(t, region, ecrRepoName)
-	defer aws.DeleteECRRepo(t, region, repo1)
+	repo1, err := aws.CreateECRRepoContextE(t, context.Background(), region, ecrRepoName)
+	defer aws.DeleteECRRepoContext(t, context.Background(), region, repo1)
 
 	require.NoError(t, err)
 
 	assert.Equal(t, ecrRepoName, awsSDK.ToString(repo1.RepositoryName))
 
-	repo2, err := aws.GetECRRepoE(t, region, ecrRepoName)
+	repo2, err := aws.GetECRRepoContextE(t, context.Background(), region, ecrRepoName)
 	require.NoError(t, err)
 	assert.Equal(t, ecrRepoName, awsSDK.ToString(repo2.RepositoryName))
 }
@@ -33,28 +34,28 @@ func TestEcrRepo(t *testing.T) {
 func TestGetEcrRepoLifecyclePolicyError(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
 
-	repo1, err := aws.CreateECRRepoE(t, region, ecrRepoName)
-	defer aws.DeleteECRRepo(t, region, repo1)
+	repo1, err := aws.CreateECRRepoContextE(t, context.Background(), region, ecrRepoName)
+	defer aws.DeleteECRRepoContext(t, context.Background(), region, repo1)
 
 	require.NoError(t, err)
 
 	assert.Equal(t, ecrRepoName, awsSDK.ToString(repo1.RepositoryName))
 
-	_, err = aws.GetECRRepoLifecyclePolicyE(t, region, repo1)
+	_, err = aws.GetECRRepoLifecyclePolicyContextE(t, context.Background(), region, repo1)
 	require.Error(t, err)
 }
 
 func TestCanSetECRRepoLifecyclePolicyWithSingleRule(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
 
-	repo1, err := aws.CreateECRRepoE(t, region, ecrRepoName)
-	defer aws.DeleteECRRepo(t, region, repo1)
+	repo1, err := aws.CreateECRRepoContextE(t, context.Background(), region, ecrRepoName)
+	defer aws.DeleteECRRepoContext(t, context.Background(), region, repo1)
 
 	require.NoError(t, err)
 
@@ -76,21 +77,21 @@ func TestCanSetECRRepoLifecyclePolicyWithSingleRule(t *testing.T) {
 		]
 	}`
 
-	err = aws.PutECRRepoLifecyclePolicyE(t, region, repo1, lifecyclePolicy)
+	err = aws.PutECRRepoLifecyclePolicyContextE(t, context.Background(), region, repo1, lifecyclePolicy)
 	require.NoError(t, err)
 
-	policy := aws.GetECRRepoLifecyclePolicy(t, region, repo1)
+	policy := aws.GetECRRepoLifecyclePolicyContext(t, context.Background(), region, repo1)
 	assert.JSONEq(t, lifecyclePolicy, policy)
 }
 
 func TestCanSetRepositoryPolicyWithSimplePolicy(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	ecrRepoName := "terratest" + strings.ToLower(random.UniqueID())
 
-	repo, err := aws.CreateECRRepoE(t, region, ecrRepoName)
-	defer aws.DeleteECRRepo(t, region, repo)
+	repo, err := aws.CreateECRRepoContextE(t, context.Background(), region, ecrRepoName)
+	defer aws.DeleteECRRepoContext(t, context.Background(), region, repo)
 
 	require.NoError(t, err)
 
@@ -109,9 +110,9 @@ func TestCanSetRepositoryPolicyWithSimplePolicy(t *testing.T) {
 		]
 	}`
 
-	err = aws.PutECRRepoPolicyE(t, region, repo, repositoryPolicy)
+	err = aws.PutECRRepoPolicyContextE(t, context.Background(), region, repo, repositoryPolicy)
 	require.NoError(t, err)
 
-	policy := aws.GetECRRepoPolicy(t, region, repo)
+	policy := aws.GetECRRepoPolicyContext(t, context.Background(), region, repo)
 	assert.JSONEq(t, repositoryPolicy, policy)
 }

@@ -62,7 +62,7 @@ func GetPrivateIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetPrivateIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	return GetPrivateIPOfEc2Instance(t, instanceID, awsRegion)
+	return GetPrivateIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
 }
 
 // GetPrivateIpOfEc2InstanceE gets the private IP address of the given EC2 Instance in the given region.
@@ -71,7 +71,7 @@ func GetPrivateIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion 
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetPrivateIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPrivateIPOfEc2InstanceE(t, instanceID, awsRegion)
+	return GetPrivateIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
 }
 
 // GetPrivateIpsOfEc2InstancesContextE gets the private IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.
@@ -236,7 +236,7 @@ func GetPublicIPOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion 
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetPublicIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion string) string {
-	return GetPublicIPOfEc2Instance(t, instanceID, awsRegion)
+	return GetPublicIPOfEc2InstanceContext(t, context.Background(), instanceID, awsRegion)
 }
 
 // GetPublicIpOfEc2InstanceE gets the public IP address of the given EC2 Instance in the given region.
@@ -245,7 +245,7 @@ func GetPublicIpOfEc2Instance(t testing.TestingT, instanceID string, awsRegion s
 //
 //nolint:staticcheck,revive // preserving deprecated function name
 func GetPublicIpOfEc2InstanceE(t testing.TestingT, instanceID string, awsRegion string) (string, error) {
-	return GetPublicIPOfEc2InstanceE(t, instanceID, awsRegion)
+	return GetPublicIPOfEc2InstanceContextE(t, context.Background(), instanceID, awsRegion)
 }
 
 // GetPublicIpsOfEc2InstancesContextE gets the public IP address of the given EC2 Instance in the given region. Returns a map of instance ID to IP address.

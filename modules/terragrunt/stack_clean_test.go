@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"path"
 	"testing"
 
@@ -18,14 +19,14 @@ func TestStackClean(t *testing.T) {
 
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
 
-	terragrunt.StackGenerate(t, &terragrunt.Options{
+	terragrunt.StackGenerateContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
 
 	require.DirExists(t, stackDir)
 
-	out := terragrunt.StackClean(t, &terragrunt.Options{
+	out := terragrunt.StackCleanContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
@@ -44,7 +45,7 @@ func TestStackCleanE(t *testing.T) {
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
 
 	// First generate the stack to create .terragrunt-stack directory
-	_, err = terragrunt.StackGenerateE(t, &terragrunt.Options{
+	_, err = terragrunt.StackGenerateContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
@@ -54,7 +55,7 @@ func TestStackCleanE(t *testing.T) {
 	require.DirExists(t, stackDir)
 
 	// Clean the stack
-	out, err := terragrunt.StackCleanE(t, &terragrunt.Options{
+	out, err := terragrunt.StackCleanContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
@@ -80,7 +81,7 @@ func TestStackCleanNonExistentStack(t *testing.T) {
 	require.NoDirExists(t, stackDir)
 
 	// Clean should succeed even if .terragrunt-stack doesn't exist
-	_, err = terragrunt.StackCleanE(t, &terragrunt.Options{
+	_, err = terragrunt.StackCleanContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})
@@ -97,7 +98,7 @@ func TestStackCleanAfterRun(t *testing.T) {
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
 
 	// Initialize the stack
-	_, err = terragrunt.InitE(t, &terragrunt.Options{
+	_, err = terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
@@ -105,7 +106,7 @@ func TestStackCleanAfterRun(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run plan to generate the stack
-	_, err = terragrunt.StackRunE(t, &terragrunt.Options{
+	_, err = terragrunt.StackRunContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"plan"},
@@ -116,7 +117,7 @@ func TestStackCleanAfterRun(t *testing.T) {
 	require.DirExists(t, stackDir)
 
 	// Clean the stack
-	out, err := terragrunt.StackCleanE(t, &terragrunt.Options{
+	out, err := terragrunt.StackCleanContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
 	})

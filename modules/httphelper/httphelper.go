@@ -302,7 +302,7 @@ func HttpGetWithRetryE(t testing.TestingT, url string, tlsConfig *tls.Config, ex
 //
 //nolint:staticcheck,revive // preserving existing function name
 func HttpGetWithRetryWithOptionsE(t testing.TestingT, options HttpGetOptions, expectedStatus int, expectedBody string, retries int, sleepBetweenRetries time.Duration) error {
-	_, err := retry.DoWithRetryE(t, "HTTP GET to URL "+options.Url, retries, sleepBetweenRetries, func() (string, error) {
+	_, err := retry.DoWithRetryContextE(t, context.Background(), "HTTP GET to URL "+options.Url, retries, sleepBetweenRetries, func() (string, error) {
 		return "", HttpGetWithValidationWithOptionsE(t, options, expectedStatus, expectedBody)
 	})
 
@@ -363,7 +363,7 @@ func HttpGetWithRetryWithCustomValidationE(t testing.TestingT, url string, tlsCo
 //
 //nolint:staticcheck,revive // preserving existing function name
 func HttpGetWithRetryWithCustomValidationWithOptionsE(t testing.TestingT, options HttpGetOptions, retries int, sleepBetweenRetries time.Duration, validateResponse func(int, string) bool) error {
-	_, err := retry.DoWithRetryE(t, "HTTP GET to URL "+options.Url, retries, sleepBetweenRetries, func() (string, error) {
+	_, err := retry.DoWithRetryContextE(t, context.Background(), "HTTP GET to URL "+options.Url, retries, sleepBetweenRetries, func() (string, error) {
 		return "", HttpGetWithCustomValidationWithOptionsE(t, options, validateResponse)
 	})
 
@@ -625,8 +625,8 @@ func HTTPDoWithRetryWithOptionsE(
 
 	options.Body = nil
 
-	out, err := retry.DoWithRetryE( //nolint:staticcheck // deprecated wrapper; use HTTPDoWithRetryContext for context support
-		t, "HTTP "+options.Method+" to URL "+options.Url, retries,
+	out, err := retry.DoWithRetryContextE( //nolint:staticcheck // deprecated wrapper; use HTTPDoWithRetryContext for context support
+		t, context.Background(), "HTTP "+options.Method+" to URL "+options.Url, retries,
 		sleepBetweenRetries, func() (string, error) {
 			options.Body = bytes.NewReader(data)
 
@@ -751,7 +751,7 @@ func HTTPDoWithValidationRetryWithOptionsE(
 	t testing.TestingT, options HttpDoOptions, expectedStatus int,
 	expectedBody string, retries int, sleepBetweenRetries time.Duration,
 ) error {
-	_, err := retry.DoWithRetryE(t, "HTTP "+options.Method+" to URL "+options.Url, retries, //nolint:staticcheck // deprecated wrapper; use HTTPDoWithValidationRetryContext for context support
+	_, err := retry.DoWithRetryContextE(t, context.Background(), "HTTP "+options.Method+" to URL "+options.Url, retries, //nolint:staticcheck // deprecated wrapper; use HTTPDoWithValidationRetryContext for context support
 		sleepBetweenRetries, func() (string, error) {
 			return "", HTTPDoWithValidationWithOptionsE(t, options, expectedStatus, expectedBody)
 		})

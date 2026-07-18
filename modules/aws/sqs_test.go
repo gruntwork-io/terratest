@@ -16,11 +16,11 @@ import (
 func TestSqsQueueMethods(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	uniqueID := random.UniqueID()
 	namePrefix := "sqs-queue-test-" + uniqueID
 
-	url := terraaws.CreateRandomQueue(t, region, namePrefix)
+	url := terraaws.CreateRandomQueueContext(t, context.Background(), region, namePrefix)
 	defer deleteQueue(t, region, url)
 
 	assert.True(t, queueExists(t, region, url))
@@ -28,27 +28,27 @@ func TestSqsQueueMethods(t *testing.T) {
 	message := "test-message-" + uniqueID
 	timeoutSec := 20
 
-	terraaws.SendMessageToQueue(t, region, url, message)
+	terraaws.SendMessageToQueueContext(t, context.Background(), region, url, message)
 
-	firstResponse := terraaws.WaitForQueueMessage(t, region, url, timeoutSec)
+	firstResponse := terraaws.WaitForQueueMessageContext(t, context.Background(), region, url, timeoutSec)
 	require.NoError(t, firstResponse.Error)
 	assert.Equal(t, message, firstResponse.MessageBody)
 
-	terraaws.DeleteMessageFromQueue(t, region, url, firstResponse.ReceiptHandle)
+	terraaws.DeleteMessageFromQueueContext(t, context.Background(), region, url, firstResponse.ReceiptHandle)
 
-	secondResponse := terraaws.WaitForQueueMessage(t, region, url, timeoutSec)
+	secondResponse := terraaws.WaitForQueueMessageContext(t, context.Background(), region, url, timeoutSec)
 	assert.Error(t, secondResponse.Error, terraaws.ReceiveMessageTimeout{QueueUrl: url, TimeoutSec: timeoutSec})
 }
 
 func TestFifoSqsQueueMethods(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	uniqueID := random.UniqueID()
 	namePrefix := "sqs-queue-test-" + uniqueID
 	fifoMessageGroupID := "g1"
 
-	url := terraaws.CreateRandomFifoQueue(t, region, namePrefix)
+	url := terraaws.CreateRandomFifoQueueContext(t, context.Background(), region, namePrefix)
 	defer deleteQueue(t, region, url)
 
 	assert.True(t, queueExists(t, region, url))
@@ -56,22 +56,22 @@ func TestFifoSqsQueueMethods(t *testing.T) {
 	message := "test-message-" + uniqueID
 	timeoutSec := 20
 
-	terraaws.SendMessageFifoToQueue(t, region, url, message, fifoMessageGroupID)
+	terraaws.SendMessageFifoToQueueContext(t, context.Background(), region, url, message, fifoMessageGroupID)
 
-	firstResponse := terraaws.WaitForQueueMessage(t, region, url, timeoutSec)
+	firstResponse := terraaws.WaitForQueueMessageContext(t, context.Background(), region, url, timeoutSec)
 	require.NoError(t, firstResponse.Error)
 	assert.Equal(t, message, firstResponse.MessageBody)
 
-	terraaws.DeleteMessageFromQueue(t, region, url, firstResponse.ReceiptHandle)
+	terraaws.DeleteMessageFromQueueContext(t, context.Background(), region, url, firstResponse.ReceiptHandle)
 
-	secondResponse := terraaws.WaitForQueueMessage(t, region, url, timeoutSec)
+	secondResponse := terraaws.WaitForQueueMessageContext(t, context.Background(), region, url, timeoutSec)
 	assert.Error(t, secondResponse.Error, terraaws.ReceiveMessageTimeout{QueueUrl: url, TimeoutSec: timeoutSec})
 }
 
 func queueExists(t *testing.T, region string, url string) bool {
 	t.Helper()
 
-	sqsClient := terraaws.NewSqsClient(t, region)
+	sqsClient := terraaws.NewSqsClientContext(t, context.Background(), region)
 
 	input := sqs.GetQueueAttributesInput{QueueUrl: aws.String(url)}
 
@@ -89,6 +89,6 @@ func queueExists(t *testing.T, region string, url string) bool {
 func deleteQueue(t *testing.T, region string, url string) {
 	t.Helper()
 
-	terraaws.DeleteQueue(t, region, url)
+	terraaws.DeleteQueueContext(t, context.Background(), region, url)
 	assert.False(t, queueExists(t, region, url))
 }

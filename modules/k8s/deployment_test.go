@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -29,7 +30,7 @@ func TestGetDeploymentEReturnsError(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "")
-	_, err := k8s.GetDeploymentE(t, options, "nginx-deployment")
+	_, err := k8s.GetDeploymentContextE(t, context.Background(), options, "nginx-deployment")
 	require.Error(t, err)
 }
 
@@ -40,10 +41,10 @@ func TestGetDeployments(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	deployment := k8s.GetDeployment(t, options, "nginx-deployment")
+	deployment := k8s.GetDeploymentContext(t, context.Background(), options, "nginx-deployment")
 	require.Equal(t, "nginx-deployment", deployment.Name)
 	require.Equal(t, deployment.Namespace, uniqueID)
 }
@@ -55,10 +56,10 @@ func TestListDeployments(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	deployments := k8s.ListDeployments(t, options, metav1.ListOptions{})
+	deployments := k8s.ListDeploymentsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, deployments, 1)
 
 	deployment := deployments[0]
@@ -73,10 +74,10 @@ func TestWaitUntilDeploymentAvailable(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(ExampleDeploymentYAMLTemplate, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilDeploymentAvailable(t, options, "nginx-deployment", 60, 1*time.Second)
+	k8s.WaitUntilDeploymentAvailableContext(t, context.Background(), options, "nginx-deployment", 60, 1*time.Second)
 }
 
 func TestTestIsDeploymentAvailable(t *testing.T) {

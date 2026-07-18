@@ -1,6 +1,7 @@
 package helm_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -122,7 +123,7 @@ func TestFormatSetFilesAsArgs(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			assert.Equal(t, testCase.expected, helm.FormatSetFilesAsArgs(t, testCase.setFiles))
+			assert.Equal(t, testCase.expected, helm.FormatSetFilesAsArgsContext(t, context.Background(), testCase.setFiles))
 		})
 	}
 }
@@ -166,7 +167,7 @@ func TestFormatValuesFilesAsArgs(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			assert.Equal(t, testCase.expected, helm.FormatValuesFilesAsArgs(t, testCase.valuesFiles))
+			assert.Equal(t, testCase.expected, helm.FormatValuesFilesAsArgsContext(t, context.Background(), testCase.valuesFiles))
 		})
 	}
 }

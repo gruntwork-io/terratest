@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,7 +17,7 @@ func TestGraph(t *testing.T) {
 	testFolder, err := files.CopyTerragruntFolderToTemp("testdata/terragrunt-multi-plan", t.Name())
 	require.NoError(t, err)
 
-	output := terragrunt.Graph(t, &terragrunt.Options{
+	output := terragrunt.GraphContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 	})
@@ -32,7 +33,7 @@ func TestGraphE_InvalidConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "terragrunt.hcl"), []byte("not_valid!!!"), 0644))
 
-	output, err := terragrunt.GraphE(t, &terragrunt.Options{TerragruntDir: tmpDir})
+	output, err := terragrunt.GraphContextE(t, context.Background(), &terragrunt.Options{TerragruntDir: tmpDir})
 	require.NoError(t, err)
 	require.Contains(t, output, "digraph")
 	// Invalid config produces a minimal graph with just the current unit

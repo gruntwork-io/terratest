@@ -17,8 +17,8 @@ import (
 func TestGetDefaultVpc(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
-	vpc := terraaws.GetDefaultVpc(t, region)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	vpc := terraaws.GetDefaultVpcContext(t, context.Background(), region)
 
 	assert.NotEmpty(t, vpc.Name)
 	assert.NotEmpty(t, vpc.Subnets)
@@ -28,12 +28,12 @@ func TestGetDefaultVpc(t *testing.T) {
 func TestGetVpcById(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 
 	vpc := createVpc(t, region)
 	defer deleteVpc(t, *vpc.VpcId, region)
 
-	vpcTest := terraaws.GetVpcByID(t, *vpc.VpcId, region)
+	vpcTest := terraaws.GetVpcByIDContext(t, context.Background(), *vpc.VpcId, region)
 	assert.Equal(t, *vpc.VpcId, vpcTest.Id)
 	assert.NotEmpty(t, vpcTest.CidrAssociations)
 }
@@ -41,14 +41,14 @@ func TestGetVpcById(t *testing.T) {
 func TestGetVpcsE(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
-	azs := terraaws.GetAvailabilityZones(t, region)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	azs := terraaws.GetAvailabilityZonesContext(t, context.Background(), region)
 
 	isDefaultFilterName := "isDefault"
 	isDefaultFilterValue := "true"
 
 	defaultVpcFilter := types.Filter{Name: &isDefaultFilterName, Values: []string{isDefaultFilterValue}}
-	vpcs, _ := terraaws.GetVpcsE(t, []types.Filter{defaultVpcFilter}, region)
+	vpcs, _ := terraaws.GetVpcsContextE(t, context.Background(), []types.Filter{defaultVpcFilter}, region)
 
 	require.Len(t, vpcs, 1)
 	assert.NotEmpty(t, vpcs[0].Name)
@@ -70,26 +70,26 @@ func TestGetFirstTwoOctets(t *testing.T) {
 func TestIsPublicSubnet(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 
 	vpc := createVpc(t, region)
 	defer deleteVpc(t, *vpc.VpcId, region)
 
 	routeTable := createRouteTable(t, *vpc.VpcId, region)
 	subnet := createSubnet(t, *vpc.VpcId, *routeTable.RouteTableId, region)
-	assert.False(t, terraaws.IsPublicSubnet(t, *subnet.SubnetId, region))
+	assert.False(t, terraaws.IsPublicSubnetContext(t, context.Background(), *subnet.SubnetId, region))
 
 	createPublicRoute(t, *vpc.VpcId, *routeTable.RouteTableId, region)
-	assert.True(t, terraaws.IsPublicSubnet(t, *subnet.SubnetId, region))
+	assert.True(t, terraaws.IsPublicSubnetContext(t, context.Background(), *subnet.SubnetId, region))
 }
 
 func TestGetDefaultSubnetIDsForVpc(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
-	defaultVpc := terraaws.GetDefaultVpc(t, region)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	defaultVpc := terraaws.GetDefaultVpcContext(t, context.Background(), region)
 
-	defaultSubnetIDs := terraaws.GetDefaultSubnetIDsForVpc(t, *defaultVpc)
+	defaultSubnetIDs := terraaws.GetDefaultSubnetIDsForVpcPContext(t, context.Background(), defaultVpc)
 	assert.NotEmpty(t, defaultSubnetIDs)
 
 	availabilityZones := []string{}
@@ -97,7 +97,7 @@ func TestGetDefaultSubnetIDsForVpc(t *testing.T) {
 	for _, id := range defaultSubnetIDs {
 		// default subnets are by default public
 		// https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html
-		assert.True(t, terraaws.IsPublicSubnet(t, id, region))
+		assert.True(t, terraaws.IsPublicSubnetContext(t, context.Background(), id, region))
 
 		for _, subnet := range defaultVpc.Subnets {
 			if id == subnet.Id {
@@ -117,12 +117,12 @@ func TestGetDefaultSubnetIDsForVpc(t *testing.T) {
 func TestGetTagsForVpc(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 
 	vpc := createVpc(t, region)
 	defer deleteVpc(t, *vpc.VpcId, region)
 
-	noTags := terraaws.GetTagsForVpc(t, *vpc.VpcId, region)
+	noTags := terraaws.GetTagsForVpcContext(t, context.Background(), *vpc.VpcId, region)
 	assert.Empty(t, vpc.Tags)
 	assert.Empty(t, noTags)
 
@@ -130,9 +130,9 @@ func TestGetTagsForVpc(t *testing.T) {
 	testTags["TagKey1"] = "TagValue1"
 	testTags["TagKey2"] = "TagValue2"
 
-	terraaws.AddTagsToResource(t, region, *vpc.VpcId, testTags)
-	vpcWithTags := terraaws.GetVpcByID(t, *vpc.VpcId, region)
-	tags := terraaws.GetTagsForVpc(t, *vpc.VpcId, region)
+	terraaws.AddTagsToResourceContext(t, context.Background(), region, *vpc.VpcId, testTags)
+	vpcWithTags := terraaws.GetVpcByIDContext(t, context.Background(), *vpc.VpcId, region)
+	tags := terraaws.GetTagsForVpcContext(t, context.Background(), *vpc.VpcId, region)
 
 	assert.Len(t, vpcWithTags.Tags, len(testTags))
 	assert.Len(t, tags, len(testTags))
@@ -141,7 +141,7 @@ func TestGetTagsForVpc(t *testing.T) {
 func TestGetTagsForSubnet(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 
 	vpc := createVpc(t, region)
 	defer deleteVpc(t, *vpc.VpcId, region)
@@ -149,7 +149,7 @@ func TestGetTagsForSubnet(t *testing.T) {
 	routeTable := createRouteTable(t, *vpc.VpcId, region)
 	subnet := createSubnet(t, *vpc.VpcId, *routeTable.RouteTableId, region)
 
-	noTags := terraaws.GetTagsForSubnet(t, *subnet.SubnetId, region)
+	noTags := terraaws.GetTagsForSubnetContext(t, context.Background(), *subnet.SubnetId, region)
 	assert.Empty(t, subnet.Tags)
 	assert.Empty(t, noTags)
 
@@ -157,10 +157,10 @@ func TestGetTagsForSubnet(t *testing.T) {
 	testTags["TagKey1"] = "TagValue1"
 	testTags["TagKey2"] = "TagValue2"
 
-	terraaws.AddTagsToResource(t, region, *subnet.SubnetId, testTags)
+	terraaws.AddTagsToResourceContext(t, context.Background(), region, *subnet.SubnetId, testTags)
 
-	subnetWithTags := terraaws.GetSubnetsForVpc(t, *vpc.VpcId, region)[0]
-	tags := terraaws.GetTagsForSubnet(t, *subnet.SubnetId, region)
+	subnetWithTags := terraaws.GetSubnetsForVpcContext(t, context.Background(), *vpc.VpcId, region)[0]
+	tags := terraaws.GetTagsForSubnetContext(t, context.Background(), *subnet.SubnetId, region)
 
 	assert.Len(t, subnetWithTags.Tags, len(testTags))
 	assert.Len(t, tags, len(testTags))
@@ -171,19 +171,19 @@ func TestGetTagsForSubnet(t *testing.T) {
 func TestGetDefaultAzSubnets(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
-	vpc := terraaws.GetDefaultVpc(t, region)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	vpc := terraaws.GetDefaultVpcContext(t, context.Background(), region)
 
 	// Note: cannot know exact list of default azs aheard of time, but we know that
 	// it must be greater than 0 for default vpc.
-	subnets := terraaws.GetAzDefaultSubnetsForVpc(t, vpc.Id, region)
+	subnets := terraaws.GetAzDefaultSubnetsForVpcContext(t, context.Background(), vpc.Id, region)
 	assert.NotEmpty(t, subnets)
 }
 
 func createPublicRoute(t *testing.T, vpcID string, routeTableID string, region string) {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 
 	createIGWOut, igerr := ec2Client.CreateInternetGateway(context.Background(), &ec2.CreateInternetGatewayInput{})
 	require.NoError(t, igerr)
@@ -206,7 +206,7 @@ func createPublicRoute(t *testing.T, vpcID string, routeTableID string, region s
 func createRouteTable(t *testing.T, vpcID string, region string) types.RouteTable {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 
 	createRouteTableOutput, err := ec2Client.CreateRouteTable(context.Background(), &ec2.CreateRouteTableInput{
 		VpcId: aws.String(vpcID),
@@ -220,7 +220,7 @@ func createRouteTable(t *testing.T, vpcID string, region string) types.RouteTabl
 func createSubnet(t *testing.T, vpcID string, routeTableID string, region string) types.Subnet {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 
 	createSubnetOutput, err := ec2Client.CreateSubnet(context.Background(), &ec2.CreateSubnetInput{
 		CidrBlock: aws.String("10.10.1.0/24"),
@@ -240,7 +240,7 @@ func createSubnet(t *testing.T, vpcID string, routeTableID string, region string
 func createVpc(t *testing.T, region string) types.Vpc {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 
 	createVpcOutput, err := ec2Client.CreateVpc(context.Background(), &ec2.CreateVpcInput{
 		CidrBlock: aws.String("10.10.0.0/16"),
@@ -254,7 +254,7 @@ func createVpc(t *testing.T, region string) types.Vpc {
 func deleteRouteTables(t *testing.T, vpcID string, region string) {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 
 	vpcIDFilterName := "vpc-id"
 	vpcIDFilter := types.Filter{Name: &vpcIDFilterName, Values: []string{vpcID}}
@@ -290,7 +290,7 @@ func deleteRouteTables(t *testing.T, vpcID string, region string) {
 func deleteSubnets(t *testing.T, vpcID string, region string) {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 	vpcIDFilterName := "vpc-id"
 	vpcIDFilter := types.Filter{Name: &vpcIDFilterName, Values: []string{vpcID}}
 
@@ -308,7 +308,7 @@ func deleteSubnets(t *testing.T, vpcID string, region string) {
 func deleteInternetGateways(t *testing.T, vpcID string, region string) {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 	vpcIDFilterName := "attachment.vpc-id"
 	vpcIDFilter := types.Filter{Name: &vpcIDFilterName, Values: []string{vpcID}}
 
@@ -332,7 +332,7 @@ func deleteInternetGateways(t *testing.T, vpcID string, region string) {
 func deleteVpc(t *testing.T, vpcID string, region string) {
 	t.Helper()
 
-	ec2Client := terraaws.NewEc2Client(t, region)
+	ec2Client := terraaws.NewEc2ClientContext(t, context.Background(), region)
 
 	deleteRouteTables(t, vpcID, region)
 	deleteSubnets(t, vpcID, region)

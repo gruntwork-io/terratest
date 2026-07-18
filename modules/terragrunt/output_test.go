@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -20,10 +21,10 @@ func TestOutputJSON(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	terragrunt.Apply(t, options)
-	defer terragrunt.Destroy(t, options)
+	terragrunt.ApplyContext(t, context.Background(), options)
+	defer terragrunt.DestroyContext(t, context.Background(), options)
 
-	json := terragrunt.OutputJSON(t, options, "str")
+	json := terragrunt.OutputJSONContext(t, context.Background(), options, "str")
 	assert.Contains(t, json, "str")
 }
 
@@ -38,10 +39,10 @@ func TestOutputJSONAllKeys(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	terragrunt.Apply(t, options)
-	defer terragrunt.Destroy(t, options)
+	terragrunt.ApplyContext(t, context.Background(), options)
+	defer terragrunt.DestroyContext(t, context.Background(), options)
 
-	json := terragrunt.OutputJSON(t, options, "")
+	json := terragrunt.OutputJSONContext(t, context.Background(), options, "")
 	assert.Contains(t, json, "str")
 	assert.Contains(t, json, "list")
 	assert.Contains(t, json, "map")
@@ -55,6 +56,6 @@ func TestOutputJSONE_Error(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	_, err := terragrunt.OutputJSONE(t, options, "")
+	_, err := terragrunt.OutputJSONContextE(t, context.Background(), options, "")
 	require.Error(t, err)
 }

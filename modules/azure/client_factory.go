@@ -514,7 +514,7 @@ func CreateSQLMangedInstanceClientContext(ctx context.Context, subscriptionID st
 
 // Deprecated: Use [CreateSQLManagedInstanceClient] instead.
 func CreateSQLMangedInstanceClient(subscriptionID string) (*armsql.ManagedInstancesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
-	return CreateSQLManagedInstanceClient(subscriptionID)
+	return CreateSQLManagedInstanceClientContext(context.Background(), subscriptionID)
 }
 
 // CreateSQLManagedDatabasesClientContext is a helper function that will create and setup a sql managed databases client.
@@ -542,7 +542,7 @@ func CreateSQLMangedDatabasesClientContext(ctx context.Context, subscriptionID s
 
 // Deprecated: Use [CreateSQLManagedDatabasesClient] instead.
 func CreateSQLMangedDatabasesClient(subscriptionID string) (*armsql.ManagedDatabasesClient, error) { //nolint:revive,staticcheck // preserving deprecated function name
-	return CreateSQLManagedDatabasesClient(subscriptionID)
+	return CreateSQLManagedDatabasesClientContext(context.Background(), subscriptionID)
 }
 
 // getArmSQLClientFactory gets an arm sql client factory

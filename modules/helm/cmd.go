@@ -68,14 +68,14 @@ func getValuesArgsE(options *Options, args ...string) ([]string, error) {
 	args = append(args, FormatSetValuesAsArgs(options.SetStrValues, "--set-string")...)
 	args = append(args, FormatSetValuesAsArgs(mergeSetJSONValues(options), "--set-json")...)
 
-	valuesFilesArgs, err := FormatValuesFilesAsArgsE(options.ValuesFiles)
+	valuesFilesArgs, err := FormatValuesFilesAsArgsContextE(context.Background(), options.ValuesFiles)
 	if err != nil {
 		return args, err
 	}
 
 	args = append(args, valuesFilesArgs...)
 
-	setFilesArgs, err := FormatSetFilesAsArgsE(options.SetFiles)
+	setFilesArgs, err := FormatSetFilesAsArgsContextE(context.Background(), options.SetFiles)
 	if err != nil {
 		return args, err
 	}

@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -28,15 +29,15 @@ func TestNamespaces(t *testing.T) {
 	uniqueID := random.UniqueID()
 	namespaceName := strings.ToLower(uniqueID)
 	options := k8s.NewKubectlOptions("", "", namespaceName)
-	k8s.CreateNamespace(t, options, namespaceName)
+	k8s.CreateNamespaceContext(t, context.Background(), options, namespaceName)
 
 	defer func() {
-		k8s.DeleteNamespace(t, options, namespaceName)
-		namespace := k8s.GetNamespace(t, options, namespaceName)
+		k8s.DeleteNamespaceContext(t, context.Background(), options, namespaceName)
+		namespace := k8s.GetNamespaceContext(t, context.Background(), options, namespaceName)
 		require.Equal(t, corev1.NamespaceTerminating, namespace.Status.Phase)
 	}()
 
-	namespace := k8s.GetNamespace(t, options, namespaceName)
+	namespace := k8s.GetNamespaceContext(t, context.Background(), options, namespaceName)
 	require.Equal(t, namespace.Name, namespaceName)
 }
 
@@ -51,15 +52,15 @@ func TestNamespaceWithMetadata(t *testing.T) {
 		Name:   namespaceName,
 		Labels: namespaceLabels,
 	}
-	k8s.CreateNamespaceWithMetadata(t, options, namespaceObjectMetaWithLabels)
+	k8s.CreateNamespaceWithMetadataContext(t, context.Background(), options, namespaceObjectMetaWithLabels)
 
 	defer func() {
-		k8s.DeleteNamespace(t, options, namespaceName)
-		namespace := k8s.GetNamespace(t, options, namespaceName)
+		k8s.DeleteNamespaceContext(t, context.Background(), options, namespaceName)
+		namespace := k8s.GetNamespaceContext(t, context.Background(), options, namespaceName)
 		require.Equal(t, corev1.NamespaceTerminating, namespace.Status.Phase)
 	}()
 
-	namespace := k8s.GetNamespace(t, options, namespaceName)
+	namespace := k8s.GetNamespaceContext(t, context.Background(), options, namespaceName)
 	require.Equal(t, namespace.Name, namespaceName)
 
 	for k, v := range namespaceLabels {
@@ -74,12 +75,12 @@ func TestListNamespaces(t *testing.T) {
 	namespaceName := strings.ToLower(uniqueID)
 	options := k8s.NewKubectlOptions("", "", namespaceName)
 
-	k8s.CreateNamespace(t, options, namespaceName)
-	t.Cleanup(func() { k8s.DeleteNamespace(t, options, namespaceName) })
+	k8s.CreateNamespaceContext(t, context.Background(), options, namespaceName)
+	t.Cleanup(func() { k8s.DeleteNamespaceContext(t, context.Background(), options, namespaceName) })
 
 	t.Run("List all namespaces and find the created one", func(t *testing.T) {
 		t.Parallel()
-		namespaces := k8s.ListNamespaces(t, options, metav1.ListOptions{})
+		namespaces := k8s.ListNamespacesContext(t, context.Background(), options, metav1.ListOptions{})
 		require.NotEmpty(t, namespaces, "Should find at least some namespaces")
 
 		found := false

@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -62,11 +63,11 @@ func TestRunE_EmptyTfArgs(t *testing.T) {
 		TerragruntDir: "/some/path",
 	}
 
-	_, err := terragrunt.RunE(t, options, []string{}, []string{})
+	_, err := terragrunt.RunContextE(t, context.Background(), options, []string{}, []string{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tfArgs cannot be empty")
 
-	_, err = terragrunt.RunE(t, options, []string{"--all"}, nil)
+	_, err = terragrunt.RunContextE(t, context.Background(), options, []string{"--all"}, nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tfArgs cannot be empty")
 }
@@ -83,9 +84,9 @@ func TestRun(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer terragrunt.Run(t, options, []string{}, []string{"destroy", "-auto-approve"})
+	defer terragrunt.RunContext(t, context.Background(), options, []string{}, []string{"destroy", "-auto-approve"})
 
-	out := terragrunt.Run(t, options, []string{}, []string{"apply", "-input=false", "-auto-approve"})
+	out := terragrunt.RunContext(t, context.Background(), options, []string{}, []string{"apply", "-input=false", "-auto-approve"})
 	require.Contains(t, out, "Hello, World")
 }
 
@@ -102,7 +103,7 @@ func TestRunE(t *testing.T) {
 	}
 
 	// Run an invalid tf command to trigger an error
-	_, err = terragrunt.RunE(t, options, []string{}, []string{"not-a-real-command"})
+	_, err = terragrunt.RunContextE(t, context.Background(), options, []string{}, []string{"not-a-real-command"})
 	require.Error(t, err)
 }
 
@@ -118,10 +119,10 @@ func TestRunWithTgArgs(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 	}
 
-	defer terragrunt.Run(t, options, []string{}, []string{"destroy", "-auto-approve"})
+	defer terragrunt.RunContext(t, context.Background(), options, []string{}, []string{"destroy", "-auto-approve"})
 
 	// Use --log-level error as a tg arg to verify it's respected
-	out := terragrunt.Run(t, options, []string{"--log-level", "error"}, []string{"apply", "-input=false", "-auto-approve"})
+	out := terragrunt.RunContext(t, context.Background(), options, []string{"--log-level", "error"}, []string{"apply", "-input=false", "-auto-approve"})
 	require.Contains(t, out, "Hello, World")
 	require.NotContains(t, out, "level=info",
 		"With --log-level error, info logs should not appear")
@@ -133,7 +134,7 @@ func TestRunE_ValidationError(t *testing.T) {
 
 	// Missing TerragruntDir
 	options := &terragrunt.Options{}
-	_, err := terragrunt.RunE(t, options, []string{}, []string{"apply"})
+	_, err := terragrunt.RunContextE(t, context.Background(), options, []string{}, []string{"apply"})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "TerragruntDir is required")
 }

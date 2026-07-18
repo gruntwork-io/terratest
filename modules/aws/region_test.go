@@ -1,6 +1,7 @@
 package aws_test
 
 import (
+	"context"
 	"testing"
 
 	aws "github.com/gruntwork-io/terratest/modules/aws/v2"
@@ -10,7 +11,7 @@ import (
 func TestGetRandomRegion(t *testing.T) {
 	t.Parallel()
 
-	randomRegion := aws.GetRandomRegion(t, nil, nil)
+	randomRegion := aws.GetRandomRegionContext(t, context.Background(), nil, nil)
 	assertLooksLikeRegionName(t, randomRegion)
 }
 
@@ -21,7 +22,7 @@ func TestGetRandomRegionExcludesForbiddenRegions(t *testing.T) {
 	forbiddenRegions := []string{"us-west-2", "ap-northeast-2"}
 
 	for i := 0; i < 1000; i++ {
-		randomRegion := aws.GetRandomRegion(t, approvedRegions, forbiddenRegions)
+		randomRegion := aws.GetRandomRegionContext(t, context.Background(), approvedRegions, forbiddenRegions)
 		assert.NotContains(t, forbiddenRegions, randomRegion)
 	}
 }
@@ -29,7 +30,7 @@ func TestGetRandomRegionExcludesForbiddenRegions(t *testing.T) {
 func TestGetAllAwsRegions(t *testing.T) {
 	t.Parallel()
 
-	regions := aws.GetAllAwsRegions(t)
+	regions := aws.GetAllAwsRegionsContext(t, context.Background())
 
 	// The typical account had access to 15 regions as of April, 2018: https://aws.amazon.com/about-aws/global-infrastructure/
 	assert.GreaterOrEqual(t, len(regions), 15, "Number of regions: %d", len(regions))
@@ -48,8 +49,8 @@ func assertLooksLikeRegionName(t *testing.T, regionName string) {
 func TestGetAvailabilityZones(t *testing.T) {
 	t.Parallel()
 
-	randomRegion := aws.GetRandomStableRegion(t, nil, nil)
-	azs := aws.GetAvailabilityZones(t, randomRegion)
+	randomRegion := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	azs := aws.GetAvailabilityZonesContext(t, context.Background(), randomRegion)
 
 	// Every AWS account has access to different AZs, so he best we can do is make sure we get at least one back
 	assert.Greater(t, len(azs), 1)
@@ -64,8 +65,8 @@ func TestGetRandomRegionForService(t *testing.T) {
 
 	serviceName := "apigatewayv2"
 
-	regionsForService, _ := aws.GetRegionsForServiceE(t, serviceName)
-	randomRegionForService := aws.GetRandomRegionForService(t, serviceName)
+	regionsForService, _ := aws.GetRegionsForServiceContextE(t, context.Background(), serviceName)
+	randomRegionForService := aws.GetRandomRegionForServiceContext(t, context.Background(), serviceName)
 
 	assert.Contains(t, regionsForService, randomRegionForService)
 }

@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -31,11 +32,11 @@ func TestListPodsReturnsPodsInNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	pods := k8s.ListPods(t, options, metav1.ListOptions{})
+	pods := k8s.ListPodsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, pods, 1)
 	pod := pods[0]
 	require.Equal(t, "nginx-pod", pod.Name)
@@ -46,7 +47,7 @@ func TestGetPodEReturnsErrorForNonExistantPod(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetPodE(t, options, "nginx-pod")
+	_, err := k8s.GetPodContextE(t, context.Background(), options, "nginx-pod")
 	require.Error(t, err)
 }
 
@@ -57,11 +58,11 @@ func TestGetPodEReturnsCorrectPodInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	pod := k8s.GetPod(t, options, "nginx-pod")
+	pod := k8s.GetPodContext(t, context.Background(), options, "nginx-pod")
 	require.Equal(t, "nginx-pod", pod.Name)
 	require.Equal(t, pod.Namespace, uniqueID)
 }
@@ -73,11 +74,11 @@ func TestWaitUntilNumPodsCreatedReturnsSuccessfully(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilNumPodsCreated(t, options, metav1.ListOptions{}, 1, 60, 1*time.Second)
+	k8s.WaitUntilNumPodsCreatedContext(t, context.Background(), options, metav1.ListOptions{}, 1, 60, 1*time.Second)
 }
 
 func TestWaitUntilPodAvailableReturnsSuccessfully(t *testing.T) {
@@ -87,11 +88,11 @@ func TestWaitUntilPodAvailableReturnsSuccessfully(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	k8s.WaitUntilPodAvailableContext(t, context.Background(), options, "nginx-pod", 60, 1*time.Second)
 }
 
 func TestWaitUntilPodWithMultipleContainersAvailableReturnsSuccessfully(t *testing.T) {
@@ -101,11 +102,11 @@ func TestWaitUntilPodWithMultipleContainersAvailableReturnsSuccessfully(t *testi
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodWithMultipleContainersYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	k8s.WaitUntilPodAvailableContext(t, context.Background(), options, "nginx-pod", 60, 1*time.Second)
 }
 
 func TestWaitUntilPodAvailableWithReadinessProbe(t *testing.T) {
@@ -115,11 +116,11 @@ func TestWaitUntilPodAvailableWithReadinessProbe(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodWithReadinessProbe, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	k8s.WaitUntilPodAvailableContext(t, context.Background(), options, "nginx-pod", 60, 1*time.Second)
 }
 
 func TestWaitUntilPodAvailableWithFailingReadinessProbe(t *testing.T) {
@@ -129,11 +130,11 @@ func TestWaitUntilPodAvailableWithFailingReadinessProbe(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(examplePodWithFailingReadinessProbe, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	err := k8s.WaitUntilPodAvailableE(t, options, "nginx-pod", 60, 1*time.Second)
+	err := k8s.WaitUntilPodAvailableContextE(t, context.Background(), options, "nginx-pod", 60, 1*time.Second)
 	require.Error(t, err)
 }
 
@@ -289,16 +290,16 @@ func TestExecPod(t *testing.T) {
 
 	configData := fmt.Sprintf(examplePodWithMultipleContainersYAMLTemplate, uniqueID, uniqueID)
 
-	t.Cleanup(func() { k8s.KubectlDeleteFromString(t, options, configData) })
+	t.Cleanup(func() { k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData) })
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilPodAvailable(t, options, "nginx-pod", 60, 1*time.Second)
+	k8s.WaitUntilPodAvailableContext(t, context.Background(), options, "nginx-pod", 60, 1*time.Second)
 
 	t.Run("TestExecPodWithoutContainer", func(t *testing.T) {
 		t.Parallel()
 
-		stdout, err := k8s.ExecPodE(t, options, "nginx-pod", "", "env")
+		stdout, err := k8s.ExecPodContextE(t, context.Background(), options, "nginx-pod", "", "env")
 		require.NoError(t, err)
 		require.Contains(t, stdout, "NAME=nginx\n")
 	})
@@ -306,7 +307,7 @@ func TestExecPod(t *testing.T) {
 	t.Run("TestExecPodWithContainer", func(t *testing.T) {
 		t.Parallel()
 
-		stdout, err := k8s.ExecPodE(t, options, "nginx-pod", "nginx-two", "env")
+		stdout, err := k8s.ExecPodContextE(t, context.Background(), options, "nginx-pod", "nginx-two", "env")
 		require.NoError(t, err)
 		require.Contains(t, stdout, "NAME=nginx-two\n")
 	})

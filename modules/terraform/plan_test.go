@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -21,7 +22,7 @@ func TestInitAndPlanWithError(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	_, err = terraform.InitAndPlanE(t, options)
+	_, err = terraform.InitAndPlanContextE(t, context.Background(), options)
 	require.Error(t, err)
 }
 
@@ -39,9 +40,9 @@ func TestInitAndPlanWithNoError(t *testing.T) {
 	// report "No changes. Infrastructure is up-to-date." However, with 0.13 and above, if the Terraform configuration
 	// has never been applied at all, 'plan' always shows changes. So we have to run 'apply' first, and can then
 	// check that 'plan' returns the message we expect.
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	out, err := terraform.PlanE(t, options)
+	out, err := terraform.PlanContextE(t, context.Background(), options)
 	require.NoError(t, err)
 	require.Contains(t, out, "No changes.")
 }
@@ -59,7 +60,7 @@ func TestInitAndPlanWithOutput(t *testing.T) {
 		},
 	}
 
-	out, err := terraform.InitAndPlanE(t, options)
+	out, err := terraform.InitAndPlanContextE(t, context.Background(), options)
 	require.NoError(t, err)
 	require.Contains(t, out, "1 to add, 0 to change, 0 to destroy.")
 }
@@ -80,7 +81,7 @@ func TestInitAndPlanWithPlanFile(t *testing.T) {
 		PlanFilePath: planFilePath,
 	}
 
-	out, err := terraform.InitAndPlanE(t, options)
+	out, err := terraform.InitAndPlanContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
 	// clean output to be consistent in checks
@@ -103,7 +104,7 @@ func TestInitAndPlanAndShowWithStructNoLogTempPlanFile(t *testing.T) {
 		},
 	}
 
-	planStruct := terraform.InitAndPlanAndShowWithStructNoLogTempPlanFile(t, options)
+	planStruct := terraform.InitAndPlanAndShowWithStructNoLogTempPlanFileContext(t, context.Background(), options)
 	assert.Len(t, planStruct.ResourceChangesMap, 1)
 }
 
@@ -121,9 +122,9 @@ func TestPlanWithExitCodeWithNoChanges(t *testing.T) {
 	// would return a code of 0. However, with 0.13 and above, if the Terraform configuration has never been applied
 	// at all, -detailed-exitcode always returns an exit code of 2. So we have to run 'apply' first, and can then
 	// check that 'plan' returns the exit code we expect.
-	terraform.InitAndApply(t, options)
+	terraform.InitAndApplyContext(t, context.Background(), options)
 
-	exitCode := terraform.PlanExitCode(t, options)
+	exitCode := terraform.PlanExitCodeContext(t, context.Background(), options)
 	require.Equal(t, terraform.DefaultSuccessExitCode, exitCode)
 }
 
@@ -140,7 +141,7 @@ func TestPlanWithExitCodeWithChanges(t *testing.T) {
 		},
 	}
 
-	exitCode := terraform.InitAndPlanWithExitCode(t, options)
+	exitCode := terraform.InitAndPlanWithExitCodeContext(t, context.Background(), options)
 	require.Equal(t, terraform.TerraformPlanChangesPresentExitCode, exitCode)
 }
 
@@ -154,7 +155,7 @@ func TestPlanWithExitCodeWithFailure(t *testing.T) {
 		TerraformDir: testFolder,
 	}
 
-	exitCode, getExitCodeErr := terraform.InitAndPlanWithExitCodeE(t, options)
+	exitCode, getExitCodeErr := terraform.InitAndPlanWithExitCodeContextE(t, context.Background(), options)
 	require.NoError(t, getExitCodeErr)
 	require.Equal(t, 1, exitCode)
 }

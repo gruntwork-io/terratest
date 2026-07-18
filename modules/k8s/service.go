@@ -317,7 +317,7 @@ func FindNodePortE(service *corev1.Service, servicePort int32) (int32, error) {
 
 // pickRandomNode will pick a random node in the kubernetes cluster
 func pickRandomNodeE(t testing.TestingT, options *KubectlOptions) (corev1.Node, error) {
-	nodes, err := GetNodesE(t, options)
+	nodes, err := GetNodesContextE(t, context.Background(), options)
 	if err != nil {
 		return corev1.Node{}, err
 	}

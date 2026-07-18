@@ -44,7 +44,7 @@ type DBConfig struct {
 func DBConnection(t testing.TestingT, dbType string, dbConfig DBConfig) *sql.DB { //nolint:gocritic // Preserving original signature for backward compatibility.
 	t.Helper()
 
-	db, err := DBConnectionE(t, dbType, dbConfig)
+	db, err := DBConnectionWithContextE(t, context.Background(), dbType, &dbConfig)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func DBConnectionWithContextE(t testing.TestingT, ctx context.Context, dbType st
 func DBExecution(t testing.TestingT, db *sql.DB, command string) {
 	t.Helper()
 
-	_, err := DBExecutionE(t, db, command)
+	_, err := DBExecutionWithContextE(t, context.Background(), db, command)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func DBExecutionWithContextE(t testing.TestingT, ctx context.Context, db *sql.DB
 func DBQuery(t testing.TestingT, db *sql.DB, command string) *sql.Rows {
 	t.Helper()
 
-	rows, err := DBQueryE(t, db, command)
+	rows, err := DBQueryWithContextE(t, context.Background(), db, command)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,7 +181,7 @@ func DBQueryWithValidation(t testing.TestingT, db *sql.DB, command string, expec
 func DBQueryWithValidationE(t testing.TestingT, db *sql.DB, command string, expected string) error {
 	t.Helper()
 
-	return DBQueryWithCustomValidationE(t, db, command, func(rows *sql.Rows) bool {
+	return DBQueryWithCustomValidationWithContextE(t, context.Background(), db, command, func(rows *sql.Rows) bool {
 		var name string
 		for rows.Next() {
 			err := rows.Scan(&name)
@@ -205,7 +205,7 @@ func DBQueryWithValidationE(t testing.TestingT, db *sql.DB, command string, expe
 func DBQueryWithCustomValidation(t testing.TestingT, db *sql.DB, command string, validateResponse func(*sql.Rows) bool) {
 	t.Helper()
 
-	err := DBQueryWithCustomValidationE(t, db, command, validateResponse)
+	err := DBQueryWithCustomValidationWithContextE(t, context.Background(), db, command, validateResponse)
 	if err != nil {
 		t.Fatal(err)
 	}

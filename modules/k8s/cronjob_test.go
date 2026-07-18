@@ -4,6 +4,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -26,11 +27,11 @@ func TestListCronJobsReturnsCronJobsInNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	jobs := k8s.ListCronJobs(t, options, metav1.ListOptions{})
+	jobs := k8s.ListCronJobsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, jobs, 1)
 	job := jobs[0]
 	require.Equal(t, "cron-job", job.Name)
@@ -41,7 +42,7 @@ func TestGetCronJobEReturnErrorForNotExistingCronJob(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetJobE(t, options, random.UniqueID())
+	_, err := k8s.GetJobContextE(t, context.Background(), options, random.UniqueID())
 	require.Error(t, err)
 }
 
@@ -52,11 +53,11 @@ func TestGetCronJobEReturnsCorrectJobInNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	job := k8s.GetCronJob(t, options, "cron-job")
+	job := k8s.GetCronJobContext(t, context.Background(), options, "cron-job")
 	require.Equal(t, "cron-job", job.Name)
 	require.Equal(t, job.Namespace, uniqueID)
 }
@@ -68,11 +69,11 @@ func TestWaitUntilCronJobScheduleSuccessfullyContainer(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(ExampleCronjobYamlTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilCronJobSucceed(t, options, "cron-job", 60, 5*time.Second)
+	k8s.WaitUntilCronJobSucceedContext(t, context.Background(), options, "cron-job", 60, 5*time.Second)
 }
 
 func TestIsCronJobSucceeded(t *testing.T) {

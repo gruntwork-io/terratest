@@ -9,6 +9,7 @@
 package helm_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"path/filepath"
@@ -55,9 +56,9 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 
 	// Add the stable repo under a random name so as not to touch existing repo configs
 	uniqueName := strings.ToLower("terratest-" + random.UniqueID())
-	defer helm.RemoveRepo(t, options, uniqueName)
+	defer helm.RemoveRepoContext(t, context.Background(), options, uniqueName)
 
-	helm.AddRepo(t, options, uniqueName, remoteChartSource)
+	helm.AddRepoContext(t, context.Background(), options, uniqueName, remoteChartSource)
 	helmChart := fmt.Sprintf("%s/%s", uniqueName, remoteChartName)
 
 	// Generate a unique release name so we can defer the delete before installing
@@ -65,9 +66,9 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 		"%s-%s",
 		remoteChartName, strings.ToLower(random.UniqueID()),
 	)
-	defer helm.Delete(t, options, releaseName, true)
+	defer helm.DeleteContext(t, context.Background(), options, releaseName, true)
 
-	helm.Install(t, options, helmChart, releaseName)
+	helm.InstallContext(t, context.Background(), options, helmChart, releaseName)
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 1)
 
 	// Setting replica count to 2 to check the upgrade functionality.
@@ -80,7 +81,7 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 	// Test that passing extra arguments doesn't error, by changing default timeout
 	options.ExtraArgs = map[string][]string{"upgrade": {"--timeout", "5m1s"}}
 	options.ExtraArgs["rollback"] = []string{"--timeout", "5m1s"}
-	helm.Upgrade(t, options, helmChart, releaseName)
+	helm.UpgradeContext(t, context.Background(), options, helmChart, releaseName)
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 2)
 
 	// Verify service is accessible. Wait for it to become available and then hit the endpoint.
@@ -105,7 +106,7 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 	)
 
 	// Finally, test rollback functionality. When rolling back, we should see the pods go back down to 1.
-	helm.Rollback(t, options, releaseName, "")
+	helm.RollbackContext(t, context.Background(), options, releaseName, "")
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 1)
 }
 
@@ -143,13 +144,13 @@ func TestHelmDependencyUpgrade(t *testing.T) {
 	// By doing so, we can schedule the delete call here so that at the end of the test, we run
 	// `helm delete RELEASE_NAME` to clean up any resources that were created.
 	releaseName := "helm-dependency-example-" + strings.ToLower(random.UniqueID())
-	defer helm.Delete(t, options, releaseName, true)
+	defer helm.DeleteContext(t, context.Background(), options, releaseName, true)
 
 	// Deploy the chart using `helm install`.
-	err = helm.InstallE(t, options, helmChartPath, releaseName)
+	err = helm.InstallContextE(t, context.Background(), options, helmChartPath, releaseName)
 	require.NoError(t, err)
 
 	// Verify that upgrade is working as expected.
-	err = helm.UpgradeE(t, options, helmChartPath, releaseName)
+	err = helm.UpgradeContextE(t, context.Background(), options, helmChartPath, releaseName)
 	assert.NoError(t, err)
 }

@@ -17,15 +17,15 @@ import (
 func TestEcsCluster(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 
-	c1, err := aws.CreateEcsClusterE(t, region, "terratest")
-	defer aws.DeleteEcsCluster(t, region, c1)
+	c1, err := aws.CreateEcsClusterContextE(t, context.Background(), region, "terratest")
+	defer aws.DeleteEcsClusterContext(t, context.Background(), region, c1)
 
 	require.NoError(t, err)
 	assert.Equal(t, "terratest", *c1.ClusterName)
 
-	c2, err := aws.GetEcsClusterE(t, region, *c1.ClusterName)
+	c2, err := aws.GetEcsClusterContextE(t, context.Background(), region, *c1.ClusterName)
 
 	require.NoError(t, err)
 	assert.Equal(t, "terratest", *c2.ClusterName)
@@ -34,32 +34,32 @@ func TestEcsCluster(t *testing.T) {
 func TestEcsClusterWithInclude(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	clusterName := "terratest-" + random.UniqueID()
 	tags := []types.Tag{{
 		Key:   awsSDK.String("test-tag"),
 		Value: awsSDK.String("hello-world"),
 	}}
 
-	client := aws.NewEcsClient(t, region)
+	client := aws.NewEcsClientContext(t, context.Background(), region)
 	c1, err := client.CreateCluster(context.Background(), &ecs.CreateClusterInput{
 		ClusterName: awsSDK.String(clusterName),
 		Tags:        tags,
 	})
 	require.NoError(t, err)
 
-	defer aws.DeleteEcsCluster(t, region, c1.Cluster)
+	defer aws.DeleteEcsClusterContext(t, context.Background(), region, c1.Cluster)
 
 	assert.Equal(t, clusterName, awsSDK.ToString(c1.Cluster.ClusterName))
 
-	c2, err := aws.GetEcsClusterWithIncludeE(t, region, clusterName, []types.ClusterField{types.ClusterFieldTags})
+	c2, err := aws.GetEcsClusterWithIncludeContextE(t, context.Background(), region, clusterName, []types.ClusterField{types.ClusterFieldTags})
 	require.NoError(t, err)
 
 	assert.Equal(t, clusterName, awsSDK.ToString(c2.ClusterName))
 	assert.Equal(t, tags, c2.Tags)
 	assert.Empty(t, c2.Statistics)
 
-	c3, err := aws.GetEcsClusterWithIncludeE(t, region, clusterName, []types.ClusterField{types.ClusterFieldStatistics})
+	c3, err := aws.GetEcsClusterWithIncludeContextE(t, context.Background(), region, clusterName, []types.ClusterField{types.ClusterFieldStatistics})
 	require.NoError(t, err)
 
 	assert.Equal(t, clusterName, awsSDK.ToString(c3.ClusterName))

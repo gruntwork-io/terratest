@@ -134,14 +134,14 @@ func (tunnel *Tunnel) getAttachablePodForResourceE(t testing.TestingT) (string, 
 
 // getAttachablePodForDeploymentE will find an active pod associated with the Deployment and return the pod name.
 func (tunnel *Tunnel) getAttachablePodForDeploymentE(t testing.TestingT) (string, error) {
-	deploy, err := GetDeploymentE(t, tunnel.kubectlOptions, tunnel.resourceName)
+	deploy, err := GetDeploymentContextE(t, context.Background(), tunnel.kubectlOptions, tunnel.resourceName)
 	if err != nil {
 		return "", err
 	}
 
 	selectorLabelsOfPods := makeLabels(deploy.Spec.Selector.MatchLabels)
 
-	deploymentPods, err := ListPodsE(t, tunnel.kubectlOptions, metav1.ListOptions{LabelSelector: selectorLabelsOfPods})
+	deploymentPods, err := ListPodsContextE(t, context.Background(), tunnel.kubectlOptions, metav1.ListOptions{LabelSelector: selectorLabelsOfPods})
 	if err != nil {
 		return "", err
 	}
@@ -157,14 +157,14 @@ func (tunnel *Tunnel) getAttachablePodForDeploymentE(t testing.TestingT) (string
 
 // getAttachablePodForServiceE will find an active pod associated with the Service and return the pod name.
 func (tunnel *Tunnel) getAttachablePodForServiceE(t testing.TestingT) (string, error) {
-	service, err := GetServiceE(t, tunnel.kubectlOptions, tunnel.resourceName)
+	service, err := GetServiceContextE(t, context.Background(), tunnel.kubectlOptions, tunnel.resourceName)
 	if err != nil {
 		return "", err
 	}
 
 	selectorLabelsOfPods := makeLabels(service.Spec.Selector)
 
-	servicePods, err := ListPodsE(t, tunnel.kubectlOptions, metav1.ListOptions{LabelSelector: selectorLabelsOfPods})
+	servicePods, err := ListPodsContextE(t, context.Background(), tunnel.kubectlOptions, metav1.ListOptions{LabelSelector: selectorLabelsOfPods})
 	if err != nil {
 		return "", err
 	}
@@ -196,7 +196,7 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 	)
 
 	// Prepare a kubernetes client for the client-go library
-	clientset, err := GetKubernetesClientFromOptionsE(t, tunnel.kubectlOptions)
+	clientset, err := GetKubernetesClientFromOptionsContextE(t, context.Background(), tunnel.kubectlOptions)
 	if err != nil {
 		tunnel.logger.Logf(t, "Error creating a new Kubernetes client: %s", err)
 		return err
@@ -230,14 +230,14 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 
 	// in case of services, find target port on pod based on service definition
 	if tunnel.resourceType == ResourceTypeService {
-		service := GetService(t, tunnel.kubectlOptions, tunnel.resourceName)
+		service := GetServiceContext(t, context.Background(), tunnel.kubectlOptions, tunnel.resourceName)
 
 		var portFound = false
 
 		for _, portSpec := range service.Spec.Ports {
 			if portSpec.Port == int32(targetPort) {
 				if portSpec.TargetPort.Type == intstr.String {
-					pod, err := GetPodE(t, tunnel.kubectlOptions, podName)
+					pod, err := GetPodContextE(t, context.Background(), tunnel.kubectlOptions, podName)
 					if err != nil {
 						return err
 					}
@@ -296,7 +296,7 @@ func (tunnel *Tunnel) ForwardPortE(t testing.TestingT) error {
 	if tunnel.localPort == 0 {
 		tunnel.logger.Logf(t, "Requested local port is 0. Selecting an open port on host system")
 
-		tunnel.localPort, err = GetAvailablePortE(t)
+		tunnel.localPort, err = GetAvailablePortContextE(t, context.Background())
 		if err != nil {
 			tunnel.logger.Logf(t, "Error getting available port: %s", err)
 			return err

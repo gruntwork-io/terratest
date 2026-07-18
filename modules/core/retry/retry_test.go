@@ -1,6 +1,7 @@
 package retry_test
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"testing"
@@ -53,7 +54,7 @@ func TestDoWithRetry(t *testing.T) {
 		t.Run(testCase.description, func(t *testing.T) {
 			t.Parallel()
 
-			actualOutput, err := retry.DoWithRetryE(t, testCase.description, testCase.maxRetries, 1*time.Millisecond, testCase.action)
+			actualOutput, err := retry.DoWithRetryContextE(t, context.Background(), testCase.description, testCase.maxRetries, 1*time.Millisecond, testCase.action)
 			assert.Equal(t, expectedOutput, actualOutput)
 
 			if testCase.expectedError != nil {
@@ -111,7 +112,7 @@ func TestDoWithTimeout(t *testing.T) {
 		t.Run(testCase.description, func(t *testing.T) {
 			t.Parallel()
 
-			actualOutput, err := retry.DoWithTimeoutE(t, testCase.description, testCase.timeout, testCase.action)
+			actualOutput, err := retry.DoWithTimeoutContextE(t, context.Background(), testCase.description, testCase.timeout, testCase.action)
 			if testCase.expectedError != nil {
 				assert.Equal(t, testCase.expectedError, err)
 			} else {
@@ -129,7 +130,7 @@ func TestDoInBackgroundUntilStopped(t *testing.T) {
 	waitStop := sleepBetweenRetries*2 + sleepBetweenRetries/2
 	counter := 0
 
-	stop := retry.DoInBackgroundUntilStopped(t, t.Name(), sleepBetweenRetries, func() {
+	stop := retry.DoInBackgroundUntilStoppedContext(t, context.Background(), t.Name(), sleepBetweenRetries, func() {
 		counter++
 		t.Log(time.Now(), counter)
 	})
@@ -264,7 +265,7 @@ func TestDoWithRetryableErrors(t *testing.T) {
 		t.Run(testCase.description, func(t *testing.T) {
 			t.Parallel()
 
-			actualOutput, err := retry.DoWithRetryableErrorsE(t, testCase.description, testCase.retryableErrors, testCase.maxRetries, 1*time.Millisecond, testCase.action)
+			actualOutput, err := retry.DoWithRetryableErrorsContextE(t, context.Background(), testCase.description, testCase.retryableErrors, testCase.maxRetries, 1*time.Millisecond, testCase.action)
 			assert.Equal(t, expectedOutput, actualOutput)
 
 			if testCase.expectedError != nil {

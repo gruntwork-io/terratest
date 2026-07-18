@@ -1,6 +1,7 @@
 package aws_test
 
 import (
+	"context"
 	"testing"
 
 	aws "github.com/gruntwork-io/terratest/modules/aws/v2"
@@ -10,7 +11,7 @@ import (
 func TestGetAccountId(t *testing.T) {
 	t.Parallel()
 
-	accountID := aws.GetAccountID(t)
+	accountID := aws.GetAccountIDContext(t, context.Background())
 	assert.Regexp(t, "^[0-9]{12}$", accountID)
 }
 

@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"context"
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
@@ -53,7 +54,7 @@ func (kubectlOptions *KubectlOptions) GetConfigPath(t testing.TestingT) (string,
 
 	kubeConfigPath := kubectlOptions.ConfigPath
 	if kubeConfigPath == "" {
-		kubeConfigPath, err = GetKubeConfigPathE(t)
+		kubeConfigPath, err = GetKubeConfigPathContextE(t, context.Background())
 		if err != nil {
 			return "", err
 		}

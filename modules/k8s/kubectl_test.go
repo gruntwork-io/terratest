@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -30,7 +31,7 @@ func TestRunKubectlAndGetOutputReturnsOutput(t *testing.T) {
 
 	namespaceName := "kubectl-test-" + strings.ToLower(random.UniqueID())
 	options := k8s.NewKubectlOptions("", "", namespaceName)
-	output, err := k8s.RunKubectlAndGetOutputE(t, options, "auth", "can-i", "get", "pods")
+	output, err := k8s.RunKubectlAndGetOutputContextE(t, context.Background(), options, "auth", "can-i", "get", "pods")
 	require.NoError(t, err)
 	require.Equal(t, "yes", output)
 }
@@ -76,7 +77,7 @@ current-context: dummy-context
 			ContextName: "dummy-context",
 			ConfigPath:  k8s.StoreConfigToTempFile(t, config),
 		}
-		_, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "pods")
+		_, err := k8s.RunKubectlAndGetOutputContextE(t, context.Background(), options, "get", "pods")
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "dummy-error")
 		assert.NotContains(t, err.Error(), "Client.Timeout exceeded while awaiting headers")
@@ -88,7 +89,7 @@ current-context: dummy-context
 			ConfigPath:     k8s.StoreConfigToTempFile(t, config),
 			RequestTimeout: time.Second,
 		}
-		_, err := k8s.RunKubectlAndGetOutputE(t, options, "get", "pods")
+		_, err := k8s.RunKubectlAndGetOutputContextE(t, context.Background(), options, "get", "pods")
 		require.Error(t, err)
 		assert.Equal(t, options.RequestTimeout, parsedTimeout)
 		assert.NotContains(t, err.Error(), "dummy-error")

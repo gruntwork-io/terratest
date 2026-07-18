@@ -1,6 +1,7 @@
 package gcp_test
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -18,16 +19,16 @@ func TestStaticTokenShortCircuitsCredentialLookup(t *testing.T) {
 	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/credentials.json")
 	t.Setenv("GOOGLE_OAUTH_ACCESS_TOKEN", "fake-access-token")
 
-	svc, err := gcp.NewComputeServiceE(t)
+	svc, err := gcp.NewComputeServiceContextE(t, context.Background())
 	require.NoError(t, err)
 	assert.NotNil(t, svc)
 
-	cb, err := gcp.NewCloudBuildServiceE(t)
+	cb, err := gcp.NewCloudBuildServiceContextE(t, context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, cb)
 	require.NoError(t, cb.Close())
 
-	osl, err := gcp.NewOSLoginServiceE(t)
+	osl, err := gcp.NewOSLoginServiceContextE(t, context.Background())
 	require.NoError(t, err)
 	assert.NotNil(t, osl)
 }
@@ -42,6 +43,6 @@ func TestMissingStaticTokenFallsBackToADC(t *testing.T) {
 
 	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "/nonexistent/credentials.json")
 
-	_, err := gcp.NewCloudBuildServiceE(t)
+	_, err := gcp.NewCloudBuildServiceContextE(t, context.Background())
 	assert.Error(t, err)
 }

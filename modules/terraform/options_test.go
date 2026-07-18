@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
@@ -55,37 +56,37 @@ func TestExtraArgsHelp(t *testing.T) {
 		{
 			name: "apply",
 			fn: func() (string, error) {
-				return terraform.ApplyE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{Apply: []string{"-help"}}})
+				return terraform.ApplyContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{Apply: []string{"-help"}}})
 			},
 		},
 		{
 			name: "destroy",
 			fn: func() (string, error) {
-				return terraform.DestroyE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{Destroy: []string{"-help"}}})
+				return terraform.DestroyContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{Destroy: []string{"-help"}}})
 			},
 		},
 		{
 			name: "get",
 			fn: func() (string, error) {
-				return terraform.GetE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{Get: []string{"-help"}}})
+				return terraform.GetContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{Get: []string{"-help"}}})
 			},
 		},
 		{
 			name: "init",
 			fn: func() (string, error) {
-				return terraform.InitE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{Init: []string{"-help"}}})
+				return terraform.InitContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{Init: []string{"-help"}}})
 			},
 		},
 		{
 			name: "plan",
 			fn: func() (string, error) {
-				return terraform.PlanE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{Plan: []string{"-help"}}})
+				return terraform.PlanContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{Plan: []string{"-help"}}})
 			},
 		},
 		{
 			name: "validate",
 			fn: func() (string, error) {
-				return terraform.ValidateE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{Validate: []string{"-help"}}})
+				return terraform.ValidateContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{Validate: []string{"-help"}}})
 			},
 		},
 	}
@@ -106,17 +107,17 @@ func TestExtraArgsWorkspace(t *testing.T) {
 		t.Parallel()
 
 		// set to default
-		terraform.WorkspaceSelectOrNew(t, &terraform.Options{}, "default")
+		terraform.WorkspaceSelectOrNewContext(t, context.Background(), &terraform.Options{}, "default")
 
 		// after adding -help, the function did not create the workspace
-		out, err := terraform.WorkspaceSelectOrNewE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{
+		out, err := terraform.WorkspaceSelectOrNewContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{
 			WorkspaceNew: []string{"-help"},
 		}}, random.UniqueID())
 		require.NoError(t, err)
 		require.Equal(t, "default", out)
 	})
 
-	out, err := terraform.WorkspaceSelectOrNewE(t, &terraform.Options{}, name)
+	out, err := terraform.WorkspaceSelectOrNewContextE(t, context.Background(), &terraform.Options{}, name)
 	require.NoError(t, err)
 	require.Equal(t, name, out)
 
@@ -124,10 +125,10 @@ func TestExtraArgsWorkspace(t *testing.T) {
 		t.Parallel()
 
 		// set to default
-		terraform.WorkspaceSelectOrNew(t, &terraform.Options{}, "default")
+		terraform.WorkspaceSelectOrNewContext(t, context.Background(), &terraform.Options{}, "default")
 
 		// after adding -help to select, the function did not select the workspace
-		out, err := terraform.WorkspaceSelectOrNewE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{
+		out, err := terraform.WorkspaceSelectOrNewContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{
 			WorkspaceSelect: []string{"-help"},
 		}}, name)
 		require.NoError(t, err)
@@ -138,13 +139,13 @@ func TestExtraArgsWorkspace(t *testing.T) {
 		t.Parallel()
 
 		// after adding -help to select, the function did not delete the workspace
-		_, err := terraform.WorkspaceDeleteE(t, &terraform.Options{ExtraArgs: terraform.ExtraArgs{
+		_, err := terraform.WorkspaceDeleteContextE(t, context.Background(), &terraform.Options{ExtraArgs: terraform.ExtraArgs{
 			WorkspaceDelete: []string{"-help"},
 		}}, name)
 		require.NoError(t, err)
 
 		// the workspace should still exist
-		out, err := terraform.RunTerraformCommandE(t, &terraform.Options{}, "workspace", "list")
+		out, err := terraform.RunTerraformCommandContextE(t, context.Background(), &terraform.Options{}, "workspace", "list")
 		require.NoError(t, err)
 		assert.Contains(t, out, name)
 	})

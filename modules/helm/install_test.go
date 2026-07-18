@@ -9,6 +9,7 @@
 package helm_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"path/filepath"
@@ -63,9 +64,9 @@ func TestRemoteChartInstall(t *testing.T) {
 
 	// Add the stable repo under a random name so as not to touch existing repo configs
 	uniqueName := strings.ToLower("terratest-" + random.UniqueID())
-	defer helm.RemoveRepo(t, options, uniqueName)
+	defer helm.RemoveRepoContext(t, context.Background(), options, uniqueName)
 
-	helm.AddRepo(t, options, uniqueName, remoteChartSource)
+	helm.AddRepoContext(t, context.Background(), options, uniqueName, remoteChartSource)
 	helmChart := fmt.Sprintf("%s/%s", uniqueName, remoteChartName)
 
 	// Generate a unique release name so we can defer the delete before installing
@@ -73,18 +74,18 @@ func TestRemoteChartInstall(t *testing.T) {
 		"%s-%s",
 		remoteChartName, strings.ToLower(random.UniqueID()),
 	)
-	defer helm.Delete(t, options, releaseName, true)
+	defer helm.DeleteContext(t, context.Background(), options, releaseName, true)
 
 	// Test if helm.install will return an error if the chart version is incorrect
 	options.Version = "notValidVersion.0.0.0"
-	require.Error(t, helm.InstallE(t, options, helmChart, releaseName))
+	require.Error(t, helm.InstallContextE(t, context.Background(), options, helmChart, releaseName))
 
 	// Fix chart version and retry install
 	options.Version = remoteChartVersion
 	// Test that passing extra arguments doesn't error, by changing default timeout
 	options.ExtraArgs = map[string][]string{"install": {"--timeout", "5m1s"}}
 	options.ExtraArgs["delete"] = []string{"--timeout", "5m1s"}
-	require.NoError(t, helm.InstallE(t, options, helmChart, releaseName))
+	require.NoError(t, helm.InstallContextE(t, context.Background(), options, helmChart, releaseName))
 	waitForRemoteChartPods(t, kubectlOptions, releaseName, 1)
 
 	// Verify service is accessible. Wait for it to become available and then hit the endpoint.
@@ -143,10 +144,10 @@ func TestHelmDependencyInstall(t *testing.T) {
 	// By doing so, we can schedule the delete call here so that at the end of the test, we run
 	// `helm delete RELEASE_NAME` to clean up any resources that were created.
 	releaseName := "helm-dependency-example-" + strings.ToLower(random.UniqueID())
-	defer helm.Delete(t, options, releaseName, true)
+	defer helm.DeleteContext(t, context.Background(), options, releaseName, true)
 
 	// Deploy the chart using `helm install`.
-	err = helm.InstallE(t, options, helmChartPath, releaseName)
+	err = helm.InstallContextE(t, context.Background(), options, helmChartPath, releaseName)
 	assert.NoError(t, err) //nolint:testifylint // assert not require: deferred Delete must run even if install fails
 
 	// Verify that Kubernetes service is available after helm chart deployment.

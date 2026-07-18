@@ -1,6 +1,7 @@
 package terragrunt_test
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestInit(t *testing.T) {
 		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	out := terragrunt.Init(t, &terragrunt.Options{
+	out := terragrunt.InitContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"},
@@ -32,7 +33,7 @@ func TestInitE(t *testing.T) {
 		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
-	out, err := terragrunt.InitE(t, &terragrunt.Options{
+	out, err := terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"}, // Common terraform init flag
@@ -50,7 +51,7 @@ func TestInitWithInvalidConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	// This should fail due to invalid HCL syntax in tg.hcl
-	_, err = terragrunt.InitE(t, &terragrunt.Options{
+	_, err = terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		TerraformArgs:    []string{"-upgrade=true"}, // Common terraform init flag
@@ -75,7 +76,7 @@ func TestInitWithBothArgTypes(t *testing.T) {
 		TerraformArgs:    []string{"-upgrade"},
 	}
 
-	output, err := terragrunt.InitE(t, options)
+	output, err := terragrunt.InitContextE(t, context.Background(), options)
 	require.NoError(t, err)
 	// Verify TerragruntArgs: no info logs
 	require.NotContains(t, output, "level=info")

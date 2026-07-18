@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -22,9 +23,9 @@ func TestTerraformCommand(t *testing.T) {
 		options := &terraform.Options{
 			TerraformDir: testFolder,
 		}
-		terraform.Init(t, options)
+		terraform.InitContext(t, context.Background(), options)
 
-		stdout, stderr, code, err := terraform.RunTerraformCommandAndGetStdOutErrCodeE(t, options, "apply", "-input=false", "-auto-approve")
+		stdout, stderr, code, err := terraform.RunTerraformCommandAndGetStdOutErrCodeContextE(t, context.Background(), options, "apply", "-input=false", "-auto-approve")
 		require.Error(t, err)
 		assert.Contains(t, stdout, "Creating...", "should capture stdout")
 		assert.Contains(t, stderr, "Error: ", "should capture stderr")
@@ -43,9 +44,9 @@ func TestTerraformCommand(t *testing.T) {
 				".*lorem ipsum.*": "this warning message should shown.",
 			},
 		}
-		terraform.Init(t, options)
+		terraform.InitContext(t, context.Background(), options)
 
-		stdout, stderr, code, err := terraform.RunTerraformCommandAndGetStdOutErrCodeE(t, options, "apply", "-input=false", "-auto-approve")
+		stdout, stderr, code, err := terraform.RunTerraformCommandAndGetStdOutErrCodeContextE(t, context.Background(), options, "apply", "-input=false", "-auto-approve")
 		require.Error(t, err)
 		assert.Contains(t, stdout, "Creating...", "should capture stdout")
 		assert.Contains(t, stderr, "", "should capture stderr")
@@ -63,14 +64,14 @@ func TestTerraformCommand(t *testing.T) {
 		}
 
 		{
-			stdout, stderr, code := terraform.RunTerraformCommandAndGetStdOutErrCode(t, options, "apply", "-input=false", "-auto-approve")
+			stdout, stderr, code := terraform.RunTerraformCommandAndGetStdOutErrCodeContext(t, context.Background(), options, "apply", "-input=false", "-auto-approve")
 			assert.Contains(t, stdout, `test = "Hello, World"`, "should capture stdout")
 			assert.Equal(t, 0, code)
 			assert.Empty(t, stderr)
 		}
 
 		{
-			stdout := terraform.RunTerraformCommandAndGetStdout(t, options, "apply", "-input=false", "-auto-approve")
+			stdout := terraform.RunTerraformCommandAndGetStdoutContext(t, context.Background(), options, "apply", "-input=false", "-auto-approve")
 			assert.Contains(t, stdout, `test = "Hello, World"`, "should capture stdout")
 		}
 	})

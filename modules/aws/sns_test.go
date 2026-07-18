@@ -15,11 +15,11 @@ import (
 func TestCreateAndDeleteSnsTopic(t *testing.T) {
 	t.Parallel()
 
-	region := terraaws.GetRandomStableRegion(t, nil, nil)
+	region := terraaws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	uniqueID := random.UniqueID()
 	name := "test-sns-topic-" + uniqueID
 
-	arn := terraaws.CreateSnsTopic(t, region, name)
+	arn := terraaws.CreateSnsTopicContext(t, context.Background(), region, name)
 	defer deleteTopic(t, region, arn)
 
 	assert.True(t, snsTopicExists(t, region, arn))
@@ -28,7 +28,7 @@ func TestCreateAndDeleteSnsTopic(t *testing.T) {
 func snsTopicExists(t *testing.T, region string, arn string) bool {
 	t.Helper()
 
-	snsClient := terraaws.NewSnsClient(t, region)
+	snsClient := terraaws.NewSnsClientContext(t, context.Background(), region)
 
 	input := sns.GetTopicAttributesInput{TopicArn: aws.String(arn)}
 
@@ -46,6 +46,6 @@ func snsTopicExists(t *testing.T, region string, arn string) bool {
 func deleteTopic(t *testing.T, region string, arn string) {
 	t.Helper()
 
-	terraaws.DeleteSNSTopic(t, region, arn)
+	terraaws.DeleteSNSTopicContext(t, context.Background(), region, arn)
 	assert.False(t, snsTopicExists(t, region, arn))
 }

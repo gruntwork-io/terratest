@@ -14,11 +14,11 @@ import (
 func TestCreateImportAndDeleteEC2KeyPair(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	uniqueID := random.UniqueID()
 	name := "test-key-pair-" + uniqueID
 
-	keyPair := aws.CreateAndImportEC2KeyPair(t, region, name)
+	keyPair := aws.CreateAndImportEC2KeyPairContext(t, context.Background(), region, name)
 	defer deleteKeyPair(t, keyPair)
 
 	assert.True(t, keyPairExists(t, keyPair))
@@ -31,7 +31,7 @@ func TestCreateImportAndDeleteEC2KeyPair(t *testing.T) {
 func keyPairExists(t *testing.T, keyPair *aws.Ec2Keypair) bool {
 	t.Helper()
 
-	client := aws.NewEc2Client(t, keyPair.Region)
+	client := aws.NewEc2ClientContext(t, context.Background(), keyPair.Region)
 
 	input := ec2.DescribeKeyPairsInput{
 		KeyNames: []string{keyPair.Name},
@@ -52,6 +52,6 @@ func keyPairExists(t *testing.T, keyPair *aws.Ec2Keypair) bool {
 func deleteKeyPair(t *testing.T, keyPair *aws.Ec2Keypair) {
 	t.Helper()
 
-	aws.DeleteEC2KeyPair(t, keyPair)
+	aws.DeleteEC2KeyPairContext(t, context.Background(), keyPair)
 	assert.False(t, keyPairExists(t, keyPair))
 }

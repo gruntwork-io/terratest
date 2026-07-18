@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/k8s/v2"
@@ -24,7 +25,7 @@ func TestListEventsEReturnsNilErrorWhenListingEvents(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "kube-system")
-	events, err := k8s.ListEventsE(t, options, v1.ListOptions{})
+	events, err := k8s.ListEventsContextE(t, context.Background(), options, v1.ListOptions{})
 	require.NoError(t, err)
 	require.NotEmpty(t, events)
 }
@@ -33,7 +34,7 @@ func TestListEventsInNamespace(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "kube-system")
-	events := k8s.ListEvents(t, options, v1.ListOptions{})
+	events := k8s.ListEventsContext(t, context.Background(), options, v1.ListOptions{})
 	require.NotEmpty(t, events)
 }
 
@@ -44,11 +45,11 @@ func TestListEventsReturnsZeroEventsIfNoneCreated(t *testing.T) {
 
 	options := k8s.NewKubectlOptions("", "", "")
 
-	defer k8s.DeleteNamespace(t, options, ns)
+	defer k8s.DeleteNamespaceContext(t, context.Background(), options, ns)
 
-	k8s.CreateNamespace(t, options, ns)
+	k8s.CreateNamespaceContext(t, context.Background(), options, ns)
 
 	options.Namespace = ns
-	events := k8s.ListEvents(t, options, v1.ListOptions{})
+	events := k8s.ListEventsContext(t, context.Background(), options, v1.ListOptions{})
 	require.Empty(t, events)
 }

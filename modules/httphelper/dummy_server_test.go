@@ -1,6 +1,7 @@
 package httphelper_test
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -19,11 +20,11 @@ func TestRunDummyServer(t *testing.T) {
 	uniqueID := random.UniqueID()
 	text := "dummy-server-" + uniqueID
 
-	listener, port := httphelper.RunDummyServer(t, text)
+	listener, port := httphelper.RunDummyServerContext(t, context.Background(), text)
 	defer shutDownServer(t, listener)
 
 	url := fmt.Sprintf("http://localhost:%d", port)
-	httphelper.HttpGetWithValidation(t, url, &tls.Config{}, 200, text)
+	httphelper.HTTPGetWithValidationContext(t, context.Background(), url, &tls.Config{}, 200, text)
 }
 
 func TestContinuouslyCheck(t *testing.T) {
@@ -33,10 +34,10 @@ func TestContinuouslyCheck(t *testing.T) {
 	text := "dummy-server-" + uniqueID
 	stopChecking := make(chan bool, 1)
 
-	listener, port := httphelper.RunDummyServer(t, text)
+	listener, port := httphelper.RunDummyServerContext(t, context.Background(), text)
 
 	url := fmt.Sprintf("http://localhost:%d", port)
-	wg, responses := httphelper.ContinuouslyCheckUrl(t, url, stopChecking, 1*time.Second)
+	wg, responses := httphelper.ContinuouslyCheckURLContext(t, context.Background(), url, stopChecking, 1*time.Second)
 
 	defer func() {
 		stopChecking <- true
@@ -90,7 +91,7 @@ func TestRunDummyServersWithHandlers(t *testing.T) {
 			"/v1/endpoint": handler,
 		}
 
-		listener, port := httphelper.RunDummyServerWithHandlers(t, handlerMap)
+		listener, port := httphelper.RunDummyServerWithHandlersContext(t, context.Background(), handlerMap)
 		defer shutDownServer(t, listener)
 
 		data[idx] = testData{text: text, port: port}
@@ -98,7 +99,7 @@ func TestRunDummyServersWithHandlers(t *testing.T) {
 
 	for _, testInstance := range data {
 		url := fmt.Sprintf("http://localhost:%d/v1/endpoint", testInstance.port)
-		httphelper.HttpGetWithValidation(t, url, &tls.Config{}, 200, testInstance.text)
+		httphelper.HTTPGetWithValidationContext(t, context.Background(), url, &tls.Config{}, 200, testInstance.text)
 	}
 }
 

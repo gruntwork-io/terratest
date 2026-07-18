@@ -1,6 +1,7 @@
 package aws_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -16,8 +17,8 @@ import (
 func TestGetEc2InstanceIdsByTag(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
-	ids, err := aws.GetEc2InstanceIdsByTagE(t, region, "Name", "nonexistent-"+random.UniqueID())
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
+	ids, err := aws.GetEc2InstanceIdsByTagContextE(t, context.Background(), region, "Name", "nonexistent-"+random.UniqueID())
 	require.NoError(t, err)
 	assert.Empty(t, ids)
 }
@@ -25,13 +26,13 @@ func TestGetEc2InstanceIdsByTag(t *testing.T) {
 func TestGetEc2InstanceIdsByFilters(t *testing.T) {
 	t.Parallel()
 
-	region := aws.GetRandomStableRegion(t, nil, nil)
+	region := aws.GetRandomStableRegionContext(t, context.Background(), nil, nil)
 	filters := map[string][]string{
 		"instance-state-name": {"running", "shutting-down"},
 		"tag:Name":            {"nonexistent-" + random.UniqueID()},
 	}
 
-	ids, err := aws.GetEc2InstanceIdsByFiltersE(t, region, filters)
+	ids, err := aws.GetEc2InstanceIdsByFiltersContextE(t, context.Background(), region, filters)
 	require.NoError(t, err)
 	assert.Empty(t, ids)
 }
@@ -55,7 +56,7 @@ func TestGetRecommendedInstanceType(t *testing.T) {
 
 		t.Run(testCase.region+"-"+strings.Join(testCase.instanceTypeOptions, "-"), func(t *testing.T) {
 			t.Parallel()
-			instanceType := aws.GetRecommendedInstanceType(t, testCase.region, testCase.instanceTypeOptions)
+			instanceType := aws.GetRecommendedInstanceTypeContext(t, context.Background(), testCase.region, testCase.instanceTypeOptions)
 			// We could hard-code the expected result (e.g., as of July 2020, we expect eu-west-1 to return t2.micro
 			// and ap-northeast-2 to return t3.micro), but the result will likely change over time, so to avoid a
 			// brittle test, we simply check that we get _one_ result. Combined with the unit test below, this hopefully

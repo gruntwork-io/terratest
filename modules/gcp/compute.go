@@ -308,14 +308,14 @@ func (i *Instance) GetPublicIPE(t testing.TestingT) (string, error) {
 //
 // Deprecated: Use [Instance.GetPublicIP] instead.
 func (i *Instance) GetPublicIp(t testing.TestingT) string { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.GetPublicIP(t)
+	return i.GetPublicIPContext(t, context.Background())
 }
 
 // GetPublicIpE gets the public IP address of the given Compute Instance.
 //
 // Deprecated: Use [Instance.GetPublicIPE] instead.
 func (i *Instance) GetPublicIpE(t testing.TestingT) (string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.GetPublicIPE(t)
+	return i.GetPublicIPContextE(t, context.Background())
 }
 
 // GetPublicIPContextE gets the public IP address of the given Compute Instance.
@@ -591,14 +591,14 @@ func (i *Instance) AddSSHKeyE(t testing.TestingT, username string, publicKey str
 //
 // Deprecated: Use [Instance.AddSSHKey] instead.
 func (i *Instance) AddSshKey(t testing.TestingT, username string, publicKey string) { //nolint:staticcheck,revive // preserving deprecated method name
-	i.AddSSHKey(t, username, publicKey)
+	i.AddSSHKeyContext(t, context.Background(), username, publicKey)
 }
 
 // AddSshKeyE adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
 //
 // Deprecated: Use [Instance.AddSSHKeyE] instead.
 func (i *Instance) AddSshKeyE(t testing.TestingT, username string, publicKey string) error { //nolint:staticcheck,revive // preserving deprecated method name
-	return i.AddSSHKeyE(t, username, publicKey)
+	return i.AddSSHKeyContextE(t, context.Background(), username, publicKey)
 }
 
 // AddSSHKeyContextE adds the given public SSH key to the Compute Instance. Users can SSH in with the given username.
@@ -712,14 +712,14 @@ func (ig *ZonalInstanceGroup) GetInstanceIDsE(t testing.TestingT) ([]string, err
 //
 // Deprecated: Use [ZonalInstanceGroup.GetInstanceIDs] instead.
 func (ig *ZonalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDs(t)
+	return ig.GetInstanceIDsContext(t, context.Background())
 }
 
 // GetInstanceIdsE gets the IDs of Instances in the given Zonal Instance Group.
 //
 // Deprecated: Use [ZonalInstanceGroup.GetInstanceIDsE] instead.
 func (ig *ZonalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDsE(t)
+	return ig.GetInstanceIDsContextE(t, context.Background())
 }
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Zonal Instance Group.
@@ -796,14 +796,14 @@ func (ig *RegionalInstanceGroup) GetInstanceIDsE(t testing.TestingT) ([]string, 
 //
 // Deprecated: Use [RegionalInstanceGroup.GetInstanceIDs] instead.
 func (ig *RegionalInstanceGroup) GetInstanceIds(t testing.TestingT) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDs(t)
+	return ig.GetInstanceIDsContext(t, context.Background())
 }
 
 // GetInstanceIdsE gets the IDs of Instances in the given Regional Instance Group.
 //
 // Deprecated: Use [RegionalInstanceGroup.GetInstanceIDsE] instead.
 func (ig *RegionalInstanceGroup) GetInstanceIdsE(t testing.TestingT) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetInstanceIDsE(t)
+	return ig.GetInstanceIDsContextE(t, context.Background())
 }
 
 // GetInstanceIDsContextE gets the IDs of Instances in the given Regional Instance Group.
@@ -963,14 +963,14 @@ func (ig *ZonalInstanceGroup) GetPublicIPsE(t testing.TestingT, projectID string
 //
 // Deprecated: Use [ZonalInstanceGroup.GetPublicIPs] instead.
 func (ig *ZonalInstanceGroup) GetPublicIps(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPs(t, projectID)
+	return ig.GetPublicIPsContext(t, context.Background(), projectID)
 }
 
 // GetPublicIpsE returns a slice of the public IPs from the given Zonal Instance Group.
 //
 // Deprecated: Use [ZonalInstanceGroup.GetPublicIPsE] instead.
 func (ig *ZonalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPsE(t, projectID)
+	return ig.GetPublicIPsContextE(t, context.Background(), projectID)
 }
 
 // GetPublicIPsContextE returns a slice of the public IPs from the given Zonal Instance Group.
@@ -1009,14 +1009,14 @@ func (ig *RegionalInstanceGroup) GetPublicIPsE(t testing.TestingT, projectID str
 //
 // Deprecated: Use [RegionalInstanceGroup.GetPublicIPs] instead.
 func (ig *RegionalInstanceGroup) GetPublicIps(t testing.TestingT, projectID string) []string { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPs(t, projectID)
+	return ig.GetPublicIPsContext(t, context.Background(), projectID)
 }
 
 // GetPublicIpsE returns a slice of the public IPs from the given Regional Instance Group.
 //
 // Deprecated: Use [RegionalInstanceGroup.GetPublicIPsE] instead.
 func (ig *RegionalInstanceGroup) GetPublicIpsE(t testing.TestingT, projectID string) ([]string, error) { //nolint:staticcheck,revive // preserving deprecated method name
-	return ig.GetPublicIPsE(t, projectID)
+	return ig.GetPublicIPsContextE(t, context.Background(), projectID)
 }
 
 // GetPublicIPsContextE returns a slice of the public IPs from the given Regional Instance Group.

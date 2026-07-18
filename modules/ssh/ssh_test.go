@@ -1,6 +1,7 @@
 package ssh_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -32,7 +33,7 @@ func TestCheckSshConnectionWithRetryE(t *testing.T) {
 
 	timesCalled := 0
 
-	handler := func(_ grunttest.TestingT, _ ssh.Host) error {
+	handler := func(_ grunttest.TestingT, _ context.Context, _ *ssh.Host) error {
 		timesCalled++
 
 		if timesCalled >= 5 {
@@ -45,7 +46,7 @@ func TestCheckSshConnectionWithRetryE(t *testing.T) {
 	host := ssh.Host{Hostname: "Host"}
 	retries := 10
 
-	assert.NoError(t, ssh.CheckSshConnectionWithRetryE(t, host, retries, 3*time.Millisecond, handler))
+	assert.NoError(t, ssh.CheckSSHConnectionWithRetryContextE(t, context.Background(), &host, retries, 3*time.Millisecond, handler))
 }
 
 func TestCheckSshConnectionWithRetryEExceedsMaxRetries(t *testing.T) {
@@ -53,7 +54,7 @@ func TestCheckSshConnectionWithRetryEExceedsMaxRetries(t *testing.T) {
 
 	timesCalled := 0
 
-	handler := func(_ grunttest.TestingT, _ ssh.Host) error {
+	handler := func(_ grunttest.TestingT, _ context.Context, _ *ssh.Host) error {
 		timesCalled++
 
 		if timesCalled >= 5 {
@@ -68,7 +69,7 @@ func TestCheckSshConnectionWithRetryEExceedsMaxRetries(t *testing.T) {
 	// Not enough retries.
 	retries := 3
 
-	assert.Error(t, ssh.CheckSshConnectionWithRetryE(t, host, retries, 3*time.Millisecond, handler))
+	assert.Error(t, ssh.CheckSSHConnectionWithRetryContextE(t, context.Background(), &host, retries, 3*time.Millisecond, handler))
 }
 
 func TestCheckSshConnectionWithRetry(t *testing.T) {
@@ -76,7 +77,7 @@ func TestCheckSshConnectionWithRetry(t *testing.T) {
 
 	timesCalled := 0
 
-	handler := func(_ grunttest.TestingT, _ ssh.Host) error {
+	handler := func(_ grunttest.TestingT, _ context.Context, _ *ssh.Host) error {
 		timesCalled++
 
 		if timesCalled >= 5 {
@@ -89,7 +90,7 @@ func TestCheckSshConnectionWithRetry(t *testing.T) {
 	host := ssh.Host{Hostname: "Host"}
 	retries := 10
 
-	ssh.CheckSshConnectionWithRetry(t, host, retries, 3*time.Millisecond, handler)
+	ssh.CheckSSHConnectionWithRetryContext(t, context.Background(), &host, retries, 3*time.Millisecond, handler)
 }
 
 func TestCheckSshCommandWithRetryE(t *testing.T) {
@@ -97,7 +98,7 @@ func TestCheckSshCommandWithRetryE(t *testing.T) {
 
 	timesCalled := 0
 
-	handler := func(_ grunttest.TestingT, _ ssh.Host, _ string) (string, error) {
+	handler := func(_ grunttest.TestingT, _ context.Context, _ *ssh.Host, _ string) (string, error) {
 		timesCalled++
 
 		if timesCalled >= 5 {
@@ -111,7 +112,7 @@ func TestCheckSshCommandWithRetryE(t *testing.T) {
 	command := "echo -n hello world"
 	retries := 10
 
-	_, err := ssh.CheckSshCommandWithRetryE(t, host, command, retries, 3*time.Millisecond, handler)
+	_, err := ssh.CheckSSHCommandWithRetryContextE(t, context.Background(), &host, command, retries, 3*time.Millisecond, handler)
 	assert.NoError(t, err)
 }
 
@@ -120,7 +121,7 @@ func TestCheckSshCommandWithRetryEExceedsRetries(t *testing.T) {
 
 	timesCalled := 0
 
-	handler := func(_ grunttest.TestingT, _ ssh.Host, _ string) (string, error) {
+	handler := func(_ grunttest.TestingT, _ context.Context, _ *ssh.Host, _ string) (string, error) {
 		timesCalled++
 
 		if timesCalled >= 5 {
@@ -136,7 +137,7 @@ func TestCheckSshCommandWithRetryEExceedsRetries(t *testing.T) {
 	// Not enough retries.
 	retries := 3
 
-	_, err := ssh.CheckSshCommandWithRetryE(t, host, command, retries, 3*time.Millisecond, handler)
+	_, err := ssh.CheckSSHCommandWithRetryContextE(t, context.Background(), &host, command, retries, 3*time.Millisecond, handler)
 	assert.Error(t, err)
 }
 
@@ -145,7 +146,7 @@ func TestCheckSshCommandWithRetry(t *testing.T) {
 
 	timesCalled := 0
 
-	handler := func(_ grunttest.TestingT, _ ssh.Host, _ string) (string, error) {
+	handler := func(_ grunttest.TestingT, _ context.Context, _ *ssh.Host, _ string) (string, error) {
 		timesCalled++
 
 		if timesCalled >= 5 {
@@ -159,5 +160,5 @@ func TestCheckSshCommandWithRetry(t *testing.T) {
 	command := "echo -n hello world"
 	retries := 10
 
-	ssh.CheckSshCommandWithRetry(t, host, command, retries, 3*time.Millisecond, handler)
+	ssh.CheckSSHCommandWithRetryContext(t, context.Background(), &host, command, retries, 3*time.Millisecond, handler)
 }

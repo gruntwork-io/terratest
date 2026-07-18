@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ func TestGetSecretEReturnsErrorForNonExistantSecret(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetSecretE(t, options, "master-password")
+	_, err := k8s.GetSecretContextE(t, context.Background(), options, "master-password")
 	require.Error(t, err)
 }
 
@@ -37,11 +38,11 @@ func TestGetSecretEReturnsCorrectSecretInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleSecretYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	secret := k8s.GetSecret(t, options, "master-password")
+	secret := k8s.GetSecretContext(t, context.Background(), options, "master-password")
 	require.Equal(t, "master-password", secret.Name)
 	require.Equal(t, secret.Namespace, uniqueID)
 }
@@ -53,10 +54,10 @@ func TestWaitUntilSecretAvailableReturnsSuccessfully(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleSecretYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	k8s.WaitUntilSecretAvailable(t, options, "master-password", 10, 1*time.Second)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	k8s.WaitUntilSecretAvailableContext(t, context.Background(), options, "master-password", 10, 1*time.Second)
 }
 
 const exampleSecretYAMLTemplate = `---

@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -29,7 +30,7 @@ func TestGetIngressEReturnsErrorForNonExistantIngress(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "default")
-	_, err := k8s.GetIngressE(t, options, "i-dont-exist")
+	_, err := k8s.GetIngressContextE(t, context.Background(), options, "i-dont-exist")
 	require.Error(t, err)
 }
 
@@ -40,10 +41,10 @@ func TestGetIngressEReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	service := k8s.GetIngress(t, options, "nginx-service-ingress")
+	service := k8s.GetIngressContext(t, context.Background(), options, "nginx-service-ingress")
 	require.Equal(t, "nginx-service-ingress", service.Name)
 	require.Equal(t, service.Namespace, uniqueID)
 }
@@ -55,10 +56,10 @@ func TestListIngressesReturnsCorrectIngressInCorrectNamespace(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	ingresses := k8s.ListIngresses(t, options, metav1.ListOptions{})
+	ingresses := k8s.ListIngressesContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, ingresses, 1)
 
 	ingress := ingresses[0]
@@ -73,10 +74,10 @@ func TestWaitUntilIngressAvailableReturnsSuccessfully(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 	configData := fmt.Sprintf(exampleIngressDeploymentYamlTemplate, uniqueID, uniqueID, uniqueID, uniqueID, uniqueID)
 
-	k8s.KubectlApplyFromString(t, options, configData)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.WaitUntilIngressAvailable(t, options, ExampleIngressName, 60, 5*time.Second)
+	k8s.WaitUntilIngressAvailableContext(t, context.Background(), options, ExampleIngressName, 60, 5*time.Second)
 }
 
 const exampleIngressDeploymentYamlTemplate = `---

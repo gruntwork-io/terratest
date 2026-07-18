@@ -9,6 +9,7 @@
 package helm_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -59,7 +60,7 @@ func TestRemoteChartRender(t *testing.T) {
 
 	// Run RenderTemplate to render the template and capture the output. Note that we use the version without `E`, since
 	// we want to assert that the template renders without any errors.
-	output := helm.RenderRemoteTemplate(t, options, remoteChartSource, releaseName, []string{"templates/deployment.yaml"})
+	output := helm.RenderRemoteTemplateContext(t, context.Background(), options, remoteChartSource, releaseName, []string{"templates/deployment.yaml"})
 
 	// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 	// ensure the Deployment resource is rendered correctly.
@@ -97,7 +98,7 @@ func TestRemoteChartRenderDiff(t *testing.T) {
 		SnapshotPath: initialSnapshot,
 	}
 	// diff in: spec.initContainers.preserve-logs-symlinks.imag, spec.containers.nginx.image, tls certificates
-	require.Equal(t, 4, helm.DiffAgainstSnapshot(t, options, output, "nginx"))
+	require.Equal(t, 4, helm.DiffAgainstSnapshotContext(t, context.Background(), options, output, "nginx"))
 }
 
 // render chart dump and return the rendered output
@@ -126,7 +127,7 @@ func renderChartDump(t *testing.T, remoteChartVersion, snapshotDir string) strin
 
 	// Run RenderTemplate to render the template and capture the output. Note that we use the version without `E`, since
 	// we want to assert that the template renders without any errors.
-	output := helm.RenderRemoteTemplate(t, options, remoteChartSource, releaseName, []string{})
+	output := helm.RenderRemoteTemplateContext(t, context.Background(), options, remoteChartSource, releaseName, []string{})
 
 	// Now we use kubernetes/client-go library to render the template output into the Deployment struct. This will
 	// ensure the Deployment resource is rendered correctly.
@@ -141,7 +142,7 @@ func renderChartDump(t *testing.T, remoteChartVersion, snapshotDir string) strin
 		Logger:       logger.Default,
 		SnapshotPath: snapshotDir,
 	}
-	helm.UpdateSnapshot(t, options, output, releaseName)
+	helm.UpdateSnapshotContext(t, context.Background(), options, output, releaseName)
 
 	return output
 }
@@ -211,7 +212,7 @@ func TestRenderWarning(t *testing.T) {
 	chart, err := filepath.Abs("testdata/deprecated-chart")
 	require.NoError(t, err)
 
-	stdout, stderr, err := helm.RenderTemplateAndGetStdOutErrE(t, &helm.Options{}, chart, "test", nil)
+	stdout, stderr, err := helm.RenderTemplateAndGetStdOutErrContextE(t, context.Background(), &helm.Options{}, chart, "test", nil)
 	require.NoError(t, err)
 
 	assert.Contains(t, stderr, "WARNING:")
@@ -227,7 +228,7 @@ func TestRenderMultipleManifests(t *testing.T) {
 	chart, err := filepath.Abs("testdata/multiple-manifests")
 	require.NoError(t, err)
 
-	out := helm.RenderTemplate(t, &helm.Options{}, chart, "test", []string{})
+	out := helm.RenderTemplateContext(t, context.Background(), &helm.Options{}, chart, "test", []string{})
 
 	var configs []corev1.ConfigMap
 	helm.UnmarshalK8SYamlsE(t, out, &configs, func(v corev1.ConfigMap) bool {

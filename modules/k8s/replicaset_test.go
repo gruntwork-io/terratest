@@ -10,6 +10,7 @@
 package k8s_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gruntwork-io/terratest/modules/k8s/v2"
@@ -26,7 +27,7 @@ func TestGetReplicaSetEReturnsError(t *testing.T) {
 	t.Parallel()
 
 	options := k8s.NewKubectlOptions("", "", "")
-	_, err := k8s.GetReplicaSetE(t, options, "sample-rs")
+	_, err := k8s.GetReplicaSetContextE(t, context.Background(), options, "sample-rs")
 	require.Error(t, err)
 }
 
@@ -37,11 +38,11 @@ func TestGetReplicaSets(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleReplicaSetYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	replicaSet := k8s.GetReplicaSet(t, options, "sample-rs")
+	replicaSet := k8s.GetReplicaSetContext(t, context.Background(), options, "sample-rs")
 	require.Equal(t, "sample-rs", replicaSet.Name)
 	require.Equal(t, replicaSet.Namespace, uniqueID)
 }
@@ -53,11 +54,11 @@ func TestListReplicaSets(t *testing.T) {
 	options := k8s.NewKubectlOptions("", "", uniqueID)
 
 	configData := fmt.Sprintf(exampleReplicaSetYAMLTemplate, uniqueID, uniqueID)
-	defer k8s.KubectlDeleteFromString(t, options, configData)
+	defer k8s.KubectlDeleteFromStringContext(t, context.Background(), options, configData)
 
-	k8s.KubectlApplyFromString(t, options, configData)
+	k8s.KubectlApplyFromStringContext(t, context.Background(), options, configData)
 
-	replicaSets := k8s.ListReplicaSets(t, options, metav1.ListOptions{})
+	replicaSets := k8s.ListReplicaSetsContext(t, context.Background(), options, metav1.ListOptions{})
 	require.Len(t, replicaSets, 1)
 
 	replicaSet := replicaSets[0]

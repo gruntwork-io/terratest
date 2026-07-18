@@ -2,6 +2,7 @@ package httphelper_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,7 +31,7 @@ func TestOkBody(t *testing.T) {
 	url := ts.URL
 	expectedBody := "Hello, Terratest!"
 	body := bytes.NewReader([]byte(expectedBody))
-	statusCode, respBody := httphelper.HTTPDo(t, "POST", url, body, nil, nil)
+	statusCode, respBody := httphelper.HTTPDoContext(t, context.Background(), "POST", url, body, nil, nil)
 
 	expectedCode := 200
 
@@ -52,7 +53,7 @@ func TestHTTPDoWithValidation(t *testing.T) {
 	url := ts.URL
 	expectedBody := "Hello, Terratest!"
 	body := bytes.NewReader([]byte(expectedBody))
-	httphelper.HTTPDoWithValidation(t, "POST", url, body, nil, 200, expectedBody, nil)
+	httphelper.HTTPDoWithValidationContext(t, context.Background(), "POST", url, body, nil, 200, expectedBody, nil)
 }
 
 func TestHTTPDoWithCustomValidation(t *testing.T) {
@@ -69,7 +70,7 @@ func TestHTTPDoWithCustomValidation(t *testing.T) {
 		return statusCode == 200 && response == expectedBody
 	}
 
-	httphelper.HTTPDoWithCustomValidation(t, "POST", url, body, nil, customValidation, nil)
+	httphelper.HTTPDoWithCustomValidationContext(t, context.Background(), "POST", url, body, nil, customValidation, nil)
 }
 
 func TestOkHeaders(t *testing.T) {
@@ -80,7 +81,7 @@ func TestOkHeaders(t *testing.T) {
 
 	url := ts.URL
 	headers := map[string]string{"Authorization": "Bearer 1a2b3c99ff"}
-	statusCode, respBody := httphelper.HTTPDo(t, "POST", url, nil, headers, nil)
+	statusCode, respBody := httphelper.HTTPDoContext(t, context.Background(), "POST", url, nil, headers, nil)
 
 	expectedCode := 200
 
@@ -102,7 +103,7 @@ func TestWrongStatus(t *testing.T) {
 	defer ts.Close()
 
 	url := ts.URL
-	statusCode, _ := httphelper.HTTPDo(t, "POST", url, nil, nil, nil)
+	statusCode, _ := httphelper.HTTPDoContext(t, context.Background(), "POST", url, nil, nil, nil)
 
 	expectedCode := 500
 
@@ -119,7 +120,7 @@ func TestRequestTimeout(t *testing.T) {
 
 	url := ts.URL
 
-	_, _, err := httphelper.HTTPDoE(t, "DELETE", url, nil, nil, nil)
+	_, _, err := httphelper.HTTPDoContextE(t, context.Background(), "DELETE", url, nil, nil, nil)
 	if err == nil {
 		t.Error("handler didn't return a timeout error")
 	}
@@ -140,7 +141,7 @@ func TestOkWithRetry(t *testing.T) {
 
 	url := ts.URL
 	counter = 3
-	response := httphelper.HTTPDoWithRetry(t, "POST", url, bodyBytes, nil, 200, 10, time.Second, nil)
+	response := httphelper.HTTPDoWithRetryContext(t, context.Background(), "POST", url, bodyBytes, nil, 200, 10, time.Second, nil)
 	require.Equal(t, body, response)
 }
 
@@ -154,7 +155,7 @@ func TestErrorWithRetry(t *testing.T) {
 
 	url := ts.URL
 
-	_, err := httphelper.HTTPDoWithRetryE(t, "POST", url, nil, nil, 200, 2, time.Second, nil)
+	_, err := httphelper.HTTPDoWithRetryContextE(t, context.Background(), "POST", url, nil, nil, 200, 2, time.Second, nil)
 	if err == nil {
 		t.Error("handler didn't return a retry error")
 	}

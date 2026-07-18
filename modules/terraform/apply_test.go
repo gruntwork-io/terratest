@@ -1,6 +1,7 @@
 package terraform_test
 
 import (
+	"context"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -22,7 +23,7 @@ func TestApplyNoError(t *testing.T) {
 		NoColor:      true,
 	})
 
-	out := terraform.InitAndApply(t, options)
+	out := terraform.InitAndApplyContext(t, context.Background(), options)
 
 	require.Contains(t, out, "Hello, World")
 
@@ -40,7 +41,7 @@ func TestApplyWithErrorNoRetry(t *testing.T) {
 		TerraformDir: testFolder,
 	})
 
-	out, err := terraform.InitAndApplyE(t, options)
+	out, err := terraform.InitAndApplyContextE(t, context.Background(), options)
 
 	require.Error(t, err)
 	require.Contains(t, out, "This is the first run, exiting with an error")
@@ -60,7 +61,7 @@ func TestApplyWithErrorWithRetry(t *testing.T) {
 		},
 	})
 
-	out := terraform.InitAndApply(t, options)
+	out := terraform.InitAndApplyContext(t, context.Background(), options)
 
 	require.Contains(t, out, "This is the first run, exiting with an error")
 }
@@ -122,7 +123,7 @@ func TestApplyWithWarning(t *testing.T) {
 				WarningsAsErrors: scenario.warnings,
 			})
 
-			out, err := terraform.InitAndApplyE(t, options)
+			out, err := terraform.InitAndApplyContextE(t, context.Background(), options)
 			if scenario.isError {
 				require.Error(t, err)
 			} else {
@@ -145,7 +146,7 @@ func TestIdempotentNoChanges(t *testing.T) {
 		NoColor:      true,
 	})
 
-	terraform.InitAndApplyAndIdempotentE(t, options)
+	terraform.InitAndApplyAndIdempotentContextE(t, context.Background(), options)
 }
 
 func TestIdempotentWithChanges(t *testing.T) {
@@ -159,7 +160,7 @@ func TestIdempotentWithChanges(t *testing.T) {
 		NoColor:      true,
 	})
 
-	out, err := terraform.InitAndApplyAndIdempotentE(t, options)
+	out, err := terraform.InitAndApplyAndIdempotentContextE(t, context.Background(), options)
 
 	require.NotEmpty(t, out)
 	require.Error(t, err)
@@ -177,14 +178,14 @@ func TestParallelism(t *testing.T) { //nolint:paralleltest // test depends on pr
 		NoColor:      true,
 	})
 
-	terraform.Init(t, options)
+	terraform.InitContext(t, context.Background(), options)
 
 	// Run the first time with parallelism set to 5 and it should take about 5 seconds (plus or minus 10 seconds to
 	// account for other CPU hogging stuff)
 	options.Parallelism = 5
 	start := time.Now()
 
-	terraform.Apply(t, options)
+	terraform.ApplyContext(t, context.Background(), options)
 
 	end := time.Now()
 	require.WithinDuration(t, end, start, 15*time.Second)
@@ -193,7 +194,7 @@ func TestParallelism(t *testing.T) { //nolint:paralleltest // test depends on pr
 	options.Parallelism = 1
 	start = time.Now()
 
-	terraform.Apply(t, options)
+	terraform.ApplyContext(t, context.Background(), options)
 
 	end = time.Now()
 	duration := end.Sub(start)
@@ -217,11 +218,11 @@ func TestApplyWithPlanFile(t *testing.T) {
 		PlanFilePath: planFilePath,
 	}
 
-	_, err = terraform.InitAndPlanE(t, options)
+	_, err = terraform.InitAndPlanContextE(t, context.Background(), options)
 	require.NoError(t, err)
 	require.FileExists(t, planFilePath, "Plan file was not saved to expected location:", planFilePath)
 
-	out, err := terraform.ApplyE(t, options)
+	out, err := terraform.ApplyContextE(t, context.Background(), options)
 	require.NoError(t, err)
 	require.Contains(t, out, "1 added, 0 changed, 0 destroyed.")
 	require.NotRegexp(t, `\[\d*m`, out, "Output should not contain color escape codes")
