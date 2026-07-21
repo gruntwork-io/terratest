@@ -145,3 +145,34 @@ jobs:
           if [ "$fail" -ne 0 ]; then
             echo "::warning::Proxy has not served every tag yet. The tags are already pushed and immutable; the proxy usually populates within a few minutes. Re-run this check if needed."
           fi
+
+      # One human-facing GitHub Release for the whole version (not 16). Attached
+      # to the core tag; -beta/-rc suffixes are marked prerelease.
+      - name: Create GitHub Release
+        if: ${{ inputs.dry_run == false }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          prerelease=""
+          case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
+          {
+            echo "Terratest v2 lockstep release. All 16 submodules are tagged at ${VERSION}."
+            echo
+            echo "## Install"
+            echo
+            echo '```'
+            echo "go get github.com/gruntwork-io/terratest/modules/aws/v2@${VERSION}"
+            echo '```'
+            echo
+            echo "## Modules"
+            echo
+            echo "All at \`github.com/gruntwork-io/terratest/modules/<name>/v2\`:"
+            echo
+            for p in $MODULE_PATHS; do printf '%s ' "${p#modules/}"; done
+            echo
+          } > release_notes.md
+          # shellcheck disable=SC2086
+          gh release create "modules/core/${VERSION}" \
+            --title "Terratest ${VERSION}" \
+            --notes-file release_notes.md \
+            $prerelease
