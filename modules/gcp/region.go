@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gruntwork-io/terratest/modules/core/v2/collections"
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -56,7 +55,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, projectID 
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = subtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	logger.Default.Logf(t, "Using Region %s", region)
@@ -99,7 +98,7 @@ func GetRandomZoneContextE(t testing.TestingT, ctx context.Context, projectID st
 		zonesToPickFrom = allZones
 	}
 
-	zonesToPickFrom = collections.Subtract(zonesToPickFrom, forbiddenZones)
+	zonesToPickFrom = subtract(zonesToPickFrom, forbiddenZones)
 
 	var zonesToPickFromFiltered []string
 
@@ -273,4 +272,21 @@ func isInRegions(zone string, regions []string) bool {
 // isInRegion returns true if the given zone is in the given region.
 func isInRegion(zone string, region string) bool {
 	return strings.Contains(zone, region)
+}
+
+// subtract returns the items in list1 that are not in list2.
+func subtract[T comparable](list1, list2 []T) []T {
+	lookups := make(map[T]struct{}, len(list2))
+	for _, item := range list2 {
+		lookups[item] = struct{}{}
+	}
+
+	out := make([]T, 0, len(list1))
+	for _, item := range list1 {
+		if _, found := lookups[item]; !found {
+			out = append(out, item)
+		}
+	}
+
+	return out
 }

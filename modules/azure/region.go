@@ -3,7 +3,6 @@ package azure
 import (
 	"context"
 
-	"github.com/gruntwork-io/terratest/modules/core/v2/collections"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
@@ -67,11 +66,11 @@ func GetRandomStableRegionContext(t testing.TestingT, ctx context.Context, appro
 	regionsToPickFrom := stableRegions
 
 	if len(approvedRegions) > 0 {
-		regionsToPickFrom = collections.Intersection(regionsToPickFrom, approvedRegions)
+		regionsToPickFrom = intersection(regionsToPickFrom, approvedRegions)
 	}
 
 	if len(forbiddenRegions) > 0 {
-		regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
+		regionsToPickFrom = subtract(regionsToPickFrom, forbiddenRegions)
 	}
 
 	return GetRandomRegionContext(t, ctx, regionsToPickFrom, nil, subscriptionID)
@@ -115,7 +114,7 @@ func GetRandomRegionContextE(t testing.TestingT, ctx context.Context, approvedRe
 		regionsToPickFrom = allRegions
 	}
 
-	regionsToPickFrom = collections.Subtract(regionsToPickFrom, forbiddenRegions)
+	regionsToPickFrom = subtract(regionsToPickFrom, forbiddenRegions)
 	region := random.RandomString(regionsToPickFrom)
 
 	return region, nil
@@ -167,4 +166,40 @@ func GetAllAzureRegionsContextE(t testing.TestingT, ctx context.Context, subscri
 	}
 
 	return regions, nil
+}
+
+// intersection returns the items present in both lists, de-duplicated, in the
+// order they appear in list1.
+func intersection[T comparable](list1, list2 []T) []T {
+	lookups := make(map[T]struct{}, len(list2))
+	for _, item := range list2 {
+		lookups[item] = struct{}{}
+	}
+
+	out := make([]T, 0, min(len(list1), len(list2)))
+	for _, item := range list1 {
+		if _, found := lookups[item]; found {
+			out = append(out, item)
+			delete(lookups, item) // delete so a repeated list1 item isn't emitted twice
+		}
+	}
+
+	return out
+}
+
+// subtract returns the items in list1 that are not in list2.
+func subtract[T comparable](list1, list2 []T) []T {
+	lookups := make(map[T]struct{}, len(list2))
+	for _, item := range list2 {
+		lookups[item] = struct{}{}
+	}
+
+	out := make([]T, 0, len(list1))
+	for _, item := range list1 {
+		if _, found := lookups[item]; !found {
+			out = append(out, item)
+		}
+	}
+
+	return out
 }
