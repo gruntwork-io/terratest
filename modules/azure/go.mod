@@ -32,7 +32,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azcertificates v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets v1.4.0
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.1
 	github.com/stretchr/testify v1.11.1
 )
 

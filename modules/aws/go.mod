@@ -30,8 +30,8 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/uuid v1.6.0
 	github.com/gruntwork-io/go-commons v0.8.0
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-beta.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/pquerna/otp v1.4.0

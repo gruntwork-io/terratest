@@ -3,7 +3,7 @@ module github.com/gruntwork-io/terratest/modules/httphelper/v2
 go 1.26.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.1
 	github.com/stretchr/testify v1.11.1
 )
 

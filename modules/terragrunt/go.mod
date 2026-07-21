@@ -3,8 +3,8 @@ module github.com/gruntwork-io/terratest/modules/terragrunt/v2
 go 1.26.0
 
 require (
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0-beta.1
 	github.com/stretchr/testify v1.11.1
 )
 
@@ -13,8 +13,8 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0-00010101000000-000000000000 // indirect
-	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-00010101000000-000000000000 // indirect
+	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0-beta.1 // indirect
+	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-beta.1 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter/v2 v2.2.3 // indirect

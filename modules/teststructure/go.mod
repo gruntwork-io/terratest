@@ -4,13 +4,13 @@ go 1.26.0
 
 require (
 	github.com/gruntwork-io/go-commons v0.8.0
-	github.com/gruntwork-io/terratest/modules/aws/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/k8s/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/packer/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/aws/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/k8s/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/packer/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/ssh/v2 v2.0.0-beta.1
+	github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0-beta.1
 	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
 	github.com/stretchr/testify v1.11.1
 )

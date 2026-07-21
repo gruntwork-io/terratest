@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/pubsub/v2 v2.4.0
 	cloud.google.com/go/storage v1.62.1
 	github.com/google/go-containerregistry v0.20.2
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.276.0

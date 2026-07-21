@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/go-sql-driver/mysql v1.10.0
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.1
 	github.com/lib/pq v1.12.3
 	github.com/microsoft/go-mssqldb v1.10.0
 )
