@@ -2,9 +2,15 @@
 
 How to cut a coordinated release of the v2 submodules. Read this before tagging.
 
-The tag push and proxy verification are automated by the `v2 Release` workflow
-(`.github/workflows/v2-release.yml`, run via workflow_dispatch). This runbook
-explains the procedure that workflow follows and how to do it by hand if needed.
+The whole release is one manual workflow: `Create v2 Release`
+(`.github/workflows/create-release.yml`, run via workflow_dispatch). Give it a
+`version` (e.g. `v2.0.0-beta.1`) and a `ref` (default `main`); it runs the
+pre-flight checks, pins the cross-module requires, commits that in CI, pushes the
+16 tags in dependency order, and verifies the proxy. Run it once with
+`dry_run=true` to preview the exact tags, then again with `dry_run=false` to push.
+
+The rest of this runbook explains what that workflow does under the hood and how
+to do each step by hand if you ever need to.
 
 ## Layout
 
@@ -22,14 +28,16 @@ resolves; it is never pinned to a real, to-be-published version. Pinning a sibli
 version (e.g. `core/v2 v2.0.0-beta.1`) BREAKS the workspace build until that tag
 actually exists: `go.work` does not shadow an unpublished required version, so
 `go build` and `go work sync` try to fetch the missing revision and fail. The pin
-must therefore happen on a short-lived release-prep branch, immediately before the
-tags are pushed, never on the modularization PR.
+must therefore happen immediately before the tags are pushed, never on `main` or
+a modularization PR. The `Create v2 Release` workflow does this pin in CI (via
+`scripts/release-prep-pin.sh`) on an ephemeral commit that only the tags point
+at, so the broken-build state never lands on a branch.
 
 CI validates the release-mode build continuously without committing the pin: the
 `GOWORK=off` check generates the pinned state with throwaway `replace` directives,
 builds a consumer, and discards it (see `scripts/`).
 
-## Pre-flight (on a release-prep branch)
+## Pre-flight (what the workflow does before tagging)
 
 1. Choose the version, e.g. `v2.0.0-beta.1`.
 2. Pin each module, in dependency order (core first, then helpers, tooling,

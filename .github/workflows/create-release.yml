@@ -1,11 +1,15 @@
-name: v2 Release (lockstep tag push)
+name: Create v2 Release (pin + lockstep tags)
 
-# Manual-trigger workflow that pushes the full v2 tag set from a release-prep commit.
-# Procedure documented in docs/v2-release-runbook.md.
+# One manual workflow that cuts a full v2 release from main:
+#   1. Pre-flight: the modularization gates + the GOWORK=off release-mode build.
+#   2. Pin every submodule's cross-module require to the release version and
+#      commit that in-CI (the commit the tags point at). Deterministic; runs
+#      scripts/release-prep-pin.sh.
+#   3. Push the 16 per-module tags in dependency order, then verify the proxy.
 #
-# Use this AFTER:
-#   - scripts/release-prep.sh ran on the release-prep branch
-#   - The release-prep commit was reviewed and approved
+# Supersedes the old two-step flow (manual release-prep-pin.sh on a throwaway
+# branch + a tag-only workflow). Procedure documented in
+# docs/v2-release-runbook.md. Run with dry_run=true first to preview the tags.
 
 on:
   workflow_dispatch:
@@ -14,18 +18,19 @@ on:
         description: 'Version to tag (e.g. v2.0.0-beta.1). Applied to every submodule.'
         required: true
         type: string
-      commit_sha:
-        description: 'SHA of the release-prep commit to tag.'
-        required: true
+      ref:
+        description: 'Base ref/SHA to release from.'
+        required: false
         type: string
+        default: main
       dry_run:
-        description: 'If true, print the tag commands without pushing.'
+        description: 'If true, pin and print the tag commands without pushing.'
         required: false
         type: boolean
         default: true
 
-# Default to read-only. Only the tag-pushing job is granted write, so the
-# pre-flight job cannot push even though it runs scripts from a dispatched SHA.
+# Default to read-only. Only the tagging job is granted write, so the pre-flight
+# job cannot push even though it runs scripts from a dispatched ref.
 permissions:
   contents: read
 
@@ -37,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ inputs.commit_sha }}
+          ref: ${{ inputs.ref }}
           persist-credentials: false
       - run: bash scripts/check-acyclic-deps.sh
       - run: bash scripts/check-single-source.sh
@@ -47,11 +52,13 @@ jobs:
         uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Validates the exact release-mode build (pin + GOWORK=off external
+      # consumer) in a throwaway, so it runs against the un-pinned ref.
       - name: Release-mode build (GOWORK=off external consumer)
         run: bash scripts/check-release-mode.sh
 
   tag-and-push:
-    name: Push lockstep tags
+    name: Pin, tag, push
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -70,29 +77,48 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ inputs.commit_sha }}
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
+
+      - name: Validate version
+        run: |
+          if [[ ! "$VERSION" =~ ^v2\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::version '$VERSION' must look like v2.<minor>.<patch>[-suffix] (e.g. v2.0.0-beta.1)"
+            exit 1
+          fi
+
+      - name: Set up mise
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Pin the cross-module requires to the real version and commit in-CI. This
+      # is the commit the tags point at. It intentionally breaks the go.work
+      # build (the tags do not exist yet); that only matters until the push.
+      - name: Pin cross-module requires and commit
+        run: |
+          bash scripts/release-prep-pin.sh "$VERSION"
+          if git diff --quiet; then
+            echo "no placeholders to pin (ref already pinned to $VERSION)"
+          else
+            git commit -am "release-prep: pin cross-module requires to $VERSION"
+          fi
+          echo "PINNED_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
       - name: Tag in dependency order
         env:
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -e
-
-          if [[ ! "$VERSION" =~ ^v2\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
-            echo "::error::version '$VERSION' must look like v2.<minor>.<patch>[-suffix] (e.g. v2.0.0-beta.1)"
-            exit 1
-          fi
-
           for path in $MODULE_PATHS; do
             tag="${path}/v2/${VERSION}"
             if [ "$DRY_RUN" = "true" ]; then
-              echo "DRY-RUN would tag: $tag"
+              echo "DRY-RUN would tag ${PINNED_SHA:0:12}: $tag"
             else
               git tag -a "$tag" -m "v2 lockstep release $VERSION"
               git push origin "$tag"
