@@ -68,11 +68,14 @@ build is validated continuously without committing the pin or needing tags.
 
 ## Tag push order
 
-All tags point at the same release commit. Each tag name puts the `/v2` SIV in the
-tag itself: `modules/<name>/v2/<version>` (NOT `modules/<name>/<version>`, which
-the proxy cannot associate with the `/v2` module path). Push in dependency order:
+All tags point at the same release commit. The tag name is the module's
+on-disk subdirectory (which does NOT include the `/v2`, since `/v2` is only the
+SIV in the module path, not a directory) followed by the version:
+`modules/<name>/<version>`, e.g. `modules/aws/v2.0.0-beta.1`. Do NOT put the
+`/v2` in the tag (`modules/<name>/v2/<version>`), Go looks for the tag at
+`<subdir>/<version>` and will not find it. Push in dependency order:
 
-1. `modules/core/v2/v2.0.0-beta.1`
+1. `modules/core/v2.0.0-beta.1`
 2. helpers: `ssh`, `httphelper`, `dnshelper`
 3. tooling: `docker`, `packer`, `database`, `opa`
 4. platforms: `aws`, `azure`, `gcp`, then `k8s`, `helm`

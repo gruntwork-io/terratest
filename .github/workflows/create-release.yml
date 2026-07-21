@@ -116,7 +116,7 @@ jobs:
         run: |
           set -e
           for path in $MODULE_PATHS; do
-            tag="${path}/v2/${VERSION}"
+            tag="${path}/${VERSION}"
             if [ "$DRY_RUN" = "true" ]; then
               echo "DRY-RUN would tag ${PINNED_SHA:0:12}: $tag"
             else
