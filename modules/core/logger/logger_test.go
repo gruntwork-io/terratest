@@ -59,7 +59,52 @@ func TestCustomLogger(t *testing.T) {
 	assert.Equal(t, "subtest log", c.logs[2])
 }
 
-// TestLockedLog makes sure that Log and Logf which use stdout are thread-safe.
+// fakeTestingT implements testing.TestingT but is deliberately NOT a *testing.T and has no Log method, so logging
+// through it exercises DoLog's stdout fallback path. A real *testing.T is instead routed through t.Log (see DoLog).
+type fakeTestingT struct{ name string }
+
+func (fakeTestingT) Fail()                 {}
+func (fakeTestingT) FailNow()              {}
+func (fakeTestingT) Fatal(...any)          {}
+func (fakeTestingT) Fatalf(string, ...any) {}
+func (fakeTestingT) Error(...any)          {}
+func (fakeTestingT) Errorf(string, ...any) {}
+func (f fakeTestingT) Name() string        { return f.name }
+func (fakeTestingT) Helper()               {}
+
+// spyTestingT satisfies both testing.TestingT and the logSink that DoLog routes stdout logging through, recording each
+// Log call so tests can assert on what was routed.
+type spyTestingT struct {
+	fakeTestingT
+	logged []string
+}
+
+func (s *spyTestingT) Log(args ...any) { s.logged = append(s.logged, fmt.Sprintln(args...)) }
+
+// TestDoLogRoutesThroughTestingT verifies that DoLog routes to t.Log when writing to stdout for a *testing.T (so that
+// `go test -json` attributes output to the correct test), while always honoring an explicit non-stdout writer.
+//
+//nolint:paralleltest // asserts on os.Stdout routing
+func TestDoLogRoutesThroughTestingT(t *testing.T) {
+	// writer == os.Stdout with a testing.T-like sink: routed through Log, nothing written to the real stdout.
+	spy := &spyTestingT{fakeTestingT: fakeTestingT{name: "TestApply1"}}
+	logger.DoLog(spy, 1, os.Stdout, "routed-message")
+	require.Len(t, spy.logged, 1)
+	assert.Contains(t, spy.logged[0], "TestApply1")
+	assert.Contains(t, spy.logged[0], "routed-message")
+
+	// An explicit non-stdout writer is always honored and never routed to the sink.
+	var buf bytes.Buffer
+
+	spy2 := &spyTestingT{fakeTestingT: fakeTestingT{name: "TestApply2"}}
+
+	logger.DoLog(spy2, 1, &buf, "buffered-message")
+	assert.Empty(t, spy2.logged)
+	assert.Contains(t, buf.String(), "buffered-message")
+}
+
+// TestLockedLog makes sure that Log which uses the stdout fallback path is thread-safe. It uses fakeTestingT (not a
+// *testing.T) so DoLog writes to stdout under MutexStdout rather than routing through t.Log.
 //
 //nolint:paralleltest // test modifies os.Stdout
 func TestLockedLog(t *testing.T) {
@@ -69,19 +114,21 @@ func TestLockedLog(t *testing.T) {
 		os.Stdout = stdout
 	})
 
+	ft := fakeTestingT{name: t.Name()}
+
 	data := []struct {
 		fn   func(string)
 		name string
 	}{
 		{
 			fn: func(s string) {
-				logger.Log(t, s)
+				logger.Log(ft, s)
 			},
 			name: "Log",
 		},
 		{
 			fn: func(s string) {
-				logger.Default.Logf(t, "%s", s)
+				logger.Default.Logf(ft, "%s", s)
 			},
 			name: "Logf",
 		},

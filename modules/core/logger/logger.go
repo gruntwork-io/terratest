@@ -44,6 +44,10 @@ var (
 	//    because there is no log output with t.Logf (e.g., CircleCI kills tests after 10 minutes of no log output). With
 	//    this log method, you get log output continuously.
 	//
+	// When a *testing.T is available, the log is emitted through t.Log rather than written to stdout directly, so that
+	// `go test -json` attributes each line to the correct test even when tests run in parallel (see DoLog and issue
+	// #1871). t.Log still streams immediately under `-v` on Go 1.14+, so the benefits above are preserved.
+	//
 	Terratest = New(terratestLogger{})
 	// TestingT can be used to use Go's testing.T to log. If this is used, but no testing.T is provided, it will fallback
 	// to Default.
@@ -109,6 +113,10 @@ func (testingT) Logf(t testing.TestingT, format string, args ...any) {
 type terratestLogger struct{}
 
 func (terratestLogger) Logf(t testing.TestingT, format string, args ...any) {
+	if h, ok := t.(helper); ok {
+		h.Helper()
+	}
+
 	DoLog(t, callDepthWrapped, os.Stdout, fmt.Sprintf(format, args...))
 }
 
@@ -132,11 +140,50 @@ var MutexStdout sync.Mutex
 // DoLog logs the given arguments to the given writer, along with a timestamp and information about what test and file is
 // doing the logging.
 func DoLog(t testing.TestingT, callDepth int, writer io.Writer, args ...any) {
+	if h, ok := t.(helper); ok {
+		h.Helper()
+	}
+
 	date := time.Now()
 	prefix := fmt.Sprintf("%s %s %s:", t.Name(), date.Format(time.RFC3339), CallerPrefix(callDepth+1))
 	allArgs := append([]any{prefix}, args...)
 
+	// When we would otherwise write to stdout and a *testing.T is available, route the line through t.Log instead.
+	// This lets `go test -json` attribute each line to the correct test, which it cannot do for raw stdout writes made
+	// by tests running in parallel: such writes bypass the framework's per-test output coordination, so the JSON runner
+	// tags them with whichever test happened to be active, mixing up the output of parallel tests (issue #1871). An
+	// explicit non-stdout writer (e.g. a bytes.Buffer) is always honored as-is.
+	if writer == os.Stdout {
+		if sink, ok := t.(logSink); ok && logViaTestingT(sink, allArgs...) {
+			return
+		}
+	}
+
 	fmt.Fprintln(writer, allArgs...)
+}
+
+// logSink is satisfied by *testing.T (and *testing.B / *testing.F). See DoLog for why terratest routes stdout logging
+// through it: doing so is what allows `go test -json` to attribute output to the right test under t.Parallel().
+type logSink interface {
+	Log(args ...any)
+	Helper()
+}
+
+// logViaTestingT routes the given args through the testing.T's Log method, which formats them like fmt.Sprintln (the
+// same as fmt.Fprintln) and streams them under the testing framework so they are attributed to the right test. It
+// recovers if the test has already completed, since t.Log panics in that case, and reports false so the caller can fall
+// back to writing directly to stdout rather than crash or drop the line.
+func logViaTestingT(sink logSink, args ...any) (logged bool) {
+	defer func() {
+		if recover() != nil {
+			logged = false
+		}
+	}()
+
+	sink.Helper()
+	sink.Log(args...)
+
+	return true
 }
 
 // CallerPrefix returns the file and line number information about the methods that called this method, based on the current
