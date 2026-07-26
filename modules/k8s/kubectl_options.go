@@ -9,16 +9,34 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// awsProviderIDScheme is the scheme used in the provider ID of a node backed by an AWS EC2 instance.
+const awsProviderIDScheme = "aws"
+
+// NodePublicIPLookup resolves the public IP addresses of the given cloud provider instance IDs in the given region,
+// returning a map of instance ID to public IP. Instances with no public IP may be omitted from the map.
+//
+// This exists so that k8s can resolve the externally reachable address of a node without depending on any cloud
+// provider module. It matches the signature of aws.GetPublicIpsOfEc2InstancesContextE, so on EKS you can wire it up
+// directly:
+//
+//	options := k8s.NewKubectlOptions("", "", "default")
+//	options.NodePublicIPLookup = aws.GetPublicIpsOfEc2InstancesContextE
+type NodePublicIPLookup func(t testing.TestingT, ctx context.Context, instanceIDs []string, region string) (map[string]string, error)
+
 // KubectlOptions represents common options necessary to specify for all Kubectl calls
 type KubectlOptions struct {
-	Env            map[string]string
-	RestConfig     *rest.Config
-	Logger         *logger.Logger
-	ContextName    string
-	ConfigPath     string
-	Namespace      string
-	RequestTimeout time.Duration
-	InClusterAuth  bool
+	Env map[string]string
+	// NodePublicIPLookup, if set, is used to resolve the public IP of a node whose provider ID identifies a cloud
+	// instance. If it is nil, node lookups fall back to the internal hostname recorded on the Kubernetes node object.
+	// It is skipped when serializing options, since a function cannot be represented as JSON.
+	NodePublicIPLookup NodePublicIPLookup `json:"-"`
+	RestConfig         *rest.Config
+	Logger             *logger.Logger
+	ContextName        string
+	ConfigPath         string
+	Namespace          string
+	RequestTimeout     time.Duration
+	InClusterAuth      bool
 }
 
 // NewKubectlOptions will return a pointer to new instance of KubectlOptions with the configured options

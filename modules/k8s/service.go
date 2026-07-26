@@ -11,7 +11,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gruntwork-io/terratest/modules/aws/v2"
+	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/core/v2/retry"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -205,7 +205,7 @@ func findEndpointForNodePortServiceContext(
 		return "", err
 	}
 
-	nodeHostname, err := FindNodeHostnameContextE(t, ctx, node)
+	nodeHostname, err := FindNodeHostnameContextE(t, ctx, options, node)
 	if err != nil {
 		return "", err
 	}
@@ -256,10 +256,12 @@ func pickRandomNodeE(t testing.TestingT, options *KubectlOptions) (corev1.Node, 
 // FindNodeHostnameContext returns the hostname or IP address of the given node using the provided context, preferring
 // the external IP when available. This will fail the test if there is an error.
 //
+// Resolving the external IP of a cloud instance requires options.NodePublicIPLookup to be set. See NodePublicIPLookup.
+//
 //nolint:gocritic // hugeParam: cannot change public function signature
-func FindNodeHostnameContext(t testing.TestingT, ctx context.Context, node corev1.Node) string {
+func FindNodeHostnameContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, node corev1.Node) string {
 	t.Helper()
-	hostname, err := FindNodeHostnameContextE(t, ctx, node)
+	hostname, err := FindNodeHostnameContextE(t, ctx, options, node)
 	require.NoError(t, err)
 
 	return hostname
@@ -268,16 +270,18 @@ func FindNodeHostnameContext(t testing.TestingT, ctx context.Context, node corev
 // FindNodeHostnameContextE returns the hostname or IP address of the given node using the provided context, preferring
 // the external IP when available.
 //
+// Resolving the external IP of a cloud instance requires options.NodePublicIPLookup to be set. See NodePublicIPLookup.
+//
 //nolint:gocritic // hugeParam: cannot change public function signature
-func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, node corev1.Node) (string, error) {
+func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, node corev1.Node) (string, error) {
 	nodeIDUri, err := url.Parse(node.Spec.ProviderID)
 	if err != nil {
 		return "", err
 	}
 
 	switch nodeIDUri.Scheme {
-	case "aws":
-		return findAwsNodeHostnameContextE(t, ctx, &node, nodeIDUri)
+	case awsProviderIDScheme:
+		return findAwsNodeHostnameContextE(t, ctx, options, &node, nodeIDUri)
 	default:
 		return findDefaultNodeHostnameE(&node)
 	}
@@ -289,8 +293,13 @@ func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, node core
 // expectedAWSIDPathParts is the number of path segments in an AWS provider ID (empty, availability zone, instance ID).
 const expectedAWSIDPathParts = 3
 
-func findAwsNodeHostnameContextE(t testing.TestingT, ctx context.Context, node *corev1.Node, awsIDUri *url.URL) (string, error) {
-
+func findAwsNodeHostnameContextE(
+	t testing.TestingT,
+	ctx context.Context,
+	options *KubectlOptions,
+	node *corev1.Node,
+	awsIDUri *url.URL,
+) (string, error) {
 	parts := strings.Split(awsIDUri.Path, "/")
 	if len(parts) != expectedAWSIDPathParts {
 		return "", NewMalformedNodeIDError(node)
@@ -301,7 +310,15 @@ func findAwsNodeHostnameContextE(t testing.TestingT, ctx context.Context, node *
 
 	region := availabilityZone[:len(availabilityZone)-1]
 
-	ipMap, err := aws.GetPublicIpsOfEc2InstancesContextE(t, ctx, []string{instanceID}, region)
+	if options == nil || options.NodePublicIPLookup == nil {
+		logger.Default.Logf(t, "[WARNING] Node %s is backed by an AWS EC2 instance, but KubectlOptions.NodePublicIPLookup "+
+			"is not set, so its public IP cannot be resolved. Falling back to the internal hostname recorded on the node. "+
+			"Set options.NodePublicIPLookup = aws.GetPublicIpsOfEc2InstancesContextE to resolve public IPs.", node.Name)
+
+		return findDefaultNodeHostnameE(node)
+	}
+
+	ipMap, err := options.NodePublicIPLookup(t, ctx, []string{instanceID}, region)
 	if err != nil {
 		return "", err
 	}
