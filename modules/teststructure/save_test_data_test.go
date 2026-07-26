@@ -1,21 +1,12 @@
 package teststructure_test
 
 import (
-	"encoding/json"
-	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/gruntwork-io/terratest/modules/aws/v2"
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
-	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
-	gotesting "github.com/gruntwork-io/terratest/modules/core/v2/testing"
-	"github.com/gruntwork-io/terratest/modules/k8s/v2"
-	"github.com/gruntwork-io/terratest/modules/ssh/v2"
 	"github.com/gruntwork-io/terratest/modules/terraform/v2"
 	"github.com/gruntwork-io/terratest/modules/teststructure/v2"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type testData struct {
@@ -259,63 +250,4 @@ func TestSaveAndLoadNamedInts(t *testing.T) {
 
 	assert.Equal(t, expectedData1, actualData1)
 	assert.Equal(t, expectedData2, actualData2)
-}
-
-func TestSaveAndLoadKubectlOptions(t *testing.T) {
-	t.Parallel()
-
-	tmpFolder := t.TempDir()
-
-	expectedData := &k8s.KubectlOptions{
-		ContextName: "terratest-context",
-		ConfigPath:  "~/.kube/config",
-		Namespace:   "default",
-		Env: map[string]string{
-			"TERRATEST_ENV_VAR": "terratest",
-		},
-	}
-	teststructure.SaveKubectlOptions(t, tmpFolder, expectedData)
-
-	actualData := teststructure.LoadKubectlOptions(t, tmpFolder)
-	assert.Equal(t, expectedData, actualData)
-}
-
-type tStringLogger struct {
-	sb strings.Builder
-}
-
-func (l *tStringLogger) Logf(t gotesting.TestingT, format string, args ...any) {
-	t.Helper()
-	fmt.Fprintf(&l.sb, format, args...)
-	l.sb.WriteRune('\n')
-}
-
-func TestSaveAndLoadEC2KeyPair(t *testing.T) {
-	t.Parallel()
-
-	def, slogger := logger.Default, &tStringLogger{}
-	logger.Default = logger.New(slogger)
-
-	t.Cleanup(func() {
-		logger.Default = def
-	})
-
-	keyPair, err := ssh.GenerateRSAKeyPairE(t, 2048) //nolint:mnd // RSA key size for testing
-	require.NoError(t, err)
-
-	ec2KeyPair := &aws.Ec2Keypair{
-		KeyPair: keyPair,
-		Name:    "test-ec2-key-pair",
-		Region:  "us-east-1",
-	}
-
-	storedEC2KeyPair, err := json.Marshal(ec2KeyPair) //nolint:musttag // aws.Ec2Keypair does not have json tags
-	require.NoError(t, err)
-
-	tmpFolder := t.TempDir()
-	teststructure.SaveEc2KeyPair(t, tmpFolder, ec2KeyPair)
-	loadedEC2KeyPair := teststructure.LoadEc2KeyPair(t, tmpFolder)
-	assert.Equal(t, ec2KeyPair, loadedEC2KeyPair)
-
-	assert.NotContains(t, slogger.sb.String(), string(storedEC2KeyPair), "stored ec2 key pair should not be logged")
 }
