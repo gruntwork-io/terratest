@@ -90,7 +90,7 @@ func buildAMI(t *testing.T, awsRegion string, workingDir string) {
 	}
 
 	// Save the Packer Options so future test stages can use them
-	teststructure.SavePackerOptions(t, workingDir, packerOptions)
+	packer.SavePackerOptions(t, workingDir, packerOptions)
 
 	// Build the AMI
 	amiID := packer.BuildArtifactContext(t, t.Context(), packerOptions)

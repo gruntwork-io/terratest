@@ -80,7 +80,7 @@ func initialDeploy(t *testing.T, awsRegion string, workingDir string) {
 
 	// Create a KeyPair we can use later to SSH to each Instance
 	keyPair := aws.CreateAndImportEC2KeyPairContext(t, t.Context(), awsRegion, uniqueID)
-	teststructure.SaveEc2KeyPair(t, workingDir, keyPair)
+	aws.SaveEc2KeyPair(t, workingDir, keyPair)
 
 	// Give the ASG and other resources in the Terraform code a name with a unique ID so it doesn't clash
 	// with anything else in the AWS account.
@@ -219,7 +219,7 @@ func fetchFilesFromAsg(t *testing.T, awsRegion string, workingDir string) {
 
 	// Load the Terraform Options and Key Pair saved by the earlier deploy_terraform stage
 	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
-	keyPair := teststructure.LoadEc2KeyPair(t, workingDir)
+	keyPair := aws.LoadEc2KeyPair(t, workingDir)
 
 	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
 	instanceIDToFilePathToContents := aws.FetchContentsOfFilesFromAsgContext(t, t.Context(), awsRegion, "ubuntu", keyPair, asgName, true, syslogPathUbuntu, indexHTMLUbuntu)

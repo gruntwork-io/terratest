@@ -27,7 +27,7 @@ func TestTerraformScpExample(t *testing.T) {
 		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
 
-		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
+		keyPair := aws.LoadEc2KeyPair(t, exampleFolder)
 		aws.DeleteEC2KeyPairContext(t, t.Context(), keyPair)
 	})
 
@@ -37,7 +37,7 @@ func TestTerraformScpExample(t *testing.T) {
 
 		// Save the options and key pair so later test stages can use them
 		teststructure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
-		teststructure.SaveEc2KeyPair(t, exampleFolder, keyPair)
+		aws.SaveEc2KeyPair(t, exampleFolder, keyPair)
 
 		// This will run `terraform init` and `terraform apply` and fail the test if there are any errors
 		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
@@ -46,7 +46,7 @@ func TestTerraformScpExample(t *testing.T) {
 	// Make sure we can SCP a file from an EC2 instance to our local box
 	teststructure.RunTestStage(t, "validate_file", func() {
 		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
-		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
+		keyPair := aws.LoadEc2KeyPair(t, exampleFolder)
 
 		testScpFromHost(t, terraformOptions, keyPair)
 	})
@@ -54,7 +54,7 @@ func TestTerraformScpExample(t *testing.T) {
 	// Make sure we can SCP all files in a given remote dir from an EC2 instance to our local box
 	teststructure.RunTestStage(t, "validate_dir", func() {
 		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
-		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
+		keyPair := aws.LoadEc2KeyPair(t, exampleFolder)
 
 		testScpDirFromHost(t, terraformOptions, keyPair)
 	})
@@ -62,7 +62,7 @@ func TestTerraformScpExample(t *testing.T) {
 	// Make sure we can SCP all files in a given remote dir from an EC2 instance to our local box
 	teststructure.RunTestStage(t, "validate_asg", func() {
 		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
-		keyPair := teststructure.LoadEc2KeyPair(t, exampleFolder)
+		keyPair := aws.LoadEc2KeyPair(t, exampleFolder)
 
 		testScpFromAsg(t, terraformOptions, keyPair, exampleFolder)
 	})

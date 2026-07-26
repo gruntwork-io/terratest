@@ -43,7 +43,7 @@ func TestTerraformSshCertificateExample(t *testing.T) {
 
 		// Save the options so later test stages can use them.
 		teststructure.SaveTerraformOptions(t, exampleFolder, terraformOptions)
-		teststructure.SaveSSHKeyPair(t, exampleFolder, keyPair)
+		ssh.SaveSSHKeyPair(t, exampleFolder, keyPair)
 
 		// This will run `terraform init` and `terraform apply` and fail the test if there are any errors.
 		terraform.InitAndApplyContext(t, t.Context(), terraformOptions)
@@ -52,7 +52,7 @@ func TestTerraformSshCertificateExample(t *testing.T) {
 	// Make sure we can SSH to the public instance directly from the public internet.
 	teststructure.RunTestStage(t, "validate", func() {
 		terraformOptions := teststructure.LoadTerraformOptions(t, exampleFolder)
-		keypair := teststructure.LoadSSHKeyPair(t, exampleFolder)
+		keypair := ssh.LoadSSHKeyPair(t, exampleFolder)
 
 		testSSHCertificateToPublicHost(t, terraformOptions, keypair)
 	})

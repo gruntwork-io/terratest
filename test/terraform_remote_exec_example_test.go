@@ -26,7 +26,7 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 	// At the end of the test, run `terraform destroy` to clean up any resources that were created
 	defer teststructure.RunTestStage(t, "teardown", func() {
 		terraformOptions := teststructure.LoadTerraformOptions(t, terraformDirectory)
-		keyPair := teststructure.LoadEc2KeyPair(t, terraformDirectory)
+		keyPair := aws.LoadEc2KeyPair(t, terraformDirectory)
 
 		// destroy terraform resources and delete ec2 key pair
 		terraform.DestroyContext(t, t.Context(), terraformOptions)
@@ -83,7 +83,7 @@ func TestTerraformRemoteExecExample(t *testing.T) {
 
 		// Save the options and key pair so later test stages can use them
 		teststructure.SaveTerraformOptions(t, terraformDirectory, terraformOptions)
-		teststructure.SaveEc2KeyPair(t, terraformDirectory, keyPair)
+		aws.SaveEc2KeyPair(t, terraformDirectory, keyPair)
 
 		// Because of the SshAgent option above, the terraform process will be provided an `SSH_AUTH_SOCK` environment
 		// variable, which will point to the socket file of our in-process `sshAgent` instance:
