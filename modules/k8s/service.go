@@ -306,8 +306,13 @@ func findAwsNodeHostnameContextE(
 	}
 
 	instanceID := parts[2]
-	availabilityZone := parts[1]
 
+	availabilityZone := parts[1]
+	if availabilityZone == "" || instanceID == "" {
+		return "", NewMalformedNodeIDError(node)
+	}
+
+	// An AZ is a region plus a single trailing letter, so dropping that letter yields the region.
 	region := availabilityZone[:len(availabilityZone)-1]
 
 	if options == nil || options.NodePublicIPLookup == nil {

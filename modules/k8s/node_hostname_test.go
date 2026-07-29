@@ -107,3 +107,47 @@ func TestFindNodeHostnamePropagatesLookupError(t *testing.T) {
 	_, err := k8s.FindNodeHostnameContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
 	require.ErrorIs(t, err, expectedErr)
 }
+
+// TestFindNodeHostnameRejectsMalformedAwsProviderIDs covers provider IDs that satisfy the path-segment count but
+// carry an empty availability zone or instance ID. Before the explicit guard, an empty AZ reached
+// availabilityZone[:len(availabilityZone)-1] and panicked with a slice-bounds error.
+func TestFindNodeHostnameRejectsMalformedAwsProviderIDs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		providerID string
+	}{
+		{"empty availability zone", "aws:////i-0123456789"},
+		{"empty instance ID", "aws:///us-east-1d/"},
+		{"both empty", "aws:////"},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			node := corev1.Node{
+				Spec: corev1.NodeSpec{ProviderID: testCase.providerID},
+				Status: corev1.NodeStatus{
+					Addresses: []corev1.NodeAddress{{Type: corev1.NodeHostName, Address: testHostname}},
+				},
+			}
+
+			options := k8s.NewKubectlOptions("", "", "default")
+			options.NodePublicIPLookup = func(_ gotesting.TestingT, _ context.Context, _ []string, _ string) (map[string]string, error) {
+				t.Fatal("lookup must not be reached for a malformed provider ID")
+
+				return nil, nil
+			}
+
+			// The guard must fire before the region slice, with and without a lookup configured.
+			for _, opts := range []*k8s.KubectlOptions{nil, options} {
+				require.NotPanics(t, func() {
+					_, err := k8s.FindNodeHostnameContextE(t, t.Context(), opts, node)
+					require.Error(t, err)
+				})
+			}
+		})
+	}
+}
