@@ -205,7 +205,7 @@ func findEndpointForNodePortServiceContext(
 		return "", err
 	}
 
-	nodeHostname, err := FindNodeHostnameContextE(t, ctx, options, node)
+	nodeHostname, err := FindNodeHostnameWithOptionsContextE(t, ctx, options, node)
 	if err != nil {
 		return "", err
 	}
@@ -256,12 +256,10 @@ func pickRandomNodeE(t testing.TestingT, options *KubectlOptions) (corev1.Node, 
 // FindNodeHostnameContext returns the hostname or IP address of the given node using the provided context, preferring
 // the external IP when available. This will fail the test if there is an error.
 //
-// Resolving the external IP of a cloud instance requires options.NodePublicIPLookup to be set. See NodePublicIPLookup.
-//
 //nolint:gocritic // hugeParam: cannot change public function signature
-func FindNodeHostnameContext(t testing.TestingT, ctx context.Context, options *KubectlOptions, node corev1.Node) string {
+func FindNodeHostnameContext(t testing.TestingT, ctx context.Context, node corev1.Node) string {
 	t.Helper()
-	hostname, err := FindNodeHostnameContextE(t, ctx, options, node)
+	hostname, err := FindNodeHostnameContextE(t, ctx, node)
 	require.NoError(t, err)
 
 	return hostname
@@ -270,10 +268,52 @@ func FindNodeHostnameContext(t testing.TestingT, ctx context.Context, options *K
 // FindNodeHostnameContextE returns the hostname or IP address of the given node using the provided context, preferring
 // the external IP when available.
 //
-// Resolving the external IP of a cloud instance requires options.NodePublicIPLookup to be set. See NodePublicIPLookup.
+// The address is read from the node object itself: cloud controller managers record an instance's public IP as an
+// ExternalIP address on the node. For the rare cluster that does not advertise one, see
+// FindNodeHostnameWithOptionsContextE, which can fall back to querying the cloud provider directly.
 //
 //nolint:gocritic // hugeParam: cannot change public function signature
-func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, options *KubectlOptions, node corev1.Node) (string, error) {
+func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, node corev1.Node) (string, error) {
+	return FindNodeHostnameWithOptionsContextE(t, ctx, nil, node)
+}
+
+// FindNodeHostnameWithOptionsContext behaves like FindNodeHostnameContext, but consults
+// options.NodePublicIPLookup when the node itself does not advertise an external IP. This will fail the test if
+// there is an error.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func FindNodeHostnameWithOptionsContext(
+	t testing.TestingT,
+	ctx context.Context,
+	options *KubectlOptions,
+	node corev1.Node,
+) string {
+	t.Helper()
+	hostname, err := FindNodeHostnameWithOptionsContextE(t, ctx, options, node)
+	require.NoError(t, err)
+
+	return hostname
+}
+
+// FindNodeHostnameWithOptionsContextE behaves like FindNodeHostnameContextE, but consults
+// options.NodePublicIPLookup when the node itself does not advertise an external IP.
+//
+// Almost all callers want FindNodeHostnameContextE instead. A lookup is only needed on clusters whose cloud
+// controller manager does not record the instance's public IP as an ExternalIP on the node object. See
+// NodePublicIPLookup for the wiring.
+//
+//nolint:gocritic // hugeParam: cannot change public function signature
+func FindNodeHostnameWithOptionsContextE(
+	t testing.TestingT,
+	ctx context.Context,
+	options *KubectlOptions,
+	node corev1.Node,
+) (string, error) {
+	// An external IP recorded on the node is authoritative and costs no API call, so prefer it for every provider.
+	if externalIP, ok := findNodeAddress(&node, corev1.NodeExternalIP); ok {
+		return externalIP, nil
+	}
+
 	nodeIDUri, err := url.Parse(node.Spec.ProviderID)
 	if err != nil {
 		return "", err
@@ -285,6 +325,17 @@ func FindNodeHostnameContextE(t testing.TestingT, ctx context.Context, options *
 	default:
 		return findDefaultNodeHostnameE(&node)
 	}
+}
+
+// findNodeAddress returns the first address of the given type recorded on the node, and whether one was found.
+func findNodeAddress(node *corev1.Node, addressType corev1.NodeAddressType) (string, bool) {
+	for _, address := range node.Status.Addresses {
+		if address.Type == addressType && address.Address != "" {
+			return address.Address, true
+		}
+	}
+
+	return "", false
 }
 
 // findAwsNodeHostname will return the public ip of the node, assuming the node is an AWS EC2 instance.
@@ -339,10 +390,8 @@ func findAwsNodeHostnameContextE(
 
 // findDefaultNodeHostname returns the hostname recorded on the Kubernetes node object.
 func findDefaultNodeHostnameE(node *corev1.Node) (string, error) {
-	for _, address := range node.Status.Addresses {
-		if address.Type == corev1.NodeHostName {
-			return address.Address, nil
-		}
+	if hostname, ok := findNodeAddress(node, corev1.NodeHostName); ok {
+		return hostname, nil
 	}
 
 	return "", NewNodeHasNoHostnameError(node)

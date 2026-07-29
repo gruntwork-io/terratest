@@ -31,6 +31,17 @@ func nodeWithProviderID(providerID string) corev1.Node {
 	}
 }
 
+// nodeWithExternalIP models what a cloud controller manager records for an instance that has a public IP.
+func nodeWithExternalIP(providerID string, externalIP string) corev1.Node {
+	node := nodeWithProviderID(providerID)
+	node.Status.Addresses = append(
+		[]corev1.NodeAddress{{Type: corev1.NodeExternalIP, Address: externalIP}},
+		node.Status.Addresses...,
+	)
+
+	return node
+}
+
 func TestFindNodeHostnameUsesPublicIPLookup(t *testing.T) {
 	t.Parallel()
 
@@ -45,7 +56,7 @@ func TestFindNodeHostnameUsesPublicIPLookup(t *testing.T) {
 		return map[string]string{testInstanceID: testPublicIP}, nil
 	}
 
-	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
+	hostname, err := k8s.FindNodeHostnameWithOptionsContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
 	require.NoError(t, err)
 
 	assert.Equal(t, testPublicIP, hostname)
@@ -58,7 +69,7 @@ func TestFindNodeHostnameFallsBackWhenNoLookupConfigured(t *testing.T) {
 
 	options := k8s.NewKubectlOptions("", "", "default")
 
-	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
+	hostname, err := k8s.FindNodeHostnameWithOptionsContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
 	require.NoError(t, err)
 
 	assert.Equal(t, testHostname, hostname, "should fall back to the internal hostname when no lookup is configured")
@@ -72,7 +83,7 @@ func TestFindNodeHostnameFallsBackWhenInstanceHasNoPublicIP(t *testing.T) {
 		return map[string]string{}, nil
 	}
 
-	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
+	hostname, err := k8s.FindNodeHostnameWithOptionsContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
 	require.NoError(t, err)
 
 	assert.Equal(t, testHostname, hostname)
@@ -88,7 +99,7 @@ func TestFindNodeHostnameSkipsLookupForNonAWSProvider(t *testing.T) {
 		return nil, nil
 	}
 
-	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), options, nodeWithProviderID("gce://project/us-central1-a/instance-1"))
+	hostname, err := k8s.FindNodeHostnameWithOptionsContextE(t, t.Context(), options, nodeWithProviderID("gce://project/us-central1-a/instance-1"))
 	require.NoError(t, err)
 
 	assert.Equal(t, testHostname, hostname)
@@ -104,7 +115,7 @@ func TestFindNodeHostnamePropagatesLookupError(t *testing.T) {
 		return nil, expectedErr
 	}
 
-	_, err := k8s.FindNodeHostnameContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
+	_, err := k8s.FindNodeHostnameWithOptionsContextE(t, t.Context(), options, nodeWithProviderID(testProviderID))
 	require.ErrorIs(t, err, expectedErr)
 }
 
@@ -144,10 +155,70 @@ func TestFindNodeHostnameRejectsMalformedAwsProviderIDs(t *testing.T) {
 			// The guard must fire before the region slice, with and without a lookup configured.
 			for _, opts := range []*k8s.KubectlOptions{nil, options} {
 				require.NotPanics(t, func() {
-					_, err := k8s.FindNodeHostnameContextE(t, t.Context(), opts, node)
+					_, err := k8s.FindNodeHostnameWithOptionsContextE(t, t.Context(), opts, node)
 					require.Error(t, err)
 				})
 			}
 		})
 	}
+}
+
+// TestFindNodeHostnamePrefersExternalIPFromNode is the primary path. Cloud controller managers record an
+// instance's public IP as an ExternalIP address on the node object, so no cloud API call is needed and no lookup
+// has to be configured.
+func TestFindNodeHostnamePrefersExternalIPFromNode(t *testing.T) {
+	t.Parallel()
+
+	node := nodeWithExternalIP(testProviderID, testPublicIP)
+
+	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), node)
+	require.NoError(t, err)
+	assert.Equal(t, testPublicIP, hostname, "the node's ExternalIP must win without any options")
+}
+
+// TestFindNodeHostnameExternalIPSkipsTheLookup pins that the cloud API call is not made when the node already
+// advertises an external IP, even if a lookup is configured.
+func TestFindNodeHostnameExternalIPSkipsTheLookup(t *testing.T) {
+	t.Parallel()
+
+	options := k8s.NewKubectlOptions("", "", "default")
+	options.NodePublicIPLookup = func(_ gotesting.TestingT, _ context.Context, _ []string, _ string) (map[string]string, error) {
+		t.Fatal("lookup must not be called when the node advertises an ExternalIP")
+
+		return nil, nil
+	}
+
+	hostname, err := k8s.FindNodeHostnameWithOptionsContextE(t, t.Context(), options, nodeWithExternalIP(testProviderID, testPublicIP))
+	require.NoError(t, err)
+	assert.Equal(t, testPublicIP, hostname)
+}
+
+// TestFindNodeHostnameExternalIPWorksForNonAwsProviders confirms the preference is provider agnostic, so GKE and
+// other clusters that advertise an ExternalIP get it too.
+func TestFindNodeHostnameExternalIPWorksForNonAwsProviders(t *testing.T) {
+	t.Parallel()
+
+	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), nodeWithExternalIP("gce://project/zone/instance", testPublicIP))
+	require.NoError(t, err)
+	assert.Equal(t, testPublicIP, hostname)
+}
+
+// TestFindNodeHostnameWithoutOptionsFallsBackToHostname covers an AWS node with no ExternalIP reached through the
+// options-free entry point: there is nothing to query with, so it degrades to the internal hostname.
+func TestFindNodeHostnameWithoutOptionsFallsBackToHostname(t *testing.T) {
+	t.Parallel()
+
+	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), nodeWithProviderID(testProviderID))
+	require.NoError(t, err)
+	assert.Equal(t, testHostname, hostname)
+}
+
+// TestFindNodeHostnameIgnoresEmptyExternalIP guards against an ExternalIP entry with a blank address shadowing the
+// rest of the resolution chain.
+func TestFindNodeHostnameIgnoresEmptyExternalIP(t *testing.T) {
+	t.Parallel()
+
+	hostname, err := k8s.FindNodeHostnameContextE(t, t.Context(), nodeWithExternalIP(testProviderID, ""))
+	require.NoError(t, err)
+	assert.Equal(t, testHostname, hostname, "a blank ExternalIP must not shadow the hostname")
 }
