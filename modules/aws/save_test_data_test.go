@@ -24,9 +24,9 @@ func (l *tStringLogger) Logf(t gotesting.TestingT, format string, args ...any) {
 	l.sb.WriteRune('\n')
 }
 
+// Not parallel: this test swaps the package-level logger.Default, which every other test in this package reads.
+// Running it alongside them is a data race.
 func TestSaveAndLoadEC2KeyPair(t *testing.T) {
-	t.Parallel()
-
 	def, slogger := logger.Default, &tStringLogger{}
 	logger.Default = logger.New(slogger)
 

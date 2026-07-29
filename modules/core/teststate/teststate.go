@@ -2,7 +2,7 @@
 // and reused in later validation and teardown stages.
 //
 // These primitives are type agnostic. Modules that own a type typically wrap them in a named helper (for example,
-// terraform.SaveOptions or aws.SaveEc2KeyPair) so that callers do not have to spell out paths or filenames. Callers
+// aws.SaveEc2KeyPair or k8s.SaveKubectlOptions) so that callers do not have to spell out paths or filenames. Callers
 // with types that have no owning module can use Save and Load directly.
 //
 // This package lives in core rather than teststructure so that modules such as aws, k8s, packer, and ssh can provide
@@ -22,6 +22,9 @@ import (
 
 // DirName is the name of the folder, relative to a test folder, in which test data is stored.
 const DirName = ".test-data"
+
+// redactedPlaceholder stands in for a value whose contents must not reach the test log.
+const redactedPlaceholder = "[REDACTED]"
 
 // FormatPath formats a path to save test data with the given filename in the given test folder.
 func FormatPath(testFolder string, filename string) string {
@@ -50,11 +53,18 @@ func SaveRedacted(t testing.TestingT, path string, overwrite bool, value any) {
 func save(t testing.TestingT, path string, overwrite bool, value any, loggedVal bool) {
 	logger.Default.Logf(t, "Storing test data in %s so it can be reused later", path)
 
+	// The overwrite warnings render the value, so a redacted save must show a placeholder instead. Otherwise a
+	// secret suppressed from the "Marshalled JSON" line below would still reach the log through this branch.
+	loggedRepr := any(redactedPlaceholder)
+	if loggedVal {
+		loggedRepr = value
+	}
+
 	if IsPresent(t, path) {
 		if overwrite {
-			logger.Default.Logf(t, "[WARNING] The named test data at path %s is non-empty. Save operation will overwrite existing value with \"%v\".\n.", path, value)
+			logger.Default.Logf(t, "[WARNING] The named test data at path %s is non-empty. Save operation will overwrite existing value with \"%v\".\n.", path, loggedRepr)
 		} else {
-			logger.Default.Logf(t, "[WARNING] The named test data at path %s is non-empty. Skipping save operation to prevent overwriting existing value with \"%v\".\n.", path, value)
+			logger.Default.Logf(t, "[WARNING] The named test data at path %s is non-empty. Skipping save operation to prevent overwriting existing value with \"%v\".\n.", path, loggedRepr)
 
 			return
 		}

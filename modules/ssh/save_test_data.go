@@ -10,8 +10,10 @@ const sshKeyPairFilename = "SshKeyPair.json"
 
 // SaveSSHKeyPair serializes and saves an SSH key pair into the given folder. This allows you to create an SSH key pair
 // during setup and to reuse that key pair later during validation and teardown.
+//
+// The key pair is saved with teststate.SaveRedacted so that KeyPair.PrivateKey is not written to the test log.
 func SaveSSHKeyPair(t testing.TestingT, testFolder string, keyPair *KeyPair) {
-	teststate.Save(t, formatSSHKeyPairPath(testFolder), true, keyPair)
+	teststate.SaveRedacted(t, formatSSHKeyPairPath(testFolder), true, keyPair)
 }
 
 // LoadSSHKeyPair loads and unserializes an SSH key pair from the given folder. This allows you to reuse an SSH key pair
