@@ -2,6 +2,7 @@ package teststate_test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -189,4 +190,17 @@ func TestCleanupFolder(t *testing.T) {
 
 	// Cleaning an absent folder is a no-op.
 	require.NoError(t, teststate.CleanupFolderE(t, folder))
+}
+
+// TestSaveWritesOwnerOnlyPermissions pins the file mode. Saved state can hold private keys, so it must not be
+// world readable.
+func TestSaveWritesOwnerOnlyPermissions(t *testing.T) {
+	t.Parallel()
+
+	path := teststate.FormatPath(t.TempDir(), "Value.json")
+	teststate.Save(t, path, true, "value")
+
+	info, err := os.Stat(path)
+	require.NoError(t, err)
+	assert.Equal(t, os.FileMode(0o600), info.Mode().Perm(), "saved test data must be owner read/write only")
 }

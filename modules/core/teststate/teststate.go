@@ -85,7 +85,8 @@ func save(t testing.TestingT, path string, overwrite bool, value any, loggedVal 
 		t.Fatalf("Failed to create folder %s: %v", parentDir, err)
 	}
 
-	if err := os.WriteFile(path, bytes, 0o644); err != nil {
+	// 0o600: this file can hold secrets, such as the private key in an aws.Ec2Keypair or an ssh.KeyPair.
+	if err := os.WriteFile(path, bytes, 0o600); err != nil {
 		t.Fatalf("Failed to save value %s: %v", path, err)
 	}
 }
