@@ -3,7 +3,9 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -154,7 +156,7 @@ func GetServiceEndpointContextE(t testing.TestingT, ctx context.Context, options
 	switch service.Spec.Type {
 	case corev1.ServiceTypeClusterIP:
 
-		return fmt.Sprintf("%s:%d", service.Spec.ClusterIP, servicePort), nil
+		return net.JoinHostPort(service.Spec.ClusterIP, strconv.Itoa(servicePort)), nil
 	case corev1.ServiceTypeNodePort:
 		return findEndpointForNodePortServiceContext(t, ctx, options, service, int32(servicePort))
 	case corev1.ServiceTypeExternalName:
@@ -176,10 +178,10 @@ func GetServiceEndpointContextE(t testing.TestingT, ctx context.Context, options
 		}
 
 		if ingress[0].Hostname == "" {
-			return fmt.Sprintf("%s:%d", ingress[0].IP, servicePort), nil
+			return net.JoinHostPort(ingress[0].IP, strconv.Itoa(servicePort)), nil
 		}
 
-		return fmt.Sprintf("%s:%d", ingress[0].Hostname, servicePort), nil
+		return net.JoinHostPort(ingress[0].Hostname, strconv.Itoa(servicePort)), nil
 	default:
 		return "", NewUnknownServiceTypeError(service)
 	}
@@ -210,7 +212,7 @@ func findEndpointForNodePortServiceContext(
 		return "", err
 	}
 
-	return fmt.Sprintf("%s:%d", nodeHostname, nodePort), nil
+	return net.JoinHostPort(nodeHostname, strconv.FormatInt(int64(nodePort), 10)), nil
 }
 
 // FindNodePortContextE returns the allocated NodePort for the given servicePort from the service definition.
