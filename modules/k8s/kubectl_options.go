@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
@@ -35,10 +36,8 @@ type KubectlOptions struct {
 	// functions, and only after the node's own ExternalIP has been checked, so most callers can leave it nil.
 	// It is skipped when serializing options, since a function cannot be represented as JSON.
 	NodePublicIPLookup NodePublicIPLookup `json:"-"`
-	// RestConfig is skipped when serializing options. rest.Config holds func-typed fields (WrapTransport, Dial,
-	// Proxy) and encoding/json rejects a func field whether or not it is set, so without this tag any marshal of
-	// KubectlOptions carrying a RestConfig fails. Note that SaveKubectlOptions refuses to save such options rather
-	// than dropping the config silently, since a reload would then authenticate against a different cluster.
+	// RestConfig is not serialized. A rest.Config cannot be rebuilt from JSON, so rather than drop it silently
+	// MarshalJSON refuses to encode options that carry one. See ErrRestConfigNotSerializable.
 	RestConfig     *rest.Config `json:"-"`
 	Logger         *logger.Logger
 	ContextName    string
@@ -88,4 +87,21 @@ func (kubectlOptions *KubectlOptions) GetConfigPath(t testing.TestingT) (string,
 	}
 
 	return kubeConfigPath, nil
+}
+
+// MarshalJSON implements json.Marshaler.
+//
+// It exists to make the loss explicit. RestConfig and NodePublicIPLookup cannot be encoded, and encoding/json
+// rejects their func-typed contents outright, so both are tagged json:"-". Dropping NodePublicIPLookup is benign,
+// since a missing lookup degrades to a visible node resolution failure. Dropping RestConfig is not, so this
+// returns ErrRestConfigNotSerializable instead of writing options that would silently target the wrong cluster.
+func (options KubectlOptions) MarshalJSON() ([]byte, error) {
+	if options.RestConfig != nil {
+		return nil, ErrRestConfigNotSerializable
+	}
+
+	// alias drops the MarshalJSON method, so this does not recurse.
+	type alias KubectlOptions
+
+	return json.Marshal(alias(options))
 }

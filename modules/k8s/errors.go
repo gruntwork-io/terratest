@@ -26,6 +26,16 @@ var (
 
 	// ErrNilPod is returned when a nil pod is passed to a function that requires a non-nil pod.
 	ErrNilPod = errors.New("cannot get port for pod which is nil")
+
+	// ErrRestConfigNotSerializable is returned by KubectlOptions.MarshalJSON when the options carry a RestConfig.
+	//
+	// A rest.Config cannot be rebuilt from JSON: beyond its func-typed fields it holds interfaces and exec
+	// credential plugin wiring, and the fields that would survive are the credentials themselves. Encoding such
+	// options would therefore drop the config, leaving reloaded options with no cluster identity at all, so they
+	// would fall back to the ambient kubeconfig and authenticate against a different cluster than the one under
+	// test. Use NewKubectlOptions with a kubeconfig path and context name, or NewKubectlOptionsWithInClusterAuth;
+	// both round trip intact.
+	ErrRestConfigNotSerializable = errors.New("kubectl options carrying a RestConfig cannot be serialized")
 )
 
 // IngressNotAvailable is returned when a Kubernetes service is not yet available to accept traffic.

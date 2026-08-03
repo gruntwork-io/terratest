@@ -12,17 +12,8 @@ const kubectlOptionsFilename = "KubectlOptions.json"
 // SaveKubectlOptions serializes and saves KubectlOptions into the given folder. This allows you to create a
 // KubectlOptions during setup and reuse that KubectlOptions later during validation and teardown.
 //
-// Options carrying a RestConfig cannot be saved and will fail the test, because a rest.Config cannot be rebuilt
-// from JSON. Rebuild it in the later stage instead, or use options built from a kubeconfig path and context name.
+// Options carrying a RestConfig cannot be saved and will fail the test. See ErrRestConfigNotSerializable.
 func SaveKubectlOptions(t testing.TestingT, testFolder string, kubectlOptions *KubectlOptions) {
-	if kubectlOptions != nil && kubectlOptions.RestConfig != nil {
-		t.Fatalf("SaveKubectlOptions cannot save options built with a RestConfig, because a rest.Config cannot be " +
-			"serialized. Rebuild it in the later stage instead, or use options built from a kubeconfig path and " +
-			"context name.")
-
-		return
-	}
-
 	teststate.Save(t, formatKubectlOptionsPath(testFolder), true, kubectlOptions)
 }
 
