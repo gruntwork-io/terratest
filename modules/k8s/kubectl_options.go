@@ -35,13 +35,17 @@ type KubectlOptions struct {
 	// functions, and only after the node's own ExternalIP has been checked, so most callers can leave it nil.
 	// It is skipped when serializing options, since a function cannot be represented as JSON.
 	NodePublicIPLookup NodePublicIPLookup `json:"-"`
-	RestConfig         *rest.Config
-	Logger             *logger.Logger
-	ContextName        string
-	ConfigPath         string
-	Namespace          string
-	RequestTimeout     time.Duration
-	InClusterAuth      bool
+	// RestConfig is skipped when serializing options. rest.Config holds func-typed fields (WrapTransport, Dial,
+	// Proxy) and encoding/json rejects a func field whether or not it is set, so without this tag any marshal of
+	// KubectlOptions carrying a RestConfig fails. Note that SaveKubectlOptions refuses to save such options rather
+	// than dropping the config silently, since a reload would then authenticate against a different cluster.
+	RestConfig     *rest.Config `json:"-"`
+	Logger         *logger.Logger
+	ContextName    string
+	ConfigPath     string
+	Namespace      string
+	RequestTimeout time.Duration
+	InClusterAuth  bool
 }
 
 // NewKubectlOptions will return a pointer to new instance of KubectlOptions with the configured options
