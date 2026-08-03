@@ -9,16 +9,39 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// awsProviderIDScheme is the scheme used in the provider ID of a node backed by an AWS EC2 instance.
+const awsProviderIDScheme = "aws"
+
+// NodePublicIPLookup resolves the public IP addresses of the given cloud provider instance IDs in the given region,
+// returning a map of instance ID to public IP. Instances with no public IP may be omitted from the map.
+//
+// This is an escape hatch, not the usual path. Node addresses recorded by a cloud controller manager already carry
+// the instance's public IP as an ExternalIP, and FindNodeHostnameContextE prefers that, so most clusters need no
+// lookup at all. Set one only when your cluster does not advertise an ExternalIP.
+//
+// It exists so that k8s can resolve a node's externally reachable address without depending on any cloud provider
+// module. It matches the signature of aws.GetPublicIpsOfEc2InstancesContextE, so on EKS you can wire it up
+// directly:
+//
+//	options := k8s.NewKubectlOptions("", "", "default")
+//	options.NodePublicIPLookup = aws.GetPublicIpsOfEc2InstancesContextE
+type NodePublicIPLookup func(t testing.TestingT, ctx context.Context, instanceIDs []string, region string) (map[string]string, error)
+
 // KubectlOptions represents common options necessary to specify for all Kubectl calls
 type KubectlOptions struct {
-	Env            map[string]string
-	RestConfig     *rest.Config
-	Logger         *logger.Logger
-	ContextName    string
-	ConfigPath     string
-	Namespace      string
-	RequestTimeout time.Duration
-	InClusterAuth  bool
+	Env map[string]string
+	// NodePublicIPLookup, if set, resolves the public IP of a node whose provider ID identifies a cloud instance and
+	// whose node object carries no ExternalIP address. It is consulted only by the FindNodeHostnameWithOptions
+	// functions, and only after the node's own ExternalIP has been checked, so most callers can leave it nil.
+	// It is skipped when serializing options, since a function cannot be represented as JSON.
+	NodePublicIPLookup NodePublicIPLookup `json:"-"`
+	RestConfig         *rest.Config
+	Logger             *logger.Logger
+	ContextName        string
+	ConfigPath         string
+	Namespace          string
+	RequestTimeout     time.Duration
+	InClusterAuth      bool
 }
 
 // NewKubectlOptions will return a pointer to new instance of KubectlOptions with the configured options
