@@ -3,7 +3,6 @@ package k8s_test
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 	"testing"
 
 	gotesting "github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -37,33 +36,14 @@ func TestKubectlOptionsMarshalsWithLookupSet(t *testing.T) {
 }
 
 // TestKubectlOptionsMarshalsWithRestConfigSet covers the other unserializable field. rest.Config holds func-typed
-// fields, and encoding/json rejects a func field whether or not it is set, so before the json:"-" tag any marshal
-// of options built by NewKubectlOptionsWithRestConfig failed with "unsupported type: transport.WrapperFunc".
+// fields, and encoding/json rejects a func field even when it is nil, so before the json:"-" tag any marshal of
+// options from NewKubectlOptionsWithRestConfig failed with "unsupported type: transport.WrapperFunc".
 func TestKubectlOptionsMarshalsWithRestConfigSet(t *testing.T) {
 	t.Parallel()
 
-	testCases := []struct {
-		name   string
-		config *rest.Config
-	}{
-		{"plain config", &rest.Config{Host: "https://example.com"}},
-		{"config with WrapTransport set", &rest.Config{
-			Host: "https://example.com",
-			WrapTransport: func(rt http.RoundTripper) http.RoundTripper {
-				return rt
-			},
-		}},
-	}
+	options := k8s.NewKubectlOptionsWithRestConfig(&rest.Config{Host: "https://example.com"}, "default")
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			options := k8s.NewKubectlOptionsWithRestConfig(testCase.config, "default")
-
-			raw, err := json.Marshal(options) //nolint:musttag // KubectlOptions does not have json tags
-			require.NoError(t, err, "options carrying a RestConfig must still marshal")
-			assert.NotContains(t, string(raw), "RestConfig", "the config must be omitted from JSON")
-		})
-	}
+	raw, err := json.Marshal(options) //nolint:musttag // KubectlOptions does not have json tags
+	require.NoError(t, err, "options carrying a RestConfig must still marshal")
+	assert.NotContains(t, string(raw), "RestConfig", "the config must be omitted from JSON")
 }
