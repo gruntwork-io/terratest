@@ -45,6 +45,7 @@ jobs:
           ref: ${{ inputs.ref }}
           persist-credentials: false
       - run: bash scripts/check-acyclic-deps.sh
+      - run: bash scripts/check-module-deps.sh
       - run: bash scripts/check-single-source.sh
       - run: bash scripts/check-siv-placement.sh
 
