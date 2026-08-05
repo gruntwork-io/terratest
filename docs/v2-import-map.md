@@ -2,7 +2,7 @@
 
 Status: FROZEN for import paths. The one open decision (renames) is resolved: the three hyphenated packages are renamed to idiomatic Go names at the `/v2` boundary.
 
-A rewrite of import paths alone is not sufficient to migrate. Some symbols also moved between modules during the v2 beta, after this map was frozen. Those are listed under [Symbols relocated during the v2 beta](#symbols-relocated-during-the-v2-beta), and they are compile errors, not silent changes.
+Rewriting import paths is not sufficient on its own: some symbols also moved between modules during the beta. See [Symbols relocated during the v2 beta](#symbols-relocated-during-the-v2-beta).
 
 Built from the actual v1 layout at tag `v1.0.1-test` (27 `modules/` packages, 2 `cmd/` binaries, 1 `internal/lib` tree).
 
@@ -70,12 +70,9 @@ So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, `modules/aws
 
 ## Symbols relocated during the v2 beta
 
-The import-path rewrite above is mechanical. These moves are not: the function keeps its name, arguments, return type
-and on-disk filename, but it now lives in the module that owns the type it operates on. This was done so that
-`teststructure` no longer requires `aws`, `k8s`, `packer` and `ssh` (#1877). Importing it for `RunTestStage` used to
-pull in the AWS SDK and client-go.
-
-Each is a compile error after the path rewrite, so `go build ./...` finds every call site.
+These functions moved to the module that owns the type they operate on, so that `teststructure` no longer requires
+`aws`, `k8s`, `packer` and `ssh` (#1877). Name, arguments, return type and on-disk filename are unchanged. Each is a
+compile error, so `go build ./...` finds every call site.
 
 | v2.0.0-beta.1 | v2.0.0-beta.2 onwards |
 |---|---|
@@ -88,58 +85,35 @@ Each is a compile error after the path rewrite, so `go build ./...` finds every 
 | `teststructure.SaveSSHKeyPair` | `ssh.SaveSSHKeyPair` |
 | `teststructure.LoadSSHKeyPair` | `ssh.LoadSSHKeyPair` |
 
-Everything else in `teststructure` stayed: `RunTestStage`, `CopyTerraformFolderToTemp`, all the Terraform helpers
-(`SaveTerraformOptions`, `LoadTerraformOptions`), `SaveString`/`LoadString`, `SaveInt`/`LoadInt`,
-`SaveArtifactID`/`LoadArtifactID`, and the generic `SaveTestData`/`LoadTestData`. Measured across Gruntwork's own
-repositories, the moved functions are about 6% of all `teststructure` call sites, and every affected file was already
-being edited for the import-path rewrite.
+Nothing else moved. `RunTestStage`, `CopyTerraformFolderToTemp`, the Terraform helpers, `SaveString`/`LoadString`,
+`SaveInt`/`LoadInt`, `SaveArtifactID`/`LoadArtifactID` and the generic `SaveTestData`/`LoadTestData` all stay in
+`teststructure`. The generic primitives now live in `modules/core/v2/teststate` and are re-exported, so those calls
+are unaffected.
 
-The generic primitives now live in `modules/core/v2/teststate` and are re-exported from `teststructure`, so calls to
-`SaveTestData` and friends are unaffected.
+Migration is a qualifier swap, with two cautions:
 
-### Migrating
-
-In the files the import rewrite already touches, swap the qualifier:
-
-```
-teststructure.SaveEc2KeyPair(   ->  aws.SaveEc2KeyPair(
-teststructure.LoadEc2KeyPair(   ->  aws.LoadEc2KeyPair(
-teststructure.SaveKubectlOptions( -> k8s.SaveKubectlOptions(
-teststructure.LoadKubectlOptions( -> k8s.LoadKubectlOptions(
-teststructure.SavePackerOptions(  -> packer.SavePackerOptions(
-teststructure.LoadPackerOptions(  -> packer.LoadPackerOptions(
-teststructure.SaveSSHKeyPair(     -> ssh.SaveSSHKeyPair(
-teststructure.LoadSSHKeyPair(     -> ssh.LoadSSHKeyPair(
-```
-
-Two cautions before running a blind find and replace:
-
-- The target module is usually already imported by the same file, since the value being saved came from it. Where it
-  is not, add the import.
-- A file that imports both the AWS SDK and Terratest's `aws` module may have bound the plain `aws` identifier to the
-  SDK and aliased Terratest's. Use that file's own alias rather than `aws.`.
+- The target module is usually already imported, since the value came from it. Where it is not, add the import.
+- A file importing both the AWS SDK and Terratest's `aws` may bind plain `aws` to the SDK and alias Terratest's. Use
+  that file's alias.
 
 ## Behaviour changes during the v2 beta
 
 No signature changed, but two behaviours did.
 
-**Node address resolution now prefers `ExternalIP`** (#1878). `k8s.FindNodeHostnameContextE` and everything built on
-it, including `GetServiceEndpoint` for a NodePort service, now return the `ExternalIP` recorded on the Node object
-when one is present, falling back to the internal hostname as before when it is not. On EKS this is the instance's
-public IP, so the common case no longer needs an EC2 API call or the `ec2:DescribeInstances` permission. Clusters on
-any provider that advertise an `ExternalIP` will now resolve to it rather than to the internal hostname, which is
-what the documented contract has always described.
+**Node addresses prefer `ExternalIP`** (#1878). `k8s.FindNodeHostnameContextE`, and `GetServiceEndpoint` for a
+NodePort service, now return the `ExternalIP` on the Node object when present, falling back to the internal hostname
+as before. On EKS that is the instance's public IP, so the common case needs no EC2 call and no
+`ec2:DescribeInstances` permission. Clusters that advertise an `ExternalIP` now resolve to it rather than the
+internal hostname.
 
-`FindNodeHostnameContext` and `FindNodeHostnameContextE` keep their original signatures. A new
-`FindNodeHostnameWithOptionsContext[E]` pair takes `*KubectlOptions` and consults `KubectlOptions.NodePublicIPLookup`,
-an escape hatch for clusters that do not advertise an `ExternalIP`. Wire it up with
+`FindNodeHostnameContext[E]` keep their original signatures. A new `FindNodeHostnameWithOptionsContext[E]` pair takes
+`*KubectlOptions` and consults `NodePublicIPLookup`, for clusters that do not advertise an `ExternalIP`:
 `options.NodePublicIPLookup = aws.GetPublicIpsOfEc2InstancesContextE`.
 
-**`KubectlOptions` carrying a `RestConfig` no longer serializes** (#1879). A `rest.Config` cannot be rebuilt from
-JSON, so `MarshalJSON` returns `k8s.ErrRestConfigNotSerializable` rather than dropping it and leaving reloaded
-options with no cluster identity. Previously this failed too, with an opaque `json: unsupported type:
-transport.WrapperFunc`. For staged tests, build options with `NewKubectlOptions` (kubeconfig path and context name)
-or `NewKubectlOptionsWithInClusterAuth`; both round trip intact.
+**`KubectlOptions` carrying a `RestConfig` no longer serializes** (#1879). `MarshalJSON` returns
+`k8s.ErrRestConfigNotSerializable` rather than dropping the config and leaving reloaded options with no cluster
+identity. This failed before too, with an opaque `json: unsupported type: transport.WrapperFunc`. For staged tests
+use `NewKubectlOptions` or `NewKubectlOptionsWithInClusterAuth`; both round trip intact.
 
 ## Accounting
 
