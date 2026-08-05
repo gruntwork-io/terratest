@@ -7,6 +7,11 @@
 //
 // This package lives in core rather than teststructure so that modules such as aws, k8s, packer, and ssh can provide
 // their own helpers without teststructure having to import every one of them.
+// Every t.Fatalf in this package is followed by an explicit return. testing.TestingT documents FailNow as stopping
+// execution via runtime.Goexit, and *testing.T honours that, so those returns are unreachable in ordinary use. They
+// are not decorative: TestingT exists so other harnesses can be plugged in, and an implementation whose FailNow
+// returns would otherwise carry on past the failure. In save that meant writing a zero byte file after a marshal
+// error, and in IsPresent and IsEmptyJSON it meant masking the real error behind a plausible looking answer.
 package teststate
 
 import (
@@ -73,6 +78,8 @@ func save(t testing.TestingT, path string, overwrite bool, value any, loggedVal 
 	bytes, err := json.Marshal(value)
 	if err != nil {
 		t.Fatalf("Failed to convert value %s to JSON: %v", path, err)
+
+		return
 	}
 
 	if loggedVal {
@@ -83,6 +90,8 @@ func save(t testing.TestingT, path string, overwrite bool, value any, loggedVal 
 
 	if err := os.MkdirAll(parentDir, 0o755); err != nil {
 		t.Fatalf("Failed to create folder %s: %v", parentDir, err)
+
+		return
 	}
 
 	// 0o600: this file can hold secrets, such as the private key in an aws.Ec2Keypair or an ssh.KeyPair.
@@ -100,6 +109,8 @@ func Load(t testing.TestingT, path string, value any) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Failed to load value from %s: %v", path, err)
+
+		return
 	}
 
 	if err := json.Unmarshal(bytes, value); err != nil {
@@ -112,6 +123,8 @@ func IsPresent(t testing.TestingT, path string) bool {
 	exists, err := files.FileExistsE(path)
 	if err != nil {
 		t.Fatalf("Failed to load test data from %s due to unexpected error: %v", path, err)
+
+		return false
 	}
 
 	if !exists {
@@ -121,6 +134,8 @@ func IsPresent(t testing.TestingT, path string) bool {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Failed to load test data from %s due to unexpected error: %v", path, err)
+
+		return false
 	}
 
 	if IsEmptyJSON(t, bytes) {
@@ -141,6 +156,8 @@ func IsEmptyJSON(t testing.TestingT, bytes []byte) bool {
 
 	if err := json.Unmarshal(bytes, &value); err != nil {
 		t.Fatalf("Failed to parse JSON while testing whether it is empty: %v", err)
+
+		return false
 	}
 
 	if value == nil {
