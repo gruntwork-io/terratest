@@ -2,26 +2,18 @@
 #
 # Checks the cross-module dependency graph against an explicit allowlist, and catches stale indirect requires.
 #
-# check-acyclic-deps.sh enforces layering: a module may not import from a strictly higher tier. That is necessary but
-# not sufficient. aws and k8s are both tier 3, so k8s importing aws for a single EC2 call never violated the tier
-# rule, and it went unnoticed until a user reported that depending on k8s pulled in 23 AWS service SDKs (#1875).
+# check-acyclic-deps.sh enforces layering only. aws and k8s are both tier 3, so k8s importing aws for one EC2 call
+# never violated it (#1875). This requires every edge to be listed on purpose instead.
 #
-# This script enforces the complementary rule: every cross-module edge is listed below on purpose. Adding one is a
-# deliberate act with a reviewer attached, not something that happens because an import was convenient.
+# It also catches staleness: nothing tidies submodule go.mod files, so when k8s dropped aws, helm kept it as an
+# indirect and shipped 72 aws-sdk-go-v2 go.sum entries for code no module imported.
 #
-# It also catches the second half of that problem. When k8s stopped requiring aws, helm kept carrying aws as an
-# indirect require, because nothing tidies submodule go.mod files: the go-mod-tidy-check workflow runs at the repo
-# root and diffs only the root go.mod and go.sum. helm shipped 72 aws-sdk-go-v2 entries in its go.sum for code no
-# module imported. An indirect require that is not reachable through the declared direct graph is stale.
-#
-# No -e: accumulate every violation and report them all, rather than aborting on the first.
+# No -e: accumulate every violation rather than aborting on the first.
 set -uo pipefail
 
-# Permitted direct cross-module requires, as "importer:importee".
-#
-# Test-only edges still appear here, because a test dependency is a real entry in go.mod. Keeping the graph small is
-# the point of the v2 split, so treat an addition as a design decision: prefer injecting behaviour over taking the
-# dependency. modules/k8s/kubectl_options.go NodePublicIPLookup is the worked example.
+# Permitted direct cross-module requires, as "importer:importee". Test-only edges count, since a test dependency is
+# a real go.mod entry. Treat an addition as a design decision: prefer injecting behaviour over taking the dependency
+# (see NodePublicIPLookup in modules/k8s/kubectl_options.go).
 ALLOWED_EDGES=(
   "aws:core"
   "aws:ssh"           # Ec2Keypair embeds ssh.KeyPair; SCP helpers
@@ -119,9 +111,8 @@ for allowed in "${ALLOWED_EDGES[@]}"; do
   fi
 done
 
-# 3. Every indirect terratest require must be reachable through the declared direct graph. An unreachable one is a
-#    stale entry left behind when some other module dropped the dependency, and it drags that module's whole
-#    transitive tree into every consumer's go.sum.
+# 3. Every indirect terratest require must be reachable through the declared direct graph. An unreachable one is
+#    stale, and drags a whole transitive tree into every consumer's go.sum.
 reachable_from() {
   local start="$1"
   local -A visited=()
