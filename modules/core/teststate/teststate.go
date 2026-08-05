@@ -7,11 +7,9 @@
 //
 // This package lives in core rather than teststructure so that modules such as aws, k8s, packer, and ssh can provide
 // their own helpers without teststructure having to import every one of them.
-// Every t.Fatalf in this package is followed by an explicit return. testing.TestingT documents FailNow as stopping
-// execution via runtime.Goexit, and *testing.T honours that, so those returns are unreachable in ordinary use. They
-// are not decorative: TestingT exists so other harnesses can be plugged in, and an implementation whose FailNow
-// returns would otherwise carry on past the failure. In save that meant writing a zero byte file after a marshal
-// error, and in IsPresent and IsEmptyJSON it meant masking the real error behind a plausible looking answer.
+// Every t.Fatalf here is followed by an explicit return. They are unreachable with *testing.T, whose FailNow calls
+// runtime.Goexit, but TestingT allows other harnesses, and one whose FailNow returns would otherwise carry on past
+// the failure.
 package teststate
 
 import (

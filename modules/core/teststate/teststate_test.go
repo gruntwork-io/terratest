@@ -205,9 +205,8 @@ func TestSaveWritesOwnerOnlyPermissions(t *testing.T) {
 	assert.Equal(t, os.FileMode(0o600), info.Mode().Perm(), "saved test data must be owner read/write only")
 }
 
-// nonStoppingT is a testing.TestingT whose FailNow returns instead of calling runtime.Goexit. The interface
-// documents Goexit semantics, but TestingT exists so other harnesses can be plugged in, and this pins that a
-// harness which does not stop cannot make this package do damage after it has reported a failure.
+// nonStoppingT is a TestingT whose FailNow returns rather than calling runtime.Goexit, so these tests can assert
+// that the package stops doing work after it reports a failure.
 type nonStoppingT struct {
 	failed bool
 	msgs   []string
@@ -225,14 +224,13 @@ func (r *nonStoppingT) Fatalf(f string, a ...any) {
 	r.FailNow()
 }
 
-// unmarshalable has a func field, which encoding/json always rejects, so Save fails at the marshal step.
+// unmarshalable fails json.Marshal: encoding/json always rejects a func field.
 type unmarshalable struct {
 	Fn func()
 }
 
-// TestSaveWritesNothingAfterAMarshalFailure is the regression test. Before the explicit return, save reported the
-// marshal failure and then carried on to os.WriteFile with a nil byte slice, leaving a zero byte file that a later
-// stage would try to load.
+// Before the fix, a marshal failure was reported and os.WriteFile still ran with a nil slice, leaving a zero byte
+// file for a later stage to load.
 func TestSaveWritesNothingAfterAMarshalFailure(t *testing.T) {
 	t.Parallel()
 
@@ -246,12 +244,12 @@ func TestSaveWritesNothingAfterAMarshalFailure(t *testing.T) {
 	assert.NoFileExists(t, path, "no file may be written after a marshal failure")
 }
 
-// TestIsPresentDoesNotMaskAnUnreadableFile pins that a read failure reports the failure rather than quietly
-// answering "absent", which would invite a caller to overwrite state it could not read.
+// A read failure must be reported, not reported as "absent", which would invite a caller to overwrite state it
+// could not read.
 func TestIsPresentDoesNotMaskAnUnreadableFile(t *testing.T) {
 	t.Parallel()
 
-	// A directory where a file is expected: FileExistsE succeeds, os.ReadFile then fails with EISDIR.
+	// A directory where a file is expected: FileExistsE succeeds, os.ReadFile fails with EISDIR.
 	folder := t.TempDir()
 	path := teststate.FormatPath(folder, "IsADirectory.json")
 	require.NoError(t, os.MkdirAll(path, 0o755))
@@ -265,7 +263,7 @@ func TestIsPresentDoesNotMaskAnUnreadableFile(t *testing.T) {
 	assert.Contains(t, recorder.msgs[0], "unexpected error")
 }
 
-// TestIsEmptyJSONReportsAParseFailure pins that invalid JSON is reported rather than being called empty.
+// Invalid JSON must be reported, not called empty.
 func TestIsEmptyJSONReportsAParseFailure(t *testing.T) {
 	t.Parallel()
 
