@@ -2,7 +2,7 @@
 
 Status: FROZEN for import paths. The one open decision (renames) is resolved: the three hyphenated packages are renamed to idiomatic Go names at the `/v2` boundary.
 
-Rewriting import paths is not sufficient on its own: some symbols also moved between modules during the beta. See [Symbols relocated during the v2 beta](#symbols-relocated-during-the-v2-beta).
+Some symbols also moved between modules during the beta. See [Symbols relocated during the v2 beta](#symbols-relocated-during-the-v2-beta).
 
 Built from the actual v1 layout at tag `v1.0.1-test` (27 `modules/` packages, 2 `cmd/` binaries, 1 `internal/lib` tree).
 
@@ -70,50 +70,28 @@ So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, `modules/aws
 
 ## Symbols relocated during the v2 beta
 
-These functions moved to the module that owns the type they operate on, so that `teststructure` no longer requires
-`aws`, `k8s`, `packer` and `ssh` (#1877). Name, arguments, return type and on-disk filename are unchanged. Each is a
-compile error, so `go build ./...` finds every call site.
+Moved to the module owning the type, so `teststructure` no longer requires `aws`, `k8s`, `packer` and `ssh` (#1877).
+Signatures and on-disk filenames are unchanged, and every call site is a compile error.
 
-| v2.0.0-beta.1 | v2.0.0-beta.2 onwards |
+| beta.1 | beta.2 onwards |
 |---|---|
-| `teststructure.SaveEc2KeyPair` | `aws.SaveEc2KeyPair` |
-| `teststructure.LoadEc2KeyPair` | `aws.LoadEc2KeyPair` |
-| `teststructure.SaveKubectlOptions` | `k8s.SaveKubectlOptions` |
-| `teststructure.LoadKubectlOptions` | `k8s.LoadKubectlOptions` |
-| `teststructure.SavePackerOptions` | `packer.SavePackerOptions` |
-| `teststructure.LoadPackerOptions` | `packer.LoadPackerOptions` |
-| `teststructure.SaveSSHKeyPair` | `ssh.SaveSSHKeyPair` |
-| `teststructure.LoadSSHKeyPair` | `ssh.LoadSSHKeyPair` |
+| `teststructure.{Save,Load}Ec2KeyPair` | `aws.{Save,Load}Ec2KeyPair` |
+| `teststructure.{Save,Load}KubectlOptions` | `k8s.{Save,Load}KubectlOptions` |
+| `teststructure.{Save,Load}PackerOptions` | `packer.{Save,Load}PackerOptions` |
+| `teststructure.{Save,Load}SSHKeyPair` | `ssh.{Save,Load}SSHKeyPair` |
 
-Nothing else moved. `RunTestStage`, `CopyTerraformFolderToTemp`, the Terraform helpers, `SaveString`/`LoadString`,
-`SaveInt`/`LoadInt`, `SaveArtifactID`/`LoadArtifactID` and the generic `SaveTestData`/`LoadTestData` all stay in
-`teststructure`. The generic primitives now live in `modules/core/v2/teststate` and are re-exported, so those calls
-are unaffected.
-
-Migration is a qualifier swap, with two cautions:
-
-- The target module is usually already imported, since the value came from it. Where it is not, add the import.
-- A file importing both the AWS SDK and Terratest's `aws` may bind plain `aws` to the SDK and alias Terratest's. Use
-  that file's alias.
+Nothing else moved. Watch for files that alias Terratest's `aws` because plain `aws` is the AWS SDK.
 
 ## Behaviour changes during the v2 beta
 
-No signature changed, but two behaviours did.
-
-**Node addresses prefer `ExternalIP`** (#1878). `k8s.FindNodeHostnameContextE`, and `GetServiceEndpoint` for a
-NodePort service, now return the `ExternalIP` on the Node object when present, falling back to the internal hostname
-as before. On EKS that is the instance's public IP, so the common case needs no EC2 call and no
-`ec2:DescribeInstances` permission. Clusters that advertise an `ExternalIP` now resolve to it rather than the
-internal hostname.
-
-`FindNodeHostnameContext[E]` keep their original signatures. A new `FindNodeHostnameWithOptionsContext[E]` pair takes
-`*KubectlOptions` and consults `NodePublicIPLookup`, for clusters that do not advertise an `ExternalIP`:
-`options.NodePublicIPLookup = aws.GetPublicIpsOfEc2InstancesContextE`.
+**Node addresses prefer `ExternalIP`** (#1878). `k8s.FindNodeHostnameContextE` and `GetServiceEndpoint` (NodePort)
+now return the Node's `ExternalIP` when present, falling back to the internal hostname as before. On EKS that is the
+public IP, so no EC2 call and no `ec2:DescribeInstances` permission is needed. Signatures are unchanged; the new
+`FindNodeHostnameWithOptionsContext[E]` consults `NodePublicIPLookup` for clusters with no `ExternalIP`.
 
 **`KubectlOptions` carrying a `RestConfig` no longer serializes** (#1879). `MarshalJSON` returns
-`k8s.ErrRestConfigNotSerializable` rather than dropping the config and leaving reloaded options with no cluster
-identity. This failed before too, with an opaque `json: unsupported type: transport.WrapperFunc`. For staged tests
-use `NewKubectlOptions` or `NewKubectlOptionsWithInClusterAuth`; both round trip intact.
+`k8s.ErrRestConfigNotSerializable` instead of dropping the config. This already failed, with an opaque
+`json: unsupported type: transport.WrapperFunc`. Use `NewKubectlOptions` or `NewKubectlOptionsWithInClusterAuth`.
 
 ## Accounting
 
