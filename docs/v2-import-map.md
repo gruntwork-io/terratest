@@ -1,6 +1,8 @@
 # Terratest v2 Import Map
 
-Status: FROZEN. The one open decision (renames) is resolved: the three hyphenated packages are renamed to idiomatic Go names at the `/v2` boundary.
+Status: FROZEN for import paths. The one open decision (renames) is resolved: the three hyphenated packages are renamed to idiomatic Go names at the `/v2` boundary.
+
+Some symbols also moved between modules during the beta. See [Symbols relocated during the v2 beta](#symbols-relocated-during-the-v2-beta).
 
 Built from the actual v1 layout at tag `v1.0.1-test` (27 `modules/` packages, 2 `cmd/` binaries, 1 `internal/lib` tree).
 
@@ -65,6 +67,31 @@ So e.g. `modules/logger/parser` -> `modules/core/v2/logger/parser`, `modules/aws
 | v1 | v2 |
 |---|---|
 | `internal/lib/formatting` | `internal/formatting` |
+
+## Symbols relocated during the v2 beta
+
+Moved to the module owning the type, so `teststructure` no longer requires `aws`, `k8s`, `packer` and `ssh` (#1877).
+Signatures and on-disk filenames are unchanged, and every call site is a compile error.
+
+| beta.1 | beta.2 onwards |
+|---|---|
+| `teststructure.{Save,Load}Ec2KeyPair` | `aws.{Save,Load}Ec2KeyPair` |
+| `teststructure.{Save,Load}KubectlOptions` | `k8s.{Save,Load}KubectlOptions` |
+| `teststructure.{Save,Load}PackerOptions` | `packer.{Save,Load}PackerOptions` |
+| `teststructure.{Save,Load}SSHKeyPair` | `ssh.{Save,Load}SSHKeyPair` |
+
+Nothing else moved. Watch for files that alias Terratest's `aws` because plain `aws` is the AWS SDK.
+
+## Behaviour changes during the v2 beta
+
+**Node addresses prefer `ExternalIP`** (#1878). `k8s.FindNodeHostnameContextE` and `GetServiceEndpoint` (NodePort)
+now return the Node's `ExternalIP` when present, falling back to the internal hostname as before. On EKS that is the
+public IP, so no EC2 call and no `ec2:DescribeInstances` permission is needed. Signatures are unchanged; the new
+`FindNodeHostnameWithOptionsContext[E]` consults `NodePublicIPLookup` for clusters with no `ExternalIP`.
+
+**`KubectlOptions` carrying a `RestConfig` no longer serializes** (#1879). `MarshalJSON` returns
+`k8s.ErrRestConfigNotSerializable` instead of dropping the config. This already failed, with an opaque
+`json: unsupported type: transport.WrapperFunc`. Use `NewKubectlOptions` or `NewKubectlOptionsWithInClusterAuth`.
 
 ## Accounting
 
