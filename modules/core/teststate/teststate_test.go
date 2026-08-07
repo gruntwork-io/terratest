@@ -204,3 +204,72 @@ func TestSaveWritesOwnerOnlyPermissions(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, os.FileMode(0o600), info.Mode().Perm(), "saved test data must be owner read/write only")
 }
+
+// nonStoppingT is a TestingT whose FailNow returns rather than calling runtime.Goexit, so these tests can assert
+// that the package stops doing work after it reports a failure.
+type nonStoppingT struct {
+	failed bool
+	msgs   []string
+}
+
+func (r *nonStoppingT) Fail()                 { r.failed = true }
+func (r *nonStoppingT) FailNow()              { r.failed = true }
+func (r *nonStoppingT) Error(args ...any)     { r.failed = true }
+func (r *nonStoppingT) Errorf(string, ...any) { r.failed = true }
+func (r *nonStoppingT) Fatal(args ...any)     { r.msgs = append(r.msgs, fmt.Sprint(args...)); r.FailNow() }
+func (r *nonStoppingT) Name() string          { return "nonStoppingT" }
+func (r *nonStoppingT) Helper()               {}
+func (r *nonStoppingT) Fatalf(f string, a ...any) {
+	r.msgs = append(r.msgs, fmt.Sprintf(f, a...))
+	r.FailNow()
+}
+
+// unmarshalable fails json.Marshal: encoding/json always rejects a func field.
+type unmarshalable struct {
+	Fn func()
+}
+
+// Before the fix, a marshal failure was reported and os.WriteFile still ran with a nil slice, leaving a zero byte
+// file for a later stage to load.
+func TestSaveWritesNothingAfterAMarshalFailure(t *testing.T) {
+	t.Parallel()
+
+	folder := t.TempDir()
+	path := teststate.FormatPath(folder, "Broken.json")
+
+	recorder := &nonStoppingT{}
+	teststate.Save(recorder, path, true, unmarshalable{})
+
+	assert.True(t, recorder.failed, "the marshal failure must be reported")
+	assert.NoFileExists(t, path, "no file may be written after a marshal failure")
+}
+
+// A read failure must be reported, not reported as "absent", which would invite a caller to overwrite state it
+// could not read.
+func TestIsPresentDoesNotMaskAnUnreadableFile(t *testing.T) {
+	t.Parallel()
+
+	// A directory where a file is expected: FileExistsE succeeds, os.ReadFile fails with EISDIR.
+	folder := t.TempDir()
+	path := teststate.FormatPath(folder, "IsADirectory.json")
+	require.NoError(t, os.MkdirAll(path, 0o755))
+
+	recorder := &nonStoppingT{}
+	present := teststate.IsPresent(recorder, path)
+
+	assert.True(t, recorder.failed, "the read failure must be reported")
+	assert.False(t, present)
+	require.NotEmpty(t, recorder.msgs)
+	assert.Contains(t, recorder.msgs[0], "unexpected error")
+}
+
+// Invalid JSON must be reported, not called empty.
+func TestIsEmptyJSONReportsAParseFailure(t *testing.T) {
+	t.Parallel()
+
+	recorder := &nonStoppingT{}
+	empty := teststate.IsEmptyJSON(recorder, []byte("{not json"))
+
+	assert.True(t, recorder.failed, "the parse failure must be reported")
+	assert.False(t, empty, "invalid JSON is not the same as empty JSON")
+}
