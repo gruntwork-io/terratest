@@ -23,6 +23,15 @@ jobs:
           persist-credentials: false
       - run: bash scripts/check-acyclic-deps.sh
 
+  module-deps:
+    name: Cross-module dependency allowlist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+      - run: bash scripts/check-module-deps.sh
+
   single-source:
     name: Single source of truth per package path
     runs-on: ubuntu-latest
