@@ -5,9 +5,9 @@ go 1.26.0
 require (
 	github.com/gonvenience/ytbx v1.4.4
 	github.com/gruntwork-io/go-commons v0.8.0
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/httphelper/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/k8s/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.2
+	github.com/gruntwork-io/terratest/modules/httphelper/v2 v2.0.0-beta.2
+	github.com/gruntwork-io/terratest/modules/k8s/v2 v2.0.0-beta.2
 	github.com/homeport/dyff v1.6.0
 	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v3 v3.0.1
