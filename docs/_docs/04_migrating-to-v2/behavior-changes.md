@@ -20,9 +20,9 @@ the migration.
 ## Node addresses prefer `ExternalIP`
 
 `k8s.FindNodeHostnameContextE`, and `GetServiceEndpointContextE` for a
-NodePort service, now return the `ExternalIP` recorded on the Node object when one
-is present. They fall back to the internal hostname exactly as before when
-it is not.
+NodePort service, now return the `ExternalIP` recorded on the Node object
+when one is present. They fall back to the internal hostname exactly as
+before when it is not.
 
 Cloud controller managers record an instance's public IP as an
 `ExternalIP`. Terratest previously ignored that field and, on AWS, called
