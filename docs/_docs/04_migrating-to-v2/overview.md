@@ -22,7 +22,9 @@ details.
 
 ## Should you migrate yet
 
-v2 is in beta. v1 remains supported and gets fixes. Migrate now if you want
+v2 is in beta. v1 is in maintenance and receives security fixes only,
+until 12 months after v2.0.0 reaches general availability. Migrate now if
+you want
 the smaller dependency graph or are starting fresh; wait for v2.0.0 if you
 would rather not track beta releases.
 
@@ -120,13 +122,14 @@ map]({{site.baseurl}}/docs/migrating-to-v2/import-map/).
    changes]({{site.baseurl}}/docs/migrating-to-v2/behavior-changes/), which
    the compiler will *not* find for you. There are two, both in `k8s`.
 
-Steps 1 to 4 are compile errors: if it builds, you are done. Step 5 is the
-only one that needs reading.
+Steps 1 to 4 are compiler-detectable, so the build tells you when they are
+complete. Step 5 is not: the code compiles either way, so it needs reading
+before you call the migration done.
 
 ## Removed packages
 
-Six packages and two binaries are not carried forward. Most have a stdlib
-replacement:
+Six packages and two binaries are not carried forward. Three have a
+standard library replacement:
 
 | v1 | Replacement |
 |---|---|

@@ -39,7 +39,7 @@ find . -name '*.go' -exec sed -i '' -E \
   -e 's#(^|[^A-Za-z0-9_])http_helper\.#\1httphelper.#g' \
   -e 's#(^|[^A-Za-z0-9_])dns_helper\.#\1dnshelper.#g' \
   -e 's#(^|[^A-Za-z0-9_])test_structure\.#\1teststructure.#g' \
-  -e 's#^(\t*)(http_helper|dns_helper|test_structure) "#\1"#' {} +
+  -e 's#^([[:space:]]*)(http_helper|dns_helper|test_structure) "#\1"#' {} +
 ```
 
 That last expression matters. These packages were commonly imported under
