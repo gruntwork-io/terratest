@@ -3,7 +3,7 @@ layout: collection-browser-doc
 title: Rewriting imports
 category: migrating-to-v2
 excerpt: >-
-  The mechanical part of the v2 migration, and the two places a blind
+  The mechanical part of the v2 migration, and the places a blind
   find-and-replace gets it wrong.
 tags: ["migration", "v2"]
 order: 401
@@ -11,80 +11,70 @@ nav_title: Documentation
 nav_title_link: /docs/
 ---
 
-Every v2 import path changes. This page covers doing that in bulk, and the
-two cases where a naive replace produces code that does not compile or,
-worse, compiles and is wrong.
+Every v2 import path changes. This page covers doing that in bulk, then the
+symbol relocations, then the cases a scripted rewrite cannot finish on its
+own.
 
-## The rewrite
+The commands below are written for BSD `sed`, which is what macOS ships.
+On Linux, drop the `''` after `-i`. They use `#` as the delimiter rather
+than `|`, because `|` collides with regex alternation, and they avoid `\b`,
+which BSD `sed` does not support and silently ignores.
 
-Three transformations, in this order.
-
-**Collapse the tier-0 utilities into `core`.** Do this first, because the
-next rule would otherwise rewrite these paths to something that does not
-exist:
-
-```bash
-find . -name '*.go' -exec sed -i '' -E \
-  's|gruntwork-io/terratest/modules/(random\|files\|formatting\|logger\|shell\|retry\|testing)|gruntwork-io/terratest/modules/core/v2/\1|g' {} +
-```
-
-**Rename the three hyphenated packages,** both the path and the identifier:
-
-```bash
-find . -name '*.go' -exec sed -i '' \
-  -e 's|terratest/modules/http-helper|terratest/modules/httphelper/v2|g' \
-  -e 's|terratest/modules/dns-helper|terratest/modules/dnshelper/v2|g' \
-  -e 's|terratest/modules/test-structure|terratest/modules/teststructure/v2|g' \
-  -e 's|\bhttp_helper\.|httphelper.|g' \
-  -e 's|\bdns_helper\.|dnshelper.|g' \
-  -e 's|\btest_structure\.|teststructure.|g' {} +
-```
-
-**Add `/v2` to everything else:**
+## 1. Collapse the utility packages into `core`
 
 ```bash
 find . -name '*.go' -exec sed -i '' -E \
-  's|gruntwork-io/terratest/modules/(aws\|azure\|gcp\|k8s\|helm\|ssh\|docker\|packer\|database\|opa\|terraform\|terragrunt)([^/]\|$)|gruntwork-io/terratest/modules/\1/v2\2|g' {} +
+  's#gruntwork-io/terratest/modules/(random|files|logger|shell|retry|testing)#gruntwork-io/terratest/modules/core/v2/\1#g' {} +
 ```
 
-On Linux, drop the `''` after `-i`.
+## 2. Rename the three hyphenated packages
 
-Then let the compiler find the rest:
+Path, package identifier, and any stale alias:
 
 ```bash
-go mod tidy && go build ./...
+find . -name '*.go' -exec sed -i '' -E \
+  -e 's#gruntwork-io/terratest/modules/http-helper#gruntwork-io/terratest/modules/httphelper/v2#g' \
+  -e 's#gruntwork-io/terratest/modules/dns-helper#gruntwork-io/terratest/modules/dnshelper/v2#g' \
+  -e 's#gruntwork-io/terratest/modules/test-structure#gruntwork-io/terratest/modules/teststructure/v2#g' \
+  -e 's#(^|[^A-Za-z0-9_])http_helper\.#\1httphelper.#g' \
+  -e 's#(^|[^A-Za-z0-9_])dns_helper\.#\1dnshelper.#g' \
+  -e 's#(^|[^A-Za-z0-9_])test_structure\.#\1teststructure.#g' \
+  -e 's#^(\t*)(http_helper|dns_helper|test_structure) "#\1"#' {} +
 ```
 
-## Where a blind replace goes wrong
-
-**Files that alias Terratest's `aws`.** A file importing both the AWS SDK
-and Terratest's `aws` package usually binds plain `aws` to the SDK and
-aliases Terratest's:
+That last expression matters. These packages were commonly imported under
+an explicit alias:
 
 ```go
-import (
-    "github.com/aws/aws-sdk-go-v2/service/ec2"
-    terraAws "github.com/gruntwork-io/terratest/modules/aws/v2"
-)
+test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 ```
 
-The path rewrite is fine here, but the [symbol
-relocations](#symbol-relocations) below are not: rewriting
-`test_structure.LoadEc2KeyPair` to `aws.LoadEc2KeyPair` in this file
-resolves to the SDK and fails to compile. Use that file's alias. This is a
-compile error, so you will not miss it, but it is the one place the
-scripted rewrite needs a human.
+Rewriting only the path leaves the old alias bound to the new package, so
+every rewritten call site fails with `undefined: teststructure`. The
+expression drops the alias so the package name applies.
 
-**`testing` is a common word.** The first script rewrites
-`gruntwork-io/terratest/modules/testing`, which is specific enough to be
-safe. Do not broaden it to match bare `testing`, or you will rewrite the
-stdlib import in every test file.
+## 3. Add the `/v2` suffix to the rest
+
+```bash
+find . -name '*.go' -exec sed -i '' -E \
+  's#gruntwork-io/terratest/modules/(aws|azure|gcp|k8s|helm|ssh|docker|packer|database|opa|terraform|terragrunt)([^/a-z]|$)#gruntwork-io/terratest/modules/\1/v2\2#g' {} +
+```
+
+## 4. Reformat
+
+The rewrite reorders import paths alphabetically, so the blocks are no
+longer sorted:
+
+```bash
+gofmt -w .
+```
 
 ## Symbol relocations
 
 Eight functions moved to the module that owns the type they operate on, so
 `teststructure` no longer requires `aws`, `k8s`, `packer` and `ssh`.
-Signatures and on-disk filenames are unchanged.
+Signatures and on-disk filenames are unchanged, so this is a qualifier
+swap.
 
 | v1 | v2 |
 |---|---|
@@ -94,7 +84,9 @@ Signatures and on-disk filenames are unchanged.
 | `test_structure.{Save,Load}SSHKeyPair` | `ssh.{Save,Load}SSHKeyPair` |
 
 The target module is usually already imported, because the value being
-saved came from it. Where it is not, add the import.
+saved came from it. Where it is not, add the import, and re-run `go mod
+tidy` afterwards since this can pull in a module you did not previously
+require.
 
 Everything else stays in `teststructure`: `RunTestStage`,
 `CopyTerraformFolderToTemp`, the Terraform option helpers,
@@ -102,17 +94,31 @@ Everything else stays in `teststructure`: `RunTestStage`,
 `SaveArtifactID`/`LoadArtifactID`, and the generic
 `SaveTestData`/`LoadTestData`.
 
-## go.mod
+## Files that alias Terratest's `aws`
 
-One `require` per module you import, all at the same version:
+A file importing both the AWS SDK and Terratest's `aws` usually binds plain
+`aws` to the SDK:
 
-```
-require (
-    github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0-beta.2
-    github.com/gruntwork-io/terratest/modules/aws/v2 v2.0.0-beta.2
-    github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-beta.2
+```go
+import (
+    "github.com/aws/aws-sdk-go-v2/aws"
+    terraAws "github.com/gruntwork-io/terratest/modules/aws/v2"
 )
 ```
 
-The modules are released in lockstep and their cross-module requires are
-pinned to the release version, so mixing versions is not supported.
+Here the relocation above resolves to the SDK and fails to compile. Use
+that file's alias: `terraAws.LoadEc2KeyPair`. This is the one place the
+scripted rewrite needs a human, and the compiler will point at it.
+
+## Verify
+
+No v1 paths left, and everything still builds:
+
+```bash
+grep -rn 'gruntwork-io/terratest/modules/' --include='*.go' . | grep -v '/v2'
+go test -run '^$' ./...
+```
+
+The `grep` should print nothing. Use `go test -run '^$'` rather than
+`go build`: it compiles `_test.go` files without running anything, and for
+a Terratest suite that is where all of your code lives.

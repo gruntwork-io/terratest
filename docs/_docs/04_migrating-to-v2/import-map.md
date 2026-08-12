@@ -29,8 +29,9 @@ identifier at call sites is unchanged.
 | `modules/testing` | `modules/core/v2/testing` |
 
 `modules/logger/parser` becomes `modules/core/v2/logger/parser`.
-`internal/lib/formatting` moved to `internal/formatting`, which was never
-importable.
+
+`modules/core/v2/formatting` is new in v2 and has no v1 equivalent to
+migrate: it was `internal/lib/formatting`, which was never importable.
 
 ## Renamed
 
@@ -63,7 +64,7 @@ Path gains `/v2`; package identifier unchanged.
 
 ## Removed
 
-| v1 | replacement |
+| v1 | Replacement |
 |---|---|
 | `modules/collections` | stdlib `slices` |
 | `modules/environment` | stdlib `os.Getenv` |

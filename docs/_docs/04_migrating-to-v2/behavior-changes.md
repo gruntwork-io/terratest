@@ -13,12 +13,14 @@ nav_title_link: /docs/
 
 Everything else in the v2 migration is a compile error. These two are not:
 your code builds and behaves differently. Both are in `k8s`, so skip this
-page if you do not use it.
+page if you do not use it, and see the [v2
+overview]({{site.baseurl}}/docs/migrating-to-v2/overview/) for the rest of
+the migration.
 
 ## Node addresses prefer `ExternalIP`
 
-`k8s.FindNodeHostnameContextE`, and `GetServiceEndpoint` for a NodePort
-service, now return the `ExternalIP` recorded on the Node object when one
+`k8s.FindNodeHostnameContextE`, and `GetServiceEndpointContextE` for a
+NodePort service, now return the `ExternalIP` recorded on the Node object when one
 is present. They fall back to the internal hostname exactly as before when
 it is not.
 
@@ -28,8 +30,8 @@ Cloud controller managers record an instance's public IP as an
 object is the same answer without the API call, so:
 
 - `ec2:DescribeInstances` is no longer needed for this path
-- `k8s` no longer depends on the `aws` module, which removes 23 AWS service
-  SDKs from its dependency graph
+- `k8s` no longer depends on the `aws` module, which removes 22 AWS service
+  clients from its dependency graph
 
 **What to check.** If your cluster advertises an `ExternalIP` and your test
 previously received an internal hostname, it now receives the external
@@ -38,8 +40,9 @@ wanted, but it is a different string. Tests that assert on the endpoint
 value, or that rely on reaching the node over its internal address, are the
 ones to look at.
 
-Signatures are unchanged. For clusters that do not advertise an
-`ExternalIP`, a new pair of functions takes `*KubectlOptions` and consults
+Signatures are unchanged. The `ExternalIP` preference applies to every
+provider. For AWS-backed nodes that advertise no `ExternalIP`, a new pair of
+functions takes `*KubectlOptions` and consults
 a lookup you provide:
 
 ```go
@@ -55,10 +58,11 @@ has been checked, so most callers can leave it nil.
 ## `KubectlOptions` carrying a `RestConfig` cannot be saved
 
 `json.Marshal` of a `KubectlOptions` built by
-`NewKubectlOptionsWithRestConfig` now returns
-`k8s.ErrRestConfigNotSerializable`. This affects `k8s.SaveKubectlOptions`,
-`teststructure.SaveTestData`, and any code of your own that marshals
-options.
+`NewKubectlOptionsWithRestConfig` now fails with an error wrapping
+`k8s.ErrRestConfigNotSerializable`. Match it with `errors.Is`, not `==`:
+`encoding/json` returns a `*json.MarshalerError` around it. This affects
+`k8s.SaveKubectlOptions`, `teststructure.SaveTestData`, and any code of
+your own that marshals options.
 
 This already failed in v1, with an opaque `json: unsupported type:
 transport.WrapperFunc`, because `rest.Config` holds func-typed fields that

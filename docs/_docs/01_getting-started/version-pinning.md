@@ -25,3 +25,5 @@ Replace `v0.56.0` with the tag you want from the [Releases page](https://github.
 ## Use `go get`, not subpath requires
 
 `go get github.com/gruntwork-io/terratest@<tag>` is enough; the pin applies to every subpackage your tests import. Avoid writing subpath requires by hand (e.g. `go mod edit -require github.com/gruntwork-io/terratest/modules/terraform@<tag>`); Go searches for a `modules/terraform/<tag>` tag and fails with `unknown revision`.
+
+This applies to v1. In v2 each module is published separately and does carry its own `modules/<name>/<tag>` tag, so you require them individually. See [migrating to v2]({{site.baseurl}}/docs/migrating-to-v2/overview/).
