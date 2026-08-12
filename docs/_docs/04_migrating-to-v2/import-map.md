@@ -10,12 +10,14 @@ nav_title: Documentation
 nav_title_link: /docs/
 ---
 
-The complete v1 to v2 path mapping. See [rewriting imports]({{site.baseurl}}/docs/migrating-to-v2/rewriting-imports/)
-for how to apply it in bulk.
+The complete v1 to v2 path mapping. See [rewriting
+imports]({{site.baseurl}}/docs/migrating-to-v2/rewriting-imports/) for how
+to apply it in bulk.
 
 ## Collapsed into `core`
 
-Six utility packages became subpackages of one module. The package identifier at call sites is unchanged.
+Six utility packages became subpackages of one module. The package
+identifier at call sites is unchanged.
 
 | v1 | v2 |
 |---|---|
@@ -26,8 +28,9 @@ Six utility packages became subpackages of one module. The package identifier at
 | `modules/retry` | `modules/core/v2/retry` |
 | `modules/testing` | `modules/core/v2/testing` |
 
-`modules/logger/parser` becomes `modules/core/v2/logger/parser`. `internal/lib/formatting` moved to
-`internal/formatting`, which was never importable.
+`modules/logger/parser` becomes `modules/core/v2/logger/parser`.
+`internal/lib/formatting` moved to `internal/formatting`, which was never
+importable.
 
 ## Renamed
 
@@ -71,5 +74,6 @@ Path gains `/v2`; package identifier unchanged.
 | `cmd/pick-instance-type` | none |
 | `cmd/terratest_log_parser` | none as a binary; the library survives at `modules/core/v2/logger/parser` |
 
-These were deprecated in v1 first and deleted at the v2 cutover. If you depend on `slack`, `version-checker` or
-`oci`, v1 stays available and is the place to stay.
+These were deprecated in v1 first and deleted at the v2 cutover. If you
+depend on `slack`, `version-checker` or `oci`, v1 stays available and is
+the place to stay.

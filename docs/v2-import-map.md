@@ -82,7 +82,7 @@ Signatures and on-disk filenames are unchanged, and every call site is a compile
 
 Nothing else moved. Watch for files that alias Terratest's `aws` because plain `aws` is the AWS SDK.
 
-## Behaviour changes during the v2 beta
+## Behavior changes during the v2 beta
 
 **Node addresses prefer `ExternalIP`** (#1878). `k8s.FindNodeHostnameContextE` and `GetServiceEndpoint` (NodePort)
 now return the Node's `ExternalIP` when present, falling back to the internal hostname as before. On EKS that is the
