@@ -22,9 +22,8 @@ details.
 
 ## Should you migrate yet
 
-v2 is in beta. v1 is in maintenance and receives security fixes only,
-until 12 months after v2.0.0 reaches general availability. Migrate now if
-you want
+v2 is in beta. v1 is in maintenance and receives security fixes only, until
+12 months after v2.0.0 reaches general availability. Migrate now if you want
 the smaller dependency graph or are starting fresh; wait for v2.0.0 if you
 would rather not track beta releases.
 
