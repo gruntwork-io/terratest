@@ -63,22 +63,36 @@ func NewAuthenticatedSessionFromRoleContext(ctx context.Context, region string, 
 		return nil, CredentialsError{UnderlyingErr: err}
 	}
 
-	return &aws.Config{
-		Region: region,
-		Credentials: aws.NewCredentialsCache(credentials.StaticCredentialsProvider{
-			Value: retrieve,
-		}),
-	}, nil
+	// Swap the assumed-role credentials into the config we already resolved, rather than
+	// building a fresh one, so settings such as an endpoint override are not discarded.
+	cfg.Credentials = aws.NewCredentialsCache(credentials.StaticCredentialsProvider{
+		Value: retrieve,
+	})
+
+	return cfg, nil
+}
+
+// newConfigWithCredentials resolves the standard AWS configuration for the given region,
+// including any endpoint override such as one pointing at an emulator, and then replaces the
+// credentials with the ones supplied.
+func newConfigWithCredentials(ctx context.Context, region string, creds aws.CredentialsProvider) (*aws.Config, error) {
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(region),
+		config.WithCredentialsProvider(creds),
+	)
+	if err != nil {
+		return nil, CredentialsError{UnderlyingErr: err}
+	}
+
+	return &cfg, nil
 }
 
 // CreateAwsSessionWithCredsContext creates a new AWS Config using explicit credentials. This is useful if you want to create an IAM User dynamically and
 // create an AWS Config authenticated as the new IAM User.
-// The ctx parameter is accepted for API consistency but not currently used.
+// The ctx parameter supports cancellation and timeouts.
 func CreateAwsSessionWithCredsContext(ctx context.Context, region string, accessKeyID string, secretAccessKey string) (*aws.Config, error) {
-	return &aws.Config{
-		Region:      region,
-		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
-	}, nil
+	return newConfigWithCredentials(ctx, region,
+		credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, ""))
 }
 
 // CreateAwsSessionWithMfaContext creates a new AWS Config authenticated using an MFA token retrieved using the given STS client and MFA Device.
@@ -101,10 +115,8 @@ func CreateAwsSessionWithMfaContext(ctx context.Context, region string, stsClien
 	secretAccessKey := *output.Credentials.SecretAccessKey
 	sessionToken := *output.Credentials.SessionToken
 
-	return &aws.Config{
-		Region:      region,
-		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, sessionToken)),
-	}, nil
+	return newConfigWithCredentials(ctx, region,
+		credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, sessionToken))
 }
 
 // GetTimeBasedOneTimePassword gets a One-Time Password from the given mfaDevice. Per the RFC 6238 standard, this value will be different every 30 seconds.
