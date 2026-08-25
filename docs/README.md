@@ -89,7 +89,7 @@ nav_title_link: /docs/                          # X Cannot be changed
 
 * `layout` - do not change! (Layout sets components like a navigation sidebar, page header, footer, etc.)
 * `title` - document title
-* `categories` - the document's category. Four categories are in use for now: "getting-started", "testing-best-practices", "alternative-testing-tools", and "community".
+* `category` - the document's category. The categories in use are: 'getting-started', 'testing-best-practices', 'migrating-to-v1', 'migrating-to-v2', and 'community'.
 * `excerpt` - description. Try to keep it short.
 * `tags` - check other posts to see common tags, but you can set a new as well.
 * `order` - it is used to sort the documents within collection.
@@ -186,7 +186,7 @@ nav_title_link: /docs/ # OPTIONAL
 * categories - set one category. Use downcase with dashes, e.g. `getting-started`.
 * excerpt - the doc description.
 * tags - doc tags.
-* order - it is use to list documents in the right order. "Getting Started" starts from 100, "Features" starts from 200, and "Community" starts from 300.
+* order - it is used to list documents in the right order. "Getting Started" starts from 100, "Testing Best Practices" from 200, "Migrating to v1" from 300, "Migrating to v2" from 400, and "Community" from 500.
 * nav_title - the title above navigation. It's optional. It's a link if `nav_title_link` is set.
 * nav_title_link - it is a URL. If it is set, `nav_link` is transformed to the link.
 

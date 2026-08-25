@@ -15,6 +15,9 @@ changes to the public API only happen in major releases (e.g. v2.0.0), per
 [semver](https://semver.org/). Renamed or replaced symbols stay around as
 deprecated aliases inside v1; full removal is deferred to v2.
 
+Already on v1 and looking for v2? See
+[migrating to v2]({{site.baseurl}}/docs/migrating-to-v2/overview/).
+
 This page is the orientation map for v0.x to v1.0.0. It tells you what
 shape the changes take and where to look; the per-service guides hold the
 mechanical details.
