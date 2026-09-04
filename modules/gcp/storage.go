@@ -295,6 +295,41 @@ func AssertStorageBucketExistsWithClient(ctx context.Context, client *storage.Cl
 	return nil
 }
 
+// GetStorageBucketAttrsContext returns the settings Google Cloud holds for the given bucket, so a
+// test can assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageBucketAttrsContext(t testing.TestingT, ctx context.Context, name string) *storage.BucketAttrs {
+	attrs, err := GetStorageBucketAttrsContextE(t, ctx, name)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetStorageBucketAttrsContextE returns the settings Google Cloud holds for the given bucket, or an
+// error if they cannot be read.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageBucketAttrsContextE(t testing.TestingT, ctx context.Context, name string) (*storage.BucketAttrs, error) {
+	logger.Default.Logf(t, "Reading attributes of bucket %s", name)
+
+	client, err := newStorageClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = client.Close() }()
+
+	return GetStorageBucketAttrsWithClient(ctx, client, name)
+}
+
+// GetStorageBucketAttrsWithClient returns the settings Google Cloud holds for the given bucket using
+// the supplied *storage.Client. Prefer this variant in unit tests where the client is backed by an
+// httptest fake server (see storage_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageBucketAttrsWithClient(ctx context.Context, client *storage.Client, name string) (*storage.BucketAttrs, error) {
+	return client.Bucket(name).Attrs(ctx)
+}
+
 func newStorageClient(ctx context.Context) (*storage.Client, error) {
 	client, err := storage.NewClient(ctx, withOptions()...)
 	if err != nil {
