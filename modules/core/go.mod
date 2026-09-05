@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/gruntwork-io/go-commons v0.8.0
 	github.com/jstemmer/go-junit-report v1.0.0
-	github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
+	github.com/mattn/go-zglob v0.0.6
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
 )
