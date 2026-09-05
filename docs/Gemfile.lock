@@ -278,7 +278,7 @@ GEM
     unf_ext (0.0.7.7)
     unicode-display_width (1.7.0)
     uri (1.1.1)
-    wdm (0.1.1)
+    wdm (0.2.0)
 
 PLATFORMS
   ruby
@@ -290,7 +290,7 @@ DEPENDENCIES
   jekyll-toc
   less (= 2.6.0)
   therubyracer (= 0.12.3)
-  wdm (~> 0.1.1)
+  wdm (~> 0.2.0)
 
 BUNDLED WITH
    2.1.4
