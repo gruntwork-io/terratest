@@ -138,3 +138,50 @@ func TestEmptyStorageBucketWithClient(t *testing.T) {
 	require.NoError(t, gcp.EmptyStorageBucketWithClient(context.Background(), client, "b"))
 	assert.ElementsMatch(t, []string{"a", "b"}, deleted)
 }
+
+func TestGetStorageBucketAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-data-storage bucket module sets, because the
+	// point of reading attributes back is asserting a module configured the bucket it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/b/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"kind":"storage#bucket",
+			"id":"gw-library-test",
+			"name":"gw-library-test",
+			"location":"US",
+			"storageClass":"NEARLINE",
+			"iamConfiguration":{
+				"uniformBucketLevelAccess":{"enabled":true},
+				"publicAccessPrevention":"enforced"
+			},
+			"versioning":{"enabled":true},
+			"labels":{"purpose":"terratest"}
+		}`))
+	})
+
+	attrs, err := gcp.GetStorageBucketAttrsWithClient(context.Background(), newFakeStorageClient(t, handler), "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", attrs.Name)
+	assert.Equal(t, "US", attrs.Location)
+	assert.Equal(t, "NEARLINE", attrs.StorageClass)
+	assert.True(t, attrs.UniformBucketLevelAccess.Enabled)
+	assert.Equal(t, "enforced", attrs.PublicAccessPrevention.String())
+	assert.True(t, attrs.VersioningEnabled)
+	assert.Equal(t, map[string]string{"purpose": "terratest"}, attrs.Labels)
+}
+
+func TestGetStorageBucketAttrsWithClientMissingBucket(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetStorageBucketAttrsWithClient(context.Background(), newFakeStorageClient(t, handler), "gw-library-missing")
+	require.ErrorIs(t, err, storage.ErrBucketNotExist)
+}
