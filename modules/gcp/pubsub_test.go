@@ -92,6 +92,47 @@ func TestGetTopicAttrsWithClient(t *testing.T) {
 	assert.Equal(t, []string{"us-central1"}, topic.GetMessageStoragePolicy().GetAllowedPersistenceRegions())
 }
 
+func TestGetSubscriptionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	client := newFakePubSubClient(t)
+	ctx := context.Background()
+
+	// The error names the subscription and the project as well as saying it is absent, so all
+	// three are asserted rather than only the phrase.
+	_, err := gcp.GetSubscriptionAttrsWithClient(ctx, client, "missing")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "missing")
+	require.ErrorContains(t, err, "test-project")
+
+	require.NoError(t, gcp.CreateTopicWithClient(ctx, client, "attached"))
+
+	// The values are the ones the terraform-google-messaging subscription module sets, because the
+	// point of reading settings back is asserting a module configured the subscription it was
+	// asked for.
+	_, err = client.SubscriptionAdminClient.CreateSubscription(ctx, &pubsubpb.Subscription{
+		Name:                     "projects/test-project/subscriptions/configured",
+		Topic:                    "projects/test-project/topics/attached",
+		Labels:                   map[string]string{"purpose": "terratest"},
+		AckDeadlineSeconds:       45,
+		RetainAckedMessages:      true,
+		MessageRetentionDuration: durationpb.New(900 * time.Second),
+		EnableMessageOrdering:    true,
+	})
+	require.NoError(t, err)
+
+	subscription, err := gcp.GetSubscriptionAttrsWithClient(ctx, client, "configured")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/test-project/subscriptions/configured", subscription.GetName())
+	assert.Equal(t, "projects/test-project/topics/attached", subscription.GetTopic())
+	assert.Equal(t, map[string]string{"purpose": "terratest"}, subscription.GetLabels())
+	assert.Equal(t, int32(45), subscription.GetAckDeadlineSeconds())
+	assert.True(t, subscription.GetRetainAckedMessages())
+	assert.Equal(t, 900*time.Second, subscription.GetMessageRetentionDuration().AsDuration())
+	assert.True(t, subscription.GetEnableMessageOrdering())
+}
+
 func TestPubSubSubscriptionLifecycleWithClient(t *testing.T) {
 	t.Parallel()
 
