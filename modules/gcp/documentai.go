@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -60,11 +61,20 @@ func GetDocumentAIProcessorAttrsWithClient(ctx context.Context, service *documen
 	return processor, nil
 }
 
+// locationPattern is what a Google Cloud location identifier may contain. It is checked before a
+// location reaches an endpoint, because a value carrying a slash, a colon or an at sign would build
+// a URL pointing at a host of the caller's choosing rather than at Google.
+var locationPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
 // NewDocumentAIServiceE creates a Document AI service authenticated the same way every other client
 // in this module is. Document AI answers only on a per-location host, so the location decides which
-// endpoint the service talks to.
+// endpoint the service talks to, and a location that is not a plain identifier is refused.
 // The ctx parameter supports cancellation and timeouts.
 func NewDocumentAIServiceE(t testing.TestingT, ctx context.Context, location string) (*documentai.Service, error) {
+	if !locationPattern.MatchString(location) {
+		return nil, fmt.Errorf("%q is not a valid location: a location may hold only lowercase letters, digits and hyphens", location)
+	}
+
 	opts := append(withOptions(), option.WithScopes(documentai.CloudPlatformScope))
 	opts = append(opts, option.WithEndpoint(fmt.Sprintf("https://%s-documentai.googleapis.com/", location)))
 

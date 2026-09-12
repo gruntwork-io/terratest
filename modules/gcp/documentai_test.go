@@ -68,3 +68,18 @@ func TestGetDocumentAIProcessorAttrsWithClientMissingProcessor(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestNewDocumentAIServiceERefusesABadLocation(t *testing.T) {
+	t.Parallel()
+
+	// Each of these would build a URL pointing somewhere other than Google, so the constructor has
+	// to refuse them before the endpoint is built.
+	for _, location := range []string{"us/../evil.com", "evil.com", "us:8080", "user@evil.com", "US", ""} {
+		_, err := gcp.NewDocumentAIServiceE(t, context.Background(), location)
+		require.ErrorContains(t, err, "not a valid location", "location %q should be refused", location)
+	}
+
+	// A real one is accepted.
+	_, err := gcp.NewDocumentAIServiceE(t, context.Background(), "us-central1")
+	require.NoError(t, err)
+}
