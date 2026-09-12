@@ -37,7 +37,7 @@ func TestGetArtifactRegistryRepositoryAttrsWithClient(t *testing.T) {
 	// for.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.True(t, strings.HasSuffix(r.URL.Path, "/locations/us-central1/repositories/gw-library-test"))
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/repositories/gw-library-test"))
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{
 			"name":"projects/gw-library-test-project/locations/us-central1/repositories/gw-library-test",
