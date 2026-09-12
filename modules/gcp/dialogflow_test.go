@@ -72,3 +72,20 @@ func TestGetDialogflowAgentAttrsWithClientMissingAgent(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestNewDialogflowServiceERefusesABadLocation(t *testing.T) {
+	t.Parallel()
+
+	// Each of these would build a URL pointing somewhere other than Google, so the constructor has
+	// to refuse them before the endpoint is built.
+	for _, location := range []string{"us/../evil.com", "evil.com", "us:8080", "user@evil.com", "US", ""} {
+		_, err := gcp.NewDialogflowServiceE(t, context.Background(), location)
+		require.ErrorContains(t, err, "not a valid location", "location %q should be refused", location)
+	}
+
+	// A real one is accepted, and so is the global one that builds no endpoint.
+	for _, location := range []string{"us-central1", "global"} {
+		_, err := gcp.NewDialogflowServiceE(t, context.Background(), location)
+		require.NoError(t, err, "location %q should be accepted", location)
+	}
+}

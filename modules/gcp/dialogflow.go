@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -59,11 +60,21 @@ func GetDialogflowAgentAttrsWithClient(ctx context.Context, service *dialogflow.
 	return agent, nil
 }
 
+// dialogflowLocationPattern is what a Google Cloud location identifier may contain. It is checked
+// before a location reaches an endpoint, because a value carrying a slash, a colon or an at sign
+// would build a URL pointing at a host of the caller's choosing rather than at Google.
+var dialogflowLocationPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
 // NewDialogflowServiceE creates a Dialogflow service authenticated the same way every other client
 // in this module is. Dialogflow answers on a per-location host for every location but `global`, so
-// the location decides which endpoint the service talks to.
+// the location decides which endpoint the service talks to, and a location that is not a plain
+// identifier is refused.
 // The ctx parameter supports cancellation and timeouts.
 func NewDialogflowServiceE(t testing.TestingT, ctx context.Context, location string) (*dialogflow.Service, error) {
+	if !dialogflowLocationPattern.MatchString(location) {
+		return nil, fmt.Errorf("%q is not a valid location: a location may hold only lowercase letters, digits and hyphens", location)
+	}
+
 	opts := append(withOptions(), option.WithScopes(dialogflow.CloudPlatformScope))
 	if location != "global" {
 		opts = append(opts, option.WithEndpoint(fmt.Sprintf("https://%s-dialogflow.googleapis.com/", location)))
