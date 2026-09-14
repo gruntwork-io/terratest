@@ -96,6 +96,80 @@ func FetchInstanceWithClient(ctx context.Context, service *compute.Service, proj
 	return nil, fmt.Errorf("compute Instance %s could not be found in project %s", name, projectID)
 }
 
+// FetchNetworkContext queries GCP to return the settings it holds for the given VPC network, so a
+// test can assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkContext(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Network {
+	network, err := FetchNetworkContextE(t, ctx, projectID, name)
+	require.NoError(t, err)
+
+	return network
+}
+
+// FetchNetworkContextE queries GCP to return the settings it holds for the given VPC network.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Network, error) {
+	logger.Default.Logf(t, "Getting network %s", name)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchNetworkWithClient(ctx, service, projectID, name)
+}
+
+// FetchNetworkWithClient queries GCP to return the settings it holds for the given VPC network
+// using the supplied *compute.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.Network, error) {
+	network, err := service.Networks.Get(projectID, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("Networks.Get(%s, %s) got error: %w", projectID, name, err)
+	}
+
+	return network, nil
+}
+
+// FetchFirewallContext queries GCP to return the settings it holds for the given firewall rule, so
+// a test can assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchFirewallContext(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Firewall {
+	firewall, err := FetchFirewallContextE(t, ctx, projectID, name)
+	require.NoError(t, err)
+
+	return firewall
+}
+
+// FetchFirewallContextE queries GCP to return the settings it holds for the given firewall rule.
+// The ctx parameter supports cancellation and timeouts.
+func FetchFirewallContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Firewall, error) {
+	logger.Default.Logf(t, "Getting firewall rule %s", name)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchFirewallWithClient(ctx, service, projectID, name)
+}
+
+// FetchFirewallWithClient queries GCP to return the settings it holds for the given firewall rule
+// using the supplied *compute.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see compute_unit_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchFirewallWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.Firewall, error) {
+	firewall, err := service.Firewalls.Get(projectID, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("Firewalls.Get(%s, %s) got error: %w", projectID, name, err)
+	}
+
+	return firewall, nil
+}
+
 // FetchImageContext queries GCP to return a new instance of the Compute Image type.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
