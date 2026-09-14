@@ -147,6 +147,53 @@ func AssertSubscriptionExistsWithClient(ctx context.Context, client *pubsub.Clie
 	return nil
 }
 
+// GetSubscriptionAttrs returns the settings Google Cloud holds for the given Pub/Sub subscription,
+// so a test can assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetSubscriptionAttrs(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string) *pubsubpb.Subscription {
+	subscription, err := GetSubscriptionAttrsE(t, ctx, projectID, subscriptionName)
+	require.NoError(t, err)
+
+	return subscription
+}
+
+// GetSubscriptionAttrsE returns the settings Google Cloud holds for the given Pub/Sub subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetSubscriptionAttrsE(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string) (subscription *pubsubpb.Subscription, err error) {
+	logger.Default.Logf(t, "Getting settings for Pub/Sub subscription %s in project %s", subscriptionName, projectID)
+
+	client, err := newPubSubClient(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { err = errors.Join(err, client.Close()) }()
+
+	return GetSubscriptionAttrsWithClient(ctx, client, subscriptionName)
+}
+
+// GetSubscriptionAttrsWithClient returns the settings Google Cloud holds for the given Pub/Sub
+// subscription using the supplied *pubsub.Client. Prefer this variant in unit tests where the
+// client is backed by a pstest in-memory fake server (see pubsub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetSubscriptionAttrsWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string) (*pubsubpb.Subscription, error) {
+	projectID := client.Project()
+
+	subscription, err := client.SubscriptionAdminClient.GetSubscription(ctx, &pubsubpb.GetSubscriptionRequest{
+		Subscription: subscriptionResource(projectID, subscriptionName),
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, fmt.Errorf("Pub/Sub subscription %s does not exist in project %s", subscriptionName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Pub/Sub subscription %s in project %s: %w", subscriptionName, projectID, err)
+	}
+
+	return subscription, nil
+}
+
 // CreateTopicContext creates a new Pub/Sub topic and fails the test if it cannot.
 // The ctx parameter supports cancellation and timeouts.
 func CreateTopicContext(t testing.TestingT, ctx context.Context, projectID string, topicName string) {
