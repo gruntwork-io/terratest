@@ -147,8 +147,7 @@ func TestCreateAwsSessionWithMfaContextKeepsEndpointOverride(t *testing.T) {
 // profile that does not exist in the shared config files), the error must not tell the caller
 // to set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, since that is not the cause.
 func TestCreateAwsSessionWithCredsContextReportsAmbientConfigFailure(t *testing.T) {
-	t.Setenv("AWS_CONFIG_FILE", os.DevNull)
-	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", os.DevNull)
+	isolateSharedAwsConfig(t)
 	t.Setenv("AWS_PROFILE", "does-not-exist")
 
 	_, err := aws.CreateAwsSessionWithCredsContext(context.Background(), authTestRegion, "key", "secret")
