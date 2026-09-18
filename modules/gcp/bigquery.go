@@ -55,6 +55,49 @@ func GetBigQueryDatasetAttrsWithClient(ctx context.Context, service *bigquery.Se
 	return dataset, nil
 }
 
+// GetBigQueryTableAttrs returns the settings Google Cloud holds for the given BigQuery table, so a
+// test can assert on what was actually created rather than only that it exists. The schema comes
+// back with the table, so a caller can check each column.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryTableAttrs(t testing.TestingT, ctx context.Context, projectID string, datasetID string, tableID string) *bigquery.Table {
+	table, err := GetBigQueryTableAttrsE(t, ctx, projectID, datasetID, tableID)
+	require.NoError(t, err)
+
+	return table
+}
+
+// GetBigQueryTableAttrsE returns the settings Google Cloud holds for the given BigQuery table.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryTableAttrsE(t testing.TestingT, ctx context.Context, projectID string, datasetID string, tableID string) (*bigquery.Table, error) {
+	logger.Default.Logf(t, "Getting settings for BigQuery table %s.%s in project %s", datasetID, tableID, projectID)
+
+	service, err := NewBigQueryServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigQueryTableAttrsWithClient(ctx, service, projectID, datasetID, tableID)
+}
+
+// GetBigQueryTableAttrsWithClient returns the settings Google Cloud holds for the given BigQuery
+// table using the supplied *bigquery.Service. Prefer this variant in unit tests where the service
+// is backed by an httptest fake server (see bigquery_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryTableAttrsWithClient(ctx context.Context, service *bigquery.Service, projectID string, datasetID string, tableID string) (*bigquery.Table, error) {
+	table, err := service.Tables.Get(projectID, datasetID, tableID).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("BigQuery table %s.%s does not exist in project %s", datasetID, tableID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for BigQuery table %s.%s in project %s: %w", datasetID, tableID, projectID, err)
+	}
+
+	return table, nil
+}
+
 // NewBigQueryServiceE creates a BigQuery service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.
