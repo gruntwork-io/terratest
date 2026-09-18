@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
@@ -43,6 +44,14 @@ const getSessionTokenResponse = `<GetSessionTokenResponse xmlns="https://sts.ama
     </Credentials>
   </GetSessionTokenResult>
 </GetSessionTokenResponse>`
+
+const getCallerIdentityResponse = `<GetCallerIdentityResponse xmlns="https://sts.amazonaws.com/doc/2011-06-15/">
+  <GetCallerIdentityResult>
+    <Arn>arn:aws:iam::123456789012:user/test</Arn>
+    <UserId>AIDATEST</UserId>
+    <Account>123456789012</Account>
+  </GetCallerIdentityResult>
+</GetCallerIdentityResponse>`
 
 // stubSts serves a canned STS response so the auth helpers can be exercised without
 // reaching AWS, the way they would be pointed at an emulator such as LocalStack.
@@ -140,6 +149,34 @@ func TestCreateAwsSessionWithMfaContextKeepsEndpointOverride(t *testing.T) {
 	creds, err := cfg.Credentials.Retrieve(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, "ASIAMFA", creds.AccessKeyID)
+}
+
+// The global AWS_ENDPOINT_URL is not the only override the SDK resolves: a per-service one
+// such as AWS_ENDPOINT_URL_STS must also survive, and asserting on cfg.BaseEndpoint alone
+// would not catch a regression that drops it. This sends a real request through an STS
+// client built from the returned config to prove the override is actually used.
+func TestCreateAwsSessionWithCredsContextKeepsServiceSpecificEndpointOverride(t *testing.T) {
+	isolateSharedAwsConfig(t)
+
+	var requestedHost string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestedHost = r.Host
+		w.Header().Set("Content-Type", "text/xml")
+		_, _ = w.Write([]byte(getCallerIdentityResponse))
+	}))
+	t.Cleanup(server.Close)
+
+	t.Setenv("AWS_ENDPOINT_URL_STS", server.URL)
+
+	cfg, err := aws.CreateAwsSessionWithCredsContext(context.Background(), authTestRegion, "key", "secret")
+	require.NoError(t, err)
+
+	stsClient := sts.NewFromConfig(*cfg)
+	_, err = stsClient.GetCallerIdentity(context.Background(), &sts.GetCallerIdentityInput{})
+	require.NoError(t, err)
+
+	assert.Equal(t, strings.TrimPrefix(server.URL, "http://"), requestedHost,
+		"the STS client did not use the AWS_ENDPOINT_URL_STS override, so it would have reached real AWS")
 }
 
 // CreateAwsSessionWithCredsContext already received explicit credentials as arguments, so if
