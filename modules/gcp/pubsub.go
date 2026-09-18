@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cloud.google.com/go/pubsub/v2"
@@ -56,6 +57,53 @@ func AssertTopicExistsWithClient(ctx context.Context, client *pubsub.Client, top
 	return nil
 }
 
+// GetTopicAttrs returns the settings Google Cloud holds for the given Pub/Sub topic, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetTopicAttrs(t testing.TestingT, ctx context.Context, projectID string, topicName string) *pubsubpb.Topic {
+	topic, err := GetTopicAttrsE(t, ctx, projectID, topicName)
+	require.NoError(t, err)
+
+	return topic
+}
+
+// GetTopicAttrsE returns the settings Google Cloud holds for the given Pub/Sub topic.
+// The ctx parameter supports cancellation and timeouts.
+func GetTopicAttrsE(t testing.TestingT, ctx context.Context, projectID string, topicName string) (topic *pubsubpb.Topic, err error) {
+	logger.Default.Logf(t, "Getting settings for Pub/Sub topic %s in project %s", topicName, projectID)
+
+	client, err := newPubSubClient(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { err = errors.Join(err, client.Close()) }()
+
+	return GetTopicAttrsWithClient(ctx, client, topicName)
+}
+
+// GetTopicAttrsWithClient returns the settings Google Cloud holds for the given Pub/Sub topic
+// using the supplied *pubsub.Client. Prefer this variant in unit tests where the client is backed
+// by a pstest in-memory fake server (see pubsub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetTopicAttrsWithClient(ctx context.Context, client *pubsub.Client, topicName string) (*pubsubpb.Topic, error) {
+	projectID := client.Project()
+
+	topic, err := client.TopicAdminClient.GetTopic(ctx, &pubsubpb.GetTopicRequest{
+		Topic: topicResource(projectID, topicName),
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, fmt.Errorf("Pub/Sub topic %s does not exist in project %s", topicName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Pub/Sub topic %s in project %s: %w", topicName, projectID, err)
+	}
+
+	return topic, nil
+}
+
 // AssertSubscriptionExistsContext checks if the given Pub/Sub subscription exists and fails the test if it does not.
 // The ctx parameter supports cancellation and timeouts.
 func AssertSubscriptionExistsContext(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string) {
@@ -97,6 +145,53 @@ func AssertSubscriptionExistsWithClient(ctx context.Context, client *pubsub.Clie
 	}
 
 	return nil
+}
+
+// GetSubscriptionAttrs returns the settings Google Cloud holds for the given Pub/Sub subscription,
+// so a test can assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetSubscriptionAttrs(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string) *pubsubpb.Subscription {
+	subscription, err := GetSubscriptionAttrsE(t, ctx, projectID, subscriptionName)
+	require.NoError(t, err)
+
+	return subscription
+}
+
+// GetSubscriptionAttrsE returns the settings Google Cloud holds for the given Pub/Sub subscription.
+// The ctx parameter supports cancellation and timeouts.
+func GetSubscriptionAttrsE(t testing.TestingT, ctx context.Context, projectID string, subscriptionName string) (subscription *pubsubpb.Subscription, err error) {
+	logger.Default.Logf(t, "Getting settings for Pub/Sub subscription %s in project %s", subscriptionName, projectID)
+
+	client, err := newPubSubClient(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { err = errors.Join(err, client.Close()) }()
+
+	return GetSubscriptionAttrsWithClient(ctx, client, subscriptionName)
+}
+
+// GetSubscriptionAttrsWithClient returns the settings Google Cloud holds for the given Pub/Sub
+// subscription using the supplied *pubsub.Client. Prefer this variant in unit tests where the
+// client is backed by a pstest in-memory fake server (see pubsub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetSubscriptionAttrsWithClient(ctx context.Context, client *pubsub.Client, subscriptionName string) (*pubsubpb.Subscription, error) {
+	projectID := client.Project()
+
+	subscription, err := client.SubscriptionAdminClient.GetSubscription(ctx, &pubsubpb.GetSubscriptionRequest{
+		Subscription: subscriptionResource(projectID, subscriptionName),
+	})
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, fmt.Errorf("Pub/Sub subscription %s does not exist in project %s", subscriptionName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Pub/Sub subscription %s in project %s: %w", subscriptionName, projectID, err)
+	}
+
+	return subscription, nil
 }
 
 // CreateTopicContext creates a new Pub/Sub topic and fails the test if it cannot.

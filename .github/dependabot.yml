@@ -1,0 +1,24 @@
+version: 2
+
+updates:
+  # k8s.io/api drops alpha packages that the matching client-go still imports,
+  # so the Kubernetes libraries have to move together within a go.mod (#1886).
+  # Grouped per directory, which is what keeps them in step.
+  - package-ecosystem: gomod
+    directories:
+      - /
+      - /modules/*
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      kubernetes:
+        patterns:
+          - k8s.io/*
+          - sigs.k8s.io/*
+
+  # A repo-level config replaces the org-level default that opens these today.
+  - package-ecosystem: bundler
+    directory: /docs
+    schedule:
+      interval: weekly
