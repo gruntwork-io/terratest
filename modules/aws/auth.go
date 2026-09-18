@@ -81,7 +81,7 @@ func newConfigWithCredentials(ctx context.Context, region string, creds aws.Cred
 		config.WithCredentialsProvider(creds),
 	)
 	if err != nil {
-		return nil, CredentialsError{UnderlyingErr: err}
+		return nil, AmbientConfigError{UnderlyingErr: err}
 	}
 
 	return &cfg, nil
@@ -149,4 +149,15 @@ type CredentialsError struct {
 
 func (err CredentialsError) Error() string {
 	return fmt.Sprintf("Error finding AWS credentials. Did you set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables or configure an AWS profile? Underlying error: %v", err.UnderlyingErr)
+}
+
+// AmbientConfigError is an error that occurs while resolving the ambient AWS configuration —
+// region, endpoint overrides, or a shared config/credentials profile — for a caller that
+// already supplied its own credentials explicitly, so missing access keys are not the cause.
+type AmbientConfigError struct {
+	UnderlyingErr error
+}
+
+func (err AmbientConfigError) Error() string {
+	return fmt.Sprintf("Error resolving the ambient AWS configuration (region, endpoint overrides, or a shared config/credentials profile). Underlying error: %v", err.UnderlyingErr)
 }
