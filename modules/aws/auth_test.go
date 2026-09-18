@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
@@ -57,9 +58,22 @@ func stubSts(t *testing.T, body string) string {
 	return server.URL
 }
 
+// isolateSharedAwsConfig points the shared config/credentials files at /dev/null and clears any
+// profile selection, so a developer's own AWS_PROFILE or config files (even a broken one) can't
+// make these tests fail for a reason unrelated to what they test.
+func isolateSharedAwsConfig(t *testing.T) {
+	t.Helper()
+
+	t.Setenv("AWS_CONFIG_FILE", os.DevNull)
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", os.DevNull)
+	t.Setenv("AWS_PROFILE", "")
+}
+
 // A caller pointing the SDK at an emulator via AWS_ENDPOINT_URL expects every helper that
 // hands back a Config to keep that endpoint, otherwise the requests silently go to real AWS.
 func TestCreateAwsSessionWithCredsContextKeepsEndpointOverride(t *testing.T) {
+	isolateSharedAwsConfig(t)
+
 	endpoint := "http://localhost:4566"
 	t.Setenv("AWS_ENDPOINT_URL", endpoint)
 
@@ -77,6 +91,8 @@ func TestCreateAwsSessionWithCredsContextKeepsEndpointOverride(t *testing.T) {
 }
 
 func TestNewAuthenticatedSessionFromRoleContextKeepsEndpointOverride(t *testing.T) {
+	isolateSharedAwsConfig(t)
+
 	endpoint := stubSts(t, assumeRoleResponse)
 
 	t.Setenv("AWS_ENDPOINT_URL", endpoint)
@@ -97,6 +113,8 @@ func TestNewAuthenticatedSessionFromRoleContextKeepsEndpointOverride(t *testing.
 }
 
 func TestCreateAwsSessionWithMfaContextKeepsEndpointOverride(t *testing.T) {
+	isolateSharedAwsConfig(t)
+
 	endpoint := stubSts(t, getSessionTokenResponse)
 
 	t.Setenv("AWS_ENDPOINT_URL", endpoint)
@@ -122,4 +140,20 @@ func TestCreateAwsSessionWithMfaContextKeepsEndpointOverride(t *testing.T) {
 	creds, err := cfg.Credentials.Retrieve(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, "ASIAMFA", creds.AccessKeyID)
+}
+
+// CreateAwsSessionWithCredsContext already received explicit credentials as arguments, so if
+// config.LoadDefaultConfig still fails while resolving other ambient configuration (here, a
+// profile that does not exist in the shared config files), the error must not tell the caller
+// to set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, since that is not the cause.
+func TestCreateAwsSessionWithCredsContextReportsAmbientConfigFailure(t *testing.T) {
+	t.Setenv("AWS_CONFIG_FILE", os.DevNull)
+	t.Setenv("AWS_SHARED_CREDENTIALS_FILE", os.DevNull)
+	t.Setenv("AWS_PROFILE", "does-not-exist")
+
+	_, err := aws.CreateAwsSessionWithCredsContext(context.Background(), authTestRegion, "key", "secret")
+
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "AWS_ACCESS_KEY_ID",
+		"credentials were supplied explicitly, so the error must not suggest they are missing")
 }
