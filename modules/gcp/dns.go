@@ -55,6 +55,49 @@ func GetManagedZoneAttrsWithClient(ctx context.Context, service *dns.Service, pr
 	return zone, nil
 }
 
+// GetDNSPolicyAttrs returns the settings Google Cloud holds for the given Cloud DNS policy, so a
+// test can assert on what was actually created rather than only that it exists. The networks the
+// policy applies to come back with it.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSPolicyAttrs(t testing.TestingT, ctx context.Context, projectID string, policyName string) *dns.Policy {
+	policy, err := GetDNSPolicyAttrsE(t, ctx, projectID, policyName)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// GetDNSPolicyAttrsE returns the settings Google Cloud holds for the given Cloud DNS policy.
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, policyName string) (*dns.Policy, error) {
+	logger.Default.Logf(t, "Getting settings for DNS policy %s in project %s", policyName, projectID)
+
+	service, err := NewDNSServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDNSPolicyAttrsWithClient(ctx, service, projectID, policyName)
+}
+
+// GetDNSPolicyAttrsWithClient returns the settings Google Cloud holds for the given Cloud DNS
+// policy using the supplied *dns.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see dns_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSPolicyAttrsWithClient(ctx context.Context, service *dns.Service, projectID string, policyName string) (*dns.Policy, error) {
+	policy, err := service.Policies.Get(projectID, policyName).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("DNS policy %s does not exist in project %s", policyName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for DNS policy %s in project %s: %w", policyName, projectID, err)
+	}
+
+	return policy, nil
+}
+
 // NewDNSServiceE creates a Cloud DNS service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
