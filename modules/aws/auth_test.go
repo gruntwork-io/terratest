@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	awsSDK "github.com/aws/aws-sdk-go-v2/aws"
@@ -158,9 +159,15 @@ func TestCreateAwsSessionWithMfaContextKeepsEndpointOverride(t *testing.T) {
 func TestCreateAwsSessionWithCredsContextKeepsServiceSpecificEndpointOverride(t *testing.T) {
 	isolateSharedAwsConfig(t)
 
+	// The handler runs in the server's own goroutine, so the host it records has to be
+	// guarded to be read safely from the test.
+	var mu sync.Mutex
 	var requestedHost string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
 		requestedHost = r.Host
+		mu.Unlock()
+
 		w.Header().Set("Content-Type", "text/xml")
 		_, _ = w.Write([]byte(getCallerIdentityResponse))
 	}))
@@ -174,6 +181,9 @@ func TestCreateAwsSessionWithCredsContextKeepsServiceSpecificEndpointOverride(t 
 	stsClient := sts.NewFromConfig(*cfg)
 	_, err = stsClient.GetCallerIdentity(context.Background(), &sts.GetCallerIdentityInput{})
 	require.NoError(t, err)
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	assert.Equal(t, strings.TrimPrefix(server.URL, "http://"), requestedHost,
 		"the STS client did not use the AWS_ENDPOINT_URL_STS override, so it would have reached real AWS")
