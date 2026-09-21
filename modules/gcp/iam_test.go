@@ -126,9 +126,9 @@ func TestGetServiceAccountAttrsWithClientMissingAccount(t *testing.T) {
 func TestGetWorkloadIdentityPoolProviderAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The values are the ones the terraform-google-identity pool provider module sets, because the
-	// point of reading settings back is asserting a module configured the provider it was asked
-	// for. A provider is named by its pool as well as its own id, so both have to reach the request.
+	// The response is shaped like the one Google returns for a pool provider the
+	// terraform-google-identity module created, not a copy of any one fixture's values. A provider is
+	// named by its pool as well as its own id, so both have to reach the request.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/workloadIdentityPools/gw-library-test/providers/gw-library-test-oidc"))
@@ -166,10 +166,11 @@ func TestGetWorkloadIdentityPoolProviderAttrsWithClientMissingProvider(t *testin
 	})
 
 	// The error names the provider, its pool and the project as well as saying it is absent, since a
-	// provider is only identified by all three together.
-	_, err := gcp.GetWorkloadIdentityPoolProviderAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "global", "gw-library-test", "gone")
+	// provider is only identified by all three together. The pool is named so that no other value in
+	// the error contains it, or its check could not fail.
+	_, err := gcp.GetWorkloadIdentityPoolProviderAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "global", "gw-pool", "gone")
 	require.ErrorContains(t, err, "does not exist")
-	require.ErrorContains(t, err, "gone")
-	require.ErrorContains(t, err, "gw-library-test")
+	require.ErrorContains(t, err, "provider gone ")
+	require.ErrorContains(t, err, "pool gw-pool ")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
