@@ -14,7 +14,7 @@ import (
 
 // GetBuildTriggerAttrs returns the settings Google Cloud holds for the given Cloud Build trigger,
 // so a test can assert on what was actually created rather than only that it exists. A trigger
-// lives in a location, which has to be given, and is found by either its name or its id.
+// lives in a location, which has to be given.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetBuildTriggerAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, trigger string) *cloudbuild.BuildTrigger {
