@@ -122,3 +122,54 @@ func TestGetServiceAccountAttrsWithClientMissingAccount(t *testing.T) {
 	require.ErrorContains(t, err, "gone@")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetWorkloadIdentityPoolProviderAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-identity pool provider module sets, because the
+	// point of reading settings back is asserting a module configured the provider it was asked
+	// for. A provider is named by its pool as well as its own id, so both have to reach the request.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/workloadIdentityPools/gw-library-test/providers/gw-library-test-oidc"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"name":"projects/123/locations/global/workloadIdentityPools/gw-library-test/providers/gw-library-test-oidc",
+			"displayName":"terratest provider",
+			"description":"created by terratest",
+			"disabled":true,
+			"state":"ACTIVE",
+			"attributeMapping":{"google.subject":"assertion.sub"},
+			"attributeCondition":"assertion.repository_owner == 'gruntwork-io'",
+			"oidc":{"issuerUri":"https://token.actions.githubusercontent.com","allowedAudiences":["gw-library-test"]}
+		}`))
+	})
+
+	provider, err := gcp.GetWorkloadIdentityPoolProviderAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "global", "gw-library-test", "gw-library-test-oidc")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest provider", provider.DisplayName)
+	assert.Equal(t, "created by terratest", provider.Description)
+	assert.True(t, provider.Disabled)
+	assert.Equal(t, map[string]string{"google.subject": "assertion.sub"}, provider.AttributeMapping)
+	assert.Equal(t, "assertion.repository_owner == 'gruntwork-io'", provider.AttributeCondition)
+	require.NotNil(t, provider.Oidc)
+	assert.Equal(t, "https://token.actions.githubusercontent.com", provider.Oidc.IssuerUri)
+	assert.Equal(t, []string{"gw-library-test"}, provider.Oidc.AllowedAudiences)
+}
+
+func TestGetWorkloadIdentityPoolProviderAttrsWithClientMissingProvider(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the provider, its pool and the project as well as saying it is absent, since a
+	// provider is only identified by all three together.
+	_, err := gcp.GetWorkloadIdentityPoolProviderAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "global", "gw-library-test", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "gw-library-test")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}

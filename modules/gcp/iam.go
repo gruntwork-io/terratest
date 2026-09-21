@@ -104,6 +104,52 @@ func GetWorkloadIdentityPoolAttrsWithClient(ctx context.Context, service *iam.Se
 	return pool, nil
 }
 
+// GetWorkloadIdentityPoolProviderAttrs returns the settings Google Cloud holds for the given
+// workload identity pool provider, so a test can assert on what was actually created rather than
+// only that it exists. A provider is named by its pool as well as its own id.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetWorkloadIdentityPoolProviderAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, poolID string, providerID string) *iam.WorkloadIdentityPoolProvider {
+	provider, err := GetWorkloadIdentityPoolProviderAttrsE(t, ctx, projectID, location, poolID, providerID)
+	require.NoError(t, err)
+
+	return provider
+}
+
+// GetWorkloadIdentityPoolProviderAttrsE returns the settings Google Cloud holds for the given
+// workload identity pool provider.
+// The ctx parameter supports cancellation and timeouts.
+func GetWorkloadIdentityPoolProviderAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, poolID string, providerID string) (*iam.WorkloadIdentityPoolProvider, error) {
+	logger.Default.Logf(t, "Getting settings for workload identity pool provider %s in pool %s in project %s", providerID, poolID, projectID)
+
+	service, err := NewIAMServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetWorkloadIdentityPoolProviderAttrsWithClient(ctx, service, projectID, location, poolID, providerID)
+}
+
+// GetWorkloadIdentityPoolProviderAttrsWithClient returns the settings Google Cloud holds for the
+// given workload identity pool provider using the supplied *iam.Service. Prefer this variant in unit
+// tests where the service is backed by an httptest fake server (see iam_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetWorkloadIdentityPoolProviderAttrsWithClient(ctx context.Context, service *iam.Service, projectID string, location string, poolID string, providerID string) (*iam.WorkloadIdentityPoolProvider, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/workloadIdentityPools/%s/providers/%s", projectID, location, poolID, providerID)
+
+	provider, err := service.Projects.Locations.WorkloadIdentityPools.Providers.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("workload identity pool provider %s does not exist in pool %s in project %s", providerID, poolID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for workload identity pool provider %s in pool %s in project %s: %w", providerID, poolID, projectID, err)
+	}
+
+	return provider, nil
+}
+
 // NewIAMServiceE creates an IAM service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
