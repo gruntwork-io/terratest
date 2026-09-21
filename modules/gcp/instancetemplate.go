@@ -10,22 +10,22 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-// FetchInstanceTemplateContext queries GCP to return the settings it holds for the given global
+// FetchInstanceTemplate queries GCP to return the settings it holds for the given global
 // instance template, so a test can assert on what was actually created rather than only that it
 // exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchInstanceTemplateContext(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.InstanceTemplate {
-	template, err := FetchInstanceTemplateContextE(t, ctx, projectID, name)
+func FetchInstanceTemplate(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.InstanceTemplate {
+	template, err := FetchInstanceTemplateE(t, ctx, projectID, name)
 	require.NoError(t, err)
 
 	return template
 }
 
-// FetchInstanceTemplateContextE queries GCP to return the settings it holds for the given global
+// FetchInstanceTemplateE queries GCP to return the settings it holds for the given global
 // instance template.
 // The ctx parameter supports cancellation and timeouts.
-func FetchInstanceTemplateContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.InstanceTemplate, error) {
+func FetchInstanceTemplateE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.InstanceTemplate, error) {
 	logger.Default.Logf(t, "Getting global instance template %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -49,23 +49,23 @@ func FetchInstanceTemplateWithClient(ctx context.Context, service *compute.Servi
 	return template, nil
 }
 
-// FetchRegionalInstanceGroupManagerContext queries GCP to return the settings it holds for the given
+// FetchRegionalInstanceGroupManager queries GCP to return the settings it holds for the given
 // regional managed instance group, so a test can assert on what was actually created rather than
 // only that it exists. It returns the manager's own settings, such as its template, target size and
 // update policy. The instances it runs are read with FetchRegionalInstanceGroupContext.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchRegionalInstanceGroupManagerContext(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.InstanceGroupManager {
-	manager, err := FetchRegionalInstanceGroupManagerContextE(t, ctx, projectID, region, name)
+func FetchRegionalInstanceGroupManager(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.InstanceGroupManager {
+	manager, err := FetchRegionalInstanceGroupManagerE(t, ctx, projectID, region, name)
 	require.NoError(t, err)
 
 	return manager
 }
 
-// FetchRegionalInstanceGroupManagerContextE queries GCP to return the settings it holds for the given
+// FetchRegionalInstanceGroupManagerE queries GCP to return the settings it holds for the given
 // regional managed instance group.
 // The ctx parameter supports cancellation and timeouts.
-func FetchRegionalInstanceGroupManagerContextE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.InstanceGroupManager, error) {
+func FetchRegionalInstanceGroupManagerE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.InstanceGroupManager, error) {
 	logger.Default.Logf(t, "Getting regional managed instance group %s in region %s", name, region)
 
 	service, err := NewComputeServiceContextE(t, ctx)
