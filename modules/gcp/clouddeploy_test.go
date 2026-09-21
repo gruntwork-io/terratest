@@ -70,3 +70,47 @@ func TestGetDeliveryPipelineAttrsWithClientMissingPipeline(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetDeployTargetAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-devtools target module sets, because the point of
+	// reading settings back is asserting a module configured the target it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/targets/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"name":"projects/gw-library-test-project/locations/us-central1/targets/gw-library-test",
+			"description":"created by terratest",
+			"requireApproval":true,
+			"labels":{"purpose":"terratest"},
+			"run":{"location":"projects/gw-library-test-project/locations/us-central1"}
+		}`))
+	})
+
+	target, err := gcp.GetDeployTargetAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", target.Description)
+	assert.True(t, target.RequireApproval)
+	assert.Equal(t, map[string]string{"purpose": "terratest"}, target.Labels)
+	require.NotNil(t, target.Run)
+	assert.Equal(t, "projects/gw-library-test-project/locations/us-central1", target.Run.Location)
+}
+
+func TestGetDeployTargetAttrsWithClientMissingTarget(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the target, its location and the project as well as saying it is absent, so
+	// all four are asserted rather than only the phrase.
+	_, err := gcp.GetDeployTargetAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "us-central1")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
