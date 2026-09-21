@@ -154,10 +154,11 @@ func TestGetDNSRecordSetAttrsWithClientMissingRecordSet(t *testing.T) {
 
 	// The error names the record, its type, the zone and the project as well as saying it is absent,
 	// since a record is only identified by all of them together.
-	_, err := gcp.GetDNSRecordSetAttrsWithClient(context.Background(), newFakeDNSService(t, handler), "gw-library-test-project", "gw-library-test", "gone.gw-library-test.example.com.", "TXT")
+	// The zone is named so that no other value in the error contains it, or its check could not fail.
+	_, err := gcp.GetDNSRecordSetAttrsWithClient(context.Background(), newFakeDNSService(t, handler), "gw-library-test-project", "gw-zone", "gone.example.com.", "TXT")
 	require.ErrorContains(t, err, "does not exist")
-	require.ErrorContains(t, err, "gone.gw-library-test.example.com.")
+	require.ErrorContains(t, err, "gone.example.com.")
 	require.ErrorContains(t, err, "TXT")
-	require.ErrorContains(t, err, "gw-library-test")
+	require.ErrorContains(t, err, "DNS managed zone gw-zone ")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
