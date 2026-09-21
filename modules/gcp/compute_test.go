@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
@@ -302,4 +303,67 @@ func TestRegionalInstanceGroupGetInstanceIDsWithClient(t *testing.T) {
 	ids, err := ig.GetInstanceIDsWithClient(context.Background(), svc2)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"c", "d"}, ids)
+}
+
+func TestFetchNetworkWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking network module sets, because the
+	// point of reading settings back is asserting a module configured the network it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/networks/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"kind":"compute#network",
+			"name":"gw-library-test",
+			"description":"created by terratest",
+			"autoCreateSubnetworks":false,
+			"routingConfig":{"routingMode":"REGIONAL"},
+			"mtu":1500
+		}`))
+	})
+
+	network, err := gcp.FetchNetworkWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", network.Name)
+	assert.Equal(t, "created by terratest", network.Description)
+	assert.False(t, network.AutoCreateSubnetworks)
+	require.NotNil(t, network.RoutingConfig)
+	assert.Equal(t, "REGIONAL", network.RoutingConfig.RoutingMode)
+	assert.Equal(t, int64(1500), network.Mtu)
+}
+
+func TestFetchFirewallWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking firewall module sets. A rule whose
+	// ports or direction came out wrong is the case most worth catching here.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/firewalls/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"kind":"compute#firewall",
+			"name":"gw-library-test",
+			"description":"created by terratest",
+			"direction":"INGRESS",
+			"priority":1000,
+			"disabled":true,
+			"sourceRanges":["10.0.0.0/8"],
+			"allowed":[{"IPProtocol":"tcp","ports":["443"]}]
+		}`))
+	})
+
+	firewall, err := gcp.FetchFirewallWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "INGRESS", firewall.Direction)
+	assert.Equal(t, int64(1000), firewall.Priority)
+	assert.True(t, firewall.Disabled)
+	assert.Equal(t, []string{"10.0.0.0/8"}, firewall.SourceRanges)
+	require.Len(t, firewall.Allowed, 1)
+	assert.Equal(t, "tcp", firewall.Allowed[0].IPProtocol)
+	assert.Equal(t, []string{"443"}, firewall.Allowed[0].Ports)
 }

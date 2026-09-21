@@ -75,3 +75,60 @@ func TestGetBigQueryDatasetAttrsWithClientMissingDataset(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetBigQueryTableAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-data-analytics table module sets, because the
+	// point of reading settings back is asserting a module configured the table it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/datasets/gw_library_test/tables/events"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"tableReference":{"projectId":"gw-library-test-project","datasetId":"gw_library_test","tableId":"events"},
+			"friendlyName":"terratest table",
+			"description":"created by terratest",
+			"type":"TABLE",
+			"labels":{"managed-by":"terratest"},
+			"schema":{"fields":[
+				{"name":"id","type":"STRING","mode":"REQUIRED"},
+				{"name":"occurred_at","type":"TIMESTAMP","mode":"NULLABLE"}
+			]},
+			"timePartitioning":{"type":"DAY","field":"occurred_at"},
+			"clustering":{"fields":["id"]}
+		}`))
+	})
+
+	table, err := gcp.GetBigQueryTableAttrsWithClient(context.Background(), newFakeBigQueryService(t, handler), "gw-library-test-project", "gw_library_test", "events")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest table", table.FriendlyName)
+	assert.Equal(t, "created by terratest", table.Description)
+	assert.Equal(t, "TABLE", table.Type)
+	assert.Equal(t, map[string]string{"managed-by": "terratest"}, table.Labels)
+	require.NotNil(t, table.Schema)
+	require.Len(t, table.Schema.Fields, 2)
+	assert.Equal(t, "id", table.Schema.Fields[0].Name)
+	assert.Equal(t, "REQUIRED", table.Schema.Fields[0].Mode)
+	require.NotNil(t, table.TimePartitioning)
+	assert.Equal(t, "DAY", table.TimePartitioning.Type)
+	assert.Equal(t, "occurred_at", table.TimePartitioning.Field)
+	require.NotNil(t, table.Clustering)
+	assert.Equal(t, []string{"id"}, table.Clustering.Fields)
+}
+
+func TestGetBigQueryTableAttrsWithClientMissingTable(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the dataset, the table and the project as well as saying it is absent, so all
+	// of them are asserted rather than only the phrase.
+	_, err := gcp.GetBigQueryTableAttrsWithClient(context.Background(), newFakeBigQueryService(t, handler), "gw-library-test-project", "gw_library_test", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gw_library_test.gone")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
