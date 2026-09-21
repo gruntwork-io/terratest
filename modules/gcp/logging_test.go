@@ -69,3 +69,48 @@ func TestGetLogMetricAttrsWithClientMissingMetric(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetLogBucketAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-observability log bucket module sets, because the
+	// point of reading settings back is asserting a module configured the bucket it was asked for.
+	// A bucket is named by its location as well as its id, so both have to reach the request.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/buckets/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"name":"projects/gw-library-test-project/locations/global/buckets/gw-library-test",
+			"description":"created by terratest",
+			"retentionDays":7,
+			"locked":false,
+			"lifecycleState":"ACTIVE"
+		}`))
+	})
+
+	bucket, err := gcp.GetLogBucketAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "global", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/gw-library-test-project/locations/global/buckets/gw-library-test", bucket.Name)
+	assert.Equal(t, "created by terratest", bucket.Description)
+	assert.Equal(t, int64(7), bucket.RetentionDays)
+	assert.False(t, bucket.Locked)
+	assert.Equal(t, "ACTIVE", bucket.LifecycleState)
+}
+
+func TestGetLogBucketAttrsWithClientMissingBucket(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the bucket, its location and the project as well as saying it is absent,
+	// since a bucket is only identified by all three together.
+	_, err := gcp.GetLogBucketAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "us-central1")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
