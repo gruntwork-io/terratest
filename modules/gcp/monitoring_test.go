@@ -75,3 +75,53 @@ func TestGetNotificationChannelAttrsWithClientMissingChannel(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetUptimeCheckConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-observability uptime check module sets, because
+	// the point of reading settings back is asserting a module configured the check it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/uptimeCheckConfigs/abc123"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"name":"projects/gw-library-test-project/uptimeCheckConfigs/abc123",
+			"displayName":"terratest check",
+			"period":"300s",
+			"timeout":"10s",
+			"checkerType":"STATIC_IP_CHECKERS",
+			"httpCheck":{"path":"/healthz","port":443,"useSsl":true,"validateSsl":true,"requestMethod":"GET"},
+			"monitoredResource":{"type":"uptime_url","labels":{"host":"example.com","project_id":"gw-library-test-project"}},
+			"userLabels":{"managed-by":"terratest"}
+		}`))
+	})
+
+	check, err := gcp.GetUptimeCheckConfigAttrsWithClient(context.Background(), newFakeMonitoringService(t, handler), "gw-library-test-project", "abc123")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest check", check.DisplayName)
+	assert.Equal(t, "300s", check.Period)
+	assert.Equal(t, "10s", check.Timeout)
+	require.NotNil(t, check.HttpCheck)
+	assert.Equal(t, "/healthz", check.HttpCheck.Path)
+	assert.Equal(t, int64(443), check.HttpCheck.Port)
+	assert.True(t, check.HttpCheck.UseSsl)
+	require.NotNil(t, check.MonitoredResource)
+	assert.Equal(t, "example.com", check.MonitoredResource.Labels["host"])
+}
+
+func TestGetUptimeCheckConfigAttrsWithClientMissingCheck(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the check and the project as well as saying it is absent, so all three are
+	// asserted rather than only the phrase.
+	_, err := gcp.GetUptimeCheckConfigAttrsWithClient(context.Background(), newFakeMonitoringService(t, handler), "gw-library-test-project", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
