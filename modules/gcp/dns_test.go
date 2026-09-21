@@ -119,10 +119,10 @@ func TestGetDNSPolicyAttrsWithClientMissingPolicy(t *testing.T) {
 func TestGetDNSRecordSetAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The values are the ones the terraform-google-networking record set module sets, because the
-	// point of reading settings back is asserting a module configured the record it was asked for.
-	// A record is named by its zone, its fully qualified name and its type together, so all three
-	// have to reach the request.
+	// The response is shaped like the one Google returns for a record set the
+	// terraform-google-networking module created, not a copy of any one fixture's values. A record is
+	// named by its zone, its fully qualified name and its type together, so all three have to reach
+	// the request.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/managedZones/gw-library-test/rrsets/www.gw-library-test.example.com./A"))
