@@ -14,8 +14,8 @@ import (
 func TestGetBuildTriggerAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The values are the ones the terraform-google-devtools trigger module sets, because the point of
-	// reading settings back is asserting a module configured the trigger it was asked for.
+	// The response is shaped like the one Google returns for a trigger the terraform-google-devtools
+	// module created, not a copy of any one fixture's values.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/triggers/gw-library-test"))
