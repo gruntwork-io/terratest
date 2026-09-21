@@ -72,3 +72,46 @@ func TestGetManagedZoneAttrsWithClientMissingZone(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetDNSPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking policy module sets, because the point
+	// of reading settings back is asserting a module configured the policy it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/policies/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"name":"gw-library-test",
+			"description":"created by terratest",
+			"enableInboundForwarding":true,
+			"enableLogging":true,
+			"networks":[{"networkUrl":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/global/networks/gw-library-test"}]
+		}`))
+	})
+
+	policy, err := gcp.GetDNSPolicyAttrsWithClient(context.Background(), newFakeDNSService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", policy.Description)
+	assert.True(t, policy.EnableInboundForwarding)
+	assert.True(t, policy.EnableLogging)
+	require.Len(t, policy.Networks, 1)
+	assert.True(t, strings.HasSuffix(policy.Networks[0].NetworkUrl, "/global/networks/gw-library-test"))
+}
+
+func TestGetDNSPolicyAttrsWithClientMissingPolicy(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the policy and the project as well as saying it is absent, so all three are
+	// asserted rather than only the phrase.
+	_, err := gcp.GetDNSPolicyAttrsWithClient(context.Background(), newFakeDNSService(t, handler), "gw-library-test-project", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
