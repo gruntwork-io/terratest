@@ -115,3 +115,49 @@ func TestGetDNSPolicyAttrsWithClientMissingPolicy(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetDNSRecordSetAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking record set module sets, because the
+	// point of reading settings back is asserting a module configured the record it was asked for.
+	// A record is named by its zone, its fully qualified name and its type together, so all three
+	// have to reach the request.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/managedZones/gw-library-test/rrsets/www.gw-library-test.example.com./A"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"kind":"dns#resourceRecordSet",
+			"name":"www.gw-library-test.example.com.",
+			"type":"A",
+			"ttl":300,
+			"rrdatas":["10.0.0.10","10.0.0.11"]
+		}`))
+	})
+
+	recordSet, err := gcp.GetDNSRecordSetAttrsWithClient(context.Background(), newFakeDNSService(t, handler), "gw-library-test-project", "gw-library-test", "www.gw-library-test.example.com.", "A")
+	require.NoError(t, err)
+
+	assert.Equal(t, "www.gw-library-test.example.com.", recordSet.Name)
+	assert.Equal(t, "A", recordSet.Type)
+	assert.Equal(t, int64(300), recordSet.Ttl)
+	assert.Equal(t, []string{"10.0.0.10", "10.0.0.11"}, recordSet.Rrdatas)
+}
+
+func TestGetDNSRecordSetAttrsWithClientMissingRecordSet(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the record, its type, the zone and the project as well as saying it is absent,
+	// since a record is only identified by all of them together.
+	_, err := gcp.GetDNSRecordSetAttrsWithClient(context.Background(), newFakeDNSService(t, handler), "gw-library-test-project", "gw-library-test", "gone.gw-library-test.example.com.", "TXT")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone.gw-library-test.example.com.")
+	require.ErrorContains(t, err, "TXT")
+	require.ErrorContains(t, err, "gw-library-test")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
