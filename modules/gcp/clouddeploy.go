@@ -95,7 +95,7 @@ func GetDeployTargetAttrsWithClient(ctx context.Context, service *clouddeploy.Se
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
-			return nil, fmt.Errorf("target %s does not exist in location %s in project %s", targetName, location, projectID)
+			return nil, fmt.Errorf("the Cloud Deploy target %s does not exist in location %s in project %s", targetName, location, projectID)
 		}
 
 		return nil, fmt.Errorf("failed to get settings for Cloud Deploy target %s in location %s in project %s: %w", targetName, location, projectID, err)

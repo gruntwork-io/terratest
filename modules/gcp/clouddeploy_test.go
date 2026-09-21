@@ -74,8 +74,8 @@ func TestGetDeliveryPipelineAttrsWithClientMissingPipeline(t *testing.T) {
 func TestGetDeployTargetAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The values are the ones the terraform-google-devtools target module sets, because the point of
-	// reading settings back is asserting a module configured the target it was asked for.
+	// The response is shaped like the one Google returns for a target the terraform-google-devtools
+	// module created, not a copy of any one fixture's values.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/targets/gw-library-test"))
