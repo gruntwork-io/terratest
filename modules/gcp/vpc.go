@@ -10,20 +10,20 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-// FetchSubnetworkContext queries GCP to return the settings it holds for the given VPC subnetwork,
+// FetchSubnetwork queries GCP to return the settings it holds for the given VPC subnetwork,
 // so a test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchSubnetworkContext(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Subnetwork {
-	subnetwork, err := FetchSubnetworkContextE(t, ctx, projectID, region, name)
+func FetchSubnetwork(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Subnetwork {
+	subnetwork, err := FetchSubnetworkE(t, ctx, projectID, region, name)
 	require.NoError(t, err)
 
 	return subnetwork
 }
 
-// FetchSubnetworkContextE queries GCP to return the settings it holds for the given VPC subnetwork.
+// FetchSubnetworkE queries GCP to return the settings it holds for the given VPC subnetwork.
 // The ctx parameter supports cancellation and timeouts.
-func FetchSubnetworkContextE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Subnetwork, error) {
+func FetchSubnetworkE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Subnetwork, error) {
 	logger.Default.Logf(t, "Getting VPC subnetwork %s in region %s", name, region)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -47,22 +47,22 @@ func FetchSubnetworkWithClient(ctx context.Context, service *compute.Service, pr
 	return subnetwork, nil
 }
 
-// FetchRouterContext queries GCP to return the settings it holds for the given Cloud Router, so a
+// FetchRouter queries GCP to return the settings it holds for the given Cloud Router, so a
 // test can assert on what was actually created rather than only that it exists. A Cloud NAT gateway
 // is part of its router rather than a resource of its own, so its settings come back in the
 // router's Nats field.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchRouterContext(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Router {
-	router, err := FetchRouterContextE(t, ctx, projectID, region, name)
+func FetchRouter(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Router {
+	router, err := FetchRouterE(t, ctx, projectID, region, name)
 	require.NoError(t, err)
 
 	return router
 }
 
-// FetchRouterContextE queries GCP to return the settings it holds for the given Cloud Router.
+// FetchRouterE queries GCP to return the settings it holds for the given Cloud Router.
 // The ctx parameter supports cancellation and timeouts.
-func FetchRouterContextE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Router, error) {
+func FetchRouterE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Router, error) {
 	logger.Default.Logf(t, "Getting Cloud Router %s in region %s", name, region)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -86,21 +86,21 @@ func FetchRouterWithClient(ctx context.Context, service *compute.Service, projec
 	return router, nil
 }
 
-// FetchAddressContext queries GCP to return the settings it holds for the given regional IP address
+// FetchAddress queries GCP to return the settings it holds for the given regional IP address
 // reservation, so a test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchAddressContext(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Address {
-	address, err := FetchAddressContextE(t, ctx, projectID, region, name)
+func FetchAddress(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Address {
+	address, err := FetchAddressE(t, ctx, projectID, region, name)
 	require.NoError(t, err)
 
 	return address
 }
 
-// FetchAddressContextE queries GCP to return the settings it holds for the given regional IP
+// FetchAddressE queries GCP to return the settings it holds for the given regional IP
 // address reservation.
 // The ctx parameter supports cancellation and timeouts.
-func FetchAddressContextE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Address, error) {
+func FetchAddressE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Address, error) {
 	logger.Default.Logf(t, "Getting regional IP address reservation %s in region %s", name, region)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -124,22 +124,22 @@ func FetchAddressWithClient(ctx context.Context, service *compute.Service, proje
 	return address, nil
 }
 
-// FetchGlobalAddressContext queries GCP to return the settings it holds for the given global IP
+// FetchGlobalAddress queries GCP to return the settings it holds for the given global IP
 // address reservation, so a test can assert on what was actually created rather than only that it
 // exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchGlobalAddressContext(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Address {
-	address, err := FetchGlobalAddressContextE(t, ctx, projectID, name)
+func FetchGlobalAddress(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Address {
+	address, err := FetchGlobalAddressE(t, ctx, projectID, name)
 	require.NoError(t, err)
 
 	return address
 }
 
-// FetchGlobalAddressContextE queries GCP to return the settings it holds for the given global IP
+// FetchGlobalAddressE queries GCP to return the settings it holds for the given global IP
 // address reservation.
 // The ctx parameter supports cancellation and timeouts.
-func FetchGlobalAddressContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Address, error) {
+func FetchGlobalAddressE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Address, error) {
 	logger.Default.Logf(t, "Getting global IP address reservation %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
