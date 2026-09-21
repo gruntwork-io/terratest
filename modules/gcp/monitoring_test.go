@@ -129,9 +129,9 @@ func TestGetUptimeCheckConfigAttrsWithClientMissingCheck(t *testing.T) {
 func TestGetAlertPolicyAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The values are the ones the terraform-google-observability alert policy module sets, because
-	// the point of reading settings back is asserting a module configured the policy it was asked
-	// for. Google assigns the policy's id, so the caller passes the id it got back.
+	// The response is shaped like the one Google returns for an alert policy the
+	// terraform-google-observability module created, not a copy of any one fixture's values. Google
+	// assigns the policy's id, so the caller passes the id it got back.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/alertPolicies/1234567890"))
@@ -182,8 +182,9 @@ func TestGetAlertPolicyAttrsWithClientMissingPolicy(t *testing.T) {
 func TestGetServiceLevelObjectiveAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The values are the ones the terraform-google-observability SLO module sets. An SLO is named by
-	// the service it measures as well as its own id, so both have to reach the request.
+	// The response is shaped like the one Google returns for an SLO the terraform-google-observability
+	// module created, not a copy of any one fixture's values. An SLO is named by the service it
+	// measures as well as its own id, so both have to reach the request.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/services/gw-library-test/serviceLevelObjectives/gw-library-test-slo"))
@@ -214,10 +215,11 @@ func TestGetServiceLevelObjectiveAttrsWithClientMissingSLO(t *testing.T) {
 	})
 
 	// The error names the SLO, its service and the project as well as saying it is absent, since an
-	// SLO is only identified by all three together.
-	_, err := gcp.GetServiceLevelObjectiveAttrsWithClient(context.Background(), newFakeMonitoringService(t, handler), "gw-library-test-project", "gw-library-test", "gone")
+	// SLO is only identified by all three together. The service is named so that no other value in
+	// the error contains it, or its check could not fail.
+	_, err := gcp.GetServiceLevelObjectiveAttrsWithClient(context.Background(), newFakeMonitoringService(t, handler), "gw-library-test-project", "gw-service", "gone")
 	require.ErrorContains(t, err, "does not exist")
-	require.ErrorContains(t, err, "gone")
-	require.ErrorContains(t, err, "gw-library-test")
+	require.ErrorContains(t, err, "SLO gone ")
+	require.ErrorContains(t, err, "service gw-service ")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
