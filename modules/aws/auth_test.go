@@ -162,7 +162,9 @@ func TestCreateAwsSessionWithCredsContextKeepsServiceSpecificEndpointOverride(t 
 	// The handler runs in the server's own goroutine, so the host it records has to be
 	// guarded to be read safely from the test.
 	var mu sync.Mutex
+
 	var requestedHost string
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		requestedHost = r.Host
