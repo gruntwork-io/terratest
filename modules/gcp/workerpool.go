@@ -61,8 +61,8 @@ func GetWorkerPoolAttrsWithClient(ctx context.Context, service *cloudbuild.Servi
 
 // NewCloudBuildRESTServiceE creates a Cloud Build REST service authenticated the same way every
 // other client in this module is. The build functions in cloudbuild.go use the gRPC client, which
-// has no worker pool read that a local test server can stand in for; this is the REST client for
-// the same API.
+// has no worker pool or trigger read that a local test server can stand in for; this is the REST
+// client for the same API, and buildtrigger.go uses it too.
 // The ctx parameter supports cancellation and timeouts.
 func NewCloudBuildRESTServiceE(t testing.TestingT, ctx context.Context) (*cloudbuild.Service, error) {
 	return cloudbuild.NewService(ctx, append(withOptions(), option.WithScopes(cloudbuild.CloudPlatformScope))...)
