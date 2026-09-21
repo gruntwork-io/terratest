@@ -11,32 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// fakeComputeGet answers one GET on a path ending in suffix with body, so each case below states
-// only the request it expects and the resource Google would send back.
-func fakeComputeGet(t *testing.T, suffix string, body string) http.Handler {
-	t.Helper()
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, http.MethodGet, r.Method)
-		assert.True(t, strings.HasSuffix(r.URL.Path, suffix), "unexpected path %s", r.URL.Path)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(body))
-	})
-}
-
-// notFound answers every request with a 404, for the cases that read something already gone.
-func notFound() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-	})
-}
-
 func TestFetchSubnetworkWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The values are the ones the terraform-google-networking subnetwork module sets, because the
-	// point of reading settings back is asserting a module configured the subnet it was asked for.
-	handler := fakeComputeGet(t, "/projects/gw-library-test-project/regions/us-central1/subnetworks/gw-library-test", `{
+	// Each response below is shaped like the one Google returns for a resource the
+	// terraform-google-networking modules created, not a copy of any one fixture's values.
+	handler := respond(t, http.MethodGet, "/projects/gw-library-test-project/regions/us-central1/subnetworks/gw-library-test", http.StatusOK, `{
 		"kind":"compute#subnetwork",
 		"name":"gw-library-test",
 		"ipCidrRange":"10.10.0.0/24",
@@ -61,7 +41,7 @@ func TestFetchSubnetworkWithClientMissingSubnetwork(t *testing.T) {
 
 	// The error names the call, the project, the region and the subnet, in the shape the other
 	// compute reads here use.
-	_, err := gcp.FetchSubnetworkWithClient(context.Background(), newFakeComputeService(t, notFound()), "gw-library-test-project", "us-central1", "gone")
+	_, err := gcp.FetchSubnetworkWithClient(context.Background(), newFakeComputeService(t, respond(t, "", "", http.StatusNotFound, "")), "gw-library-test-project", "us-central1", "gone")
 	require.ErrorContains(t, err, "Subnetworks.Get(gw-library-test-project, us-central1, gone)")
 }
 
@@ -69,7 +49,7 @@ func TestFetchRouterWithClient(t *testing.T) {
 	t.Parallel()
 
 	// A NAT gateway comes back inside its router, so the router read is also the NAT read.
-	handler := fakeComputeGet(t, "/projects/gw-library-test-project/regions/us-central1/routers/gw-library-test", `{
+	handler := respond(t, http.MethodGet, "/projects/gw-library-test-project/regions/us-central1/routers/gw-library-test", http.StatusOK, `{
 		"kind":"compute#router",
 		"name":"gw-library-test",
 		"bgp":{"asn":64514},
@@ -97,14 +77,14 @@ func TestFetchRouterWithClient(t *testing.T) {
 func TestFetchRouterWithClientMissingRouter(t *testing.T) {
 	t.Parallel()
 
-	_, err := gcp.FetchRouterWithClient(context.Background(), newFakeComputeService(t, notFound()), "gw-library-test-project", "us-central1", "gone")
+	_, err := gcp.FetchRouterWithClient(context.Background(), newFakeComputeService(t, respond(t, "", "", http.StatusNotFound, "")), "gw-library-test-project", "us-central1", "gone")
 	require.ErrorContains(t, err, "Routers.Get(gw-library-test-project, us-central1, gone)")
 }
 
 func TestFetchAddressWithClient(t *testing.T) {
 	t.Parallel()
 
-	handler := fakeComputeGet(t, "/projects/gw-library-test-project/regions/us-central1/addresses/gw-library-test", `{
+	handler := respond(t, http.MethodGet, "/projects/gw-library-test-project/regions/us-central1/addresses/gw-library-test", http.StatusOK, `{
 		"kind":"compute#address",
 		"name":"gw-library-test",
 		"description":"created by terratest",
@@ -127,7 +107,7 @@ func TestFetchAddressWithClient(t *testing.T) {
 func TestFetchAddressWithClientMissingAddress(t *testing.T) {
 	t.Parallel()
 
-	_, err := gcp.FetchAddressWithClient(context.Background(), newFakeComputeService(t, notFound()), "gw-library-test-project", "us-central1", "gone")
+	_, err := gcp.FetchAddressWithClient(context.Background(), newFakeComputeService(t, respond(t, "", "", http.StatusNotFound, "")), "gw-library-test-project", "us-central1", "gone")
 	require.ErrorContains(t, err, "Addresses.Get(gw-library-test-project, us-central1, gone)")
 }
 
@@ -135,7 +115,7 @@ func TestFetchGlobalAddressWithClient(t *testing.T) {
 	t.Parallel()
 
 	// A global address is read from its own endpoint, with no region in the path.
-	handler := fakeComputeGet(t, "/projects/gw-library-test-project/global/addresses/gw-library-test", `{
+	handler := respond(t, http.MethodGet, "/projects/gw-library-test-project/global/addresses/gw-library-test", http.StatusOK, `{
 		"kind":"compute#address",
 		"name":"gw-library-test",
 		"addressType":"INTERNAL",
@@ -156,6 +136,6 @@ func TestFetchGlobalAddressWithClient(t *testing.T) {
 func TestFetchGlobalAddressWithClientMissingAddress(t *testing.T) {
 	t.Parallel()
 
-	_, err := gcp.FetchGlobalAddressWithClient(context.Background(), newFakeComputeService(t, notFound()), "gw-library-test-project", "gone")
+	_, err := gcp.FetchGlobalAddressWithClient(context.Background(), newFakeComputeService(t, respond(t, "", "", http.StatusNotFound, "")), "gw-library-test-project", "gone")
 	require.ErrorContains(t, err, "GlobalAddresses.Get(gw-library-test-project, gone)")
 }
