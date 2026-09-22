@@ -28,7 +28,7 @@ func newFakeEventarcService(t *testing.T, handler http.Handler) *eventarc.Servic
 	return service
 }
 
-func TestEventarcTriggerAttrsWithClient(t *testing.T) {
+func TestGetEventarcTriggerAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a trigger the terraform-google-
@@ -51,7 +51,7 @@ func TestEventarcTriggerAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "gw-library-test", trigger.Destination.CloudRun.Service)
 }
 
-func TestEventarcTriggerAttrsWithClientMissingTrigger(t *testing.T) {
+func TestGetEventarcTriggerAttrsWithClientMissingTrigger(t *testing.T) {
 	t.Parallel()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

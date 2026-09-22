@@ -13,11 +13,11 @@ import (
 	"google.golang.org/api/option"
 )
 
-// GetCloudFunctionAttrs returns the settings Google Cloud holds for the given Cloud Function, so a
+// GetCloudFunctionV2Attrs returns the settings Google Cloud holds for the given Cloud Function, so a
 // test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetCloudFunctionAttrs(t testing.TestingT, ctx context.Context, projectID string, region string, functionID string) *cloudfunctions.Function {
+func GetCloudFunctionV2Attrs(t testing.TestingT, ctx context.Context, projectID string, region string, functionID string) *cloudfunctions.Function {
 	function, err := GetCloudFunctionAttrsE(t, ctx, projectID, region, functionID)
 	require.NoError(t, err)
 

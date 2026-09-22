@@ -13,11 +13,11 @@ import (
 	"google.golang.org/api/option"
 )
 
-// GetTasksQueueAttrs returns the settings Google Cloud holds for the given Cloud Tasks queue, so a
+// GetCloudTasksQueueAttrs returns the settings Google Cloud holds for the given Cloud Tasks queue, so a
 // test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetTasksQueueAttrs(t testing.TestingT, ctx context.Context, projectID string, region string, queueID string) *cloudtasks.Queue {
+func GetCloudTasksQueueAttrs(t testing.TestingT, ctx context.Context, projectID string, region string, queueID string) *cloudtasks.Queue {
 	queue, err := GetTasksQueueAttrsE(t, ctx, projectID, region, queueID)
 	require.NoError(t, err)
 

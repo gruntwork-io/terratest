@@ -12,10 +12,10 @@ import (
 	"google.golang.org/api/servicenetworking/v1"
 )
 
-// ServiceNetworkingParent is the service a private connection is made to. Every connection a
+// serviceNetworkingParent is the service a private connection is made to. Every connection a
 // Terraform module creates is to this one, which is what serves Cloud SQL, Memorystore and the
 // other managed products that live in Google's own network.
-const ServiceNetworkingParent = "services/servicenetworking.googleapis.com"
+const serviceNetworkingParent = "services/servicenetworking.googleapis.com"
 
 // GetServiceNetworkingConnectionAttrs returns the settings Google Cloud holds for the private
 // connection between the given network and Google's services, so a test can assert on what was
@@ -52,7 +52,7 @@ func GetServiceNetworkingConnectionAttrsE(t testing.TestingT, ctx context.Contex
 func GetServiceNetworkingConnectionAttrsWithClient(ctx context.Context, service *servicenetworking.APIService, projectID string, networkName string) (*servicenetworking.Connection, error) {
 	network := fmt.Sprintf("projects/%s/global/networks/%s", projectID, networkName)
 
-	response, err := service.Services.Connections.List(ServiceNetworkingParent).Network(network).Context(ctx).Do()
+	response, err := service.Services.Connections.List(serviceNetworkingParent).Network(network).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list the private connections on network %s in project %s: %w", networkName, projectID, err)
 	}

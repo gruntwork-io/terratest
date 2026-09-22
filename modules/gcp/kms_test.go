@@ -28,7 +28,7 @@ func newFakeCloudKMSService(t *testing.T, handler http.Handler) *cloudkms.Servic
 	return service
 }
 
-func TestKeyRingAttrsWithClient(t *testing.T) {
+func TestGetKeyRingAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a key ring the terraform-google-
@@ -46,7 +46,7 @@ func TestKeyRingAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "projects/gw-library-test-project/locations/us-central1/keyRings/gw-library-test", keyRing.Name)
 }
 
-func TestKeyRingAttrsWithClientMissingKeyRing(t *testing.T) {
+func TestGetKeyRingAttrsWithClientMissingKeyRing(t *testing.T) {
 	t.Parallel()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -62,7 +62,7 @@ func TestKeyRingAttrsWithClientMissingKeyRing(t *testing.T) {
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
 
-func TestCryptoKeyAttrsWithClient(t *testing.T) {
+func TestGetCryptoKeyAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a key the terraform-google-security
@@ -84,7 +84,7 @@ func TestCryptoKeyAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "GOOGLE_SYMMETRIC_ENCRYPTION", key.VersionTemplate.Algorithm)
 }
 
-func TestCryptoKeyAttrsWithClientMissingKey(t *testing.T) {
+func TestGetCryptoKeyAttrsWithClientMissingKey(t *testing.T) {
 	t.Parallel()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

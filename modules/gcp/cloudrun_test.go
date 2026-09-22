@@ -28,7 +28,7 @@ func newFakeCloudRunService(t *testing.T, handler http.Handler) *run.Service {
 	return service
 }
 
-func TestCloudRunServiceAttrsWithClient(t *testing.T) {
+func TestGetCloudRunServiceAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a service the terraform-google-
@@ -50,7 +50,7 @@ func TestCloudRunServiceAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "us-docker.pkg.dev/cloudrun/container/hello", runService.Template.Containers[0].Image)
 }
 
-func TestCloudRunServiceAttrsWithClientMissingService(t *testing.T) {
+func TestGetCloudRunServiceAttrsWithClientMissingService(t *testing.T) {
 	t.Parallel()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -66,7 +66,7 @@ func TestCloudRunServiceAttrsWithClientMissingService(t *testing.T) {
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
 
-func TestCloudRunJobAttrsWithClient(t *testing.T) {
+func TestGetCloudRunJobAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a job the terraform-google-serverless
@@ -88,7 +88,7 @@ func TestCloudRunJobAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "us-docker.pkg.dev/cloudrun/container/job", job.Template.Template.Containers[0].Image)
 }
 
-func TestCloudRunJobAttrsWithClientMissingJob(t *testing.T) {
+func TestGetCloudRunJobAttrsWithClientMissingJob(t *testing.T) {
 	t.Parallel()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

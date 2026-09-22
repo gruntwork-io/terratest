@@ -29,7 +29,7 @@ func GetCloudRunServiceAttrs(t testing.TestingT, ctx context.Context, projectID 
 func GetCloudRunServiceAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, serviceID string) (*run.GoogleCloudRunV2Service, error) {
 	logger.Default.Logf(t, "Getting settings for Cloud Run service %s in region %s in project %s", serviceID, region, projectID)
 
-	service, err := NewCloudRunServiceE(t, ctx)
+	service, err := NewCloudRunClientE(t, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func GetCloudRunJobAttrs(t testing.TestingT, ctx context.Context, projectID stri
 func GetCloudRunJobAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, jobID string) (*run.GoogleCloudRunV2Job, error) {
 	logger.Default.Logf(t, "Getting settings for Cloud Run job %s in region %s in project %s", jobID, region, projectID)
 
-	service, err := NewCloudRunServiceE(t, ctx)
+	service, err := NewCloudRunClientE(t, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +101,9 @@ func GetCloudRunJobAttrsWithClient(ctx context.Context, service *run.Service, pr
 	return job, nil
 }
 
-// NewCloudRunServiceE creates a Cloud Run service authenticated the same way every other client in
+// NewCloudRunClientE creates a Cloud Run client authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.
-func NewCloudRunServiceE(t testing.TestingT, ctx context.Context) (*run.Service, error) {
+func NewCloudRunClientE(t testing.TestingT, ctx context.Context) (*run.Service, error) {
 	return run.NewService(ctx, append(withOptions(), option.WithScopes(run.CloudPlatformScope))...)
 }

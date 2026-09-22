@@ -13,11 +13,11 @@ import (
 	"google.golang.org/api/option"
 )
 
-// GetSchedulerJobAttrs returns the settings Google Cloud holds for the given Cloud Scheduler job,
+// GetCloudSchedulerJobAttrs returns the settings Google Cloud holds for the given Cloud Scheduler job,
 // so a test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetSchedulerJobAttrs(t testing.TestingT, ctx context.Context, projectID string, region string, jobID string) *cloudscheduler.Job {
+func GetCloudSchedulerJobAttrs(t testing.TestingT, ctx context.Context, projectID string, region string, jobID string) *cloudscheduler.Job {
 	job, err := GetSchedulerJobAttrsE(t, ctx, projectID, region, jobID)
 	require.NoError(t, err)
 

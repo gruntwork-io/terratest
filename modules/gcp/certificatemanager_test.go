@@ -28,7 +28,7 @@ func newFakeCertificateManagerService(t *testing.T, handler http.Handler) *certi
 	return service
 }
 
-func TestCertificateManagerCertificateAttrsWithClient(t *testing.T) {
+func TestGetCertificateManagerCertificateAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a certificate the terraform-google-
@@ -49,7 +49,7 @@ func TestCertificateManagerCertificateAttrsWithClient(t *testing.T) {
 	assert.Equal(t, []string{"app.example.com"}, certificate.Managed.Domains)
 }
 
-func TestCertificateManagerCertificateAttrsWithClientMissingCertificate(t *testing.T) {
+func TestGetCertificateManagerCertificateAttrsWithClientMissingCertificate(t *testing.T) {
 	t.Parallel()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {

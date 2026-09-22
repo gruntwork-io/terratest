@@ -28,7 +28,7 @@ func newFakeVPCAccessService(t *testing.T, handler http.Handler) *vpcaccess.Serv
 	return service
 }
 
-func TestVPCAccessConnectorAttrsWithClient(t *testing.T) {
+func TestGetVPCAccessConnectorAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a connector the terraform-google-
@@ -49,7 +49,7 @@ func TestVPCAccessConnectorAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "READY", connector.State)
 }
 
-func TestVPCAccessConnectorAttrsWithClientMissingConnector(t *testing.T) {
+func TestGetVPCAccessConnectorAttrsWithClientMissingConnector(t *testing.T) {
 	t.Parallel()
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
