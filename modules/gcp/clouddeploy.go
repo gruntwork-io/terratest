@@ -60,6 +60,50 @@ func GetDeliveryPipelineAttrsWithClient(ctx context.Context, service *clouddeplo
 	return pipeline, nil
 }
 
+// GetDeployTargetAttrs returns the settings Google Cloud holds for the given Cloud Deploy target, so
+// a test can assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDeployTargetAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, targetName string) *clouddeploy.Target {
+	target, err := GetDeployTargetAttrsE(t, ctx, projectID, location, targetName)
+	require.NoError(t, err)
+
+	return target
+}
+
+// GetDeployTargetAttrsE returns the settings Google Cloud holds for the given Cloud Deploy target.
+// The ctx parameter supports cancellation and timeouts.
+func GetDeployTargetAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, targetName string) (*clouddeploy.Target, error) {
+	logger.Default.Logf(t, "Getting settings for Cloud Deploy target %s in location %s in project %s", targetName, location, projectID)
+
+	service, err := NewCloudDeployServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDeployTargetAttrsWithClient(ctx, service, projectID, location, targetName)
+}
+
+// GetDeployTargetAttrsWithClient returns the settings Google Cloud holds for the given Cloud Deploy
+// target using the supplied *clouddeploy.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see clouddeploy_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDeployTargetAttrsWithClient(ctx context.Context, service *clouddeploy.Service, projectID string, location string, targetName string) (*clouddeploy.Target, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/targets/%s", projectID, location, targetName)
+
+	target, err := service.Projects.Locations.Targets.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Cloud Deploy target %s does not exist in location %s in project %s", targetName, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Cloud Deploy target %s in location %s in project %s: %w", targetName, location, projectID, err)
+	}
+
+	return target, nil
+}
+
 // NewCloudDeployServiceE creates a Cloud Deploy service authenticated the same way every other
 // client in this module is.
 // The ctx parameter supports cancellation and timeouts.

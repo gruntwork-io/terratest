@@ -102,6 +102,52 @@ func GetLogSinkAttrsWithClient(ctx context.Context, service *logging.Service, pr
 	return sink, nil
 }
 
+// GetLogBucketAttrs returns the settings Google Cloud holds for the given log bucket, so a test can
+// assert on what was actually created rather than only that it exists. A bucket is named by its
+// location as well as its id, and a deleted one is still returned for seven days with a
+// lifecycleState of DELETE_REQUESTED rather than as absent.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetLogBucketAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, bucketID string) *logging.LogBucket {
+	bucket, err := GetLogBucketAttrsE(t, ctx, projectID, location, bucketID)
+	require.NoError(t, err)
+
+	return bucket
+}
+
+// GetLogBucketAttrsE returns the settings Google Cloud holds for the given log bucket.
+// The ctx parameter supports cancellation and timeouts.
+func GetLogBucketAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, bucketID string) (*logging.LogBucket, error) {
+	logger.Default.Logf(t, "Getting settings for log bucket %s in location %s in project %s", bucketID, location, projectID)
+
+	service, err := NewLoggingServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetLogBucketAttrsWithClient(ctx, service, projectID, location, bucketID)
+}
+
+// GetLogBucketAttrsWithClient returns the settings Google Cloud holds for the given log bucket using
+// the supplied *logging.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see logging_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetLogBucketAttrsWithClient(ctx context.Context, service *logging.Service, projectID string, location string, bucketID string) (*logging.LogBucket, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/buckets/%s", projectID, location, bucketID)
+
+	bucket, err := service.Projects.Locations.Buckets.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("log bucket %s does not exist in location %s in project %s", bucketID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for log bucket %s in location %s in project %s: %w", bucketID, location, projectID, err)
+	}
+
+	return bucket, nil
+}
+
 // NewLoggingServiceE creates a Cloud Logging service authenticated the same way every other client
 // in this module is.
 // The ctx parameter supports cancellation and timeouts.

@@ -98,6 +98,50 @@ func GetDNSPolicyAttrsWithClient(ctx context.Context, service *dns.Service, proj
 	return policy, nil
 }
 
+// GetDNSRecordSetAttrs returns the settings Google Cloud holds for the given record set, so a test
+// can assert on what was actually created rather than only that it exists. A record set is named by
+// its managed zone, its fully qualified name with the trailing dot, and its type together, since one
+// name can carry a record of every type.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSRecordSetAttrs(t testing.TestingT, ctx context.Context, projectID string, zoneName string, recordName string, recordType string) *dns.ResourceRecordSet {
+	recordSet, err := GetDNSRecordSetAttrsE(t, ctx, projectID, zoneName, recordName, recordType)
+	require.NoError(t, err)
+
+	return recordSet
+}
+
+// GetDNSRecordSetAttrsE returns the settings Google Cloud holds for the given record set.
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSRecordSetAttrsE(t testing.TestingT, ctx context.Context, projectID string, zoneName string, recordName string, recordType string) (*dns.ResourceRecordSet, error) {
+	logger.Default.Logf(t, "Getting settings for %s record %s in DNS managed zone %s in project %s", recordType, recordName, zoneName, projectID)
+
+	service, err := NewDNSServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDNSRecordSetAttrsWithClient(ctx, service, projectID, zoneName, recordName, recordType)
+}
+
+// GetDNSRecordSetAttrsWithClient returns the settings Google Cloud holds for the given record set
+// using the supplied *dns.Service. Prefer this variant in unit tests where the service is backed by
+// an httptest fake server (see dns_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSRecordSetAttrsWithClient(ctx context.Context, service *dns.Service, projectID string, zoneName string, recordName string, recordType string) (*dns.ResourceRecordSet, error) {
+	recordSet, err := service.ResourceRecordSets.Get(projectID, zoneName, recordName, recordType).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("%s record %s does not exist in DNS managed zone %s in project %s", recordType, recordName, zoneName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for %s record %s in DNS managed zone %s in project %s: %w", recordType, recordName, zoneName, projectID, err)
+	}
+
+	return recordSet, nil
+}
+
 // NewDNSServiceE creates a Cloud DNS service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
