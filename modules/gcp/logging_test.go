@@ -70,6 +70,50 @@ func TestGetLogMetricAttrsWithClientMissingMetric(t *testing.T) {
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
 
+func TestGetLogSinkAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-observability project sink module sets, because
+	// the point of reading settings back is asserting a module configured the sink it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/sinks/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"name":"gw-library-test",
+			"description":"created by terratest",
+			"destination":"logging.googleapis.com/projects/gw-library-test-project/locations/global/buckets/_Default",
+			"filter":"severity>=ERROR",
+			"disabled":true,
+			"writerIdentity":"serviceAccount:service-123@gcp-sa-logging.iam.gserviceaccount.com"
+		}`))
+	})
+
+	sink, err := gcp.GetLogSinkAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", sink.Description)
+	assert.Equal(t, "logging.googleapis.com/projects/gw-library-test-project/locations/global/buckets/_Default", sink.Destination)
+	assert.Equal(t, "severity>=ERROR", sink.Filter)
+	assert.True(t, sink.Disabled)
+	assert.Contains(t, sink.WriterIdentity, "serviceAccount:")
+}
+
+func TestGetLogSinkAttrsWithClientMissingSink(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the sink and the project as well as saying it is absent, so all three are
+	// asserted rather than only the phrase.
+	_, err := gcp.GetLogSinkAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
+
 func TestGetLogBucketAttrsWithClient(t *testing.T) {
 	t.Parallel()
 

@@ -71,3 +71,60 @@ func TestGetSecretAttrsWithClientMissingSecret(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetRegionalSecretAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-security regional secret module sets, because
+	// the point of reading settings back is asserting a module configured the secret it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/secrets/gw-library-test"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"name":"projects/gw-library-test-project/locations/us-central1/secrets/gw-library-test",
+			"labels":{"managed-by":"terratest"},
+			"annotations":{"owner":"terratest"},
+			"ttl":"86400s",
+			"versionDestroyTtl":"90000s"
+		}`))
+	})
+
+	secret, err := gcp.GetRegionalSecretAttrsWithClient(context.Background(), newFakeSecretManagerService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest", secret.Labels["managed-by"])
+	assert.Equal(t, "terratest", secret.Annotations["owner"])
+	assert.Equal(t, "86400s", secret.Ttl)
+	assert.Equal(t, "90000s", secret.VersionDestroyTtl)
+}
+
+func TestGetRegionalSecretAttrsWithClientMissingSecret(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the secret, the location and the project as well as saying it is absent, so
+	// all of them are asserted rather than only the phrase.
+	_, err := gcp.GetRegionalSecretAttrsWithClient(context.Background(), newFakeSecretManagerService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "us-central1")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
+
+func TestNewRegionalSecretManagerServiceERefusesABadLocation(t *testing.T) {
+	t.Parallel()
+
+	// Each of these would build a URL pointing somewhere other than Google, so the constructor has
+	// to refuse them before the endpoint is built.
+	for _, location := range []string{"us/../evil.com", "evil.com", "us:8080", "user@evil.com", "US", ""} {
+		_, err := gcp.NewRegionalSecretManagerServiceE(t, context.Background(), location)
+		require.ErrorContains(t, err, "not a valid location", "location %q should be refused", location)
+	}
+
+	_, err := gcp.NewRegionalSecretManagerServiceE(t, context.Background(), "us-central1")
+	require.NoError(t, err)
+}

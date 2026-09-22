@@ -57,6 +57,51 @@ func GetLogMetricAttrsWithClient(ctx context.Context, service *logging.Service, 
 	return metric, nil
 }
 
+// GetLogSinkAttrs returns the settings Google Cloud holds for the given project log sink, so a
+// test can assert on what was actually created rather than only that it exists. The writer
+// identity comes back with it, which is the service account a destination has to grant.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetLogSinkAttrs(t testing.TestingT, ctx context.Context, projectID string, sinkName string) *logging.LogSink {
+	sink, err := GetLogSinkAttrsE(t, ctx, projectID, sinkName)
+	require.NoError(t, err)
+
+	return sink
+}
+
+// GetLogSinkAttrsE returns the settings Google Cloud holds for the given project log sink.
+// The ctx parameter supports cancellation and timeouts.
+func GetLogSinkAttrsE(t testing.TestingT, ctx context.Context, projectID string, sinkName string) (*logging.LogSink, error) {
+	logger.Default.Logf(t, "Getting settings for log sink %s in project %s", sinkName, projectID)
+
+	service, err := NewLoggingServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetLogSinkAttrsWithClient(ctx, service, projectID, sinkName)
+}
+
+// GetLogSinkAttrsWithClient returns the settings Google Cloud holds for the given project log sink
+// using the supplied *logging.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see logging_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetLogSinkAttrsWithClient(ctx context.Context, service *logging.Service, projectID string, sinkName string) (*logging.LogSink, error) {
+	name := fmt.Sprintf("projects/%s/sinks/%s", projectID, sinkName)
+
+	sink, err := service.Projects.Sinks.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("log sink %s does not exist in project %s", sinkName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for log sink %s in project %s: %w", sinkName, projectID, err)
+	}
+
+	return sink, nil
+}
+
 // GetLogBucketAttrs returns the settings Google Cloud holds for the given log bucket, so a test can
 // assert on what was actually created rather than only that it exists. A bucket is named by its
 // location as well as its id, and a deleted one is still returned for seven days with a
