@@ -52,7 +52,7 @@ func FetchInstanceTemplateWithClient(ctx context.Context, service *compute.Servi
 // FetchRegionalInstanceGroupManager queries GCP to return the settings it holds for the given
 // regional managed instance group, so a test can assert on what was actually created rather than
 // only that it exists. It returns the manager's own settings, such as its template, target size and
-// update policy. The instances it runs are read with FetchRegionalInstanceGroupContext.
+// update policy. The instances it runs are read with FetchRegionalInstanceGroup.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func FetchRegionalInstanceGroupManager(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.InstanceGroupManager {

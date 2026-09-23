@@ -51,19 +51,19 @@ type InstanceGroup interface {
 	GetInstanceIDsContextE(t testing.TestingT, ctx context.Context) ([]string, error)
 }
 
-// FetchInstanceContext queries GCP to return an instance of the Compute Instance type.
+// FetchInstance queries GCP to return an instance of the Compute Instance type.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchInstanceContext(t testing.TestingT, ctx context.Context, projectID string, name string) *Instance {
-	instance, err := FetchInstanceContextE(t, ctx, projectID, name)
+func FetchInstance(t testing.TestingT, ctx context.Context, projectID string, name string) *Instance {
+	instance, err := FetchInstanceE(t, ctx, projectID, name)
 	require.NoError(t, err)
 
 	return instance
 }
 
-// FetchInstanceContextE queries GCP to return an instance of the Compute Instance type.
+// FetchInstanceE queries GCP to return an instance of the Compute Instance type.
 // The ctx parameter supports cancellation and timeouts.
-func FetchInstanceContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*Instance, error) {
+func FetchInstanceE(t testing.TestingT, ctx context.Context, projectID string, name string) (*Instance, error) {
 	logger.Default.Logf(t, "Getting Compute Instance %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -170,19 +170,19 @@ func FetchFirewallWithClient(ctx context.Context, service *compute.Service, proj
 	return firewall, nil
 }
 
-// FetchImageContext queries GCP to return a new instance of the Compute Image type.
+// FetchImage queries GCP to return a new instance of the Compute Image type.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchImageContext(t testing.TestingT, ctx context.Context, projectID string, name string) *Image {
-	image, err := FetchImageContextE(t, ctx, projectID, name)
+func FetchImage(t testing.TestingT, ctx context.Context, projectID string, name string) *Image {
+	image, err := FetchImageE(t, ctx, projectID, name)
 	require.NoError(t, err)
 
 	return image
 }
 
-// FetchImageContextE queries GCP to return a new instance of the Compute Image type.
+// FetchImageE queries GCP to return a new instance of the Compute Image type.
 // The ctx parameter supports cancellation and timeouts.
-func FetchImageContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*Image, error) {
+func FetchImageE(t testing.TestingT, ctx context.Context, projectID string, name string) (*Image, error) {
 	logger.Default.Logf(t, "Getting Image %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -206,19 +206,19 @@ func FetchImageWithClient(ctx context.Context, service *compute.Service, project
 	return &Image{Image: image, projectID: projectID}, nil
 }
 
-// FetchRegionalInstanceGroupContext queries GCP to return a new instance of the Regional Instance Group type.
+// FetchRegionalInstanceGroup queries GCP to return a new instance of the Regional Instance Group type.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchRegionalInstanceGroupContext(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *RegionalInstanceGroup {
-	instanceGroup, err := FetchRegionalInstanceGroupContextE(t, ctx, projectID, region, name)
+func FetchRegionalInstanceGroup(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *RegionalInstanceGroup {
+	instanceGroup, err := FetchRegionalInstanceGroupE(t, ctx, projectID, region, name)
 	require.NoError(t, err)
 
 	return instanceGroup
 }
 
-// FetchRegionalInstanceGroupContextE queries GCP to return a new instance of the Regional Instance Group type.
+// FetchRegionalInstanceGroupE queries GCP to return a new instance of the Regional Instance Group type.
 // The ctx parameter supports cancellation and timeouts.
-func FetchRegionalInstanceGroupContextE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*RegionalInstanceGroup, error) {
+func FetchRegionalInstanceGroupE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*RegionalInstanceGroup, error) {
 	logger.Default.Logf(t, "Getting Regional Instance Group %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -242,19 +242,19 @@ func FetchRegionalInstanceGroupWithClient(ctx context.Context, service *compute.
 	return &RegionalInstanceGroup{InstanceGroup: instanceGroup, projectID: projectID}, nil
 }
 
-// FetchZonalInstanceGroupContext queries GCP to return a new instance of the Zonal Instance Group type.
+// FetchZonalInstanceGroup queries GCP to return a new instance of the Zonal Instance Group type.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchZonalInstanceGroupContext(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *ZonalInstanceGroup {
-	instanceGroup, err := FetchZonalInstanceGroupContextE(t, ctx, projectID, zone, name)
+func FetchZonalInstanceGroup(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *ZonalInstanceGroup {
+	instanceGroup, err := FetchZonalInstanceGroupE(t, ctx, projectID, zone, name)
 	require.NoError(t, err)
 
 	return instanceGroup
 }
 
-// FetchZonalInstanceGroupContextE queries GCP to return a new instance of the Zonal Instance Group type.
+// FetchZonalInstanceGroupE queries GCP to return a new instance of the Zonal Instance Group type.
 // The ctx parameter supports cancellation and timeouts.
-func FetchZonalInstanceGroupContextE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*ZonalInstanceGroup, error) {
+func FetchZonalInstanceGroupE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*ZonalInstanceGroup, error) {
 	logger.Default.Logf(t, "Getting Zonal Instance Group %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -681,7 +681,7 @@ func getInstancesContextE(t testing.TestingT, ctx context.Context, ig InstanceGr
 	var instances []*Instance
 
 	for _, instanceID := range instanceIDs {
-		instance, err := FetchInstanceContextE(t, ctx, projectID, instanceID)
+		instance, err := FetchInstanceE(t, ctx, projectID, instanceID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get Instance: %w", err)
 		}
@@ -795,7 +795,7 @@ func getRandomInstanceContextE(t testing.TestingT, ctx context.Context, ig Insta
 	randIndex := random.Random(0, clusterSize-1)
 	instanceID := instanceIDs[randIndex]
 
-	instance, err := FetchInstanceContextE(t, ctx, projectID, instanceID)
+	instance, err := FetchInstanceE(t, ctx, projectID, instanceID)
 	if err != nil {
 		return nil, err
 	}

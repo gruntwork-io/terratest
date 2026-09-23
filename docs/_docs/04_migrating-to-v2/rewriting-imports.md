@@ -94,6 +94,24 @@ Everything else stays in `teststructure`: `RunTestStage`,
 `SaveArtifactID`/`LoadArtifactID`, and the generic
 `SaveTestData`/`LoadTestData`.
 
+## Renamed `gcp` reads
+
+Four Compute Engine reads drop the `Context` suffix, so every `Fetch`
+function in `gcp` is named the same way. Signatures are unchanged, and the
+`E` form of each is renamed the same way.
+
+| v1 | v2 |
+|---|---|
+| `gcp.FetchInstanceContext` | `gcp.FetchInstance` |
+| `gcp.FetchImageContext` | `gcp.FetchImage` |
+| `gcp.FetchRegionalInstanceGroupContext` | `gcp.FetchRegionalInstanceGroup` |
+| `gcp.FetchZonalInstanceGroupContext` | `gcp.FetchZonalInstanceGroup` |
+
+```bash
+find . -name '*.go' -exec sed -i '' -E \
+  's#gcp\.Fetch(Instance|Image|RegionalInstanceGroup|ZonalInstanceGroup)Context#gcp.Fetch\1#g' {} +
+```
+
 ## Files that alias Terratest's `aws`
 
 A file importing both the AWS SDK and Terratest's `aws` usually binds plain

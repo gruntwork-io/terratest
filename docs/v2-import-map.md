@@ -82,6 +82,17 @@ Signatures and on-disk filenames are unchanged, and every call site is a compile
 
 Nothing else moved. Watch for files that alias Terratest's `aws` because plain `aws` is the AWS SDK.
 
+## `gcp` reads renamed before v2.0.0
+
+Four Compute Engine reads drop the `Context` suffix, so every `Fetch` function in `gcp` is named the same way. Signatures are unchanged, the `E` form of each is renamed the same way, and every call site is a compile error.
+
+| v1 and the betas | v2.0.0 |
+|---|---|
+| `gcp.FetchInstanceContext` | `gcp.FetchInstance` |
+| `gcp.FetchImageContext` | `gcp.FetchImage` |
+| `gcp.FetchRegionalInstanceGroupContext` | `gcp.FetchRegionalInstanceGroup` |
+| `gcp.FetchZonalInstanceGroupContext` | `gcp.FetchZonalInstanceGroup` |
+
 ## Behavior changes during the v2 beta
 
 **Node addresses prefer `ExternalIP`** (#1878). `k8s.FindNodeHostnameContextE` and `GetServiceEndpoint` (NodePort)

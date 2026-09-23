@@ -72,7 +72,7 @@ func TestTerraformGcpExample(t *testing.T) {
 	gcp.AssertStorageBucketExistsContext(t, t.Context(), expectedBucketName)
 
 	// Add a tag to the Compute Instance
-	instance := gcp.FetchInstanceContext(t, t.Context(), projectID, instanceName)
+	instance := gcp.FetchInstance(t, t.Context(), projectID, instanceName)
 	instance.SetLabelsContext(t, t.Context(), map[string]string{"testing": "testing-tag-value2"})
 
 	// Check for the labels within a retry loop as it can sometimes take a while for the
@@ -84,7 +84,7 @@ func TestTerraformGcpExample(t *testing.T) {
 	// website::tag::4::Check if the GCP instance contains a given tag.
 	retry.DoWithRetryContext(t, t.Context(), fmt.Sprintf("Checking Instance %s for labels", instanceName), maxRetries, timeBetweenRetries, func() (string, error) {
 		// Look up the tags for the given Instance ID
-		instance := gcp.FetchInstanceContext(t, t.Context(), projectID, instanceName)
+		instance := gcp.FetchInstance(t, t.Context(), projectID, instanceName)
 		instanceLabels := instance.GetLabelsContext(t, t.Context())
 
 		testingTag, containsTestingTag := instanceLabels["testing"]
@@ -136,7 +136,7 @@ func TestSshAccessToComputeInstance(t *testing.T) {
 	publicIP := terraform.OutputContext(t, t.Context(), terraformOptions, "public_ip")
 
 	// Attempt to SSH and execute the command
-	instance := gcp.FetchInstanceContext(t, t.Context(), projectID, randomValidGcpName)
+	instance := gcp.FetchInstance(t, t.Context(), projectID, randomValidGcpName)
 
 	sampleText := "Hello World"
 	sshUsername := "terratest"

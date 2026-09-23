@@ -50,7 +50,7 @@ func TestTerraformGcpInstanceGroupExample(t *testing.T) {
 
 	instanceGroupName := terraform.OutputContext(t, t.Context(), terraformOptions, "instance_group_name")
 
-	instanceGroup := gcp.FetchRegionalInstanceGroupContext(t, t.Context(), projectID, region, instanceGroupName)
+	instanceGroup := gcp.FetchRegionalInstanceGroup(t, t.Context(), projectID, region, instanceGroupName)
 
 	// Validate that GetInstances() returns a non-zero number of Instances
 	maxRetries := 100
