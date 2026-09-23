@@ -109,3 +109,183 @@ func GetBigtableClusterAttrsWithClient(ctx context.Context, service *bigtableadm
 func NewBigtableAdminServiceE(t testing.TestingT, ctx context.Context) (*bigtableadmin.Service, error) {
 	return bigtableadmin.NewService(ctx, append(withOptions(), option.WithScopes(bigtableadmin.CloudPlatformScope))...)
 }
+
+// GetBigtableTableAttrs returns the settings Google Cloud holds for the given Bigtable table, so a test can assert
+// on what was actually created rather than only that it exists. The full view is asked for, because the default
+// answer carries no column families and a caller asserting on one would read an empty map.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableTableAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, tableID string) *bigtableadmin.Table {
+	table, err := GetBigtableTableAttrsE(t, ctx, projectID, instanceID, tableID)
+	require.NoError(t, err)
+
+	return table
+}
+
+// GetBigtableTableAttrsE returns the settings Google Cloud holds for the given Bigtable table.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableTableAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, tableID string) (*bigtableadmin.Table, error) {
+	logger.Default.Logf(t, "Getting settings for Bigtable table %s in instance %s in project %s", tableID, instanceID, projectID)
+
+	service, err := NewBigtableAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigtableTableAttrsWithClient(ctx, service, projectID, instanceID, tableID)
+}
+
+// GetBigtableTableAttrsWithClient returns the settings Google Cloud holds for the given Bigtable table using the
+// supplied *bigtableadmin.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see bigtable_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableTableAttrsWithClient(ctx context.Context, service *bigtableadmin.Service, projectID string, instanceID string, tableID string) (*bigtableadmin.Table, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/tables/%s", projectID, instanceID, tableID)
+
+	table, err := service.Projects.Instances.Tables.Get(name).View("FULL").Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Bigtable table %s in instance %s in project %s does not exist", tableID, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Bigtable table %s in instance %s in project %s: %w", tableID, instanceID, projectID, err)
+	}
+
+	return table, nil
+}
+
+// GetBigtableAppProfileAttrs returns the settings Google Cloud holds for the given Bigtable app profile, so a test can assert
+// on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableAppProfileAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, profileID string) *bigtableadmin.AppProfile {
+	profile, err := GetBigtableAppProfileAttrsE(t, ctx, projectID, instanceID, profileID)
+	require.NoError(t, err)
+
+	return profile
+}
+
+// GetBigtableAppProfileAttrsE returns the settings Google Cloud holds for the given Bigtable app profile.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableAppProfileAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, profileID string) (*bigtableadmin.AppProfile, error) {
+	logger.Default.Logf(t, "Getting settings for Bigtable app profile %s in instance %s in project %s", profileID, instanceID, projectID)
+
+	service, err := NewBigtableAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigtableAppProfileAttrsWithClient(ctx, service, projectID, instanceID, profileID)
+}
+
+// GetBigtableAppProfileAttrsWithClient returns the settings Google Cloud holds for the given Bigtable app profile using the
+// supplied *bigtableadmin.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see bigtable_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableAppProfileAttrsWithClient(ctx context.Context, service *bigtableadmin.Service, projectID string, instanceID string, profileID string) (*bigtableadmin.AppProfile, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/appProfiles/%s", projectID, instanceID, profileID)
+
+	profile, err := service.Projects.Instances.AppProfiles.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Bigtable app profile %s in instance %s in project %s does not exist", profileID, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Bigtable app profile %s in instance %s in project %s: %w", profileID, instanceID, projectID, err)
+	}
+
+	return profile, nil
+}
+
+// GetBigtableAuthorizedViewAttrs returns the settings Google Cloud holds for the given Bigtable authorized view, so a test can assert
+// on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableAuthorizedViewAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, tableID string, viewID string) *bigtableadmin.AuthorizedView {
+	view, err := GetBigtableAuthorizedViewAttrsE(t, ctx, projectID, instanceID, tableID, viewID)
+	require.NoError(t, err)
+
+	return view
+}
+
+// GetBigtableAuthorizedViewAttrsE returns the settings Google Cloud holds for the given Bigtable authorized view.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableAuthorizedViewAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, tableID string, viewID string) (*bigtableadmin.AuthorizedView, error) {
+	logger.Default.Logf(t, "Getting settings for Bigtable authorized view %s on table %s in instance %s in project %s", viewID, tableID, instanceID, projectID)
+
+	service, err := NewBigtableAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigtableAuthorizedViewAttrsWithClient(ctx, service, projectID, instanceID, tableID, viewID)
+}
+
+// GetBigtableAuthorizedViewAttrsWithClient returns the settings Google Cloud holds for the given Bigtable authorized view using the
+// supplied *bigtableadmin.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see bigtable_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableAuthorizedViewAttrsWithClient(ctx context.Context, service *bigtableadmin.Service, projectID string, instanceID string, tableID string, viewID string) (*bigtableadmin.AuthorizedView, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/tables/%s/authorizedViews/%s", projectID, instanceID, tableID, viewID)
+
+	view, err := service.Projects.Instances.Tables.AuthorizedViews.Get(name).View("FULL").Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Bigtable authorized view %s on table %s in instance %s in project %s does not exist", viewID, tableID, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Bigtable authorized view %s on table %s in instance %s in project %s: %w", viewID, tableID, instanceID, projectID, err)
+	}
+
+	return view, nil
+}
+
+// GetBigtableTableIamPolicyAttrs returns the IAM policy Google Cloud holds for the given Bigtable
+// table, so a test can assert on who may act on it. That is a different question from what the
+// table holds.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableTableIamPolicyAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, tableID string) *bigtableadmin.Policy {
+	policy, err := GetBigtableTableIamPolicyAttrsE(t, ctx, projectID, instanceID, tableID)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// GetBigtableTableIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Bigtable
+// table.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableTableIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, tableID string) (*bigtableadmin.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy of Bigtable table %s in instance %s in project %s", tableID, instanceID, projectID)
+
+	service, err := NewBigtableAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigtableTableIamPolicyAttrsWithClient(ctx, service, projectID, instanceID, tableID)
+}
+
+// GetBigtableTableIamPolicyAttrsWithClient returns the IAM policy Google Cloud holds for the given
+// Bigtable table using the supplied *bigtableadmin.Service. Prefer this variant in unit tests where
+// the service is backed by an httptest fake server (see bigtable_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableTableIamPolicyAttrsWithClient(ctx context.Context, service *bigtableadmin.Service, projectID string, instanceID string, tableID string) (*bigtableadmin.Policy, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/tables/%s", projectID, instanceID, tableID)
+
+	// This call takes a request body even when nothing is being asked for beyond the policy.
+	policy, err := service.Projects.Instances.Tables.GetIamPolicy(name, &bigtableadmin.GetIamPolicyRequest{}).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Bigtable table %s does not exist in instance %s in project %s", tableID, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy of Bigtable table %s in instance %s in project %s: %w", tableID, instanceID, projectID, err)
+	}
+
+	return policy, nil
+}
