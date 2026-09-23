@@ -1,0 +1,66 @@
+package gcp_test
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/gcp/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/api/option"
+	"google.golang.org/api/vpcaccess/v1"
+)
+
+// newFakeVPCAccessService points a real Serverless VPC Access client at a local test server, so the Google transport is
+// exercised rather than a hand-written stand-in for a type we do not own.
+func newFakeVPCAccessService(t *testing.T, handler http.Handler) *vpcaccess.Service {
+	t.Helper()
+
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+
+	service, err := vpcaccess.NewService(context.Background(),
+		option.WithEndpoint(server.URL), option.WithoutAuthentication())
+	require.NoError(t, err)
+
+	return service
+}
+
+func TestGetVPCAccessConnectorAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a connector the terraform-google-
+	// networking module created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Contains(t, r.URL.Path, "/locations/us-central1/connectors/gw-library-test", "unexpected path")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/connectors/gw-library-test","network":"gw-library-test","ipCidrRange":"10.8.0.0/28","minInstances":2,"maxInstances":3,"machineType":"e2-micro","state":"READY"}`))
+	})
+
+	connector, err := gcp.GetVPCAccessConnectorAttrsWithClient(context.Background(), newFakeVPCAccessService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "10.8.0.0/28", connector.IpCidrRange)
+	assert.Equal(t, int64(2), connector.MinInstances)
+	assert.Equal(t, "e2-micro", connector.MachineType)
+	assert.Equal(t, "READY", connector.State)
+}
+
+func TestGetVPCAccessConnectorAttrsWithClientMissingConnector(t *testing.T) {
+	t.Parallel()
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	// The error names the connector and everything that identifies it, and each of those is a value
+	// no other part of the message contains, or its check could not fail.
+	_, err := gcp.GetVPCAccessConnectorAttrsWithClient(context.Background(), newFakeVPCAccessService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	require.ErrorContains(t, err, "does not exist")
+	require.ErrorContains(t, err, "gone")
+	require.ErrorContains(t, err, "us-central1")
+	require.ErrorContains(t, err, "gw-library-test-project")
+}
