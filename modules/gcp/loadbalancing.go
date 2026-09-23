@@ -575,3 +575,276 @@ func FetchRegionBackendServiceWithClient(ctx context.Context, service *compute.S
 
 	return backendService, nil
 }
+
+// FetchForwardingRule queries GCP to return the settings it holds for the given regional forwarding rule, so a test can
+// assert on what was actually created rather than only that it exists. A regional rule is a different resource from the global one, which FetchGlobalForwardingRule reads.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchForwardingRule(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.ForwardingRule {
+	rule, err := FetchForwardingRuleE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return rule
+}
+
+// FetchForwardingRuleE queries GCP to return the settings it holds for the given regional forwarding rule.
+// The ctx parameter supports cancellation and timeouts.
+func FetchForwardingRuleE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.ForwardingRule, error) {
+	logger.Default.Logf(t, "Getting regional forwarding rule %s in region %s", name, region)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchForwardingRuleWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchForwardingRuleWithClient queries GCP to return the settings it holds for the given regional forwarding rule using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see loadbalancing_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchForwardingRuleWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.ForwardingRule, error) {
+	rule, err := service.ForwardingRules.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("ForwardingRules.Get(%s, %s, %s) got error: %w", projectID, region, name, err)
+	}
+
+	return rule, nil
+}
+
+// FetchRegionTargetHTTPSProxy queries GCP to return the settings it holds for the given regional target HTTPS proxy, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionTargetHTTPSProxy(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.TargetHttpsProxy {
+	proxy, err := FetchRegionTargetHTTPSProxyE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return proxy
+}
+
+// FetchRegionTargetHTTPSProxyE queries GCP to return the settings it holds for the given regional target HTTPS proxy.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionTargetHTTPSProxyE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.TargetHttpsProxy, error) {
+	logger.Default.Logf(t, "Getting regional target HTTPS proxy %s in region %s", name, region)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionTargetHTTPSProxyWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionTargetHTTPSProxyWithClient queries GCP to return the settings it holds for the given regional target HTTPS proxy using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see loadbalancing_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionTargetHTTPSProxyWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.TargetHttpsProxy, error) {
+	proxy, err := service.RegionTargetHttpsProxies.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("RegionTargetHttpsProxies.Get(%s, %s, %s) got error: %w", projectID, region, name, err)
+	}
+
+	return proxy, nil
+}
+
+// FetchRegionTargetTCPProxy queries GCP to return the settings it holds for the given regional target TCP proxy, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionTargetTCPProxy(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.TargetTcpProxy {
+	proxy, err := FetchRegionTargetTCPProxyE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return proxy
+}
+
+// FetchRegionTargetTCPProxyE queries GCP to return the settings it holds for the given regional target TCP proxy.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionTargetTCPProxyE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.TargetTcpProxy, error) {
+	logger.Default.Logf(t, "Getting regional target TCP proxy %s in region %s", name, region)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionTargetTCPProxyWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionTargetTCPProxyWithClient queries GCP to return the settings it holds for the given regional target TCP proxy using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see loadbalancing_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionTargetTCPProxyWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.TargetTcpProxy, error) {
+	proxy, err := service.RegionTargetTcpProxies.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("RegionTargetTcpProxies.Get(%s, %s, %s) got error: %w", projectID, region, name, err)
+	}
+
+	return proxy, nil
+}
+
+// FetchRegionCompositeHealthCheck queries GCP to return the settings it holds for the given regional composite health check, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionCompositeHealthCheck(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.CompositeHealthCheck {
+	check, err := FetchRegionCompositeHealthCheckE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return check
+}
+
+// FetchRegionCompositeHealthCheckE queries GCP to return the settings it holds for the given regional composite health check.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionCompositeHealthCheckE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.CompositeHealthCheck, error) {
+	logger.Default.Logf(t, "Getting regional composite health check %s in region %s", name, region)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionCompositeHealthCheckWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionCompositeHealthCheckWithClient queries GCP to return the settings it holds for the given regional composite health check using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see loadbalancing_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionCompositeHealthCheckWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.CompositeHealthCheck, error) {
+	check, err := service.RegionCompositeHealthChecks.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("RegionCompositeHealthChecks.Get(%s, %s, %s) got error: %w", projectID, region, name, err)
+	}
+
+	return check, nil
+}
+
+// FetchRegionHealthAggregationPolicy queries GCP to return the settings it holds for the given regional health aggregation policy, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionHealthAggregationPolicy(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.HealthAggregationPolicy {
+	policy, err := FetchRegionHealthAggregationPolicyE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchRegionHealthAggregationPolicyE queries GCP to return the settings it holds for the given regional health aggregation policy.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionHealthAggregationPolicyE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.HealthAggregationPolicy, error) {
+	logger.Default.Logf(t, "Getting regional health aggregation policy %s in region %s", name, region)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionHealthAggregationPolicyWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionHealthAggregationPolicyWithClient queries GCP to return the settings it holds for the given regional health aggregation policy using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see loadbalancing_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionHealthAggregationPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.HealthAggregationPolicy, error) {
+	policy, err := service.RegionHealthAggregationPolicies.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("RegionHealthAggregationPolicies.Get(%s, %s, %s) got error: %w", projectID, region, name, err)
+	}
+
+	return policy, nil
+}
+
+// FetchRegionHealthSource queries GCP to return the settings it holds for the given regional health source, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionHealthSource(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.HealthSource {
+	source, err := FetchRegionHealthSourceE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return source
+}
+
+// FetchRegionHealthSourceE queries GCP to return the settings it holds for the given regional health source.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionHealthSourceE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.HealthSource, error) {
+	logger.Default.Logf(t, "Getting regional health source %s in region %s", name, region)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionHealthSourceWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionHealthSourceWithClient queries GCP to return the settings it holds for the given regional health source using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see loadbalancing_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionHealthSourceWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.HealthSource, error) {
+	source, err := service.RegionHealthSources.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("RegionHealthSources.Get(%s, %s, %s) got error: %w", projectID, region, name, err)
+	}
+
+	return source, nil
+}
+
+// FetchNetworkEndpoints queries GCP to return the endpoints the given zonal network endpoint group
+// holds, so a test can assert on what was actually attached rather than only that the group exists.
+// An endpoint has no name of its own and cannot be fetched one at a time, so this lists the group's
+// endpoints and the caller picks out the one it asked for.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkEndpoints(t testing.TestingT, ctx context.Context, projectID string, zone string, group string) []*compute.NetworkEndpointWithHealthStatus {
+	endpoints, err := FetchNetworkEndpointsE(t, ctx, projectID, zone, group)
+	require.NoError(t, err)
+
+	return endpoints
+}
+
+// FetchNetworkEndpointsE queries GCP to return the endpoints the given zonal network endpoint group
+// holds.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkEndpointsE(t testing.TestingT, ctx context.Context, projectID string, zone string, group string) ([]*compute.NetworkEndpointWithHealthStatus, error) {
+	logger.Default.Logf(t, "Getting the endpoints of network endpoint group %s in zone %s", group, zone)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchNetworkEndpointsWithClient(ctx, service, projectID, zone, group)
+}
+
+// FetchNetworkEndpointsWithClient queries GCP to return the endpoints the given zonal network
+// endpoint group holds using the supplied *compute.Service. Prefer this variant in unit tests where
+// the service is backed by an httptest fake server (see loadbalancing_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkEndpointsWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, group string) ([]*compute.NetworkEndpointWithHealthStatus, error) {
+	var endpoints []*compute.NetworkEndpointWithHealthStatus
+
+	// The API takes a filter body even when nothing is being filtered.
+	call := service.NetworkEndpointGroups.ListNetworkEndpoints(projectID, zone, group, &compute.NetworkEndpointGroupsListEndpointsRequest{})
+
+	// A group may hold more endpoints than one page returns, and a caller asserting on a count
+	// would be wrong if the rest were dropped.
+	err := call.Pages(ctx, func(page *compute.NetworkEndpointGroupsListNetworkEndpoints) error {
+		endpoints = append(endpoints, page.Items...)
+
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("NetworkEndpointGroups.ListNetworkEndpoints(%s, %s, %s) got error: %w", projectID, zone, group, err)
+	}
+
+	return endpoints, nil
+}
