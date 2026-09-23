@@ -4,8 +4,8 @@ go 1.26.0
 
 require (
 	github.com/gruntwork-io/go-commons v0.8.0
-	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
-	github.com/gruntwork-io/terratest/modules/httphelper/v2 v2.0.0-00010101000000-000000000000
+	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0
+	github.com/gruntwork-io/terratest/modules/httphelper/v2 v2.0.0
 	github.com/stretchr/testify v1.11.1
 	k8s.io/api v0.37.0
 	k8s.io/apimachinery v0.37.0
