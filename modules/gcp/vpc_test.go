@@ -139,3 +139,47 @@ func TestFetchGlobalAddressWithClientMissingAddress(t *testing.T) {
 	_, err := gcp.FetchGlobalAddressWithClient(context.Background(), newFakeComputeService(t, respond(t, "", "", http.StatusNotFound, "")), "gw-library-test-project", "gone")
 	require.ErrorContains(t, err, "GlobalAddresses.Get(gw-library-test-project, gone)")
 }
+
+func TestFetchRouteWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking route module sets, because the point
+	// of reading settings back is asserting a module configured the route it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/routes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","destRange":"192.0.2.0/24","priority":900,"nextHopGateway":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/global/gateways/default-internet-gateway","tags":["terratest"]}`))
+	})
+
+	route, err := gcp.FetchRouteWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", route.Name)
+	assert.Equal(t, "192.0.2.0/24", route.DestRange)
+	assert.Equal(t, int64(900), route.Priority)
+	require.Len(t, route.Tags, 1)
+	assert.Equal(t, "terratest", route.Tags[0])
+}
+
+func TestFetchPacketMirroringWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking packet mirroring module sets, because the point
+	// of reading settings back is asserting a module configured the policy it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/packetMirrorings/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","priority":900,"enable":"TRUE","filter":{"cidrRanges":["192.0.2.0/24"],"direction":"BOTH"}}`))
+	})
+
+	mirroring, err := gcp.FetchPacketMirroringWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", mirroring.Name)
+	assert.Equal(t, int64(900), mirroring.Priority)
+	assert.Equal(t, "TRUE", mirroring.Enable)
+	require.NotNil(t, mirroring.Filter)
+	assert.Equal(t, "BOTH", mirroring.Filter.Direction)
+}

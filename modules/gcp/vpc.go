@@ -162,3 +162,77 @@ func FetchGlobalAddressWithClient(ctx context.Context, service *compute.Service,
 
 	return address, nil
 }
+
+// FetchRoute queries GCP to return the settings it holds for the given route, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRoute(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Route {
+	route, err := FetchRouteE(t, ctx, projectID, name)
+	require.NoError(t, err)
+
+	return route
+}
+
+// FetchRouteE queries GCP to return the settings it holds for the given route.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRouteE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Route, error) {
+	logger.Default.Logf(t, "Getting route %s", name)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRouteWithClient(ctx, service, projectID, name)
+}
+
+// FetchRouteWithClient queries GCP to return the settings it holds for the given route using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see vpc_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRouteWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.Route, error) {
+	route, err := service.Routes.Get(projectID, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("Routes.Get(%s, %s) got error: %w", projectID, name, err)
+	}
+
+	return route, nil
+}
+
+// FetchPacketMirroring queries GCP to return the settings it holds for the given packet mirroring policy, so a test can
+// assert on what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchPacketMirroring(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.PacketMirroring {
+	mirroring, err := FetchPacketMirroringE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return mirroring
+}
+
+// FetchPacketMirroringE queries GCP to return the settings it holds for the given packet mirroring policy.
+// The ctx parameter supports cancellation and timeouts.
+func FetchPacketMirroringE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.PacketMirroring, error) {
+	logger.Default.Logf(t, "Getting packet mirroring policy %s in region %s", name, region)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchPacketMirroringWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchPacketMirroringWithClient queries GCP to return the settings it holds for the given packet mirroring policy using the
+// supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see vpc_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchPacketMirroringWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.PacketMirroring, error) {
+	mirroring, err := service.PacketMirrorings.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("PacketMirrorings.Get(%s, %s, %s) got error: %w", projectID, region, name, err)
+	}
+
+	return mirroring, nil
+}
