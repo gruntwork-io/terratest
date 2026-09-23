@@ -74,3 +74,45 @@ func TestGetNetworkConnectivityHubAttrsWithClientMissingHub(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetNetworkConnectivitySpokeAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking spoke module sets, because the point
+	// of reading settings back is asserting a module configured the spoke it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/spokes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/spokes/gw-library-test","description":"created by terratest","hub":"projects/gw-library-test-project/locations/global/hubs/gw-library-test","state":"ACTIVE","labels":{"purpose":"terratest"}}`))
+	})
+
+	spoke, err := gcp.GetNetworkConnectivitySpokeAttrsWithClient(context.Background(), newFakeNetworkConnectivityService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", spoke.Description)
+	assert.True(t, strings.HasSuffix(spoke.Hub, "/hubs/gw-library-test"))
+	assert.Equal(t, "ACTIVE", spoke.State)
+	assert.Equal(t, "terratest", spoke.Labels["purpose"])
+}
+
+func TestGetPolicyBasedRouteAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking policy based route module sets.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/policyBasedRoutes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/policyBasedRoutes/gw-library-test","description":"created by terratest","priority":900,"network":"projects/gw-library-test-project/global/networks/gw-library-test","filter":{"protocolVersion":"IPV4","destRange":"192.0.2.0/24","ipProtocol":"TCP"},"nextHopOtherRoutes":"DEFAULT_ROUTING"}`))
+	})
+
+	route, err := gcp.GetPolicyBasedRouteAttrsWithClient(context.Background(), newFakeNetworkConnectivityService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", route.Description)
+	assert.Equal(t, int64(900), route.Priority)
+	require.NotNil(t, route.Filter)
+	assert.Equal(t, "192.0.2.0/24", route.Filter.DestRange)
+	assert.Equal(t, "TCP", route.Filter.IpProtocol)
+}
