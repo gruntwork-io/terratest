@@ -18,15 +18,15 @@ import (
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetCloudFunctionV2Attrs(t testing.TestingT, ctx context.Context, projectID string, region string, functionID string) *cloudfunctions.Function {
-	function, err := GetCloudFunctionAttrsE(t, ctx, projectID, region, functionID)
+	function, err := GetCloudFunctionV2AttrsE(t, ctx, projectID, region, functionID)
 	require.NoError(t, err)
 
 	return function
 }
 
-// GetCloudFunctionAttrsE returns the settings Google Cloud holds for the given Cloud Function.
+// GetCloudFunctionV2AttrsE returns the settings Google Cloud holds for the given Cloud Function.
 // The ctx parameter supports cancellation and timeouts.
-func GetCloudFunctionAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, functionID string) (*cloudfunctions.Function, error) {
+func GetCloudFunctionV2AttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, functionID string) (*cloudfunctions.Function, error) {
 	logger.Default.Logf(t, "Getting settings for Cloud Function %s in region %s in project %s", functionID, region, projectID)
 
 	service, err := NewCloudFunctionsServiceE(t, ctx)
@@ -34,14 +34,14 @@ func GetCloudFunctionAttrsE(t testing.TestingT, ctx context.Context, projectID s
 		return nil, err
 	}
 
-	return GetCloudFunctionAttrsWithClient(ctx, service, projectID, region, functionID)
+	return GetCloudFunctionV2AttrsWithClient(ctx, service, projectID, region, functionID)
 }
 
-// GetCloudFunctionAttrsWithClient returns the settings Google Cloud holds for the given Cloud
+// GetCloudFunctionV2AttrsWithClient returns the settings Google Cloud holds for the given Cloud
 // Function using the supplied *cloudfunctions.Service. Prefer this variant in unit tests where the
 // service is backed by an httptest fake server (see cloudfunctions_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
-func GetCloudFunctionAttrsWithClient(ctx context.Context, service *cloudfunctions.Service, projectID string, region string, functionID string) (*cloudfunctions.Function, error) {
+func GetCloudFunctionV2AttrsWithClient(ctx context.Context, service *cloudfunctions.Service, projectID string, region string, functionID string) (*cloudfunctions.Function, error) {
 	name := fmt.Sprintf("projects/%s/locations/%s/functions/%s", projectID, region, functionID)
 
 	function, err := service.Projects.Locations.Functions.Get(name).Context(ctx).Do()

@@ -40,7 +40,7 @@ func TestTasksQueueAttrsWithClient(t *testing.T) {
 		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/queues/gw-library-test","state":"PAUSED","rateLimits":{"maxDispatchesPerSecond":2.5,"maxConcurrentDispatches":3},"retryConfig":{"maxAttempts":7,"maxRetryDuration":"600s"}}`))
 	})
 
-	queue, err := gcp.GetTasksQueueAttrsWithClient(context.Background(), newFakeCloudTasksService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	queue, err := gcp.GetCloudTasksQueueAttrsWithClient(context.Background(), newFakeCloudTasksService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	assert.Equal(t, "PAUSED", queue.State)
@@ -59,7 +59,7 @@ func TestTasksQueueAttrsWithClientMissingQueue(t *testing.T) {
 
 	// The error names the queue and everything that identifies it, and each of those is a value no
 	// other part of the message contains, or its check could not fail.
-	_, err := gcp.GetTasksQueueAttrsWithClient(context.Background(), newFakeCloudTasksService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	_, err := gcp.GetCloudTasksQueueAttrsWithClient(context.Background(), newFakeCloudTasksService(t, handler), "gw-library-test-project", "us-central1", "gone")
 	require.ErrorContains(t, err, "does not exist")
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "us-central1")

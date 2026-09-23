@@ -18,15 +18,15 @@ import (
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetCloudTasksQueueAttrs(t testing.TestingT, ctx context.Context, projectID string, region string, queueID string) *cloudtasks.Queue {
-	queue, err := GetTasksQueueAttrsE(t, ctx, projectID, region, queueID)
+	queue, err := GetCloudTasksQueueAttrsE(t, ctx, projectID, region, queueID)
 	require.NoError(t, err)
 
 	return queue
 }
 
-// GetTasksQueueAttrsE returns the settings Google Cloud holds for the given Cloud Tasks queue.
+// GetCloudTasksQueueAttrsE returns the settings Google Cloud holds for the given Cloud Tasks queue.
 // The ctx parameter supports cancellation and timeouts.
-func GetTasksQueueAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, queueID string) (*cloudtasks.Queue, error) {
+func GetCloudTasksQueueAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, queueID string) (*cloudtasks.Queue, error) {
 	logger.Default.Logf(t, "Getting settings for Cloud Tasks queue %s in region %s in project %s", queueID, region, projectID)
 
 	service, err := NewCloudTasksServiceE(t, ctx)
@@ -34,14 +34,14 @@ func GetTasksQueueAttrsE(t testing.TestingT, ctx context.Context, projectID stri
 		return nil, err
 	}
 
-	return GetTasksQueueAttrsWithClient(ctx, service, projectID, region, queueID)
+	return GetCloudTasksQueueAttrsWithClient(ctx, service, projectID, region, queueID)
 }
 
-// GetTasksQueueAttrsWithClient returns the settings Google Cloud holds for the given Cloud Tasks
+// GetCloudTasksQueueAttrsWithClient returns the settings Google Cloud holds for the given Cloud Tasks
 // queue using the supplied *cloudtasks.Service. Prefer this variant in unit tests where the service
 // is backed by an httptest fake server (see cloudtasks_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
-func GetTasksQueueAttrsWithClient(ctx context.Context, service *cloudtasks.Service, projectID string, region string, queueID string) (*cloudtasks.Queue, error) {
+func GetCloudTasksQueueAttrsWithClient(ctx context.Context, service *cloudtasks.Service, projectID string, region string, queueID string) (*cloudtasks.Queue, error) {
 	name := fmt.Sprintf("projects/%s/locations/%s/queues/%s", projectID, region, queueID)
 
 	queue, err := service.Projects.Locations.Queues.Get(name).Context(ctx).Do()

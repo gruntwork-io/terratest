@@ -40,7 +40,7 @@ func TestCloudFunctionAttrsWithClient(t *testing.T) {
 		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/functions/gw-library-test","description":"created by terratest","state":"ACTIVE","labels":{"purpose":"terratest"},"buildConfig":{"runtime":"go123","entryPoint":"Hello"},"serviceConfig":{"availableMemory":"256M","timeoutSeconds":30,"maxInstanceCount":2}}`))
 	})
 
-	function, err := gcp.GetCloudFunctionAttrsWithClient(context.Background(), newFakeCloudFunctionsService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	function, err := gcp.GetCloudFunctionV2AttrsWithClient(context.Background(), newFakeCloudFunctionsService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	assert.Equal(t, "ACTIVE", function.State)
@@ -60,7 +60,7 @@ func TestCloudFunctionAttrsWithClientMissingFunction(t *testing.T) {
 
 	// The error names the function and everything that identifies it, and each of those is a value
 	// no other part of the message contains, or its check could not fail.
-	_, err := gcp.GetCloudFunctionAttrsWithClient(context.Background(), newFakeCloudFunctionsService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	_, err := gcp.GetCloudFunctionV2AttrsWithClient(context.Background(), newFakeCloudFunctionsService(t, handler), "gw-library-test-project", "us-central1", "gone")
 	require.ErrorContains(t, err, "does not exist")
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "us-central1")

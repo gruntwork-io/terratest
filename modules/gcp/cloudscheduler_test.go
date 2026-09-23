@@ -41,7 +41,7 @@ func TestSchedulerJobAttrsWithClient(t *testing.T) {
 		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/jobs/gw-library-test","description":"created by terratest","schedule":"0 4 * * *","timeZone":"Etc/UTC","state":"PAUSED","pubsubTarget":{"topicName":"projects/gw-library-test-project/topics/gw-library-test","data":"aGVsbG8="}}`))
 	})
 
-	job, err := gcp.GetSchedulerJobAttrsWithClient(context.Background(), newFakeCloudSchedulerService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	job, err := gcp.GetCloudSchedulerJobAttrsWithClient(context.Background(), newFakeCloudSchedulerService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	assert.Equal(t, "0 4 * * *", job.Schedule)
@@ -60,7 +60,7 @@ func TestSchedulerJobAttrsWithClientMissingJob(t *testing.T) {
 
 	// The error names the job and everything that identifies it, and each of those is a value no
 	// other part of the message contains, or its check could not fail.
-	_, err := gcp.GetSchedulerJobAttrsWithClient(context.Background(), newFakeCloudSchedulerService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	_, err := gcp.GetCloudSchedulerJobAttrsWithClient(context.Background(), newFakeCloudSchedulerService(t, handler), "gw-library-test-project", "us-central1", "gone")
 	require.ErrorContains(t, err, "does not exist")
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "us-central1")

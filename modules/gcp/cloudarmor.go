@@ -10,22 +10,22 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-// FetchSecurityPolicyContext queries GCP to return the settings it holds for the given Cloud Armor
+// FetchSecurityPolicy queries GCP to return the settings it holds for the given Cloud Armor
 // security policy, so a test can assert on what was actually created rather than only that it
 // exists. The rules come back with the policy, including the default rule Google adds.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchSecurityPolicyContext(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.SecurityPolicy {
-	policy, err := FetchSecurityPolicyContextE(t, ctx, projectID, name)
+func FetchSecurityPolicy(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.SecurityPolicy {
+	policy, err := FetchSecurityPolicyE(t, ctx, projectID, name)
 	require.NoError(t, err)
 
 	return policy
 }
 
-// FetchSecurityPolicyContextE queries GCP to return the settings it holds for the given Cloud Armor
+// FetchSecurityPolicyE queries GCP to return the settings it holds for the given Cloud Armor
 // security policy.
 // The ctx parameter supports cancellation and timeouts.
-func FetchSecurityPolicyContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.SecurityPolicy, error) {
+func FetchSecurityPolicyE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.SecurityPolicy, error) {
 	logger.Default.Logf(t, "Getting security policy %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)

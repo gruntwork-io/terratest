@@ -96,20 +96,20 @@ func FetchInstanceWithClient(ctx context.Context, service *compute.Service, proj
 	return nil, fmt.Errorf("compute Instance %s could not be found in project %s", name, projectID)
 }
 
-// FetchNetworkContext queries GCP to return the settings it holds for the given VPC network, so a
+// FetchNetwork queries GCP to return the settings it holds for the given VPC network, so a
 // test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchNetworkContext(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Network {
-	network, err := FetchNetworkContextE(t, ctx, projectID, name)
+func FetchNetwork(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Network {
+	network, err := FetchNetworkE(t, ctx, projectID, name)
 	require.NoError(t, err)
 
 	return network
 }
 
-// FetchNetworkContextE queries GCP to return the settings it holds for the given VPC network.
+// FetchNetworkE queries GCP to return the settings it holds for the given VPC network.
 // The ctx parameter supports cancellation and timeouts.
-func FetchNetworkContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Network, error) {
+func FetchNetworkE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Network, error) {
 	logger.Default.Logf(t, "Getting network %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)
@@ -133,20 +133,20 @@ func FetchNetworkWithClient(ctx context.Context, service *compute.Service, proje
 	return network, nil
 }
 
-// FetchFirewallContext queries GCP to return the settings it holds for the given firewall rule, so
+// FetchFirewall queries GCP to return the settings it holds for the given firewall rule, so
 // a test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchFirewallContext(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Firewall {
-	firewall, err := FetchFirewallContextE(t, ctx, projectID, name)
+func FetchFirewall(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Firewall {
+	firewall, err := FetchFirewallE(t, ctx, projectID, name)
 	require.NoError(t, err)
 
 	return firewall
 }
 
-// FetchFirewallContextE queries GCP to return the settings it holds for the given firewall rule.
+// FetchFirewallE queries GCP to return the settings it holds for the given firewall rule.
 // The ctx parameter supports cancellation and timeouts.
-func FetchFirewallContextE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Firewall, error) {
+func FetchFirewallE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Firewall, error) {
 	logger.Default.Logf(t, "Getting firewall rule %s", name)
 
 	service, err := NewComputeServiceContextE(t, ctx)

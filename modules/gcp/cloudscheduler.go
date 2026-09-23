@@ -18,15 +18,15 @@ import (
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetCloudSchedulerJobAttrs(t testing.TestingT, ctx context.Context, projectID string, region string, jobID string) *cloudscheduler.Job {
-	job, err := GetSchedulerJobAttrsE(t, ctx, projectID, region, jobID)
+	job, err := GetCloudSchedulerJobAttrsE(t, ctx, projectID, region, jobID)
 	require.NoError(t, err)
 
 	return job
 }
 
-// GetSchedulerJobAttrsE returns the settings Google Cloud holds for the given Cloud Scheduler job.
+// GetCloudSchedulerJobAttrsE returns the settings Google Cloud holds for the given Cloud Scheduler job.
 // The ctx parameter supports cancellation and timeouts.
-func GetSchedulerJobAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, jobID string) (*cloudscheduler.Job, error) {
+func GetCloudSchedulerJobAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, jobID string) (*cloudscheduler.Job, error) {
 	logger.Default.Logf(t, "Getting settings for Cloud Scheduler job %s in region %s in project %s", jobID, region, projectID)
 
 	service, err := NewCloudSchedulerServiceE(t, ctx)
@@ -34,14 +34,14 @@ func GetSchedulerJobAttrsE(t testing.TestingT, ctx context.Context, projectID st
 		return nil, err
 	}
 
-	return GetSchedulerJobAttrsWithClient(ctx, service, projectID, region, jobID)
+	return GetCloudSchedulerJobAttrsWithClient(ctx, service, projectID, region, jobID)
 }
 
-// GetSchedulerJobAttrsWithClient returns the settings Google Cloud holds for the given Cloud
+// GetCloudSchedulerJobAttrsWithClient returns the settings Google Cloud holds for the given Cloud
 // Scheduler job using the supplied *cloudscheduler.Service. Prefer this variant in unit tests where
 // the service is backed by an httptest fake server (see cloudscheduler_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
-func GetSchedulerJobAttrsWithClient(ctx context.Context, service *cloudscheduler.Service, projectID string, region string, jobID string) (*cloudscheduler.Job, error) {
+func GetCloudSchedulerJobAttrsWithClient(ctx context.Context, service *cloudscheduler.Service, projectID string, region string, jobID string) (*cloudscheduler.Job, error) {
 	name := fmt.Sprintf("projects/%s/locations/%s/jobs/%s", projectID, region, jobID)
 
 	job, err := service.Projects.Locations.Jobs.Get(name).Context(ctx).Do()

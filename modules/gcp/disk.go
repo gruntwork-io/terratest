@@ -10,21 +10,21 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-// FetchDiskContext queries GCP to return the settings it holds for the given zonal persistent
+// FetchDisk queries GCP to return the settings it holds for the given zonal persistent
 // disk, so a test can assert on what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func FetchDiskContext(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *compute.Disk {
-	disk, err := FetchDiskContextE(t, ctx, projectID, zone, name)
+func FetchDisk(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *compute.Disk {
+	disk, err := FetchDiskE(t, ctx, projectID, zone, name)
 	require.NoError(t, err)
 
 	return disk
 }
 
-// FetchDiskContextE queries GCP to return the settings it holds for the given zonal persistent
+// FetchDiskE queries GCP to return the settings it holds for the given zonal persistent
 // disk.
 // The ctx parameter supports cancellation and timeouts.
-func FetchDiskContextE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*compute.Disk, error) {
+func FetchDiskE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*compute.Disk, error) {
 	logger.Default.Logf(t, "Getting disk %s in zone %s", name, zone)
 
 	service, err := NewComputeServiceContextE(t, ctx)
