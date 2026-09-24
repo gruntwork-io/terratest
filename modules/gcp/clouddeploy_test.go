@@ -114,3 +114,105 @@ func TestGetDeployTargetAttrsWithClientMissingTarget(t *testing.T) {
 	require.ErrorContains(t, err, "us-central1")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetCloudDeployAutomationAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an automation the terraform-google-devtools automation module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/deliveryPipelines/gw-library-test/automations/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/deliveryPipelines/gw-library-test/automations/gw-library-test","description":"created by terratest","serviceAccount":"gw-library-test@gw-library-test-project.iam.gserviceaccount.com","suspended":true,"selector":{"targets":[{"id":"gw-library-test"}]},"rules":[{"promoteReleaseRule":{"id":"promote","wait":"3600s"}}]}`))
+	})
+
+	automation, err := gcp.GetCloudDeployAutomationAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", automation.Description)
+	assert.True(t, automation.Suspended)
+	require.Len(t, automation.Rules, 1)
+	require.NotNil(t, automation.Rules[0].PromoteReleaseRule)
+	assert.Equal(t, "3600s", automation.Rules[0].PromoteReleaseRule.Wait)
+}
+
+func TestGetCloudDeployCustomTargetTypeAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a target type the terraform-google-devtools custom target type module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/customTargetTypes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/customTargetTypes/gw-library-test","description":"created by terratest","customActions":{"renderAction":"render","deployAction":"deploy"},"labels":{"purpose":"terratest"}}`))
+	})
+
+	targetType, err := gcp.GetCloudDeployCustomTargetTypeAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", targetType.Description)
+	require.NotNil(t, targetType.CustomActions)
+	assert.Equal(t, "deploy", targetType.CustomActions.DeployAction)
+}
+
+func TestGetCloudDeployPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a policy the terraform-google-devtools deploy policy module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/deployPolicies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/deployPolicies/gw-library-test","description":"created by terratest","suspended":true,"selectors":[{"deliveryPipeline":{"id":"gw-library-test"}}],"rules":[{"rolloutRestriction":{"id":"weekend","actions":["ADVANCE"]}}]}`))
+	})
+
+	policy, err := gcp.GetCloudDeployPolicyAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", policy.Description)
+	assert.True(t, policy.Suspended)
+	require.Len(t, policy.Rules, 1)
+	require.NotNil(t, policy.Rules[0].RolloutRestriction)
+	assert.Equal(t, []string{"ADVANCE"}, policy.Rules[0].RolloutRestriction.Actions)
+}
+
+func TestGetCloudDeployDeliveryPipelineIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a pipeline the terraform-google-devtools delivery pipeline IAM policy module granted
+	// access on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/deliveryPipelines/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/clouddeploy.releaser","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.GetCloudDeployDeliveryPipelineIamPolicyAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/clouddeploy.releaser", policy.Bindings[0].Role)
+}
+
+func TestGetCloudDeployTargetIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a target the terraform-google-devtools target IAM policy module granted
+	// access on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/targets/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/clouddeploy.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.GetCloudDeployTargetIamPolicyAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/clouddeploy.viewer", policy.Bindings[0].Role)
+}
