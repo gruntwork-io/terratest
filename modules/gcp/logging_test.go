@@ -158,3 +158,123 @@ func TestGetLogBucketAttrsWithClientMissingBucket(t *testing.T) {
 	require.ErrorContains(t, err, "us-central1")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetLogExclusionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an exclusion the terraform-google-observability project exclusion module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v2/projects/gw-library-test-project/exclusions/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","filter":"severity < WARNING","disabled":true}`))
+	})
+
+	exclusion, err := gcp.GetLogExclusionAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", exclusion.Description)
+	assert.Equal(t, "severity < WARNING", exclusion.Filter)
+	assert.True(t, exclusion.Disabled)
+}
+
+func TestGetLogViewAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a view the terraform-google-observability log view module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v2/projects/gw-library-test-project/locations/global/buckets/gw-library-test/views/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/buckets/gw-library-test/views/gw-library-test","description":"created by terratest","filter":"LOG_ID(\"terratest\")"}`))
+	})
+
+	view, err := gcp.GetLogViewAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "global", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", view.Description)
+	assert.Equal(t, `LOG_ID("terratest")`, view.Filter)
+}
+
+func TestGetLogLinkAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a link the terraform-google-observability linked dataset module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v2/projects/gw-library-test-project/locations/global/buckets/gw-library-test/links/gw_library_test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/buckets/gw-library-test/links/gw_library_test","description":"created by terratest","lifecycleState":"ACTIVE","bigqueryDataset":{"datasetId":"bigquery.googleapis.com/projects/gw-library-test-project/datasets/gw_library_test"}}`))
+	})
+
+	link, err := gcp.GetLogLinkAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "global", "gw-library-test", "gw_library_test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", link.Description)
+	assert.Equal(t, "ACTIVE", link.LifecycleState)
+	require.NotNil(t, link.BigqueryDataset)
+	assert.Equal(t, "bigquery.googleapis.com/projects/gw-library-test-project/datasets/gw_library_test", link.BigqueryDataset.DatasetId)
+}
+
+func TestGetLogScopeAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a scope the terraform-google-observability log scope module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v2/projects/gw-library-test-project/locations/global/logScopes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/logScopes/gw-library-test","description":"created by terratest","resourceNames":["projects/gw-library-test-project"]}`))
+	})
+
+	scope, err := gcp.GetLogScopeAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "global", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", scope.Description)
+	assert.Equal(t, []string{"projects/gw-library-test-project"}, scope.ResourceNames)
+}
+
+func TestGetLogSavedQueryAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a saved query the terraform-google-observability saved query module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v2/projects/gw-library-test-project/locations/global/savedQueries/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/savedQueries/gw-library-test","displayName":"terratest query","description":"created by terratest","visibility":"PRIVATE","loggingQuery":{"filter":"severity >= ERROR","summaryFieldStart":0,"summaryFieldEnd":20}}`))
+	})
+
+	query, err := gcp.GetLogSavedQueryAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "global", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest query", query.DisplayName)
+	assert.Equal(t, "PRIVATE", query.Visibility)
+	require.NotNil(t, query.LoggingQuery)
+	assert.Equal(t, "severity >= ERROR", query.LoggingQuery.Filter)
+	assert.Equal(t, int64(20), query.LoggingQuery.SummaryFieldEnd)
+}
+
+func TestGetLogViewIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a view the terraform-google-observability log view IAM policy module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v2/projects/gw-library-test-project/locations/global/buckets/gw-library-test/views/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/logging.viewAccessor","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.GetLogViewIamPolicyAttrsWithClient(context.Background(), newFakeLoggingService(t, handler), "gw-library-test-project", "global", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/logging.viewAccessor", policy.Bindings[0].Role)
+}
