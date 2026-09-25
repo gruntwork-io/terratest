@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
@@ -64,4 +65,23 @@ func TestTasksQueueAttrsWithClientMissingQueue(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "us-central1")
 	require.ErrorContains(t, err, "gw-library-test-project")
+}
+
+func TestGetCloudTasksQueueIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a queue the terraform-google-messaging
+	// queue IAM policy module granted access on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/queues/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/cloudtasks.enqueuer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.GetCloudTasksQueueIamPolicyAttrsWithClient(context.Background(), newFakeCloudTasksService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/cloudtasks.enqueuer", policy.Bindings[0].Role)
 }

@@ -69,3 +69,23 @@ func TestGetInsightsViewAttrsWithClientMissingView(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetContactCenterInsightsAnalysisRuleAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a rule the terraform-google-business-apps analysis rule module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/analysisRules/1234567890"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/37950160017/locations/us-central1/analysisRules/1234567890","displayName":"terratest rule","conversationFilter":"agent_id=\"terratest\"","analysisPercentage":0.5,"active":false}`))
+	})
+
+	rule, err := gcp.GetContactCenterInsightsAnalysisRuleAttrsWithClient(context.Background(), newFakeContactCenterInsightsService(t, handler), "gw-library-test-project", "us-central1", "1234567890")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest rule", rule.DisplayName)
+	assert.InDelta(t, 0.5, rule.AnalysisPercentage, 0.001)
+	assert.False(t, rule.Active)
+}
