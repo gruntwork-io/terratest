@@ -190,3 +190,338 @@ func TestFetchGlobalForwardingRuleWithClientMissingRule(t *testing.T) {
 	_, err := gcp.FetchGlobalForwardingRuleWithClient(context.Background(), newFakeComputeService(t, respond(t, "", "", http.StatusNotFound, "")), "gw-library-test-project", "gone")
 	require.ErrorContains(t, err, "GlobalForwardingRules.Get(gw-library-test-project, gone)")
 }
+
+func TestFetchBackendBucketWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking backend bucket module sets, because the point
+	// of reading settings back is asserting a module configured the bucket it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/backendBuckets/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","bucketName":"gw-library-test-bucket","enableCdn":true}`))
+	})
+
+	bucket, err := gcp.FetchBackendBucketWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", bucket.Name)
+	assert.Equal(t, "created by terratest", bucket.Description)
+	assert.Equal(t, "gw-library-test-bucket", bucket.BucketName)
+	assert.True(t, bucket.EnableCdn)
+}
+
+func TestFetchHTTPHealthCheckWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking HTTP health check module sets, because the point
+	// of reading settings back is asserting a module configured the check it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/httpHealthChecks/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","port":8080,"requestPath":"/healthz","checkIntervalSec":15,"timeoutSec":10,"healthyThreshold":3,"unhealthyThreshold":4}`))
+	})
+
+	healthCheck, err := gcp.FetchHTTPHealthCheckWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", healthCheck.Name)
+	assert.Equal(t, int64(8080), healthCheck.Port)
+	assert.Equal(t, "/healthz", healthCheck.RequestPath)
+	assert.Equal(t, int64(15), healthCheck.CheckIntervalSec)
+	assert.Equal(t, int64(4), healthCheck.UnhealthyThreshold)
+}
+
+func TestFetchHTTPSHealthCheckWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking HTTPS health check module sets, because the point
+	// of reading settings back is asserting a module configured the check it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/httpsHealthChecks/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","port":8443,"requestPath":"/healthz","checkIntervalSec":15,"timeoutSec":10}`))
+	})
+
+	healthCheck, err := gcp.FetchHTTPSHealthCheckWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", healthCheck.Name)
+	assert.Equal(t, int64(8443), healthCheck.Port)
+	assert.Equal(t, "/healthz", healthCheck.RequestPath)
+	assert.Equal(t, int64(10), healthCheck.TimeoutSec)
+}
+
+func TestFetchSSLPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking SSL policy module sets, because the point
+	// of reading settings back is asserting a module configured the policy it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/sslPolicies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","profile":"RESTRICTED","minTlsVersion":"TLS_1_2"}`))
+	})
+
+	policy, err := gcp.FetchSSLPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", policy.Name)
+	assert.Equal(t, "RESTRICTED", policy.Profile)
+	assert.Equal(t, "TLS_1_2", policy.MinTlsVersion)
+}
+
+func TestFetchTargetHTTPProxyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking target HTTP proxy module sets, because the point
+	// of reading settings back is asserting a module configured the proxy it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/targetHttpProxies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","urlMap":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/global/urlMaps/gw-library-test"}`))
+	})
+
+	proxy, err := gcp.FetchTargetHTTPProxyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", proxy.Name)
+	assert.Equal(t, "created by terratest", proxy.Description)
+	assert.True(t, strings.HasSuffix(proxy.UrlMap, "/urlMaps/gw-library-test"))
+}
+
+func TestFetchTargetPoolWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking target pool module sets, because the point
+	// of reading settings back is asserting a module configured the pool it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/targetPools/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","sessionAffinity":"CLIENT_IP","failoverRatio":0.5}`))
+	})
+
+	pool, err := gcp.FetchTargetPoolWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", pool.Name)
+	assert.Equal(t, "CLIENT_IP", pool.SessionAffinity)
+	assert.InDelta(t, 0.5, pool.FailoverRatio, 0.001)
+}
+
+func TestFetchNetworkEndpointGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking network endpoint group module sets, because the point
+	// of reading settings back is asserting a module configured the group it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/networkEndpointGroups/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","networkEndpointType":"GCE_VM_IP_PORT","defaultPort":8080,"size":0}`))
+	})
+
+	group, err := gcp.FetchNetworkEndpointGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", group.Name)
+	assert.Equal(t, "GCE_VM_IP_PORT", group.NetworkEndpointType)
+	assert.Equal(t, int64(8080), group.DefaultPort)
+}
+
+func TestFetchRegionHealthCheckWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking region health check module sets, because the point
+	// of reading settings back is asserting a module configured the check it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/healthChecks/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","type":"TCP","checkIntervalSec":15,"timeoutSec":10,"tcpHealthCheck":{"port":8080}}`))
+	})
+
+	healthCheck, err := gcp.FetchRegionHealthCheckWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", healthCheck.Name)
+	assert.Equal(t, "TCP", healthCheck.Type)
+	assert.Equal(t, int64(15), healthCheck.CheckIntervalSec)
+	require.NotNil(t, healthCheck.TcpHealthCheck)
+	assert.Equal(t, int64(8080), healthCheck.TcpHealthCheck.Port)
+}
+
+func TestFetchRegionBackendServiceWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking region backend service module sets, because the point
+	// of reading settings back is asserting a module configured the service it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/backendServices/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","protocol":"TCP","loadBalancingScheme":"INTERNAL","sessionAffinity":"CLIENT_IP","timeoutSec":25}`))
+	})
+
+	backendService, err := gcp.FetchRegionBackendServiceWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", backendService.Name)
+	assert.Equal(t, "TCP", backendService.Protocol)
+	assert.Equal(t, "INTERNAL", backendService.LoadBalancingScheme)
+	assert.Equal(t, int64(25), backendService.TimeoutSec)
+}
+
+func TestFetchForwardingRuleWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking forwarding rule module sets, because the point
+	// of reading settings back is asserting a module configured the rule it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/forwardingRules/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","loadBalancingScheme":"INTERNAL","ipProtocol":"TCP","ports":["8080"],"allowGlobalAccess":true}`))
+	})
+
+	rule, err := gcp.FetchForwardingRuleWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", rule.Name)
+	assert.Equal(t, "INTERNAL", rule.LoadBalancingScheme)
+	assert.Equal(t, "TCP", rule.IPProtocol)
+	assert.True(t, rule.AllowGlobalAccess)
+	require.Len(t, rule.Ports, 1)
+	assert.Equal(t, "8080", rule.Ports[0])
+}
+
+func TestFetchRegionTargetHTTPSProxyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking region target HTTPS proxy module sets, because the point
+	// of reading settings back is asserting a module configured the proxy it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/targetHttpsProxies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","urlMap":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/urlMaps/gw-library-test","sslCertificates":["https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/sslCertificates/gw-library-test"]}`))
+	})
+
+	proxy, err := gcp.FetchRegionTargetHTTPSProxyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", proxy.Name)
+	assert.True(t, strings.HasSuffix(proxy.UrlMap, "/urlMaps/gw-library-test"))
+	require.Len(t, proxy.SslCertificates, 1)
+	assert.True(t, strings.HasSuffix(proxy.SslCertificates[0], "/sslCertificates/gw-library-test"))
+}
+
+func TestFetchRegionTargetTCPProxyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking region target TCP proxy module sets, because the point
+	// of reading settings back is asserting a module configured the proxy it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/targetTcpProxies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","proxyHeader":"PROXY_V1","service":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/backendServices/gw-library-test"}`))
+	})
+
+	proxy, err := gcp.FetchRegionTargetTCPProxyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", proxy.Name)
+	assert.Equal(t, "PROXY_V1", proxy.ProxyHeader)
+	assert.True(t, strings.HasSuffix(proxy.Service, "/backendServices/gw-library-test"))
+}
+
+func TestFetchRegionCompositeHealthCheckWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking region composite health check module sets, because the point
+	// of reading settings back is asserting a module configured the check it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/compositeHealthChecks/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","healthDestination":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/backendServices/gw-library-test"}`))
+	})
+
+	check, err := gcp.FetchRegionCompositeHealthCheckWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", check.Name)
+	assert.Equal(t, "created by terratest", check.Description)
+	assert.True(t, strings.HasSuffix(check.HealthDestination, "/backendServices/gw-library-test"))
+}
+
+func TestFetchRegionHealthAggregationPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking region health aggregation policy module sets, because the point
+	// of reading settings back is asserting a module configured the policy it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/healthAggregationPolicies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","healthyPercentThreshold":60,"minHealthyThreshold":2,"policyType":"BACKEND_SERVICE_POLICY"}`))
+	})
+
+	policy, err := gcp.FetchRegionHealthAggregationPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", policy.Name)
+	assert.Equal(t, int64(60), policy.HealthyPercentThreshold)
+	assert.Equal(t, int64(2), policy.MinHealthyThreshold)
+	assert.Equal(t, "BACKEND_SERVICE_POLICY", policy.PolicyType)
+}
+
+func TestFetchRegionHealthSourceWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking region health source module sets, because the point
+	// of reading settings back is asserting a module configured the source it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/healthSources/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","sourceType":"BACKEND_SERVICE","sources":["https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/backendServices/gw-library-test"]}`))
+	})
+
+	source, err := gcp.FetchRegionHealthSourceWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", source.Name)
+	assert.Equal(t, "BACKEND_SERVICE", source.SourceType)
+	require.Len(t, source.Sources, 1)
+	assert.True(t, strings.HasSuffix(source.Sources[0], "/backendServices/gw-library-test"))
+}
+
+func TestFetchNetworkEndpointsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-networking network endpoint module sets, because the point
+	// of reading settings back is asserting a module configured the endpoint it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/networkEndpointGroups/gw-library-test/listNetworkEndpoints"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"items":[{"networkEndpoint":{"ipAddress":"10.42.0.5","port":8080,"instance":"gw-library-test"}}]}`))
+	})
+
+	endpoints, err := gcp.FetchNetworkEndpointsWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, endpoints, 1, "the group should hold exactly the endpoint the fixture attached")
+	require.NotNil(t, endpoints[0].NetworkEndpoint)
+	assert.Equal(t, "10.42.0.5", endpoints[0].NetworkEndpoint.IpAddress)
+	assert.Equal(t, int64(8080), endpoints[0].NetworkEndpoint.Port)
+	assert.Equal(t, "gw-library-test", endpoints[0].NetworkEndpoint.Instance)
+}
