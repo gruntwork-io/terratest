@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -108,4 +109,52 @@ func GetCryptoKeyAttrsWithClient(ctx context.Context, service *cloudkms.Service,
 // The ctx parameter supports cancellation and timeouts.
 func NewCloudKMSServiceE(t testing.TestingT, ctx context.Context) (*cloudkms.Service, error) {
 	return cloudkms.NewService(ctx, append(withOptions(), option.WithScopes(cloudkms.CloudPlatformScope))...)
+}
+
+// DecryptSecretCiphertext returns the plaintext Cloud KMS gets back from the given ciphertext, so a
+// test can assert that what a module encrypted is what it was given. The ciphertext is base64 as the
+// provider returns it, and the plaintext comes back decoded.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func DecryptSecretCiphertext(t testing.TestingT, ctx context.Context, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string) string {
+	plaintext, err := DecryptSecretCiphertextE(t, ctx, projectID, location, keyRingID, cryptoKeyID, ciphertext)
+	require.NoError(t, err)
+
+	return plaintext
+}
+
+// DecryptSecretCiphertextE returns the plaintext Cloud KMS gets back from the given ciphertext.
+// The ctx parameter supports cancellation and timeouts.
+func DecryptSecretCiphertextE(t testing.TestingT, ctx context.Context, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string) (string, error) {
+	logger.Default.Logf(t, "Decrypting a ciphertext with key %s in key ring %s in %s in project %s", cryptoKeyID, keyRingID, location, projectID)
+
+	service, err := NewCloudKMSServiceE(t, ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return DecryptSecretCiphertextWithClient(ctx, service, projectID, location, keyRingID, cryptoKeyID, ciphertext)
+}
+
+// DecryptSecretCiphertextWithClient returns the plaintext Cloud KMS gets back from the given
+// ciphertext using the supplied *cloudkms.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see kms_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func DecryptSecretCiphertextWithClient(ctx context.Context, service *cloudkms.Service, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string) (string, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s", projectID, location, keyRingID, cryptoKeyID)
+
+	// The call takes a request body rather than a plain resource name, and returns the plaintext
+	// base64 encoded whatever the plaintext was.
+	response, err := service.Projects.Locations.KeyRings.CryptoKeys.Decrypt(name,
+		&cloudkms.DecryptRequest{Ciphertext: ciphertext}).Context(ctx).Do()
+	if err != nil {
+		return "", fmt.Errorf("failed to decrypt a ciphertext with key %s in key ring %s in %s in project %s: %w", cryptoKeyID, keyRingID, location, projectID, err)
+	}
+
+	plaintext, err := base64.StdEncoding.DecodeString(response.Plaintext)
+	if err != nil {
+		return "", fmt.Errorf("Cloud KMS returned a plaintext that is not base64: %w", err)
+	}
+
+	return string(plaintext), nil
 }
