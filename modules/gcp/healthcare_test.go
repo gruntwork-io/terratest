@@ -65,3 +65,80 @@ func TestGetHealthcareDatasetAttrsWithClientMissingDataset(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetHealthcareDicomStoreAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a store the terraform-google-healthcare DICOM store module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/dicomStores/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/dicomStores/gw-library-test","labels":{"purpose":"terratest"}}`))
+	})
+
+	store, err := gcp.GetHealthcareDicomStoreAttrsWithClient(context.Background(), newFakeHealthcareService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest", store.Labels["purpose"])
+}
+
+func TestGetHealthcareFhirStoreAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a store the terraform-google-healthcare FHIR store module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/fhirStores/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/fhirStores/gw-library-test","version":"R4","enableUpdateCreate":true,"disableReferentialIntegrity":true,"labels":{"purpose":"terratest"}}`))
+	})
+
+	store, err := gcp.GetHealthcareFhirStoreAttrsWithClient(context.Background(), newFakeHealthcareService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "R4", store.Version)
+	assert.True(t, store.EnableUpdateCreate)
+	assert.True(t, store.DisableReferentialIntegrity)
+}
+
+func TestGetHealthcareHl7V2StoreAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a store the terraform-google-healthcare HL7v2 store module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/hl7V2Stores/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/hl7V2Stores/gw-library-test","rejectDuplicateMessage":true,"parserConfig":{"version":"V3","allowNullHeader":true},"labels":{"purpose":"terratest"}}`))
+	})
+
+	store, err := gcp.GetHealthcareHl7V2StoreAttrsWithClient(context.Background(), newFakeHealthcareService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.True(t, store.RejectDuplicateMessage)
+	require.NotNil(t, store.ParserConfig)
+	assert.Equal(t, "V3", store.ParserConfig.Version)
+}
+
+func TestGetHealthcareConsentStoreAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a store the terraform-google-healthcare consent store module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/consentStores/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/datasets/gw-library-test/consentStores/gw-library-test","defaultConsentTtl":"90000s","enableConsentCreateOnUpdate":true,"labels":{"purpose":"terratest"}}`))
+	})
+
+	store, err := gcp.GetHealthcareConsentStoreAttrsWithClient(context.Background(), newFakeHealthcareService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "90000s", store.DefaultConsentTtl)
+	assert.True(t, store.EnableConsentCreateOnUpdate)
+}
