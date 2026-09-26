@@ -130,7 +130,16 @@ func GetTagBindingsAttrsE(t testing.TestingT, ctx context.Context, parent string
 // service is backed by an httptest fake server (see cloudresourcemanager_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func GetTagBindingsAttrsWithClient(ctx context.Context, service *cloudresourcemanager.Service, parent string) ([]*cloudresourcemanager.TagBinding, error) {
-	response, err := service.TagBindings.List().Parent(parent).Context(ctx).Do()
+	// Every page, not just the first: a caller looking for the binding it made would otherwise be told
+	// the resource carries no such value when the answer was merely further down.
+	var bindings []*cloudresourcemanager.TagBinding
+
+	err := service.TagBindings.List().Parent(parent).Pages(ctx,
+		func(response *cloudresourcemanager.ListTagBindingsResponse) error {
+			bindings = append(bindings, response.TagBindings...)
+
+			return nil
+		})
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -140,7 +149,7 @@ func GetTagBindingsAttrsWithClient(ctx context.Context, service *cloudresourcema
 		return nil, fmt.Errorf("failed to list the tag bindings on %s: %w", parent, err)
 	}
 
-	return response.TagBindings, nil
+	return bindings, nil
 }
 
 // GetLienAttrs returns the settings Google Cloud holds for the given lien, so a test can assert on

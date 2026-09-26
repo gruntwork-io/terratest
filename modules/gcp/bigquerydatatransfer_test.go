@@ -49,3 +49,22 @@ func TestGetBigQueryTransferConfigAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "every 24 hours", config.Schedule)
 	assert.True(t, config.Disabled)
 }
+
+func TestGetBigQueryTransferConfigAttrsWithClientAcceptsWholeName(t *testing.T) {
+	t.Parallel()
+
+	// The Terraform resource's id is the whole resource name, built from the project number, so a
+	// caller holding it must not have a second path prefixed onto it.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/v1/projects/37950160017/locations/us-central1/transferConfigs/68d4a7d0-0000-2c0a-0000-000000000000", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/37950160017/locations/us-central1/transferConfigs/68d4a7d0-0000-2c0a-0000-000000000000","displayName":"terratest transfer","dataSourceId":"scheduled_query"}`))
+	})
+
+	config, err := gcp.GetBigQueryTransferConfigAttrsWithClient(context.Background(), newFakeBigQueryDataTransferService(t, handler),
+		"gw-library-test-project", "us-central1", "projects/37950160017/locations/us-central1/transferConfigs/68d4a7d0-0000-2c0a-0000-000000000000")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest transfer", config.DisplayName)
+}

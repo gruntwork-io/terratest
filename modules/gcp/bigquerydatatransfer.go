@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -15,7 +16,8 @@ import (
 
 // GetBigQueryTransferConfigAttrs returns the settings Google Cloud holds for the given BigQuery data transfer configuration, so a test can assert on
 // what was actually created rather than only that it exists. Google assigns a transfer configuration its id, so the caller
-// passes the one it got back rather than a name it chose.
+// passes the one it got back rather than a name it chose. The whole resource name is accepted too, because that is what the
+// Terraform resource's id is, and Google names the configuration by project number while the caller is holding an id.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetBigQueryTransferConfigAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, configID string) *bigquerydatatransfer.TransferConfig {
@@ -43,7 +45,13 @@ func GetBigQueryTransferConfigAttrsE(t testing.TestingT, ctx context.Context, pr
 // server (see bigquerydatatransfer_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func GetBigQueryTransferConfigAttrsWithClient(ctx context.Context, service *bigquerydatatransfer.Service, projectID string, location string, configID string) (*bigquerydatatransfer.TransferConfig, error) {
-	name := fmt.Sprintf("projects/%s/locations/%s/transferConfigs/%s", projectID, location, configID)
+	// Either the id on its own or the whole resource name: Google answers with a name built from the
+	// project number, and the Terraform resource's id is that name, so prefixing it again would ask for
+	// a path that does not exist.
+	name := configID
+	if !strings.Contains(configID, "/") {
+		name = fmt.Sprintf("projects/%s/locations/%s/transferConfigs/%s", projectID, location, configID)
+	}
 
 	config, err := service.Projects.Locations.TransferConfigs.Get(name).Context(ctx).Do()
 	if err != nil {

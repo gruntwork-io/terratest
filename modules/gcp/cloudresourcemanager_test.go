@@ -107,3 +107,34 @@ func TestGetTagBindingsAttrsWithClient(t *testing.T) {
 	require.Len(t, bindings, 1)
 	assert.Equal(t, "tagValues/281478044408593", bindings[0].TagValue)
 }
+
+func TestGetTagBindingsAttrsWithClientReadsEveryPage(t *testing.T) {
+	t.Parallel()
+
+	// Google pages this list, and the binding a caller is looking for may not be on the first page, so
+	// a read that stopped there would report it missing.
+	var requests int
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if r.URL.Query().Get("pageToken") == "" {
+			_, _ = w.Write([]byte(`{"tagBindings":[{"tagValue":"tagValues/111111111111"}],"nextPageToken":"second"}`))
+
+			return
+		}
+
+		assert.Equal(t, "second", r.URL.Query().Get("pageToken"))
+
+		_, _ = w.Write([]byte(`{"tagBindings":[{"tagValue":"tagValues/281478044408593"}]}`))
+	})
+
+	bindings, err := gcp.GetTagBindingsAttrsWithClient(context.Background(), newFakeResourceManagerService(t, handler), "//cloudresourcemanager.googleapis.com/projects/37950160017")
+	require.NoError(t, err)
+
+	assert.Equal(t, 2, requests, "both pages should have been asked for")
+	require.Len(t, bindings, 2)
+	assert.Equal(t, "tagValues/281478044408593", bindings[1].TagValue)
+}
