@@ -223,3 +223,65 @@ func TestGetServiceLevelObjectiveAttrsWithClientMissingSLO(t *testing.T) {
 	require.ErrorContains(t, err, "service gw-service ")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetMonitoringGroupAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a group the terraform-google-observability group module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v3/projects/gw-library-test-project/groups/1234567890"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/groups/1234567890","displayName":"terratest group","filter":"resource.metadata.tag.purpose=\"terratest\"","isCluster":true}`))
+	})
+
+	group, err := gcp.GetMonitoringGroupAttrsWithClient(context.Background(), newFakeMonitoringService(t, handler), "gw-library-test-project", "1234567890")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest group", group.DisplayName)
+	assert.Equal(t, `resource.metadata.tag.purpose="terratest"`, group.Filter)
+	assert.True(t, group.IsCluster)
+}
+
+func TestGetMetricDescriptorAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a descriptor the terraform-google-observability metric descriptor module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v3/projects/gw-library-test-project/metricDescriptors/custom.googleapis.com/terratest"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/metricDescriptors/custom.googleapis.com/terratest","type":"custom.googleapis.com/terratest","metricKind":"DELTA","valueType":"INT64","unit":"{request}","displayName":"terratest metric","labels":[{"key":"outcome","valueType":"STRING","description":"how the request ended"}]}`))
+	})
+
+	descriptor, err := gcp.GetMetricDescriptorAttrsWithClient(context.Background(), newFakeMonitoringService(t, handler), "gw-library-test-project", "custom.googleapis.com/terratest")
+	require.NoError(t, err)
+
+	assert.Equal(t, "DELTA", descriptor.MetricKind)
+	assert.Equal(t, "INT64", descriptor.ValueType)
+	assert.Equal(t, "{request}", descriptor.Unit)
+	require.Len(t, descriptor.Labels, 1)
+	assert.Equal(t, "outcome", descriptor.Labels[0].Key)
+}
+
+func TestGetMonitoringCustomServiceAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a service the terraform-google-observability custom service module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/v3/projects/gw-library-test-project/services/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/services/gw-library-test","displayName":"terratest service","userLabels":{"purpose":"terratest"},"custom":{},"telemetry":{"resourceName":"//cloudresourcemanager.googleapis.com/projects/gw-library-test-project"}}`))
+	})
+
+	customService, err := gcp.GetMonitoringCustomServiceAttrsWithClient(context.Background(), newFakeMonitoringService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest service", customService.DisplayName)
+	assert.Equal(t, "terratest", customService.UserLabels["purpose"])
+	require.NotNil(t, customService.Telemetry)
+}
