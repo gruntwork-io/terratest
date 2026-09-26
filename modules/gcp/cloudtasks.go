@@ -96,9 +96,12 @@ func GetCloudTasksQueueIamPolicyAttrsWithClient(ctx context.Context, service *cl
 	resource := fmt.Sprintf("projects/%s/locations/%s/queues/%s", projectID, location, queueID)
 
 	// This call takes a request body rather than a plain resource name, which is why it is written out
-	// here rather than following the shape of the reads around it.
+	// here rather than following the shape of the reads around it. A policy carrying a conditional
+	// binding is only returned in full at version 3, so that is what is asked for.
 	policy, err := service.Projects.Locations.Queues.GetIamPolicy(resource,
-		&cloudtasks.GetIamPolicyRequest{}).Context(ctx).Do()
+		&cloudtasks.GetIamPolicyRequest{
+			Options: &cloudtasks.GetPolicyOptions{RequestedPolicyVersion: iamPolicyVersionWithConditions},
+		}).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {

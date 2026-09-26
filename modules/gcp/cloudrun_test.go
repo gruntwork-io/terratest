@@ -133,15 +133,20 @@ func TestGetCloudRunServiceIamPolicyAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/services/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		// A conditional binding only comes back at version 3, so the read has to ask for it.
+		assert.Equal(t, "3", r.URL.Query().Get("options.requestedPolicyVersion"))
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/run.invoker","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/run.invoker","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
 	})
 
 	policy, err := gcp.GetCloudRunServiceIamPolicyAttrsWithClient(context.Background(), newFakeCloudRunService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, int64(3), policy.Version)
 	assert.Equal(t, "roles/run.invoker", policy.Bindings[0].Role)
+	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 }
 
 func TestGetCloudRunJobIamPolicyAttrsWithClient(t *testing.T) {
@@ -152,15 +157,20 @@ func TestGetCloudRunJobIamPolicyAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/jobs/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		// A conditional binding only comes back at version 3, so the read has to ask for it.
+		assert.Equal(t, "3", r.URL.Query().Get("options.requestedPolicyVersion"))
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/run.invoker","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/run.invoker","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
 	})
 
 	policy, err := gcp.GetCloudRunJobIamPolicyAttrsWithClient(context.Background(), newFakeCloudRunService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, int64(3), policy.Version)
 	assert.Equal(t, "roles/run.invoker", policy.Bindings[0].Role)
+	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 }
 
 func TestGetCloudRunWorkerPoolIamPolicyAttrsWithClient(t *testing.T) {
@@ -171,13 +181,18 @@ func TestGetCloudRunWorkerPoolIamPolicyAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/workerPools/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		// A conditional binding only comes back at version 3, so the read has to ask for it.
+		assert.Equal(t, "3", r.URL.Query().Get("options.requestedPolicyVersion"))
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/run.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/run.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
 	})
 
 	policy, err := gcp.GetCloudRunWorkerPoolIamPolicyAttrsWithClient(context.Background(), newFakeCloudRunService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, int64(3), policy.Version)
 	assert.Equal(t, "roles/run.viewer", policy.Bindings[0].Role)
+	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 }

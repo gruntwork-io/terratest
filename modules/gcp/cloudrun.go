@@ -153,6 +153,11 @@ func GetCloudRunWorkerPoolAttrsWithClient(ctx context.Context, service *run.Serv
 	return pool, nil
 }
 
+// iamPolicyVersionWithConditions is the policy version that carries conditional bindings. Google
+// returns a policy at version 1 unless asked otherwise, and a version 1 answer has no room for a
+// condition.
+const iamPolicyVersionWithConditions = 3
+
 // GetCloudRunServiceIamPolicyAttrs returns the IAM policy Google Cloud holds for the given Cloud Run
 // service, so a test can assert on who was actually granted access to it.
 // This will fail the test if there is an error.
@@ -184,7 +189,10 @@ func GetCloudRunServiceIamPolicyAttrsE(t testing.TestingT, ctx context.Context, 
 func GetCloudRunServiceIamPolicyAttrsWithClient(ctx context.Context, service *run.Service, projectID string, location string, serviceID string) (*run.GoogleIamV1Policy, error) {
 	resource := fmt.Sprintf("projects/%s/locations/%s/services/%s", projectID, location, serviceID)
 
-	policy, err := service.Projects.Locations.Services.GetIamPolicy(resource).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.Projects.Locations.Services.GetIamPolicy(resource).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -228,7 +236,10 @@ func GetCloudRunJobIamPolicyAttrsE(t testing.TestingT, ctx context.Context, proj
 func GetCloudRunJobIamPolicyAttrsWithClient(ctx context.Context, service *run.Service, projectID string, location string, jobID string) (*run.GoogleIamV1Policy, error) {
 	resource := fmt.Sprintf("projects/%s/locations/%s/jobs/%s", projectID, location, jobID)
 
-	policy, err := service.Projects.Locations.Jobs.GetIamPolicy(resource).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.Projects.Locations.Jobs.GetIamPolicy(resource).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -272,7 +283,10 @@ func GetCloudRunWorkerPoolIamPolicyAttrsE(t testing.TestingT, ctx context.Contex
 func GetCloudRunWorkerPoolIamPolicyAttrsWithClient(ctx context.Context, service *run.Service, projectID string, location string, poolID string) (*run.GoogleIamV1Policy, error) {
 	resource := fmt.Sprintf("projects/%s/locations/%s/workerPools/%s", projectID, location, poolID)
 
-	policy, err := service.Projects.Locations.WorkerPools.GetIamPolicy(resource).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.Projects.Locations.WorkerPools.GetIamPolicy(resource).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
