@@ -409,8 +409,11 @@ func GetLogViewIamPolicyAttrsWithClient(ctx context.Context, service *logging.Se
 	name := fmt.Sprintf("projects/%s/locations/%s/buckets/%s/views/%s", projectID, location, bucketID, viewID)
 
 	// This call takes a request body rather than a plain resource name, which is why it is written
-	// out here rather than generated like the reads around it.
-	policy, err := service.Projects.Locations.Buckets.Views.GetIamPolicy(name, &logging.GetIamPolicyRequest{}).Context(ctx).Do()
+	// out here rather than generated like the reads around it. A policy carrying a conditional binding
+	// is only returned in full at version 3, so that is what is asked for.
+	policy, err := service.Projects.Locations.Buckets.Views.GetIamPolicy(name, &logging.GetIamPolicyRequest{
+		Options: &logging.GetPolicyOptions{RequestedPolicyVersion: iamPolicyVersionWithConditions},
+	}).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {

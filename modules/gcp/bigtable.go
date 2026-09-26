@@ -243,6 +243,11 @@ func GetBigtableAuthorizedViewAttrsWithClient(ctx context.Context, service *bigt
 	return view, nil
 }
 
+// iamPolicyVersionWithConditions is the policy version that carries conditional bindings. Google
+// returns a policy at version 1 unless asked otherwise, and a version 1 answer has no room for a
+// condition.
+const iamPolicyVersionWithConditions = 3
+
 // GetBigtableTableIamPolicyAttrs returns the IAM policy Google Cloud holds for the given Bigtable
 // table, so a test can assert on who may act on it. That is a different question from what the
 // table holds.
@@ -277,7 +282,11 @@ func GetBigtableTableIamPolicyAttrsWithClient(ctx context.Context, service *bigt
 	name := fmt.Sprintf("projects/%s/instances/%s/tables/%s", projectID, instanceID, tableID)
 
 	// This call takes a request body even when nothing is being asked for beyond the policy.
-	policy, err := service.Projects.Instances.Tables.GetIamPolicy(name, &bigtableadmin.GetIamPolicyRequest{}).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.Projects.Instances.Tables.GetIamPolicy(name, &bigtableadmin.GetIamPolicyRequest{
+		Options: &bigtableadmin.GetPolicyOptions{RequestedPolicyVersion: iamPolicyVersionWithConditions},
+	}).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {

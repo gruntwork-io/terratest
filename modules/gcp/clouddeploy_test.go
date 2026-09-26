@@ -187,15 +187,21 @@ func TestGetCloudDeployDeliveryPipelineIamPolicyAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/deliveryPipelines/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		// A conditional binding only comes back at version 3, so the read has to ask for it. This
+		// client spells the parameter with a dot, where the compute and storage ones do not.
+		assert.Equal(t, "3", r.URL.Query().Get("options.requestedPolicyVersion"))
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/clouddeploy.releaser","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/clouddeploy.releaser","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
 	})
 
 	policy, err := gcp.GetCloudDeployDeliveryPipelineIamPolicyAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, int64(3), policy.Version)
 	assert.Equal(t, "roles/clouddeploy.releaser", policy.Bindings[0].Role)
+	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 }
 
 func TestGetCloudDeployTargetIamPolicyAttrsWithClient(t *testing.T) {
@@ -206,13 +212,19 @@ func TestGetCloudDeployTargetIamPolicyAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/targets/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		// A conditional binding only comes back at version 3, so the read has to ask for it. This
+		// client spells the parameter with a dot, where the compute and storage ones do not.
+		assert.Equal(t, "3", r.URL.Query().Get("options.requestedPolicyVersion"))
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"version":1,"etag":"BwXhqw==","bindings":[{"role":"roles/clouddeploy.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/clouddeploy.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
 	})
 
 	policy, err := gcp.GetCloudDeployTargetIamPolicyAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, int64(3), policy.Version)
 	assert.Equal(t, "roles/clouddeploy.viewer", policy.Bindings[0].Role)
+	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 }

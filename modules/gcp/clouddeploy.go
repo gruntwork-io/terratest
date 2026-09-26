@@ -275,7 +275,10 @@ func GetCloudDeployDeliveryPipelineIamPolicyAttrsE(t testing.TestingT, ctx conte
 func GetCloudDeployDeliveryPipelineIamPolicyAttrsWithClient(ctx context.Context, service *clouddeploy.Service, projectID string, location string, pipelineID string) (*clouddeploy.Policy, error) {
 	name := fmt.Sprintf("projects/%s/locations/%s/deliveryPipelines/%s", projectID, location, pipelineID)
 
-	policy, err := service.Projects.Locations.DeliveryPipelines.GetIamPolicy(name).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.Projects.Locations.DeliveryPipelines.GetIamPolicy(name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -319,7 +322,10 @@ func GetCloudDeployTargetIamPolicyAttrsE(t testing.TestingT, ctx context.Context
 func GetCloudDeployTargetIamPolicyAttrsWithClient(ctx context.Context, service *clouddeploy.Service, projectID string, location string, targetID string) (*clouddeploy.Policy, error) {
 	name := fmt.Sprintf("projects/%s/locations/%s/targets/%s", projectID, location, targetID)
 
-	policy, err := service.Projects.Locations.Targets.GetIamPolicy(name).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.Projects.Locations.Targets.GetIamPolicy(name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {

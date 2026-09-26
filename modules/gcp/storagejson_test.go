@@ -156,14 +156,20 @@ func TestGetStorageManagedFolderIamPolicyAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/b/gw-library-test/managedFolders/terratest//iam"), "unexpected path %s", r.URL.Path)
+
+		// A conditional binding only comes back at version 3, so the read has to ask for it.
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"))
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"resourceId":"projects/_/buckets/gw-library-test/managedFolders/terratest/","version":1,"bindings":[{"role":"roles/storage.objectViewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+		_, _ = w.Write([]byte(`{"resourceId":"projects/_/buckets/gw-library-test/managedFolders/terratest/","version":3,"bindings":[{"role":"roles/storage.objectViewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
 	})
 
 	policy, err := gcp.GetStorageManagedFolderIamPolicyAttrsWithClient(context.Background(), newFakeStorageJSONService(t, handler), "gw-library-test", "terratest/")
 	require.NoError(t, err)
 
 	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, int64(3), policy.Version)
 	assert.Equal(t, "roles/storage.objectViewer", policy.Bindings[0].Role)
+	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 	assert.Equal(t, []string{"serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"}, policy.Bindings[0].Members)
 }

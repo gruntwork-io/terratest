@@ -301,7 +301,10 @@ func GetStorageManagedFolderIamPolicyAttrsE(t testing.TestingT, ctx context.Cont
 // where the service is backed by an httptest fake server (see storagejson_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func GetStorageManagedFolderIamPolicyAttrsWithClient(ctx context.Context, service *storagev1.Service, bucket string, folderName string) (*storagev1.Policy, error) {
-	policy, err := service.ManagedFolders.GetIamPolicy(bucket, folderName).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.ManagedFolders.GetIamPolicy(bucket, folderName).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
