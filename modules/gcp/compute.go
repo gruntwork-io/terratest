@@ -872,3 +872,45 @@ func RandomValidGCPName() string {
 
 	return "terratest-" + id
 }
+
+// FetchProjectMetadata queries GCP to return the common instance metadata the given project holds,
+// so a test can assert on what was actually set rather than only that a key exists. Metadata is a
+// field of the project rather than a resource of its own, so it is read by project alone.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchProjectMetadata(t testing.TestingT, ctx context.Context, projectID string) *compute.Metadata {
+	metadata, err := FetchProjectMetadataE(t, ctx, projectID)
+	require.NoError(t, err)
+
+	return metadata
+}
+
+// FetchProjectMetadataE queries GCP to return the common instance metadata the given project holds.
+// The ctx parameter supports cancellation and timeouts.
+func FetchProjectMetadataE(t testing.TestingT, ctx context.Context, projectID string) (*compute.Metadata, error) {
+	logger.Default.Logf(t, "Getting common instance metadata for project %s", projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchProjectMetadataWithClient(ctx, service, projectID)
+}
+
+// FetchProjectMetadataWithClient queries GCP to return the common instance metadata the given
+// project holds using the supplied *compute.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchProjectMetadataWithClient(ctx context.Context, service *compute.Service, projectID string) (*compute.Metadata, error) {
+	project, err := service.Projects.Get(projectID).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("Projects.Get(%s) got error: %w", projectID, err)
+	}
+
+	if project.CommonInstanceMetadata == nil {
+		return nil, fmt.Errorf("project %s holds no common instance metadata", projectID)
+	}
+
+	return project.CommonInstanceMetadata, nil
+}

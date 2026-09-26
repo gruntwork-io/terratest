@@ -367,3 +367,24 @@ func TestFetchFirewallWithClient(t *testing.T) {
 	assert.Equal(t, "tcp", firewall.Allowed[0].IPProtocol)
 	assert.Equal(t, []string{"443"}, firewall.Allowed[0].Ports)
 }
+
+func TestFetchProjectMetadataWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The values are the ones the terraform-google-compute project metadata module sets, because the point of reading settings back
+	// is asserting a module configured the metadata it was asked for.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test-project","commonInstanceMetadata":{"fingerprint":"abc123","items":[{"key":"gw-library-test","value":"created by terratest"}]}}`))
+	})
+
+	metadata, err := gcp.FetchProjectMetadataWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project")
+	require.NoError(t, err)
+
+	require.Len(t, metadata.Items, 1, "the project should hold exactly the item the fixture set")
+	assert.Equal(t, "gw-library-test", metadata.Items[0].Key)
+	require.NotNil(t, metadata.Items[0].Value)
+	assert.Equal(t, "created by terratest", *metadata.Items[0].Value)
+}
