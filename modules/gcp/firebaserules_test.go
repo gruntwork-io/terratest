@@ -69,3 +69,21 @@ func TestGetFirebaseRulesetAttrsWithClientMissingRuleset(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetFirebaseRulesReleaseAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a release the terraform-google-firebase
+	// release module created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/releases/cloud.firestore/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/releases/cloud.firestore/gw-library-test","rulesetName":"projects/gw-library-test-project/rulesets/9b4e2b1c-0000-2c0a-0000-000000000000","createTime":"2026-09-24T12:00:00Z"}`))
+	})
+
+	release, err := gcp.GetFirebaseRulesReleaseAttrsWithClient(context.Background(), newFakeFirebaseRulesService(t, handler), "gw-library-test-project", "cloud.firestore/gw-library-test")
+	require.NoError(t, err)
+
+	assert.Contains(t, release.RulesetName, "rulesets/")
+}
