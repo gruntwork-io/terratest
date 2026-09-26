@@ -203,7 +203,8 @@ func TestGetOAuthClientCredentialAttrsWithClient(t *testing.T) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/oauthClients/gw-library-test/credentials/gw-library-test"), "unexpected path %s", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/oauthClients/gw-library-test/credentials/gw-library-test","displayName":"terratest credential","disabled":true}`))
+		// The secret is in the answer on purpose: what is asserted below is that the read drops it.
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/oauthClients/gw-library-test/credentials/gw-library-test","displayName":"terratest credential","disabled":true,"clientSecret":"a-working-secret"}`))
 	})
 
 	credential, err := gcp.GetOAuthClientCredentialAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-test")
@@ -211,5 +212,5 @@ func TestGetOAuthClientCredentialAttrsWithClient(t *testing.T) {
 
 	assert.Equal(t, "terratest credential", credential.DisplayName)
 	assert.True(t, credential.Disabled)
-	assert.Empty(t, credential.ClientSecret, "the secret is only returned when the credential is created")
+	assert.Empty(t, credential.ClientSecret, "the secret should be cleared, so a test that logs what it read cannot leak one")
 }

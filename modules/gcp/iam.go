@@ -206,7 +206,8 @@ func GetWorkloadIdentityPoolManagedIdentityAttrsWithClient(ctx context.Context, 
 
 // GetOAuthClientCredentialAttrs returns the settings Google Cloud holds for the given OAuth client
 // credential, so a test can assert on what was actually created rather than only that it exists. The
-// secret itself is only returned when the credential is created, never by this call.
+// secret is cleared before the credential is returned, so a test that logs what it read cannot put a
+// working credential in a log.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetOAuthClientCredentialAttrs(t testing.TestingT, ctx context.Context, projectID string, clientID string, credentialID string) *iam.OauthClientCredential {
@@ -246,6 +247,10 @@ func GetOAuthClientCredentialAttrsWithClient(ctx context.Context, service *iam.S
 
 		return nil, fmt.Errorf("failed to get settings for credential %s on OAuth client %s in project %s: %w", credentialID, clientID, projectID, err)
 	}
+
+	// Google may answer with the secret, and nothing a test asserts needs it, so it does not leave
+	// this function.
+	credential.ClientSecret = ""
 
 	return credential, nil
 }

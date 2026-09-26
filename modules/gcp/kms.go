@@ -113,11 +113,13 @@ func NewCloudKMSServiceE(t testing.TestingT, ctx context.Context) (*cloudkms.Ser
 
 // DecryptSecretCiphertext returns the plaintext Cloud KMS gets back from the given ciphertext, so a
 // test can assert that what a module encrypted is what it was given. The ciphertext is base64 as the
-// provider returns it, and the plaintext comes back decoded.
+// provider returns it, and the plaintext comes back decoded. A ciphertext encrypted with additional
+// authenticated data can only be decrypted with the same data, so that is passed too, as the plain
+// string the module was given; pass an empty string when the module named none.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func DecryptSecretCiphertext(t testing.TestingT, ctx context.Context, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string) string {
-	plaintext, err := DecryptSecretCiphertextE(t, ctx, projectID, location, keyRingID, cryptoKeyID, ciphertext)
+func DecryptSecretCiphertext(t testing.TestingT, ctx context.Context, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string, additionalAuthenticatedData string) string {
+	plaintext, err := DecryptSecretCiphertextE(t, ctx, projectID, location, keyRingID, cryptoKeyID, ciphertext, additionalAuthenticatedData)
 	require.NoError(t, err)
 
 	return plaintext
@@ -125,7 +127,7 @@ func DecryptSecretCiphertext(t testing.TestingT, ctx context.Context, projectID 
 
 // DecryptSecretCiphertextE returns the plaintext Cloud KMS gets back from the given ciphertext.
 // The ctx parameter supports cancellation and timeouts.
-func DecryptSecretCiphertextE(t testing.TestingT, ctx context.Context, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string) (string, error) {
+func DecryptSecretCiphertextE(t testing.TestingT, ctx context.Context, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string, additionalAuthenticatedData string) (string, error) {
 	logger.Default.Logf(t, "Decrypting a ciphertext with key %s in key ring %s in %s in project %s", cryptoKeyID, keyRingID, location, projectID)
 
 	service, err := NewCloudKMSServiceE(t, ctx)
@@ -133,27 +135,31 @@ func DecryptSecretCiphertextE(t testing.TestingT, ctx context.Context, projectID
 		return "", err
 	}
 
-	return DecryptSecretCiphertextWithClient(ctx, service, projectID, location, keyRingID, cryptoKeyID, ciphertext)
+	return DecryptSecretCiphertextWithClient(ctx, service, projectID, location, keyRingID, cryptoKeyID, ciphertext, additionalAuthenticatedData)
 }
 
 // DecryptSecretCiphertextWithClient returns the plaintext Cloud KMS gets back from the given
 // ciphertext using the supplied *cloudkms.Service. Prefer this variant in unit tests where the
 // service is backed by an httptest fake server (see kms_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
-func DecryptSecretCiphertextWithClient(ctx context.Context, service *cloudkms.Service, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string) (string, error) {
+func DecryptSecretCiphertextWithClient(ctx context.Context, service *cloudkms.Service, projectID string, location string, keyRingID string, cryptoKeyID string, ciphertext string, additionalAuthenticatedData string) (string, error) {
 	name := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s", projectID, location, keyRingID, cryptoKeyID)
 
 	// The call takes a request body rather than a plain resource name, and returns the plaintext
 	// base64 encoded whatever the plaintext was.
-	response, err := service.Projects.Locations.KeyRings.CryptoKeys.Decrypt(name,
-		&cloudkms.DecryptRequest{Ciphertext: ciphertext}).Context(ctx).Do()
+	request := &cloudkms.DecryptRequest{Ciphertext: ciphertext}
+	if additionalAuthenticatedData != "" {
+		request.AdditionalAuthenticatedData = base64.StdEncoding.EncodeToString([]byte(additionalAuthenticatedData))
+	}
+
+	response, err := service.Projects.Locations.KeyRings.CryptoKeys.Decrypt(name, request).Context(ctx).Do()
 	if err != nil {
 		return "", fmt.Errorf("failed to decrypt a ciphertext with key %s in key ring %s in %s in project %s: %w", cryptoKeyID, keyRingID, location, projectID, err)
 	}
 
 	plaintext, err := base64.StdEncoding.DecodeString(response.Plaintext)
 	if err != nil {
-		return "", fmt.Errorf("Cloud KMS returned a plaintext that is not base64: %w", err)
+		return "", fmt.Errorf("the plaintext Cloud KMS returned is not base64: %w", err)
 	}
 
 	return string(plaintext), nil
