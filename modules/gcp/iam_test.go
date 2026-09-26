@@ -174,3 +174,43 @@ func TestGetWorkloadIdentityPoolProviderAttrsWithClientMissingProvider(t *testin
 	require.ErrorContains(t, err, "pool gw-pool ")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetWorkloadIdentityPoolManagedIdentityAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an identity the terraform-google-identity managed identity module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/workloadIdentityPools/gw-library-test/namespaces/gw-library-test/managedIdentities/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/workloadIdentityPools/gw-library-test/namespaces/gw-library-test/managedIdentities/gw-library-test","description":"created by terratest","disabled":true,"state":"ACTIVE"}`))
+	})
+
+	identity, err := gcp.GetWorkloadIdentityPoolManagedIdentityAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", identity.Description)
+	assert.True(t, identity.Disabled)
+}
+
+func TestGetOAuthClientCredentialAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a credential the terraform-google-identity OAuth client credential module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/oauthClients/gw-library-test/credentials/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		// The secret is in the answer on purpose: what is asserted below is that the read drops it.
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/oauthClients/gw-library-test/credentials/gw-library-test","displayName":"terratest credential","disabled":true,"clientSecret":"a-working-secret"}`))
+	})
+
+	credential, err := gcp.GetOAuthClientCredentialAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest credential", credential.DisplayName)
+	assert.True(t, credential.Disabled)
+	assert.Empty(t, credential.ClientSecret, "the secret should be cleared, so a test that logs what it read cannot leak one")
+}

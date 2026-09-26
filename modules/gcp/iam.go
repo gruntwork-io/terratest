@@ -156,3 +156,101 @@ func GetWorkloadIdentityPoolProviderAttrsWithClient(ctx context.Context, service
 func NewIAMServiceE(t testing.TestingT, ctx context.Context) (*iam.Service, error) {
 	return iam.NewService(ctx, append(withOptions(), option.WithScopes(iam.CloudPlatformScope))...)
 }
+
+// GetWorkloadIdentityPoolManagedIdentityAttrs returns the settings Google Cloud holds for the given
+// managed identity, so a test can assert on what was actually created rather than only that it
+// exists. A managed identity sits in a namespace inside a workload identity pool, so it is named by
+// both as well as by itself.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetWorkloadIdentityPoolManagedIdentityAttrs(t testing.TestingT, ctx context.Context, projectID string, poolID string, namespaceID string, identityID string) *iam.WorkloadIdentityPoolManagedIdentity {
+	identity, err := GetWorkloadIdentityPoolManagedIdentityAttrsE(t, ctx, projectID, poolID, namespaceID, identityID)
+	require.NoError(t, err)
+
+	return identity
+}
+
+// GetWorkloadIdentityPoolManagedIdentityAttrsE returns the settings Google Cloud holds for the given
+// managed identity.
+// The ctx parameter supports cancellation and timeouts.
+func GetWorkloadIdentityPoolManagedIdentityAttrsE(t testing.TestingT, ctx context.Context, projectID string, poolID string, namespaceID string, identityID string) (*iam.WorkloadIdentityPoolManagedIdentity, error) {
+	logger.Default.Logf(t, "Getting settings for managed identity %s in namespace %s in pool %s in project %s", identityID, namespaceID, poolID, projectID)
+
+	service, err := NewIAMServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetWorkloadIdentityPoolManagedIdentityAttrsWithClient(ctx, service, projectID, poolID, namespaceID, identityID)
+}
+
+// GetWorkloadIdentityPoolManagedIdentityAttrsWithClient returns the settings Google Cloud holds for
+// the given managed identity using the supplied *iam.Service. Prefer this variant in unit tests where
+// the service is backed by an httptest fake server (see iam_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetWorkloadIdentityPoolManagedIdentityAttrsWithClient(ctx context.Context, service *iam.Service, projectID string, poolID string, namespaceID string, identityID string) (*iam.WorkloadIdentityPoolManagedIdentity, error) {
+	name := fmt.Sprintf("projects/%s/locations/global/workloadIdentityPools/%s/namespaces/%s/managedIdentities/%s", projectID, poolID, namespaceID, identityID)
+
+	identity, err := service.Projects.Locations.WorkloadIdentityPools.Namespaces.ManagedIdentities.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the managed identity %s does not exist in namespace %s in pool %s in project %s", identityID, namespaceID, poolID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for managed identity %s in namespace %s in pool %s in project %s: %w", identityID, namespaceID, poolID, projectID, err)
+	}
+
+	return identity, nil
+}
+
+// GetOAuthClientCredentialAttrs returns the settings Google Cloud holds for the given OAuth client
+// credential, so a test can assert on what was actually created rather than only that it exists. The
+// secret is cleared before the credential is returned, so a test that logs what it read cannot put a
+// working credential in a log.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetOAuthClientCredentialAttrs(t testing.TestingT, ctx context.Context, projectID string, clientID string, credentialID string) *iam.OauthClientCredential {
+	credential, err := GetOAuthClientCredentialAttrsE(t, ctx, projectID, clientID, credentialID)
+	require.NoError(t, err)
+
+	return credential
+}
+
+// GetOAuthClientCredentialAttrsE returns the settings Google Cloud holds for the given OAuth client
+// credential.
+// The ctx parameter supports cancellation and timeouts.
+func GetOAuthClientCredentialAttrsE(t testing.TestingT, ctx context.Context, projectID string, clientID string, credentialID string) (*iam.OauthClientCredential, error) {
+	logger.Default.Logf(t, "Getting settings for credential %s on OAuth client %s in project %s", credentialID, clientID, projectID)
+
+	service, err := NewIAMServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetOAuthClientCredentialAttrsWithClient(ctx, service, projectID, clientID, credentialID)
+}
+
+// GetOAuthClientCredentialAttrsWithClient returns the settings Google Cloud holds for the given OAuth
+// client credential using the supplied *iam.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see iam_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetOAuthClientCredentialAttrsWithClient(ctx context.Context, service *iam.Service, projectID string, clientID string, credentialID string) (*iam.OauthClientCredential, error) {
+	name := fmt.Sprintf("projects/%s/locations/global/oauthClients/%s/credentials/%s", projectID, clientID, credentialID)
+
+	credential, err := service.Projects.Locations.OauthClients.Credentials.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the credential %s does not exist on OAuth client %s in project %s", credentialID, clientID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for credential %s on OAuth client %s in project %s: %w", credentialID, clientID, projectID, err)
+	}
+
+	// Google may answer with the secret, and nothing a test asserts needs it, so it does not leave
+	// this function.
+	credential.ClientSecret = ""
+
+	return credential, nil
+}

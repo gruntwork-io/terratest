@@ -2,8 +2,11 @@ package gcp_test
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
@@ -98,4 +101,60 @@ func TestGetCryptoKeyAttrsWithClientMissingKey(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-ring")
 	require.ErrorContains(t, err, "gw-library-test-project")
+}
+
+func TestDecryptSecretCiphertextWithClient(t *testing.T) {
+	t.Parallel()
+
+	// Cloud KMS answers a decrypt with the plaintext base64 encoded, whatever the plaintext was.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/keyRings/gw-library-test/cryptoKeys/gw-key:decrypt"), "unexpected path %s", r.URL.Path)
+
+		var request struct {
+			Ciphertext                  string `json:"ciphertext"`
+			AdditionalAuthenticatedData string `json:"additionalAuthenticatedData"`
+		}
+
+		// assert rather than require: a failed require inside a handler stops the wrong goroutine.
+		if assert.NoError(t, json.NewDecoder(r.Body).Decode(&request)) {
+			assert.Equal(t, "Q2lwaGVyVGV4dA==", request.Ciphertext)
+			assert.Equal(t, base64.StdEncoding.EncodeToString([]byte("terratest")), request.AdditionalAuthenticatedData,
+				"a ciphertext encrypted with additional authenticated data can only be decrypted with it")
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"plaintext":"d3JpdHRlbiBieSB0ZXJyYXRlc3Q="}`))
+	})
+
+	plaintext, err := gcp.DecryptSecretCiphertextWithClient(context.Background(), newFakeCloudKMSService(t, handler),
+		"gw-library-test-project", "us-central1", "gw-library-test", "gw-key", "Q2lwaGVyVGV4dA==", "terratest")
+	require.NoError(t, err)
+
+	assert.Equal(t, "written by terratest", plaintext)
+}
+
+func TestDecryptSecretCiphertextWithClientWithoutAuthenticatedData(t *testing.T) {
+	t.Parallel()
+
+	// A module that named no additional authenticated data must not have one sent on its behalf, or
+	// Cloud KMS refuses the decrypt.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var request struct {
+			AdditionalAuthenticatedData string `json:"additionalAuthenticatedData"`
+		}
+
+		if assert.NoError(t, json.NewDecoder(r.Body).Decode(&request)) {
+			assert.Empty(t, request.AdditionalAuthenticatedData)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"plaintext":"d3JpdHRlbiBieSB0ZXJyYXRlc3Q="}`))
+	})
+
+	plaintext, err := gcp.DecryptSecretCiphertextWithClient(context.Background(), newFakeCloudKMSService(t, handler),
+		"gw-library-test-project", "us-central1", "gw-library-test", "gw-key", "Q2lwaGVyVGV4dA==", "")
+	require.NoError(t, err)
+
+	assert.Equal(t, "written by terratest", plaintext)
 }
