@@ -111,6 +111,10 @@ func TestGetBigtableTableAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test/tables/gw-library-test"), "unexpected path %s", r.URL.Path)
+
+		// The default answer carries no column families and no subset rows, so the read has to ask for
+		// the full view and this is what fails if it stops doing so.
+		assert.Equal(t, "FULL", r.URL.Query().Get("view"))
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/instances/gw-library-test/tables/gw-library-test","columnFamilies":{"terratest":{"gcRule":{"maxNumVersions":3}}},"granularity":"MILLIS"}`))
 	})
@@ -151,6 +155,10 @@ func TestGetBigtableAuthorizedViewAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test/tables/gw-library-test/authorizedViews/gw-library-test"), "unexpected path %s", r.URL.Path)
+
+		// The default answer carries no column families and no subset rows, so the read has to ask for
+		// the full view and this is what fails if it stops doing so.
+		assert.Equal(t, "FULL", r.URL.Query().Get("view"))
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/instances/gw-library-test/tables/gw-library-test/authorizedViews/gw-library-test","deletionProtection":false,"subsetView":{"rowPrefixes":["dGVycmF0ZXN0"]}}`))
 	})
