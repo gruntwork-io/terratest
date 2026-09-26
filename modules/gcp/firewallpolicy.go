@@ -84,6 +84,11 @@ func FetchRegionNetworkFirewallPolicyWithClient(ctx context.Context, service *co
 	return policy, nil
 }
 
+// iamPolicyVersionWithConditions is the policy version that carries conditional bindings. Google
+// returns a policy at version 1 unless asked otherwise, and a version 1 answer has no room for a
+// condition.
+const iamPolicyVersionWithConditions = 3
+
 // FetchNetworkFirewallPolicyIamPolicy queries GCP to return the settings it holds for the given IAM policy of a global network firewall policy, so a test can
 // assert on what was actually created rather than only that it exists. This reads who may act on the policy, which is a different question from what the policy allows through.
 // This will fail the test if there is an error.
@@ -113,7 +118,10 @@ func FetchNetworkFirewallPolicyIamPolicyE(t testing.TestingT, ctx context.Contex
 // httptest fake server (see firewallpolicy_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func FetchNetworkFirewallPolicyIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.Policy, error) {
-	policy, err := service.NetworkFirewallPolicies.GetIamPolicy(projectID, name).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.NetworkFirewallPolicies.GetIamPolicy(projectID, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("NetworkFirewallPolicies.GetIamPolicy(%s, %s) got error: %w", projectID, name, err)
 	}
@@ -150,7 +158,10 @@ func FetchRegionNetworkFirewallPolicyIamPolicyE(t testing.TestingT, ctx context.
 // httptest fake server (see firewallpolicy_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func FetchRegionNetworkFirewallPolicyIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.Policy, error) {
-	policy, err := service.RegionNetworkFirewallPolicies.GetIamPolicy(projectID, region, name).Context(ctx).Do()
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for: at a lower version Google drops the condition or refuses the call outright.
+	policy, err := service.RegionNetworkFirewallPolicies.GetIamPolicy(projectID, region, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("RegionNetworkFirewallPolicies.GetIamPolicy(%s, %s, %s) got error: %w", projectID, region, name, err)
 	}
