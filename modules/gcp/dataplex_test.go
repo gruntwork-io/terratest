@@ -260,6 +260,10 @@ func TestGetDataplexDataScanAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/dataScans/gw-library-test"), "unexpected path %s", r.URL.Path)
+
+		// The default answer carries no scan specification, so the read has to ask for the full view
+		// and this is what fails if it stops doing so.
+		assert.Equal(t, "FULL", r.URL.Query().Get("view"))
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/dataScans/gw-library-test","displayName":"terratest scan","state":"ACTIVE","data":{"resource":"//bigquery.googleapis.com/projects/gw-library-test-project/datasets/gw_library_test/tables/gw_library_test"},"executionSpec":{"trigger":{"onDemand":{}}},"dataQualitySpec":{"samplingPercent":10,"rules":[{"column":"purpose","nonNullExpectation":{},"dimension":"COMPLETENESS"}]}}`))
 	})
