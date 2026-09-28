@@ -13,3 +13,8 @@ func withOptions() (opts []option.ClientOption) {
 
 	return
 }
+
+// iamPolicyVersionWithConditions is the policy version that carries conditional bindings. Google
+// returns a policy at version 1 unless asked otherwise, and a version 1 answer has no room for a
+// condition, so every read in this package that fetches an IAM policy asks for this one.
+const iamPolicyVersionWithConditions = 3
