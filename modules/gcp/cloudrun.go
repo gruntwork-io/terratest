@@ -153,11 +153,6 @@ func GetCloudRunWorkerPoolAttrsWithClient(ctx context.Context, service *run.Serv
 	return pool, nil
 }
 
-// iamPolicyVersionWithConditions is the policy version that carries conditional bindings. Google
-// returns a policy at version 1 unless asked otherwise, and a version 1 answer has no room for a
-// condition.
-const iamPolicyVersionWithConditions = 3
-
 // GetCloudRunServiceIamPolicyAttrs returns the IAM policy Google Cloud holds for the given Cloud Run
 // service, so a test can assert on who was actually granted access to it.
 // This will fail the test if there is an error.
