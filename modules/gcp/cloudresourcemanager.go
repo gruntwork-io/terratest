@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -15,7 +16,8 @@ import (
 
 // GetTagKeyAttrs returns the settings Google Cloud holds for the given tag key, so a test can assert
 // on what was actually created rather than only that it exists. Google assigns a tag key its numeric
-// id, so the caller passes the one it got back rather than a name it chose.
+// id, so the caller passes the one it got back rather than a name it chose. The whole name is accepted
+// too, because the provider hands back tagKeys/<id> as the resource's name.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetTagKeyAttrs(t testing.TestingT, ctx context.Context, tagKeyID string) *cloudresourcemanager.TagKey {
@@ -43,7 +45,7 @@ func GetTagKeyAttrsE(t testing.TestingT, ctx context.Context, tagKeyID string) (
 // backed by an httptest fake server (see cloudresourcemanager_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func GetTagKeyAttrsWithClient(ctx context.Context, service *cloudresourcemanager.Service, tagKeyID string) (*cloudresourcemanager.TagKey, error) {
-	tagKey, err := service.TagKeys.Get("tagKeys/" + tagKeyID).Context(ctx).Do()
+	tagKey, err := service.TagKeys.Get(withCollection("tagKeys", tagKeyID)).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -58,7 +60,8 @@ func GetTagKeyAttrsWithClient(ctx context.Context, service *cloudresourcemanager
 
 // GetTagValueAttrs returns the settings Google Cloud holds for the given tag value, so a test can
 // assert on what was actually created rather than only that it exists. Google assigns a tag value its
-// numeric id, so the caller passes the one it got back rather than a name it chose.
+// numeric id, so the caller passes the one it got back rather than a name it chose. The whole name is
+// accepted too, because the provider hands back tagValues/<id> as the resource's name.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetTagValueAttrs(t testing.TestingT, ctx context.Context, tagValueID string) *cloudresourcemanager.TagValue {
@@ -86,7 +89,7 @@ func GetTagValueAttrsE(t testing.TestingT, ctx context.Context, tagValueID strin
 // backed by an httptest fake server (see cloudresourcemanager_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func GetTagValueAttrsWithClient(ctx context.Context, service *cloudresourcemanager.Service, tagValueID string) (*cloudresourcemanager.TagValue, error) {
-	tagValue, err := service.TagValues.Get("tagValues/" + tagValueID).Context(ctx).Do()
+	tagValue, err := service.TagValues.Get(withCollection("tagValues", tagValueID)).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -153,8 +156,9 @@ func GetTagBindingsAttrsWithClient(ctx context.Context, service *cloudresourcema
 }
 
 // GetLienAttrs returns the settings Google Cloud holds for the given lien, so a test can assert on
-// what was actually created rather than only that it exists. Google assigns a lien its id, and that
-// is what the caller passes: the collection in front of it is added here.
+// what was actually created rather than only that it exists. Google assigns a lien its id, and that is
+// what the caller passes: the collection in front of it is added here when it is not there already,
+// because the provider hands back liens/<id> as the resource's name.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetLienAttrs(t testing.TestingT, ctx context.Context, lienID string) *cloudresourcemanager.Lien {
@@ -182,7 +186,7 @@ func GetLienAttrsE(t testing.TestingT, ctx context.Context, lienID string) (*clo
 // backed by an httptest fake server (see cloudresourcemanager_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
 func GetLienAttrsWithClient(ctx context.Context, service *cloudresourcemanager.Service, lienID string) (*cloudresourcemanager.Lien, error) {
-	lien, err := service.Liens.Get("liens/" + lienID).Context(ctx).Do()
+	lien, err := service.Liens.Get(withCollection("liens", lienID)).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -193,6 +197,17 @@ func GetLienAttrsWithClient(ctx context.Context, service *cloudresourcemanager.S
 	}
 
 	return lien, nil
+}
+
+// withCollection returns the resource name for an id, leaving it alone when the collection is already
+// in front of it. A caller holding a Terraform resource's name has one; a caller holding the id
+// Google assigned does not, and prefixing a name that has one asks for tagKeys/tagKeys/123.
+func withCollection(collection string, id string) string {
+	if strings.HasPrefix(id, collection+"/") {
+		return id
+	}
+
+	return collection + "/" + id
 }
 
 // NewResourceManagerServiceE creates a Cloud Resource Manager service authenticated the same way

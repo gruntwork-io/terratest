@@ -2,6 +2,7 @@ package gcp_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -137,4 +138,84 @@ func TestGetTagBindingsAttrsWithClientReadsEveryPage(t *testing.T) {
 	assert.Equal(t, 2, requests, "both pages should have been asked for")
 	require.Len(t, bindings, 2)
 	assert.Equal(t, "tagValues/281478044408593", bindings[1].TagValue)
+}
+
+func TestResourceManagerReadsAcceptEitherForm(t *testing.T) {
+	t.Parallel()
+
+	// A caller holding the id Google assigned and a caller holding the provider's resource name must
+	// reach the same path. Prefixing a name that already carries its collection would ask for
+	// tagKeys/tagKeys/281476187767567, which does not exist.
+	cases := []struct {
+		read     func(service *cloudresourcemanager.Service, argument string) (string, error)
+		resource string
+		path     string
+		id       string
+		name     string
+		body     string
+	}{
+		{
+			resource: "tag key",
+			path:     "/v3/tagKeys/281476187767567",
+			id:       "281476187767567",
+			name:     "tagKeys/281476187767567",
+			body:     `{"name":"tagKeys/281476187767567","shortName":"gw-library-test"}`,
+			read: func(service *cloudresourcemanager.Service, argument string) (string, error) {
+				tagKey, err := gcp.GetTagKeyAttrsWithClient(context.Background(), service, argument)
+				if err != nil {
+					return "", err
+				}
+
+				return tagKey.ShortName, nil
+			},
+		},
+		{
+			resource: "tag value",
+			path:     "/v3/tagValues/281478044408593",
+			id:       "281478044408593",
+			name:     "tagValues/281478044408593",
+			body:     `{"name":"tagValues/281478044408593","shortName":"terratest"}`,
+			read: func(service *cloudresourcemanager.Service, argument string) (string, error) {
+				tagValue, err := gcp.GetTagValueAttrsWithClient(context.Background(), service, argument)
+				if err != nil {
+					return "", err
+				}
+
+				return tagValue.ShortName, nil
+			},
+		},
+		{
+			resource: "lien",
+			path:     "/v3/liens/p37950160017-l26b104ba",
+			id:       "p37950160017-l26b104ba",
+			name:     "liens/p37950160017-l26b104ba",
+			body:     `{"name":"liens/p37950160017-l26b104ba","origin":"terratest"}`,
+			read: func(service *cloudresourcemanager.Service, argument string) (string, error) {
+				lien, err := gcp.GetLienAttrsWithClient(context.Background(), service, argument)
+				if err != nil {
+					return "", err
+				}
+
+				return lien.Origin, nil
+			},
+		},
+	}
+
+	for _, testCase := range cases {
+		for _, argument := range []string{testCase.id, testCase.name} {
+			t.Run(fmt.Sprintf("%s/%s", testCase.resource, argument), func(t *testing.T) {
+				t.Parallel()
+
+				handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					assert.Equal(t, testCase.path, r.URL.Path)
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = w.Write([]byte(testCase.body))
+				})
+
+				value, err := testCase.read(newFakeResourceManagerService(t, handler), argument)
+				require.NoError(t, err)
+				assert.NotEmpty(t, value)
+			})
+		}
+	}
 }
