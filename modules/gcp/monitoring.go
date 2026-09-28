@@ -202,3 +202,137 @@ func GetServiceLevelObjectiveAttrsWithClient(ctx context.Context, service *monit
 func NewMonitoringServiceE(t testing.TestingT, ctx context.Context) (*monitoring.Service, error) {
 	return monitoring.NewService(ctx, append(withOptions(), option.WithScopes(monitoring.CloudPlatformScope))...)
 }
+
+// GetMonitoringGroupAttrs returns the settings Google Cloud holds for the given monitoring group, so a test can assert on
+// what was actually created rather than only that it exists. Google assigns a group its id, so the caller passes
+// the one it got back rather than a name it chose.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetMonitoringGroupAttrs(t testing.TestingT, ctx context.Context, projectID string, groupID string) *monitoring.Group {
+	group, err := GetMonitoringGroupAttrsE(t, ctx, projectID, groupID)
+	require.NoError(t, err)
+
+	return group
+}
+
+// GetMonitoringGroupAttrsE returns the settings Google Cloud holds for the given monitoring group.
+// The ctx parameter supports cancellation and timeouts.
+func GetMonitoringGroupAttrsE(t testing.TestingT, ctx context.Context, projectID string, groupID string) (*monitoring.Group, error) {
+	logger.Default.Logf(t, "Getting settings for monitoring group %s in project %s", groupID, projectID)
+
+	service, err := NewMonitoringServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetMonitoringGroupAttrsWithClient(ctx, service, projectID, groupID)
+}
+
+// GetMonitoringGroupAttrsWithClient returns the settings Google Cloud holds for the given monitoring group using the supplied
+// *monitoring.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see monitoring_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetMonitoringGroupAttrsWithClient(ctx context.Context, service *monitoring.Service, projectID string, groupID string) (*monitoring.Group, error) {
+	name := fmt.Sprintf("projects/%s/groups/%s", projectID, groupID)
+
+	group, err := service.Projects.Groups.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the monitoring group %s does not exist in project %s", groupID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for monitoring group %s in project %s: %w", groupID, projectID, err)
+	}
+
+	return group, nil
+}
+
+// GetMetricDescriptorAttrs returns the settings Google Cloud holds for the given metric descriptor, so a test can assert on
+// what was actually created rather than only that it exists. A descriptor is named by the metric type it describes.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetMetricDescriptorAttrs(t testing.TestingT, ctx context.Context, projectID string, metricType string) *monitoring.MetricDescriptor {
+	descriptor, err := GetMetricDescriptorAttrsE(t, ctx, projectID, metricType)
+	require.NoError(t, err)
+
+	return descriptor
+}
+
+// GetMetricDescriptorAttrsE returns the settings Google Cloud holds for the given metric descriptor.
+// The ctx parameter supports cancellation and timeouts.
+func GetMetricDescriptorAttrsE(t testing.TestingT, ctx context.Context, projectID string, metricType string) (*monitoring.MetricDescriptor, error) {
+	logger.Default.Logf(t, "Getting settings for metric descriptor %s in project %s", metricType, projectID)
+
+	service, err := NewMonitoringServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetMetricDescriptorAttrsWithClient(ctx, service, projectID, metricType)
+}
+
+// GetMetricDescriptorAttrsWithClient returns the settings Google Cloud holds for the given metric descriptor using the supplied
+// *monitoring.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see monitoring_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetMetricDescriptorAttrsWithClient(ctx context.Context, service *monitoring.Service, projectID string, metricType string) (*monitoring.MetricDescriptor, error) {
+	name := fmt.Sprintf("projects/%s/metricDescriptors/%s", projectID, metricType)
+
+	descriptor, err := service.Projects.MetricDescriptors.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the metric descriptor %s does not exist in project %s", metricType, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for metric descriptor %s in project %s: %w", metricType, projectID, err)
+	}
+
+	return descriptor, nil
+}
+
+// GetMonitoringCustomServiceAttrs returns the settings Google Cloud holds for the given monitoring service, so a test can assert on
+// what was actually created rather than only that it exists. The Go client calls this type MService, because
+// Service is the name of the client itself.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetMonitoringCustomServiceAttrs(t testing.TestingT, ctx context.Context, projectID string, serviceID string) *monitoring.MService {
+	customService, err := GetMonitoringCustomServiceAttrsE(t, ctx, projectID, serviceID)
+	require.NoError(t, err)
+
+	return customService
+}
+
+// GetMonitoringCustomServiceAttrsE returns the settings Google Cloud holds for the given monitoring service.
+// The ctx parameter supports cancellation and timeouts.
+func GetMonitoringCustomServiceAttrsE(t testing.TestingT, ctx context.Context, projectID string, serviceID string) (*monitoring.MService, error) {
+	logger.Default.Logf(t, "Getting settings for monitoring service %s in project %s", serviceID, projectID)
+
+	service, err := NewMonitoringServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetMonitoringCustomServiceAttrsWithClient(ctx, service, projectID, serviceID)
+}
+
+// GetMonitoringCustomServiceAttrsWithClient returns the settings Google Cloud holds for the given monitoring service using the supplied
+// *monitoring.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see monitoring_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetMonitoringCustomServiceAttrsWithClient(ctx context.Context, service *monitoring.Service, projectID string, serviceID string) (*monitoring.MService, error) {
+	name := fmt.Sprintf("projects/%s/services/%s", projectID, serviceID)
+
+	customService, err := service.Services.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the monitoring service %s does not exist in project %s", serviceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for monitoring service %s in project %s: %w", serviceID, projectID, err)
+	}
+
+	return customService, nil
+}
