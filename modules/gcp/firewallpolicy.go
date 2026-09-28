@@ -84,11 +84,6 @@ func FetchRegionNetworkFirewallPolicyWithClient(ctx context.Context, service *co
 	return policy, nil
 }
 
-// iamPolicyVersionWithConditions is the policy version that carries conditional bindings. Google
-// returns a policy at version 1 unless asked otherwise, and a version 1 answer has no room for a
-// condition.
-const iamPolicyVersionWithConditions = 3
-
 // FetchNetworkFirewallPolicyIamPolicy queries GCP to return the settings it holds for the given IAM policy of a global network firewall policy, so a test can
 // assert on what was actually created rather than only that it exists. This reads who may act on the policy, which is a different question from what the policy allows through.
 // This will fail the test if there is an error.

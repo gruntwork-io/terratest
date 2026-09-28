@@ -243,11 +243,6 @@ func GetBigtableAuthorizedViewAttrsWithClient(ctx context.Context, service *bigt
 	return view, nil
 }
 
-// iamPolicyVersionWithConditions is the policy version that carries conditional bindings. Google
-// returns a policy at version 1 unless asked otherwise, and a version 1 answer has no room for a
-// condition.
-const iamPolicyVersionWithConditions = 3
-
 // GetBigtableTableIamPolicyAttrs returns the IAM policy Google Cloud holds for the given Bigtable
 // table, so a test can assert on who may act on it. That is a different question from what the
 // table holds.
