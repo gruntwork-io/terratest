@@ -66,3 +66,49 @@ func GetFirebaseRulesetAttrsWithClient(ctx context.Context, service *firebaserul
 func NewFirebaseRulesServiceE(t testing.TestingT, ctx context.Context) (*firebaserules.Service, error) {
 	return firebaserules.NewService(ctx, append(withOptions(), option.WithScopes(firebaserules.CloudPlatformScope))...)
 }
+
+// GetFirebaseRulesReleaseAttrs returns the settings Google Cloud holds for the given Firebase rules
+// release, so a test can assert on what was actually created rather than only that it exists. A
+// release is what binds a ruleset to a name a product reads, so the ruleset it points at is what
+// matters.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetFirebaseRulesReleaseAttrs(t testing.TestingT, ctx context.Context, projectID string, releaseName string) *firebaserules.Release {
+	release, err := GetFirebaseRulesReleaseAttrsE(t, ctx, projectID, releaseName)
+	require.NoError(t, err)
+
+	return release
+}
+
+// GetFirebaseRulesReleaseAttrsE returns the settings Google Cloud holds for the given release.
+// The ctx parameter supports cancellation and timeouts.
+func GetFirebaseRulesReleaseAttrsE(t testing.TestingT, ctx context.Context, projectID string, releaseName string) (*firebaserules.Release, error) {
+	logger.Default.Logf(t, "Getting settings for rules release %s in project %s", releaseName, projectID)
+
+	service, err := NewFirebaseRulesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetFirebaseRulesReleaseAttrsWithClient(ctx, service, projectID, releaseName)
+}
+
+// GetFirebaseRulesReleaseAttrsWithClient returns the settings Google Cloud holds for the given release
+// using the supplied *firebaserules.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see firebaserules_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetFirebaseRulesReleaseAttrsWithClient(ctx context.Context, service *firebaserules.Service, projectID string, releaseName string) (*firebaserules.Release, error) {
+	name := fmt.Sprintf("projects/%s/releases/%s", projectID, releaseName)
+
+	release, err := service.Projects.Releases.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the rules release %s does not exist in project %s", releaseName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for rules release %s in project %s: %w", releaseName, projectID, err)
+	}
+
+	return release, nil
+}

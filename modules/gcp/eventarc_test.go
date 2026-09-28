@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
@@ -65,4 +66,44 @@ func TestGetEventarcTriggerAttrsWithClientMissingTrigger(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "us-central1")
 	require.ErrorContains(t, err, "gw-library-test-project")
+}
+
+func TestGetEventarcChannelAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a channel the terraform-google-messaging channel module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/channels/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/channels/gw-library-test","state":"PENDING","provider":"projects/gw-library-test-project/locations/us-central1/providers/datadog","activationToken":"terratest"}`))
+	})
+
+	channel, err := gcp.GetEventarcChannelAttrsWithClient(context.Background(), newFakeEventarcService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "PENDING", channel.State)
+	assert.Contains(t, channel.Provider, "datadog")
+}
+
+func TestGetEventarcPipelineAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a pipeline the terraform-google-messaging pipeline module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/pipelines/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/pipelines/gw-library-test","labels":{"purpose":"terratest"},"destinations":[{"topic":"projects/gw-library-test-project/topics/gw-library-test"}],"retryPolicy":{"maxAttempts":3,"minRetryDelay":"5s","maxRetryDelay":"60s"}}`))
+	})
+
+	pipeline, err := gcp.GetEventarcPipelineAttrsWithClient(context.Background(), newFakeEventarcService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, pipeline.Destinations, 1)
+	require.NotNil(t, pipeline.RetryPolicy)
+	assert.Equal(t, int64(3), pipeline.RetryPolicy.MaxAttempts)
+	assert.Equal(t, "5s", pipeline.RetryPolicy.MinRetryDelay)
 }
