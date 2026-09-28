@@ -154,3 +154,102 @@ func GetFirestoreDocumentAttrsWithClient(ctx context.Context, service *firestore
 func NewFirestoreAdminServiceE(t testing.TestingT, ctx context.Context) (*firestore.Service, error) {
 	return firestore.NewService(ctx, append(withOptions(), option.WithScopes(firestore.CloudPlatformScope))...)
 }
+
+// GetFirestoreBackupScheduleAttrs returns the settings Google Cloud holds for the given Firestore
+// backup schedule, so a test can assert on how often it runs and how long it keeps a backup. Google
+// assigns a schedule its id, so the caller passes the id it got back rather than a name it chose.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetFirestoreBackupScheduleAttrs(t testing.TestingT, ctx context.Context, projectID string, databaseID string, scheduleID string) *firestore.GoogleFirestoreAdminV1BackupSchedule {
+	schedule, err := GetFirestoreBackupScheduleAttrsE(t, ctx, projectID, databaseID, scheduleID)
+	require.NoError(t, err)
+
+	return schedule
+}
+
+// GetFirestoreBackupScheduleAttrsE returns the settings Google Cloud holds for the given Firestore
+// backup schedule.
+// The ctx parameter supports cancellation and timeouts.
+func GetFirestoreBackupScheduleAttrsE(t testing.TestingT, ctx context.Context, projectID string, databaseID string, scheduleID string) (*firestore.GoogleFirestoreAdminV1BackupSchedule, error) {
+	logger.Default.Logf(t, "Getting settings for Firestore backup schedule %s on database %s in project %s", scheduleID, databaseID, projectID)
+
+	service, err := NewFirestoreAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetFirestoreBackupScheduleAttrsWithClient(ctx, service, projectID, databaseID, scheduleID)
+}
+
+// GetFirestoreBackupScheduleAttrsWithClient returns the settings Google Cloud holds for the given
+// Firestore backup schedule using the supplied *firestore.Service. Prefer this variant in unit tests
+// where the service is backed by an httptest fake server (see firestoreadmin_test.go for the
+// pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetFirestoreBackupScheduleAttrsWithClient(ctx context.Context, service *firestore.Service, projectID string, databaseID string, scheduleID string) (*firestore.GoogleFirestoreAdminV1BackupSchedule, error) {
+	name := fmt.Sprintf("projects/%s/databases/%s/backupSchedules/%s", projectID, databaseID, scheduleID)
+
+	schedule, err := service.Projects.Databases.BackupSchedules.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Firestore backup schedule %s on database %s in project %s does not exist", scheduleID, databaseID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Firestore backup schedule %s on database %s in project %s: %w", scheduleID, databaseID, projectID, err)
+	}
+
+	return schedule, nil
+}
+
+// GetFirestoreUserCredsAttrs returns the settings Google Cloud holds for the given Firestore user
+// credential, so a test can assert on which identity it stands for and whether it is enabled. The
+// password Google generated is not read back here, because a test has no use for it and it would end
+// up in a log.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetFirestoreUserCredsAttrs(t testing.TestingT, ctx context.Context, projectID string, databaseID string, credsID string) *firestore.GoogleFirestoreAdminV1UserCreds {
+	creds, err := GetFirestoreUserCredsAttrsE(t, ctx, projectID, databaseID, credsID)
+	require.NoError(t, err)
+
+	return creds
+}
+
+// GetFirestoreUserCredsAttrsE returns the settings Google Cloud holds for the given Firestore user
+// credential.
+// The ctx parameter supports cancellation and timeouts.
+func GetFirestoreUserCredsAttrsE(t testing.TestingT, ctx context.Context, projectID string, databaseID string, credsID string) (*firestore.GoogleFirestoreAdminV1UserCreds, error) {
+	logger.Default.Logf(t, "Getting settings for Firestore user credential %s on database %s in project %s", credsID, databaseID, projectID)
+
+	service, err := NewFirestoreAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetFirestoreUserCredsAttrsWithClient(ctx, service, projectID, databaseID, credsID)
+}
+
+// GetFirestoreUserCredsAttrsWithClient returns the settings Google Cloud holds for the given
+// Firestore user credential using the supplied *firestore.Service. Prefer this variant in unit tests
+// where the service is backed by an httptest fake server (see firestoreadmin_test.go for the
+// pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetFirestoreUserCredsAttrsWithClient(ctx context.Context, service *firestore.Service, projectID string, databaseID string, credsID string) (*firestore.GoogleFirestoreAdminV1UserCreds, error) {
+	name := fmt.Sprintf("projects/%s/databases/%s/userCreds/%s", projectID, databaseID, credsID)
+
+	creds, err := service.Projects.Databases.UserCreds.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Firestore user credential %s on database %s in project %s does not exist", credsID, databaseID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Firestore user credential %s on database %s in project %s: %w", credsID, databaseID, projectID, err)
+	}
+
+	// The generated password is a secret a test has no use for, and leaving it on the struct risks it
+	// reaching a log, so it is cleared before the caller sees it.
+	creds.SecurePassword = ""
+
+	return creds, nil
+}
