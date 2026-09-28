@@ -61,3 +61,50 @@ func TestFetchSecurityPolicyWithClientMissingPolicy(t *testing.T) {
 	_, err := gcp.FetchSecurityPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gone")
 	require.ErrorContains(t, err, "SecurityPolicies.Get(gw-library-test-project, gone)")
 }
+
+func TestFetchRegionSecurityPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A regional policy and a global one are separate resources on separate paths, and the values are
+	// the ones the terraform-google-security regional policy module sets. A regional policy may only be
+	// the standard type, so what is worth catching here is the parsing and the logging.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/securityPolicies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{
+			"kind":"compute#securityPolicy",
+			"name":"gw-library-test",
+			"description":"created by terratest",
+			"type":"CLOUD_ARMOR",
+			"region":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1",
+			"advancedOptionsConfig":{"jsonParsing":"STANDARD","logLevel":"VERBOSE"}
+		}`))
+	})
+
+	policy, err := gcp.FetchRegionSecurityPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", policy.Description)
+	assert.Equal(t, "CLOUD_ARMOR", policy.Type)
+	require.NotNil(t, policy.AdvancedOptionsConfig, "the policy should carry the options the module set")
+	assert.Equal(t, "STANDARD", policy.AdvancedOptionsConfig.JsonParsing)
+	assert.Equal(t, "VERBOSE", policy.AdvancedOptionsConfig.LogLevel)
+}
+
+func TestFetchRegionSecurityPolicyWithClientWhenMissing(t *testing.T) {
+	t.Parallel()
+
+	// A regional policy that does not exist has to say so by name, region and project, because that is
+	// what a caller reads when a fixture named the wrong one.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"not found"}}`))
+	})
+
+	_, err := gcp.FetchRegionSecurityPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gone")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gone")
+	assert.Contains(t, err.Error(), "us-central1")
+	assert.Contains(t, err.Error(), "gw-library-test-project")
+}
