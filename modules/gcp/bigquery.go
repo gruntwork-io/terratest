@@ -104,3 +104,55 @@ func GetBigQueryTableAttrsWithClient(ctx context.Context, service *bigquery.Serv
 func NewBigQueryServiceE(t testing.TestingT, ctx context.Context) (*bigquery.Service, error) {
 	return bigquery.NewService(ctx, append(withOptions(), option.WithScopes(bigquery.CloudPlatformScope))...)
 }
+
+// GetBigQueryJobAttrs returns the settings Google Cloud holds for the given BigQuery job, so a test
+// can assert on what it was asked to run rather than only that it exists. A job is a record of work
+// rather than a resource that persists, so this reads it after it has finished. A job that ran in a
+// single region is only found when its location is named, so the caller passes the one it ran in; the
+// US and EU multi-regions accept an empty location.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryJobAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, jobID string) *bigquery.Job {
+	job, err := GetBigQueryJobAttrsE(t, ctx, projectID, location, jobID)
+	require.NoError(t, err)
+
+	return job
+}
+
+// GetBigQueryJobAttrsE returns the settings Google Cloud holds for the given BigQuery job.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryJobAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, jobID string) (*bigquery.Job, error) {
+	logger.Default.Logf(t, "Getting settings for BigQuery job %s in %s in project %s", jobID, location, projectID)
+
+	service, err := NewBigQueryServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigQueryJobAttrsWithClient(ctx, service, projectID, location, jobID)
+}
+
+// GetBigQueryJobAttrsWithClient returns the settings Google Cloud holds for the given BigQuery job
+// using the supplied *bigquery.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see bigquery_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryJobAttrsWithClient(ctx context.Context, service *bigquery.Service, projectID string, location string, jobID string) (*bigquery.Job, error) {
+	// This call names the project and the job as separate parameters rather than as one path. A job
+	// that ran in a single region is only found when the location goes with it.
+	call := service.Jobs.Get(projectID, jobID)
+	if location != "" {
+		call = call.Location(location)
+	}
+
+	job, err := call.Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the BigQuery job %s in %s in project %s does not exist", jobID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for BigQuery job %s in %s in project %s: %w", jobID, location, projectID, err)
+	}
+
+	return job, nil
+}
