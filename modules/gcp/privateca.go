@@ -64,3 +64,92 @@ func GetCertificateTemplateAttrsWithClient(ctx context.Context, service *private
 func NewPrivateCAServiceE(t testing.TestingT, ctx context.Context) (*privateca.Service, error) {
 	return privateca.NewService(ctx, append(withOptions(), option.WithScopes(privateca.CloudPlatformScope))...)
 }
+
+// GetCaPoolAttrs returns the settings Google Cloud holds for the given CA pool, so a test can assert
+// on the tier and issuance policy it was given rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCaPoolAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, poolID string) *privateca.CaPool {
+	pool, err := GetCaPoolAttrsE(t, ctx, projectID, location, poolID)
+	require.NoError(t, err)
+
+	return pool
+}
+
+// GetCaPoolAttrsE returns the settings Google Cloud holds for the given CA pool.
+// The ctx parameter supports cancellation and timeouts.
+func GetCaPoolAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, poolID string) (*privateca.CaPool, error) {
+	logger.Default.Logf(t, "Getting settings for CA pool %s in %s in project %s", poolID, location, projectID)
+
+	service, err := NewPrivateCAServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCaPoolAttrsWithClient(ctx, service, projectID, location, poolID)
+}
+
+// GetCaPoolAttrsWithClient returns the settings Google Cloud holds for the given CA pool using the
+// supplied *privateca.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see privateca_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetCaPoolAttrsWithClient(ctx context.Context, service *privateca.Service, projectID string, location string, poolID string) (*privateca.CaPool, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/caPools/%s", projectID, location, poolID)
+
+	pool, err := service.Projects.Locations.CaPools.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the CA pool %s in %s in project %s does not exist", poolID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for CA pool %s in %s in project %s: %w", poolID, location, projectID, err)
+	}
+
+	return pool, nil
+}
+
+// GetPrivateCACertificateAttrs returns the settings Google Cloud holds for the given certificate that
+// a CA pool issued, so a test can assert on its lifetime and subject rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetPrivateCACertificateAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, poolID string, certificateID string) *privateca.Certificate {
+	certificate, err := GetPrivateCACertificateAttrsE(t, ctx, projectID, location, poolID, certificateID)
+	require.NoError(t, err)
+
+	return certificate
+}
+
+// GetPrivateCACertificateAttrsE returns the settings Google Cloud holds for the given certificate
+// that a CA pool issued.
+// The ctx parameter supports cancellation and timeouts.
+func GetPrivateCACertificateAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, poolID string, certificateID string) (*privateca.Certificate, error) {
+	logger.Default.Logf(t, "Getting settings for certificate %s in CA pool %s in %s in project %s", certificateID, poolID, location, projectID)
+
+	service, err := NewPrivateCAServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetPrivateCACertificateAttrsWithClient(ctx, service, projectID, location, poolID, certificateID)
+}
+
+// GetPrivateCACertificateAttrsWithClient returns the settings Google Cloud holds for the given
+// certificate using the supplied *privateca.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see privateca_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetPrivateCACertificateAttrsWithClient(ctx context.Context, service *privateca.Service, projectID string, location string, poolID string, certificateID string) (*privateca.Certificate, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/caPools/%s/certificates/%s", projectID, location, poolID, certificateID)
+
+	certificate, err := service.Projects.Locations.CaPools.Certificates.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the certificate %s in CA pool %s in %s in project %s does not exist", certificateID, poolID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for certificate %s in CA pool %s in %s in project %s: %w", certificateID, poolID, location, projectID, err)
+	}
+
+	return certificate, nil
+}

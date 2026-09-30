@@ -89,3 +89,63 @@ func TestGetContactCenterInsightsAnalysisRuleAttrsWithClient(t *testing.T) {
 	assert.InDelta(t, 0.5, rule.AnalysisPercentage, 0.001)
 	assert.False(t, rule.Active)
 }
+
+func TestGetContactCenterInsightsAssessmentRuleAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a rule the terraform-google-business-apps assessment rule module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/assessmentRules/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/assessmentRules/gw-library-test","displayName":"terratest assessment rule","active":true,"sampleRule":{"samplePercentage":5}}`))
+	})
+
+	rule, err := gcp.GetContactCenterInsightsAssessmentRuleAttrsWithClient(context.Background(), newFakeContactCenterInsightsService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest assessment rule", rule.DisplayName)
+	assert.True(t, rule.Active)
+	require.NotNil(t, rule.SampleRule)
+	assert.InDelta(t, 5.0, rule.SampleRule.SamplePercentage, 0.001)
+}
+
+func TestGetContactCenterInsightsAutoLabelingRuleAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a rule the terraform-google-business-apps auto labeling rule module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/autoLabelingRules/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/autoLabelingRules/gw-library-test","displayName":"terratest labeling rule","description":"created by terratest","labelKey":"purpose","active":true}`))
+	})
+
+	rule, err := gcp.GetContactCenterInsightsAutoLabelingRuleAttrsWithClient(context.Background(), newFakeContactCenterInsightsService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest labeling rule", rule.DisplayName)
+	assert.Equal(t, "purpose", rule.LabelKey)
+	assert.True(t, rule.Active)
+}
+
+func TestGetContactCenterInsightsQaScorecardAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a scorecard the terraform-google-business-apps QA scorecard module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/qaScorecards/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/qaScorecards/gw-library-test","displayName":"terratest scorecard","description":"created by terratest"}`))
+	})
+
+	scorecard, err := gcp.GetContactCenterInsightsQaScorecardAttrsWithClient(context.Background(), newFakeContactCenterInsightsService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest scorecard", scorecard.DisplayName)
+	assert.Equal(t, "created by terratest", scorecard.Description)
+}
