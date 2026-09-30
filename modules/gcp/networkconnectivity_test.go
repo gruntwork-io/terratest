@@ -116,3 +116,23 @@ func TestGetPolicyBasedRouteAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "192.0.2.0/24", route.Filter.DestRange)
 	assert.Equal(t, "TCP", route.Filter.IpProtocol)
 }
+
+func TestGetInternalRangeAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a range the terraform-google-networking internal range module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/internalRanges/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/internalRanges/gw-library-test","description":"created by terratest","ipCidrRange":"10.20.0.0/24","usage":"FOR_VPC","peering":"FOR_SELF","labels":{"purpose":"terratest"}}`))
+	})
+
+	internalRange, err := gcp.GetInternalRangeAttrsWithClient(context.Background(), newFakeNetworkConnectivityService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "10.20.0.0/24", internalRange.IpCidrRange)
+	assert.Equal(t, "FOR_VPC", internalRange.Usage)
+	assert.Equal(t, "FOR_SELF", internalRange.Peering)
+}
