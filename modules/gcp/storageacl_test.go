@@ -71,8 +71,9 @@ func TestGetObjectACLAttrsWithClient(t *testing.T) {
 func TestGetDefaultObjectACLAttrsWithClientReportsAMissingEntry(t *testing.T) {
 	t.Parallel()
 
-	// A bucket with uniform access carries no default object ACL, so a caller asking for one should
-	// be told that rather than handed the transport's own wording for a 404.
+	// A caller who asks for an entry that is not there should be told that, rather than handed the
+	// transport's own wording for a 404. A bucket with uniform access is a different case: Google
+	// refuses the request outright with a 400, so it is not what this fixture covers.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not Found"}}`))

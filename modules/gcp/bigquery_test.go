@@ -141,11 +141,12 @@ func TestGetBigQueryJobAttrsWithClient(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/jobs/gw-library-test"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "us-central1", r.URL.Query().Get("location"), "a single region job is only found when its location goes with it")
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"kind":"bigquery#job","jobReference":{"projectId":"gw-library-test-project","jobId":"gw-library-test"},"configuration":{"jobType":"QUERY","labels":{"purpose":"terratest"},"query":{"query":"SELECT 1","useLegacySql":false,"priority":"BATCH"}},"status":{"state":"DONE"}}`))
 	})
 
-	job, err := gcp.GetBigQueryJobAttrsWithClient(context.Background(), newFakeBigQueryService(t, handler), "gw-library-test-project", "gw-library-test")
+	job, err := gcp.GetBigQueryJobAttrsWithClient(context.Background(), newFakeBigQueryService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	require.NotNil(t, job.Configuration)
@@ -155,4 +156,23 @@ func TestGetBigQueryJobAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "BATCH", job.Configuration.Query.Priority)
 	require.NotNil(t, job.Status)
 	assert.Equal(t, "DONE", job.Status.State)
+}
+
+func TestGetBigQueryJobAttrsWithClientOmitsAnEmptyLocation(t *testing.T) {
+	t.Parallel()
+
+	// The US and EU multi-regions are found without a location, and sending an empty one would ask
+	// BigQuery for a region with no name.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, present := r.URL.Query()["location"]
+		assert.False(t, present, "an empty location should not be sent at all")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"kind":"bigquery#job","configuration":{"jobType":"QUERY","query":{"query":"SELECT 1"}},"status":{"state":"DONE"}}`))
+	})
+
+	job, err := gcp.GetBigQueryJobAttrsWithClient(context.Background(), newFakeBigQueryService(t, handler), "gw-library-test-project", "", "gw-library-test")
+	require.NoError(t, err)
+
+	require.NotNil(t, job.Configuration)
+	assert.Equal(t, "QUERY", job.Configuration.JobType)
 }
