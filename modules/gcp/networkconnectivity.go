@@ -160,3 +160,49 @@ func GetPolicyBasedRouteAttrsWithClient(ctx context.Context, service *networkcon
 
 	return route, nil
 }
+
+// GetInternalRangeAttrs returns the settings Google Cloud holds for the given internal range, so a
+// test can assert on what was actually created rather than only that it exists. An internal range
+// reserves address space inside a network so nothing else is given it, which is only worth anything if
+// the range and its usage came out as asked.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetInternalRangeAttrs(t testing.TestingT, ctx context.Context, projectID string, rangeID string) *networkconnectivity.InternalRange {
+	internalRange, err := GetInternalRangeAttrsE(t, ctx, projectID, rangeID)
+	require.NoError(t, err)
+
+	return internalRange
+}
+
+// GetInternalRangeAttrsE returns the settings Google Cloud holds for the given internal range.
+// The ctx parameter supports cancellation and timeouts.
+func GetInternalRangeAttrsE(t testing.TestingT, ctx context.Context, projectID string, rangeID string) (*networkconnectivity.InternalRange, error) {
+	logger.Default.Logf(t, "Getting settings for internal range %s in project %s", rangeID, projectID)
+
+	service, err := NewNetworkConnectivityServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetInternalRangeAttrsWithClient(ctx, service, projectID, rangeID)
+}
+
+// GetInternalRangeAttrsWithClient returns the settings Google Cloud holds for the given internal range
+// using the supplied *networkconnectivity.Service. Prefer this variant in unit tests where the service
+// is backed by an httptest fake server (see networkconnectivity_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetInternalRangeAttrsWithClient(ctx context.Context, service *networkconnectivity.Service, projectID string, rangeID string) (*networkconnectivity.InternalRange, error) {
+	name := fmt.Sprintf("projects/%s/locations/global/internalRanges/%s", projectID, rangeID)
+
+	internalRange, err := service.Projects.Locations.InternalRanges.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the internal range %s does not exist in project %s", rangeID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for internal range %s in project %s: %w", rangeID, projectID, err)
+	}
+
+	return internalRange, nil
+}

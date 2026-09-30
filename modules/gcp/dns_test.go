@@ -162,3 +162,23 @@ func TestGetDNSRecordSetAttrsWithClientMissingRecordSet(t *testing.T) {
 	require.ErrorContains(t, err, "DNS managed zone gw-zone ")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetDNSResponsePolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a policy the terraform-google-networking response policy module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/responsePolicies/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"responsePolicyName":"gw-library-test","description":"created by terratest","networks":[{"networkUrl":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/global/networks/gw-library-test"}]}`))
+	})
+
+	policy, err := gcp.GetDNSResponsePolicyAttrsWithClient(context.Background(), newFakeDNSService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", policy.ResponsePolicyName)
+	assert.Equal(t, "created by terratest", policy.Description)
+	require.Len(t, policy.Networks, 1)
+}
