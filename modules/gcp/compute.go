@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -913,4 +915,48 @@ func FetchProjectMetadataWithClient(ctx context.Context, service *compute.Servic
 	}
 
 	return project.CommonInstanceMetadata, nil
+}
+
+// FetchNetworkAttachment returns the settings Google Cloud holds for the given network attachment, so
+// a test can assert on what was actually created rather than only that it exists. An attachment is how
+// a producer's traffic is allowed into a consumer's subnetwork, so who may connect is the whole point
+// of it.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkAttachment(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.NetworkAttachment {
+	attachment, err := FetchNetworkAttachmentE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return attachment
+}
+
+// FetchNetworkAttachmentE returns the settings Google Cloud holds for the given network attachment.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkAttachmentE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.NetworkAttachment, error) {
+	logger.Default.Logf(t, "Getting settings for network attachment %s in %s in project %s", name, region, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchNetworkAttachmentWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchNetworkAttachmentWithClient returns the settings Google Cloud holds for the given network
+// attachment using the supplied *compute.Service. Prefer this variant in unit tests where the service
+// is backed by an httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchNetworkAttachmentWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.NetworkAttachment, error) {
+	attachment, err := service.NetworkAttachments.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the network attachment %s does not exist in %s in project %s", name, region, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for network attachment %s in %s in project %s: %w", name, region, projectID, err)
+	}
+
+	return attachment, nil
 }
