@@ -33,7 +33,8 @@ func TestGetAssetFeedAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
 	// The response is shaped like the one Google returns for a feed the terraform-google-management project feed module created, not a
-	// copy of any one fixture's values.
+	// copy of any one fixture's values. The path carries a project number rather than a project id,
+	// because that is the only form Google names a feed by.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/37950160017/feeds/gw-library-test"), "unexpected path %s", r.URL.Path)
