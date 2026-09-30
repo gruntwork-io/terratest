@@ -388,3 +388,24 @@ func TestFetchProjectMetadataWithClient(t *testing.T) {
 	require.NotNil(t, metadata.Items[0].Value)
 	assert.Equal(t, "created by terratest", *metadata.Items[0].Value)
 }
+
+func TestFetchNetworkAttachmentWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an attachment the terraform-google-networking network attachment module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/networkAttachments/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","connectionPreference":"ACCEPT_MANUAL","subnetworks":["https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/subnetworks/gw-library-test"],"producerAcceptLists":["gw-library-test-project"]}`))
+	})
+
+	attachment, err := gcp.FetchNetworkAttachmentWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ACCEPT_MANUAL", attachment.ConnectionPreference)
+	assert.Equal(t, "created by terratest", attachment.Description)
+	require.Len(t, attachment.Subnetworks, 1)
+	assert.Equal(t, []string{"gw-library-test-project"}, attachment.ProducerAcceptLists)
+}
