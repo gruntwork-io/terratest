@@ -135,3 +135,32 @@ func TestGetFirestoreUserCredsAttrsWithClientDropsThePassword(t *testing.T) {
 	require.NotNil(t, creds.ResourceIdentity)
 	assert.Contains(t, creds.ResourceIdentity.Principal, "userCreds/gw-library-test")
 }
+
+func TestGetFirestoreBackupScheduleAttrsWithClientAcceptsEitherForm(t *testing.T) {
+	t.Parallel()
+
+	// A caller holding the id Google assigned and a caller holding the whole resource name the
+	// provider hands back must reach the same path. Prefixing a name that already carries its
+	// collection would ask for a schedule that cannot exist.
+	const (
+		id   = "abc123"
+		full = "projects/gw-library-test-project/databases/gw-library-test/backupSchedules/abc123"
+	)
+
+	for _, argument := range []string{id, full} {
+		t.Run(argument, func(t *testing.T) {
+			t.Parallel()
+
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				assert.True(t, strings.HasSuffix(r.URL.Path, "/"+full), "unexpected path %s", r.URL.Path)
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"name":"` + full + `","retention":"604800s","dailyRecurrence":{}}`))
+			})
+
+			schedule, err := gcp.GetFirestoreBackupScheduleAttrsWithClient(context.Background(),
+				newFakeFirestoreAdminService(t, handler), "gw-library-test-project", "gw-library-test", argument)
+			require.NoError(t, err)
+			assert.Equal(t, "604800s", schedule.Retention)
+		})
+	}
+}

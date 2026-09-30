@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -157,7 +158,8 @@ func NewFirestoreAdminServiceE(t testing.TestingT, ctx context.Context) (*firest
 
 // GetFirestoreBackupScheduleAttrs returns the settings Google Cloud holds for the given Firestore
 // backup schedule, so a test can assert on how often it runs and how long it keeps a backup. Google
-// assigns a schedule its id, so the caller passes the id it got back rather than a name it chose.
+// assigns a schedule its id, so the caller passes the id it got back rather than a name it chose. A
+// caller holding the whole resource name the provider hands back may pass that instead.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
 func GetFirestoreBackupScheduleAttrs(t testing.TestingT, ctx context.Context, projectID string, databaseID string, scheduleID string) *firestore.GoogleFirestoreAdminV1BackupSchedule {
@@ -187,7 +189,14 @@ func GetFirestoreBackupScheduleAttrsE(t testing.TestingT, ctx context.Context, p
 // pattern).
 // The ctx parameter supports cancellation and timeouts.
 func GetFirestoreBackupScheduleAttrsWithClient(ctx context.Context, service *firestore.Service, projectID string, databaseID string, scheduleID string) (*firestore.GoogleFirestoreAdminV1BackupSchedule, error) {
-	name := fmt.Sprintf("projects/%s/databases/%s/backupSchedules/%s", projectID, databaseID, scheduleID)
+	// A caller may hold the id Google assigned or the whole resource name the provider hands back.
+	// Prefixing a name that already carries its collection would ask for a schedule that cannot exist.
+	collection := fmt.Sprintf("projects/%s/databases/%s/backupSchedules/", projectID, databaseID)
+
+	name := collection + scheduleID
+	if strings.HasPrefix(scheduleID, collection) {
+		name = scheduleID
+	}
 
 	schedule, err := service.Projects.Databases.BackupSchedules.Get(name).Context(ctx).Do()
 	if err != nil {
