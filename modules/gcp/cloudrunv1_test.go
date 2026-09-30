@@ -67,3 +67,13 @@ func TestGetCloudRunV1ServiceAttrsWithClientReportsAMissingService(t *testing.T)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestNewCloudRunV1ServiceERefusesAnInvalidLocation(t *testing.T) {
+	t.Parallel()
+
+	// The location goes into the endpoint host, so anything but a plain location name would send the
+	// request, and the caller's credentials with it, somewhere the caller did not name.
+	_, err := gcp.NewCloudRunV1ServiceE(t, context.Background(), "us-central1.evil.example.com")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "is not a valid location")
+}

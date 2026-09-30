@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
@@ -67,8 +68,17 @@ func GetCloudRunV1ServiceAttrsWithClient(ctx context.Context, client *runv1.APIS
 // way every other client in this module is. The v1 API serves each region from its own endpoint.
 // The ctx parameter supports cancellation and timeouts.
 func NewCloudRunV1ServiceE(t testing.TestingT, ctx context.Context, location string) (*runv1.APIService, error) {
+	if !cloudRunV1LocationPattern.MatchString(location) {
+		return nil, fmt.Errorf("%q is not a valid location: a location may hold only lowercase letters, digits and hyphens", location)
+	}
+
 	endpoint := fmt.Sprintf("https://%s-run.googleapis.com/", location)
 
 	return runv1.NewService(ctx, append(withOptions(),
 		option.WithScopes(runv1.CloudPlatformScope), option.WithEndpoint(endpoint))...)
 }
+
+// cloudRunV1LocationPattern is what a Cloud Run location may look like. The location goes into the
+// endpoint host, so anything else would send the request, and the caller's credentials with it,
+// somewhere the caller did not name.
+var cloudRunV1LocationPattern = regexp.MustCompile(`^[a-z0-9-]+$`)
