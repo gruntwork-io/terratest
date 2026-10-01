@@ -196,3 +196,48 @@ func GetDLPJobTriggerAttrsWithClient(ctx context.Context, service *dlp.Service, 
 func NewDLPServiceE(t testing.TestingT, ctx context.Context) (*dlp.Service, error) {
 	return dlp.NewService(ctx, append(withOptions(), option.WithScopes(dlp.CloudPlatformScope))...)
 }
+
+// GetDLPDiscoveryConfigAttrs returns the settings Google Cloud holds for the given discovery config,
+// so a test can assert on which data it profiles and on what schedule. Google assigns a discovery
+// config its id, so the caller passes the id it got back rather than a name it chose.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDLPDiscoveryConfigAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, configID string) *dlp.GooglePrivacyDlpV2DiscoveryConfig {
+	config, err := GetDLPDiscoveryConfigAttrsE(t, ctx, projectID, location, configID)
+	require.NoError(t, err)
+
+	return config
+}
+
+// GetDLPDiscoveryConfigAttrsE returns the settings Google Cloud holds for the given discovery config.
+// The ctx parameter supports cancellation and timeouts.
+func GetDLPDiscoveryConfigAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, configID string) (*dlp.GooglePrivacyDlpV2DiscoveryConfig, error) {
+	logger.Default.Logf(t, "Getting settings for discovery config %s in %s in project %s", configID, location, projectID)
+
+	service, err := NewDLPServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDLPDiscoveryConfigAttrsWithClient(ctx, service, projectID, location, configID)
+}
+
+// GetDLPDiscoveryConfigAttrsWithClient returns the settings Google Cloud holds for the given
+// discovery config using the supplied *dlp.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see dlp_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDLPDiscoveryConfigAttrsWithClient(ctx context.Context, service *dlp.Service, projectID string, location string, configID string) (*dlp.GooglePrivacyDlpV2DiscoveryConfig, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/discoveryConfigs/%s", projectID, location, configID)
+
+	config, err := service.Projects.Locations.DiscoveryConfigs.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the discovery config %s in %s in project %s does not exist", configID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for discovery config %s in %s in project %s: %w", configID, location, projectID, err)
+	}
+
+	return config, nil
+}

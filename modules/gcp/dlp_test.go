@@ -116,3 +116,23 @@ func TestGetDLPJobTriggerAttrsWithClient(t *testing.T) {
 	require.NotNil(t, trigger.Triggers[0].Schedule)
 	assert.Equal(t, "86400s", trigger.Triggers[0].Schedule.RecurrencePeriodDuration)
 }
+
+func TestGetDLPDiscoveryConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a config the terraform-google-security discovery config module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/discoveryConfigs/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/discoveryConfigs/gw-library-test","displayName":"terratest discovery config","status":"PAUSED","inspectTemplates":["projects/gw-library-test-project/locations/us-central1/inspectTemplates/gw-library-test"]}`))
+	})
+
+	config, err := gcp.GetDLPDiscoveryConfigAttrsWithClient(context.Background(), newFakeDLPService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest discovery config", config.DisplayName)
+	assert.Equal(t, "PAUSED", config.Status)
+	require.Len(t, config.InspectTemplates, 1)
+}
