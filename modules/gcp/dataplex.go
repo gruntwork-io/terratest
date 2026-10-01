@@ -58,11 +58,49 @@ func GetDataplexLakeAttrsWithClient(ctx context.Context, service *dataplex.Servi
 	return lake, nil
 }
 
-// NewDataplexServiceE creates a Dataplex service authenticated the same way every other client in
-// this module is.
+// GetDataplexEntryLinkAttrs returns the settings Google Cloud holds for the given Dataplex entry link, so
+// a test can assert which two entries it joins and under which link type. An entry link lives inside an
+// entry group, so the caller names the group too.
+// This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func NewDataplexServiceE(t testing.TestingT, ctx context.Context) (*dataplex.Service, error) {
-	return dataplex.NewService(ctx, append(withOptions(), option.WithScopes(dataplex.CloudPlatformScope))...)
+func GetDataplexEntryLinkAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, entryGroupID string, entryLinkID string) *dataplex.GoogleCloudDataplexV1EntryLink {
+	link, err := GetDataplexEntryLinkAttrsE(t, ctx, projectID, location, entryGroupID, entryLinkID)
+	require.NoError(t, err)
+
+	return link
+}
+
+// GetDataplexEntryLinkAttrsE returns the settings Google Cloud holds for the given Dataplex entry link.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexEntryLinkAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, entryGroupID string, entryLinkID string) (*dataplex.GoogleCloudDataplexV1EntryLink, error) {
+	logger.Default.Logf(t, "Getting settings for Dataplex entry link %s in entry group %s in %s in project %s", entryLinkID, entryGroupID, location, projectID)
+
+	service, err := NewDataplexServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDataplexEntryLinkAttrsWithClient(ctx, service, projectID, location, entryGroupID, entryLinkID)
+}
+
+// GetDataplexEntryLinkAttrsWithClient returns the settings Google Cloud holds for the given Dataplex
+// entry link using the supplied *dataplex.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see dataplex_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexEntryLinkAttrsWithClient(ctx context.Context, service *dataplex.Service, projectID string, location string, entryGroupID string, entryLinkID string) (*dataplex.GoogleCloudDataplexV1EntryLink, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/entryGroups/%s/entryLinks/%s", projectID, location, entryGroupID, entryLinkID)
+
+	link, err := service.Projects.Locations.EntryGroups.EntryLinks.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Dataplex entry link %s in entry group %s in %s in project %s does not exist", entryLinkID, entryGroupID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Dataplex entry link %s in entry group %s in %s in project %s: %w", entryLinkID, entryGroupID, location, projectID, err)
+	}
+
+	return link, nil
 }
 
 // GetDataplexZoneAttrs returns the settings Google Cloud holds for the given Dataplex zone, so a test can assert on
@@ -507,4 +545,11 @@ func GetDataplexDataScanAttrsWithClient(ctx context.Context, service *dataplex.S
 	}
 
 	return scan, nil
+}
+
+// NewDataplexServiceE creates a Dataplex service authenticated the same way every other client in
+// this module is.
+// The ctx parameter supports cancellation and timeouts.
+func NewDataplexServiceE(t testing.TestingT, ctx context.Context) (*dataplex.Service, error) {
+	return dataplex.NewService(ctx, append(withOptions(), option.WithScopes(dataplex.CloudPlatformScope))...)
 }

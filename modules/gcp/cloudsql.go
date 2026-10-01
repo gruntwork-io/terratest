@@ -146,13 +146,6 @@ func GetCloudSQLUserAttrsWithClient(ctx context.Context, service *sqladmin.Servi
 	return user, nil
 }
 
-// NewCloudSQLServiceE creates a Cloud SQL Admin service authenticated the same way every other
-// client in this module is.
-// The ctx parameter supports cancellation and timeouts.
-func NewCloudSQLServiceE(t testing.TestingT, ctx context.Context) (*sqladmin.Service, error) {
-	return sqladmin.NewService(ctx, append(withOptions(), option.WithScopes(sqladmin.CloudPlatformScope))...)
-}
-
 // GetSourceRepresentationInstanceAttrs returns the settings Google Cloud holds for the given source
 // representation instance, so a test can assert on the database it stands for. A source
 // representation instance is a stored description of a database somewhere else rather than a running
@@ -198,4 +191,55 @@ func GetSourceRepresentationInstanceAttrsWithClient(ctx context.Context, service
 	}
 
 	return instance, nil
+}
+
+// GetCloudSQLSslCertAttrs returns the client certificate Google Cloud holds under the given fingerprint
+// on a Cloud SQL instance, so a test can assert on the name it was issued under. A certificate is named
+// by its own SHA-1 fingerprint rather than by a path, so the caller passes that.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudSQLSslCertAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, sha1Fingerprint string) *sqladmin.SslCert {
+	cert, err := GetCloudSQLSslCertAttrsE(t, ctx, projectID, instanceID, sha1Fingerprint)
+	require.NoError(t, err)
+
+	return cert
+}
+
+// GetCloudSQLSslCertAttrsE returns the client certificate Google Cloud holds under the given fingerprint
+// on a Cloud SQL instance.
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudSQLSslCertAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, sha1Fingerprint string) (*sqladmin.SslCert, error) {
+	logger.Default.Logf(t, "Getting the client certificate %s on Cloud SQL instance %s in project %s", sha1Fingerprint, instanceID, projectID)
+
+	service, err := NewCloudSQLServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCloudSQLSslCertAttrsWithClient(ctx, service, projectID, instanceID, sha1Fingerprint)
+}
+
+// GetCloudSQLSslCertAttrsWithClient returns the client certificate Google Cloud holds under the given
+// fingerprint on a Cloud SQL instance using the supplied *sqladmin.Service. Prefer this variant in unit
+// tests where the service is backed by an httptest fake server (see cloudsql_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudSQLSslCertAttrsWithClient(ctx context.Context, service *sqladmin.Service, projectID string, instanceID string, sha1Fingerprint string) (*sqladmin.SslCert, error) {
+	cert, err := service.SslCerts.Get(projectID, instanceID, sha1Fingerprint).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the client certificate %s on Cloud SQL instance %s in project %s does not exist", sha1Fingerprint, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the client certificate %s on Cloud SQL instance %s in project %s: %w", sha1Fingerprint, instanceID, projectID, err)
+	}
+
+	return cert, nil
+}
+
+// NewCloudSQLServiceE creates a Cloud SQL Admin service authenticated the same way every other
+// client in this module is.
+// The ctx parameter supports cancellation and timeouts.
+func NewCloudSQLServiceE(t testing.TestingT, ctx context.Context) (*sqladmin.Service, error) {
+	return sqladmin.NewService(ctx, append(withOptions(), option.WithScopes(sqladmin.CloudPlatformScope))...)
 }

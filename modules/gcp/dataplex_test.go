@@ -277,3 +277,40 @@ func TestGetDataplexDataScanAttrsWithClient(t *testing.T) {
 	require.Len(t, scan.DataQualitySpec.Rules, 1)
 	assert.Equal(t, "COMPLETENESS", scan.DataQualitySpec.Rules[0].Dimension)
 }
+
+func TestGetDataplexEntryLinkAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an entry link the terraform-google-data-analytics entry link module created, not a
+	// copy of any one fixture's values. An entry link joins exactly two entries, and the link type says
+	// what the join means.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/entryGroups/gw-library-test/entryLinks/gw-library-link"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/entryGroups/gw-library-test/entryLinks/gw-library-link","entryLinkType":"projects/dataplex-types/locations/global/entryLinkTypes/synonym","entryReferences":[{"name":"projects/gw-library-test-project/locations/global/entryGroups/@dataplex/entries/first","type":"SOURCE"},{"name":"projects/gw-library-test-project/locations/global/entryGroups/@dataplex/entries/second","type":"TARGET"}]}`))
+	})
+
+	link, err := gcp.GetDataplexEntryLinkAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-link")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/dataplex-types/locations/global/entryLinkTypes/synonym", link.EntryLinkType)
+	require.Len(t, link.EntryReferences, 2)
+	assert.Equal(t, "SOURCE", link.EntryReferences[0].Type)
+	assert.Equal(t, "TARGET", link.EntryReferences[1].Type)
+}
+
+func TestGetDataplexEntryLinkAttrsWithClientMissingLink(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names an entry link that is not there should read a sentence about that link, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetDataplexEntryLinkAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

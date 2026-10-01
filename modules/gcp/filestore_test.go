@@ -68,3 +68,74 @@ func TestGetFilestoreInstanceAttrsWithClientMissingInstance(t *testing.T) {
 	require.ErrorContains(t, err, "us-central1-a")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetFilestoreSnapshotAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a snapshot the terraform-google-data-storage snapshot module created, not a copy of
+	// any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1-a/instances/gw-library-test/snapshots/gw-library-snapshot"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1-a/instances/gw-library-test/snapshots/gw-library-snapshot","description":"created by terratest","state":"READY","labels":{"purpose":"terratest"}}`))
+	})
+
+	snapshot, err := gcp.GetFilestoreSnapshotAttrsWithClient(context.Background(), newFakeFilestoreService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test", "gw-library-snapshot")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", snapshot.Description)
+	assert.Equal(t, "READY", snapshot.State)
+	assert.Equal(t, "terratest", snapshot.Labels["purpose"])
+}
+
+func TestGetFilestoreSnapshotAttrsWithClientMissingSnapshot(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a snapshot that is not there should read a sentence about that snapshot, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetFilestoreSnapshotAttrsWithClient(context.Background(), newFakeFilestoreService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetFilestoreBackupAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a backup the terraform-google-data-storage backup module created, not a copy of any
+	// one fixture's values. A backup names a location rather than a zone, and carries the share it was
+	// taken from.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/backups/gw-library-backup"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/backups/gw-library-backup","description":"created by terratest","sourceFileShare":"terratest_share","state":"READY","labels":{"purpose":"terratest"}}`))
+	})
+
+	backup, err := gcp.GetFilestoreBackupAttrsWithClient(context.Background(), newFakeFilestoreService(t, handler), "gw-library-test-project", "us-central1", "gw-library-backup")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", backup.Description)
+	assert.Equal(t, "terratest_share", backup.SourceFileShare)
+	assert.Equal(t, "terratest", backup.Labels["purpose"])
+}
+
+func TestGetFilestoreBackupAttrsWithClientMissingBackup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a backup that is not there should read a sentence about that backup, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetFilestoreBackupAttrsWithClient(context.Background(), newFakeFilestoreService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

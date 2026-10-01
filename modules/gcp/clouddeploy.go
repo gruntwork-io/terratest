@@ -104,13 +104,6 @@ func GetDeployTargetAttrsWithClient(ctx context.Context, service *clouddeploy.Se
 	return target, nil
 }
 
-// NewCloudDeployServiceE creates a Cloud Deploy service authenticated the same way every other
-// client in this module is.
-// The ctx parameter supports cancellation and timeouts.
-func NewCloudDeployServiceE(t testing.TestingT, ctx context.Context) (*clouddeploy.Service, error) {
-	return clouddeploy.NewService(ctx, append(withOptions(), option.WithScopes(clouddeploy.CloudPlatformScope))...)
-}
-
 // GetCloudDeployAutomationAttrs returns the settings Google Cloud holds for the given delivery pipeline automation, so a test can assert on
 // what was actually created rather than only that it exists.
 // This will fail the test if there is an error.
@@ -336,4 +329,60 @@ func GetCloudDeployTargetIamPolicyAttrsWithClient(ctx context.Context, service *
 	}
 
 	return policy, nil
+}
+
+// GetCloudDeployCustomTargetTypeIamPolicyAttrs returns the IAM policy Google Cloud holds for the given
+// custom target type, so a test can assert on who may deploy through it.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudDeployCustomTargetTypeIamPolicyAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, typeID string) *clouddeploy.Policy {
+	policy, err := GetCloudDeployCustomTargetTypeIamPolicyAttrsE(t, ctx, projectID, location, typeID)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// GetCloudDeployCustomTargetTypeIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given
+// custom target type.
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudDeployCustomTargetTypeIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, typeID string) (*clouddeploy.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for custom target type %s in %s in project %s", typeID, location, projectID)
+
+	service, err := NewCloudDeployServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCloudDeployCustomTargetTypeIamPolicyAttrsWithClient(ctx, service, projectID, location, typeID)
+}
+
+// GetCloudDeployCustomTargetTypeIamPolicyAttrsWithClient returns the IAM policy Google Cloud holds for
+// the given custom target type using the supplied *clouddeploy.Service. Prefer this variant in unit
+// tests where the service is backed by an httptest fake server (see clouddeploy_test.go for the
+// pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudDeployCustomTargetTypeIamPolicyAttrsWithClient(ctx context.Context, service *clouddeploy.Service, projectID string, location string, typeID string) (*clouddeploy.Policy, error) {
+	resource := fmt.Sprintf("projects/%s/locations/%s/customTargetTypes/%s", projectID, location, typeID)
+
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what is
+	// asked for.
+	policy, err := service.Projects.Locations.CustomTargetTypes.GetIamPolicy(resource).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the custom target type %s in %s in project %s does not exist", typeID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for custom target type %s in %s in project %s: %w", typeID, location, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// NewCloudDeployServiceE creates a Cloud Deploy service authenticated the same way every other
+// client in this module is.
+// The ctx parameter supports cancellation and timeouts.
+func NewCloudDeployServiceE(t testing.TestingT, ctx context.Context) (*clouddeploy.Service, error) {
+	return clouddeploy.NewService(ctx, append(withOptions(), option.WithScopes(clouddeploy.CloudPlatformScope))...)
 }
