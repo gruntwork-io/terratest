@@ -317,6 +317,49 @@ func GetStorageManagedFolderIamPolicyAttrsWithClient(ctx context.Context, servic
 	return policy, nil
 }
 
+// GetStorageAnywhereCacheAttrs returns the settings Google Cloud holds for the given Anywhere Cache instance, so a test can assert on what was
+// actually created rather than only that it exists.
+// A cache keeps a zonal copy of a bucket's reads, so the zone it lives in and its admission policy are the point.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageAnywhereCacheAttrs(t testing.TestingT, ctx context.Context, bucket string, cacheID string) *storagev1.AnywhereCache {
+	attrs, err := GetStorageAnywhereCacheAttrsE(t, ctx, bucket, cacheID)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetStorageAnywhereCacheAttrsE returns the settings Google Cloud holds for the given Anywhere Cache instance.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageAnywhereCacheAttrsE(t testing.TestingT, ctx context.Context, bucket string, cacheID string) (*storagev1.AnywhereCache, error) {
+	logger.Default.Logf(t, "Getting settings for Anywhere Cache instance %s on bucket %s", cacheID, bucket)
+
+	service, err := NewStorageJSONServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetStorageAnywhereCacheAttrsWithClient(ctx, service, bucket, cacheID)
+}
+
+// GetStorageAnywhereCacheAttrsWithClient returns the settings Google Cloud holds for the given Anywhere Cache instance using the supplied
+// *storagev1.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see storagejson_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageAnywhereCacheAttrsWithClient(ctx context.Context, service *storagev1.Service, bucket string, cacheID string) (*storagev1.AnywhereCache, error) {
+	attrs, err := service.AnywhereCaches.Get(bucket, cacheID).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Anywhere Cache instance %s on bucket %s does not exist", cacheID, bucket)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Anywhere Cache instance %s on bucket %s: %w", cacheID, bucket, err)
+	}
+
+	return attrs, nil
+}
+
 // NewStorageJSONServiceE creates a Cloud Storage JSON API service authenticated the same way every
 // other client in this module is. The Cloud Storage client used by storage.go covers buckets and
 // objects; folders, managed folders, HMAC keys, notifications and access controls are only on this
