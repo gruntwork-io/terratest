@@ -29,47 +29,46 @@ func newFakeNetAppService(t *testing.T, handler http.Handler) *netapp.Service {
 	return service
 }
 
-func TestGetNetAppBackupVaultAttrsWithClient(t *testing.T) {
+func TestGetNetAppHostGroupAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
-	// The response is shaped like the one Google returns for a backup vault a Gruntwork module created, not a
+	// The response is shaped like the one Google returns for a host group a Gruntwork module created, not a
 	// copy of any one fixture's values.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/backupVaults/gw-library-test"), "unexpected path %s", r.URL.Path)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/hostGroups/gw-library-test"), "unexpected path %s", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/backupVaults/gw-library-test","description":"created by terratest","backupVaultType":"IN_REGION","labels":{"purpose":"terratest"},"state":"READY"}`))
+		_, _ = w.Write([]byte(`{"name":"...","description":"created by terratest","type":"ISCSI_INITIATOR","osType":"LINUX","hosts":["iqn.1993-08.org.debian:01:terratest"],"labels":{"purpose":"terratest"}}`))
 	})
 
-	result, err := gcp.GetNetAppBackupVaultAttrsWithClient(context.Background(), newFakeNetAppService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	result, err := gcp.GetNetAppHostGroupAttrsWithClient(context.Background(), newFakeNetAppService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ISCSI_INITIATOR", result.Type)
+	assert.Equal(t, "LINUX", result.OsType)
+	require.Len(t, result.Hosts, 1)
+}
+
+func TestGetNetAppKmsConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a KMS config a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/kmsConfigs/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"...","description":"created by terratest","cryptoKeyName":"projects/gw-library-test-project/locations/us-central1/keyRings/gw-library-test/cryptoKeys/gw-library-test","labels":{"purpose":"terratest"}}`))
+	})
+
+	result, err := gcp.GetNetAppKmsConfigAttrsWithClient(context.Background(), newFakeNetAppService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
 	require.NoError(t, err)
 
 	assert.Equal(t, "created by terratest", result.Description)
-	assert.Equal(t, "IN_REGION", result.BackupVaultType)
-	assert.Equal(t, map[string]string{"purpose": "terratest"}, result.Labels)
+	assert.Contains(t, result.CryptoKeyName, "cryptoKeys/gw-library-test")
 }
 
-func TestGetNetAppBackupPolicyAttrsWithClient(t *testing.T) {
-	t.Parallel()
-
-	// The response is shaped like the one Google returns for a backup policy a Gruntwork module created, not a
-	// copy of any one fixture's values.
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, http.MethodGet, r.Method)
-		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/backupPolicies/gw-library-test"), "unexpected path %s", r.URL.Path)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/backupPolicies/gw-library-test","description":"created by terratest","enabled":false,"dailyBackupLimit":3,"weeklyBackupLimit":2,"monthlyBackupLimit":1}`))
-	})
-
-	result, err := gcp.GetNetAppBackupPolicyAttrsWithClient(context.Background(), newFakeNetAppService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
-	require.NoError(t, err)
-
-	assert.Equal(t, int64(3), result.DailyBackupLimit)
-	assert.Equal(t, int64(2), result.WeeklyBackupLimit)
-	assert.False(t, result.Enabled)
-}
-
-func TestGetNetAppBackupVaultAttrsWithClientReportsAMissingOne(t *testing.T) {
+func TestGetNetAppHostGroupAttrsWithClientReportsAMissingOne(t *testing.T) {
 	t.Parallel()
 
 	// A caller who asks for something that is not there should be told that, rather than be handed the
@@ -79,7 +78,7 @@ func TestGetNetAppBackupVaultAttrsWithClientReportsAMissingOne(t *testing.T) {
 		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Resource not found."}}`))
 	})
 
-	_, err := gcp.GetNetAppBackupVaultAttrsWithClient(context.Background(), newFakeNetAppService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	_, err := gcp.GetNetAppHostGroupAttrsWithClient(context.Background(), newFakeNetAppService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
