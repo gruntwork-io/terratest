@@ -102,6 +102,51 @@ func GetSpannerDatabaseAttrsWithClient(ctx context.Context, service *spanner.Ser
 	return database, nil
 }
 
+// GetSpannerBackupScheduleAttrs returns the settings Google Cloud holds for the given backup schedule,
+// so a test can assert on how often it runs and how long it keeps a backup. A schedule belongs to a
+// database, so the caller names both.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetSpannerBackupScheduleAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, databaseID string, scheduleID string) *spanner.BackupSchedule {
+	schedule, err := GetSpannerBackupScheduleAttrsE(t, ctx, projectID, instanceID, databaseID, scheduleID)
+	require.NoError(t, err)
+
+	return schedule
+}
+
+// GetSpannerBackupScheduleAttrsE returns the settings Google Cloud holds for the given backup schedule.
+// The ctx parameter supports cancellation and timeouts.
+func GetSpannerBackupScheduleAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, databaseID string, scheduleID string) (*spanner.BackupSchedule, error) {
+	logger.Default.Logf(t, "Getting settings for Spanner backup schedule %s on database %s in project %s", scheduleID, databaseID, projectID)
+
+	service, err := NewSpannerServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetSpannerBackupScheduleAttrsWithClient(ctx, service, projectID, instanceID, databaseID, scheduleID)
+}
+
+// GetSpannerBackupScheduleAttrsWithClient returns the settings Google Cloud holds for the given backup
+// schedule using the supplied *spanner.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see spanner_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetSpannerBackupScheduleAttrsWithClient(ctx context.Context, service *spanner.Service, projectID string, instanceID string, databaseID string, scheduleID string) (*spanner.BackupSchedule, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/databases/%s/backupSchedules/%s", projectID, instanceID, databaseID, scheduleID)
+
+	schedule, err := service.Projects.Instances.Databases.BackupSchedules.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Spanner backup schedule %s on database %s in project %s does not exist", scheduleID, databaseID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Spanner backup schedule %s on database %s in project %s: %w", scheduleID, databaseID, projectID, err)
+	}
+
+	return schedule, nil
+}
+
 // NewSpannerServiceE creates a Spanner service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.
