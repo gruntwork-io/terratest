@@ -409,3 +409,265 @@ func TestFetchNetworkAttachmentWithClient(t *testing.T) {
 	require.Len(t, attachment.Subnetworks, 1)
 	assert.Equal(t, []string{"gw-library-test-project"}, attachment.ProducerAcceptLists)
 }
+
+func TestFetchDiskIamPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a disk a Gruntwork module set a policy
+	// on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/disks/gw-library-test/getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"), "a conditional binding only comes back at version 3")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"bindings":[{"role":"roles/compute.storageAdmin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.FetchDiskIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/compute.storageAdmin", policy.Bindings[0].Role)
+	assert.Equal(t, int64(3), policy.Version)
+}
+
+func TestFetchRegionDiskIamPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a regional disk a Gruntwork module set a policy
+	// on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/disks/gw-library-test/getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"), "a conditional binding only comes back at version 3")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"bindings":[{"role":"roles/compute.storageAdmin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.FetchRegionDiskIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/compute.storageAdmin", policy.Bindings[0].Role)
+	assert.Equal(t, int64(3), policy.Version)
+}
+
+func TestFetchSnapshotIamPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a snapshot a Gruntwork module set a policy
+	// on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/snapshots/gw-library-test/getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"), "a conditional binding only comes back at version 3")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"bindings":[{"role":"roles/compute.storageAdmin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.FetchSnapshotIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/compute.storageAdmin", policy.Bindings[0].Role)
+	assert.Equal(t, int64(3), policy.Version)
+}
+
+func TestFetchInstantSnapshotIamPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a instant snapshot a Gruntwork module set a policy
+	// on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/instantSnapshots/gw-library-test/getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"), "a conditional binding only comes back at version 3")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"bindings":[{"role":"roles/compute.storageAdmin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.FetchInstantSnapshotIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/compute.storageAdmin", policy.Bindings[0].Role)
+	assert.Equal(t, int64(3), policy.Version)
+}
+
+func TestFetchRegionInstantSnapshotIamPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a regional instant snapshot a Gruntwork module set a policy
+	// on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/instantSnapshots/gw-library-test/getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"), "a conditional binding only comes back at version 3")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"bindings":[{"role":"roles/compute.storageAdmin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.FetchRegionInstantSnapshotIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/compute.storageAdmin", policy.Bindings[0].Role)
+	assert.Equal(t, int64(3), policy.Version)
+}
+
+func TestFetchInstanceTemplateIamPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a instance template a Gruntwork module set a policy
+	// on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/instanceTemplates/gw-library-test/getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"), "a conditional binding only comes back at version 3")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"bindings":[{"role":"roles/compute.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.FetchInstanceTemplateIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/compute.viewer", policy.Bindings[0].Role)
+	assert.Equal(t, int64(3), policy.Version)
+}
+
+func TestFetchInstanceIamPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a instance a Gruntwork module set a policy
+	// on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/instances/gw-library-test/getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("optionsRequestedPolicyVersion"), "a conditional binding only comes back at version 3")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"bindings":[{"role":"roles/compute.osLogin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.FetchInstanceIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/compute.osLogin", policy.Bindings[0].Role)
+	assert.Equal(t, int64(3), policy.Version)
+}
+
+func TestFetchInstantSnapshotWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a instant snapshot a Gruntwork module created, not
+	// a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/instantSnapshots/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","diskSizeGb":"10","labels":{"purpose":"terratest"},"status":"READY"}`))
+	})
+
+	result, err := gcp.FetchInstantSnapshotWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", result.Description)
+	assert.Equal(t, int64(10), result.DiskSizeGb)
+	assert.Equal(t, map[string]string{"purpose": "terratest"}, result.Labels)
+}
+
+func TestFetchRegionInstantSnapshotWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a regional instant snapshot a Gruntwork module created, not
+	// a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/instantSnapshots/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","diskSizeGb":"10","status":"READY"}`))
+	})
+
+	result, err := gcp.FetchRegionInstantSnapshotWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", result.Description)
+	assert.Equal(t, int64(10), result.DiskSizeGb)
+}
+
+func TestFetchNodeTemplateWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a sole tenant node template a Gruntwork module created, not
+	// a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/nodeTemplates/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","nodeType":"n1-node-96-624","cpuOvercommitType":"NONE","nodeAffinityLabels":{"purpose":"terratest"}}`))
+	})
+
+	result, err := gcp.FetchNodeTemplateWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "n1-node-96-624", result.NodeType)
+	assert.Equal(t, "NONE", result.CpuOvercommitType)
+	assert.Equal(t, map[string]string{"purpose": "terratest"}, result.NodeAffinityLabels)
+}
+
+func TestFetchRegionAutoscalerWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a regional autoscaler a Gruntwork module created, not
+	// a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/autoscalers/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","autoscalingPolicy":{"minNumReplicas":1,"maxNumReplicas":3,"coolDownPeriodSec":90,"mode":"OFF"}}`))
+	})
+
+	result, err := gcp.FetchRegionAutoscalerWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.NotNil(t, result.AutoscalingPolicy)
+	assert.Equal(t, int64(3), result.AutoscalingPolicy.MaxNumReplicas)
+	assert.Equal(t, int64(90), result.AutoscalingPolicy.CoolDownPeriodSec)
+	assert.Equal(t, "OFF", result.AutoscalingPolicy.Mode)
+}
+
+func TestFetchDiskIamPolicyWithClientReportsAMissingDisk(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a disk that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"The resource was not found."}}`))
+	})
+
+	_, err := gcp.FetchDiskIamPolicyWithClient(context.Background(), newFakeComputeService(t, handler),
+		"gw-library-test-project", "us-central1-a", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchInstanceResourcePoliciesWithClient(t *testing.T) {
+	t.Parallel()
+
+	// An attachment is not a resource of its own, so Google answers for it as a list on the instance.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/instances/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","resourcePolicies":["https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/resourcePolicies/gw-library-test"]}`))
+	})
+
+	policies, err := gcp.FetchInstanceResourcePoliciesWithClient(context.Background(), newFakeComputeService(t, handler),
+		"gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policies, 1)
+	assert.Contains(t, policies[0], "resourcePolicies/gw-library-test")
+}
