@@ -960,3 +960,530 @@ func FetchNetworkAttachmentWithClient(ctx context.Context, service *compute.Serv
 
 	return attachment, nil
 }
+
+// FetchDiskIamPolicy returns the IAM policy Google Cloud holds for the given disk, so a test can
+// assert on who may use it rather than only that a policy was applied.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchDiskIamPolicy(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *compute.Policy {
+	policy, err := FetchDiskIamPolicyE(t, ctx, projectID, zone, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchDiskIamPolicyE returns the IAM policy Google Cloud holds for the given disk.
+// The ctx parameter supports cancellation and timeouts.
+func FetchDiskIamPolicyE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*compute.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for disk %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchDiskIamPolicyWithClient(ctx, service, projectID, zone, name)
+}
+
+// FetchDiskIamPolicyWithClient returns the IAM policy Google Cloud holds for the given disk using
+// the supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchDiskIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, name string) (*compute.Policy, error) {
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for.
+	policy, err := service.Disks.GetIamPolicy(projectID, zone, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the disk %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for disk %s in project %s: %w", name, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// FetchRegionDiskIamPolicy returns the IAM policy Google Cloud holds for the given regional disk, so a test can
+// assert on who may use it rather than only that a policy was applied.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionDiskIamPolicy(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Policy {
+	policy, err := FetchRegionDiskIamPolicyE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchRegionDiskIamPolicyE returns the IAM policy Google Cloud holds for the given regional disk.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionDiskIamPolicyE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for regional disk %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionDiskIamPolicyWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionDiskIamPolicyWithClient returns the IAM policy Google Cloud holds for the given regional disk using
+// the supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionDiskIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.Policy, error) {
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for.
+	policy, err := service.RegionDisks.GetIamPolicy(projectID, region, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the regional disk %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for regional disk %s in project %s: %w", name, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// FetchSnapshotIamPolicy returns the IAM policy Google Cloud holds for the given snapshot, so a test can
+// assert on who may use it rather than only that a policy was applied.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchSnapshotIamPolicy(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Policy {
+	policy, err := FetchSnapshotIamPolicyE(t, ctx, projectID, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchSnapshotIamPolicyE returns the IAM policy Google Cloud holds for the given snapshot.
+// The ctx parameter supports cancellation and timeouts.
+func FetchSnapshotIamPolicyE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for snapshot %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchSnapshotIamPolicyWithClient(ctx, service, projectID, name)
+}
+
+// FetchSnapshotIamPolicyWithClient returns the IAM policy Google Cloud holds for the given snapshot using
+// the supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchSnapshotIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.Policy, error) {
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for.
+	policy, err := service.Snapshots.GetIamPolicy(projectID, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the snapshot %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for snapshot %s in project %s: %w", name, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// FetchInstantSnapshotIamPolicy returns the IAM policy Google Cloud holds for the given instant snapshot, so a test can
+// assert on who may use it rather than only that a policy was applied.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstantSnapshotIamPolicy(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *compute.Policy {
+	policy, err := FetchInstantSnapshotIamPolicyE(t, ctx, projectID, zone, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchInstantSnapshotIamPolicyE returns the IAM policy Google Cloud holds for the given instant snapshot.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstantSnapshotIamPolicyE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*compute.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for instant snapshot %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchInstantSnapshotIamPolicyWithClient(ctx, service, projectID, zone, name)
+}
+
+// FetchInstantSnapshotIamPolicyWithClient returns the IAM policy Google Cloud holds for the given instant snapshot using
+// the supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstantSnapshotIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, name string) (*compute.Policy, error) {
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for.
+	policy, err := service.InstantSnapshots.GetIamPolicy(projectID, zone, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the instant snapshot %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for instant snapshot %s in project %s: %w", name, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// FetchRegionInstantSnapshotIamPolicy returns the IAM policy Google Cloud holds for the given regional instant snapshot, so a test can
+// assert on who may use it rather than only that a policy was applied.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstantSnapshotIamPolicy(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Policy {
+	policy, err := FetchRegionInstantSnapshotIamPolicyE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchRegionInstantSnapshotIamPolicyE returns the IAM policy Google Cloud holds for the given regional instant snapshot.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstantSnapshotIamPolicyE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for regional instant snapshot %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionInstantSnapshotIamPolicyWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionInstantSnapshotIamPolicyWithClient returns the IAM policy Google Cloud holds for the given regional instant snapshot using
+// the supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstantSnapshotIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.Policy, error) {
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for.
+	policy, err := service.RegionInstantSnapshots.GetIamPolicy(projectID, region, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the regional instant snapshot %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for regional instant snapshot %s in project %s: %w", name, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// FetchInstanceTemplateIamPolicy returns the IAM policy Google Cloud holds for the given instance template, so a test can
+// assert on who may use it rather than only that a policy was applied.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceTemplateIamPolicy(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.Policy {
+	policy, err := FetchInstanceTemplateIamPolicyE(t, ctx, projectID, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchInstanceTemplateIamPolicyE returns the IAM policy Google Cloud holds for the given instance template.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceTemplateIamPolicyE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for instance template %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchInstanceTemplateIamPolicyWithClient(ctx, service, projectID, name)
+}
+
+// FetchInstanceTemplateIamPolicyWithClient returns the IAM policy Google Cloud holds for the given instance template using
+// the supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceTemplateIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.Policy, error) {
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for.
+	policy, err := service.InstanceTemplates.GetIamPolicy(projectID, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the instance template %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for instance template %s in project %s: %w", name, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// FetchInstanceIamPolicy returns the IAM policy Google Cloud holds for the given instance, so a test can
+// assert on who may use it rather than only that a policy was applied.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceIamPolicy(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *compute.Policy {
+	policy, err := FetchInstanceIamPolicyE(t, ctx, projectID, zone, name)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// FetchInstanceIamPolicyE returns the IAM policy Google Cloud holds for the given instance.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceIamPolicyE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*compute.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for instance %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchInstanceIamPolicyWithClient(ctx, service, projectID, zone, name)
+}
+
+// FetchInstanceIamPolicyWithClient returns the IAM policy Google Cloud holds for the given instance using
+// the supplied *compute.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceIamPolicyWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, name string) (*compute.Policy, error) {
+	// A policy carrying a conditional binding is only returned in full at version 3, so that is what
+	// is asked for.
+	policy, err := service.Instances.GetIamPolicy(projectID, zone, name).
+		OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the instance %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for instance %s in project %s: %w", name, projectID, err)
+	}
+
+	return policy, nil
+}
+
+// FetchInstantSnapshot returns the settings Google Cloud holds for the given instant snapshot, so a test can assert on
+// what was actually created rather than only that it exists. An instant snapshot keeps only the blocks that changed, so it is cheap to take and lives beside its disk rather than in a bucket.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstantSnapshot(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) *compute.InstantSnapshot {
+	result, err := FetchInstantSnapshotE(t, ctx, projectID, zone, name)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchInstantSnapshotE returns the settings Google Cloud holds for the given instant snapshot.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstantSnapshotE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) (*compute.InstantSnapshot, error) {
+	logger.Default.Logf(t, "Getting settings for instant snapshot %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchInstantSnapshotWithClient(ctx, service, projectID, zone, name)
+}
+
+// FetchInstantSnapshotWithClient returns the settings Google Cloud holds for the given instant snapshot using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstantSnapshotWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, name string) (*compute.InstantSnapshot, error) {
+	result, err := service.InstantSnapshots.Get(projectID, zone, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the instant snapshot %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for instant snapshot %s in project %s: %w", name, projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchRegionInstantSnapshot returns the settings Google Cloud holds for the given regional instant snapshot, so a test can assert on
+// what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstantSnapshot(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.InstantSnapshot {
+	result, err := FetchRegionInstantSnapshotE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchRegionInstantSnapshotE returns the settings Google Cloud holds for the given regional instant snapshot.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstantSnapshotE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.InstantSnapshot, error) {
+	logger.Default.Logf(t, "Getting settings for regional instant snapshot %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionInstantSnapshotWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionInstantSnapshotWithClient returns the settings Google Cloud holds for the given regional instant snapshot using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstantSnapshotWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.InstantSnapshot, error) {
+	result, err := service.RegionInstantSnapshots.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the regional instant snapshot %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for regional instant snapshot %s in project %s: %w", name, projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchNodeTemplate returns the settings Google Cloud holds for the given sole tenant node template, so a test can assert on
+// what was actually created rather than only that it exists. A template describes the nodes a group would run; on its own it runs none.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNodeTemplate(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.NodeTemplate {
+	result, err := FetchNodeTemplateE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchNodeTemplateE returns the settings Google Cloud holds for the given sole tenant node template.
+// The ctx parameter supports cancellation and timeouts.
+func FetchNodeTemplateE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.NodeTemplate, error) {
+	logger.Default.Logf(t, "Getting settings for sole tenant node template %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchNodeTemplateWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchNodeTemplateWithClient returns the settings Google Cloud holds for the given sole tenant node template using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchNodeTemplateWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.NodeTemplate, error) {
+	result, err := service.NodeTemplates.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the sole tenant node template %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for sole tenant node template %s in project %s: %w", name, projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchRegionAutoscaler returns the settings Google Cloud holds for the given regional autoscaler, so a test can assert on
+// what was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionAutoscaler(t testing.TestingT, ctx context.Context, projectID string, region string, name string) *compute.Autoscaler {
+	result, err := FetchRegionAutoscalerE(t, ctx, projectID, region, name)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchRegionAutoscalerE returns the settings Google Cloud holds for the given regional autoscaler.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionAutoscalerE(t testing.TestingT, ctx context.Context, projectID string, region string, name string) (*compute.Autoscaler, error) {
+	logger.Default.Logf(t, "Getting settings for regional autoscaler %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionAutoscalerWithClient(ctx, service, projectID, region, name)
+}
+
+// FetchRegionAutoscalerWithClient returns the settings Google Cloud holds for the given regional autoscaler using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionAutoscalerWithClient(ctx context.Context, service *compute.Service, projectID string, region string, name string) (*compute.Autoscaler, error) {
+	result, err := service.RegionAutoscalers.Get(projectID, region, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the regional autoscaler %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for regional autoscaler %s in project %s: %w", name, projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchInstanceResourcePolicies returns the resource policies Google Cloud holds against the given
+// instance, so a test can assert that an attachment landed. An attachment is not a resource of its
+// own: Google answers for it as a list on the instance, so that is what this reads.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceResourcePolicies(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) []string {
+	policies, err := FetchInstanceResourcePoliciesE(t, ctx, projectID, zone, name)
+	require.NoError(t, err)
+
+	return policies
+}
+
+// FetchInstanceResourcePoliciesE returns the resource policies Google Cloud holds against the given
+// instance.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceResourcePoliciesE(t testing.TestingT, ctx context.Context, projectID string, zone string, name string) ([]string, error) {
+	logger.Default.Logf(t, "Getting the resource policies attached to instance %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchInstanceResourcePoliciesWithClient(ctx, service, projectID, zone, name)
+}
+
+// FetchInstanceResourcePoliciesWithClient returns the resource policies Google Cloud holds against
+// the given instance using the supplied *compute.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceResourcePoliciesWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, name string) ([]string, error) {
+	instance, err := service.Instances.Get(projectID, zone, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the instance %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the resource policies attached to instance %s in project %s: %w", name, projectID, err)
+	}
+
+	return instance.ResourcePolicies, nil
+}
