@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
@@ -114,10 +115,13 @@ func TestGetTagBindingsAttrsWithClientReadsEveryPage(t *testing.T) {
 
 	// Google pages this list, and the binding a caller is looking for may not be on the first page, so
 	// a read that stopped there would report it missing.
-	var requests int
+	//
+	// The server answers each request on a goroutine of its own, so the count is held atomically: a
+	// plain one would be a race the detector fails the whole package on.
+	var requests atomic.Int64
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requests++
+		requests.Add(1)
 
 		w.Header().Set("Content-Type", "application/json")
 
@@ -135,7 +139,7 @@ func TestGetTagBindingsAttrsWithClientReadsEveryPage(t *testing.T) {
 	bindings, err := gcp.GetTagBindingsAttrsWithClient(context.Background(), newFakeResourceManagerService(t, handler), "//cloudresourcemanager.googleapis.com/projects/37950160017")
 	require.NoError(t, err)
 
-	assert.Equal(t, 2, requests, "both pages should have been asked for")
+	assert.Equal(t, int64(2), requests.Load(), "both pages should have been asked for")
 	require.Len(t, bindings, 2)
 	assert.Equal(t, "tagValues/281478044408593", bindings[1].TagValue)
 }
