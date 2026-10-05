@@ -228,3 +228,43 @@ func TestGetCloudDeployTargetIamPolicyAttrsWithClient(t *testing.T) {
 	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
 	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 }
+
+func TestGetCloudDeployCustomTargetTypeIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a custom target type the terraform-google-devtools custom target type IAM policy
+	// module granted access on, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/customTargetTypes/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		// A conditional binding only comes back at version 3, so the read has to ask for it. This
+		// client spells the parameter with a dot, where the compute and storage ones do not.
+		assert.Equal(t, "3", r.URL.Query().Get("options.requestedPolicyVersion"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/clouddeploy.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
+	})
+
+	policy, err := gcp.GetCloudDeployCustomTargetTypeIamPolicyAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, int64(3), policy.Version)
+	assert.Equal(t, "roles/clouddeploy.viewer", policy.Bindings[0].Role)
+	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
+}
+
+func TestGetCloudDeployCustomTargetTypeIamPolicyAttrsWithClientMissingType(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a custom target type that is not there should read a sentence about that type,
+	// not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetCloudDeployCustomTargetTypeIamPolicyAttrsWithClient(context.Background(), newFakeCloudDeployService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
