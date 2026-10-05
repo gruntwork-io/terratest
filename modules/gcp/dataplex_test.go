@@ -278,6 +278,76 @@ func TestGetDataplexDataScanAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "COMPLETENESS", scan.DataQualitySpec.Rules[0].Dimension)
 }
 
+func TestGetDataplexTaskAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Dataplex task the the library suite Dataplex task module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/lakes/gw-library-parent/tasks/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/lakes/gw-library-parent/tasks/gw-library-test","description":"created by terratest","displayName":"terratest task","state":"ACTIVE","labels":{"purpose":"terratest"}}`))
+	})
+
+	attrs, err := gcp.GetDataplexTaskAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "terratest task", attrs.DisplayName)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetDataplexTaskAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Dataplex task that is not there should read a sentence about that Dataplex task, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetDataplexTaskAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetDataplexTaskIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Dataplex task the the library suite Dataplex task module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/lakes/gw-library-parent/tasks/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/dataplex.viewer","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
+	})
+
+	policy, err := gcp.GetDataplexTaskIamPolicyAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(3), policy.Version)
+	assert.Equal(t, "roles/dataplex.viewer", policy.Bindings[0].Role)
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
+}
+
+func TestGetDataplexTaskIamPolicyAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Dataplex task that is not there should read a sentence about that Dataplex task, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetDataplexTaskIamPolicyAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
 func TestGetDataplexDataProductAttrsWithClient(t *testing.T) {
 	t.Parallel()
 

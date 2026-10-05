@@ -58,11 +58,49 @@ func GetDataplexLakeAttrsWithClient(ctx context.Context, service *dataplex.Servi
 	return lake, nil
 }
 
-// NewDataplexServiceE creates a Dataplex service authenticated the same way every other client in
-// this module is.
+// GetDataplexTaskAttrs returns the settings Google Cloud holds for the given Dataplex task, so a test can assert on what was
+// actually created rather than only that it exists.
+// A task is the scheduled job a lake runs, so its trigger and the service account it runs as are the point.
+// This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func NewDataplexServiceE(t testing.TestingT, ctx context.Context) (*dataplex.Service, error) {
-	return dataplex.NewService(ctx, append(withOptions(), option.WithScopes(dataplex.CloudPlatformScope))...)
+func GetDataplexTaskAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, lakeID string, id string) *dataplex.GoogleCloudDataplexV1Task {
+	attrs, err := GetDataplexTaskAttrsE(t, ctx, projectID, location, lakeID, id)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetDataplexTaskAttrsE returns the settings Google Cloud holds for the given Dataplex task.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexTaskAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, lakeID string, id string) (*dataplex.GoogleCloudDataplexV1Task, error) {
+	logger.Default.Logf(t, "Getting settings for Dataplex task %s in lake %s in %s in project %s", id, lakeID, location, projectID)
+
+	service, err := NewDataplexServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDataplexTaskAttrsWithClient(ctx, service, projectID, location, lakeID, id)
+}
+
+// GetDataplexTaskAttrsWithClient returns the settings Google Cloud holds for the given Dataplex task using the supplied
+// *dataplex.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see dataplex_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexTaskAttrsWithClient(ctx context.Context, service *dataplex.Service, projectID string, location string, lakeID string, id string) (*dataplex.GoogleCloudDataplexV1Task, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/lakes/%s/tasks/%s", projectID, location, lakeID, id)
+
+	attrs, err := service.Projects.Locations.Lakes.Tasks.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Dataplex task %s in lake %s in %s in project %s does not exist", id, lakeID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Dataplex task %s in lake %s in %s in project %s: %w", id, lakeID, location, projectID, err)
+	}
+
+	return attrs, nil
 }
 
 // GetDataplexZoneAttrs returns the settings Google Cloud holds for the given Dataplex zone, so a test can assert on
@@ -509,6 +547,51 @@ func GetDataplexDataScanAttrsWithClient(ctx context.Context, service *dataplex.S
 	return scan, nil
 }
 
+// GetDataplexTaskIamPolicyAttrs returns the IAM policy Google Cloud holds for the given Dataplex task, so a test can assert on what was
+// actually created rather than only that it exists.
+// Who may run the task is what the policy decides, and the task runs as a service account of its own.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexTaskIamPolicyAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, lakeID string, taskID string) *dataplex.GoogleIamV1Policy {
+	policy, err := GetDataplexTaskIamPolicyAttrsE(t, ctx, projectID, location, lakeID, taskID)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// GetDataplexTaskIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Dataplex task.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexTaskIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, lakeID string, taskID string) (*dataplex.GoogleIamV1Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for Dataplex task %s in lake %s in %s in project %s", taskID, lakeID, location, projectID)
+
+	service, err := NewDataplexServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDataplexTaskIamPolicyAttrsWithClient(ctx, service, projectID, location, lakeID, taskID)
+}
+
+// GetDataplexTaskIamPolicyAttrsWithClient returns the IAM policy Google Cloud holds for the given Dataplex task using the supplied
+// *dataplex.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see dataplex_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexTaskIamPolicyAttrsWithClient(ctx context.Context, service *dataplex.Service, projectID string, location string, lakeID string, taskID string) (*dataplex.GoogleIamV1Policy, error) {
+	resource := fmt.Sprintf("projects/%s/locations/%s/lakes/%s/tasks/%s", projectID, location, lakeID, taskID)
+
+	policy, err := service.Projects.Locations.Lakes.Tasks.GetIamPolicy(resource).OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Dataplex task %s in lake %s in %s in project %s does not exist", taskID, lakeID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for Dataplex task %s in lake %s in %s in project %s: %w", taskID, lakeID, location, projectID, err)
+	}
+
+	return policy, nil
+}
+
 // GetDataplexDataProductAttrs returns the settings Google Cloud holds for the given data product, so a
 // test can assert on who owns it and who may reach it. A data product groups assets for a consumer to
 // find; it holds no data of its own.
@@ -552,4 +635,11 @@ func GetDataplexDataProductAttrsWithClient(ctx context.Context, service *dataple
 	}
 
 	return product, nil
+}
+
+// NewDataplexServiceE creates a Dataplex service authenticated the same way every other client in
+// this module is.
+// The ctx parameter supports cancellation and timeouts.
+func NewDataplexServiceE(t testing.TestingT, ctx context.Context) (*dataplex.Service, error) {
+	return dataplex.NewService(ctx, append(withOptions(), option.WithScopes(dataplex.CloudPlatformScope))...)
 }
