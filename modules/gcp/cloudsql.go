@@ -152,3 +152,50 @@ func GetCloudSQLUserAttrsWithClient(ctx context.Context, service *sqladmin.Servi
 func NewCloudSQLServiceE(t testing.TestingT, ctx context.Context) (*sqladmin.Service, error) {
 	return sqladmin.NewService(ctx, append(withOptions(), option.WithScopes(sqladmin.CloudPlatformScope))...)
 }
+
+// GetSourceRepresentationInstanceAttrs returns the settings Google Cloud holds for the given source
+// representation instance, so a test can assert on the database it stands for. A source
+// representation instance is a stored description of a database somewhere else rather than a running
+// one, so nothing is provisioned for it.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetSourceRepresentationInstanceAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string) *sqladmin.DatabaseInstance {
+	instance, err := GetSourceRepresentationInstanceAttrsE(t, ctx, projectID, instanceID)
+	require.NoError(t, err)
+
+	return instance
+}
+
+// GetSourceRepresentationInstanceAttrsE returns the settings Google Cloud holds for the given source
+// representation instance.
+// The ctx parameter supports cancellation and timeouts.
+func GetSourceRepresentationInstanceAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string) (*sqladmin.DatabaseInstance, error) {
+	logger.Default.Logf(t, "Getting settings for source representation instance %s in project %s", instanceID, projectID)
+
+	service, err := NewCloudSQLServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetSourceRepresentationInstanceAttrsWithClient(ctx, service, projectID, instanceID)
+}
+
+// GetSourceRepresentationInstanceAttrsWithClient returns the settings Google Cloud holds for the
+// given source representation instance using the supplied *sqladmin.Service. Prefer this variant in
+// unit tests where the service is backed by an httptest fake server (see cloudsql_test.go for the
+// pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetSourceRepresentationInstanceAttrsWithClient(ctx context.Context, service *sqladmin.Service, projectID string, instanceID string) (*sqladmin.DatabaseInstance, error) {
+	// This call names the project and the instance as separate parameters rather than as one path.
+	instance, err := service.Instances.Get(projectID, instanceID).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the source representation instance %s in project %s does not exist", instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for source representation instance %s in project %s: %w", instanceID, projectID, err)
+	}
+
+	return instance, nil
+}

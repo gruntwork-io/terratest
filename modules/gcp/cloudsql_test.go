@@ -140,3 +140,23 @@ func TestGetCloudSQLUserAttrsWithClientMissingUser(t *testing.T) {
 	require.ErrorContains(t, err, "gw-instance")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetSourceRepresentationInstanceAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A source representation instance is a stored description of a database somewhere else, so
+	// Google answers with the host and port it was told rather than with one it provisioned.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","databaseVersion":"MYSQL_8_0","region":"us-central1","onPremisesConfiguration":{"hostPort":"10.80.0.1:3306"}}`))
+	})
+
+	instance, err := gcp.GetSourceRepresentationInstanceAttrsWithClient(context.Background(), newFakeCloudSQLService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "MYSQL_8_0", instance.DatabaseVersion)
+	require.NotNil(t, instance.OnPremisesConfiguration)
+	assert.Equal(t, "10.80.0.1:3306", instance.OnPremisesConfiguration.HostPort)
+}

@@ -90,6 +90,72 @@ func TestNewDialogflowServiceERefusesABadLocation(t *testing.T) {
 	}
 }
 
+func TestGetDialogflowCXGenerativeSettingsAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Dialogflow CX generative settings the the library suite Dialogflow CX generative settings module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/agents/gw-library-parent/generativeSettings"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/agents/gw-library-parent/generativeSettings","languageCode":"en","fallbackSettings":{"selectedPrompt":"terratest"}}`))
+	})
+
+	attrs, err := gcp.GetDialogflowCXGenerativeSettingsAttrsWithClient(context.Background(), newFakeDialogflowService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "en")
+	require.NoError(t, err)
+
+	assert.Equal(t, "en", attrs.LanguageCode)
+}
+
+func TestGetDialogflowCXGenerativeSettingsAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Dialogflow CX generative settings that is not there should read a sentence about that Dialogflow CX generative settings, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetDialogflowCXGenerativeSettingsAttrsWithClient(context.Background(), newFakeDialogflowService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetDialogflowCXToolVersionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Dialogflow CX tool version the the library suite Dialogflow CX tool version module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/agents/gw-library-parent/tools/gw-library-tool/versions/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/agents/gw-library-parent/tools/gw-library-tool/versions/gw-library-test","displayName":"terratest tool version"}`))
+	})
+
+	attrs, err := gcp.GetDialogflowCXToolVersionAttrsWithClient(context.Background(), newFakeDialogflowService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-tool", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest tool version", attrs.DisplayName)
+}
+
+func TestGetDialogflowCXToolVersionAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Dialogflow CX tool version that is not there should read a sentence about that Dialogflow CX tool version, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetDialogflowCXToolVersionAttrsWithClient(context.Background(), newFakeDialogflowService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-tool", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
 func TestGetDialogflowCXIntentAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -109,7 +175,6 @@ func TestGetDialogflowCXIntentAttrsWithClient(t *testing.T) {
 	assert.Equal(t, int64(250000), result.Priority)
 	assert.Equal(t, map[string]string{"purpose": "terratest"}, result.Labels)
 }
-
 func TestGetDialogflowCXEntityTypeAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -130,7 +195,6 @@ func TestGetDialogflowCXEntityTypeAttrsWithClient(t *testing.T) {
 	require.Len(t, result.Entities, 1)
 	assert.Equal(t, "terratest", result.Entities[0].Value)
 }
-
 func TestGetDialogflowCXFlowAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -149,7 +213,6 @@ func TestGetDialogflowCXFlowAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "terratest flow", result.DisplayName)
 	assert.Equal(t, "created by terratest", result.Description)
 }
-
 func TestGetDialogflowCXWebhookAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -170,7 +233,6 @@ func TestGetDialogflowCXWebhookAttrsWithClient(t *testing.T) {
 	require.NotNil(t, result.GenericWebService)
 	assert.Equal(t, "https://terratest.example.com/hook", result.GenericWebService.Uri)
 }
-
 func TestGetDialogflowCXEnvironmentAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -189,7 +251,6 @@ func TestGetDialogflowCXEnvironmentAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "terratest environment", result.DisplayName)
 	require.Len(t, result.VersionConfigs, 1)
 }
-
 func TestGetDialogflowCXTestCaseAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -208,7 +269,6 @@ func TestGetDialogflowCXTestCaseAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "terratest test case", result.DisplayName)
 	assert.Equal(t, []string{"#terratest"}, result.Tags)
 }
-
 func TestGetDialogflowCXGeneratorAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -228,7 +288,6 @@ func TestGetDialogflowCXGeneratorAttrsWithClient(t *testing.T) {
 	require.NotNil(t, result.PromptText)
 	assert.Contains(t, result.PromptText.Text, "terratest")
 }
-
 func TestGetDialogflowCXToolAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -248,7 +307,6 @@ func TestGetDialogflowCXToolAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "CUSTOMIZED_TOOL", result.ToolType)
 	require.NotNil(t, result.OpenApiSpec)
 }
-
 func TestGetDialogflowCXPlaybookAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -267,7 +325,6 @@ func TestGetDialogflowCXPlaybookAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "terratest playbook", result.DisplayName)
 	assert.Contains(t, result.Goal, "terratest")
 }
-
 func TestGetDialogflowCXPageAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -285,7 +342,6 @@ func TestGetDialogflowCXPageAttrsWithClient(t *testing.T) {
 
 	assert.Equal(t, "terratest page", result.DisplayName)
 }
-
 func TestGetDialogflowCXVersionAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -304,7 +360,6 @@ func TestGetDialogflowCXVersionAttrsWithClient(t *testing.T) {
 	assert.Equal(t, "terratest version", result.DisplayName)
 	assert.Equal(t, "RUNNING", result.State)
 }
-
 func TestGetDialogflowCXSecuritySettingsAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
@@ -324,7 +379,6 @@ func TestGetDialogflowCXSecuritySettingsAttrsWithClient(t *testing.T) {
 	assert.Equal(t, int64(7), result.RetentionWindowDays)
 	assert.Equal(t, []string{"DIALOGFLOW_HISTORY"}, result.PurgeDataTypes)
 }
-
 func TestGetDialogflowCXIntentAttrsWithClientReportsAMissingIntent(t *testing.T) {
 	t.Parallel()
 

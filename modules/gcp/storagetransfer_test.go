@@ -69,3 +69,27 @@ func TestGetAgentPoolAttrsWithClientMissingPool(t *testing.T) {
 	require.ErrorContains(t, err, "gone")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetStorageTransferJobAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A transfer job's name is unique across Google rather than within a project, so the project is a
+	// query parameter rather than part of the path.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/transferJobs/1234567890"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "gw-library-test-project", r.URL.Query().Get("projectId"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"transferJobs/1234567890","description":"created by terratest","status":"ENABLED","projectId":"gw-library-test-project","transferSpec":{"gcsDataSource":{"bucketName":"gw-library-test-source"},"gcsDataSink":{"bucketName":"gw-library-test-sink"}}}`))
+	})
+
+	job, err := gcp.GetStorageTransferJobAttrsWithClient(context.Background(), newFakeStorageTransferService(t, handler), "gw-library-test-project", "transferJobs/1234567890")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", job.Description)
+	assert.Equal(t, "ENABLED", job.Status)
+	require.NotNil(t, job.TransferSpec)
+	require.NotNil(t, job.TransferSpec.GcsDataSource)
+	assert.Equal(t, "gw-library-test-source", job.TransferSpec.GcsDataSource.BucketName)
+	assert.Equal(t, "gw-library-test-sink", job.TransferSpec.GcsDataSink.BucketName)
+}

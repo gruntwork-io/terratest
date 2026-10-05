@@ -65,3 +65,49 @@ func GetAgentPoolAttrsWithClient(ctx context.Context, service *storagetransfer.S
 func NewStorageTransferServiceE(t testing.TestingT, ctx context.Context) (*storagetransfer.Service, error) {
 	return storagetransfer.NewService(ctx, append(withOptions(), option.WithScopes(storagetransfer.CloudPlatformScope))...)
 }
+
+// GetStorageTransferJobAttrs returns the settings Google Cloud holds for the given storage transfer
+// job, so a test can assert on what it moves and on what schedule rather than only that it exists.
+// Google assigns a transfer job its name, so the caller passes the name it got back.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageTransferJobAttrs(t testing.TestingT, ctx context.Context, projectID string, jobName string) *storagetransfer.TransferJob {
+	job, err := GetStorageTransferJobAttrsE(t, ctx, projectID, jobName)
+	require.NoError(t, err)
+
+	return job
+}
+
+// GetStorageTransferJobAttrsE returns the settings Google Cloud holds for the given storage transfer
+// job.
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageTransferJobAttrsE(t testing.TestingT, ctx context.Context, projectID string, jobName string) (*storagetransfer.TransferJob, error) {
+	logger.Default.Logf(t, "Getting settings for storage transfer job %s in project %s", jobName, projectID)
+
+	service, err := NewStorageTransferServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetStorageTransferJobAttrsWithClient(ctx, service, projectID, jobName)
+}
+
+// GetStorageTransferJobAttrsWithClient returns the settings Google Cloud holds for the given storage
+// transfer job using the supplied *storagetransfer.Service. Prefer this variant in unit tests where
+// the service is backed by an httptest fake server (see storagetransfer_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetStorageTransferJobAttrsWithClient(ctx context.Context, service *storagetransfer.Service, projectID string, jobName string) (*storagetransfer.TransferJob, error) {
+	// This call names the project as a parameter rather than in the path, because a job's name is
+	// unique across Google rather than within a project.
+	job, err := service.TransferJobs.Get(jobName, projectID).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the storage transfer job %s in project %s does not exist", jobName, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for storage transfer job %s in project %s: %w", jobName, projectID, err)
+	}
+
+	return job, nil
+}
