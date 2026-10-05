@@ -63,3 +63,49 @@ func GetDatastreamConnectionProfileAttrsWithClient(ctx context.Context, service 
 func NewDatastreamServiceE(t testing.TestingT, ctx context.Context) (*datastream.Service, error) {
 	return datastream.NewService(ctx, append(withOptions(), option.WithScopes(datastream.CloudPlatformScope))...)
 }
+
+// GetDatastreamPrivateConnectionAttrs returns the settings Google Cloud holds for the given private
+// connection, so a test can assert which network Datastream would reach a source through. A private
+// connection is a peering Datastream holds open; a stream names it rather than the network.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDatastreamPrivateConnectionAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, connectionID string) *datastream.PrivateConnection {
+	connection, err := GetDatastreamPrivateConnectionAttrsE(t, ctx, projectID, location, connectionID)
+	require.NoError(t, err)
+
+	return connection
+}
+
+// GetDatastreamPrivateConnectionAttrsE returns the settings Google Cloud holds for the given private
+// connection.
+// The ctx parameter supports cancellation and timeouts.
+func GetDatastreamPrivateConnectionAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, connectionID string) (*datastream.PrivateConnection, error) {
+	logger.Default.Logf(t, "Getting settings for Datastream private connection %s in %s in project %s", connectionID, location, projectID)
+
+	service, err := NewDatastreamServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDatastreamPrivateConnectionAttrsWithClient(ctx, service, projectID, location, connectionID)
+}
+
+// GetDatastreamPrivateConnectionAttrsWithClient returns the settings Google Cloud holds for the given
+// private connection using the supplied *datastream.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see datastream_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDatastreamPrivateConnectionAttrsWithClient(ctx context.Context, service *datastream.Service, projectID string, location string, connectionID string) (*datastream.PrivateConnection, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/privateConnections/%s", projectID, location, connectionID)
+
+	connection, err := service.Projects.Locations.PrivateConnections.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Datastream private connection %s in %s in project %s does not exist", connectionID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Datastream private connection %s in %s in project %s: %w", connectionID, location, projectID, err)
+	}
+
+	return connection, nil
+}

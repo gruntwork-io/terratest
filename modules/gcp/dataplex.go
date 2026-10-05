@@ -592,6 +592,51 @@ func GetDataplexTaskIamPolicyAttrsWithClient(ctx context.Context, service *datap
 	return policy, nil
 }
 
+// GetDataplexDataProductAttrs returns the settings Google Cloud holds for the given data product, so a
+// test can assert on who owns it and who may reach it. A data product groups assets for a consumer to
+// find; it holds no data of its own.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexDataProductAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, productID string) *dataplex.GoogleCloudDataplexV1DataProduct {
+	product, err := GetDataplexDataProductAttrsE(t, ctx, projectID, location, productID)
+	require.NoError(t, err)
+
+	return product
+}
+
+// GetDataplexDataProductAttrsE returns the settings Google Cloud holds for the given data product.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexDataProductAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, productID string) (*dataplex.GoogleCloudDataplexV1DataProduct, error) {
+	logger.Default.Logf(t, "Getting settings for Dataplex data product %s in %s in project %s", productID, location, projectID)
+
+	service, err := NewDataplexServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDataplexDataProductAttrsWithClient(ctx, service, projectID, location, productID)
+}
+
+// GetDataplexDataProductAttrsWithClient returns the settings Google Cloud holds for the given data
+// product using the supplied *dataplex.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see dataplex_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexDataProductAttrsWithClient(ctx context.Context, service *dataplex.Service, projectID string, location string, productID string) (*dataplex.GoogleCloudDataplexV1DataProduct, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", projectID, location, productID)
+
+	product, err := service.Projects.Locations.DataProducts.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Dataplex data product %s in %s in project %s does not exist", productID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Dataplex data product %s in %s in project %s: %w", productID, location, projectID, err)
+	}
+
+	return product, nil
+}
+
 // NewDataplexServiceE creates a Dataplex service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.

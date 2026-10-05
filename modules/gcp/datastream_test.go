@@ -64,3 +64,23 @@ func TestGetDatastreamConnectionProfileAttrsWithClientReportsAMissingOne(t *test
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetDatastreamPrivateConnectionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A private connection is a peering Datastream holds open, so the response names the network rather
+	// than a database.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/privateConnections/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/privateConnections/gw-library-test","displayName":"terratest connection","labels":{"purpose":"terratest"},"vpcPeeringConfig":{"vpc":"projects/gw-library-test-project/global/networks/gw-library-test","subnet":"10.98.0.0/29"}}`))
+	})
+
+	connection, err := gcp.GetDatastreamPrivateConnectionAttrsWithClient(context.Background(), newFakeDatastreamService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest connection", connection.DisplayName)
+	require.NotNil(t, connection.VpcPeeringConfig)
+	assert.Equal(t, "10.98.0.0/29", connection.VpcPeeringConfig.Subnet)
+}
