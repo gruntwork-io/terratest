@@ -253,7 +253,7 @@ func GetBeyondCorpSecurityGatewayIamPolicyAttrs(t testing.TestingT, ctx context.
 // GetBeyondCorpSecurityGatewayIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given BeyondCorp security gateway.
 // The ctx parameter supports cancellation and timeouts.
 func GetBeyondCorpSecurityGatewayIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, gatewayID string) (*beyondcorp.GoogleIamV1Policy, error) {
-	logger.Default.Logf(t, "Getting settings for BeyondCorp security gateway %s in %s in project %s", gatewayID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for BeyondCorp security gateway %s in %s in project %s", gatewayID, location, projectID)
 
 	service, err := NewBeyondCorpServiceE(t, ctx)
 	if err != nil {
@@ -277,7 +277,7 @@ func GetBeyondCorpSecurityGatewayIamPolicyAttrsWithClient(ctx context.Context, s
 			return nil, fmt.Errorf("the BeyondCorp security gateway %s in %s in project %s does not exist", gatewayID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for BeyondCorp security gateway %s in %s in project %s: %w", gatewayID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for BeyondCorp security gateway %s in %s in project %s: %w", gatewayID, location, projectID, err)
 	}
 
 	return policy, nil
@@ -298,7 +298,7 @@ func GetBeyondCorpSecurityGatewayApplicationIamPolicyAttrs(t testing.TestingT, c
 // GetBeyondCorpSecurityGatewayApplicationIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given BeyondCorp security gateway application.
 // The ctx parameter supports cancellation and timeouts.
 func GetBeyondCorpSecurityGatewayApplicationIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, gatewayID string, applicationID string) (*beyondcorp.GoogleIamV1Policy, error) {
-	logger.Default.Logf(t, "Getting settings for BeyondCorp security gateway application %s in gateway %s in %s in project %s", applicationID, gatewayID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for BeyondCorp security gateway application %s in gateway %s in %s in project %s", applicationID, gatewayID, location, projectID)
 
 	service, err := NewBeyondCorpServiceE(t, ctx)
 	if err != nil {
@@ -322,7 +322,7 @@ func GetBeyondCorpSecurityGatewayApplicationIamPolicyAttrsWithClient(ctx context
 			return nil, fmt.Errorf("the BeyondCorp security gateway application %s in gateway %s in %s in project %s does not exist", applicationID, gatewayID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for BeyondCorp security gateway application %s in gateway %s in %s in project %s: %w", applicationID, gatewayID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for BeyondCorp security gateway application %s in gateway %s in %s in project %s: %w", applicationID, gatewayID, location, projectID, err)
 	}
 
 	return policy, nil

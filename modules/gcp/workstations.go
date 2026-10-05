@@ -163,7 +163,7 @@ func GetWorkstationConfigIamPolicyAttrs(t testing.TestingT, ctx context.Context,
 // GetWorkstationConfigIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given workstation config.
 // The ctx parameter supports cancellation and timeouts.
 func GetWorkstationConfigIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, clusterID string, configID string) (*workstations.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for workstation config %s in cluster %s in %s in project %s", configID, clusterID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for workstation config %s in cluster %s in %s in project %s", configID, clusterID, location, projectID)
 
 	service, err := NewWorkstationsServiceE(t, ctx)
 	if err != nil {
@@ -187,7 +187,7 @@ func GetWorkstationConfigIamPolicyAttrsWithClient(ctx context.Context, service *
 			return nil, fmt.Errorf("the workstation config %s in cluster %s in %s in project %s does not exist", configID, clusterID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for workstation config %s in cluster %s in %s in project %s: %w", configID, clusterID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for workstation config %s in cluster %s in %s in project %s: %w", configID, clusterID, location, projectID, err)
 	}
 
 	return policy, nil
@@ -208,7 +208,7 @@ func GetWorkstationIamPolicyAttrs(t testing.TestingT, ctx context.Context, proje
 // GetWorkstationIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given workstation.
 // The ctx parameter supports cancellation and timeouts.
 func GetWorkstationIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, clusterID string, configID string, workstationID string) (*workstations.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for workstation %s in config %s in cluster %s in %s in project %s", workstationID, configID, clusterID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for workstation %s in config %s in cluster %s in %s in project %s", workstationID, configID, clusterID, location, projectID)
 
 	service, err := NewWorkstationsServiceE(t, ctx)
 	if err != nil {
@@ -232,7 +232,7 @@ func GetWorkstationIamPolicyAttrsWithClient(ctx context.Context, service *workst
 			return nil, fmt.Errorf("the workstation %s in config %s in cluster %s in %s in project %s does not exist", workstationID, configID, clusterID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for workstation %s in config %s in cluster %s in %s in project %s: %w", workstationID, configID, clusterID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for workstation %s in config %s in cluster %s in %s in project %s: %w", workstationID, configID, clusterID, location, projectID, err)
 	}
 
 	return policy, nil

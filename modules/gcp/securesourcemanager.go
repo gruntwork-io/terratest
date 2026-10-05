@@ -208,7 +208,7 @@ func GetSecureSourceManagerInstanceIamPolicyAttrs(t testing.TestingT, ctx contex
 // GetSecureSourceManagerInstanceIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Secure Source Manager instance.
 // The ctx parameter supports cancellation and timeouts.
 func GetSecureSourceManagerInstanceIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*securesourcemanager.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Secure Source Manager instance %s in %s in project %s", id, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Secure Source Manager instance %s in %s in project %s", id, location, projectID)
 
 	service, err := NewSecureSourceManagerServiceE(t, ctx)
 	if err != nil {
@@ -232,7 +232,7 @@ func GetSecureSourceManagerInstanceIamPolicyAttrsWithClient(ctx context.Context,
 			return nil, fmt.Errorf("the Secure Source Manager instance %s in %s in project %s does not exist", id, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Secure Source Manager instance %s in %s in project %s: %w", id, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Secure Source Manager instance %s in %s in project %s: %w", id, location, projectID, err)
 	}
 
 	return policy, nil
@@ -253,7 +253,7 @@ func GetSecureSourceManagerRepositoryIamPolicyAttrs(t testing.TestingT, ctx cont
 // GetSecureSourceManagerRepositoryIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Secure Source Manager repository.
 // The ctx parameter supports cancellation and timeouts.
 func GetSecureSourceManagerRepositoryIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*securesourcemanager.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Secure Source Manager repository %s in %s in project %s", id, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Secure Source Manager repository %s in %s in project %s", id, location, projectID)
 
 	service, err := NewSecureSourceManagerServiceE(t, ctx)
 	if err != nil {
@@ -277,7 +277,7 @@ func GetSecureSourceManagerRepositoryIamPolicyAttrsWithClient(ctx context.Contex
 			return nil, fmt.Errorf("the Secure Source Manager repository %s in %s in project %s does not exist", id, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Secure Source Manager repository %s in %s in project %s: %w", id, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Secure Source Manager repository %s in %s in project %s: %w", id, location, projectID, err)
 	}
 
 	return policy, nil

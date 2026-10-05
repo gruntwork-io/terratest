@@ -212,7 +212,7 @@ func GetDiscoveryEngineEngineIamPolicyAttrs(t testing.TestingT, ctx context.Cont
 // GetDiscoveryEngineEngineIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Discovery Engine engine.
 // The ctx parameter supports cancellation and timeouts.
 func GetDiscoveryEngineEngineIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, collectionID string, engineID string) (*discoveryengine.GoogleIamV1Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Discovery Engine engine %s in collection %s in %s in project %s", engineID, collectionID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Discovery Engine engine %s in collection %s in %s in project %s", engineID, collectionID, location, projectID)
 
 	service, err := NewDiscoveryEngineServiceE(t, ctx)
 	if err != nil {
@@ -236,7 +236,7 @@ func GetDiscoveryEngineEngineIamPolicyAttrsWithClient(ctx context.Context, servi
 			return nil, fmt.Errorf("the Discovery Engine engine %s in collection %s in %s in project %s does not exist", engineID, collectionID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Discovery Engine engine %s in collection %s in %s in project %s: %w", engineID, collectionID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Discovery Engine engine %s in collection %s in %s in project %s: %w", engineID, collectionID, location, projectID, err)
 	}
 
 	return policy, nil
