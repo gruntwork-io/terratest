@@ -173,3 +173,209 @@ func TestGetNetworkServicesMeshAttrsWithClientReportsAMissingMesh(t *testing.T) 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetNetworkServicesAuthzExtensionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a authorization extension the terraform-google-networking authorization extension module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/authzExtensions/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/authzExtensions/gw-library-test","description":"created by terratest","loadBalancingScheme":"INTERNAL_MANAGED","timeout":"2s","authority":"terratest.example.com"}`))
+	})
+
+	attrs, err := gcp.GetNetworkServicesAuthzExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "2s", attrs.Timeout)
+	assert.Equal(t, "terratest.example.com", attrs.Authority)
+}
+
+func TestGetNetworkServicesAuthzExtensionAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a authorization extension that is not there should read a sentence about that authorization extension, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkServicesAuthzExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetNetworkServicesGatewayAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a gateway the terraform-google-networking gateway module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/gateways/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/gateways/gw-library-test","description":"created by terratest","type":"OPEN_MESH","ports":[443],"scope":"terratest","labels":{"purpose":"terratest"}}`))
+	})
+
+	attrs, err := gcp.GetNetworkServicesGatewayAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "OPEN_MESH", attrs.Type)
+	assert.Equal(t, "terratest", attrs.Scope)
+}
+
+func TestGetNetworkServicesGatewayAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a gateway that is not there should read a sentence about that gateway, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkServicesGatewayAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetNetworkServicesLbEdgeExtensionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a load balancer edge extension the terraform-google-networking load balancer edge extension module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/lbEdgeExtensions/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/lbEdgeExtensions/gw-library-test","description":"created by terratest","loadBalancingScheme":"EXTERNAL_MANAGED","labels":{"purpose":"terratest"}}`))
+	})
+
+	attrs, err := gcp.GetNetworkServicesLbEdgeExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "EXTERNAL_MANAGED", attrs.LoadBalancingScheme)
+}
+
+func TestGetNetworkServicesLbEdgeExtensionAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a load balancer edge extension that is not there should read a sentence about that load balancer edge extension, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkServicesLbEdgeExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetNetworkServicesLbRouteExtensionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a load balancer route extension the terraform-google-networking load balancer route extension module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/lbRouteExtensions/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/lbRouteExtensions/gw-library-test","description":"created by terratest","loadBalancingScheme":"INTERNAL_MANAGED","labels":{"purpose":"terratest"}}`))
+	})
+
+	attrs, err := gcp.GetNetworkServicesLbRouteExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "INTERNAL_MANAGED", attrs.LoadBalancingScheme)
+}
+
+func TestGetNetworkServicesLbRouteExtensionAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a load balancer route extension that is not there should read a sentence about that load balancer route extension, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkServicesLbRouteExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetNetworkServicesLbTrafficExtensionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a load balancer traffic extension the terraform-google-networking load balancer traffic extension module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/lbTrafficExtensions/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/lbTrafficExtensions/gw-library-test","description":"created by terratest","loadBalancingScheme":"INTERNAL_MANAGED","labels":{"purpose":"terratest"}}`))
+	})
+
+	attrs, err := gcp.GetNetworkServicesLbTrafficExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "INTERNAL_MANAGED", attrs.LoadBalancingScheme)
+}
+
+func TestGetNetworkServicesLbTrafficExtensionAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a load balancer traffic extension that is not there should read a sentence about that load balancer traffic extension, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkServicesLbTrafficExtensionAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetNetworkServicesWasmPluginAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Wasm plugin the terraform-google-networking Wasm plugin module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/wasmPlugins/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/wasmPlugins/gw-library-test","description":"created by terratest","mainVersionId":"v1","labels":{"purpose":"terratest"}}`))
+	})
+
+	attrs, err := gcp.GetNetworkServicesWasmPluginAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "v1", attrs.MainVersionId)
+}
+
+func TestGetNetworkServicesWasmPluginAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Wasm plugin that is not there should read a sentence about that Wasm plugin, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkServicesWasmPluginAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
