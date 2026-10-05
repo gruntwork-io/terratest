@@ -206,3 +206,56 @@ func TestGetBigtableTableIamPolicyAttrsWithClient(t *testing.T) {
 	require.NotNil(t, policy.Bindings[0].Condition, "a conditional binding should keep its condition")
 	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 }
+
+func TestGetBigtableLogicalViewAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A logical view is a saved query over a table rather than stored data, so the response carries the
+	// query and nothing about storage.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test/logicalViews/gw-library-view"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/instances/gw-library-test/logicalViews/gw-library-view","query":"SELECT _key FROM gw_library_table","deletionProtection":false}`))
+	})
+
+	view, err := gcp.GetBigtableLogicalViewAttrsWithClient(context.Background(), newFakeBigtableAdminService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-view")
+	require.NoError(t, err)
+
+	assert.Equal(t, "SELECT _key FROM gw_library_table", view.Query)
+	assert.False(t, view.DeletionProtection)
+}
+
+func TestGetBigtableMaterializedViewAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A materialized view keeps its own copy of the result, so the query behind it is the thing worth
+	// reading back.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test/materializedViews/gw-library-view"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/instances/gw-library-test/materializedViews/gw-library-view","query":"SELECT _key, COUNT(*) AS row_count FROM gw_library_table GROUP BY _key","deletionProtection":false}`))
+	})
+
+	view, err := gcp.GetBigtableMaterializedViewAttrsWithClient(context.Background(), newFakeBigtableAdminService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-view")
+	require.NoError(t, err)
+
+	assert.Contains(t, view.Query, "GROUP BY _key")
+	assert.False(t, view.DeletionProtection)
+}
+
+func TestGetBigtableLogicalViewAttrsWithClientReportsAMissingView(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a view that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Resource not found."}}`))
+	})
+
+	_, err := gcp.GetBigtableLogicalViewAttrsWithClient(context.Background(), newFakeBigtableAdminService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
