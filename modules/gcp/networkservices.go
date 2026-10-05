@@ -277,6 +277,276 @@ func GetNetworkServicesEndpointPolicyAttrsWithClient(ctx context.Context, servic
 	return policy, nil
 }
 
+// GetNetworkServicesAuthzExtensionAttrs returns the settings Google Cloud holds for the given authorization extension, so a test can assert on what was
+// actually created rather than only that it exists.
+// An extension hands an authorization decision to a service of our own, so the service it calls and how long it waits are the point.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesAuthzExtensionAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, id string) *networkservices.AuthzExtension {
+	attrs, err := GetNetworkServicesAuthzExtensionAttrsE(t, ctx, projectID, location, id)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetNetworkServicesAuthzExtensionAttrsE returns the settings Google Cloud holds for the given authorization extension.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesAuthzExtensionAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*networkservices.AuthzExtension, error) {
+	logger.Default.Logf(t, "Getting settings for authorization extension %s in %s in project %s", id, location, projectID)
+
+	service, err := NewNetworkServicesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkServicesAuthzExtensionAttrsWithClient(ctx, service, projectID, location, id)
+}
+
+// GetNetworkServicesAuthzExtensionAttrsWithClient returns the settings Google Cloud holds for the given authorization extension using the supplied
+// *networkservices.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see networkservices_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesAuthzExtensionAttrsWithClient(ctx context.Context, service *networkservices.Service, projectID string, location string, id string) (*networkservices.AuthzExtension, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/authzExtensions/%s", projectID, location, id)
+
+	attrs, err := service.Projects.Locations.AuthzExtensions.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the authorization extension %s in %s in project %s does not exist", id, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for authorization extension %s in %s in project %s: %w", id, location, projectID, err)
+	}
+
+	return attrs, nil
+}
+
+// GetNetworkServicesGatewayAttrs returns the settings Google Cloud holds for the given gateway, so a test can assert on what was
+// actually created rather than only that it exists.
+// A gateway is where a mesh accepts traffic from outside it, so which ports it listens on and which type it is decide what can reach it.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesGatewayAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, id string) *networkservices.Gateway {
+	attrs, err := GetNetworkServicesGatewayAttrsE(t, ctx, projectID, location, id)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetNetworkServicesGatewayAttrsE returns the settings Google Cloud holds for the given gateway.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesGatewayAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*networkservices.Gateway, error) {
+	logger.Default.Logf(t, "Getting settings for gateway %s in %s in project %s", id, location, projectID)
+
+	service, err := NewNetworkServicesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkServicesGatewayAttrsWithClient(ctx, service, projectID, location, id)
+}
+
+// GetNetworkServicesGatewayAttrsWithClient returns the settings Google Cloud holds for the given gateway using the supplied
+// *networkservices.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see networkservices_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesGatewayAttrsWithClient(ctx context.Context, service *networkservices.Service, projectID string, location string, id string) (*networkservices.Gateway, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/gateways/%s", projectID, location, id)
+
+	attrs, err := service.Projects.Locations.Gateways.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the gateway %s in %s in project %s does not exist", id, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for gateway %s in %s in project %s: %w", id, location, projectID, err)
+	}
+
+	return attrs, nil
+}
+
+// GetNetworkServicesLbEdgeExtensionAttrs returns the settings Google Cloud holds for the given load balancer edge extension, so a test can assert on what was
+// actually created rather than only that it exists.
+// An edge extension runs at the edge before a request is routed, so which forwarding rules it attaches to is what it affects.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbEdgeExtensionAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, id string) *networkservices.LbEdgeExtension {
+	attrs, err := GetNetworkServicesLbEdgeExtensionAttrsE(t, ctx, projectID, location, id)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetNetworkServicesLbEdgeExtensionAttrsE returns the settings Google Cloud holds for the given load balancer edge extension.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbEdgeExtensionAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*networkservices.LbEdgeExtension, error) {
+	logger.Default.Logf(t, "Getting settings for load balancer edge extension %s in %s in project %s", id, location, projectID)
+
+	service, err := NewNetworkServicesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkServicesLbEdgeExtensionAttrsWithClient(ctx, service, projectID, location, id)
+}
+
+// GetNetworkServicesLbEdgeExtensionAttrsWithClient returns the settings Google Cloud holds for the given load balancer edge extension using the supplied
+// *networkservices.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see networkservices_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbEdgeExtensionAttrsWithClient(ctx context.Context, service *networkservices.Service, projectID string, location string, id string) (*networkservices.LbEdgeExtension, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/lbEdgeExtensions/%s", projectID, location, id)
+
+	attrs, err := service.Projects.Locations.LbEdgeExtensions.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the load balancer edge extension %s in %s in project %s does not exist", id, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for load balancer edge extension %s in %s in project %s: %w", id, location, projectID, err)
+	}
+
+	return attrs, nil
+}
+
+// GetNetworkServicesLbRouteExtensionAttrs returns the settings Google Cloud holds for the given load balancer route extension, so a test can assert on what was
+// actually created rather than only that it exists.
+// A route extension can pick the backend for a request, so the extension chain it runs is what decides where traffic lands.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbRouteExtensionAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, id string) *networkservices.LbRouteExtension {
+	attrs, err := GetNetworkServicesLbRouteExtensionAttrsE(t, ctx, projectID, location, id)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetNetworkServicesLbRouteExtensionAttrsE returns the settings Google Cloud holds for the given load balancer route extension.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbRouteExtensionAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*networkservices.LbRouteExtension, error) {
+	logger.Default.Logf(t, "Getting settings for load balancer route extension %s in %s in project %s", id, location, projectID)
+
+	service, err := NewNetworkServicesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkServicesLbRouteExtensionAttrsWithClient(ctx, service, projectID, location, id)
+}
+
+// GetNetworkServicesLbRouteExtensionAttrsWithClient returns the settings Google Cloud holds for the given load balancer route extension using the supplied
+// *networkservices.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see networkservices_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbRouteExtensionAttrsWithClient(ctx context.Context, service *networkservices.Service, projectID string, location string, id string) (*networkservices.LbRouteExtension, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/lbRouteExtensions/%s", projectID, location, id)
+
+	attrs, err := service.Projects.Locations.LbRouteExtensions.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the load balancer route extension %s in %s in project %s does not exist", id, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for load balancer route extension %s in %s in project %s: %w", id, location, projectID, err)
+	}
+
+	return attrs, nil
+}
+
+// GetNetworkServicesLbTrafficExtensionAttrs returns the settings Google Cloud holds for the given load balancer traffic extension, so a test can assert on what was
+// actually created rather than only that it exists.
+// A traffic extension sees requests and responses as they pass, so which chain runs and on which rules is the whole point.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbTrafficExtensionAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, id string) *networkservices.LbTrafficExtension {
+	attrs, err := GetNetworkServicesLbTrafficExtensionAttrsE(t, ctx, projectID, location, id)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetNetworkServicesLbTrafficExtensionAttrsE returns the settings Google Cloud holds for the given load balancer traffic extension.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbTrafficExtensionAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*networkservices.LbTrafficExtension, error) {
+	logger.Default.Logf(t, "Getting settings for load balancer traffic extension %s in %s in project %s", id, location, projectID)
+
+	service, err := NewNetworkServicesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkServicesLbTrafficExtensionAttrsWithClient(ctx, service, projectID, location, id)
+}
+
+// GetNetworkServicesLbTrafficExtensionAttrsWithClient returns the settings Google Cloud holds for the given load balancer traffic extension using the supplied
+// *networkservices.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see networkservices_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesLbTrafficExtensionAttrsWithClient(ctx context.Context, service *networkservices.Service, projectID string, location string, id string) (*networkservices.LbTrafficExtension, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/lbTrafficExtensions/%s", projectID, location, id)
+
+	attrs, err := service.Projects.Locations.LbTrafficExtensions.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the load balancer traffic extension %s in %s in project %s does not exist", id, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for load balancer traffic extension %s in %s in project %s: %w", id, location, projectID, err)
+	}
+
+	return attrs, nil
+}
+
+// GetNetworkServicesWasmPluginAttrs returns the settings Google Cloud holds for the given Wasm plugin, so a test can assert on what was
+// actually created rather than only that it exists.
+// A plugin is the code an extension runs, so which version is the main one decides what actually executes.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesWasmPluginAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, id string) *networkservices.WasmPlugin {
+	attrs, err := GetNetworkServicesWasmPluginAttrsE(t, ctx, projectID, location, id)
+	require.NoError(t, err)
+
+	return attrs
+}
+
+// GetNetworkServicesWasmPluginAttrsE returns the settings Google Cloud holds for the given Wasm plugin.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesWasmPluginAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, id string) (*networkservices.WasmPlugin, error) {
+	logger.Default.Logf(t, "Getting settings for Wasm plugin %s in %s in project %s", id, location, projectID)
+
+	service, err := NewNetworkServicesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkServicesWasmPluginAttrsWithClient(ctx, service, projectID, location, id)
+}
+
+// GetNetworkServicesWasmPluginAttrsWithClient returns the settings Google Cloud holds for the given Wasm plugin using the supplied
+// *networkservices.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see networkservices_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesWasmPluginAttrsWithClient(ctx context.Context, service *networkservices.Service, projectID string, location string, id string) (*networkservices.WasmPlugin, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/wasmPlugins/%s", projectID, location, id)
+
+	attrs, err := service.Projects.Locations.WasmPlugins.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Wasm plugin %s in %s in project %s does not exist", id, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Wasm plugin %s in %s in project %s: %w", id, location, projectID, err)
+	}
+
+	return attrs, nil
+}
+
 // NewNetworkServicesServiceE creates a Network Services service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
