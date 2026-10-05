@@ -118,7 +118,7 @@ func GetMetastoreServiceIamPolicyAttrs(t testing.TestingT, ctx context.Context, 
 // GetMetastoreServiceIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Dataproc Metastore service.
 // The ctx parameter supports cancellation and timeouts.
 func GetMetastoreServiceIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, serviceID string) (*metastore.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Dataproc Metastore service %s in %s in project %s", serviceID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Dataproc Metastore service %s in %s in project %s", serviceID, location, projectID)
 
 	service, err := NewMetastoreServiceE(t, ctx)
 	if err != nil {
@@ -142,7 +142,7 @@ func GetMetastoreServiceIamPolicyAttrsWithClient(ctx context.Context, service *m
 			return nil, fmt.Errorf("the Dataproc Metastore service %s in %s in project %s does not exist", serviceID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Dataproc Metastore service %s in %s in project %s: %w", serviceID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Dataproc Metastore service %s in %s in project %s: %w", serviceID, location, projectID, err)
 	}
 
 	return policy, nil
@@ -163,7 +163,7 @@ func GetMetastoreFederationIamPolicyAttrs(t testing.TestingT, ctx context.Contex
 // GetMetastoreFederationIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Dataproc Metastore federation.
 // The ctx parameter supports cancellation and timeouts.
 func GetMetastoreFederationIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, federationID string) (*metastore.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Dataproc Metastore federation %s in %s in project %s", federationID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Dataproc Metastore federation %s in %s in project %s", federationID, location, projectID)
 
 	service, err := NewMetastoreServiceE(t, ctx)
 	if err != nil {
@@ -187,7 +187,7 @@ func GetMetastoreFederationIamPolicyAttrsWithClient(ctx context.Context, service
 			return nil, fmt.Errorf("the Dataproc Metastore federation %s in %s in project %s does not exist", federationID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Dataproc Metastore federation %s in %s in project %s: %w", federationID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Dataproc Metastore federation %s in %s in project %s: %w", federationID, location, projectID, err)
 	}
 
 	return policy, nil
@@ -208,7 +208,7 @@ func GetMetastoreDatabaseIamPolicyAttrs(t testing.TestingT, ctx context.Context,
 // GetMetastoreDatabaseIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Dataproc Metastore database.
 // The ctx parameter supports cancellation and timeouts.
 func GetMetastoreDatabaseIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, serviceID string, databaseID string) (*metastore.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Dataproc Metastore database %s %s in %s in project %s", databaseID, serviceID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Dataproc Metastore database %s %s in %s in project %s", databaseID, serviceID, location, projectID)
 
 	service, err := NewMetastoreServiceE(t, ctx)
 	if err != nil {
@@ -232,7 +232,7 @@ func GetMetastoreDatabaseIamPolicyAttrsWithClient(ctx context.Context, service *
 			return nil, fmt.Errorf("the Dataproc Metastore database %s %s in %s in project %s does not exist", databaseID, serviceID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Dataproc Metastore database %s %s in %s in project %s: %w", databaseID, serviceID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Dataproc Metastore database %s %s in %s in project %s: %w", databaseID, serviceID, location, projectID, err)
 	}
 
 	return policy, nil
@@ -253,7 +253,7 @@ func GetMetastoreTableIamPolicyAttrs(t testing.TestingT, ctx context.Context, pr
 // GetMetastoreTableIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Dataproc Metastore table.
 // The ctx parameter supports cancellation and timeouts.
 func GetMetastoreTableIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, serviceID string, databaseID string, tableID string) (*metastore.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Dataproc Metastore table %s %s %s in %s in project %s", tableID, databaseID, serviceID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Dataproc Metastore table %s %s %s in %s in project %s", tableID, databaseID, serviceID, location, projectID)
 
 	service, err := NewMetastoreServiceE(t, ctx)
 	if err != nil {
@@ -277,7 +277,7 @@ func GetMetastoreTableIamPolicyAttrsWithClient(ctx context.Context, service *met
 			return nil, fmt.Errorf("the Dataproc Metastore table %s %s %s in %s in project %s does not exist", tableID, databaseID, serviceID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Dataproc Metastore table %s %s %s in %s in project %s: %w", tableID, databaseID, serviceID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Dataproc Metastore table %s %s %s in %s in project %s: %w", tableID, databaseID, serviceID, location, projectID, err)
 	}
 
 	return policy, nil
