@@ -388,3 +388,438 @@ func TestFetchProjectMetadataWithClient(t *testing.T) {
 	require.NotNil(t, metadata.Items[0].Value)
 	assert.Equal(t, "created by terratest", *metadata.Items[0].Value)
 }
+
+func TestFetchNetworkAttachmentWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an attachment the terraform-google-networking network attachment module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/networkAttachments/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","connectionPreference":"ACCEPT_MANUAL","subnetworks":["https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/subnetworks/gw-library-test"],"producerAcceptLists":["gw-library-test-project"]}`))
+	})
+
+	attachment, err := gcp.FetchNetworkAttachmentWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ACCEPT_MANUAL", attachment.ConnectionPreference)
+	assert.Equal(t, "created by terratest", attachment.Description)
+	require.Len(t, attachment.Subnetworks, 1)
+	assert.Equal(t, []string{"gw-library-test-project"}, attachment.ProducerAcceptLists)
+}
+
+func TestFetchNodeGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a sole-tenant node group the terraform-google-compute node group module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/nodeGroups/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","size":1,"maintenancePolicy":"RESTART_IN_PLACE","nodeTemplate":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/nodeTemplates/gw-library-test"}`))
+	})
+
+	group, err := gcp.FetchNodeGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", group.Description)
+	assert.Equal(t, "RESTART_IN_PLACE", group.MaintenancePolicy)
+	assert.Equal(t, int64(1), group.Size)
+}
+
+func TestFetchNodeGroupWithClientMissingGroup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a sole-tenant node group that is not there should read a sentence about that sole-tenant node group, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchNodeGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchReservationWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a reservation the terraform-google-compute reservation module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/reservations/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","specificReservationRequired":true,"status":"READY"}`))
+	})
+
+	reservation, err := gcp.FetchReservationWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", reservation.Description)
+	assert.True(t, reservation.SpecificReservationRequired)
+	assert.Equal(t, "READY", reservation.Status)
+}
+
+func TestFetchReservationWithClientMissingReservation(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a reservation that is not there should read a sentence about that reservation, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchReservationWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchRegionCommitmentWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a commitment the terraform-google-compute region commitment module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/commitments/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","plan":"TWELVE_MONTH","type":"GENERAL_PURPOSE_N2","status":"ACTIVE"}`))
+	})
+
+	commitment, err := gcp.FetchRegionCommitmentWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", commitment.Description)
+	assert.Equal(t, "TWELVE_MONTH", commitment.Plan)
+	assert.Equal(t, "GENERAL_PURPOSE_N2", commitment.Type)
+}
+
+func TestFetchRegionCommitmentWithClientMissingCommitment(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a commitment that is not there should read a sentence about that commitment, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchRegionCommitmentWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchStoragePoolWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a storage pool the terraform-google-compute storage pool module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/storagePools/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","poolProvisionedCapacityGb":"10240","poolProvisionedIops":"10000","capacityProvisioningType":"ADVANCED"}`))
+	})
+
+	pool, err := gcp.FetchStoragePoolWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", pool.Description)
+	assert.Equal(t, int64(10240), pool.PoolProvisionedCapacityGb)
+	assert.Equal(t, "ADVANCED", pool.CapacityProvisioningType)
+}
+
+func TestFetchStoragePoolWithClientMissingPool(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a storage pool that is not there should read a sentence about that storage pool, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchStoragePoolWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchPublicAdvertisedPrefixWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a public advertised prefix the terraform-google-networking public advertised prefix module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/publicAdvertisedPrefixes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","ipCidrRange":"198.51.100.0/24","dnsVerificationIp":"198.51.100.1","status":"VALIDATED"}`))
+	})
+
+	prefix, err := gcp.FetchPublicAdvertisedPrefixWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", prefix.Description)
+	assert.Equal(t, "198.51.100.0/24", prefix.IpCidrRange)
+	assert.Equal(t, "VALIDATED", prefix.Status)
+}
+
+func TestFetchPublicAdvertisedPrefixWithClientMissingPrefix(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a public advertised prefix that is not there should read a sentence about that public advertised prefix, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchPublicAdvertisedPrefixWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchPublicDelegatedPrefixWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a public delegated prefix the terraform-google-networking public delegated prefix module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/publicDelegatedPrefixes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","ipCidrRange":"198.51.100.0/26","parentPrefix":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/global/publicAdvertisedPrefixes/gw-library-parent","isLiveMigration":true}`))
+	})
+
+	prefix, err := gcp.FetchPublicDelegatedPrefixWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", prefix.Description)
+	assert.Equal(t, "198.51.100.0/26", prefix.IpCidrRange)
+	assert.True(t, prefix.IsLiveMigration)
+}
+
+func TestFetchPublicDelegatedPrefixWithClientMissingPrefix(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a public delegated prefix that is not there should read a sentence about that public delegated prefix, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchPublicDelegatedPrefixWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchInterconnectWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a interconnect the terraform-google-networking interconnect module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/interconnects/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","linkType":"LINK_TYPE_ETHERNET_10G_LR","requestedLinkCount":2,"location":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/global/interconnectLocations/iad-zone1-1"}`))
+	})
+
+	interconnect, err := gcp.FetchInterconnectWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", interconnect.Description)
+	assert.Equal(t, "LINK_TYPE_ETHERNET_10G_LR", interconnect.LinkType)
+	assert.Equal(t, int64(2), interconnect.RequestedLinkCount)
+}
+
+func TestFetchInterconnectWithClientMissingInterconnect(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a interconnect that is not there should read a sentence about that interconnect, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchInterconnectWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchInterconnectGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a interconnect group the terraform-google-networking interconnect group module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/interconnectGroups/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","intent":{"topologyCapability":"PRODUCTION_NON_CRITICAL"}}`))
+	})
+
+	group, err := gcp.FetchInterconnectGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", group.Description)
+}
+
+func TestFetchInterconnectGroupWithClientMissingGroup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a interconnect group that is not there should read a sentence about that interconnect group, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchInterconnectGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchInterconnectAttachmentWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a interconnect attachment the terraform-google-networking interconnect attachment module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/interconnectAttachments/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","bandwidth":"BPS_1G","type":"PARTNER","router":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1/routers/gw-library-test"}`))
+	})
+
+	attachment, err := gcp.FetchInterconnectAttachmentWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attachment.Description)
+	assert.Equal(t, "BPS_1G", attachment.Bandwidth)
+	assert.Equal(t, "PARTNER", attachment.Type)
+}
+
+func TestFetchInterconnectAttachmentWithClientMissingAttachment(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a interconnect attachment that is not there should read a sentence about that interconnect attachment, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchInterconnectAttachmentWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchCrossSiteNetworkWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a cross-site network the terraform-google-networking cross-site network module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/crossSiteNetworks/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest"}`))
+	})
+
+	network, err := gcp.FetchCrossSiteNetworkWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", network.Description)
+}
+
+func TestFetchCrossSiteNetworkWithClientMissingNetwork(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a cross-site network that is not there should read a sentence about that cross-site network, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchCrossSiteNetworkWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchWireGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a wire group the terraform-google-networking wire group module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/crossSiteNetworks/gw-library-parent/wireGroups/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","adminEnabled":true}`))
+	})
+
+	group, err := gcp.FetchWireGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-parent", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", group.Description)
+	assert.True(t, group.AdminEnabled)
+}
+
+func TestFetchWireGroupWithClientMissingGroup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a wire group that is not there should read a sentence about that wire group, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchWireGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchPreviewFeatureWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a preview feature the terraform-google-compute preview feature module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/previewFeatures/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"created by terratest","activationStatus":"ENABLED"}`))
+	})
+
+	feature, err := gcp.FetchPreviewFeatureWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", feature.Description)
+	assert.Equal(t, "ENABLED", feature.ActivationStatus)
+}
+
+func TestFetchPreviewFeatureWithClientMissingFeature(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a preview feature that is not there should read a sentence about that preview feature, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchPreviewFeatureWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
