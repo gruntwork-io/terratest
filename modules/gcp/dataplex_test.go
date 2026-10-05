@@ -348,6 +348,25 @@ func TestGetDataplexTaskIamPolicyAttrsWithClientMissingResource(t *testing.T) {
 	assert.Contains(t, err.Error(), "does not exist")
 }
 
+func TestGetDataplexDataProductAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A data product groups assets for a consumer to find, so the response carries who owns it rather
+	// than anything about storage.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/dataProducts/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/dataProducts/gw-library-test","displayName":"terratest data product","description":"created by terratest","labels":{"purpose":"terratest"},"ownerEmails":["terratest@example.com"]}`))
+	})
+
+	product, err := gcp.GetDataplexDataProductAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest data product", product.DisplayName)
+	assert.Equal(t, []string{"terratest@example.com"}, product.OwnerEmails)
+}
+
 func TestGetDataplexEntryLinkAttrsWithClient(t *testing.T) {
 	t.Parallel()
 
