@@ -243,8 +243,8 @@ func GetFirebaseAppCheckRecaptchaV3ConfigAttrsWithClient(ctx context.Context, se
 // A debug token lets one untrusted client through, so its display name is the only way to tell which one it is.
 // This will fail the test if there is an error.
 // The ctx parameter supports cancellation and timeouts.
-func GetFirebaseAppCheckDebugTokenAttrs(t testing.TestingT, ctx context.Context, projectID string, appID string) *firebaseappcheck.GoogleFirebaseAppcheckV1DebugToken {
-	attrs, err := GetFirebaseAppCheckDebugTokenAttrsE(t, ctx, projectID, appID)
+func GetFirebaseAppCheckDebugTokenAttrs(t testing.TestingT, ctx context.Context, projectID string, appID string, tokenID string) *firebaseappcheck.GoogleFirebaseAppcheckV1DebugToken {
+	attrs, err := GetFirebaseAppCheckDebugTokenAttrsE(t, ctx, projectID, appID, tokenID)
 	require.NoError(t, err)
 
 	return attrs
@@ -252,32 +252,32 @@ func GetFirebaseAppCheckDebugTokenAttrs(t testing.TestingT, ctx context.Context,
 
 // GetFirebaseAppCheckDebugTokenAttrsE returns the settings Google Cloud holds for the given Firebase App Check debug token.
 // The ctx parameter supports cancellation and timeouts.
-func GetFirebaseAppCheckDebugTokenAttrsE(t testing.TestingT, ctx context.Context, projectID string, appID string) (*firebaseappcheck.GoogleFirebaseAppcheckV1DebugToken, error) {
-	logger.Default.Logf(t, "Getting settings for Firebase App Check debug token for app %s in project %s", appID, projectID)
+func GetFirebaseAppCheckDebugTokenAttrsE(t testing.TestingT, ctx context.Context, projectID string, appID string, tokenID string) (*firebaseappcheck.GoogleFirebaseAppcheckV1DebugToken, error) {
+	logger.Default.Logf(t, "Getting settings for Firebase App Check debug token %s for app %s in project %s", tokenID, appID, projectID)
 
 	service, err := NewFirebaseAppCheckServiceE(t, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return GetFirebaseAppCheckDebugTokenAttrsWithClient(ctx, service, projectID, appID)
+	return GetFirebaseAppCheckDebugTokenAttrsWithClient(ctx, service, projectID, appID, tokenID)
 }
 
 // GetFirebaseAppCheckDebugTokenAttrsWithClient returns the settings Google Cloud holds for the given Firebase App Check debug token using the supplied
 // *firebaseappcheck.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
 // server (see firebaseappcheck_test.go for the pattern).
 // The ctx parameter supports cancellation and timeouts.
-func GetFirebaseAppCheckDebugTokenAttrsWithClient(ctx context.Context, service *firebaseappcheck.Service, projectID string, appID string) (*firebaseappcheck.GoogleFirebaseAppcheckV1DebugToken, error) {
-	name := fmt.Sprintf("projects/%s/apps/%s/debugTokens/gw-library-test", projectID, appID)
+func GetFirebaseAppCheckDebugTokenAttrsWithClient(ctx context.Context, service *firebaseappcheck.Service, projectID string, appID string, tokenID string) (*firebaseappcheck.GoogleFirebaseAppcheckV1DebugToken, error) {
+	name := fmt.Sprintf("projects/%s/apps/%s/debugTokens/%s", projectID, appID, tokenID)
 
 	attrs, err := service.Projects.Apps.DebugTokens.Get(name).Context(ctx).Do()
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
-			return nil, fmt.Errorf("the Firebase App Check debug token for app %s in project %s does not exist", appID, projectID)
+			return nil, fmt.Errorf("the Firebase App Check debug token %s for app %s in project %s does not exist", tokenID, appID, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Firebase App Check debug token for app %s in project %s: %w", appID, projectID, err)
+		return nil, fmt.Errorf("failed to get settings for Firebase App Check debug token %s for app %s in project %s: %w", tokenID, appID, projectID, err)
 	}
 
 	return attrs, nil

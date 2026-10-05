@@ -204,12 +204,12 @@ func TestGetFirebaseAppCheckDebugTokenAttrsWithClient(t *testing.T) {
 	// not a copy of any one fixture's values.
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/apps/gw-library-app/debugTokens/gw-library-test"), "unexpected path %s", r.URL.Path)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/apps/gw-library-app/debugTokens/gw-library-token"), "unexpected path %s", r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/apps/gw-library-app/debugTokens/gw-library-test","displayName":"terratest token"}`))
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/apps/gw-library-app/debugTokens/gw-library-token","displayName":"terratest token"}`))
 	})
 
-	attrs, err := gcp.GetFirebaseAppCheckDebugTokenAttrsWithClient(context.Background(), newFakeFirebaseAppCheckService(t, handler), "gw-library-test-project", "gw-library-app")
+	attrs, err := gcp.GetFirebaseAppCheckDebugTokenAttrsWithClient(context.Background(), newFakeFirebaseAppCheckService(t, handler), "gw-library-test-project", "gw-library-app", "gw-library-token")
 	require.NoError(t, err)
 
 	assert.Equal(t, "terratest token", attrs.DisplayName)
@@ -224,7 +224,7 @@ func TestGetFirebaseAppCheckDebugTokenAttrsWithClientMissingResource(t *testing.
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	_, err := gcp.GetFirebaseAppCheckDebugTokenAttrsWithClient(context.Background(), newFakeFirebaseAppCheckService(t, handler), "gw-library-test-project", "gw-library-missing")
+	_, err := gcp.GetFirebaseAppCheckDebugTokenAttrsWithClient(context.Background(), newFakeFirebaseAppCheckService(t, handler), "gw-library-test-project", "gw-library-app", "gw-library-missing")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
