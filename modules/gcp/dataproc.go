@@ -298,7 +298,7 @@ func GetDataprocJobIamPolicyAttrs(t testing.TestingT, ctx context.Context, proje
 // GetDataprocJobIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Dataproc job.
 // The ctx parameter supports cancellation and timeouts.
 func GetDataprocJobIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, region string, jobID string) (*dataproc.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Dataproc job %s in %s in project %s", jobID, region, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Dataproc job %s in %s in project %s", jobID, region, projectID)
 
 	service, err := NewDataprocServiceE(t, ctx, region)
 	if err != nil {
@@ -324,7 +324,7 @@ func GetDataprocJobIamPolicyAttrsWithClient(ctx context.Context, service *datapr
 			return nil, fmt.Errorf("the Dataproc job %s in %s in project %s does not exist", jobID, region, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Dataproc job %s in %s in project %s: %w", jobID, region, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Dataproc job %s in %s in project %s: %w", jobID, region, projectID, err)
 	}
 
 	return policy, nil

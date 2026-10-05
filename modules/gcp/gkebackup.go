@@ -206,7 +206,7 @@ func GetGKEBackupPlanIamPolicyAttrs(t testing.TestingT, ctx context.Context, pro
 // GetGKEBackupPlanIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given GKE backup plan.
 // The ctx parameter supports cancellation and timeouts.
 func GetGKEBackupPlanIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, planID string) (*gkebackup.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for GKE backup plan %s in %s in project %s", planID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for GKE backup plan %s in %s in project %s", planID, location, projectID)
 
 	service, err := NewGKEBackupServiceE(t, ctx)
 	if err != nil {
@@ -230,7 +230,7 @@ func GetGKEBackupPlanIamPolicyAttrsWithClient(ctx context.Context, service *gkeb
 			return nil, fmt.Errorf("the GKE backup plan %s in %s in project %s does not exist", planID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for GKE backup plan %s in %s in project %s: %w", planID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for GKE backup plan %s in %s in project %s: %w", planID, location, projectID, err)
 	}
 
 	return policy, nil
@@ -251,7 +251,7 @@ func GetGKERestorePlanIamPolicyAttrs(t testing.TestingT, ctx context.Context, pr
 // GetGKERestorePlanIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given GKE restore plan.
 // The ctx parameter supports cancellation and timeouts.
 func GetGKERestorePlanIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, planID string) (*gkebackup.Policy, error) {
-	logger.Default.Logf(t, "Getting settings for GKE restore plan %s in %s in project %s", planID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for GKE restore plan %s in %s in project %s", planID, location, projectID)
 
 	service, err := NewGKEBackupServiceE(t, ctx)
 	if err != nil {
@@ -275,7 +275,7 @@ func GetGKERestorePlanIamPolicyAttrsWithClient(ctx context.Context, service *gke
 			return nil, fmt.Errorf("the GKE restore plan %s in %s in project %s does not exist", planID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for GKE restore plan %s in %s in project %s: %w", planID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for GKE restore plan %s in %s in project %s: %w", planID, location, projectID, err)
 	}
 
 	return policy, nil

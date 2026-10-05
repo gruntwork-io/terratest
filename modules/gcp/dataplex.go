@@ -562,7 +562,7 @@ func GetDataplexTaskIamPolicyAttrs(t testing.TestingT, ctx context.Context, proj
 // GetDataplexTaskIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Dataplex task.
 // The ctx parameter supports cancellation and timeouts.
 func GetDataplexTaskIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, lakeID string, taskID string) (*dataplex.GoogleIamV1Policy, error) {
-	logger.Default.Logf(t, "Getting settings for Dataplex task %s in lake %s in %s in project %s", taskID, lakeID, location, projectID)
+	logger.Default.Logf(t, "Getting the IAM policy for Dataplex task %s in lake %s in %s in project %s", taskID, lakeID, location, projectID)
 
 	service, err := NewDataplexServiceE(t, ctx)
 	if err != nil {
@@ -586,7 +586,7 @@ func GetDataplexTaskIamPolicyAttrsWithClient(ctx context.Context, service *datap
 			return nil, fmt.Errorf("the Dataplex task %s in lake %s in %s in project %s does not exist", taskID, lakeID, location, projectID)
 		}
 
-		return nil, fmt.Errorf("failed to get settings for Dataplex task %s in lake %s in %s in project %s: %w", taskID, lakeID, location, projectID, err)
+		return nil, fmt.Errorf("failed to get the IAM policy for Dataplex task %s in lake %s in %s in project %s: %w", taskID, lakeID, location, projectID, err)
 	}
 
 	return policy, nil
