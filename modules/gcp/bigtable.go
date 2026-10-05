@@ -293,3 +293,94 @@ func GetBigtableTableIamPolicyAttrsWithClient(ctx context.Context, service *bigt
 
 	return policy, nil
 }
+
+// GetBigtableLogicalViewAttrs returns the settings Google Cloud holds for the given logical view, so a
+// test can assert on the query it stands for. A logical view is a saved query over a table rather than
+// stored data, so nothing is duplicated by it.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableLogicalViewAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, viewID string) *bigtableadmin.LogicalView {
+	view, err := GetBigtableLogicalViewAttrsE(t, ctx, projectID, instanceID, viewID)
+	require.NoError(t, err)
+
+	return view
+}
+
+// GetBigtableLogicalViewAttrsE returns the settings Google Cloud holds for the given logical view.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableLogicalViewAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, viewID string) (*bigtableadmin.LogicalView, error) {
+	logger.Default.Logf(t, "Getting settings for Bigtable logical view %s on instance %s in project %s", viewID, instanceID, projectID)
+
+	service, err := NewBigtableAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigtableLogicalViewAttrsWithClient(ctx, service, projectID, instanceID, viewID)
+}
+
+// GetBigtableLogicalViewAttrsWithClient returns the settings Google Cloud holds for the given logical
+// view using the supplied *bigtableadmin.Service. Prefer this variant in unit tests where the service
+// is backed by an httptest fake server (see bigtable_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableLogicalViewAttrsWithClient(ctx context.Context, service *bigtableadmin.Service, projectID string, instanceID string, viewID string) (*bigtableadmin.LogicalView, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/logicalViews/%s", projectID, instanceID, viewID)
+
+	view, err := service.Projects.Instances.LogicalViews.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Bigtable logical view %s on instance %s in project %s does not exist", viewID, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Bigtable logical view %s on instance %s in project %s: %w", viewID, instanceID, projectID, err)
+	}
+
+	return view, nil
+}
+
+// GetBigtableMaterializedViewAttrs returns the settings Google Cloud holds for the given materialized
+// view, so a test can assert on the query behind it. Unlike a logical view, a materialized view keeps
+// its own copy of the result.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableMaterializedViewAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, viewID string) *bigtableadmin.MaterializedView {
+	view, err := GetBigtableMaterializedViewAttrsE(t, ctx, projectID, instanceID, viewID)
+	require.NoError(t, err)
+
+	return view
+}
+
+// GetBigtableMaterializedViewAttrsE returns the settings Google Cloud holds for the given materialized
+// view.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableMaterializedViewAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, viewID string) (*bigtableadmin.MaterializedView, error) {
+	logger.Default.Logf(t, "Getting settings for Bigtable materialized view %s on instance %s in project %s", viewID, instanceID, projectID)
+
+	service, err := NewBigtableAdminServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigtableMaterializedViewAttrsWithClient(ctx, service, projectID, instanceID, viewID)
+}
+
+// GetBigtableMaterializedViewAttrsWithClient returns the settings Google Cloud holds for the given
+// materialized view using the supplied *bigtableadmin.Service. Prefer this variant in unit tests where
+// the service is backed by an httptest fake server (see bigtable_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigtableMaterializedViewAttrsWithClient(ctx context.Context, service *bigtableadmin.Service, projectID string, instanceID string, viewID string) (*bigtableadmin.MaterializedView, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/materializedViews/%s", projectID, instanceID, viewID)
+
+	view, err := service.Projects.Instances.MaterializedViews.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Bigtable materialized view %s on instance %s in project %s does not exist", viewID, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Bigtable materialized view %s on instance %s in project %s: %w", viewID, instanceID, projectID, err)
+	}
+
+	return view, nil
+}
