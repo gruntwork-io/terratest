@@ -66,3 +66,107 @@ func TestGetAppHubApplicationAttrsWithClientReportsAMissingApplication(t *testin
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetAppHubServiceAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a App Hub service the the library suite App Hub service module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/applications/gw-library-parent/services/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/applications/gw-library-parent/services/gw-library-test","displayName":"terratest service","description":"created by terratest","state":"ACTIVE"}`))
+	})
+
+	attrs, err := gcp.GetAppHubServiceAttrsWithClient(context.Background(), newFakeAppHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest service", attrs.DisplayName)
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetAppHubServiceAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a App Hub service that is not there should read a sentence about that App Hub service, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetAppHubServiceAttrsWithClient(context.Background(), newFakeAppHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetAppHubWorkloadAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a App Hub workload the the library suite App Hub workload module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/applications/gw-library-parent/workloads/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/applications/gw-library-parent/workloads/gw-library-test","displayName":"terratest workload","description":"created by terratest","state":"ACTIVE"}`))
+	})
+
+	attrs, err := gcp.GetAppHubWorkloadAttrsWithClient(context.Background(), newFakeAppHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest workload", attrs.DisplayName)
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetAppHubWorkloadAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a App Hub workload that is not there should read a sentence about that App Hub workload, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetAppHubWorkloadAttrsWithClient(context.Background(), newFakeAppHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetAppHubServiceProjectAttachmentAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a App Hub service project attachment the the library suite App Hub service project attachment module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/serviceProjectAttachments/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/serviceProjectAttachments/gw-library-test","serviceProject":"projects/gw-library-other-project","state":"ACTIVE"}`))
+	})
+
+	attrs, err := gcp.GetAppHubServiceProjectAttachmentAttrsWithClient(context.Background(), newFakeAppHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/gw-library-other-project", attrs.ServiceProject)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetAppHubServiceProjectAttachmentAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a App Hub service project attachment that is not there should read a sentence about that App Hub service project attachment, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetAppHubServiceProjectAttachmentAttrsWithClient(context.Background(), newFakeAppHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
