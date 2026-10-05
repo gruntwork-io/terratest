@@ -160,3 +160,39 @@ func TestGetSourceRepresentationInstanceAttrsWithClient(t *testing.T) {
 	require.NotNil(t, instance.OnPremisesConfiguration)
 	assert.Equal(t, "10.80.0.1:3306", instance.OnPremisesConfiguration.HostPort)
 }
+
+func TestGetCloudSQLSslCertAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a certificate the terraform-google-data-storage SSL certificate module created, not
+	// a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		// The fingerprint names the certificate, so it has to reach the URL rather than stay a filter.
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test/sslCerts/a1b2c3"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"kind":"sql#sslCert","commonName":"terratest client","sha1Fingerprint":"a1b2c3","instance":"gw-library-test","expirationTime":"2030-01-01T00:00:00.000Z"}`))
+	})
+
+	cert, err := gcp.GetCloudSQLSslCertAttrsWithClient(context.Background(), newFakeCloudSQLService(t, handler), "gw-library-test-project", "gw-library-test", "a1b2c3")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest client", cert.CommonName)
+	assert.Equal(t, "a1b2c3", cert.Sha1Fingerprint)
+	assert.Equal(t, "gw-library-test", cert.Instance)
+}
+
+func TestGetCloudSQLSslCertAttrsWithClientMissingCert(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a fingerprint that is not there should read a sentence about that certificate,
+	// not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetCloudSQLSslCertAttrsWithClient(context.Background(), newFakeCloudSQLService(t, handler), "gw-library-test-project", "gw-library-test", "deadbeef")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "deadbeef")
+	assert.Contains(t, err.Error(), "does not exist")
+}

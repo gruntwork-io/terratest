@@ -100,3 +100,39 @@ func TestGetSpannerDatabaseAttrsWithClientMissingDatabase(t *testing.T) {
 	require.ErrorContains(t, err, "gw-instance")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetSpannerBackupScheduleAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a schedule the terraform-google-data-storage backup schedule module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test/databases/gw-library-db/backupSchedules/gw-library-schedule"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/instances/gw-library-test/databases/gw-library-db/backupSchedules/gw-library-schedule","retentionDuration":"172800s","spec":{"cronSpec":{"text":"0 2 * * *"}},"fullBackupSpec":{}}`))
+	})
+
+	schedule, err := gcp.GetSpannerBackupScheduleAttrsWithClient(context.Background(), newFakeSpannerService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-db", "gw-library-schedule")
+	require.NoError(t, err)
+
+	assert.Equal(t, "172800s", schedule.RetentionDuration)
+	require.NotNil(t, schedule.Spec)
+	require.NotNil(t, schedule.Spec.CronSpec)
+	assert.Equal(t, "0 2 * * *", schedule.Spec.CronSpec.Text)
+}
+
+func TestGetSpannerBackupScheduleAttrsWithClientMissingSchedule(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a schedule that is not there should read a sentence about that schedule, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetSpannerBackupScheduleAttrsWithClient(context.Background(), newFakeSpannerService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-db", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
