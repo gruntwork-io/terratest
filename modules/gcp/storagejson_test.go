@@ -173,3 +173,38 @@ func TestGetStorageManagedFolderIamPolicyAttrsWithClient(t *testing.T) {
 	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, policy.Bindings[0].Condition.Expression)
 	assert.Equal(t, []string{"serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"}, policy.Bindings[0].Members)
 }
+
+func TestGetStorageAnywhereCacheAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Anywhere Cache instance the the library suite Anywhere Cache instance module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/b/gw-library-test-bucket/anywhereCaches/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","bucket":"gw-library-test-bucket","zone":"us-central1-a","admissionPolicy":"admit-on-second-miss","state":"running","ttl":"7200s"}`))
+	})
+
+	attrs, err := gcp.GetStorageAnywhereCacheAttrsWithClient(context.Background(), newFakeStorageJSONService(t, handler), "gw-library-test-bucket", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "us-central1-a", attrs.Zone)
+	assert.Equal(t, "admit-on-second-miss", attrs.AdmissionPolicy)
+	assert.Equal(t, "7200s", attrs.Ttl)
+}
+
+func TestGetStorageAnywhereCacheAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Anywhere Cache instance that is not there should read a sentence about that Anywhere Cache instance, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetStorageAnywhereCacheAttrsWithClient(context.Background(), newFakeStorageJSONService(t, handler), "gw-library-test-bucket", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
