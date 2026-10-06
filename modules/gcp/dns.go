@@ -148,3 +148,47 @@ func GetDNSRecordSetAttrsWithClient(ctx context.Context, service *dns.Service, p
 func NewDNSServiceE(t testing.TestingT, ctx context.Context) (*dns.Service, error) {
 	return dns.NewService(ctx, append(withOptions(), option.WithScopes(dns.CloudPlatformScope))...)
 }
+
+// GetDNSResponsePolicyAttrs returns the settings Google Cloud holds for the given DNS response policy,
+// so a test can assert on what was actually created rather than only that it exists. A response policy
+// answers a query before the zone does, which is how a private name is made to resolve differently
+// inside a network.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSResponsePolicyAttrs(t testing.TestingT, ctx context.Context, projectID string, policyID string) *dns.ResponsePolicy {
+	policy, err := GetDNSResponsePolicyAttrsE(t, ctx, projectID, policyID)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// GetDNSResponsePolicyAttrsE returns the settings Google Cloud holds for the given response policy.
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSResponsePolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, policyID string) (*dns.ResponsePolicy, error) {
+	logger.Default.Logf(t, "Getting settings for DNS response policy %s in project %s", policyID, projectID)
+
+	service, err := NewDNSServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDNSResponsePolicyAttrsWithClient(ctx, service, projectID, policyID)
+}
+
+// GetDNSResponsePolicyAttrsWithClient returns the settings Google Cloud holds for the given response
+// policy using the supplied *dns.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see dns_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDNSResponsePolicyAttrsWithClient(ctx context.Context, service *dns.Service, projectID string, policyID string) (*dns.ResponsePolicy, error) {
+	policy, err := service.ResponsePolicies.Get(projectID, policyID).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the DNS response policy %s does not exist in project %s", policyID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for DNS response policy %s in project %s: %w", policyID, projectID, err)
+	}
+
+	return policy, nil
+}

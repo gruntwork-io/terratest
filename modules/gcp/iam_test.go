@@ -174,3 +174,215 @@ func TestGetWorkloadIdentityPoolProviderAttrsWithClientMissingProvider(t *testin
 	require.ErrorContains(t, err, "pool gw-pool ")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetWorkloadIdentityPoolManagedIdentityAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an identity the terraform-google-identity managed identity module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/workloadIdentityPools/gw-library-test/namespaces/gw-library-test/managedIdentities/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/workloadIdentityPools/gw-library-test/namespaces/gw-library-test/managedIdentities/gw-library-test","description":"created by terratest","disabled":true,"state":"ACTIVE"}`))
+	})
+
+	identity, err := gcp.GetWorkloadIdentityPoolManagedIdentityAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", identity.Description)
+	assert.True(t, identity.Disabled)
+}
+
+func TestGetOAuthClientCredentialAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a credential the terraform-google-identity OAuth client credential module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/oauthClients/gw-library-test/credentials/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		// The secret is in the answer on purpose: what is asserted below is that the read drops it.
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/oauthClients/gw-library-test/credentials/gw-library-test","displayName":"terratest credential","disabled":true,"clientSecret":"a-working-secret"}`))
+	})
+
+	credential, err := gcp.GetOAuthClientCredentialAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest credential", credential.DisplayName)
+	assert.True(t, credential.Disabled)
+	assert.Empty(t, credential.ClientSecret, "the secret should be cleared, so a test that logs what it read cannot leak one")
+}
+
+func TestGetWorkforcePoolAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a workforce pool the the library suite workforce pool module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/locations/global/workforcePools/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"locations/global/workforcePools/gw-library-test","parent":"organizations/123456789","displayName":"terratest pool","description":"created by terratest","state":"ACTIVE","sessionDuration":"3600s"}`))
+	})
+
+	attrs, err := gcp.GetWorkforcePoolAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest pool", attrs.DisplayName)
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "3600s", attrs.SessionDuration)
+}
+
+func TestGetWorkforcePoolAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a workforce pool that is not there should read a sentence about that workforce pool, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetWorkforcePoolAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetWorkforcePoolProviderAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a workforce pool provider the the library suite workforce pool provider module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/locations/global/workforcePools/gw-library-parent/providers/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"locations/global/workforcePools/gw-library-parent/providers/gw-library-test","displayName":"terratest provider","description":"created by terratest","state":"ACTIVE","attributeMapping":{"google.subject":"assertion.sub"}}`))
+	})
+
+	attrs, err := gcp.GetWorkforcePoolProviderAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest provider", attrs.DisplayName)
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetWorkforcePoolProviderAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a workforce pool provider that is not there should read a sentence about that workforce pool provider, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetWorkforcePoolProviderAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetWorkforcePoolProviderKeyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a workforce pool provider key the the library suite workforce pool provider key module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/locations/global/workforcePools/gw-library-parent/providers/gw-library-provider/keys/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"locations/global/workforcePools/gw-library-parent/providers/gw-library-provider/keys/gw-library-test","use":"ENCRYPTION","state":"ACTIVE","keyData":{"keySpec":"RSA_2048"}}`))
+	})
+
+	attrs, err := gcp.GetWorkforcePoolProviderKeyAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-provider", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ENCRYPTION", attrs.Use)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetWorkforcePoolProviderKeyAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a workforce pool provider key that is not there should read a sentence about that workforce pool provider key, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetWorkforcePoolProviderKeyAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-provider", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetWorkforcePoolProviderScimTenantAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a workforce pool provider SCIM tenant the the library suite workforce pool provider SCIM tenant module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/locations/global/workforcePools/gw-library-parent/providers/gw-library-provider/scimTenants/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"locations/global/workforcePools/gw-library-parent/providers/gw-library-provider/scimTenants/gw-library-test","description":"created by terratest","state":"ACTIVE"}`))
+	})
+
+	attrs, err := gcp.GetWorkforcePoolProviderScimTenantAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-provider", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", attrs.Description)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetWorkforcePoolProviderScimTenantAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a workforce pool provider SCIM tenant that is not there should read a sentence about that workforce pool provider SCIM tenant, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetWorkforcePoolProviderScimTenantAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-provider", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetWorkforcePoolProviderScimTokenAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a workforce pool provider SCIM token the the library suite workforce pool provider SCIM token module created,
+	// not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/locations/global/workforcePools/gw-library-parent/providers/gw-library-provider/scimTenants/gw-library-tenant/tokens/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"locations/global/workforcePools/gw-library-parent/providers/gw-library-provider/scimTenants/gw-library-tenant/tokens/gw-library-test","displayName":"terratest token","state":"ACTIVE"}`))
+	})
+
+	attrs, err := gcp.GetWorkforcePoolProviderScimTokenAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-provider", "gw-library-tenant", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest token", attrs.DisplayName)
+	assert.Equal(t, "ACTIVE", attrs.State)
+}
+
+func TestGetWorkforcePoolProviderScimTokenAttrsWithClientMissingResource(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a workforce pool provider SCIM token that is not there should read a sentence about that workforce pool provider SCIM token, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetWorkforcePoolProviderScimTokenAttrsWithClient(context.Background(), newFakeIAMService(t, handler), "gw-library-parent", "gw-library-provider", "gw-library-tenant", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
