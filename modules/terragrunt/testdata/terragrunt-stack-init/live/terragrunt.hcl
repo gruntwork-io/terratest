@@ -1,1 +1,0 @@
-# Minimal terragrunt.hcl required for stack commands 

@@ -116,7 +116,9 @@ func TestGetRegionalSecretAttrsWithClientMissingSecret(t *testing.T) {
 }
 
 func TestNewRegionalSecretManagerServiceERefusesABadLocation(t *testing.T) {
-	t.Parallel()
+	// A static token stands in for credentials, so the constructor builds a client for a good
+	// location on a machine with none, such as the CI job. Setting it rules out t.Parallel.
+	t.Setenv("GOOGLE_OAUTH_ACCESS_TOKEN", "fake-access-token")
 
 	// Each of these would build a URL pointing somewhere other than Google, so the constructor has
 	// to refuse them before the endpoint is built.
