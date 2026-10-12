@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/core/v2/shell"
 	"github.com/gruntwork-io/terratest/modules/k8s/v2"
 
 	"github.com/stretchr/testify/assert"
@@ -26,23 +27,31 @@ type KubectlVersion struct {
 	} `json:"serverVersion"`
 }
 
+// kubectlServerVersion returns the server version kubectl reports. It reads stdout alone: when the
+// client and server are more than one minor version apart, kubectl prints a skew warning on stderr,
+// and that text would break the JSON.
+func kubectlServerVersion(t *testing.T) string {
+	t.Helper()
+
+	out, err := shell.RunCommandContextAndGetStdOutE(t, context.Background(), &shell.Command{
+		Command: "kubectl",
+		Args:    []string{"version", "-o", "json"},
+	})
+	require.NoError(t, err)
+
+	var kctlClusterVersion KubectlVersion
+	require.NoError(t, json.Unmarshal([]byte(out), &kctlClusterVersion))
+
+	return kctlClusterVersion.ServerVersion.GitVersion
+}
+
 func TestGetKubernetesClusterVersionE(t *testing.T) {
 	t.Parallel()
 
 	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionContextE(t, context.Background())
 	require.NoError(t, err)
 
-	options := k8s.NewKubectlOptions("", "", "")
-	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputContextE(t, context.Background(), options, "version", "-o", "json")
-	require.NoError(t, err)
-
-	var kctlClusterVersion KubectlVersion
-	require.NoError(
-		t,
-		json.Unmarshal([]byte(kubernetesClusterVersionFromKubectl), &kctlClusterVersion),
-	)
-
-	assert.Equal(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
+	assert.Equal(t, kubernetesClusterVersion, kubectlServerVersion(t))
 }
 
 func TestGetKubernetesClusterVersionWithOptionsE(t *testing.T) {
@@ -52,14 +61,5 @@ func TestGetKubernetesClusterVersionWithOptionsE(t *testing.T) {
 	kubernetesClusterVersion, err := k8s.GetKubernetesClusterVersionWithOptionsContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
-	kubernetesClusterVersionFromKubectl, err := k8s.RunKubectlAndGetOutputContextE(t, context.Background(), options, "version", "-o", "json")
-	require.NoError(t, err)
-
-	var kctlClusterVersion KubectlVersion
-	require.NoError(
-		t,
-		json.Unmarshal([]byte(kubernetesClusterVersionFromKubectl), &kctlClusterVersion),
-	)
-
-	assert.Equal(t, kubernetesClusterVersion, kctlClusterVersion.ServerVersion.GitVersion)
+	assert.Equal(t, kubernetesClusterVersion, kubectlServerVersion(t))
 }
