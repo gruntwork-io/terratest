@@ -18,12 +18,6 @@ func TestStackGenerate(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	terragrunt.InitContext(t, context.Background(), &terragrunt.Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
-		TerraformArgs:    []string{"-upgrade=true"},
-	})
-
 	out := terragrunt.StackGenerateContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
@@ -40,15 +34,7 @@ func TestStackGenerateE(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	// First initialize the stack
-	_, err = terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
-		TerraformArgs:    []string{"-upgrade=true"},
-	})
-	require.NoError(t, err)
-
-	// Then generate the stack
+	// Generate the stack
 	out, err := terragrunt.StackGenerateContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
@@ -93,13 +79,6 @@ func TestStackGenerateWithArgs(t *testing.T) {
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
 		"testdata/terragrunt-stack-init", t.Name())
-	require.NoError(t, err)
-
-	// Initialize first
-	_, err = terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
-	})
 	require.NoError(t, err)
 
 	// Generate with TerragruntArgs

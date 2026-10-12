@@ -17,12 +17,6 @@ func TestStackRun(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	terragrunt.InitContext(t, context.Background(), &terragrunt.Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
-		TerraformArgs:    []string{"-upgrade=true"},
-	})
-
 	out := terragrunt.StackRunContext(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
@@ -40,15 +34,7 @@ func TestStackRunE(t *testing.T) {
 		"testdata/terragrunt-stack-init", t.Name())
 	require.NoError(t, err)
 
-	// First initialize the stack
-	_, err = terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
-		TerraformArgs:    []string{"-upgrade=true"},
-	})
-	require.NoError(t, err)
-
-	// Then run plan on the stack
+	// Run plan on the stack
 	out, err := terragrunt.StackRunContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),
 		TerragruntBinary: "terragrunt",
@@ -77,14 +63,6 @@ func TestStackRunPlanWithNoColor(t *testing.T) {
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
 		"testdata/terragrunt-stack-init", t.Name())
-	require.NoError(t, err)
-
-	// First initialize the stack
-	_, err = terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
-		TerraformArgs:    []string{"-upgrade=true"},
-	})
 	require.NoError(t, err)
 
 	// Run plan with no-color option

@@ -28,10 +28,6 @@ func TestStackOutputIntegration(t *testing.T) {
 		Logger:           logger.Discard,
 	}
 
-	// Initialize and apply tg using stack commands
-	_, err = terragrunt.InitContextE(t, context.Background(), options)
-	require.NoError(t, err)
-
 	applyOptions := &terragrunt.Options{
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
@@ -114,10 +110,6 @@ func TestStackOutputErrorHandling(t *testing.T) {
 		Logger:           logger.Discard,
 	}
 
-	// Initialize and apply tg using stack commands
-	_, err = terragrunt.InitContextE(t, context.Background(), options)
-	require.NoError(t, err)
-
 	applyOptions := &terragrunt.Options{
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
@@ -163,10 +155,6 @@ func TestStackOutputAll(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 		Logger:           logger.Discard,
 	}
-
-	// Initialize and apply tg using stack commands
-	_, err = terragrunt.InitContextE(t, context.Background(), options)
-	require.NoError(t, err)
 
 	applyOptions := &terragrunt.Options{
 		TerragruntDir:    testFolder + "/live",
@@ -218,10 +206,6 @@ func TestStackOutputListAll(t *testing.T) {
 		Logger:           logger.Discard,
 	}
 
-	// Initialize and apply using stack commands
-	_, err = terragrunt.InitContextE(t, context.Background(), options)
-	require.NoError(t, err)
-
 	applyOptions := &terragrunt.Options{
 		TerragruntDir:    testFolder + "/live",
 		TerragruntBinary: "terragrunt",
@@ -269,9 +253,6 @@ func TestStackOutputListAllE(t *testing.T) {
 		TerragruntBinary: "terragrunt",
 		Logger:           logger.Discard,
 	}
-
-	_, err = terragrunt.InitContextE(t, context.Background(), options)
-	require.NoError(t, err)
 
 	applyOptions := &terragrunt.Options{
 		TerragruntDir:    testFolder + "/live",

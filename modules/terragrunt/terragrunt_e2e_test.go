@@ -74,20 +74,14 @@ func TestStackEndToEndIntegration(t *testing.T) {
 		TerragruntArgs: []string{"--log-level", "error"},
 	}
 
-	// Step 1: Initialize stack
-	t.Log("Step 1: Initializing stack with TerragruntArgs")
-	output, err := terragrunt.InitContextE(t, context.Background(), options)
-	require.NoError(t, err)
-	require.NotContains(t, output, "level=info", "TerragruntArgs should suppress info logs")
-
-	// Step 2: Generate stack
-	t.Log("Step 2: Generating stack with TerragruntArgs")
+	// Step 1: Generate stack
+	t.Log("Step 1: Generating stack with TerragruntArgs")
 	genOutput, err := terragrunt.StackGenerateContextE(t, context.Background(), options)
 	require.NoError(t, err)
 	require.NotContains(t, genOutput, "level=info", "TerragruntArgs should suppress info logs")
 
-	// Step 3: Run stack plan
-	t.Log("Step 3: Running stack plan with TerraformArgs")
+	// Step 2: Run stack plan
+	t.Log("Step 2: Running stack plan with TerraformArgs")
 
 	runOptions := *options
 	runOptions.TerraformArgs = []string{"plan"}
@@ -96,8 +90,8 @@ func TestStackEndToEndIntegration(t *testing.T) {
 	// Check for common plan indicator (works with both Terraform and OpenTofu)
 	require.Contains(t, planOutput, "will perform")
 
-	// Step 4: Clean stack
-	t.Log("Step 4: Cleaning stack")
+	// Step 3: Clean stack
+	t.Log("Step 3: Cleaning stack")
 	_, err = terragrunt.StackCleanContextE(t, context.Background(), options)
 	require.NoError(t, err)
 
