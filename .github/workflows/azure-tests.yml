@@ -59,6 +59,7 @@ jobs:
 
     - name: Run Azure unit tests
       run: |
+        set -o pipefail
         mkdir -p /tmp/logs
         go test -v -count=1 -timeout 10m ./modules/azure/... 2>&1 | tee /tmp/logs/azure-tests.log
 
