@@ -158,6 +158,9 @@ func SCPFileFromContextE(t testing.TestingT, ctx context.Context, host *Host, re
 
 	defer sshSession.Cleanup(t)
 
+	// Callers have relied on this function closing localDestination for them, so it still does.
+	defer func() { _ = localDestination.Close() }()
+
 	return copyFileFromRemote(ctx, t, sshSession, localDestination, remotePath, useSudo)
 }
 
@@ -512,12 +515,9 @@ func listFileInRemoteDir(ctx context.Context, t testing.TestingT, sshSession *SS
 	return strings.Split(resultString, "\n"), nil
 }
 
-// copyFileFromRemote copies a file from a remote host to a local file.
+// copyFileFromRemote copies a file from a remote host to a local file. The caller owns the file and closes it.
 // Based on code: https://github.com/bramvdbogaerde/go-scp/pull/6/files
 func copyFileFromRemote(ctx context.Context, t testing.TestingT, sshSession *SSHSession, file *os.File, remotePath string, useSudo bool) error {
-
-	defer func() { _ = file.Close() }()
-
 	if err := setUpSSHClient(ctx, sshSession); err != nil {
 		return err
 	}
