@@ -196,7 +196,14 @@ func fetchSyslogForAsg(t *testing.T, awsRegion string, workingDir string) {
 	terraformOptions := teststructure.LoadTerraformOptions(t, workingDir)
 
 	asgName := terraform.OutputRequiredContext(t, t.Context(), terraformOptions, "asg_name")
-	asgLogs := aws.GetSyslogForInstancesInAsgContext(t, t.Context(), asgName, awsRegion)
+
+	// These logs are only for debugging, and EC2 can take longer than the retries allow to publish console output
+	// for an instance the redeploy just launched, so a failure to fetch them is logged rather than failing the test.
+	asgLogs, err := aws.GetSyslogForInstancesInAsgContextE(t, t.Context(), asgName, awsRegion)
+	if err != nil {
+		logger.Default.Logf(t, "Could not fetch syslog for instances in ASG %s: %v", asgName, err)
+		return
+	}
 
 	logger.Default.Logf(t, "===== First few hundred bytes of syslog for instances in ASG %s =====\n\n", asgName)
 
