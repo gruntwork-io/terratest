@@ -322,6 +322,50 @@ func GetMigrationCenterReportAttrsWithClient(ctx context.Context, service *migra
 	return report, nil
 }
 
+// GetMigrationCenterImportDataFileAttrs returns the settings Google Cloud holds for the Migration Center import data file, so a test can assert on what was
+// actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetMigrationCenterImportDataFileAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, importJobID string, fileID string) *migrationcenter.ImportDataFile {
+	result, err := GetMigrationCenterImportDataFileAttrsE(t, ctx, projectID, location, importJobID, fileID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetMigrationCenterImportDataFileAttrsE returns the settings Google Cloud holds for the Migration Center import data file.
+// The ctx parameter supports cancellation and timeouts.
+func GetMigrationCenterImportDataFileAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, importJobID string, fileID string) (*migrationcenter.ImportDataFile, error) {
+	logger.Default.Logf(t, "Getting settings for Migration Center import data file %s of import job %s in %s in project %s", fileID, importJobID, location, projectID)
+
+	service, err := NewMigrationCenterServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetMigrationCenterImportDataFileAttrsWithClient(ctx, service, projectID, location, importJobID, fileID)
+}
+
+// GetMigrationCenterImportDataFileAttrsWithClient returns the settings Google Cloud holds for the Migration Center import data file using the supplied
+// *migrationcenter.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see migrationcenter_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetMigrationCenterImportDataFileAttrsWithClient(ctx context.Context, service *migrationcenter.Service, projectID string, location string, importJobID string, fileID string) (*migrationcenter.ImportDataFile, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/importJobs/%s/importDataFiles/%s", projectID, location, importJobID, fileID)
+
+	result, err := service.Projects.Locations.ImportJobs.ImportDataFiles.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Migration Center import data file %s of import job %s in %s in project %s does not exist", fileID, importJobID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Migration Center import data file %s of import job %s in %s in project %s: %w", fileID, importJobID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewMigrationCenterServiceE creates a Migration Center service authenticated the same way every
 // other client in this module is.
 // The ctx parameter supports cancellation and timeouts.

@@ -402,3 +402,39 @@ func TestGetDataplexEntryLinkAttrsWithClientMissingLink(t *testing.T) {
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetDataplexMetadataFeedAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Dataplex metadata feed a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/metadataFeeds/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"pubsubTopic":"projects/gw-library-test-project/topics/gw-library-test","labels":{"purpose":"terratest"},"scope":{"projects":["projects/gw-library-test-project"],"organizationLevel":false}}`))
+	})
+
+	result, err := gcp.GetDataplexMetadataFeedAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/gw-library-test-project/topics/gw-library-test", result.PubsubTopic)
+	require.NotNil(t, result.Scope)
+	assert.Equal(t, []string{"projects/gw-library-test-project"}, result.Scope.Projects)
+	assert.False(t, result.Scope.OrganizationLevel)
+}
+
+func TestGetDataplexMetadataFeedAttrsWithClientReportsAMissingFeed(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Dataplex metadata feed that is not there should read a sentence about that Dataplex metadata feed, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetDataplexMetadataFeedAttrsWithClient(context.Background(), newFakeDataplexService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

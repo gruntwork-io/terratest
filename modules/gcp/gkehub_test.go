@@ -79,3 +79,61 @@ func TestGetGKEHubScopeAttrsWithClientReportsAMissingScope(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetGKEHubMembershipAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a fleet membership a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/memberships/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"description":"terratest membership","externalId":"8f0bcb5a-6d54-4b5f-9a1e-0d0d2a2b3c4d","endpoint":{"gkeCluster":{"resourceLink":"//container.googleapis.com/projects/gw-library-test-project/locations/us-central1/clusters/gw-library-test"}},"state":{"code":"READY"}}`))
+	})
+
+	result, err := gcp.GetGKEHubMembershipAttrsWithClient(context.Background(), newFakeGKEHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest membership", result.Description)
+	require.NotNil(t, result.Endpoint)
+	require.NotNil(t, result.Endpoint.GkeCluster)
+	assert.Contains(t, result.Endpoint.GkeCluster.ResourceLink, "/clusters/gw-library-test")
+	require.NotNil(t, result.State)
+	assert.Equal(t, "READY", result.State.Code)
+}
+
+func TestGetGKEHubMembershipBindingAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a fleet membership binding a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/memberships/gw-library-test/bindings/gw-library-binding"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"scope":"projects/gw-library-test-project/locations/global/scopes/gw-library-test","state":{"code":"READY"},"labels":{"purpose":"terratest"}}`))
+	})
+
+	result, err := gcp.GetGKEHubMembershipBindingAttrsWithClient(context.Background(), newFakeGKEHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-binding")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/gw-library-test-project/locations/global/scopes/gw-library-test", result.Scope)
+	require.NotNil(t, result.State)
+	assert.Equal(t, "READY", result.State.Code)
+}
+
+func TestGetGKEHubMembershipAttrsWithClientReportsAMissingFleetMembership(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a fleet membership that is not there should read a sentence about that fleet membership, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetGKEHubMembershipAttrsWithClient(context.Background(), newFakeGKEHubService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

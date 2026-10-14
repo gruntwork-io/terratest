@@ -136,3 +136,39 @@ func TestGetSpannerBackupScheduleAttrsWithClientMissingSchedule(t *testing.T) {
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetSpannerInstancePartitionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Spanner instance partition a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/instances/gw-library-test/instancePartitions/gw-library-part"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"config":"projects/gw-library-test-project/instanceConfigs/nam3","displayName":"terratest partition","nodeCount":1,"state":"READY"}`))
+	})
+
+	result, err := gcp.GetSpannerInstancePartitionAttrsWithClient(context.Background(), newFakeSpannerService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-part")
+	require.NoError(t, err)
+
+	assert.Contains(t, result.Config, "/instanceConfigs/nam3")
+	assert.Equal(t, "terratest partition", result.DisplayName)
+	assert.Equal(t, int64(1), result.NodeCount)
+	assert.Equal(t, "READY", result.State)
+}
+
+func TestGetSpannerInstancePartitionAttrsWithClientReportsAMissingPartition(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Spanner instance partition that is not there should read a sentence about that Spanner instance partition, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetSpannerInstancePartitionAttrsWithClient(context.Background(), newFakeSpannerService(t, handler), "gw-library-test-project", "gw-library-test", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
