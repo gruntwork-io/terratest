@@ -46,3 +46,40 @@ func TestGetBigQueryBiReservationAttrsWithClient(t *testing.T) {
 
 	assert.Equal(t, int64(1073741824), reservation.Size)
 }
+
+func TestGetBigQueryReservationAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a BigQuery reservation a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/reservations/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"slotCapacity":"0","edition":"ENTERPRISE","ignoreIdleSlots":true,"autoscale":{"maxSlots":"100","currentSlots":"0"}}`))
+	})
+
+	result, err := gcp.GetBigQueryReservationAttrsWithClient(context.Background(), newFakeBigQueryReservationService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(0), result.SlotCapacity)
+	assert.Equal(t, "ENTERPRISE", result.Edition)
+	assert.True(t, result.IgnoreIdleSlots)
+	require.NotNil(t, result.Autoscale)
+	assert.Equal(t, int64(100), result.Autoscale.MaxSlots)
+}
+
+func TestGetBigQueryReservationAttrsWithClientReportsAMissingBigqueryReservation(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a BigQuery reservation that is not there should read a sentence about that BigQuery reservation, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetBigQueryReservationAttrsWithClient(context.Background(), newFakeBigQueryReservationService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
