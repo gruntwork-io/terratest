@@ -62,3 +62,58 @@ func TestGetBigLakeCatalogAttrsWithClientReportsAMissingOne(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetBigLakeIcebergCatalogIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a BigLake Iceberg catalog a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/catalogs/gw_library_test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/biglake.admin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
+	})
+
+	result, err := gcp.GetBigLakeIcebergCatalogIamPolicyAttrsWithClient(context.Background(), newFakeBigLakeService(t, handler), "gw-library-test-project", "gw_library_test")
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(3), result.Version)
+	assert.Equal(t, "roles/biglake.admin", result.Bindings[0].Role)
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, result.Bindings[0].Condition.Expression)
+}
+
+func TestGetBigLakeIcebergTableIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a BigLake Iceberg table a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/catalogs/gw_library_test/namespaces/gw_library_ns/tables/gw_library_table:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":3,"etag":"BwXhqw==","bindings":[{"role":"roles/biglake.admin","members":["serviceAccount:gw-library-test@gw-library-test-project.iam.gserviceaccount.com"],"condition":{"title":"until 2030","expression":"request.time < timestamp(\"2030-01-01T00:00:00Z\")"}}]}`))
+	})
+
+	result, err := gcp.GetBigLakeIcebergTableIamPolicyAttrsWithClient(context.Background(), newFakeBigLakeService(t, handler), "gw-library-test-project", "gw_library_test", "gw_library_ns", "gw_library_table")
+	require.NoError(t, err)
+
+	assert.Equal(t, int64(3), result.Version)
+	assert.Equal(t, "roles/biglake.admin", result.Bindings[0].Role)
+	assert.Equal(t, `request.time < timestamp("2030-01-01T00:00:00Z")`, result.Bindings[0].Condition.Expression)
+}
+
+func TestGetBigLakeIcebergCatalogIamPolicyAttrsWithClientReportsAMissingBiglakeIcebergCatalog(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a BigLake Iceberg catalog that is not there should read a sentence about that BigLake Iceberg catalog, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetBigLakeIcebergCatalogIamPolicyAttrsWithClient(context.Background(), newFakeBigLakeService(t, handler), "gw-library-test-project", "gw_library_missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw_library_missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

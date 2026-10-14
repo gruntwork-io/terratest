@@ -57,6 +57,52 @@ func GetDatastreamConnectionProfileAttrsWithClient(ctx context.Context, service 
 	return result, nil
 }
 
+// GetDatastreamStreamAttrs returns the settings Google Cloud holds for the Datastream stream, so a test can assert on what was
+// actually created rather than only that it exists.
+// The stream is the resource that names both connection profiles and carries the state Datastream
+// moved it into, which is the only evidence the stream was actually started.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDatastreamStreamAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, streamID string) *datastream.Stream {
+	result, err := GetDatastreamStreamAttrsE(t, ctx, projectID, location, streamID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetDatastreamStreamAttrsE returns the settings Google Cloud holds for the Datastream stream.
+// The ctx parameter supports cancellation and timeouts.
+func GetDatastreamStreamAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, streamID string) (*datastream.Stream, error) {
+	logger.Default.Logf(t, "Getting settings for Datastream stream %s in %s in project %s", streamID, location, projectID)
+
+	service, err := NewDatastreamServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDatastreamStreamAttrsWithClient(ctx, service, projectID, location, streamID)
+}
+
+// GetDatastreamStreamAttrsWithClient returns the settings Google Cloud holds for the Datastream stream using the supplied
+// *datastream.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see datastream_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDatastreamStreamAttrsWithClient(ctx context.Context, service *datastream.Service, projectID string, location string, streamID string) (*datastream.Stream, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/streams/%s", projectID, location, streamID)
+
+	result, err := service.Projects.Locations.Streams.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Datastream stream %s in %s in project %s does not exist", streamID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Datastream stream %s in %s in project %s: %w", streamID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewDatastreamServiceE creates a Datastream service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.

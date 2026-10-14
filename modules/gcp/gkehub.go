@@ -103,6 +103,97 @@ func GetGKEHubNamespaceAttrsWithClient(ctx context.Context, service *gkehub.Serv
 	return namespace, nil
 }
 
+// GetGKEHubMembershipAttrs returns the settings Google Cloud holds for the fleet membership, so a test can assert on what was
+// actually created rather than only that it exists.
+// A membership is the fleet's record of one registered cluster, and the endpoint it reports is how a
+// test tells which cluster was actually registered.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubMembershipAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, membershipID string) *gkehub.Membership {
+	result, err := GetGKEHubMembershipAttrsE(t, ctx, projectID, location, membershipID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetGKEHubMembershipAttrsE returns the settings Google Cloud holds for the fleet membership.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubMembershipAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, membershipID string) (*gkehub.Membership, error) {
+	logger.Default.Logf(t, "Getting settings for fleet membership %s in %s in project %s", membershipID, location, projectID)
+
+	service, err := NewGKEHubServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetGKEHubMembershipAttrsWithClient(ctx, service, projectID, location, membershipID)
+}
+
+// GetGKEHubMembershipAttrsWithClient returns the settings Google Cloud holds for the fleet membership using the supplied
+// *gkehub.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see gkehub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubMembershipAttrsWithClient(ctx context.Context, service *gkehub.Service, projectID string, location string, membershipID string) (*gkehub.Membership, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/memberships/%s", projectID, location, membershipID)
+
+	result, err := service.Projects.Locations.Memberships.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the fleet membership %s in %s in project %s does not exist", membershipID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for fleet membership %s in %s in project %s: %w", membershipID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetGKEHubMembershipBindingAttrs returns the settings Google Cloud holds for the fleet membership binding, so a test can assert on what was
+// actually created rather than only that it exists.
+// The binding is what puts a membership into a fleet scope, so the scope it names is the whole point.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubMembershipBindingAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, membershipID string, bindingID string) *gkehub.MembershipBinding {
+	result, err := GetGKEHubMembershipBindingAttrsE(t, ctx, projectID, location, membershipID, bindingID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetGKEHubMembershipBindingAttrsE returns the settings Google Cloud holds for the fleet membership binding.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubMembershipBindingAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, membershipID string, bindingID string) (*gkehub.MembershipBinding, error) {
+	logger.Default.Logf(t, "Getting settings for fleet membership binding %s of membership %s in %s in project %s", bindingID, membershipID, location, projectID)
+
+	service, err := NewGKEHubServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetGKEHubMembershipBindingAttrsWithClient(ctx, service, projectID, location, membershipID, bindingID)
+}
+
+// GetGKEHubMembershipBindingAttrsWithClient returns the settings Google Cloud holds for the fleet membership binding using the supplied
+// *gkehub.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see gkehub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubMembershipBindingAttrsWithClient(ctx context.Context, service *gkehub.Service, projectID string, location string, membershipID string, bindingID string) (*gkehub.MembershipBinding, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/memberships/%s/bindings/%s", projectID, location, membershipID, bindingID)
+
+	result, err := service.Projects.Locations.Memberships.Bindings.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the fleet membership binding %s of membership %s in %s in project %s does not exist", bindingID, membershipID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for fleet membership binding %s of membership %s in %s in project %s: %w", bindingID, membershipID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewGKEHubServiceE creates a GKE Hub service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
