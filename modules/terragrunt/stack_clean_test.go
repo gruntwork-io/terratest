@@ -97,14 +97,6 @@ func TestStackCleanAfterRun(t *testing.T) {
 
 	stackDir := path.Join(testFolder, "live", ".terragrunt-stack")
 
-	// Initialize the stack
-	_, err = terragrunt.InitContextE(t, context.Background(), &terragrunt.Options{
-		TerragruntDir:    path.Join(testFolder, "live"),
-		TerragruntBinary: "terragrunt",
-		TerraformArgs:    []string{"-upgrade=true"},
-	})
-	require.NoError(t, err)
-
 	// Run plan to generate the stack
 	_, err = terragrunt.StackRunContextE(t, context.Background(), &terragrunt.Options{
 		TerragruntDir:    path.Join(testFolder, "live"),

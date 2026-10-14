@@ -3,7 +3,6 @@ package terragrunt_test
 import (
 	"context"
 	"os/exec"
-	"path/filepath"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -17,11 +16,11 @@ func TestTerragruntArgsIncluded(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"testdata/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &terragrunt.Options{
-		TerragruntDir:    filepath.Join(testFolder, "live"),
+		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		// Use --log-level which should affect the output
 		TerragruntArgs: []string{"--log-level", "error"},
@@ -42,11 +41,11 @@ func TestTerraformArgsIncluded(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"testdata/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &terragrunt.Options{
-		TerragruntDir:    filepath.Join(testFolder, "live"),
+		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		// Use -backend=false to disable backend initialization
 		// This is a distinct terraform flag we can verify
@@ -106,11 +105,11 @@ func TestCombinedArgsOrdering(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"testdata/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &terragrunt.Options{
-		TerragruntDir:    filepath.Join(testFolder, "live"),
+		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		// Combine both TerragruntArgs and TerraformArgs
 		TerragruntArgs: []string{"--log-level", "error"},
@@ -328,7 +327,7 @@ func TestEnvVarsPropagation(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"testdata/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	// Detect which IaC binary is available (terraform or tofu)
@@ -344,7 +343,7 @@ func TestEnvVarsPropagation(t *testing.T) {
 	}
 
 	options := &terragrunt.Options{
-		TerragruntDir: filepath.Join(testFolder, "live"),
+		TerragruntDir: testFolder,
 		EnvVars: map[string]string{
 			"TERRAGRUNT_TFPATH": tfBinary, // Use whichever binary is available
 			"TG_LOG_LEVEL":      "error",  // Alternative to --log-level flag

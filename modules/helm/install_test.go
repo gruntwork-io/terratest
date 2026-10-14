@@ -12,6 +12,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -21,6 +22,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/gruntwork-io/terratest/modules/helm/v2"
 	"github.com/gruntwork-io/terratest/modules/httphelper/v2"
@@ -114,9 +116,8 @@ func TestRemoteChartInstall(t *testing.T) {
 func TestHelmDependencyInstall(t *testing.T) {
 	t.Parallel()
 
-	// Path to the helm chart with dependencies which we will test
-	helmChartPath, err := filepath.Abs("../../examples/helm-dependency-example")
-	require.NoError(t, err)
+	// A copy of the helm chart with dependencies which we will test
+	helmChartPath := copyDependencyChart(t)
 
 	// Custom namespace name.
 	namespaceName := "helm-dependency-example-" + strings.ToLower(random.UniqueID())
@@ -147,7 +148,7 @@ func TestHelmDependencyInstall(t *testing.T) {
 	defer helm.DeleteContext(t, context.Background(), options, releaseName, true)
 
 	// Deploy the chart using `helm install`.
-	err = helm.InstallContextE(t, context.Background(), options, helmChartPath, releaseName)
+	err := helm.InstallContextE(t, context.Background(), options, helmChartPath, releaseName)
 	assert.NoError(t, err) //nolint:testifylint // assert not require: deferred Delete must run even if install fails
 
 	// Verify that Kubernetes service is available after helm chart deployment.
@@ -173,4 +174,20 @@ func waitForRemoteChartPods(t *testing.T, kubectlOptions *k8s.KubectlOptions, re
 	for i := range pods {
 		k8s.WaitUntilPodAvailableContext(t, t.Context(), kubectlOptions, pods[i].Name, 60, 10*time.Second)
 	}
+}
+
+// copyDependencyChart copies the dependency example chart, and the basic chart it depends on, side by
+// side into a temp directory and returns the copy's path. helm dependency build stages dependencies in
+// the chart's tmpcharts directory, so two parallel tests building the in-repo chart race on it.
+func copyDependencyChart(t *testing.T) string {
+	t.Helper()
+
+	root := t.TempDir()
+	for _, name := range []string{"helm-dependency-example", "helm-basic-example"} {
+		dest := filepath.Join(root, name)
+		require.NoError(t, os.MkdirAll(dest, 0o755))
+		require.NoError(t, files.CopyFolderContents(filepath.Join("../../examples", name), dest))
+	}
+
+	return filepath.Join(root, "helm-dependency-example")
 }

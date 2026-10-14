@@ -102,7 +102,8 @@ func TestPackerBasicExampleWithVarFile(t *testing.T) {
 	defer os.Remove(varFile.Name())
 
 	// Write the vars we need to a temporary json file
-	varFileContent := []byte(fmt.Sprintf(`{"aws_region": "%s", "instance_type": "%s"}`, awsRegion, instanceType))
+	// A unique ami_base_name keeps the AMI name from colliding with another run's AMI in the same region.
+	varFileContent := []byte(fmt.Sprintf(`{"aws_region": "%s", "instance_type": "%s", "ami_base_name": "%s"}`, awsRegion, instanceType, random.UniqueID()))
 	_, err = varFile.Write(varFileContent)
 	require.NoError(t, err, "Did not expect writing to temp file %s to cause error", varFile.Name())
 

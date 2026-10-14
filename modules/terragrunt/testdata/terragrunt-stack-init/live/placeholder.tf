@@ -1,1 +1,0 @@
-# Placeholder Terraform file for Terragrunt stack tests 

@@ -12,7 +12,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -114,9 +113,8 @@ func TestRemoteChartInstallUpgradeRollback(t *testing.T) {
 func TestHelmDependencyUpgrade(t *testing.T) {
 	t.Parallel()
 
-	// Path to the helm chart with dependencies which we will test
-	helmChartPath, err := filepath.Abs("../../examples/helm-dependency-example")
-	require.NoError(t, err)
+	// A copy of the helm chart with dependencies which we will test
+	helmChartPath := copyDependencyChart(t)
 
 	// Custom namespace name.
 	namespaceName := "helm-dependency-example-" + strings.ToLower(random.UniqueID())
@@ -147,7 +145,7 @@ func TestHelmDependencyUpgrade(t *testing.T) {
 	defer helm.DeleteContext(t, context.Background(), options, releaseName, true)
 
 	// Deploy the chart using `helm install`.
-	err = helm.InstallContextE(t, context.Background(), options, helmChartPath, releaseName)
+	err := helm.InstallContextE(t, context.Background(), options, helmChartPath, releaseName)
 	require.NoError(t, err)
 
 	// Verify that upgrade is working as expected.

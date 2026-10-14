@@ -2,7 +2,6 @@ package terragrunt_test
 
 import (
 	"context"
-	"path/filepath"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -66,11 +65,11 @@ func TestInitWithBothArgTypes(t *testing.T) {
 	t.Parallel()
 
 	testFolder, err := files.CopyTerraformFolderToTemp(
-		"testdata/terragrunt-stack-init", t.Name())
+		"testdata/terragrunt-no-error", t.Name())
 	require.NoError(t, err)
 
 	options := &terragrunt.Options{
-		TerragruntDir:    filepath.Join(testFolder, "live"),
+		TerragruntDir:    testFolder,
 		TerragruntBinary: "terragrunt",
 		TerragruntArgs:   []string{"--log-level", "error"},
 		TerraformArgs:    []string{"-upgrade"},

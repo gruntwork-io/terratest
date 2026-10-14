@@ -46,8 +46,10 @@ func TestTerraformAwsExamplePlan(t *testing.T) {
 			"instance_type": instanceType,
 		},
 
-		// Environment variables to set when running Terraform
+		// Environment variables to set when running Terraform. The provider reads AWS_REGION before
+		// AWS_DEFAULT_REGION, so set both, or an AWS_REGION already in the environment wins.
 		EnvVars: map[string]string{
+			"AWS_REGION":         awsRegion,
 			"AWS_DEFAULT_REGION": awsRegion,
 		},
 

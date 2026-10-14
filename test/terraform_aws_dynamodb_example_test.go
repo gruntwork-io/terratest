@@ -27,8 +27,11 @@ func TestTerraformAwsDynamoDBExample(t *testing.T) {
 		{AttributeName: awsSDK.String("userId"), KeyType: types.KeyTypeHash},
 		{AttributeName: awsSDK.String("department"), KeyType: types.KeyTypeRange},
 	}
+	// The last two come from the provider's default_tags, so AWS returns them on the table as well.
 	expectedTags := []types.Tag{
 		{Key: awsSDK.String("Environment"), Value: awsSDK.String("production")},
+		{Key: awsSDK.String("gw:repo"), Value: awsSDK.String("https://github.com/gruntwork-io/terratest")},
+		{Key: awsSDK.String("gw:example"), Value: awsSDK.String("terraform-aws-dynamodb-example")},
 	}
 
 	// Construct the terraform options with default retryable errors to handle the most common retryable errors in

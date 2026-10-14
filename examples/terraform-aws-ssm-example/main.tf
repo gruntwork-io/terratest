@@ -64,6 +64,12 @@ data "aws_ami" "amazon_linux_2" {
     name   = "name"
     values = ["amzn2-ami-hvm*"]
   }
+
+  # The name matches arm64 images too, and the test picks x86 instance types.
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
