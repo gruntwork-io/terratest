@@ -213,3 +213,228 @@ func TestNewVertexAIServiceERefusesAnInvalidLocation(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "is not a valid location")
 }
+
+func TestGetVertexAIEndpointAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI endpoint a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/endpoints/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"terratest endpoint","description":"created by terratest","trafficSplit":{"1234567890":100},"dedicatedEndpointEnabled":true}`))
+	})
+
+	result, err := gcp.GetVertexAIEndpointAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest endpoint", result.DisplayName)
+	assert.Equal(t, map[string]int64{"1234567890": 100}, result.TrafficSplit)
+	assert.True(t, result.DedicatedEndpointEnabled)
+}
+
+func TestGetVertexAIIndexAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI index a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/indexes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"terratest index","metadataSchemaUri":"gs://google-cloud-aiplatform/schema/matchingengine/metadata/nearest_neighbor_search_1.0.0.yaml","indexUpdateMethod":"BATCH_UPDATE"}`))
+	})
+
+	result, err := gcp.GetVertexAIIndexAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest index", result.DisplayName)
+	assert.Equal(t, "BATCH_UPDATE", result.IndexUpdateMethod)
+	assert.Contains(t, result.MetadataSchemaUri, "nearest_neighbor_search_1.0.0.yaml")
+}
+
+func TestGetVertexAIIndexEndpointAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI index endpoint a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/indexEndpoints/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"terratest index endpoint","publicEndpointEnabled":true,"deployedIndexes":[{"id":"gw_library_test","index":"projects/gw-library-test-project/locations/us-central1/indexes/1234567890"}]}`))
+	})
+
+	result, err := gcp.GetVertexAIIndexEndpointAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest index endpoint", result.DisplayName)
+	assert.True(t, result.PublicEndpointEnabled)
+	require.Len(t, result.DeployedIndexes, 1)
+	assert.Equal(t, "gw_library_test", result.DeployedIndexes[0].Id)
+}
+
+func TestGetVertexAIFeatureOnlineStoreAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI feature online store a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/featureOnlineStores/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"state":"STABLE","labels":{"purpose":"terratest"},"bigtable":{"autoScaling":{"minNodeCount":1,"maxNodeCount":2,"cpuUtilizationTarget":50}}}`))
+	})
+
+	result, err := gcp.GetVertexAIFeatureOnlineStoreAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "STABLE", result.State)
+	assert.Equal(t, map[string]string{"purpose": "terratest"}, result.Labels)
+	require.NotNil(t, result.Bigtable)
+	require.NotNil(t, result.Bigtable.AutoScaling)
+	assert.Equal(t, int64(1), result.Bigtable.AutoScaling.MinNodeCount)
+}
+
+func TestGetVertexAIFeatureViewAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI feature view a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/featureOnlineStores/gw_library_store/featureViews/gw_library_view"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"bigQuerySource":{"uri":"bq://gw-library-test-project.gw_library_test.features","entityIdColumns":["entity_id"]},"syncConfig":{"cron":"0 0 * * *"}}`))
+	})
+
+	result, err := gcp.GetVertexAIFeatureViewAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw_library_store", "gw_library_view")
+	require.NoError(t, err)
+
+	require.NotNil(t, result.BigQuerySource)
+	assert.Equal(t, []string{"entity_id"}, result.BigQuerySource.EntityIdColumns)
+	require.NotNil(t, result.SyncConfig)
+	assert.Equal(t, "0 0 * * *", result.SyncConfig.Cron)
+}
+
+func TestGetVertexAIDeploymentResourcePoolAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI deployment resource pool a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/deploymentResourcePools/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"dedicatedResources":{"machineSpec":{"machineType":"n1-standard-2"},"minReplicaCount":1,"maxReplicaCount":1},"disableContainerLogging":true}`))
+	})
+
+	result, err := gcp.GetVertexAIDeploymentResourcePoolAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.NotNil(t, result.DedicatedResources)
+	require.NotNil(t, result.DedicatedResources.MachineSpec)
+	assert.Equal(t, "n1-standard-2", result.DedicatedResources.MachineSpec.MachineType)
+	assert.Equal(t, int64(1), result.DedicatedResources.MinReplicaCount)
+	assert.True(t, result.DisableContainerLogging)
+}
+
+func TestGetVertexAIPersistentResourceAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI persistent resource a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/persistentResources/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"terratest persistent resource","state":"RUNNING","resourcePools":[{"id":"gw-library-test","machineSpec":{"machineType":"n1-standard-4"},"replicaCount":"1"}]}`))
+	})
+
+	result, err := gcp.GetVertexAIPersistentResourceAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest persistent resource", result.DisplayName)
+	assert.Equal(t, "RUNNING", result.State)
+	require.Len(t, result.ResourcePools, 1)
+	assert.Equal(t, "n1-standard-4", result.ResourcePools[0].MachineSpec.MachineType)
+}
+
+func TestGetVertexAIScheduleAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI schedule a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/schedules/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"terratest schedule","cron":"0 9 * * MON","state":"ACTIVE","maxConcurrentRunCount":"1","allowQueueing":true}`))
+	})
+
+	result, err := gcp.GetVertexAIScheduleAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest schedule", result.DisplayName)
+	assert.Equal(t, "0 9 * * MON", result.Cron)
+	assert.Equal(t, "ACTIVE", result.State)
+	assert.Equal(t, int64(1), result.MaxConcurrentRunCount)
+	assert.True(t, result.AllowQueueing)
+}
+
+func TestGetVertexAIReasoningEngineAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI reasoning engine a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/reasoningEngines/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"terratest reasoning engine","description":"created by terratest","spec":{"packageSpec":{"pythonVersion":"3.11","pickleObjectGcsUri":"gs://gw-library-test/agent.pkl"}}}`))
+	})
+
+	result, err := gcp.GetVertexAIReasoningEngineAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest reasoning engine", result.DisplayName)
+	require.NotNil(t, result.Spec)
+	require.NotNil(t, result.Spec.PackageSpec)
+	assert.Equal(t, "3.11", result.Spec.PackageSpec.PythonVersion)
+}
+
+func TestGetVertexAIFeatureGroupFeatureAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Vertex AI feature group feature a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/featureGroups/gw_library_group/features/gw_library_feature"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"description":"created by terratest","versionColumnName":"feature_value","labels":{"purpose":"terratest"}}`))
+	})
+
+	result, err := gcp.GetVertexAIFeatureGroupFeatureAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw_library_group", "gw_library_feature")
+	require.NoError(t, err)
+
+	assert.Equal(t, "created by terratest", result.Description)
+	assert.Equal(t, "feature_value", result.VersionColumnName)
+	assert.Equal(t, map[string]string{"purpose": "terratest"}, result.Labels)
+}
+
+func TestGetVertexAIEndpointAttrsWithClientReportsAMissingVertexAiEndpoint(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Vertex AI endpoint that is not there should read a sentence about that Vertex AI endpoint, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetVertexAIEndpointAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

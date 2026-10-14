@@ -58,6 +58,52 @@ func GetBigQueryBiReservationAttrsWithClient(ctx context.Context, service *bigqu
 	return reservation, nil
 }
 
+// GetBigQueryReservationAttrs returns the settings Google Cloud holds for the BigQuery reservation, so a test can assert on what was
+// actually created rather than only that it exists.
+// This is a slot reservation, not the one BI reservation a project holds: GetBigQueryBiReservationAttrs
+// reads that singleton.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryReservationAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, reservationID string) *bigqueryreservation.Reservation {
+	result, err := GetBigQueryReservationAttrsE(t, ctx, projectID, location, reservationID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetBigQueryReservationAttrsE returns the settings Google Cloud holds for the BigQuery reservation.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryReservationAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, reservationID string) (*bigqueryreservation.Reservation, error) {
+	logger.Default.Logf(t, "Getting settings for BigQuery reservation %s in %s in project %s", reservationID, location, projectID)
+
+	service, err := NewBigQueryReservationServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigQueryReservationAttrsWithClient(ctx, service, projectID, location, reservationID)
+}
+
+// GetBigQueryReservationAttrsWithClient returns the settings Google Cloud holds for the BigQuery reservation using the supplied
+// *bigqueryreservation.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see bigqueryreservation_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryReservationAttrsWithClient(ctx context.Context, service *bigqueryreservation.Service, projectID string, location string, reservationID string) (*bigqueryreservation.Reservation, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/reservations/%s", projectID, location, reservationID)
+
+	result, err := service.Projects.Locations.Reservations.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the BigQuery reservation %s in %s in project %s does not exist", reservationID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for BigQuery reservation %s in %s in project %s: %w", reservationID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewBigQueryReservationServiceE creates a BigQuery Reservation service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
