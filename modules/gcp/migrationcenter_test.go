@@ -176,3 +176,38 @@ func TestGetMigrationCenterGroupAttrsWithClientReportsAMissingGroup(t *testing.T
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetMigrationCenterImportDataFileAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Migration Center import data file a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/importJobs/gw-library-test/importDataFiles/gw-library-file"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"displayName":"terratest import data file","format":"IMPORT_JOB_FORMAT_RVTOOLS_CSV","state":"ACTIVE"}`))
+	})
+
+	result, err := gcp.GetMigrationCenterImportDataFileAttrsWithClient(context.Background(), newFakeMigrationCenterService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-file")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest import data file", result.DisplayName)
+	assert.Equal(t, "IMPORT_JOB_FORMAT_RVTOOLS_CSV", result.Format)
+	assert.Equal(t, "ACTIVE", result.State)
+}
+
+func TestGetMigrationCenterImportDataFileAttrsWithClientReportsAMissingFile(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Migration Center import data file that is not there should read a sentence about that Migration Center import data file, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetMigrationCenterImportDataFileAttrsWithClient(context.Background(), newFakeMigrationCenterService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

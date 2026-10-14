@@ -65,3 +65,40 @@ func TestGetRedisInstanceAttrsWithClientMissingInstance(t *testing.T) {
 	require.ErrorContains(t, err, "us-central1")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetRedisClusterAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a Redis cluster a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/clusters/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"state":"ACTIVE","shardCount":3,"replicaCount":1,"authorizationMode":"AUTH_MODE_DISABLED","discoveryEndpoints":[{"address":"10.0.0.3","port":6379}]}`))
+	})
+
+	result, err := gcp.GetRedisClusterAttrsWithClient(context.Background(), newFakeRedisService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ACTIVE", result.State)
+	assert.Equal(t, int64(3), result.ShardCount)
+	assert.Equal(t, int64(1), result.ReplicaCount)
+	require.Len(t, result.DiscoveryEndpoints, 1)
+	assert.Equal(t, int64(6379), result.DiscoveryEndpoints[0].Port)
+}
+
+func TestGetRedisClusterAttrsWithClientReportsAMissingCluster(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a Redis cluster that is not there should read a sentence about that Redis cluster, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetRedisClusterAttrsWithClient(context.Background(), newFakeRedisService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

@@ -65,3 +65,58 @@ func TestGetAlloyDBClusterAttrsWithClientMissingCluster(t *testing.T) {
 	require.ErrorContains(t, err, "us-central1")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetAlloyDBBackupAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a AlloyDB backup a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/backups/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"clusterName":"projects/gw-library-test-project/locations/us-central1/clusters/gw-library-test","type":"ON_DEMAND","state":"READY","sizeBytes":"1048576","databaseVersion":"POSTGRES_15"}`))
+	})
+
+	result, err := gcp.GetAlloyDBBackupAttrsWithClient(context.Background(), newFakeAlloyDBService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Contains(t, result.ClusterName, "/clusters/gw-library-test")
+	assert.Equal(t, "ON_DEMAND", result.Type)
+	assert.Equal(t, "READY", result.State)
+	assert.Equal(t, int64(1048576), result.SizeBytes)
+}
+
+func TestGetAlloyDBUserAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a AlloyDB user a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/clusters/gw-library-test/users/gw_library_user"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/clusters/gw-library-test/users/gw_library_user","userType":"ALLOYDB_BUILT_IN","databaseRoles":["alloydbsuperuser"]}`))
+	})
+
+	result, err := gcp.GetAlloyDBUserAttrsWithClient(context.Background(), newFakeAlloyDBService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw_library_user")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ALLOYDB_BUILT_IN", result.UserType)
+	assert.Equal(t, []string{"alloydbsuperuser"}, result.DatabaseRoles)
+}
+
+func TestGetAlloyDBBackupAttrsWithClientReportsAMissingBackup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a AlloyDB backup that is not there should read a sentence about that AlloyDB backup, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetAlloyDBBackupAttrsWithClient(context.Background(), newFakeAlloyDBService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

@@ -50,3 +50,39 @@ func TestGetConnectivityTestAttrsWithClient(t *testing.T) {
 	require.NotNil(t, connectivityTest.Destination)
 	assert.Equal(t, int64(8080), connectivityTest.Destination.Port)
 }
+
+func TestGetNetworkManagementVpcFlowLogsConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a VPC flow logs config a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/vpcFlowLogsConfigs/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"state":"ENABLED","aggregationInterval":"INTERVAL_5_SEC","flowSampling":0.5,"metadata":"INCLUDE_ALL_METADATA","interconnectAttachment":"projects/gw-library-test-project/regions/us-central1/interconnectAttachments/gw-library-test"}`))
+	})
+
+	result, err := gcp.GetNetworkManagementVpcFlowLogsConfigAttrsWithClient(context.Background(), newFakeNetworkManagementService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ENABLED", result.State)
+	assert.Equal(t, "INTERVAL_5_SEC", result.AggregationInterval)
+	assert.InDelta(t, 0.5, result.FlowSampling, 0.0001)
+	assert.Contains(t, result.InterconnectAttachment, "/interconnectAttachments/gw-library-test")
+}
+
+func TestGetNetworkManagementVpcFlowLogsConfigAttrsWithClientReportsAMissingConfig(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a VPC flow logs config that is not there should read a sentence about that VPC flow logs config, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkManagementVpcFlowLogsConfigAttrsWithClient(context.Background(), newFakeNetworkManagementService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
