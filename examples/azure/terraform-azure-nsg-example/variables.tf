@@ -107,9 +107,3 @@ variable "username" {
   type        = string
   default     = "testadmin"
 }
-
-variable "password" {
-  description = "The password to configure for SSH access"
-  type        = string
-  default     = "!@#PasswordSetInCode!@#"
-}
