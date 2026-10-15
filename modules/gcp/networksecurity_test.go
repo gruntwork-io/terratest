@@ -579,3 +579,37 @@ func TestGetNetworkSecurityTLSInspectionPolicyAttrsWithClientMissingResource(t *
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetNetworkSecuritySecurityProfileGroupAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A profile group reports the profiles it points at, which is what a firewall policy rule naming the group will
+	// enforce.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/organizations/987654321/locations/global/securityProfileGroups/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"organizations/987654321/locations/global/securityProfileGroups/gw-library-test","description":"terratest profile group","threatPreventionProfile":"organizations/987654321/locations/global/securityProfiles/gw-library-threat","labels":{"owner":"terratest"}}`))
+	})
+
+	group, err := gcp.GetNetworkSecuritySecurityProfileGroupAttrsWithClient(context.Background(), newFakeNetworkSecurityService(t, handler), "987654321", "global", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest profile group", group.Description)
+	assert.Contains(t, group.ThreatPreventionProfile, "/securityProfiles/gw-library-threat")
+	assert.Equal(t, map[string]string{"owner": "terratest"}, group.Labels)
+}
+
+func TestGetNetworkSecuritySecurityProfileGroupAttrsWithClientReportsAMissingGroup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a profile group that is not there should read a sentence about that group, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkSecuritySecurityProfileGroupAttrsWithClient(context.Background(), newFakeNetworkSecurityService(t, handler), "987654321", "global", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
