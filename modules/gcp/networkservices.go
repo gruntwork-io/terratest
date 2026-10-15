@@ -547,6 +547,52 @@ func GetNetworkServicesWasmPluginAttrsWithClient(ctx context.Context, service *n
 	return attrs, nil
 }
 
+// GetNetworkServicesServiceBindingAttrs returns the settings Google Cloud holds for the given service binding, so a test
+// can assert on what was actually created rather than only that it exists.
+// A binding points at a Service Directory service, and Google reports that target back on the
+// binding, which is the one field a create cannot confirm.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesServiceBindingAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, bindingID string) *networkservices.ServiceBinding {
+	binding, err := GetNetworkServicesServiceBindingAttrsE(t, ctx, projectID, location, bindingID)
+	require.NoError(t, err)
+
+	return binding
+}
+
+// GetNetworkServicesServiceBindingAttrsE returns the settings Google Cloud holds for the given service binding.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesServiceBindingAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, bindingID string) (*networkservices.ServiceBinding, error) {
+	logger.Default.Logf(t, "Getting settings for service binding %s in %s in project %s", bindingID, location, projectID)
+
+	service, err := NewNetworkServicesServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkServicesServiceBindingAttrsWithClient(ctx, service, projectID, location, bindingID)
+}
+
+// GetNetworkServicesServiceBindingAttrsWithClient returns the settings Google Cloud holds for the given service binding using
+// the supplied *networkservices.Service. Prefer this variant in unit tests where the service is backed by an
+// httptest fake server (see networkservices_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkServicesServiceBindingAttrsWithClient(ctx context.Context, service *networkservices.Service, projectID string, location string, bindingID string) (*networkservices.ServiceBinding, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/serviceBindings/%s", projectID, location, bindingID)
+
+	binding, err := service.Projects.Locations.ServiceBindings.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the service binding %s does not exist in %s in project %s", bindingID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for service binding %s in %s in project %s: %w", bindingID, location, projectID, err)
+	}
+
+	return binding, nil
+}
+
 // NewNetworkServicesServiceE creates a Network Services service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.

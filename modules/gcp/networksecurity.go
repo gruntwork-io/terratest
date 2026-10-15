@@ -866,6 +866,53 @@ func GetNetworkSecurityAddressGroupIamPolicyAttrsWithClient(ctx context.Context,
 	return policy, nil
 }
 
+// GetNetworkSecuritySecurityProfileGroupAttrs returns the settings Google Cloud holds for the given security profile
+// group, so a test can assert on what was actually created rather than only that it exists.
+// A profile group belongs to an organization rather than to a project, because a firewall policy in
+// any project under that organization may name it, so the organization is named here instead.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkSecuritySecurityProfileGroupAttrs(t testing.TestingT, ctx context.Context, organizationID string, location string, groupID string) *networksecurity.SecurityProfileGroup {
+	group, err := GetNetworkSecuritySecurityProfileGroupAttrsE(t, ctx, organizationID, location, groupID)
+	require.NoError(t, err)
+
+	return group
+}
+
+// GetNetworkSecuritySecurityProfileGroupAttrsE returns the settings Google Cloud holds for the given security profile
+// group.
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkSecuritySecurityProfileGroupAttrsE(t testing.TestingT, ctx context.Context, organizationID string, location string, groupID string) (*networksecurity.SecurityProfileGroup, error) {
+	logger.Default.Logf(t, "Getting settings for security profile group %s in %s in organization %s", groupID, location, organizationID)
+
+	service, err := NewNetworkSecurityServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetNetworkSecuritySecurityProfileGroupAttrsWithClient(ctx, service, organizationID, location, groupID)
+}
+
+// GetNetworkSecuritySecurityProfileGroupAttrsWithClient returns the settings Google Cloud holds for the given security
+// profile group using the supplied *networksecurity.Service. Prefer this variant in unit tests where the service is
+// backed by an httptest fake server (see networksecurity_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetNetworkSecuritySecurityProfileGroupAttrsWithClient(ctx context.Context, service *networksecurity.Service, organizationID string, location string, groupID string) (*networksecurity.SecurityProfileGroup, error) {
+	name := fmt.Sprintf("organizations/%s/locations/%s/securityProfileGroups/%s", organizationID, location, groupID)
+
+	group, err := service.Organizations.Locations.SecurityProfileGroups.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the security profile group %s does not exist in %s in organization %s", groupID, location, organizationID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for security profile group %s in %s in organization %s: %w", groupID, location, organizationID, err)
+	}
+
+	return group, nil
+}
+
 // NewNetworkSecurityServiceE creates a Network Security service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.

@@ -2,12 +2,15 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/servicenetworking/v1"
 )
@@ -72,6 +75,116 @@ func GetServiceNetworkingConnectionAttrsWithClient(ctx context.Context, service 
 
 		return nil, fmt.Errorf("network %s in project %s has %d private connections, %s, and not the one this read expects", networkName, projectID, len(response.Connections), strings.Join(names, ", "))
 	}
+}
+
+// GetServiceNetworkingPeeredDNSDomainAttrs returns the settings Google Cloud holds for the given
+// peered DNS domain, so a test can assert on what was actually created rather than only that it
+// exists.
+// The API offers no get for one domain, only a list over the network, so this reads the list and
+// picks the domain out of it.
+// Service Networking names the network under the service rather than under the project, and it
+// refuses a parent that carries the project id: pass the project number.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetServiceNetworkingPeeredDNSDomainAttrs(t testing.TestingT, ctx context.Context, projectNumber string, network string, domainID string) *servicenetworking.PeeredDnsDomain {
+	domain, err := GetServiceNetworkingPeeredDNSDomainAttrsE(t, ctx, projectNumber, network, domainID)
+	require.NoError(t, err)
+
+	return domain
+}
+
+// GetServiceNetworkingPeeredDNSDomainAttrsE returns the settings Google Cloud holds for the given
+// peered DNS domain.
+// The ctx parameter supports cancellation and timeouts.
+func GetServiceNetworkingPeeredDNSDomainAttrsE(t testing.TestingT, ctx context.Context, projectNumber string, network string, domainID string) (*servicenetworking.PeeredDnsDomain, error) {
+	logger.Default.Logf(t, "Getting settings for peered DNS domain %s on network %s in project %s", domainID, network, projectNumber)
+
+	service, err := NewServiceNetworkingServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetServiceNetworkingPeeredDNSDomainAttrsWithClient(ctx, service, projectNumber, network, domainID)
+}
+
+// GetServiceNetworkingPeeredDNSDomainAttrsWithClient returns the settings Google Cloud holds for the
+// given peered DNS domain using the supplied *servicenetworking.APIService. Prefer this variant in
+// unit tests where the service is backed by an httptest fake server (see servicenetworking_test.go
+// for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetServiceNetworkingPeeredDNSDomainAttrsWithClient(ctx context.Context, service *servicenetworking.APIService, projectNumber string, network string, domainID string) (*servicenetworking.PeeredDnsDomain, error) {
+	parent := fmt.Sprintf("%s/projects/%s/global/networks/%s", serviceNetworkingParent, projectNumber, network)
+
+	response, err := service.Services.Projects.Global.Networks.PeeredDnsDomains.List(parent).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the network %s in project %s has no service networking connection", network, projectNumber)
+		}
+
+		return nil, fmt.Errorf("failed to list the peered DNS domains on network %s in project %s: %w", network, projectNumber, err)
+	}
+
+	for _, domain := range response.PeeredDnsDomains {
+		// A listed domain's name comes back in full, so the id the caller passed is its last segment.
+		if domain.Name == domainID || path.Base(domain.Name) == domainID {
+			return domain, nil
+		}
+	}
+
+	return nil, fmt.Errorf("the peered DNS domain %s does not exist on network %s in project %s", domainID, network, projectNumber)
+}
+
+// GetServiceNetworkingVPCServiceControlsAttrs returns whether VPC Service Controls are enforced on
+// the given producer network peering, so a test can assert the state rather than only that the apply
+// finished.
+// Service Networking names the network under the service rather than under the project, and it
+// refuses a parent that carries the project id: pass the project number.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetServiceNetworkingVPCServiceControlsAttrs(t testing.TestingT, ctx context.Context, projectNumber string, network string) *servicenetworking.VpcServiceControls {
+	controls, err := GetServiceNetworkingVPCServiceControlsAttrsE(t, ctx, projectNumber, network)
+	require.NoError(t, err)
+
+	return controls
+}
+
+// GetServiceNetworkingVPCServiceControlsAttrsE returns whether VPC Service Controls are enforced on
+// the given producer network peering.
+// The ctx parameter supports cancellation and timeouts.
+func GetServiceNetworkingVPCServiceControlsAttrsE(t testing.TestingT, ctx context.Context, projectNumber string, network string) (*servicenetworking.VpcServiceControls, error) {
+	logger.Default.Logf(t, "Getting the VPC Service Controls state for network %s in project %s", network, projectNumber)
+
+	service, err := NewServiceNetworkingServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetServiceNetworkingVPCServiceControlsAttrsWithClient(ctx, service, projectNumber, network)
+}
+
+// GetServiceNetworkingVPCServiceControlsAttrsWithClient returns whether VPC Service Controls are
+// enforced on the given producer network peering using the supplied *servicenetworking.APIService.
+// Prefer this variant in unit tests where the service is backed by an httptest fake server (see
+// servicenetworking_test.go for the pattern).
+// The consumer config returned by the network itself carries
+// VpcScReferenceArchitectureEnabled, which describes the producer's host network rather than this
+// connection, so this reads the vpcServiceControls sub-resource instead.
+// The ctx parameter supports cancellation and timeouts.
+func GetServiceNetworkingVPCServiceControlsAttrsWithClient(ctx context.Context, service *servicenetworking.APIService, projectNumber string, network string) (*servicenetworking.VpcServiceControls, error) {
+	name := fmt.Sprintf("%s/projects/%s/global/networks/%s", serviceNetworkingParent, projectNumber, network)
+
+	controls, err := service.Services.Projects.Global.Networks.GetVpcServiceControls(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the network %s in project %s has no service networking connection", network, projectNumber)
+		}
+
+		return nil, fmt.Errorf("failed to get the VPC Service Controls state for network %s in project %s: %w", network, projectNumber, err)
+	}
+
+	return controls, nil
 }
 
 // NewServiceNetworkingServiceE creates a Service Networking service authenticated the same way
