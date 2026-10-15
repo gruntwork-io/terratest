@@ -137,3 +137,72 @@ func TestGetGKEHubMembershipAttrsWithClientReportsAMissingFleetMembership(t *tes
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetGKEHubFeatureAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// One read answers for two modules, so the response carries both the feature's own spec and the per membership
+	// spec that the feature membership module writes.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/features/configmanagement"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/features/configmanagement","labels":{"owner":"terratest"},"membershipSpecs":{"projects/gw-library-test-project/locations/global/memberships/gw-library-test":{"configmanagement":{"version":"1.19.0"}}},"resourceState":{"state":"ACTIVE"}}`))
+	})
+
+	feature, err := gcp.GetGKEHubFeatureAttrsWithClient(context.Background(), newFakeGKEHubService(t, handler), "gw-library-test-project", "global", "configmanagement")
+	require.NoError(t, err)
+
+	assert.Equal(t, map[string]string{"owner": "terratest"}, feature.Labels)
+	require.Len(t, feature.MembershipSpecs, 1)
+	require.NotNil(t, feature.ResourceState)
+	assert.Equal(t, "ACTIVE", feature.ResourceState.State)
+}
+
+func TestGetGKEHubFeatureAttrsWithClientReportsAMissingFeature(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a feature that is not enabled should read a sentence about that feature, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetGKEHubFeatureAttrsWithClient(context.Background(), newFakeGKEHubService(t, handler), "gw-library-test-project", "global", "multiclusteringress")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "multiclusteringress")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetGKEHubFleetAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A project holds one fleet per location and the API names it default, so the path is fixed and the caller passes
+	// no id.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/fleets/default"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/fleets/default","displayName":"terratest fleet","state":{"code":"READY"},"labels":{"owner":"terratest"}}`))
+	})
+
+	fleet, err := gcp.GetGKEHubFleetAttrsWithClient(context.Background(), newFakeGKEHubService(t, handler), "gw-library-test-project", "global")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest fleet", fleet.DisplayName)
+	require.NotNil(t, fleet.State)
+	assert.Equal(t, "READY", fleet.State.Code)
+}
+
+func TestGetGKEHubFleetAttrsWithClientReportsAProjectWithNoFleet(t *testing.T) {
+	t.Parallel()
+
+	// A project that has never created a fleet answers 404, and the sentence has to say the project holds no fleet
+	// rather than imply the project is gone.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetGKEHubFleetAttrsWithClient(context.Background(), newFakeGKEHubService(t, handler), "gw-library-test-project", "global")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-test-project")
+	assert.Contains(t, err.Error(), "has no fleet")
+}
