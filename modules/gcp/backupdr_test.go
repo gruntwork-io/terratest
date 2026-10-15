@@ -83,3 +83,39 @@ func TestGetBackupDRBackupVaultAttrsWithClientReportsAMissingOne(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetBackupDRManagementServerAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a server the management server module
+	// created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/managementServers/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/managementServers/gw-library-test","type":"BACKUP_RESTORE","state":"READY","managementUri":{"webUi":"https://bcdr.example.com","api":"bcdr-api.example.com"},"oauth2ClientId":"gw-library-client"}`))
+	})
+
+	server, err := gcp.GetBackupDRManagementServerAttrsWithClient(context.Background(), newFakeBackupDRService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "BACKUP_RESTORE", server.Type)
+	assert.Equal(t, "READY", server.State)
+	require.NotNil(t, server.ManagementUri)
+	assert.Equal(t, "https://bcdr.example.com", server.ManagementUri.WebUi)
+}
+
+func TestGetBackupDRManagementServerAttrsWithClientReportsAMissingServer(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a server that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetBackupDRManagementServerAttrsWithClient(context.Background(), newFakeBackupDRService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}

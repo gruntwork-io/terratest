@@ -194,6 +194,52 @@ func GetAppHubServiceProjectAttachmentAttrsWithClient(ctx context.Context, servi
 	return attrs, nil
 }
 
+// GetAppHubBoundaryAttrs returns the settings Google Cloud holds for the App Hub boundary of the given project and location, so a test can assert on
+// what was actually created rather than only that it exists.
+// A boundary is a singleton per location and has no id of its own, so the name is built from the
+// project and the location alone.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetAppHubBoundaryAttrs(t testing.TestingT, ctx context.Context, projectID string, location string) *apphub.Boundary {
+	result, err := GetAppHubBoundaryAttrsE(t, ctx, projectID, location)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetAppHubBoundaryAttrsE returns the settings Google Cloud holds for the App Hub boundary of the given project and location.
+// The ctx parameter supports cancellation and timeouts.
+func GetAppHubBoundaryAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string) (*apphub.Boundary, error) {
+	logger.Default.Logf(t, "Getting the App Hub boundary in %s of project %s", location, projectID)
+
+	service, err := NewAppHubServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetAppHubBoundaryAttrsWithClient(ctx, service, projectID, location)
+}
+
+// GetAppHubBoundaryAttrsWithClient returns the settings Google Cloud holds for the App Hub boundary of the given project and location using the supplied
+// *apphub.APIService. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see apphub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetAppHubBoundaryAttrsWithClient(ctx context.Context, service *apphub.APIService, projectID string, location string) (*apphub.Boundary, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/boundary", projectID, location)
+
+	result, err := service.Projects.Locations.GetBoundary(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("no App Hub boundary exists in %s of project %s", location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the App Hub boundary in %s of project %s: %w", location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewAppHubServiceE creates an App Hub service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
