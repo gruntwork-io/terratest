@@ -158,3 +158,141 @@ func TestDecryptSecretCiphertextWithClientWithoutAuthenticatedData(t *testing.T)
 
 	assert.Equal(t, "written by terratest", plaintext)
 }
+
+func TestGetKMSEkmConnectionAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a connection the EKM connection module
+	// created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/ekmConnections/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/ekmConnections/gw-library-test","keyManagementMode":"MANUAL","serviceResolvers":[{"serviceDirectoryService":"projects/gw-library-test-project/locations/us-central1/namespaces/gw-library-test/services/gw-library-test","hostname":"ekm.example.com","endpointFilter":"","serverCertificates":[{"rawDer":"MIIB"}]}]}`))
+	})
+
+	connection, err := gcp.GetKMSEkmConnectionAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "MANUAL", connection.KeyManagementMode)
+	require.Len(t, connection.ServiceResolvers, 1)
+	assert.Equal(t, "ekm.example.com", connection.ServiceResolvers[0].Hostname)
+}
+
+func TestGetKMSEkmConnectionAttrsWithClientReportsAMissingConnection(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a connection that is not there should be told that, rather than be handed
+	// the transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetKMSEkmConnectionAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetKMSEkmConnectionIamPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The policy is shaped like the one Google returns after the EKM connection IAM policy module has
+	// applied a binding, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/ekmConnections/gw-library-test:getIamPolicy"), "unexpected path %s", r.URL.Path)
+		assert.Equal(t, "3", r.URL.Query().Get("options.requestedPolicyVersion"))
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"version":1,"etag":"BwYabc","bindings":[{"role":"roles/cloudkms.viewer","members":["serviceAccount:terratest@gw-library-test-project.iam.gserviceaccount.com"]}]}`))
+	})
+
+	policy, err := gcp.GetKMSEkmConnectionIamPolicyAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	require.Len(t, policy.Bindings, 1)
+	assert.Equal(t, "roles/cloudkms.viewer", policy.Bindings[0].Role)
+}
+
+func TestGetKMSEkmConnectionIamPolicyAttrsWithClientReportsAMissingConnection(t *testing.T) {
+	t.Parallel()
+
+	// Asking for the policy of a connection that is not there should name the connection rather than
+	// hand back the transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetKMSEkmConnectionIamPolicyAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetKMSKeyHandleAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a handle the key handle module created,
+	// not a copy of any one fixture's values. The key is the one Autokey provisioned.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/keyHandles/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/keyHandles/gw-library-test","kmsKey":"projects/gw-library-keys/locations/us-central1/keyRings/autokey/cryptoKeys/storage-gw-library","resourceTypeSelector":"storage.googleapis.com/Bucket"}`))
+	})
+
+	handle, err := gcp.GetKMSKeyHandleAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "storage.googleapis.com/Bucket", handle.ResourceTypeSelector)
+	assert.Contains(t, handle.KmsKey, "/cryptoKeys/storage-gw-library")
+}
+
+func TestGetKMSKeyHandleAttrsWithClientReportsAMissingHandle(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a handle that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetKMSKeyHandleAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetKMSProjectAutokeyConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns once the project Autokey config module has
+	// pointed a project at a key project, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/autokeyConfig"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/autokeyConfig","keyProject":"projects/gw-library-keys","state":"ACTIVE"}`))
+	})
+
+	config, err := gcp.GetKMSProjectAutokeyConfigAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-test-project")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/gw-library-keys", config.KeyProject)
+	assert.Equal(t, "ACTIVE", config.State)
+}
+
+func TestGetKMSProjectAutokeyConfigAttrsWithClientReportsAMissingConfig(t *testing.T) {
+	t.Parallel()
+
+	// A project Autokey has never been set up on answers 404, and a caller should be told that in
+	// those words rather than be handed the transport's own.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetKMSProjectAutokeyConfigAttrsWithClient(context.Background(), newFakeCloudKMSService(t, handler), "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "has no Cloud KMS Autokey config")
+}
