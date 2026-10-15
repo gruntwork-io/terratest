@@ -211,3 +211,38 @@ func TestGetMigrationCenterImportDataFileAttrsWithClientReportsAMissingFile(t *t
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetMigrationCenterAssetsExportJobAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a job the assets export job module
+	// created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/assetsExportJobs/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/assetsExportJobs/gw-library-test","signedUriDestination":{},"showHidden":true,"labels":{"terratest":"true"}}`))
+	})
+
+	job, err := gcp.GetMigrationCenterAssetsExportJobAttrsWithClient(context.Background(), newFakeMigrationCenterService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.True(t, job.ShowHidden)
+	require.NotNil(t, job.SignedUriDestination)
+	assert.Equal(t, map[string]string{"terratest": "true"}, job.Labels)
+}
+
+func TestGetMigrationCenterAssetsExportJobAttrsWithClientReportsAMissingJob(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a job that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetMigrationCenterAssetsExportJobAttrsWithClient(context.Background(), newFakeMigrationCenterService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}

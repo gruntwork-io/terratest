@@ -208,3 +208,36 @@ func TestGetEventarcMessageBusAttrsWithClientMissingResource(t *testing.T) {
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetEventarcGoogleChannelConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns once the Google channel config module has set
+	// a key on a location, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/googleChannelConfig"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/googleChannelConfig","cryptoKeyName":"projects/gw-library-test-project/locations/us-central1/keyRings/gw-library-test/cryptoKeys/gw-library-test"}`))
+	})
+
+	config, err := gcp.GetEventarcGoogleChannelConfigAttrsWithClient(context.Background(), newFakeEventarcService(t, handler), "gw-library-test-project", "us-central1")
+	require.NoError(t, err)
+
+	assert.Equal(t, "projects/gw-library-test-project/locations/us-central1/keyRings/gw-library-test/cryptoKeys/gw-library-test", config.CryptoKeyName)
+}
+
+func TestGetEventarcGoogleChannelConfigAttrsWithClientReportsAMissingConfig(t *testing.T) {
+	t.Parallel()
+
+	// A location Eventarc is not enabled in answers 404, and a caller should be told that in those
+	// words rather than be handed the transport's own.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetEventarcGoogleChannelConfigAttrsWithClient(context.Background(), newFakeEventarcService(t, handler), "gw-library-test-project", "us-central1")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no Eventarc Google channel config exists")
+}
