@@ -104,6 +104,190 @@ func GetCryptoKeyAttrsWithClient(ctx context.Context, service *cloudkms.Service,
 	return cryptoKey, nil
 }
 
+// GetKMSEkmConnectionAttrs returns the settings Google Cloud holds for the given Cloud KMS EKM connection, so a test can assert on
+// what was actually created rather than only that it exists.
+// The service resolvers a connection reaches the external key manager through are reported in full,
+// hostname and server certificates included.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSEkmConnectionAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, connectionID string) *cloudkms.EkmConnection {
+	result, err := GetKMSEkmConnectionAttrsE(t, ctx, projectID, location, connectionID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetKMSEkmConnectionAttrsE returns the settings Google Cloud holds for the given Cloud KMS EKM connection.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSEkmConnectionAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, connectionID string) (*cloudkms.EkmConnection, error) {
+	logger.Default.Logf(t, "Getting settings for Cloud KMS EKM connection %s in %s of project %s", connectionID, location, projectID)
+
+	service, err := NewCloudKMSServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetKMSEkmConnectionAttrsWithClient(ctx, service, projectID, location, connectionID)
+}
+
+// GetKMSEkmConnectionAttrsWithClient returns the settings Google Cloud holds for the given Cloud KMS EKM connection using the supplied
+// *cloudkms.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see kms_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSEkmConnectionAttrsWithClient(ctx context.Context, service *cloudkms.Service, projectID string, location string, connectionID string) (*cloudkms.EkmConnection, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/ekmConnections/%s", projectID, location, connectionID)
+
+	result, err := service.Projects.Locations.EkmConnections.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Cloud KMS EKM connection %s does not exist in %s of project %s", connectionID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Cloud KMS EKM connection %s in %s of project %s: %w", connectionID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetKMSKeyHandleAttrs returns the settings Google Cloud holds for the given Cloud KMS key handle, so a test can assert on
+// what was actually created rather than only that it exists.
+// The key Autokey provisioned for the handle is named only on the handle, so a read is the only way to
+// tell which key a resource ended up protected by.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSKeyHandleAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, handleID string) *cloudkms.KeyHandle {
+	result, err := GetKMSKeyHandleAttrsE(t, ctx, projectID, location, handleID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetKMSKeyHandleAttrsE returns the settings Google Cloud holds for the given Cloud KMS key handle.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSKeyHandleAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, handleID string) (*cloudkms.KeyHandle, error) {
+	logger.Default.Logf(t, "Getting settings for Cloud KMS key handle %s in %s of project %s", handleID, location, projectID)
+
+	service, err := NewCloudKMSServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetKMSKeyHandleAttrsWithClient(ctx, service, projectID, location, handleID)
+}
+
+// GetKMSKeyHandleAttrsWithClient returns the settings Google Cloud holds for the given Cloud KMS key handle using the supplied
+// *cloudkms.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see kms_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSKeyHandleAttrsWithClient(ctx context.Context, service *cloudkms.Service, projectID string, location string, handleID string) (*cloudkms.KeyHandle, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/keyHandles/%s", projectID, location, handleID)
+
+	result, err := service.Projects.Locations.KeyHandles.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Cloud KMS key handle %s does not exist in %s of project %s", handleID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Cloud KMS key handle %s in %s of project %s: %w", handleID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetKMSProjectAutokeyConfigAttrs returns the settings Google Cloud holds for the Cloud KMS Autokey config of the given project, so a test can assert on
+// what was actually created rather than only that it exists.
+// The config is a singleton per project and names the folder whose key project Autokey will draw
+// from, so a read is how a test tells whether the module pointed it at the right one.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSProjectAutokeyConfigAttrs(t testing.TestingT, ctx context.Context, projectID string) *cloudkms.AutokeyConfig {
+	result, err := GetKMSProjectAutokeyConfigAttrsE(t, ctx, projectID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetKMSProjectAutokeyConfigAttrsE returns the settings Google Cloud holds for the Cloud KMS Autokey config of the given project.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSProjectAutokeyConfigAttrsE(t testing.TestingT, ctx context.Context, projectID string) (*cloudkms.AutokeyConfig, error) {
+	logger.Default.Logf(t, "Getting the Cloud KMS Autokey config of project %s", projectID)
+
+	service, err := NewCloudKMSServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetKMSProjectAutokeyConfigAttrsWithClient(ctx, service, projectID)
+}
+
+// GetKMSProjectAutokeyConfigAttrsWithClient returns the settings Google Cloud holds for the Cloud KMS Autokey config of the given project using the supplied
+// *cloudkms.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see kms_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSProjectAutokeyConfigAttrsWithClient(ctx context.Context, service *cloudkms.Service, projectID string) (*cloudkms.AutokeyConfig, error) {
+	name := fmt.Sprintf("projects/%s/autokeyConfig", projectID)
+
+	result, err := service.Projects.GetAutokeyConfig(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("project %s has no Cloud KMS Autokey config", projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the Cloud KMS Autokey config of project %s: %w", projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetKMSEkmConnectionIamPolicyAttrs returns the IAM policy Google Cloud holds for the given Cloud
+// KMS EKM connection, so a test can assert on the bindings that were applied rather than only that
+// the apply finished.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSEkmConnectionIamPolicyAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, connectionID string) *cloudkms.Policy {
+	policy, err := GetKMSEkmConnectionIamPolicyAttrsE(t, ctx, projectID, location, connectionID)
+	require.NoError(t, err)
+
+	return policy
+}
+
+// GetKMSEkmConnectionIamPolicyAttrsE returns the IAM policy Google Cloud holds for the given Cloud
+// KMS EKM connection.
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSEkmConnectionIamPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, connectionID string) (*cloudkms.Policy, error) {
+	logger.Default.Logf(t, "Getting the IAM policy for Cloud KMS EKM connection %s in %s of project %s", connectionID, location, projectID)
+
+	service, err := NewCloudKMSServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetKMSEkmConnectionIamPolicyAttrsWithClient(ctx, service, projectID, location, connectionID)
+}
+
+// GetKMSEkmConnectionIamPolicyAttrsWithClient returns the IAM policy Google Cloud holds for the
+// given Cloud KMS EKM connection using the supplied *cloudkms.Service. Prefer this variant in unit
+// tests where the service is backed by an httptest fake server (see kms_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetKMSEkmConnectionIamPolicyAttrsWithClient(ctx context.Context, service *cloudkms.Service, projectID string, location string, connectionID string) (*cloudkms.Policy, error) {
+	resource := fmt.Sprintf("projects/%s/locations/%s/ekmConnections/%s", projectID, location, connectionID)
+
+	policy, err := service.Projects.Locations.EkmConnections.GetIamPolicy(resource).OptionsRequestedPolicyVersion(iamPolicyVersionWithConditions).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Cloud KMS EKM connection %s does not exist in %s of project %s", connectionID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the IAM policy for Cloud KMS EKM connection %s in %s of project %s: %w", connectionID, location, projectID, err)
+	}
+
+	return policy, nil
+}
+
 // NewCloudKMSServiceE creates a Cloud KMS service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.
