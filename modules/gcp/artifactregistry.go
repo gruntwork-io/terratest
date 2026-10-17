@@ -60,6 +60,55 @@ func GetArtifactRegistryRepositoryAttrsWithClient(ctx context.Context, service *
 	return repository, nil
 }
 
+// GetArtifactRegistryProjectConfigAttrs returns the settings Google Cloud holds for Artifact
+// Registry in the given project and location, so a test can assert on what was actually created
+// rather than only that it exists.
+// The config is one object per project and location rather than a resource with a name, and what it
+// holds is whether Artifact Registry writes platform logs there and at which severity.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetArtifactRegistryProjectConfigAttrs(t testing.TestingT, ctx context.Context, projectID string, location string) *artifactregistry.ProjectConfig {
+	result, err := GetArtifactRegistryProjectConfigAttrsE(t, ctx, projectID, location)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetArtifactRegistryProjectConfigAttrsE returns the settings Google Cloud holds for Artifact
+// Registry in the given project and location.
+// The ctx parameter supports cancellation and timeouts.
+func GetArtifactRegistryProjectConfigAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string) (*artifactregistry.ProjectConfig, error) {
+	logger.Default.Logf(t, "Getting the Artifact Registry config for %s of project %s", location, projectID)
+
+	service, err := NewArtifactRegistryServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetArtifactRegistryProjectConfigAttrsWithClient(ctx, service, projectID, location)
+}
+
+// GetArtifactRegistryProjectConfigAttrsWithClient returns the settings Google Cloud holds for
+// Artifact Registry in the given project and location using the supplied *artifactregistry.Service.
+// Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see artifactregistry_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetArtifactRegistryProjectConfigAttrsWithClient(ctx context.Context, service *artifactregistry.Service, projectID string, location string) (*artifactregistry.ProjectConfig, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/projectConfig", projectID, location)
+
+	result, err := service.Projects.Locations.GetProjectConfig(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the project %s has no Artifact Registry config in %s", projectID, location)
+		}
+
+		return nil, fmt.Errorf("failed to get the Artifact Registry config for %s of project %s: %w", location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewArtifactRegistryServiceE creates an Artifact Registry service authenticated the same way every
 // other client in this module is.
 // The ctx parameter supports cancellation and timeouts.

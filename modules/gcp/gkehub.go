@@ -194,6 +194,99 @@ func GetGKEHubMembershipBindingAttrsWithClient(ctx context.Context, service *gke
 	return result, nil
 }
 
+// GetGKEHubFeatureAttrs returns the settings Google Cloud holds for the fleet feature, so a test can assert on
+// what was actually created rather than only that it exists.
+// One read answers for two modules. A feature membership is a per membership entry in the feature's
+// own membership specs rather than a resource of its own, so it is read off the feature here.
+// The feature's id is the name of the service it turns on, for example configmanagement or
+// multiclusteringress, not a name the caller chooses.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubFeatureAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, featureID string) *gkehub.Feature {
+	result, err := GetGKEHubFeatureAttrsE(t, ctx, projectID, location, featureID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetGKEHubFeatureAttrsE returns the settings Google Cloud holds for the fleet feature.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubFeatureAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, featureID string) (*gkehub.Feature, error) {
+	logger.Default.Logf(t, "Getting settings for fleet feature %s in %s in project %s", featureID, location, projectID)
+
+	service, err := NewGKEHubServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetGKEHubFeatureAttrsWithClient(ctx, service, projectID, location, featureID)
+}
+
+// GetGKEHubFeatureAttrsWithClient returns the settings Google Cloud holds for the fleet feature using the supplied
+// *gkehub.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see gkehub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubFeatureAttrsWithClient(ctx context.Context, service *gkehub.Service, projectID string, location string, featureID string) (*gkehub.Feature, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/features/%s", projectID, location, featureID)
+
+	result, err := service.Projects.Locations.Features.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the fleet feature %s does not exist in %s in project %s", featureID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for fleet feature %s in %s in project %s: %w", featureID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetGKEHubFleetAttrs returns the settings Google Cloud holds for the fleet, so a test can assert on
+// what was actually created rather than only that it exists.
+// A project holds one fleet per location and the API names it default, so there is no id to pass.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubFleetAttrs(t testing.TestingT, ctx context.Context, projectID string, location string) *gkehub.Fleet {
+	result, err := GetGKEHubFleetAttrsE(t, ctx, projectID, location)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetGKEHubFleetAttrsE returns the settings Google Cloud holds for the fleet.
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubFleetAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string) (*gkehub.Fleet, error) {
+	logger.Default.Logf(t, "Getting settings for the fleet in %s in project %s", location, projectID)
+
+	service, err := NewGKEHubServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetGKEHubFleetAttrsWithClient(ctx, service, projectID, location)
+}
+
+// GetGKEHubFleetAttrsWithClient returns the settings Google Cloud holds for the fleet using the supplied
+// *gkehub.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see gkehub_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetGKEHubFleetAttrsWithClient(ctx context.Context, service *gkehub.Service, projectID string, location string) (*gkehub.Fleet, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/fleets/default", projectID, location)
+
+	result, err := service.Projects.Locations.Fleets.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("project %s has no fleet in %s", projectID, location)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for the fleet in %s in project %s: %w", location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewGKEHubServiceE creates a GKE Hub service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.
