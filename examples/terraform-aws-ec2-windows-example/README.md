@@ -35,7 +35,7 @@ This may take upwards of 25 minutes to complete, but generally completes in abou
 Create a new file named `terraform.tfvars` in this same directory and enter the following variables: 
 
 ```hcl
-ami_id           = "<the AMI ID you copied in the previous step>"
+ami              = "<the AMI ID you copied in the previous step>"
 region           = "us-east-1"
 root_volume_size = 100
 ```
