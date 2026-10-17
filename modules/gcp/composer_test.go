@@ -66,3 +66,36 @@ func TestGetComposerEnvironmentAttrsWithClientMissingEnvironment(t *testing.T) {
 	require.ErrorContains(t, err, "us-central1")
 	require.ErrorContains(t, err, "gw-library-test-project")
 }
+
+func TestGetComposerUserWorkloadsConfigMapAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a config map the user workloads config
+	// map module created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/environments/gw-library-parent/userWorkloadsConfigMaps/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/environments/gw-library-parent/userWorkloadsConfigMaps/gw-library-test","data":{"var_name":"var_value"}}`))
+	})
+
+	configMap, err := gcp.GetComposerUserWorkloadsConfigMapAttrsWithClient(context.Background(), newFakeComposerService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, map[string]string{"var_name": "var_value"}, configMap.Data)
+}
+
+func TestGetComposerUserWorkloadsConfigMapAttrsWithClientReportsAMissingConfigMap(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a config map that is not there should be told that, rather than be handed
+	// the transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetComposerUserWorkloadsConfigMapAttrsWithClient(context.Background(), newFakeComposerService(t, handler), "gw-library-test-project", "us-central1", "gw-library-parent", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
