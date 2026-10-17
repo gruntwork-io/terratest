@@ -1073,3 +1073,61 @@ func TestFetchInstanceResourcePoliciesWithClient(t *testing.T) {
 	require.Len(t, policies, 1)
 	assert.Contains(t, policies[0], "resourcePolicies/gw-library-test")
 }
+
+func TestFetchInstanceGroupManagerResizeRequestWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a resize request a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/zones/us-central1-a/instanceGroupManagers/gw-library-test/resizeRequests/gw-library-request"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-request","resizeBy":2,"state":"ACCEPTED","requestedRunDuration":{"seconds":"600"}}`))
+	})
+
+	request, err := gcp.FetchInstanceGroupManagerResizeRequestWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test", "gw-library-request")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-request", request.Name)
+	assert.Equal(t, int64(2), request.ResizeBy)
+	assert.Equal(t, "ACCEPTED", request.State)
+	require.NotNil(t, request.RequestedRunDuration)
+	assert.Equal(t, int64(600), request.RequestedRunDuration.Seconds)
+}
+
+func TestFetchRegionInstanceGroupManagerResizeRequestWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a regional resize request a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/regions/us-central1/instanceGroupManagers/gw-library-test/resizeRequests/gw-library-request"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-request","resizeBy":5,"state":"SUCCEEDED","region":"https://www.googleapis.com/compute/v1/projects/gw-library-test-project/regions/us-central1"}`))
+	})
+
+	request, err := gcp.FetchRegionInstanceGroupManagerResizeRequestWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test", "gw-library-request")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-request", request.Name)
+	assert.Equal(t, int64(5), request.ResizeBy)
+	assert.Equal(t, "SUCCEEDED", request.State)
+	assert.Contains(t, request.Region, "/regions/us-central1")
+}
+
+func TestFetchInstanceGroupManagerResizeRequestWithClientReportsAMissingRequest(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a resize request that is not there should read a sentence about that resize request, not a
+	// status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchInstanceGroupManagerResizeRequestWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "us-central1-a", "gw-library-test", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

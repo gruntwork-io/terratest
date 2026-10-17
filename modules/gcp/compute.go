@@ -901,6 +901,94 @@ func FetchReservationWithClient(ctx context.Context, service *compute.Service, p
 	return reservation, nil
 }
 
+// FetchInstanceGroupManagerResizeRequest returns the settings Google Cloud holds for the given resize
+// request, so a test can assert on what was actually created rather than only that it exists.
+// A resize request is how a managed instance group asks for capacity at a future moment, so the count
+// it asks for and the state Google put it in are the resource.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceGroupManagerResizeRequest(t testing.TestingT, ctx context.Context, projectID string, zone string, instanceGroupManager string, name string) *compute.InstanceGroupManagerResizeRequest {
+	request, err := FetchInstanceGroupManagerResizeRequestE(t, ctx, projectID, zone, instanceGroupManager, name)
+	require.NoError(t, err)
+
+	return request
+}
+
+// FetchInstanceGroupManagerResizeRequestE returns the settings Google Cloud holds for the given resize request.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceGroupManagerResizeRequestE(t testing.TestingT, ctx context.Context, projectID string, zone string, instanceGroupManager string, name string) (*compute.InstanceGroupManagerResizeRequest, error) {
+	logger.Default.Logf(t, "Getting settings for resize request %s of instance group manager %s in %s in project %s", name, instanceGroupManager, zone, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchInstanceGroupManagerResizeRequestWithClient(ctx, service, projectID, zone, instanceGroupManager, name)
+}
+
+// FetchInstanceGroupManagerResizeRequestWithClient returns the settings Google Cloud holds for the given
+// resize request using the supplied *compute.Service. Prefer this variant in unit tests where the
+// service is backed by an httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInstanceGroupManagerResizeRequestWithClient(ctx context.Context, service *compute.Service, projectID string, zone string, instanceGroupManager string, name string) (*compute.InstanceGroupManagerResizeRequest, error) {
+	request, err := service.InstanceGroupManagerResizeRequests.Get(projectID, zone, instanceGroupManager, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the resize request %s of instance group manager %s in %s in project %s does not exist", name, instanceGroupManager, zone, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for resize request %s of instance group manager %s in %s in project %s: %w", name, instanceGroupManager, zone, projectID, err)
+	}
+
+	return request, nil
+}
+
+// FetchRegionInstanceGroupManagerResizeRequest returns the settings Google Cloud holds for the given
+// regional resize request, so a test can assert on what was actually created rather than only that it
+// exists. Google answers both the zonal and the regional request with the same type, so the two reads
+// differ only in the collection they ask.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstanceGroupManagerResizeRequest(t testing.TestingT, ctx context.Context, projectID string, region string, instanceGroupManager string, name string) *compute.InstanceGroupManagerResizeRequest {
+	request, err := FetchRegionInstanceGroupManagerResizeRequestE(t, ctx, projectID, region, instanceGroupManager, name)
+	require.NoError(t, err)
+
+	return request
+}
+
+// FetchRegionInstanceGroupManagerResizeRequestE returns the settings Google Cloud holds for the given regional resize request.
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstanceGroupManagerResizeRequestE(t testing.TestingT, ctx context.Context, projectID string, region string, instanceGroupManager string, name string) (*compute.InstanceGroupManagerResizeRequest, error) {
+	logger.Default.Logf(t, "Getting settings for resize request %s of regional instance group manager %s in %s in project %s", name, instanceGroupManager, region, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchRegionInstanceGroupManagerResizeRequestWithClient(ctx, service, projectID, region, instanceGroupManager, name)
+}
+
+// FetchRegionInstanceGroupManagerResizeRequestWithClient returns the settings Google Cloud holds for the
+// given regional resize request using the supplied *compute.Service. Prefer this variant in unit tests
+// where the service is backed by an httptest fake server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchRegionInstanceGroupManagerResizeRequestWithClient(ctx context.Context, service *compute.Service, projectID string, region string, instanceGroupManager string, name string) (*compute.InstanceGroupManagerResizeRequest, error) {
+	request, err := service.RegionInstanceGroupManagerResizeRequests.Get(projectID, region, instanceGroupManager, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the resize request %s of regional instance group manager %s in %s in project %s does not exist", name, instanceGroupManager, region, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for resize request %s of regional instance group manager %s in %s in project %s: %w", name, instanceGroupManager, region, projectID, err)
+	}
+
+	return request, nil
+}
+
 // FetchRegionCommitment returns the settings Google Cloud holds for the given commitment, so a test can assert on what was
 // actually created rather than only that it exists.
 // A commitment buys a discount for a fixed term, and neither the term nor the resources it covers can be changed once it is made.

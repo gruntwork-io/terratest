@@ -147,6 +147,52 @@ func GetSpannerBackupScheduleAttrsWithClient(ctx context.Context, service *spann
 	return schedule, nil
 }
 
+// GetSpannerInstancePartitionAttrs returns the settings Google Cloud holds for the Spanner instance partition, so a test can assert on what was
+// actually created rather than only that it exists.
+// A partition is a geographic split of one instance's capacity, so the config it names is what says
+// where the split landed.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetSpannerInstancePartitionAttrs(t testing.TestingT, ctx context.Context, projectID string, instanceID string, partitionID string) *spanner.InstancePartition {
+	result, err := GetSpannerInstancePartitionAttrsE(t, ctx, projectID, instanceID, partitionID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetSpannerInstancePartitionAttrsE returns the settings Google Cloud holds for the Spanner instance partition.
+// The ctx parameter supports cancellation and timeouts.
+func GetSpannerInstancePartitionAttrsE(t testing.TestingT, ctx context.Context, projectID string, instanceID string, partitionID string) (*spanner.InstancePartition, error) {
+	logger.Default.Logf(t, "Getting settings for Spanner instance partition %s of instance %s in project %s", partitionID, instanceID, projectID)
+
+	service, err := NewSpannerServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetSpannerInstancePartitionAttrsWithClient(ctx, service, projectID, instanceID, partitionID)
+}
+
+// GetSpannerInstancePartitionAttrsWithClient returns the settings Google Cloud holds for the Spanner instance partition using the supplied
+// *spanner.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see spanner_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetSpannerInstancePartitionAttrsWithClient(ctx context.Context, service *spanner.Service, projectID string, instanceID string, partitionID string) (*spanner.InstancePartition, error) {
+	name := fmt.Sprintf("projects/%s/instances/%s/instancePartitions/%s", projectID, instanceID, partitionID)
+
+	result, err := service.Projects.Instances.InstancePartitions.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Spanner instance partition %s of instance %s in project %s does not exist", partitionID, instanceID, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Spanner instance partition %s of instance %s in project %s: %w", partitionID, instanceID, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewSpannerServiceE creates a Spanner service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.

@@ -682,6 +682,52 @@ func GetDataplexEntryLinkAttrsWithClient(ctx context.Context, service *dataplex.
 	return link, nil
 }
 
+// GetDataplexMetadataFeedAttrs returns the settings Google Cloud holds for the Dataplex metadata feed, so a test can assert on what was
+// actually created rather than only that it exists.
+// A feed is what keeps a Dataplex catalog entry in step with the source it was imported from, so the
+// source it names and the schedule it runs on are the whole resource.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexMetadataFeedAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, feedID string) *dataplex.GoogleCloudDataplexV1MetadataFeed {
+	result, err := GetDataplexMetadataFeedAttrsE(t, ctx, projectID, location, feedID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetDataplexMetadataFeedAttrsE returns the settings Google Cloud holds for the Dataplex metadata feed.
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexMetadataFeedAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, feedID string) (*dataplex.GoogleCloudDataplexV1MetadataFeed, error) {
+	logger.Default.Logf(t, "Getting settings for Dataplex metadata feed %s in %s in project %s", feedID, location, projectID)
+
+	service, err := NewDataplexServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetDataplexMetadataFeedAttrsWithClient(ctx, service, projectID, location, feedID)
+}
+
+// GetDataplexMetadataFeedAttrsWithClient returns the settings Google Cloud holds for the Dataplex metadata feed using the supplied
+// *dataplex.Service. Prefer this variant in unit tests where the service is backed by an httptest
+// fake server (see dataplex_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetDataplexMetadataFeedAttrsWithClient(ctx context.Context, service *dataplex.Service, projectID string, location string, feedID string) (*dataplex.GoogleCloudDataplexV1MetadataFeed, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/metadataFeeds/%s", projectID, location, feedID)
+
+	result, err := service.Projects.Locations.MetadataFeeds.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Dataplex metadata feed %s in %s in project %s does not exist", feedID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Dataplex metadata feed %s in %s in project %s: %w", feedID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewDataplexServiceE creates a Dataplex service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.
