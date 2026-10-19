@@ -66,7 +66,7 @@ jobs:
           audience: ${{ secrets.GCP_ALLOWED_AUDIENCES }}
 
       - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
