@@ -27,7 +27,7 @@ jobs:
         echo "golangci-lint-cache=$HOME/.cache/golangci-lint" >> "$GITHUB_OUTPUT"
 
     - name: Go Build Cache
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
       with:
         path: ${{ steps.go-cache-paths.outputs.go-build }}
         key: ${{ runner.os }}-go-build-lint-${{ hashFiles('**/go.sum') }}
@@ -35,7 +35,7 @@ jobs:
           ${{ runner.os }}-go-build-lint-
 
     - name: Go Mod Cache
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
       with:
         path: ${{ steps.go-cache-paths.outputs.go-mod }}
         key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
@@ -43,7 +43,7 @@ jobs:
           ${{ runner.os }}-go-mod-
 
     - name: golangci-lint Cache
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
       with:
         path: ${{ steps.go-cache-paths.outputs.golangci-lint-cache }}
         key: ${{ runner.os }}-golangci-lint-${{ hashFiles('**/go.sum') }}
