@@ -6,6 +6,16 @@ repos:
     - id: terraform-fmt
 - repo: local
   hooks:
+    # A workflow that names an action by tag runs whatever that tag points at on
+    # the day it runs (#1980), so every reference carries a commit SHA. A pin has
+    # to be a commit a tag points at: Dependabot follows the action's default
+    # branch for a commit no tag names.
+    - id: actions-pinned-to-sha
+      name: actions-pinned-to-sha
+      entry: bash -c '! grep -rnE "uses:[[:space:]]*[^ ]+@v?[0-9]" --include="*.yml" .github/ | grep -v "@[0-9a-f]\{40\}"'
+      language: system
+      files: ^\.github/.*\.ya?ml$
+      pass_filenames: false
     - id: test-interfaces-used
       name: test-interfaces-used
       entry: bash -c 'grep -Rw "*testing.T" modules | grep -v _test.go | wc -l'

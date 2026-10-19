@@ -39,10 +39,10 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Install mise
-        uses: jdx/mise-action@v3
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
           version: 2025.12.10
           experimental: true
@@ -50,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Go module cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/go/pkg/mod
@@ -63,7 +63,7 @@ jobs:
         run: go mod download
 
       - name: Azure login (OIDC)
-        uses: azure/login@v2
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload test logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: azure-integration-test-logs
           path: /tmp/logs/
