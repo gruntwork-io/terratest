@@ -22,3 +22,25 @@ updates:
     directory: /docs
     schedule:
       interval: weekly
+
+  # Every workflow names its actions by commit SHA rather than by tag, because a
+  # tag can be moved onto another commit (#1980). Dependabot is then the only
+  # thing that moves those SHAs, and it waits a week after a release before
+  # proposing one, which leaves time for a tampered release to be reported; the
+  # weekly schedule can add up to another week on top. Majors are left out of
+  # the group so they arrive one action at a time and stay bisectable, and
+  # cooldown takes only default-days here, per GitHub's cooldown support table:
+  # https://docs.github.com/code-security/reference/supply-chain-security/dependabot-options-reference#configuration-of-cooldown
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    cooldown:
+      default-days: 7
