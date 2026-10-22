@@ -1,6 +1,6 @@
 [tools]
-go = "1.26.1"
-golangci-lint = "2.11.3"
+go = "1.26.10"
+golangci-lint = "2.15.0"
 terraform = "1.5.7"
 opentofu = "1.11.6"
 terragrunt = "1.0.5"
