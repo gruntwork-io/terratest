@@ -1131,3 +1131,222 @@ func TestFetchInstanceGroupManagerResizeRequestWithClientReportsAMissingRequest(
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestFetchInterconnectAttachmentGroupWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for an attachment group a Gruntwork module created, not a
+	// copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/interconnectAttachmentGroups/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","description":"terratest attachment group","intent":{"availabilitySla":"PRODUCTION_CRITICAL"},"attachments":{"first":{"attachment":"projects/gw-library-test-project/regions/us-central1/interconnectAttachments/gw-library-attachment"}}}`))
+	})
+
+	group, err := gcp.FetchInterconnectAttachmentGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", group.Name)
+	assert.Equal(t, "terratest attachment group", group.Description)
+	require.NotNil(t, group.Intent)
+	assert.Equal(t, "PRODUCTION_CRITICAL", group.Intent.AvailabilitySla)
+	assert.Len(t, group.Attachments, 1)
+}
+
+func TestFetchInterconnectAttachmentGroupWithClientReportsAMissingGroup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names an attachment group that is not there should read a sentence about that group, not a status
+	// code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchInterconnectAttachmentGroupWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchGlobalPublicDelegatedPrefixWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A delegated prefix reports the advertised prefix it was carved from and the mode it serves, and a create
+	// confirms neither.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/global/publicDelegatedPrefixes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test","ipCidrRange":"203.0.113.0/24","parentPrefix":"projects/gw-library-test-project/global/publicAdvertisedPrefixes/gw-library-parent","mode":"DELEGATION","status":"ANNOUNCED"}`))
+	})
+
+	prefix, err := gcp.FetchGlobalPublicDelegatedPrefixWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", prefix.Name)
+	assert.Equal(t, "203.0.113.0/24", prefix.IpCidrRange)
+	assert.Equal(t, "DELEGATION", prefix.Mode)
+	assert.Contains(t, prefix.ParentPrefix, "gw-library-parent")
+}
+
+func TestFetchGlobalPublicDelegatedPrefixWithClientReportsAMissingPrefix(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a prefix that is not there should read a sentence about that prefix, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchGlobalPublicDelegatedPrefixWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchFirewallPolicyWithClient(t *testing.T) {
+	t.Parallel()
+
+	// A hierarchical policy answers with the id Google assigned it, its short name and the parent it was created
+	// under, which is how a test tells one policy from another of the same short name.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/locations/global/firewallPolicies/123456789"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"123456789","shortName":"gw-library-test","description":"terratest hierarchical policy","parent":"organizations/987654321","ruleTupleCount":2,"rules":[{"priority":1000,"action":"deny","direction":"INGRESS"}]}`))
+	})
+
+	policy, err := gcp.FetchFirewallPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "123456789")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", policy.ShortName)
+	assert.Equal(t, "organizations/987654321", policy.Parent)
+	assert.Equal(t, int64(2), policy.RuleTupleCount)
+	require.Len(t, policy.Rules, 1)
+	assert.Equal(t, "deny", policy.Rules[0].Action)
+}
+
+func TestFetchFirewallPolicyWithClientReportsAMissingPolicy(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a policy that is not there should read a sentence about that policy, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchFirewallPolicyWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchComputeProjectWithClient(t *testing.T) {
+	t.Parallel()
+
+	// One read answers for the default network tier, the usage export bucket and the common instance metadata, so the
+	// response carries all three.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-test-project","defaultNetworkTier":"STANDARD","usageExportLocation":{"bucketName":"gw-library-usage","reportNamePrefix":"terratest"},"commonInstanceMetadata":{"items":[{"key":"terratest","value":"on"}]}}`))
+	})
+
+	project, err := gcp.FetchComputeProjectWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-test-project")
+	require.NoError(t, err)
+
+	assert.Equal(t, "STANDARD", project.DefaultNetworkTier)
+	require.NotNil(t, project.UsageExportLocation)
+	assert.Equal(t, "gw-library-usage", project.UsageExportLocation.BucketName)
+	require.NotNil(t, project.CommonInstanceMetadata)
+	require.Len(t, project.CommonInstanceMetadata.Items, 1)
+	assert.Equal(t, "terratest", project.CommonInstanceMetadata.Items[0].Key)
+}
+
+func TestFetchComputeProjectWithClientReportsAMissingProject(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a project that is not there should read a sentence about that project, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchComputeProjectWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestFetchSharedVPCHostWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The project named is the service project and the project returned is its host, which is the whole point of the
+	// call.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-service-project/getXpnHost"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"gw-library-host-project","id":"12345678"}`))
+	})
+
+	host, err := gcp.FetchSharedVPCHostWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-service-project")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-host-project", host.Name)
+}
+
+func TestFetchSharedVPCHostWithClientReportsAnUnattachedProject(t *testing.T) {
+	t.Parallel()
+
+	// A project attached to no host answers 404, and the sentence has to say that rather than imply the project is
+	// gone.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchSharedVPCHostWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-service-project")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-service-project")
+	assert.Contains(t, err.Error(), "attached to no shared VPC host project")
+}
+
+func TestFetchSharedVPCServiceProjectsWithClientFollowsEveryPage(t *testing.T) {
+	t.Parallel()
+
+	// A host project may hold more service projects than one page carries, and the one a test is looking for need not
+	// be on the first page, so both pages are served here and both are expected back.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-host-project/getXpnResources"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+
+		if r.URL.Query().Get("pageToken") == "" {
+			_, _ = w.Write([]byte(`{"resources":[{"id":"gw-library-first","type":"PROJECT"}],"nextPageToken":"second"}`))
+
+			return
+		}
+
+		_, _ = w.Write([]byte(`{"resources":[{"id":"gw-library-second","type":"PROJECT"}]}`))
+	})
+
+	resources, err := gcp.FetchSharedVPCServiceProjectsWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-host-project")
+	require.NoError(t, err)
+
+	require.Len(t, resources, 2)
+	assert.Equal(t, "gw-library-first", resources[0].Id)
+	assert.Equal(t, "gw-library-second", resources[1].Id)
+}
+
+func TestFetchSharedVPCServiceProjectsWithClientReportsAMissingProject(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a project that is not there should read a sentence about that project, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.FetchSharedVPCServiceProjectsWithClient(context.Background(), newFakeComputeService(t, handler), "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
@@ -81,4 +82,74 @@ func TestGetServiceNetworkingConnectionAttrsWithClientSeveralConnections(t *test
 	_, err := gcp.GetServiceNetworkingConnectionAttrsWithClient(context.Background(), newFakeServiceNetworkingService(t, handler), "gw-library-test-project", "gw-library-test")
 	require.ErrorContains(t, err, "has 2 private connections")
 	require.ErrorContains(t, err, "first, second")
+}
+
+func TestGetServiceNetworkingPeeredDNSDomainAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The API offers no get for one domain, so the helper lists the network's domains and picks one out. The list here
+	// holds two, and the one asked for is not first.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/services/servicenetworking.googleapis.com/projects/370000000001/global/networks/gw-library-network/peeredDnsDomains"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"peeredDnsDomains":[{"name":"gw-library-other","dnsSuffix":"other.example.com."},{"name":"gw-library-test","dnsSuffix":"terratest.example.com."}]}`))
+	})
+
+	domain, err := gcp.GetServiceNetworkingPeeredDNSDomainAttrsWithClient(context.Background(), newFakeServiceNetworkingService(t, handler), "370000000001", "gw-library-network", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "gw-library-test", domain.Name)
+	assert.Equal(t, "terratest.example.com.", domain.DnsSuffix)
+}
+
+func TestGetServiceNetworkingPeeredDNSDomainAttrsWithClientReportsAMissingDomain(t *testing.T) {
+	t.Parallel()
+
+	// A domain that is not in the list is reported as missing rather than as an empty result, because the list call
+	// itself succeeded.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"peeredDnsDomains":[{"name":"gw-library-other","dnsSuffix":"other.example.com."}]}`))
+	})
+
+	_, err := gcp.GetServiceNetworkingPeeredDNSDomainAttrsWithClient(context.Background(), newFakeServiceNetworkingService(t, handler), "370000000001", "gw-library-network", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetServiceNetworkingVPCServiceControlsAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// Whether the controls are enforced on this connection comes from the network's vpcServiceControls sub-resource. The network's own
+	// consumer config carries vpcScReferenceArchitectureEnabled, which is the producer's host network instead, so
+	// the asserted path is what keeps the two apart.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/services/servicenetworking.googleapis.com/projects/370000000001/global/networks/gw-library-network/vpcServiceControls"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"enabled":true}`))
+	})
+
+	controls, err := gcp.GetServiceNetworkingVPCServiceControlsAttrsWithClient(context.Background(), newFakeServiceNetworkingService(t, handler), "370000000001", "gw-library-network")
+	require.NoError(t, err)
+
+	assert.True(t, controls.Enabled)
+}
+
+func TestGetServiceNetworkingVPCServiceControlsAttrsWithClientReportsAMissingConnection(t *testing.T) {
+	t.Parallel()
+
+	// A network with no private connection answers 404, and the sentence has to name the connection rather than imply
+	// the network is gone.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/vpcServiceControls"), "unexpected path %s", r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetServiceNetworkingVPCServiceControlsAttrsWithClient(context.Background(), newFakeServiceNetworkingService(t, handler), "370000000001", "gw-library-network")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-network")
+	assert.Contains(t, err.Error(), "no service networking connection")
 }
