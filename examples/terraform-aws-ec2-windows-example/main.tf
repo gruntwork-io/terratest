@@ -39,13 +39,6 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_subnets" "all" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # CREATE A SECURITY GROUP TO ALLOW ACCESS TO THE RDS INSTANCE
 # ---------------------------------------------------------------------------------------------------------------------
@@ -83,6 +76,10 @@ resource "aws_instance" "instance" {
   ami                    = var.ami
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.windows_instance.id]
+
+  root_block_device {
+    volume_size = var.root_volume_size
+  }
 
   tags = {
     Name = var.instance_type
