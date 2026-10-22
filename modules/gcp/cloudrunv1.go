@@ -64,6 +64,54 @@ func GetCloudRunV1ServiceAttrsWithClient(ctx context.Context, client *runv1.APIS
 	return service, nil
 }
 
+// GetCloudRunDomainMappingAttrs returns the settings Google Cloud holds for the Cloud Run domain mapping, so a test can assert on
+// what was actually created rather than only that it exists.
+// A mapping is served by the Knative style v1 API, where the project is a namespace and the
+// location is part of the endpoint rather than of the name.
+// The records the domain's owner has to publish are reported in the mapping's status, which is the
+// part a create cannot answer.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudRunDomainMappingAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, domain string) *runv1.DomainMapping {
+	result, err := GetCloudRunDomainMappingAttrsE(t, ctx, projectID, location, domain)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetCloudRunDomainMappingAttrsE returns the settings Google Cloud holds for the Cloud Run domain mapping.
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudRunDomainMappingAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, domain string) (*runv1.DomainMapping, error) {
+	logger.Default.Logf(t, "Getting settings for Cloud Run domain mapping %s in %s in project %s", domain, location, projectID)
+
+	service, err := NewCloudRunV1ServiceE(t, ctx, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetCloudRunDomainMappingAttrsWithClient(ctx, service, projectID, location, domain)
+}
+
+// GetCloudRunDomainMappingAttrsWithClient returns the settings Google Cloud holds for the Cloud Run domain mapping using the supplied
+// *runv1.APIService. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see cloudrunv1_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetCloudRunDomainMappingAttrsWithClient(ctx context.Context, service *runv1.APIService, projectID string, location string, domain string) (*runv1.DomainMapping, error) {
+	name := fmt.Sprintf("namespaces/%s/domainmappings/%s", projectID, domain)
+
+	result, err := service.Namespaces.Domainmappings.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Cloud Run domain mapping %s does not exist in %s in project %s", domain, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Cloud Run domain mapping %s in %s in project %s: %w", domain, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewCloudRunV1ServiceE creates a Cloud Run v1 client pointed at one region, authenticated the same
 // way every other client in this module is. The v1 API serves each region from its own endpoint.
 // The ctx parameter supports cancellation and timeouts.
