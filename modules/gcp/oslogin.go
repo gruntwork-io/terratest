@@ -2,6 +2,7 @@ package gcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"google.golang.org/api/oslogin/v1"
 )
@@ -196,4 +198,50 @@ func NewOSLoginServiceContextE(t testing.TestingT, ctx context.Context) (*oslogi
 	}
 
 	return service, nil
+}
+
+// GetOSLoginSSHPublicKeyAttrs returns the settings Google Cloud holds for the given OS Login SSH public key, so a test can assert on
+// what was actually created rather than only that it exists.
+// A key is addressed by its fingerprint, which Google computes, so a test reads the fingerprint the
+// module recorded rather than naming the key itself.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetOSLoginSSHPublicKeyAttrs(t testing.TestingT, ctx context.Context, userEmail string, fingerprint string) *oslogin.SshPublicKey {
+	result, err := GetOSLoginSSHPublicKeyAttrsE(t, ctx, userEmail, fingerprint)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetOSLoginSSHPublicKeyAttrsE returns the settings Google Cloud holds for the given OS Login SSH public key.
+// The ctx parameter supports cancellation and timeouts.
+func GetOSLoginSSHPublicKeyAttrsE(t testing.TestingT, ctx context.Context, userEmail string, fingerprint string) (*oslogin.SshPublicKey, error) {
+	logger.Default.Logf(t, "Getting the OS Login SSH public key %s of %s", fingerprint, userEmail)
+
+	service, err := NewOSLoginServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetOSLoginSSHPublicKeyAttrsWithClient(ctx, service, userEmail, fingerprint)
+}
+
+// GetOSLoginSSHPublicKeyAttrsWithClient returns the settings Google Cloud holds for the given OS Login SSH public key using the supplied
+// *oslogin.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see oslogin_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetOSLoginSSHPublicKeyAttrsWithClient(ctx context.Context, service *oslogin.Service, userEmail string, fingerprint string) (*oslogin.SshPublicKey, error) {
+	name := fmt.Sprintf("users/%s/sshPublicKeys/%s", userEmail, fingerprint)
+
+	result, err := service.Users.SshPublicKeys.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("%s has no OS Login SSH public key with fingerprint %s", userEmail, fingerprint)
+		}
+
+		return nil, fmt.Errorf("failed to get the OS Login SSH public key %s of %s: %w", fingerprint, userEmail, err)
+	}
+
+	return result, nil
 }

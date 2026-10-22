@@ -438,3 +438,141 @@ func TestGetVertexAIEndpointAttrsWithClientReportsAMissingVertexAiEndpoint(t *te
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetVertexAICacheConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns once the cache config module has turned
+	// context caching off, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/cacheConfig"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/cacheConfig","disableCache":true}`))
+	})
+
+	config, err := gcp.GetVertexAICacheConfigAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project")
+	require.NoError(t, err)
+
+	assert.True(t, config.DisableCache)
+}
+
+func TestGetVertexAICacheConfigAttrsWithClientReportsAMissingConfig(t *testing.T) {
+	t.Parallel()
+
+	// A project Vertex AI has never been enabled on answers 404, and a caller should be told that in
+	// those words rather than be handed the transport's own.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetVertexAICacheConfigAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "has no Vertex AI cache config")
+}
+
+func TestGetVertexAIRagEngineConfigAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns once the RAG engine config module has chosen
+	// a database tier, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/ragEngineConfig"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/ragEngineConfig","ragManagedDbConfig":{"basic":{}}}`))
+	})
+
+	config, err := gcp.GetVertexAIRagEngineConfigAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1")
+	require.NoError(t, err)
+
+	require.NotNil(t, config.RagManagedDbConfig)
+	assert.NotNil(t, config.RagManagedDbConfig.Basic)
+}
+
+func TestGetVertexAIRagEngineConfigAttrsWithClientReportsAMissingConfig(t *testing.T) {
+	t.Parallel()
+
+	// A location the RAG engine is not available in answers 404, and a caller should be told that in
+	// those words rather than be handed the transport's own.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetVertexAIRagEngineConfigAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no Vertex AI RAG engine config exists")
+}
+
+func TestGetVertexAINotebookRuntimeAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a runtime the Colab Enterprise runtime
+	// module created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/notebookRuntimes/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/notebookRuntimes/gw-library-test","displayName":"terratest runtime","runtimeState":"RUNNING","healthState":"HEALTHY","notebookRuntimeTemplateRef":{"notebookRuntimeTemplate":"projects/gw-library-test-project/locations/us-central1/notebookRuntimeTemplates/gw-library-template"},"machineSpec":{"machineType":"e2-standard-4"}}`))
+	})
+
+	runtime, err := gcp.GetVertexAINotebookRuntimeAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest runtime", runtime.DisplayName)
+	require.NotNil(t, runtime.NotebookRuntimeTemplateRef)
+	assert.Contains(t, runtime.NotebookRuntimeTemplateRef.NotebookRuntimeTemplate, "/notebookRuntimeTemplates/gw-library-template")
+}
+
+func TestGetVertexAINotebookRuntimeAttrsWithClientReportsAMissingRuntime(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a runtime that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetVertexAINotebookRuntimeAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetVertexAINotebookExecutionJobAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a job the notebook execution module
+	// created, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/us-central1/notebookExecutionJobs/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/us-central1/notebookExecutionJobs/gw-library-test","displayName":"terratest job","jobState":"JOB_STATE_SUCCEEDED","gcsOutputUri":"gs://gw-library-test/output","gcsNotebookSource":{"uri":"gs://gw-library-test/notebook.ipynb"},"executionTimeout":"600s"}`))
+	})
+
+	job, err := gcp.GetVertexAINotebookExecutionJobAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "JOB_STATE_SUCCEEDED", job.JobState)
+	assert.Equal(t, "gs://gw-library-test/output", job.GcsOutputUri)
+	require.NotNil(t, job.GcsNotebookSource)
+	assert.Equal(t, "gs://gw-library-test/notebook.ipynb", job.GcsNotebookSource.Uri)
+}
+
+func TestGetVertexAINotebookExecutionJobAttrsWithClientReportsAMissingJob(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a job that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetVertexAINotebookExecutionJobAttrsWithClient(context.Background(), newFakeVertexAIService(t, handler), "gw-library-test-project", "us-central1", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
