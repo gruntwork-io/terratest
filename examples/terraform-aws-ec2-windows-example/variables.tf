@@ -40,7 +40,7 @@ variable "instance_type" {
 }
 
 variable "root_volume_size" {
-  description = "The size in GiB of the root volume. Must match the root volume size of the target AMI."
+  description = "The size in GiB of the root volume. Must be at least the root volume size of the target AMI."
   type        = number
   default     = 30
 }

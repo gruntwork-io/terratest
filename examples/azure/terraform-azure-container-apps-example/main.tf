@@ -26,7 +26,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "aca" {
   name     = "terratest-rg-${var.postfix}"
-  location = "East US"
+  location = var.location
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
