@@ -63,3 +63,39 @@ func TestGetBinaryAuthorizationAttestorAttrsWithClientReportsAMissingOne(t *test
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetBinaryAuthorizationPolicyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns once the policy module has set a project's
+	// policy, not a copy of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/policy"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/policy","description":"created by terratest","globalPolicyEvaluationMode":"ENABLE","defaultAdmissionRule":{"evaluationMode":"REQUIRE_ATTESTATION","enforcementMode":"ENFORCED_BLOCK_AND_AUDIT_LOG","requireAttestationsBy":["projects/gw-library-test-project/attestors/gw-library-test"]},"clusterAdmissionRules":{"us-central1-a.gw-library-test":{"evaluationMode":"ALWAYS_ALLOW","enforcementMode":"DRYRUN_AUDIT_LOG_ONLY"}}}`))
+	})
+
+	policy, err := gcp.GetBinaryAuthorizationPolicyAttrsWithClient(context.Background(), newFakeBinaryAuthorizationService(t, handler), "gw-library-test-project")
+	require.NoError(t, err)
+
+	assert.Equal(t, "ENABLE", policy.GlobalPolicyEvaluationMode)
+	require.NotNil(t, policy.DefaultAdmissionRule)
+	assert.Equal(t, "REQUIRE_ATTESTATION", policy.DefaultAdmissionRule.EvaluationMode)
+	assert.Equal(t, "ALWAYS_ALLOW", policy.ClusterAdmissionRules["us-central1-a.gw-library-test"].EvaluationMode)
+}
+
+func TestGetBinaryAuthorizationPolicyAttrsWithClientReportsAMissingPolicy(t *testing.T) {
+	t.Parallel()
+
+	// A project the API has never been enabled on answers 404, and a caller should be told that in
+	// those words rather than be handed the transport's own.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetBinaryAuthorizationPolicyAttrsWithClient(context.Background(), newFakeBinaryAuthorizationService(t, handler), "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "has no Binary Authorization policy")
+}

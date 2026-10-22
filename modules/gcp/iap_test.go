@@ -96,3 +96,73 @@ func TestGetIAPIamPolicyAttrsWithClientReportsAMissingResource(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetIAPBrandAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a brand the IAP brand module created, not
+	// a copy of any one fixture's values. The brand id is the project number.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/brands/424242424242"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/424242424242/brands/424242424242","applicationTitle":"terratest brand","supportEmail":"terratest@example.com","orgInternalOnly":true}`))
+	})
+
+	brand, err := gcp.GetIAPBrandAttrsWithClient(context.Background(), newFakeIAPService(t, handler), "gw-library-test-project", "424242424242")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest brand", brand.ApplicationTitle)
+	assert.Equal(t, "terratest@example.com", brand.SupportEmail)
+	assert.True(t, brand.OrgInternalOnly)
+}
+
+func TestGetIAPBrandAttrsWithClientReportsAMissingBrand(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a brand that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetIAPBrandAttrsWithClient(context.Background(), newFakeIAPService(t, handler), "gw-library-test-project", "515151515151")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
+
+func TestGetIAPTunnelDestGroupAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a group the tunnel destination group
+	// module created, not a copy of any one fixture's values. The tunnel segment of the path carries
+	// an underscore.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/iap_tunnel/locations/us-central1/destGroups/gw_library_test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/424242424242/iap_tunnel/locations/us-central1/destGroups/gw_library_test","cidrs":["10.1.0.0/16"],"fqdns":["terratest.example.com"]}`))
+	})
+
+	group, err := gcp.GetIAPTunnelDestGroupAttrsWithClient(context.Background(), newFakeIAPService(t, handler), "gw-library-test-project", "us-central1", "gw_library_test")
+	require.NoError(t, err)
+
+	assert.Equal(t, []string{"10.1.0.0/16"}, group.Cidrs)
+	assert.Equal(t, []string{"terratest.example.com"}, group.Fqdns)
+}
+
+func TestGetIAPTunnelDestGroupAttrsWithClientReportsAMissingGroup(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a group that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetIAPTunnelDestGroupAttrsWithClient(context.Background(), newFakeIAPService(t, handler), "gw-library-test-project", "us-central1", "gw_library_missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
+}
