@@ -12,8 +12,9 @@ updates:
       interval: weekly
     open-pull-requests-limit: 10
     groups:
-      # Kubernetes comes first, because a dependency joins the first group it
-      # matches and these have to move together at every level, majors included.
+      # Kubernetes keeps its own group because these have to move together at
+      # every level, majors included, and it sets no update-types to say so.
+      # The catch-all below never takes them: a more specific pattern wins.
       kubernetes:
         patterns:
           - k8s.io/*
