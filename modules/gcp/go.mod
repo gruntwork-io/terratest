@@ -3,7 +3,7 @@ module github.com/gruntwork-io/terratest/modules/gcp/v2
 go 1.26.0
 
 require (
-	github.com/james00012/cloud-inventory v0.2.0
+	github.com/james00012/cloud-inventory v0.2.1
 	cloud.google.com/go/cloudbuild v1.28.0
 	cloud.google.com/go/pubsub/v2 v2.4.0
 	cloud.google.com/go/storage v1.62.1
