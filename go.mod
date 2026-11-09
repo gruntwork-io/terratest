@@ -118,7 +118,7 @@ require (
 	github.com/hashicorp/go-getter/v2 v2.2.3 // indirect
 	github.com/homeport/dyff v1.6.0 // indirect
 	github.com/jackc/pgx/v5 v5.9.2 // indirect
-	github.com/james00012/cloud-inventory v0.2.1 // indirect
+	github.com/james00012/cloud-inventory v0.2.2 // indirect
 	github.com/lib/pq v1.12.3 // indirect
 	github.com/microsoft/go-mssqldb v1.10.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
