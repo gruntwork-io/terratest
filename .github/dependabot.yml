@@ -12,10 +12,21 @@ updates:
       interval: weekly
     open-pull-requests-limit: 10
     groups:
+      # Kubernetes comes first, because a dependency joins the first group it
+      # matches and these have to move together at every level, majors included.
       kubernetes:
         patterns:
           - k8s.io/*
           - sigs.k8s.io/*
+      # Everything else that moved without a breaking change travels as one
+      # pull request. A major is left out, so the bump that needs a code change
+      # is read beside that change rather than among a dozen that need none.
+      go-modules:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
 
   # A repo-level config replaces the org-level default that opens these today.
   - package-ecosystem: bundler
