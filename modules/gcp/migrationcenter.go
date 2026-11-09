@@ -366,6 +366,52 @@ func GetMigrationCenterImportDataFileAttrsWithClient(ctx context.Context, servic
 	return result, nil
 }
 
+// GetMigrationCenterAssetsExportJobAttrs returns the settings Google Cloud holds for the given Migration Center assets export job, so a test can assert on
+// what was actually created rather than only that it exists.
+// The recent executions Google keeps on the job are the only way to tell whether a schedule has fired
+// since the apply.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetMigrationCenterAssetsExportJobAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, jobID string) *migrationcenter.AssetsExportJob {
+	result, err := GetMigrationCenterAssetsExportJobAttrsE(t, ctx, projectID, location, jobID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetMigrationCenterAssetsExportJobAttrsE returns the settings Google Cloud holds for the given Migration Center assets export job.
+// The ctx parameter supports cancellation and timeouts.
+func GetMigrationCenterAssetsExportJobAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, jobID string) (*migrationcenter.AssetsExportJob, error) {
+	logger.Default.Logf(t, "Getting settings for Migration Center assets export job %s in %s of project %s", jobID, location, projectID)
+
+	service, err := NewMigrationCenterServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetMigrationCenterAssetsExportJobAttrsWithClient(ctx, service, projectID, location, jobID)
+}
+
+// GetMigrationCenterAssetsExportJobAttrsWithClient returns the settings Google Cloud holds for the given Migration Center assets export job using the supplied
+// *migrationcenter.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see migrationcenter_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetMigrationCenterAssetsExportJobAttrsWithClient(ctx context.Context, service *migrationcenter.Service, projectID string, location string, jobID string) (*migrationcenter.AssetsExportJob, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/assetsExportJobs/%s", projectID, location, jobID)
+
+	result, err := service.Projects.Locations.AssetsExportJobs.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Migration Center assets export job %s does not exist in %s of project %s", jobID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Migration Center assets export job %s in %s of project %s: %w", jobID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewMigrationCenterServiceE creates a Migration Center service authenticated the same way every
 // other client in this module is.
 // The ctx parameter supports cancellation and timeouts.

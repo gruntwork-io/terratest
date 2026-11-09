@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/gcp/v2"
@@ -123,4 +124,39 @@ func TestDeleteSSHKeyWithClient(t *testing.T) {
 
 		require.NoError(t, gcp.DeleteSSHKeyWithClient(context.Background(), svc, user, key))
 	})
+}
+
+func TestGetOSLoginSSHPublicKeyAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a key the OS Login SSH public key module
+	// imported, not a copy of any one fixture's values. The expiry comes back as a quoted number.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/users/terratest@example.com/sshPublicKeys/9c3d1e0a"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"users/terratest@example.com/sshPublicKeys/9c3d1e0a","key":"ssh-rsa AAAAB3NzaC1yc2E terratest","fingerprint":"9c3d1e0a","expirationTimeUsec":"1790000000000000"}`))
+	})
+
+	key, err := gcp.GetOSLoginSSHPublicKeyAttrsWithClient(context.Background(), newFakeOsLoginService(t, handler), "terratest@example.com", "9c3d1e0a")
+	require.NoError(t, err)
+
+	assert.Equal(t, "9c3d1e0a", key.Fingerprint)
+	assert.Contains(t, key.Key, "ssh-rsa")
+	assert.Equal(t, int64(1790000000000000), key.ExpirationTimeUsec)
+}
+
+func TestGetOSLoginSSHPublicKeyAttrsWithClientReportsAMissingKey(t *testing.T) {
+	t.Parallel()
+
+	// A caller who asks for a key that is not there should be told that, rather than be handed the
+	// transport's own wording for a 404.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"Not found."}}`))
+	})
+
+	_, err := gcp.GetOSLoginSSHPublicKeyAttrsWithClient(context.Background(), newFakeOsLoginService(t, handler), "terratest@example.com", "deadbeef")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "has no OS Login SSH public key")
 }

@@ -2091,3 +2091,274 @@ func NewComputeServiceContextE(t testing.TestingT, ctx context.Context) (*comput
 
 	return compute.NewService(ctx, option.WithHTTPClient(client))
 }
+
+// FetchInterconnectAttachmentGroup returns the settings Google Cloud holds for the Cloud Interconnect attachment group, so a test can assert on what
+// was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInterconnectAttachmentGroup(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.InterconnectAttachmentGroup {
+	result, err := FetchInterconnectAttachmentGroupE(t, ctx, projectID, name)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchInterconnectAttachmentGroupE returns the settings Google Cloud holds for the Cloud Interconnect attachment group.
+// The ctx parameter supports cancellation and timeouts.
+func FetchInterconnectAttachmentGroupE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.InterconnectAttachmentGroup, error) {
+	logger.Default.Logf(t, "Getting settings for Cloud Interconnect attachment group %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchInterconnectAttachmentGroupWithClient(ctx, service, projectID, name)
+}
+
+// FetchInterconnectAttachmentGroupWithClient returns the settings Google Cloud holds for the Cloud Interconnect attachment group using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchInterconnectAttachmentGroupWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.InterconnectAttachmentGroup, error) {
+	result, err := service.InterconnectAttachmentGroups.Get(projectID, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Cloud Interconnect attachment group %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Cloud Interconnect attachment group %s in project %s: %w", name, projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchGlobalPublicDelegatedPrefix returns the settings Google Cloud holds for the global public delegated prefix, so a test can assert on what
+// was actually created rather than only that it exists.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchGlobalPublicDelegatedPrefix(t testing.TestingT, ctx context.Context, projectID string, name string) *compute.PublicDelegatedPrefix {
+	result, err := FetchGlobalPublicDelegatedPrefixE(t, ctx, projectID, name)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchGlobalPublicDelegatedPrefixE returns the settings Google Cloud holds for the global public delegated prefix.
+// The ctx parameter supports cancellation and timeouts.
+func FetchGlobalPublicDelegatedPrefixE(t testing.TestingT, ctx context.Context, projectID string, name string) (*compute.PublicDelegatedPrefix, error) {
+	logger.Default.Logf(t, "Getting settings for global public delegated prefix %s in project %s", name, projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchGlobalPublicDelegatedPrefixWithClient(ctx, service, projectID, name)
+}
+
+// FetchGlobalPublicDelegatedPrefixWithClient returns the settings Google Cloud holds for the global public delegated prefix using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchGlobalPublicDelegatedPrefixWithClient(ctx context.Context, service *compute.Service, projectID string, name string) (*compute.PublicDelegatedPrefix, error) {
+	result, err := service.GlobalPublicDelegatedPrefixes.Get(projectID, name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the global public delegated prefix %s in project %s does not exist", name, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for global public delegated prefix %s in project %s: %w", name, projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchFirewallPolicy returns the settings Google Cloud holds for the hierarchical firewall policy, so a test can assert on what
+// was actually created rather than only that it exists.
+// A hierarchical policy belongs to an organization or a folder rather than to a project, so it is
+// named on its own: either by the id Google assigned it or by its short name.
+// This is a different resource from a network firewall policy, which lives in a project.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchFirewallPolicy(t testing.TestingT, ctx context.Context, name string) *compute.FirewallPolicy {
+	result, err := FetchFirewallPolicyE(t, ctx, name)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchFirewallPolicyE returns the settings Google Cloud holds for the hierarchical firewall policy.
+// The ctx parameter supports cancellation and timeouts.
+func FetchFirewallPolicyE(t testing.TestingT, ctx context.Context, name string) (*compute.FirewallPolicy, error) {
+	logger.Default.Logf(t, "Getting settings for hierarchical firewall policy %s", name)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchFirewallPolicyWithClient(ctx, service, name)
+}
+
+// FetchFirewallPolicyWithClient returns the settings Google Cloud holds for the hierarchical firewall policy using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchFirewallPolicyWithClient(ctx context.Context, service *compute.Service, name string) (*compute.FirewallPolicy, error) {
+	result, err := service.FirewallPolicies.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the hierarchical firewall policy %s does not exist", name)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for hierarchical firewall policy %s: %w", name, err)
+	}
+
+	return result, nil
+}
+
+// FetchComputeProject returns the settings Google Cloud holds for the project's compute settings, so a test can assert on what
+// was actually created rather than only that it exists.
+// One read answers for three project level modules: the default network tier, the usage export
+// bucket and the common instance metadata every instance in the project inherits.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchComputeProject(t testing.TestingT, ctx context.Context, projectID string) *compute.Project {
+	result, err := FetchComputeProjectE(t, ctx, projectID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchComputeProjectE returns the settings Google Cloud holds for the project's compute settings.
+// The ctx parameter supports cancellation and timeouts.
+func FetchComputeProjectE(t testing.TestingT, ctx context.Context, projectID string) (*compute.Project, error) {
+	logger.Default.Logf(t, "Getting the compute settings for project %s", projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchComputeProjectWithClient(ctx, service, projectID)
+}
+
+// FetchComputeProjectWithClient returns the settings Google Cloud holds for the project's compute settings using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchComputeProjectWithClient(ctx context.Context, service *compute.Service, projectID string) (*compute.Project, error) {
+	result, err := service.Projects.Get(projectID).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the project %s does not exist", projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the compute settings for project %s: %w", projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchSharedVPCHost returns the settings Google Cloud holds for the shared VPC host project, so a test can assert on what
+// was actually created rather than only that it exists.
+// This reads the host project a service project is attached to, so the project named here is the
+// service project and the project returned is its host.
+// A project attached to no host answers 404, which reads as the service project not existing.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchSharedVPCHost(t testing.TestingT, ctx context.Context, projectID string) *compute.Project {
+	result, err := FetchSharedVPCHostE(t, ctx, projectID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchSharedVPCHostE returns the settings Google Cloud holds for the shared VPC host project.
+// The ctx parameter supports cancellation and timeouts.
+func FetchSharedVPCHostE(t testing.TestingT, ctx context.Context, projectID string) (*compute.Project, error) {
+	logger.Default.Logf(t, "Getting the shared VPC host project of project %s", projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchSharedVPCHostWithClient(ctx, service, projectID)
+}
+
+// FetchSharedVPCHostWithClient returns the settings Google Cloud holds for the shared VPC host project using the supplied
+// *compute.Service. Prefer this variant in unit tests where the service is backed by an httptest fake
+// server (see compute_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchSharedVPCHostWithClient(ctx context.Context, service *compute.Service, projectID string) (*compute.Project, error) {
+	result, err := service.Projects.GetXpnHost(projectID).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the project %s is attached to no shared VPC host project", projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the shared VPC host project of project %s: %w", projectID, err)
+	}
+
+	return result, nil
+}
+
+// FetchSharedVPCServiceProjects returns the service projects Google Cloud holds against the given
+// shared VPC host project, so a test can assert that an attachment took rather than only that the
+// apply finished.
+// Every page is followed, because a host project may hold hundreds of service projects and the one a
+// test is looking for need not be on the first page.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func FetchSharedVPCServiceProjects(t testing.TestingT, ctx context.Context, projectID string) []*compute.XpnResourceId {
+	result, err := FetchSharedVPCServiceProjectsE(t, ctx, projectID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// FetchSharedVPCServiceProjectsE returns the service projects Google Cloud holds against the given
+// shared VPC host project.
+// The ctx parameter supports cancellation and timeouts.
+func FetchSharedVPCServiceProjectsE(t testing.TestingT, ctx context.Context, projectID string) ([]*compute.XpnResourceId, error) {
+	logger.Default.Logf(t, "Getting the shared VPC service projects of host project %s", projectID)
+
+	service, err := NewComputeServiceContextE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return FetchSharedVPCServiceProjectsWithClient(ctx, service, projectID)
+}
+
+// FetchSharedVPCServiceProjectsWithClient returns the service projects Google Cloud holds against the
+// given shared VPC host project using the supplied *compute.Service. Prefer this variant in unit
+// tests where the service is backed by an httptest fake server (see compute_test.go for the
+// pattern).
+// The ctx parameter supports cancellation and timeouts.
+func FetchSharedVPCServiceProjectsWithClient(ctx context.Context, service *compute.Service, projectID string) ([]*compute.XpnResourceId, error) {
+	var resources []*compute.XpnResourceId
+
+	call := service.Projects.GetXpnResources(projectID)
+	if err := call.Pages(ctx, func(page *compute.ProjectsGetXpnResources) error {
+		resources = append(resources, page.Resources...)
+
+		return nil
+	}); err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the project %s does not exist", projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the shared VPC service projects of host project %s: %w", projectID, err)
+	}
+
+	return resources, nil
+}

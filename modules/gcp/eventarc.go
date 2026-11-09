@@ -281,6 +281,52 @@ func GetEventarcPipelineAttrsWithClient(ctx context.Context, service *eventarc.S
 	return pipeline, nil
 }
 
+// GetEventarcGoogleChannelConfigAttrs returns the settings Google Cloud holds for the Eventarc Google channel config of the given project and location, so a test can assert on
+// what was actually created rather than only that it exists.
+// The config is a singleton per location, so a destroy only clears the key it holds rather than
+// removing it, and a read always succeeds on a location Eventarc is enabled in.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetEventarcGoogleChannelConfigAttrs(t testing.TestingT, ctx context.Context, projectID string, location string) *eventarc.GoogleChannelConfig {
+	result, err := GetEventarcGoogleChannelConfigAttrsE(t, ctx, projectID, location)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetEventarcGoogleChannelConfigAttrsE returns the settings Google Cloud holds for the Eventarc Google channel config of the given project and location.
+// The ctx parameter supports cancellation and timeouts.
+func GetEventarcGoogleChannelConfigAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string) (*eventarc.GoogleChannelConfig, error) {
+	logger.Default.Logf(t, "Getting the Eventarc Google channel config in %s of project %s", location, projectID)
+
+	service, err := NewEventarcServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetEventarcGoogleChannelConfigAttrsWithClient(ctx, service, projectID, location)
+}
+
+// GetEventarcGoogleChannelConfigAttrsWithClient returns the settings Google Cloud holds for the Eventarc Google channel config of the given project and location using the supplied
+// *eventarc.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see eventarc_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetEventarcGoogleChannelConfigAttrsWithClient(ctx context.Context, service *eventarc.Service, projectID string, location string) (*eventarc.GoogleChannelConfig, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/googleChannelConfig", projectID, location)
+
+	result, err := service.Projects.Locations.GetGoogleChannelConfig(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("no Eventarc Google channel config exists in %s of project %s", location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the Eventarc Google channel config in %s of project %s: %w", location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewEventarcServiceE creates a Eventarc service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.

@@ -101,6 +101,52 @@ func GetBackupDRBackupPlanAttrsWithClient(ctx context.Context, service *backupdr
 	return result, nil
 }
 
+// GetBackupDRManagementServerAttrs returns the settings Google Cloud holds for the given Backup and DR management server, so a test can assert on
+// what was actually created rather than only that it exists.
+// The console the server is reached on and the peering it set up are both assigned at create time and
+// reported only here.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBackupDRManagementServerAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, serverID string) *backupdr.ManagementServer {
+	result, err := GetBackupDRManagementServerAttrsE(t, ctx, projectID, location, serverID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetBackupDRManagementServerAttrsE returns the settings Google Cloud holds for the given Backup and DR management server.
+// The ctx parameter supports cancellation and timeouts.
+func GetBackupDRManagementServerAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, serverID string) (*backupdr.ManagementServer, error) {
+	logger.Default.Logf(t, "Getting settings for Backup and DR management server %s in %s of project %s", serverID, location, projectID)
+
+	service, err := NewBackupDRServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBackupDRManagementServerAttrsWithClient(ctx, service, projectID, location, serverID)
+}
+
+// GetBackupDRManagementServerAttrsWithClient returns the settings Google Cloud holds for the given Backup and DR management server using the supplied
+// *backupdr.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see backupdr_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBackupDRManagementServerAttrsWithClient(ctx context.Context, service *backupdr.Service, projectID string, location string, serverID string) (*backupdr.ManagementServer, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/managementServers/%s", projectID, location, serverID)
+
+	result, err := service.Projects.Locations.ManagementServers.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Backup and DR management server %s does not exist in %s of project %s", serverID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Backup and DR management server %s in %s of project %s: %w", serverID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewBackupDRServiceE creates a Backup and DR service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.

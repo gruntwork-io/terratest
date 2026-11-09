@@ -77,3 +77,40 @@ func TestNewCloudRunV1ServiceERefusesAnInvalidLocation(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "is not a valid location")
 }
+
+func TestGetCloudRunDomainMappingAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The project is a namespace in this API, and the records the domain's owner has to publish come back in the
+	// mapping's status.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/namespaces/gw-library-test-project/domainmappings/terratest.example.com"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"metadata":{"name":"terratest.example.com","namespace":"gw-library-test-project"},"spec":{"routeName":"gw-library-service","certificateMode":"AUTOMATIC"},"status":{"resourceRecords":[{"name":"terratest","rrdata":"ghs.googlehosted.com.","type":"CNAME"}]}}`))
+	})
+
+	mapping, err := gcp.GetCloudRunDomainMappingAttrsWithClient(context.Background(), newFakeCloudRunV1Service(t, handler), "gw-library-test-project", "us-central1", "terratest.example.com")
+	require.NoError(t, err)
+
+	require.NotNil(t, mapping.Spec)
+	assert.Equal(t, "gw-library-service", mapping.Spec.RouteName)
+	assert.Equal(t, "AUTOMATIC", mapping.Spec.CertificateMode)
+	require.NotNil(t, mapping.Status)
+	require.Len(t, mapping.Status.ResourceRecords, 1)
+	assert.Equal(t, "CNAME", mapping.Status.ResourceRecords[0].Type)
+}
+
+func TestGetCloudRunDomainMappingAttrsWithClientReportsAMissingMapping(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a domain that is not mapped should read a sentence about that domain, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetCloudRunDomainMappingAttrsWithClient(context.Background(), newFakeCloudRunV1Service(t, handler), "gw-library-test-project", "us-central1", "missing.example.com")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "missing.example.com")
+	assert.Contains(t, err.Error(), "does not exist")
+}

@@ -104,6 +104,52 @@ func GetBigQueryReservationAttrsWithClient(ctx context.Context, service *bigquer
 	return result, nil
 }
 
+// GetBigQueryCapacityCommitmentAttrs returns the settings Google Cloud holds for the given BigQuery capacity commitment, so a test can assert on
+// what was actually created rather than only that it exists.
+// The slot count a commitment was bought with comes back alongside the plan and the renewal plan, so a
+// test can tell a bought commitment from a renewed one.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryCapacityCommitmentAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, commitmentID string) *bigqueryreservation.CapacityCommitment {
+	result, err := GetBigQueryCapacityCommitmentAttrsE(t, ctx, projectID, location, commitmentID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetBigQueryCapacityCommitmentAttrsE returns the settings Google Cloud holds for the given BigQuery capacity commitment.
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryCapacityCommitmentAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, commitmentID string) (*bigqueryreservation.CapacityCommitment, error) {
+	logger.Default.Logf(t, "Getting settings for BigQuery capacity commitment %s in %s of project %s", commitmentID, location, projectID)
+
+	service, err := NewBigQueryReservationServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBigQueryCapacityCommitmentAttrsWithClient(ctx, service, projectID, location, commitmentID)
+}
+
+// GetBigQueryCapacityCommitmentAttrsWithClient returns the settings Google Cloud holds for the given BigQuery capacity commitment using the supplied
+// *bigqueryreservation.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see bigqueryreservation_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBigQueryCapacityCommitmentAttrsWithClient(ctx context.Context, service *bigqueryreservation.Service, projectID string, location string, commitmentID string) (*bigqueryreservation.CapacityCommitment, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/capacityCommitments/%s", projectID, location, commitmentID)
+
+	result, err := service.Projects.Locations.CapacityCommitments.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the BigQuery capacity commitment %s does not exist in %s of project %s", commitmentID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for BigQuery capacity commitment %s in %s of project %s: %w", commitmentID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewBigQueryReservationServiceE creates a BigQuery Reservation service authenticated the same way every other client in this
 // module is.
 // The ctx parameter supports cancellation and timeouts.

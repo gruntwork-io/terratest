@@ -379,3 +379,37 @@ func TestGetNetworkServicesWasmPluginAttrsWithClientMissingResource(t *testing.T
 	assert.Contains(t, err.Error(), "gw-library-missing")
 	assert.Contains(t, err.Error(), "does not exist")
 }
+
+func TestGetNetworkServicesServiceBindingAttrsWithClient(t *testing.T) {
+	t.Parallel()
+
+	// The response is shaped like the one Google returns for a service binding a Gruntwork module created, not a copy
+	// of any one fixture's values.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.True(t, strings.HasSuffix(r.URL.Path, "/projects/gw-library-test-project/locations/global/serviceBindings/gw-library-test"), "unexpected path %s", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"name":"projects/gw-library-test-project/locations/global/serviceBindings/gw-library-test","description":"terratest service binding","service":"projects/gw-library-test-project/locations/us-central1/namespaces/gw-library/services/gw-library","labels":{"owner":"terratest"}}`))
+	})
+
+	binding, err := gcp.GetNetworkServicesServiceBindingAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "global", "gw-library-test")
+	require.NoError(t, err)
+
+	assert.Equal(t, "terratest service binding", binding.Description)
+	assert.Contains(t, binding.Service, "/services/gw-library")
+	assert.Equal(t, map[string]string{"owner": "terratest"}, binding.Labels)
+}
+
+func TestGetNetworkServicesServiceBindingAttrsWithClientReportsAMissingBinding(t *testing.T) {
+	t.Parallel()
+
+	// A caller who names a binding that is not there should read a sentence about that binding, not a status code.
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	_, err := gcp.GetNetworkServicesServiceBindingAttrsWithClient(context.Background(), newFakeNetworkServicesService(t, handler), "gw-library-test-project", "global", "gw-library-missing")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "gw-library-missing")
+	assert.Contains(t, err.Error(), "does not exist")
+}

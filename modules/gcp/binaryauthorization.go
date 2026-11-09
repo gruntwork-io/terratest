@@ -57,6 +57,52 @@ func GetBinaryAuthorizationAttestorAttrsWithClient(ctx context.Context, service 
 	return result, nil
 }
 
+// GetBinaryAuthorizationPolicyAttrs returns the settings Google Cloud holds for the Binary Authorization policy of the given project, so a test can assert on
+// what was actually created rather than only that it exists.
+// The policy is a singleton per project, so a destroy resets it to Google's default rather than
+// removing it and a read always succeeds on a project the API is enabled in.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetBinaryAuthorizationPolicyAttrs(t testing.TestingT, ctx context.Context, projectID string) *binaryauthorization.Policy {
+	result, err := GetBinaryAuthorizationPolicyAttrsE(t, ctx, projectID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetBinaryAuthorizationPolicyAttrsE returns the settings Google Cloud holds for the Binary Authorization policy of the given project.
+// The ctx parameter supports cancellation and timeouts.
+func GetBinaryAuthorizationPolicyAttrsE(t testing.TestingT, ctx context.Context, projectID string) (*binaryauthorization.Policy, error) {
+	logger.Default.Logf(t, "Getting the Binary Authorization policy of project %s", projectID)
+
+	service, err := NewBinaryAuthorizationServiceE(t, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetBinaryAuthorizationPolicyAttrsWithClient(ctx, service, projectID)
+}
+
+// GetBinaryAuthorizationPolicyAttrsWithClient returns the settings Google Cloud holds for the Binary Authorization policy of the given project using the supplied
+// *binaryauthorization.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see binaryauthorization_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetBinaryAuthorizationPolicyAttrsWithClient(ctx context.Context, service *binaryauthorization.Service, projectID string) (*binaryauthorization.Policy, error) {
+	name := fmt.Sprintf("projects/%s/policy", projectID)
+
+	result, err := service.Projects.GetPolicy(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("project %s has no Binary Authorization policy", projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the Binary Authorization policy of project %s: %w", projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewBinaryAuthorizationServiceE creates a Binary Authorization service authenticated the same way every other client in
 // this module is.
 // The ctx parameter supports cancellation and timeouts.

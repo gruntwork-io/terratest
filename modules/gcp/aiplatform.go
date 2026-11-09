@@ -814,6 +814,192 @@ func GetVertexAIFeatureGroupFeatureAttrsWithClient(ctx context.Context, service 
 	return result, nil
 }
 
+// GetVertexAICacheConfigAttrs returns the settings Google Cloud holds for the Vertex AI cache config of the given project, so a test can assert on
+// what was actually created rather than only that it exists.
+// The config is a singleton per project and holds one field, whether context caching is disabled, so a
+// read is the only way to assert the module flipped it.
+// The config is named for the project alone, but Vertex AI answers only on a regional endpoint, so a
+// location is still needed to build the client.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAICacheConfigAttrs(t testing.TestingT, ctx context.Context, projectID string, location string) *aiplatform.GoogleCloudAiplatformV1CacheConfig {
+	result, err := GetVertexAICacheConfigAttrsE(t, ctx, projectID, location)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetVertexAICacheConfigAttrsE returns the settings Google Cloud holds for the Vertex AI cache config of the given project.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAICacheConfigAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string) (*aiplatform.GoogleCloudAiplatformV1CacheConfig, error) {
+	logger.Default.Logf(t, "Getting the Vertex AI cache config of project %s", projectID)
+
+	service, err := NewVertexAIServiceE(t, ctx, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetVertexAICacheConfigAttrsWithClient(ctx, service, projectID)
+}
+
+// GetVertexAICacheConfigAttrsWithClient returns the settings Google Cloud holds for the Vertex AI cache config of the given project using the supplied
+// *aiplatform.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see aiplatform_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAICacheConfigAttrsWithClient(ctx context.Context, service *aiplatform.Service, projectID string) (*aiplatform.GoogleCloudAiplatformV1CacheConfig, error) {
+	name := fmt.Sprintf("projects/%s/cacheConfig", projectID)
+
+	result, err := service.Projects.GetCacheConfig(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("project %s has no Vertex AI cache config", projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the Vertex AI cache config of project %s: %w", projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetVertexAIRagEngineConfigAttrs returns the settings Google Cloud holds for the Vertex AI RAG engine config of the given project and location, so a test can assert on
+// what was actually created rather than only that it exists.
+// The config is a singleton per location and reports which managed database tier the RAG engine runs
+// on, which is what the module chooses.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAIRagEngineConfigAttrs(t testing.TestingT, ctx context.Context, projectID string, location string) *aiplatform.GoogleCloudAiplatformV1RagEngineConfig {
+	result, err := GetVertexAIRagEngineConfigAttrsE(t, ctx, projectID, location)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetVertexAIRagEngineConfigAttrsE returns the settings Google Cloud holds for the Vertex AI RAG engine config of the given project and location.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAIRagEngineConfigAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string) (*aiplatform.GoogleCloudAiplatformV1RagEngineConfig, error) {
+	logger.Default.Logf(t, "Getting the Vertex AI RAG engine config in %s of project %s", location, projectID)
+
+	service, err := NewVertexAIServiceE(t, ctx, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetVertexAIRagEngineConfigAttrsWithClient(ctx, service, projectID, location)
+}
+
+// GetVertexAIRagEngineConfigAttrsWithClient returns the settings Google Cloud holds for the Vertex AI RAG engine config of the given project and location using the supplied
+// *aiplatform.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see aiplatform_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAIRagEngineConfigAttrsWithClient(ctx context.Context, service *aiplatform.Service, projectID string, location string) (*aiplatform.GoogleCloudAiplatformV1RagEngineConfig, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/ragEngineConfig", projectID, location)
+
+	result, err := service.Projects.Locations.GetRagEngineConfig(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("no Vertex AI RAG engine config exists in %s of project %s", location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get the Vertex AI RAG engine config in %s of project %s: %w", location, projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetVertexAINotebookRuntimeAttrs returns the settings Google Cloud holds for the given Vertex AI notebook runtime, so a test can assert on
+// what was actually created rather than only that it exists.
+// A Colab Enterprise runtime is a notebook runtime, and the template it was created from is named only
+// on the runtime Google returns.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAINotebookRuntimeAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, runtimeID string) *aiplatform.GoogleCloudAiplatformV1NotebookRuntime {
+	result, err := GetVertexAINotebookRuntimeAttrsE(t, ctx, projectID, location, runtimeID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetVertexAINotebookRuntimeAttrsE returns the settings Google Cloud holds for the given Vertex AI notebook runtime.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAINotebookRuntimeAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, runtimeID string) (*aiplatform.GoogleCloudAiplatformV1NotebookRuntime, error) {
+	logger.Default.Logf(t, "Getting settings for Vertex AI notebook runtime %s in %s of project %s", runtimeID, location, projectID)
+
+	service, err := NewVertexAIServiceE(t, ctx, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetVertexAINotebookRuntimeAttrsWithClient(ctx, service, projectID, location, runtimeID)
+}
+
+// GetVertexAINotebookRuntimeAttrsWithClient returns the settings Google Cloud holds for the given Vertex AI notebook runtime using the supplied
+// *aiplatform.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see aiplatform_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAINotebookRuntimeAttrsWithClient(ctx context.Context, service *aiplatform.Service, projectID string, location string, runtimeID string) (*aiplatform.GoogleCloudAiplatformV1NotebookRuntime, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/notebookRuntimes/%s", projectID, location, runtimeID)
+
+	result, err := service.Projects.Locations.NotebookRuntimes.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Vertex AI notebook runtime %s does not exist in %s of project %s", runtimeID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Vertex AI notebook runtime %s in %s of project %s: %w", runtimeID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
+// GetVertexAINotebookExecutionJobAttrs returns the settings Google Cloud holds for the given Vertex AI notebook execution job, so a test can assert on
+// what was actually created rather than only that it exists.
+// The job state and the status of the run are reported here, which is how a test tells a scheduled
+// execution from one that has already finished.
+// This will fail the test if there is an error.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAINotebookExecutionJobAttrs(t testing.TestingT, ctx context.Context, projectID string, location string, jobID string) *aiplatform.GoogleCloudAiplatformV1NotebookExecutionJob {
+	result, err := GetVertexAINotebookExecutionJobAttrsE(t, ctx, projectID, location, jobID)
+	require.NoError(t, err)
+
+	return result
+}
+
+// GetVertexAINotebookExecutionJobAttrsE returns the settings Google Cloud holds for the given Vertex AI notebook execution job.
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAINotebookExecutionJobAttrsE(t testing.TestingT, ctx context.Context, projectID string, location string, jobID string) (*aiplatform.GoogleCloudAiplatformV1NotebookExecutionJob, error) {
+	logger.Default.Logf(t, "Getting settings for Vertex AI notebook execution job %s in %s of project %s", jobID, location, projectID)
+
+	service, err := NewVertexAIServiceE(t, ctx, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return GetVertexAINotebookExecutionJobAttrsWithClient(ctx, service, projectID, location, jobID)
+}
+
+// GetVertexAINotebookExecutionJobAttrsWithClient returns the settings Google Cloud holds for the given Vertex AI notebook execution job using the supplied
+// *aiplatform.Service. Prefer this variant in unit tests where the service is backed by an httptest fake server
+// (see aiplatform_test.go for the pattern).
+// The ctx parameter supports cancellation and timeouts.
+func GetVertexAINotebookExecutionJobAttrsWithClient(ctx context.Context, service *aiplatform.Service, projectID string, location string, jobID string) (*aiplatform.GoogleCloudAiplatformV1NotebookExecutionJob, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/notebookExecutionJobs/%s", projectID, location, jobID)
+
+	result, err := service.Projects.Locations.NotebookExecutionJobs.Get(name).Context(ctx).Do()
+	if err != nil {
+		var apiErr *googleapi.Error
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			return nil, fmt.Errorf("the Vertex AI notebook execution job %s does not exist in %s of project %s", jobID, location, projectID)
+		}
+
+		return nil, fmt.Errorf("failed to get settings for Vertex AI notebook execution job %s in %s of project %s: %w", jobID, location, projectID, err)
+	}
+
+	return result, nil
+}
+
 // NewVertexAIServiceE creates a Vertex AI service pointed at one region, authenticated the same way
 // every other client in this module is. Vertex AI serves each region from its own endpoint, and a
 // call to the global one finds nothing.
