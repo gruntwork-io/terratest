@@ -91,7 +91,7 @@ main() {
   [ "$fail" -ne 0 ] && { echo "release-mode check: FAILED (per-module pin)"; return 1; }
 
   # Build an external consumer that imports every module, in release mode.
-  { echo "module releasecheckconsumer"; echo "go 1.27"; } > "$WORKDIR/go.mod"
+  { echo "module releasecheckconsumer"; echo "go 1.26"; } > "$WORKDIR/go.mod"
   for s in $ORDER; do
     go mod edit -modfile="$WORKDIR/go.mod" -require="$MODULE_BASE/$s/v2@v2.0.0" -replace="$MODULE_BASE/$s/v2=$root/modules/$s"
   done

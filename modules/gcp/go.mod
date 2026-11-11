@@ -1,6 +1,6 @@
 module github.com/gruntwork-io/terratest/modules/gcp/v2
 
-go 1.27.4
+go 1.26.0
 
 require (
 	cloud.google.com/go/cloudbuild v1.28.0

@@ -17,7 +17,7 @@ custom_js:
 Terratest uses the Go testing framework, and the examples below drive [OpenTofu](https://opentofu.org/). To follow
 along, you need:
 
-- [Go](https://golang.org/) (requires version >=1.27)
+- [Go](https://golang.org/) (requires version >=1.26)
 - [OpenTofu](https://opentofu.org/docs/intro/install/) (or [Terraform](https://www.terraform.io/), if you prefer)
 
 Terratest's `terraform` module runs whichever binary you point it at. By default it uses `terraform` when that binary
@@ -44,7 +44,7 @@ is how to stand up a fresh Go project from scratch.
    versions:
 
     ```bash
-    mise use go@1.27
+    mise use go@1.26
     mise use opentofu@1.12.3
     ```
 
