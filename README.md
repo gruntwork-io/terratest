@@ -26,7 +26,7 @@ variety of helper functions and patterns for common infrastructure testing tasks
 go get github.com/gruntwork-io/terratest@latest
 ```
 
-Requires Go 1.26 or later. To lock to a specific release instead of `@latest`, see [Pinning a Terratest version](https://terratest.gruntwork.io/docs/getting-started/version-pinning/).
+Requires Go 1.27 or later. To lock to a specific release instead of `@latest`, see [Pinning a Terratest version](https://terratest.gruntwork.io/docs/getting-started/version-pinning/).
 
 ## Stability and versioning
 

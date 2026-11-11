@@ -1,6 +1,6 @@
 module github.com/gruntwork-io/terratest/modules/azure/v2
 
-go 1.26.0
+go 1.27.4
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.0

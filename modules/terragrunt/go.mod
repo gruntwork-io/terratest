@@ -1,6 +1,6 @@
 module github.com/gruntwork-io/terratest/modules/terragrunt/v2
 
-go 1.26.0
+go 1.27.4
 
 require (
 	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000

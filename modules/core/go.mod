@@ -1,6 +1,6 @@
 module github.com/gruntwork-io/terratest/modules/core/v2
 
-go 1.26.0
+go 1.27.4
 
 require (
 	github.com/jstemmer/go-junit-report v1.0.0

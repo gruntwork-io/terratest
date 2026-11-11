@@ -1,6 +1,6 @@
 module github.com/gruntwork-io/terratest/modules/helm/v2
 
-go 1.26.0
+go 1.27.4
 
 require (
 	github.com/gonvenience/ytbx v1.4.4
