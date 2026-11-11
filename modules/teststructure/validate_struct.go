@@ -2,10 +2,11 @@ package teststructure
 
 import (
 	"fmt"
+	"maps"
 	"path"
 	"path/filepath"
+	"slices"
 
-	go_commons_collections "github.com/gruntwork-io/go-commons/collections"
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/mattn/go-zglob"
 )
@@ -174,7 +175,7 @@ func FindTerraformModulePathsInRootE(opts *ValidationOptions) ([]string, error) 
 	}
 
 	// Retrieve just the unique paths to each Terraform module directory from the map we're using as a set
-	terraformDirs := go_commons_collections.Keys(terraformDirSet)
+	terraformDirs := slices.Sorted(maps.Keys(terraformDirSet))
 
 	if len(opts.IncludeDirs) > 0 {
 		terraformDirs = intersection(terraformDirs, opts.IncludeDirs)

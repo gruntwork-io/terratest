@@ -3,10 +3,10 @@ package helm
 import (
 	"context"
 	"fmt"
+	"maps"
 	"path/filepath"
+	"slices"
 
-	"github.com/gruntwork-io/go-commons/collections"
-	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
@@ -18,7 +18,7 @@ import (
 func FormatSetValuesAsArgs(setValues map[string]string, flag string) []string {
 	args := make([]string, 0, len(setValues)*2)
 
-	keys := collections.Keys(setValues)
+	keys := slices.Sorted(maps.Keys(setValues))
 	for _, key := range keys {
 		value := setValues[key]
 		argValue := fmt.Sprintf("%s=%s", key, value)
@@ -48,11 +48,11 @@ func FormatValuesFilesAsArgsContextE(ctx context.Context, valuesFiles []string) 
 
 		absValuesFilePath, err := filepath.Abs(valuesFilePath)
 		if err != nil {
-			return args, errors.WithStackTrace(err)
+			return args, err
 		}
 
 		if !files.FileExists(absValuesFilePath) {
-			return args, errors.WithStackTrace(ValuesFileNotFoundError{valuesFilePath})
+			return args, ValuesFileNotFoundError{valuesFilePath}
 		}
 
 		args = append(args, "-f", absValuesFilePath)
@@ -78,17 +78,17 @@ func FormatSetFilesAsArgsContext(t testing.TestingT, ctx context.Context, setFil
 func FormatSetFilesAsArgsContextE(ctx context.Context, setFiles map[string]string) ([]string, error) {
 	args := []string{}
 
-	keys := collections.Keys(setFiles)
+	keys := slices.Sorted(maps.Keys(setFiles))
 	for _, key := range keys {
 		setFilePath := setFiles[key]
 
 		absSetFilePath, err := filepath.Abs(setFilePath)
 		if err != nil {
-			return args, errors.WithStackTrace(err)
+			return args, err
 		}
 
 		if !files.FileExists(absSetFilePath) {
-			return args, errors.WithStackTrace(SetFileNotFoundError{setFilePath})
+			return args, SetFileNotFoundError{setFilePath}
 		}
 
 		argValue := fmt.Sprintf("%s=%s", key, absSetFilePath)

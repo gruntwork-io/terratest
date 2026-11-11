@@ -27,6 +27,9 @@ var (
 	// ErrNilPod is returned when a nil pod is passed to a function that requires a non-nil pod.
 	ErrNilPod = errors.New("cannot get port for pod which is nil")
 
+	// ErrServiceAccountHasNoSecrets is returned while a ServiceAccount does not have a token Secret yet.
+	ErrServiceAccountHasNoSecrets = errors.New("no secrets on the service account yet")
+
 	// ErrRestConfigNotSerializable is returned by KubectlOptions.MarshalJSON when the options carry a RestConfig.
 	//
 	// A rest.Config cannot be rebuilt from JSON: beyond its func-typed fields it holds interfaces and exec

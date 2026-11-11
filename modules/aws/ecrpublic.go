@@ -2,12 +2,11 @@ package aws
 
 import (
 	"context"
-	goerrors "errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
-	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +69,7 @@ func GetECRPublicRepoContextE(t testing.TestingT, ctx context.Context, region st
 	}
 
 	if len(resp.Repositories) != 1 {
-		return nil, errors.WithStackTrace(goerrors.New("an unexpected condition occurred. Please file an issue at github.com/gruntwork-io/terratest"))
+		return nil, fmt.Errorf("%w named %q in %s, got %d", ErrUnexpectedRepositoryCount, name, region, len(resp.Repositories))
 	}
 
 	return &resp.Repositories[0], nil
