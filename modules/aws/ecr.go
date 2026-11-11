@@ -2,7 +2,7 @@ package aws
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -57,7 +57,7 @@ func GetECRRepoContextE(t testing.TestingT, ctx context.Context, region string, 
 	}
 
 	if len(resp.Repositories) != 1 {
-		return nil, errors.New("an unexpected condition occurred. Please file an issue at github.com/gruntwork-io/terratest")
+		return nil, fmt.Errorf("%w named %q in %s, got %d", ErrUnexpectedRepositoryCount, name, region, len(resp.Repositories))
 	}
 
 	return &resp.Repositories[0], nil

@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -122,10 +121,9 @@ func GetServiceAccountAuthTokenContextE(t testing.TestingT, ctx context.Context,
 			}
 
 			if len(serviceAccount.Secrets) == 0 {
-				msg := "no secrets on the service account yet"
-				kubectlOptions.Logger.Logf(t, "%s", msg)
+				kubectlOptions.Logger.Logf(t, "%s", ErrServiceAccountHasNoSecrets)
 
-				return "", errors.New(msg)
+				return "", ErrServiceAccountHasNoSecrets
 			}
 
 			return "Service Account has secret", nil

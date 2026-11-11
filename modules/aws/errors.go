@@ -1,10 +1,15 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 
 	s3types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
+
+// ErrUnexpectedRepositoryCount is returned when looking up an ECR or ECR Public repository by name does not
+// return exactly one repository.
+var ErrUnexpectedRepositoryCount = errors.New("expected exactly one repository")
 
 // IPForEc2InstanceNotFound is an error that occurs when the IP for an EC2 instance is not found.
 type IPForEc2InstanceNotFound struct {
