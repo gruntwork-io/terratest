@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gruntwork-io/go-commons/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger/parser"
 	"github.com/gruntwork-io/terratest/modules/core/v2/random"
 	"github.com/stretchr/testify/assert"
@@ -30,10 +30,10 @@ func TestEnsureDirectoryExistsCreatesDirectory(t *testing.T) {
 
 	logger := NewTestLogger(t)
 	tmpd := filepath.Join(dir, "tmpdir")
-	assert.False(t, files.IsDir(tmpd))
+	assert.False(t, files.IsExistingDir(tmpd))
 
 	parser.EnsureDirectoryExists(logger, tmpd)
-	assert.True(t, files.IsDir(tmpd))
+	assert.True(t, files.IsExistingDir(tmpd))
 }
 
 func TestEnsureDirectoryExistsHandlesExistingDirectory(t *testing.T) {
@@ -42,10 +42,10 @@ func TestEnsureDirectoryExistsHandlesExistingDirectory(t *testing.T) {
 	dir := t.TempDir()
 
 	logger := NewTestLogger(t)
-	assert.True(t, files.IsDir(dir))
+	assert.True(t, files.IsExistingDir(dir))
 
 	parser.EnsureDirectoryExists(logger, dir)
-	assert.True(t, files.IsDir(dir))
+	assert.True(t, files.IsExistingDir(dir))
 }
 
 func TestGetOrCreateFileCreatesNewFile(t *testing.T) {
@@ -74,7 +74,7 @@ func TestGetOrCreateFileCreatesNewFileIfTestNameHasDir(t *testing.T) {
 	logger := NewTestLogger(t)
 	dirName := filepath.Join(logWriter.OutputDir, "TestMain")
 	testFileName := filepath.Join(dirName, t.Name()+".log")
-	assert.False(t, files.IsDir(dirName))
+	assert.False(t, files.IsExistingDir(dirName))
 	assert.False(t, files.FileExists(testFileName))
 
 	file, err := logWriter.GetOrCreateFile(logger, filepath.Join("TestMain", t.Name()))
@@ -83,7 +83,7 @@ func TestGetOrCreateFileCreatesNewFileIfTestNameHasDir(t *testing.T) {
 	defer file.Close()
 
 	assert.NotNil(t, file)
-	assert.True(t, files.IsDir(dirName))
+	assert.True(t, files.IsExistingDir(dirName))
 	assert.True(t, files.FileExists(testFileName))
 }
 

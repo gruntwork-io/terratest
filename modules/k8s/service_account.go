@@ -2,10 +2,9 @@ package k8s
 
 import (
 	"context"
-	stderrors "errors"
+	"errors"
 	"time"
 
-	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/stretchr/testify/require"
 	authenticationv1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -126,7 +125,7 @@ func GetServiceAccountAuthTokenContextE(t testing.TestingT, ctx context.Context,
 				msg := "no secrets on the service account yet"
 				kubectlOptions.Logger.Logf(t, "%s", msg)
 
-				return "", stderrors.New(msg)
+				return "", errors.New(msg)
 			}
 
 			return "Service Account has secret", nil
@@ -144,7 +143,7 @@ func GetServiceAccountAuthTokenContextE(t testing.TestingT, ctx context.Context,
 	}
 
 	if len(serviceAccount.Secrets) != 1 {
-		return "", errors.WithStackTrace(ServiceAccountTokenNotAvailable{serviceAccountName})
+		return "", ServiceAccountTokenNotAvailable{serviceAccountName}
 	}
 
 	secret, err := GetSecretContextE(t, ctx, kubectlOptions, serviceAccount.Secrets[0].Name)
@@ -181,7 +180,7 @@ func AddConfigContextForServiceAccountE(
 
 	rawConfig, err := config.RawConfig()
 	if err != nil {
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	currentContext := rawConfig.Contexts[rawConfig.CurrentContext]
@@ -192,7 +191,7 @@ func AddConfigContextForServiceAccountE(
 	UpsertConfigContext(&rawConfig, contextName, currentCluster, serviceAccountName)
 
 	if err := clientcmd.ModifyConfig(config.ConfigAccess(), rawConfig, false); err != nil {
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	return nil

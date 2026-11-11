@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"strings"
 
-	goerrors "github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
@@ -61,16 +60,16 @@ func getRenderArgs(t testing.TestingT, ctx context.Context, options *Options, ch
 
 	absChartDir, err := filepath.Abs(chartDir)
 	if err != nil {
-		return nil, goerrors.WithStackTrace(err)
+		return nil, err
 	}
 
 	if !files.FileExists(chartDir) {
-		return nil, goerrors.WithStackTrace(ChartNotFoundError{chartDir})
+		return nil, ChartNotFoundError{chartDir}
 	}
 
 	if options.BuildDependencies {
 		if _, err := RunHelmCommandAndGetOutputContextE(t, ctx, options, "dependency", "build", chartDir); err != nil {
-			return nil, goerrors.WithStackTrace(err)
+			return nil, err
 		}
 	}
 
@@ -88,7 +87,7 @@ func getRenderArgs(t testing.TestingT, ctx context.Context, options *Options, ch
 
 		absTemplateFile := filepath.Join(absChartDir, templateFile)
 		if !strings.HasPrefix(templateFile, "charts") && !files.FileExists(absTemplateFile) {
-			return nil, goerrors.WithStackTrace(TemplateFileNotFoundError{Path: templateFile, ChartDir: absChartDir})
+			return nil, TemplateFileNotFoundError{Path: templateFile, ChartDir: absChartDir}
 		}
 
 		args = append(args, "--show-only", templateFile)
@@ -202,7 +201,7 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj any) 
 		// Decode only the first document
 		var rawYaml any
 		if err := decoder.Decode(&rawYaml); err != nil {
-			return goerrors.WithStackTrace(err)
+			return err
 		}
 
 		if reflect.TypeOf(rawYaml).Kind() == reflect.Slice {
@@ -211,11 +210,11 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj any) 
 
 		jsonData, err := json.Marshal(rawYaml)
 		if err != nil {
-			return goerrors.WithStackTrace(err)
+			return err
 		}
 
 		if err := json.Unmarshal(jsonData, destinationObj); err != nil {
-			return goerrors.WithStackTrace(err)
+			return err
 		}
 
 		return nil
@@ -231,24 +230,24 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj any) 
 				break
 			}
 
-			return goerrors.WithStackTrace(err)
+			return err
 		}
 
 		jsonData, err := json.Marshal(rawYaml)
 		if err != nil {
-			return goerrors.WithStackTrace(err)
+			return err
 		}
 
 		if reflect.TypeOf(rawYaml).Kind() == reflect.Slice {
 			var items []json.RawMessage
 			if err := json.Unmarshal(jsonData, &items); err != nil {
-				return goerrors.WithStackTrace(err)
+				return err
 			}
 
 			for _, item := range items {
 				newElem := reflect.New(sliceVal.Type().Elem())
 				if err := json.Unmarshal(item, newElem.Interface()); err != nil {
-					return goerrors.WithStackTrace(err)
+					return err
 				}
 
 				sliceVal.Set(reflect.Append(sliceVal, newElem.Elem()))
@@ -256,7 +255,7 @@ func UnmarshalK8SYamlE(t testing.TestingT, yamlData string, destinationObj any) 
 		} else {
 			newElem := reflect.New(sliceVal.Type().Elem())
 			if err := json.Unmarshal(jsonData, newElem.Interface()); err != nil {
-				return goerrors.WithStackTrace(err)
+				return err
 			}
 
 			sliceVal.Set(reflect.Append(sliceVal, newElem.Elem()))
@@ -291,7 +290,7 @@ func UpdateSnapshotContextE(t testing.TestingT, ctx context.Context, options *Op
 
 	if !files.FileExists(snapshotDir) {
 		if err := os.Mkdir(snapshotDir, snapshotDirPermissions); err != nil {
-			return goerrors.WithStackTrace(err)
+			return err
 		}
 	}
 
@@ -299,12 +298,12 @@ func UpdateSnapshotContextE(t testing.TestingT, ctx context.Context, options *Op
 
 	file, err := os.Create(filename)
 	if err != nil {
-		return goerrors.WithStackTrace(err)
+		return err
 	}
 	defer file.Close()
 
 	if _, err = file.WriteString(yamlData); err != nil {
-		return goerrors.WithStackTrace(err)
+		return err
 	}
 
 	if options.Logger != nil {
@@ -342,18 +341,18 @@ func DiffAgainstSnapshotContextE(t testing.TestingT, ctx context.Context, option
 
 	from, err := ytbx.LoadFile(snapshot)
 	if err != nil {
-		return -1, goerrors.WithStackTrace(err)
+		return -1, err
 	}
 
 	currentManifests := releaseName + ".yaml"
 
 	file, err := os.Create(currentManifests)
 	if err != nil {
-		return -1, goerrors.WithStackTrace(err)
+		return -1, err
 	}
 
 	if _, err = file.WriteString(yamlData); err != nil {
-		return -1, goerrors.WithStackTrace(err)
+		return -1, err
 	}
 
 	defer file.Close()
@@ -364,14 +363,14 @@ func DiffAgainstSnapshotContextE(t testing.TestingT, ctx context.Context, option
 
 	to, err := ytbx.LoadFile(currentManifests)
 	if err != nil {
-		return -1, goerrors.WithStackTrace(err)
+		return -1, err
 	}
 
 	compOpt := dyff.KubernetesEntityDetection(false)
 
 	report, err := dyff.CompareInputFiles(from, to, compOpt)
 	if err != nil {
-		return -1, goerrors.WithStackTrace(err)
+		return -1, err
 	}
 
 	reportWriter := &dyff.HumanReport{
@@ -384,7 +383,7 @@ func DiffAgainstSnapshotContextE(t testing.TestingT, ctx context.Context, option
 
 	err = reportWriter.WriteReport(os.Stdout)
 	if err != nil {
-		return -1, goerrors.WithStackTrace(err)
+		return -1, err
 	}
 
 	return len(reportWriter.Diffs), nil

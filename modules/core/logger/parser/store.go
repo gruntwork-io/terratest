@@ -4,8 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gruntwork-io/go-commons/errors"
-	"github.com/gruntwork-io/go-commons/files"
+	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	junitformatter "github.com/jstemmer/go-junit-report/formatter"
 	junitparser "github.com/jstemmer/go-junit-report/parser"
 	"github.com/sirupsen/logrus"
@@ -30,7 +29,7 @@ func (logWriter LogWriter) GetOrCreateFile(logger *logrus.Logger, testName strin
 
 	file, err := createLogFile(logger, filename)
 	if err != nil {
-		return nil, errors.WithStackTrace(err)
+		return nil, err
 	}
 
 	logWriter.Lookup[testName] = file
@@ -55,17 +54,17 @@ func (logWriter LogWriter) WriteLog(logger *logrus.Logger, testName string, text
 	file, err := logWriter.GetOrCreateFile(logger, testName)
 	if err != nil {
 		logger.Errorf("Error retrieving log for test: %s", testName)
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	_, err = file.WriteString(text + "\n")
 	if err != nil {
 		logger.Errorf("Error (%s) writing log entry: %s", err, text)
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	if err := file.Sync(); err != nil {
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	return nil
@@ -79,12 +78,12 @@ func createLogFile(logger *logrus.Logger, filename string) (*os.File, error) {
 
 	err := EnsureDirectoryExists(logger, dirName)
 	if err != nil {
-		return nil, errors.WithStackTrace(err)
+		return nil, err
 	}
 
 	file, err := os.Create(filename)
 	if err != nil {
-		return nil, errors.WithStackTrace(err)
+		return nil, err
 	}
 
 	return file, nil
@@ -92,7 +91,7 @@ func createLogFile(logger *logrus.Logger, filename string) (*os.File, error) {
 
 // EnsureDirectoryExists will only attempt to create the directory if it does not exist.
 func EnsureDirectoryExists(logger *logrus.Logger, dirName string) error {
-	if files.IsDir(dirName) {
+	if files.IsExistingDir(dirName) {
 		logger.Infof("Directory %s already exists", dirName)
 		return nil
 	}
@@ -102,7 +101,7 @@ func EnsureDirectoryExists(logger *logrus.Logger, dirName string) error {
 	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		logger.Errorf("Error making directory %s: %s", dirName, err)
-		return errors.WithStackTrace(err)
+		return err
 	}
 
 	return nil
