@@ -12,6 +12,7 @@ use (
 	.
 	./modules/aws
 	./modules/azure
+	./modules/cloudtest
 	./modules/core
 	./modules/database
 	./modules/dnshelper
