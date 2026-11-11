@@ -5,8 +5,9 @@ go 1.26.0
 require (
 	github.com/aws/aws-sdk-go-v2 v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.297.1
+	github.com/aws/smithy-go v1.27.1
 	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
-	github.com/james00012/cloud-inventory v0.3.1
+	github.com/james00012/cloud-inventory v0.4.0
 	google.golang.org/api v0.276.0
 )
 
@@ -16,9 +17,8 @@ require (
 	cloud.google.com/go/compute/metadata v0.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.29 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.29 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.25 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.29 // indirect
-	github.com/aws/smithy-go v1.28.9 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect

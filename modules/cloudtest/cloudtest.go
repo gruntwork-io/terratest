@@ -28,9 +28,12 @@ type Managed[T any, Spec any, S any] interface {
 	inv.Deleter
 }
 
-// CleanupTimeout bounds one resource's deletion. A test whose resource is slow
-// to delete raises it.
-var CleanupTimeout = 15 * time.Minute
+// CleanupTimeout bounds one resource's deletion, and is deliberately shorter
+// than the Go test timeout: a provider that waits for a resource to disappear
+// can wait for minutes, and a stuck delete should report against this rather
+// than take the whole test binary down with it. A test whose resource is
+// genuinely slow to delete raises it.
+var CleanupTimeout = 5 * time.Minute
 
 // Create makes the resource, ties its lifetime to the test, and returns the
 // provider's own struct. Register Terraform's teardown with Cleanup rather than
