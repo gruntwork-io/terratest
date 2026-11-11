@@ -6,11 +6,9 @@ require (
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/storage v1.62.1 // indirect
 	github.com/aws/aws-lambda-go v1.54.0
-	github.com/go-errors/errors v1.0.2-0.20180813162953-d98b870cc4e0 // indirect
 	github.com/go-sql-driver/mysql v1.10.0 // indirect
 	github.com/google/go-containerregistry v0.20.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gruntwork-io/go-commons v0.8.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.22.0 // indirect
@@ -23,7 +21,6 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stretchr/testify v1.11.1
 	github.com/tmccombs/hcl2json v0.6.4 // indirect
-	github.com/urfave/cli v1.22.16 // indirect
 	github.com/zclconf/go-cty v1.15.0 // indirect
 	golang.org/x/crypto v0.54.0
 	golang.org/x/net v0.57.0 // indirect
@@ -162,7 +159,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20251210132809-ee656c7534f5 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/docker/cli v29.2.0+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
@@ -222,7 +218,6 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
