@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (7.2.3.1)
+    activesupport (8.0.5.2)
       base64
       benchmark (>= 0.3)
       bigdecimal
@@ -10,14 +10,15 @@ GEM
       drb
       i18n (>= 1.6, < 2)
       logger (>= 1.4.2)
-      minitest (>= 5.1, < 6)
+      minitest (>= 5.1)
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
     addressable (2.9.1)
       public_suffix (>= 2.0.2, < 8.0)
     base64 (0.3.0)
     benchmark (0.5.0)
-    bigdecimal (4.0.1)
+    bigdecimal (4.1.3)
     coffee-script (2.4.1)
       coffee-script-source
       execjs
@@ -25,7 +26,7 @@ GEM
     colorator (1.1.0)
     commonjs (0.2.7)
     commonmarker (0.23.10)
-    concurrent-ruby (1.3.6)
+    concurrent-ruby (1.3.8)
     connection_pool (3.0.2)
     dnsruby (1.61.4)
       simpleidn (~> 0.1)
@@ -101,7 +102,7 @@ GEM
       activesupport (>= 2)
       nokogiri (>= 1.4)
     http_parser.rb (0.6.0)
-    i18n (1.14.8)
+    i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     jekyll (3.9.3)
       addressable (~> 2.4)
@@ -232,7 +233,9 @@ GEM
       jekyll (>= 3.5, < 5.0)
       jekyll-feed (~> 0.9)
       jekyll-seo-tag (~> 2.1)
-    minitest (5.27.0)
+    minitest (6.1.0)
+      drb (~> 2.0)
+      prism (>= 1.5, < 3)
     net-http (0.9.1)
       uri (>= 0.11.1)
     nokogiri (1.19.3)
@@ -243,6 +246,7 @@ GEM
       sawyer (~> 0.9)
     pathutil (0.16.2)
       forwardable-extended (~> 2.6)
+    prism (2.1.0)
     public_suffix (4.0.7)
     racc (1.8.1)
     rb-fsevent (0.10.4)
