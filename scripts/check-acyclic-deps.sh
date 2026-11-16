@@ -15,6 +15,7 @@ set -uo pipefail
 declare -A TIER=(
   [core]=0
   [ssh]=1
+  [cloudtest]=1
   [httphelper]=1
   [dnshelper]=1
   [docker]=2

@@ -18,6 +18,7 @@ ALLOWED_EDGES=(
   "aws:core"
   "aws:ssh"           # Ec2Keypair embeds ssh.KeyPair; SCP helpers
   "azure:core"
+  "cloudtest:core"
   "database:core"
   "dnshelper:core"
   "docker:core"
