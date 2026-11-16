@@ -24,6 +24,7 @@ jobs:
       uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        sign-commits: true
         commit-message: "chore: bump Terragrunt pin to ${{ steps.bump.outputs.latest }}"
         title: "chore: bump Terragrunt pin to ${{ steps.bump.outputs.latest }}"
         body: |
