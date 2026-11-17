@@ -67,6 +67,38 @@ func TestDoWithRetry(t *testing.T) {
 	}
 }
 
+func TestDoWithRetryContextEAlreadyDone(t *testing.T) {
+	t.Parallel()
+
+	for _, testCase := range []struct {
+		name string
+		ctx  context.Context
+		err  error
+	}{
+		{name: "canceled", ctx: func() context.Context {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			return ctx
+		}(), err: context.Canceled},
+		{name: "deadline exceeded", ctx: func() context.Context {
+			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+			cancel()
+			return ctx
+		}(), err: context.DeadlineExceeded},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			called := false
+			out, err := retry.DoWithRetryContextE(t, testCase.ctx, "already done", 2, time.Millisecond, func() (string, error) {
+				called = true
+				return "unexpected", nil
+			})
+			assert.Empty(t, out)
+			require.ErrorIs(t, err, testCase.err)
+			assert.False(t, called)
+		})
+	}
+}
+
 func TestDoWithTimeout(t *testing.T) {
 	t.Parallel()
 

@@ -73,8 +73,9 @@ func DoWithRetryContext(t testing.TestingT, ctx context.Context, actionDescripti
 // supports cancellation and timeouts.
 func DoWithRetryContextE(t testing.TestingT, ctx context.Context, actionDescription string, maxRetries int, sleepBetweenRetries time.Duration, action func() (string, error)) (string, error) {
 	out, err := DoWithRetryInterfaceContextE(t, ctx, actionDescription, maxRetries, sleepBetweenRetries, func() (any, error) { return action() })
+	s, _ := out.(string)
 
-	return out.(string), err
+	return s, err
 }
 
 // DoWithRetryInterfaceContext runs the specified action. If it returns a value, return that value. If it returns a
