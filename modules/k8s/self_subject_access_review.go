@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 
-	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/stretchr/testify/require"
 	authv1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,7 +27,7 @@ func CanIDoContextE(t testing.TestingT, ctx context.Context, options *KubectlOpt
 
 	resp, err := clientset.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, &check, metav1.CreateOptions{})
 	if err != nil {
-		return false, errors.WithStackTrace(err)
+		return false, err
 	}
 
 	if !resp.Status.Allowed {

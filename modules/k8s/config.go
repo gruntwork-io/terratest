@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"sort"
 
-	gwErrors "github.com/gruntwork-io/go-commons/errors"
 	"github.com/stretchr/testify/require"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -194,7 +193,7 @@ func CopyHomeKubeConfigToTempE(t testing.TestingT) (string, error) {
 
 	tmpConfig, err := os.CreateTemp("", "")
 	if err != nil {
-		return "", gwErrors.WithStackTrace(err)
+		return "", err
 	}
 	defer tmpConfig.Close()
 

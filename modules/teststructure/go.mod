@@ -3,7 +3,6 @@ module github.com/gruntwork-io/terratest/modules/teststructure/v2
 go 1.26.0
 
 require (
-	github.com/gruntwork-io/go-commons v0.8.0
 	github.com/gruntwork-io/terratest/modules/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/gruntwork-io/terratest/modules/opa/v2 v2.0.0-00010101000000-000000000000
 	github.com/gruntwork-io/terratest/modules/terraform/v2 v2.0.0-00010101000000-000000000000
@@ -42,4 +41,3 @@ require (
 	golang.org/x/tools v0.44.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-

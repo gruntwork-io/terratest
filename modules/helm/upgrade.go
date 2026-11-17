@@ -4,7 +4,6 @@ import (
 	"context"
 	"path/filepath"
 
-	"github.com/gruntwork-io/go-commons/errors"
 	"github.com/gruntwork-io/terratest/modules/core/v2/files"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
 	"github.com/stretchr/testify/require"
@@ -23,7 +22,7 @@ func UpgradeContextE(t testing.TestingT, ctx context.Context, options *Options, 
 	if files.FileExists(chart) {
 		absChartDir, err := filepath.Abs(chart)
 		if err != nil {
-			return errors.WithStackTrace(err)
+			return err
 		}
 
 		chart = absChartDir
@@ -31,7 +30,7 @@ func UpgradeContextE(t testing.TestingT, ctx context.Context, options *Options, 
 
 	if options.BuildDependencies {
 		if _, err := RunHelmCommandAndGetOutputContextE(t, ctx, options, "dependency", "build", chart); err != nil {
-			return errors.WithStackTrace(err)
+			return err
 		}
 	}
 
