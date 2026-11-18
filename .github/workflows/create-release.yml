@@ -50,7 +50,7 @@ jobs:
       - run: bash scripts/check-siv-placement.sh
 
       - name: Set up mise
-        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Validates the exact release-mode build (pin + GOWORK=off external
@@ -89,7 +89,7 @@ jobs:
           fi
 
       - name: Set up mise
-        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
