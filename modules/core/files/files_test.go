@@ -199,6 +199,50 @@ func TestCopyTerragruntFolderToDest(t *testing.T) {
 	requireDirectoriesEqual(t, expectedDir, tmpDir)
 }
 
+// A source folder that itself sits under a hidden directory (for example ~/.cache/project) must still be copied. Only
+// hidden files and folders below the source folder should be skipped.
+func TestCopyTerraformFolderToDestUnderHiddenParent(t *testing.T) {
+	t.Parallel()
+
+	originalDir := createFolderUnderHiddenParent(t)
+
+	tmpDir, err := files.CopyTerraformFolderToDest(originalDir, t.TempDir(), "TestCopyTerraformFolderToDestUnderHiddenParent")
+	require.NoError(t, err)
+
+	assert.FileExists(t, filepath.Join(tmpDir, "main.tf"))
+	assert.FileExists(t, filepath.Join(tmpDir, "sub", "nested.tf"))
+	assert.NoDirExists(t, filepath.Join(tmpDir, ".terraform"))
+	assert.NoFileExists(t, filepath.Join(tmpDir, "terraform.tfstate"))
+}
+
+func TestCopyTerragruntFolderToDestUnderHiddenParent(t *testing.T) {
+	t.Parallel()
+
+	originalDir := createFolderUnderHiddenParent(t)
+
+	tmpDir, err := files.CopyTerragruntFolderToDest(originalDir, t.TempDir(), "TestCopyTerragruntFolderToDestUnderHiddenParent")
+	require.NoError(t, err)
+
+	assert.FileExists(t, filepath.Join(tmpDir, "terragrunt.hcl"))
+	assert.FileExists(t, filepath.Join(tmpDir, "sub", "nested.tf"))
+	assert.NoDirExists(t, filepath.Join(tmpDir, ".terraform"))
+	assert.NoFileExists(t, filepath.Join(tmpDir, "terraform.tfstate"))
+}
+
+func TestFindTerraformSourceFilesInDirUnderHiddenParent(t *testing.T) {
+	t.Parallel()
+
+	originalDir := createFolderUnderHiddenParent(t)
+
+	tfFiles, err := files.FindTerraformSourceFilesInDir(originalDir)
+	require.NoError(t, err)
+
+	assert.ElementsMatch(t, []string{
+		filepath.Join(originalDir, "main.tf"),
+		filepath.Join(originalDir, "sub", "nested.tf"),
+	}, tfFiles)
+}
+
 func TestPathContainsTerraformStateOrVars(t *testing.T) {
 	t.Parallel()
 
@@ -228,6 +272,28 @@ func TestPathContainsTerraformStateOrVars(t *testing.T) {
 			}
 		})
 	}
+}
+
+// createFolderUnderHiddenParent creates a small Terraform/Terragrunt folder whose parent directory is hidden, and returns
+// the path of the folder. It also contains hidden and state files that the copy functions are expected to skip.
+func createFolderUnderHiddenParent(t *testing.T) string {
+	t.Helper()
+
+	dir := filepath.Join(t.TempDir(), ".hidden-parent", "module")
+
+	for _, name := range []string{
+		"main.tf",
+		"terragrunt.hcl",
+		"terraform.tfstate",
+		filepath.Join("sub", "nested.tf"),
+		filepath.Join(".terraform", "hidden.tf"),
+	} {
+		path := filepath.Join(dir, name)
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		require.NoError(t, os.WriteFile(path, []byte("# test\n"), 0o600))
+	}
+
+	return dir
 }
 
 // Diffing two directories to ensure they have the exact same files, contents, etc and showing exactly what's different

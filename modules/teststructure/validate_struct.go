@@ -168,8 +168,14 @@ func FindTerraformModulePathsInRootE(opts *ValidationOptions) ([]string, error) 
 		// The glob match returns all full paths to every target file, whereas we're only interested in their root
 		// directories for the purposes of running Terraform validate
 		rootDir := path.Dir(match)
-		// Don't include hidden .terraform directories when finding paths to validate
-		if !files.PathContainsHiddenFileOrFolder(rootDir) {
+		// Don't include hidden .terraform directories when finding paths to validate. Only look below opts.RootDir, so
+		// that a RootDir that itself sits under a hidden directory (for example ~/.cache/project) is not skipped.
+		hiddenCheckDir := rootDir
+		if relDir, relErr := filepath.Rel(opts.RootDir, rootDir); relErr == nil {
+			hiddenCheckDir = relDir
+		}
+
+		if !files.PathContainsHiddenFileOrFolder(hiddenCheckDir) {
 			terraformDirSet[rootDir] = "exists"
 		}
 	}

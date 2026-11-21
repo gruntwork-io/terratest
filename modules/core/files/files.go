@@ -55,7 +55,7 @@ func CopyTerraformFolderToDest(folderPath string, destRootFolder string, tempFol
 			return true
 		}
 
-		if PathContainsHiddenFileOrFolder(path) || PathContainsTerraformStateOrVars(path) {
+		if PathContainsHiddenFileOrFolder(pathBelow(folderPath, path)) || PathContainsTerraformStateOrVars(path) {
 			return false
 		}
 
@@ -80,7 +80,7 @@ func CopyTerraformFolderToTemp(folderPath string, tempFolderPrefix string) (stri
 // Terraform state files are excluded as well as .terragrunt-cache to avoid overwriting contents.
 func CopyTerragruntFolderToDest(folderPath string, destRootFolder string, tempFolderPrefix string) (string, error) {
 	filter := func(path string) bool {
-		return !PathContainsHiddenFileOrFolder(path) && !PathContainsTerraformState(path)
+		return !PathContainsHiddenFileOrFolder(pathBelow(folderPath, path)) && !PathContainsTerraformState(path)
 	}
 
 	destFolder, err := CopyFolderToDest(folderPath, destRootFolder, tempFolderPrefix, filter)
@@ -217,6 +217,18 @@ func PathContainsHiddenFileOrFolder(path string) bool {
 	return false
 }
 
+// pathBelow returns path relative to root, or path unchanged if it can't be made relative. The copy and search helpers
+// use it to look for hidden files and folders only below the folder they were given, so a folder that itself sits under
+// a hidden directory (for example ~/.cache/project) is not skipped in its entirety.
+func pathBelow(root string, path string) string {
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return path
+	}
+
+	return rel
+}
+
 // PathIsTerraformVersionFile returns true if the given path is the special '.terraform-version' file used by the [mise](https://github.com/jdx/mise) tool.
 func PathIsTerraformVersionFile(path string) bool {
 	return filepath.Base(path) == ".terraform-version"
@@ -278,7 +290,7 @@ func FindTerraformSourceFilesInDir(dirPath string) ([]string, error) {
 
 	for _, match := range matches {
 		// Don't include hidden .terraform directories when finding paths to validate
-		if !PathContainsHiddenFileOrFolder(match) {
+		if !PathContainsHiddenFileOrFolder(pathBelow(dirPath, match)) {
 			tfFiles = append(tfFiles, match)
 		}
 	}

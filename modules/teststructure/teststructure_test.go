@@ -68,6 +68,34 @@ func TestFindTerraformModulePathsInRootEExamples(t *testing.T) {
 	require.NotEmpty(t, subDirs)
 }
 
+// A RootDir that itself sits under a hidden directory (for example ~/.cache/project) must still be searched. Only
+// hidden directories below RootDir, such as .terraform, should be skipped.
+func TestFindTerraformModulePathsInRootEUnderHiddenParent(t *testing.T) {
+	t.Parallel()
+
+	rootDir := filepath.Join(t.TempDir(), ".hidden-parent", "root")
+
+	for _, name := range []string{
+		filepath.Join("a", "main.tf"),
+		filepath.Join("b", "c", "main.tf"),
+		filepath.Join(".terraform", "d", "main.tf"),
+	} {
+		path := filepath.Join(rootDir, name)
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o755))
+		require.NoError(t, os.WriteFile(path, []byte("# test\n"), 0o600))
+	}
+
+	opts, optsErr := teststructure.NewValidationOptions(rootDir, []string{}, []string{})
+	require.NoError(t, optsErr)
+
+	subDirs, err := teststructure.FindTerraformModulePathsInRootE(opts)
+	require.NoError(t, err)
+	assert.Equal(t, []string{
+		filepath.Join(rootDir, "a"),
+		filepath.Join(rootDir, "b", "c"),
+	}, subDirs)
+}
+
 // This test calls ValidateAllTerraformModules on the Terratest root directory
 func TestValidateAllTerraformModulesOnTerratest(t *testing.T) {
 	t.Parallel()
