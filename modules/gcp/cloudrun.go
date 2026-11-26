@@ -7,6 +7,8 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/core/v2/logger"
 	"github.com/gruntwork-io/terratest/modules/core/v2/testing"
+	cloudinv "github.com/james00012/cloud-inventory"
+	gcpinv "github.com/james00012/cloud-inventory/gcp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
@@ -44,7 +46,11 @@ func GetCloudRunServiceAttrsE(t testing.TestingT, ctx context.Context, projectID
 func GetCloudRunServiceAttrsWithClient(ctx context.Context, service *run.Service, projectID string, region string, serviceID string) (*run.GoogleCloudRunV2Service, error) {
 	name := fmt.Sprintf("projects/%s/locations/%s/services/%s", projectID, region, serviceID)
 
-	runService, err := service.Projects.Locations.Services.Get(name).Context(ctx).Do()
+	// The shared library owns the call. This helper keeps its signature and
+	// returns the API's own struct, so no test asserting an SDK field changes.
+	inventory := gcpinv.NewCloudRunServicesWithClients(nil, service)
+
+	found, err := inventory.Get(ctx, cloudinv.ID(name))
 	if err != nil {
 		var apiErr *googleapi.Error
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
@@ -54,7 +60,7 @@ func GetCloudRunServiceAttrsWithClient(ctx context.Context, service *run.Service
 		return nil, fmt.Errorf("failed to get settings for Cloud Run service %s in region %s in project %s: %w", serviceID, region, projectID, err)
 	}
 
-	return runService, nil
+	return found.GoogleCloudRunV2Service, nil
 }
 
 // GetCloudRunJobAttrs returns the settings Google Cloud holds for the given Cloud Run job, so a
